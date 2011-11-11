@@ -12,4 +12,4 @@ use_clause ::= 'use'
 
 top_level_subprogram_declaration ::= [ 'private' ] subprogram_declaration
 
-subprogram_declaration ::= 'procedure' 'package'
+subprogram_declaration ::= 'procedure' | 'package'
