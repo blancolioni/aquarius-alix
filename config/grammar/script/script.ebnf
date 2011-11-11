@@ -1,0 +1,65 @@
+top_level = source_file
+case_sensitive = false
+
+identifier         ::= standard ada_identifier
+numeric_literal    ::= standard ada_numeric_literal
+character_literal  ::= standard ada_character_literal
+string_literal     ::= standard ada_string_literal
+delimiter          ::= delimiters "&()+,;|"
+symbol             ::= standard ada_symbol
+comment            ::= standard ada_comment
+
+format ';' no_space_before no_space_after new_line_after
+format '.' no_space_before no_space_after
+format '(' no_space_before no_space_after
+format ')' no_space_before no_space_after
+format 'is' new_line_after space_before
+format 'do' new_line_after space_before
+format ',' no_space_before space_after
+
+format list_of_expressions indent_child
+format list_of_actions indent_child
+
+source_file ::= plugin_declaration
+
+plugin_declaration ::= 'plugin' identifier 'version' version_spec 'is'
+                          list_of_group_declarations
+
+version_spec ::= < numeric_literal / '.' >
+
+list_of_group_declarations ::= { group_declaration }
+
+group_declaration ::= 'group' identifier ':' identifier 'is'
+   list_of_actions
+   'end' identifier ';'
+
+list_of_actions ::= { action }
+
+action ::= action_time action_context 'do' action_definition
+
+action_time ::= 'before' | 'after'
+
+action_context ::= < identifier / '.' >
+
+action_definition ::= list_of_expressions
+
+list_of_expressions ::= < expression ';' >
+
+expression ::= let_expression
+             | call_expression
+             | source_expression
+             | literal_expression
+
+let_expression ::= 'let' binding
+
+binding ::= identifier '=' expression
+
+call_expression ::= name [ '(' arguments ')' ]
+
+arguments ::= < expression / ',' >
+
+source_expression ::= '[' < expression / ',' > ']'
+
+literal_expression ::= numeric_literal | string_literal
+
+name ::= < identifier / '.' >

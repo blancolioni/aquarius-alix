@@ -1,0 +1,60 @@
+top_level = source_file
+case_sensitive = false
+
+identifier         ::= standard ada_identifier
+numeric_literal    ::= standard ada_numeric_literal
+character_literal  ::= standard ada_character_literal
+string_literal     ::= standard ada_string_literal
+delimiter          ::= delimiters "&()+,;|"
+symbol             ::= standard ada_symbol
+comment            ::= standard ada_comment
+
+format ';' no_space_before no_space_after new_line_after
+format '(' space_before no_space_after
+format ')' no_space_before space_after
+format 'is' new_line_after space_before
+format ',' no_space_before space_after
+format '.' no_space_before space_after
+
+format declaration indent_child
+format identifier space_before space_after
+
+source_file ::= { context_clause } project
+
+context_clause ::= 'with' string_literal ';'
+
+project ::= 'project' identifier 'is' < declaration ';' > 'end' identifier ';'
+
+declaration ::= setting_declaration | type_declaration | value_declaration | package_declaration
+			  | case_declaration
+
+setting_declaration ::= 'for' setting_name 'use' value
+
+setting_name ::= identifier [ '(' setting_argument ')' ]
+
+setting_argument ::= string_literal
+
+value ::= simple_value | '(' list_value ')'
+
+simple_value ::= string_literal
+
+list_value ::= < simple_value / ',' >
+
+type_declaration ::= 'type' identifier 'is' value
+
+value_declaration ::= identifier ':' identifier ':=' 'external' value
+
+package_declaration ::= 'package' identifier package_definition
+
+package_definition ::= setting_definition | renaming_definition
+
+setting_definition ::= 'is' < declaration ';' >
+                        'end' identifier
+
+renaming_definition ::= 'renames' name
+
+name ::= < identifier / '.' >
+
+case_declaration ::= 'case' identifier 'is' < case_option > 'end' 'case'
+
+case_option ::= 'when' value '=>' < declaration ';' >

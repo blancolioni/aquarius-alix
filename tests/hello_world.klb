@@ -1,0 +1,9 @@
+with Simple_IO;
+
+procedure Hello_World is
+   X : Integer;
+begin
+   X := Simple_IO.Col;
+   --  Simple_IO.Put_Line ("Hello, world");
+
+end Hello_World;

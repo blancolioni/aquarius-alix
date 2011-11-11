@@ -1,0 +1,9 @@
+procedure Test_Standard is
+
+   X : Standard.Integer;
+
+begin
+
+   X := 3;
+
+end Test_Standard;

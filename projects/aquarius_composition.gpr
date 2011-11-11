@@ -1,0 +1,18 @@
+with "aquarius_files.gpr";
+with "settings";
+with "aquarius_base";
+with "aquarius_debug";
+with "aquarius_ast";
+
+project Aquarius_Composition is
+
+   for Source_Dirs use ("../src/composition");
+
+   package Builder renames Settings.Builder;
+
+   package Compiler renames Settings.Compiler;
+
+   package Binder renames Settings.Binder;
+
+end Aquarius_Composition;
+

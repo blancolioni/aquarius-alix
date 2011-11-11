@@ -1,0 +1,19 @@
+with "aquarius_trees.gpr";
+with "settings";
+with "aquarius_base";
+with "aquarius_debug";
+
+project Aquarius_AST is
+
+   for Object_Dir use "../obj";
+   for Exec_Dir use "../bin";
+   for Source_Dirs use ("../src/types", "../src/entries");
+
+   package Builder renames Settings.Builder;
+
+   package Compiler renames Settings.Compiler;
+
+   package Binder renames Settings.Binder;
+
+end Aquarius_AST;
+

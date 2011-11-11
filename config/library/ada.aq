@@ -1,0 +1,11 @@
+createPackage = do
+  name <- askForString "Enter Package name" "Value"
+  let spec = parse $ "package " & name & " is end " & name & ";"
+  spec_buffer <- newAdaBuffer spec
+  showBuffer spec_buffer
+
+newAdaBuffer tree = do
+  let entry = tree.entry
+      id    = entry.name
+      fname = toAdaFileName id
+

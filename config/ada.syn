@@ -1,0 +1,549 @@
+case-sensitive = false
+ada-quote-hack = true
+
+top-level ::= source-file
+
+line-comment  = "--"
+right-margin = 78
+   
+identifier          ::= regex "[A-Za-z_][A-Za-z0-9_]*"
+float-constant      ::= regex "[0-9]+\.[0-9]+([eE][0-9]+)?"
+integer-constant    ::= regex "[0-9]+"
+string-literal     ::= regex """([~""]*("""")*)*"""
+character-constant  ::= regex "'[.]?'"
+
+source-file ::= list-of-context-clauses
+	  [ 'private' ] subprogram-declaration
+
+list-of-context-clauses ::= { context-clause }
+
+context-clause ::= with-clause | use-clause | pragma-spec
+
+with-clause ::= 'with' < external-unit-name / ',' > ';'
+
+use-clause ::= 'use' < external-unit-name / ',' > ';'
+
+qualified-reference ::= < identifier / '.' >
+
+subprogram-declaration ::= procedure-declaration | function-declaration |
+                           package-declaration | generic-declaration |
+                           generic-instantiation
+
+subprogram-specification ::= 
+    procedure-specification
+  | function-specification
+
+procedure-declaration ::= 
+   procedure-specification [ subprogram-body ] ';'
+
+function-declaration ::=
+   function-specification [ subprogram-body ] ';'
+
+procedure-specification ::=
+   'procedure' (procedure-name | string-literal)
+            [ formal-argument-spec ] 
+
+function-specification ::=
+   'function' (function-name | string-literal) [ formal-argument-spec ] 
+         'return' type-indication
+
+subprogram-body ::= 'is' ('abstract' | block ) |
+                    'renames' object-reference
+
+formal-argument-spec ::=
+   '(' list-of-formal-arguments ')'
+
+list-of-formal-arguments ::= <formal-argument / ';'>
+
+formal-argument ::= 
+          < identifier / ',' > ':' 
+                  [ ('in' ['out']) | 'out' | 'access' ] type-indication
+                      [ ':=' expression ]
+
+package-declaration ::=
+   'package' (package-spec | package-body) ';'
+
+package-spec ::= package-name 
+                  ('is' package-spec-declaration |
+                   'renames' qualified-reference)
+
+package-spec-declaration ::=
+                   list-of-declarations
+		   [ private-part]
+                   'end' [ package-name ]
+
+private-part ::=   'private' list-of-declarations
+
+generic-instantiation ::=
+     'package' defining-program-unit-name 'is'
+       'new' generic-package-name [generic-actual-part] ';'
+   | 'procedure' defining-program-unit-name 'is'
+       'new' generic-procedure-name [generic-actual-part] ';'
+   | 'function' defining-designator 'is'
+       'new' generic-function-name [generic-actual-part] ';'
+
+generic-actual-part ::= '(' <generic-association / ','> ')'
+
+generic-association ::=
+	[ identifier '=>' ] static-expression
+
+defining-designator ::= defining-program-unit-name | defining-operator-symbol
+
+defining-operator-symbol ::= operator-symbol
+
+operator-symbol ::= string-literal
+
+package-body ::= 'body' package-name 'is' 
+                     list-of-declarations
+                     [ 'begin' handled-sequence-of-statements ]
+                     'end' [ package-name ]
+
+
+generic-declaration ::=
+   'generic' { generic-formal-parameter-declaration }
+   (procedure-declaration | function-declaration | package-declaration)
+
+generic-formal-parameter-declaration ::=
+      formal-object-declaration
+    | formal-type-declaration
+    | formal-subprogram-declaration
+    | formal-package-declaration
+
+formal-object-declaration ::=
+   defining-identifier-list ':' mode subtype-mark
+         [ ':=' default-expression ] ';'
+
+formal-type-declaration ::=
+   'type' defining-identifier [discriminant-part] 'is'
+       formal-type-definition ';'
+
+formal-type-definition ::=
+     formal-private-type-definition
+   | formal-derived-type-definition
+   | formal-discrete-type-definition
+   | formal-signed-integer-type-definition
+   | formal-modular-type-definition
+   | formal-floating-point-definition
+   | formal-ordinary-fixed-point-definition
+   | formal-decimal-fixed-point-definition
+   | formal-array-type-definition
+   | formal-access-type-definition
+
+
+mode ::= [ 'in' ] [ 'out' ]
+
+formal-private-type-definition ::=
+    [['abstract'] 'tagged'] ['limited'] 'private'
+
+formal-derived-type-definition ::=
+   ['abstract'] 'new' subtype-mark [ 'with' 'private' ]
+
+formal-discrete-type-definition ::= '(' '<>' ')'
+
+formal-signed-integer-type-definition ::= 'range' '<>'
+
+formal-modular-type-definition ::= 'mod' '<>'
+
+formal-floating-point-definition ::= 'digits' '<>'
+
+formal-ordinary-fixed-point-definition ::= 'delta' '<>'
+
+formal-decimal-fixed-point-definition ::= 'delta' '<>' 'digits' '<>'
+
+formal-array-type-definition ::= array-type-definition
+
+formal-access-type-definition ::= access-type-definition
+
+formal-subprogram-declaration ::=
+   'with' subprogram-specification [ 'is' subprogram-default ] ';'
+
+formal-package-declaration ::=
+   'with' 'package' defining-identifier 'is' 'new'
+       generic-package-name formal-package-actual-part ';'
+
+generic-package-name ::= package-name
+
+formal-package-actual-part ::= '(' '<>' ')' | generic-actual-part
+
+subprogram-default ::= default-name | '<>'
+
+default-name ::= subprogram-name
+
+default-expression ::= expression
+
+block ::= 
+   list-of-declarations
+   'begin' 
+	handled-sequence-of-statements
+   'end' [ block-name | string-literal ]
+
+list-of-declarations ::= { declaration }
+
+declaration ::= type-declaration | subtype-declaration |
+                variable-declaration | pragma-spec |
+                subprogram-declaration | use-clause |
+                use-type-clause | representation-clause
+
+representation-clause ::= attribute-definition-clause
+
+use-type-clause ::= 'use' 'type' type-indication ';'
+
+subtype-declaration ::= 'subtype' subtype-name 'is' type-indication ';'
+
+type-declaration ::= type-header [type-discriminator]
+                              [ 'is' type-qualifiers type-definition ] ';'
+
+type-discriminator ::=
+ 	'(' discriminant-list ')'
+
+discriminant-list ::= identifier ':' type-indication
+	 [ ':=' static-expression ]
+
+type-qualifiers ::= ['abstract'] ['tagged'] ['limited']
+
+variable-declaration ::= 
+   defining-identifier-list ':' (variable-type | 'exception') ';'
+
+variable-type ::= [ 'aliased' ] [ 'constant' ]
+                      [ type-indication | array-type-definition]
+                      [ ( ':=' expression ) | ( 'renames' object-reference ) ]
+
+defining-identifier-list ::= < defining-identifier / ',' >
+
+defining-identifier ::= identifier
+
+type-indication ::= qualified-reference [ type-constraint ]
+
+type-constraint ::= ( '(' expression [ '..' expression ] ')' ) |
+                     ('''' ( identifier | 'range' | 'access')) |
+		     ('range' bounded-range)
+
+type-definition ::= derived-type-definition | record-type-definition |
+                    array-type-definition | private-type-definition |
+		    enumerated-type-definition | access-type-definition |
+		    range-type-definition | function-type-definition |
+		    procedure-type-definition
+
+range-type-definition ::= 'range' (bounded-range | '<>')
+
+bounded-range ::= static-expression '..' static-expression
+
+access-type-definition ::= 'access' [ 'all' ] type-indication
+
+function-type-definition ::= 'access' 'function' formal-argument-spec
+                                'return' type-name
+
+procedure-type-definition ::= 'access' 'procedure' formal-argument-spec
+
+enumerated-type-definition ::=
+	'(' < enumerated-literal / ',' > ')'
+
+enumerated-literal ::= identifier | character-constant
+
+private-type-definition ::= 'private'
+
+derived-type-definition ::= 'new' qualified-reference
+                               [ 'with' ( record-type-definition | 'private' )]
+
+record-type-definition ::= null-record-type | non-null-record-type
+
+null-record-type ::= 'null' 'record'
+
+non-null-record-type ::= 'record' record-element-list 'end' 'record'
+
+record-element-list ::= < record-element-definition | 
+                          variant-record-element |
+                          ('null' ';' ) >
+
+record-element-definition ::=
+    defining-identifier-list ':' type-indication [ ':=' expression ] ';'
+
+variant-record-element ::=
+    'case' identifier 'is' < variant-case > 'end' 'case' ';'
+
+variant-case ::= 'when' variant-case-options '=>' record-element-list
+
+variant-case-options ::= < identifier / '|' > | 'others'
+                                  
+array-type-definition ::= 
+ 	'array' '(' < array-bound / ',' > ')' 'of' type-indication
+
+array-bound ::= explicitly-typed-array-bound | bounded-range
+
+explicitly-typed-array-bound ::=
+	type-name [ 'range' ( bounded-range | '<>' ) ]
+	
+handled-sequence-of-statements ::=
+    sequence-of-statements
+    [ 'exception' exception-handler ]
+
+sequence-of-statements ::= < single-statement >
+
+single-statement ::= [ label ] statement
+
+label ::= '<<' identifier '>>'
+
+statement ::= null-statement | call-or-assignment-statement |
+              if-statement | return-statement | declare-statement |
+              loop-statement | exit-statement | case-statement |
+  	      raise-statement | pragma-spec
+
+null-statement ::= 'null' ';'
+
+raise-statement ::= 'raise' [ qualified-reference ] ';'
+
+call-or-assignment-statement ::=
+   object-reference [ ':=' expression ] ';'
+
+object-reference ::= identifier { object-subreferences }
+
+object-subreferences ::= array-or-call-subreference | qualified-subreference |
+                         attribute-reference
+
+array-or-call-subreference ::=
+	'(' < array-subrange | call-arg  / ',' > ')'
+
+array-subrange ::= expression '..' expression
+
+call-arg ::= [ identifier '=>' ] expression
+
+--  array-or-call-subreference ::= 
+--         '(' expression [ array-subrange | call-args | named-args ] ')'
+
+--  array-subrange ::= '..' expression
+
+--  call-args ::= < ',' expression >
+
+--  named-args ::= '=>' expression { ',' identifier '=>' expression }
+
+qualified-subreference ::= '.' ( identifier | 'all' | string-literal )
+
+attribute-reference ::= '''' ( identifier | 'access' | 'range' )
+
+if-statement ::= 'if' expression 'then' sequence-of-statements
+                 { 'elsif' expression 'then' sequence-of-statements }
+                 [ 'else' sequence-of-statements ]
+                 'end' 'if' ';'
+
+case-statement ::= 'case' expression 'is'
+                     case-list
+		   'end' 'case' ';'
+
+case-list ::= < 'when' ( case-option-list  | 'others'  ) '=>'
+                            sequence-of-statements >
+case-option-list ::= 
+     < qualified-reference | integer-constant | character-constant / '|' >
+
+
+return-statement ::= 'return' [expression] ';'
+
+exit-statement ::= 'exit' [ 'when' expression ] ';'
+
+declare-statement ::=
+   [ declare-block-name ':' ]
+   [ 'declare'
+     list-of-declarations ]
+   'begin' 
+	handled-sequence-of-statements
+   'end' [ identifier ] ';'
+
+declare-block-name ::= identifier
+
+loop-statement ::=
+                 [ loop-name ]
+                 [ loop-statement-header ] 
+                    'loop' 
+                        sequence-of-statements 
+                    'end' 'loop' [ identifier ] ';'
+
+loop-statement-header ::=
+         while-statement-header | for-statement-header
+
+loop-name ::= identifier ':'
+
+while-statement-header ::= 'while' expression
+
+for-statement-header ::= 
+   'for' identifier 'in' [ 'reverse' ] for-loop-discrete-range
+
+for-loop-discrete-range ::=
+	 ( type-name [ ( 'range' bounded-range ) | '''' 'range' ] ) |
+		 bounded-range
+
+static-expression ::= expression
+
+expression ::=
+    relation { boolean-operator relation }
+
+relation ::=
+	simple-expression [ relational-operator simple-expression  |
+			    ['not'] 'in' range ]
+
+simple-expression ::=
+    [ unary-adding-operator ] term { binary-adding-operator term }
+
+term ::= factor { multiplying-operator factor }
+
+factor ::= primary [ '**' primary ] | 'abs' primary | 'not' primary
+
+primary ::= integer-constant | float-constant | string-literal |
+            object-reference | 'null' | '(' expression-or-aggregate ')' |
+	    character-constant | allocator
+
+boolean-operator ::=
+	'and' | 'and' 'then' | 'or' | 'or' 'else' | 'xor'
+
+relational-operator ::= '=' | '/=' | '<' | '<=' | '>' | '>='
+
+binary-adding-operator ::= '+' | '-' | '&'
+
+unary-adding-operator ::= '+' | '-'
+
+multiplying-operator ::= '*' | '/' | 'mod' | 'rem'
+
+allocator ::= 'new' subtype-indication | 'new' qualified-expression
+
+subtype-indication ::= subtype-mark [constraint]
+
+subtype-mark ::= qualified-reference
+
+constraint ::= scalar-constraint | composite-constraint
+
+scalar-constraint ::= range-constraint
+
+composite-constraint ::= '(' < discrete-range-or-discriminant / ',' > ')'
+
+discrete-range-or-discriminant ::=
+	expression |		--  catch-all
+	subtype-mark constraint |
+	range |
+	< discriminant-selector-name / '|' > '=>' expression
+
+discrete-range ::= discrete-subtype-indication | range
+
+discrete-subtype-indication ::= subtype-indication
+
+range ::= range-attribute-reference | 
+          simple-expression '..' simple-expression
+
+range-attribute-reference ::= prefix '''' range-attribute-designator
+
+range-constraint ::= 'range' range
+
+range-attribute-designator ::= 'range' [ '(' static-expression ')' ]
+
+discriminant-part ::=
+   unknown-discriminant-part | known-discriminant-part
+
+unknown-discriminant-part ::= '(' '<>' ')'
+
+known-discriminant-part ::=
+   '(' { discriminant-specification / ';' } ')'
+
+discriminant-specification ::=
+   defining-identifier-list ':' ( subtype-mark | access-definition )
+      [ ':=' default-expression ]
+
+access-definition ::= 'access' subtype-mark
+
+prefix ::= name
+
+qualified-expression ::=
+   subtype-mark '''' '(' expression-or-aggregate ')'
+
+aggregate ::= expression-or-aggregate
+
+discriminant-constraint ::=
+   '(' < discriminant-association / ',' > ')'
+
+discriminant-association ::=
+   [ < discriminant-selector-name / '|' > '=>' ] expression
+
+discriminant-selector-name ::= identifier
+
+operator ::= ('*' | '/' | 'mod' | 'rem') |
+             ('+' | '-') |
+             ('>' | '<' | '<=' | '>=' | '/=' | '=') |
+             (('and' [ 'then' ]) | ('or' [ 'else' ]) ) |
+             ('&')
+
+atomic-expression ::= object-reference | integer-constant | string-literal |
+                      float-constant | character-constant | 'null' |
+                      '(' expression-or-aggregate ')'
+
+expression-or-aggregate ::= 
+        [ object-reference-with ] < [selector ] expression / ',' >
+
+object-reference-with ::=
+	object-reference 'with'
+
+selector ::= < (selector-item [ '..' selector-item ]) | 'others' / '|' > '=>'
+
+selector-item ::= 
+	identifier | character-constant | integer-constant
+
+exception-handler ::=
+   < 'when' < qualified-reference / ',' > '=>' sequence-of-statements >
+
+pragma-spec ::=
+   'pragma' identifier [ '(' pragma-arg-list ')' ] ';'
+
+pragma-arg-list ::= < pragma-arg / ',' >
+
+pragma-arg ::= [ identifier '=>' ] expression
+
+attribute-definition-clause ::=
+	'for' local-name '''' attribute-designator 'use'
+		 ( expression | record-representation ) ';'
+
+local-name ::= identifier
+
+attribute-designator ::= identifier [ '(' static-expression ')' ] |
+			'access' | 'delta' | 'digits'
+
+record-representation ::= 
+   'record' [ mod-clause ]
+       { component-clause }
+   'end' 'record' ';'
+
+mod-clause ::= 'at' 'mod' static-expression ';'
+
+component-clause ::= 
+	component-local-name 'at' position 'range' first-bit '..' last-bit ';'
+
+component-local-name ::= name
+
+position ::= static-expression
+
+first-bit ::= static-simple-expression
+
+last-bit ::= static-simple-expression
+
+static-simple-expression ::= simple-expression
+
+type-header ::= 'type' type-name
+
+procedure-name ::= qualified-reference
+
+function-name ::= qualified-reference
+
+package-name ::= qualified-reference
+
+subprogram-name ::= qualified-reference
+
+external-unit-name ::= qualified-reference
+
+subtype-name ::= identifier
+
+type-name ::= qualified-reference
+
+block-name ::= qualified-reference
+
+defining-program-unit-name ::= program-unit-name
+
+program-unit-name ::= name
+
+generic-procedure-name ::= name
+generic-function-name  ::= name
+
+name ::= object-reference

@@ -1,0 +1,17 @@
+--  Test of record types and 'when' feature
+
+procedure Records is
+
+   type Point is
+      record
+         X, Y : Integer;
+      end record;
+
+   P : Point;
+   D : Integer;
+
+begin
+
+   D := P.X + P.Y;
+
+end Records;

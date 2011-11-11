@@ -1,0 +1,109 @@
+case-sensitive = false
+top-level ::= source-file
+
+line-comment = "--"
+right-margin = 78
+
+identifier          ::= regex "[A-Za-z_][A-Za-z0-9_]*"
+float-literal      ::= regex "[0-9]+\.[0-9]+([eE][0-9]+)?"
+integer-literal    ::= regex "[0-9]+"
+string-literal     ::= regex """([~""]*("""")*)*"""
+character-literal  ::= regex "'[.]?'"
+
+source-file ::= { context-clause } subprogram
+
+context-clause ::= 'with' qualified-identifier ';'
+
+subprogram ::= procedure | package-spec | package-body
+
+procedure ::= 'procedure' qualified-identifier 'is' block identifier ';'
+
+package-spec ::= 'package' qualified-identifier 'is'
+                    list-of-definitions
+                 'end' qualified-identifier ';'
+
+package-body ::= 'package' 'body' qualified-identifier 'is'
+	  	    list-of-declarations
+                 'end' qualified-identifier ';'
+
+list-of-definitions ::= { definition ';' }
+
+list-of-declarations ::= { declaration ';' }
+
+definition ::= variable-declaration | procedure-definition
+
+procedure-definition ::= 'procedure' identifier
+
+procedure-declaration ::= 'procedure' identifier 'is' block identifier
+
+block ::= list-of-declarations 'begin' sequence-of-statements 'end'
+
+list-of-declarations ::= { declaration ';' }
+
+declaration ::= variable-declaration | procedure-definition |
+                procedure-declaration
+
+variable-declaration ::= < identifier / ',' > ':' type
+
+type ::= named-type
+
+named-type ::= identifier
+
+sequence-of-statements ::= { [ label ] statement ';' }
+
+label ::= '<<' identifier '>>'
+
+statement ::= 	null-statement |
+                assignment-statement |
+	 	procedure-call |
+		if-statement |
+                until-statement |
+		goto-statement |
+
+null-statement ::= 'null'
+
+assignment-statement ::= identifier ':=' expression
+
+procedure-call ::= identifier [ actual-argument-list ]
+
+actual-argument-list ::= '(' < expression / ','> ')'
+
+if-statement ::= 'if' expression 'then' sequence-of-statements
+		 { 'elsif' expression 'then' sequence-of-statements }
+		 [ 'else' sequence-of-statements ]
+		 'end' 'if'
+
+until-statement ::= 'until' expression 'loop' sequence-of-statements
+                    'end' 'loop'
+
+goto-statement ::= 'goto' identifier
+
+expression ::= relation { logical-operator relation }
+
+relation ::= simple-expression [ relational-operator simple-expression ]
+
+simple-expression ::=
+   [ unary-adding-operator ] term { binary-adding-operator term }
+
+term ::= factor { multiplying-operator factor }
+
+factor ::= primary [ '**' primary ] | 'not' primary
+
+primary ::= integer-literal | float-literal | character-literal |
+            string-literal | object-reference | '(' expression ')' |
+            'input'
+
+object-reference ::= identifier
+
+logical-operator ::= 'and' | 'or' | 'xor'
+
+relational-operator ::= '=' | '/=' | '<' | '>' | '<=' | '>='
+
+unary-adding-operator ::= '+' | '-'
+
+binary-adding-operator ::= '+' | '-'
+
+multiplying-operator ::= '*' | '/' | 'mod'
+
+qualified-identifier ::= < identifier / '.' >
+

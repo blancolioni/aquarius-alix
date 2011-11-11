@@ -1,0 +1,29 @@
+with "gtkada";
+with "settings";
+with "aquarius_base";
+
+project Aquarius_UI is
+
+   for Object_Dir use "../obj";
+   for Exec_Dir use "../bin";
+   type Gtkada_Kind_Type is
+      ("static", "relocatable");
+   Library_Type : Gtkada_Kind_Type := external ("LIBRARY_TYPE");
+
+   case Library_Type is
+
+      when "static" =>
+         for Source_Dirs use ("../src/interface");
+
+      when "relocatable" =>
+         for Source_Dirs use ("../src/interface");
+   end case;
+
+   package Builder renames Settings.Builder;
+
+   package Compiler renames Settings.Compiler;
+
+   package Binder renames Settings.Binder;
+
+end Aquarius_UI;
+

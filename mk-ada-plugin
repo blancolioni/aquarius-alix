@@ -1,0 +1,3 @@
+#!/bin/sh
+(cd config/grammar/ada ; aquarius -f -i ada.plugin -o /dev/null)
+mv config/grammar/ada/generated* src/plugins/ada/generated

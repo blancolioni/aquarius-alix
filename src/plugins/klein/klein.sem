@@ -1,0 +1,113 @@
+; -*- scheme -*-
+
+(sem <source-file> 'before
+     (begin
+       (create-symbol-table current-tree)
+       (add-entry (get-symbol-table current-tree) 'integer 'type
+		  current-tree '(type integer))
+       (add-entry (get-symbol-table current-tree) 'float 'type
+		  current-tree (list 'type 'float))))
+
+(sem <program> 'before
+     (set-property current-tree 'enclosing-unit 
+		   (get-child-id-text current-tree)))
+     
+(sem <block> 'before
+     (begin
+       (create-symbol-table current-tree)
+       (tree-create-properties current-tree)
+       (set-property current-tree 'frame-offset 0)))
+
+(define (report-undefined-labels buffer entries)
+  (if (null? entries)
+      '()
+      (report-error buffer (get-property (car entries) 'defn)
+		    (string-append (symbol->string
+				    (table-entry-name (car entries)))
+				   ": undefined label"))))
+
+	 
+(sem <block> 'after
+     (let* ((incomplete-label (lambda (x) (and (eq? (table-entry-tag x) 'label)
+					       (has-property x 'incomplete))))
+	    (incomplete (table-search-match (get-symbol-table current-tree) 
+					    incomplete-label)))
+       (report-undefined-labels current-buffer incomplete)))
+
+(define (new-stack-variable current-buffer decl type index)
+  (new-unique-name current-buffer (get-name decl) 'variable decl
+		   (list 'stack-variable #t)
+		   (list 'type type)
+		   (list 'stack-index index)
+		   (list 'enclosing-unit (get-property decl 'enclosing-unit)))
+  )
+
+(sem <variable-declaration> 'after
+     (if (has-child current-tree 'type)
+	 (let*
+	     ((type (get-property (get-child current-tree 'type) 'type))
+	      (props (tree-get-properties current-tree)))
+	   (for-each-child 
+	    current-tree 'identifier
+	    (lambda (x)
+	      (let ((offset (get-property current-tree 'frame-offset)))
+		(new-stack-variable current-buffer x type offset)
+		(set-property current-tree 'frame-offset
+			      (+ offset 1))))))
+	 )
+     )
+
+(sem <type> 'after
+     (set-property current-tree 'type
+		   (get-property (get-first-child current-tree) 'type)))
+
+(sem <named-type> 'before
+     (let* ((name (get-name current-tree))
+	    (ent (table-get-with-tag (get-symbol-table current-tree)
+				     name 'type #T))
+	    (type (if (table-entry-found? ent)
+		      (get-property ent 'type)
+		      (begin
+			(semantic-error current-tree
+					(string-append "unknown type: "
+						       (symbol->string name)))
+			'integer))))
+       (set-property current-tree 'type type)))
+
+
+(sem <label> 'before
+     (let* ((label-tree (get-child current-tree 'identifier))
+	    (label-name (get-name label-tree))
+	    (label-table (get-symbol-table current-tree))
+	    (label-entry (table-get-with-tag label-table label-name
+					     'label #F)))
+       (if (table-entry-found? label-entry)
+	   (if (has-property label-entry 'incomplete)
+	       (remove-property label-entry 'incomplete)
+	       (report-error current-buffer label-tree "redefined label"))
+	   (add-entry label-table label-name 'label current-tree))))
+
+(sem <goto-statement> 'after
+     (let* ((label-name (get-name (get-child current-tree 'identifier)))
+	    (label-entry (table-get-with-tag (get-symbol-table current-tree)
+					     label-name 'label #F)))
+       (if (table-entry-found? label-entry)
+	   (set-property current-tree 'goto-target label-entry)
+	   (add-entry (get-symbol-table current-tree) label-name 'label
+		      current-tree (list 'incomplete #T)))))
+
+(define (check-identifier current-buffer tree)
+     (let* ((target (get-name tree))
+	    (target-entry (table-get-with-tag (get-symbol-table tree)
+					      target 'variable #T)))
+       (if (not (table-entry-found? target-entry))
+	   (report-error current-buffer tree
+			 (string-append "undefined variable: "
+					(symbol->string target))))))
+  
+
+(sem <assignment-statement> 'after
+     (check-identifier current-buffer (get-child current-tree 'identifier)))
+
+(sem <object-reference> 'after
+     (check-identifier current-buffer current-tree))

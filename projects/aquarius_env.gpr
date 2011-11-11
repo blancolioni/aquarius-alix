@@ -1,0 +1,21 @@
+limited with "aquarius_buffers.gpr";
+with "aquarius_lexers.gpr";
+with "aquarius_trees.gpr";
+with "aquarius_programs.gpr";
+with "settings";
+with "aquarius_base";
+
+project Aquarius_Env is
+
+   for Source_Dirs use ("../src/environment");
+   for Object_Dir use "../obj";
+   for Exec_Dir use "../bin";
+
+   package Builder renames Settings.Builder;
+
+   package Compiler renames Settings.Compiler;
+
+   package Binder renames Settings.Binder;
+
+end Aquarius_Env;
+

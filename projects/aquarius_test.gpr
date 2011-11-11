@@ -1,0 +1,65 @@
+project Aquarius is
+
+   for Source_Dirs use ("../src",
+                        "../src/ast",
+                        "../src/buffers",
+                        "../src/code",
+                        "../src/composition",
+                        "../src/debug",
+                        "../src/editor",
+                        "../src/entries",
+                        "../src/environment",
+                        "../src/errors",
+                        "../src/files",
+                        "../src/glade",
+                        "../src/grammar",
+                        "../src/interface",
+                        "../src/main",
+                        "../src/messages",
+                        "../src/plugins",
+                        "../src/plugins/ada",
+                        "../src/plugins/ada/generated",
+                        "../src/plugins/ebnf",
+                        "../src/plugins/haskell",
+                        "../src/plugins/klein",
+                        "../src/plugins/projects",
+                        "../src/programs",
+                        "../src/projects",
+                        "../src/syntax",
+                        "../src/tagatha",
+                        "../src/target",
+                        "../src/tokens",
+                        "../src/trees",
+                        "../src/types",
+                        "../src/values",
+                        "../src/watchers",
+                        "../config",
+                        "../../tagatha/src");
+
+   for Object_Dir use "../obj";
+   for Exec_Dir use "../bin";
+   for Main use ("aquarius-trees-properties.adb");
+
+   package Linker is
+      for Default_Switches ("ada") use ("-g", "-fprofile-generate");
+   end Linker;
+
+   package Binder is
+      for Default_Switches ("ada") use ("-E", "-r");
+   end Binder;
+
+   package Compiler is
+      for Default_Switches ("ada") use ("-gnatwae", "-gnatyydSuxAo", "-gnatVa", "-g", "-O2", "-gnato", "-fstack-check", "-gnata", "-gnat05");
+--      for Default_Switches ("ada") use ("-g", "-gnatwae",
+--                                        "-gnatVa", "-gnatyabcefhiklmnoprst",
+--                                         "-gnata", "-gnat05", "-gnato");
+   end Compiler;
+
+   package Builder is
+      for Default_Switches ("ada") use ("-j5", "-s", "-k", "-g",
+                           "-aI/usr/include/gtkada","-aO/usr/lib64/gtkada/relocatable","-largs","-L/usr/lib64/gtkada/relocatable","-lgtkada","-lgtk-x11-2.0","-lgdk-x11-2.0","-latk-1.0","-lgio-2.0","-lpangoft2-1.0","-lgdk_pixbuf-2.0","-lpangocairo-1.0","-lcairo","-lpango-1.0","-lfreetype","-lfontconfig","-lgobject-2.0","-lgmodule-2.0","-lglib-2.0");
+      for Global_Configuration_Pragmas use "restrictions.txt";
+   end Builder;
+
+end Aquarius;
+

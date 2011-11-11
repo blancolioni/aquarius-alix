@@ -1,0 +1,24 @@
+with "/usr/local/lib/gnat/gtkada.gpr";
+with "settings";
+
+project Aquarius_Emacs is
+
+   for Object_Dir use "../obj";
+   for Exec_Dir use "../bin";
+   for Main use ("aquarius-main.adb");
+
+   for Source_Dirs use ("../src", "../src/ast", "../src/buffers", "../src/code", "../src/composition", "../src/debug", "../src/editor", "../src/entries", "../src/environment", "../src/errors", "../src/files", "../src/glade",
+"../src/grammar", "../src/interface", "../src/main", "../src/messages", "../src/plugins", "../src/plugins/ada", "../src/plugins/ebnf", "../src/plugins/haskell", "../src/plugins/klein", "../src/plugins/projects", "../src/programs",
+"../src/projects", "../src/syntax", "../src/target", "../src/tokens", "../src/trees", "../src/types", "../src/values", "../src/watchers", "../src/plugins/ada/generated", "../../../tagatha/src", "../src/tagatha", "../src/bubbles",
+"../src/vm");
+
+   package Linker is
+      for Default_Switches ("ada") use ("-g", "-fprofile-generate", "-lX11");
+   end Linker;
+
+   package Binder renames Settings.Binder;
+   package Compiler renames Settings.Compiler;
+   package Builder renames Settings.Builder;
+
+end Aquarius_Emacs;
+

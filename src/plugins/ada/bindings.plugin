@@ -1,0 +1,36 @@
+plugin Ada_Plugin is
+
+   package Ch02 is
+      action Parser is
+         Numeric_Literal after;
+      end Parser;
+   end Ch02;
+
+   package Ch03 is
+      action Parser is
+         Subtype_Indication after Subtype_Mark;
+         Interface_Type_Definition after Interface;
+         Array_Type_Definition before;
+         Range_Type_Definition after;
+         Record_Type_Definition before;
+         Component_Definition after;
+      end Parser;
+   end Ch03;
+
+
+   package Ch03 is
+      action Parser is
+         Expression after => Sub_Expression_After;
+         Relation after   => Sub_Expression_After;
+         Simple_Expression after => Sub_Expression_After;
+         Term after              => Sub_Expression_After;
+         Factor after not;
+         Primary after;
+      end Parser;
+
+      package Gen is
+
+
+   end Ch03;
+
+end Ada_Plugin;

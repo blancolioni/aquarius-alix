@@ -1,0 +1,69 @@
+;  -*-scheme-*-
+(set-format 'sym-full-stop 'no-space 'space)
+(set-format 'attributes 'space 'new-line)
+(set-format 'sym-left-paren 'match-space 'no-space)
+(set-format 'sym-right-paren 'no-space 'match-space)
+(set-format 'where 'new-line 'space)
+(set-format 'else 'new-line 'new-line)
+(set-format 'end 'new-line 'space)
+(set-format 'check 'new-line 'space)
+; (set-format 'does 'new-line 'space)
+(set-format 'sym-comma 'no-space 'space)
+(set-format 'then 'space 'new-line)
+(set-format 'synonyms 'space 'new-line)
+(set-format '$ 'no-space 'no-space)
+
+(format-child <syntax> 'syntax 'new-line 'space)
+
+(format-child <verb-header> 'verb 'new-line 'space)
+(format-child <actor-header> 'actor 'new-line 'space)
+(format-child <object-header> 'object 'new-line 'space)
+(format-child <location-header> 'location 'new-line 'space)
+(format-child <event-header> 'event 'new-line 'space)
+
+(format-child <description> 'description 'new-line 'new-line)
+(indent-child <description> 'statements)
+
+(indent-child <attributes> 'attribute)
+(indent-child <syntax-item> 'where-class-restrictions)
+
+(format-syntax-tree <verb-header> (make-format 'space 'new-line))
+(format-syntax-tree <actor-header> (make-format 'space 'new-line))
+(format-syntax-tree <object-header> (make-format 'space 'new-line))
+(format-syntax-tree <location-header> (make-format 'space 'new-line))
+(format-syntax-tree <event-header> (make-format 'space 'new-line))
+
+(indent-child <verb> 'verb-body)
+(indent-child <actor> 'actor-body)
+(indent-child <object> 'object-body)
+(indent-child <location> 'location-body)
+(indent-child <event> 'statements)
+
+;(indent-child <check> 'else-statements)
+(indent-child <does> 'statements)
+(indent-child <synonyms> 'synonym)
+(format-syntax-tree <synonym> (make-format 'space 'new-line))
+
+(format-child <syntax> 'syntax 'space 'new-line)
+(indent-child <syntax> 'syntax-item)
+(format-syntax-tree <syntax-item> (make-format 'space 'new-line))
+
+(format-child <start> 'start 'new-line 'space)
+(format-child <start> 'sym-full-stop 'no-space 'new-line)
+(indent-child <start> 'statements)
+
+(format-syntax-tree <object-body-part> (make-format 'space 'new-line))
+
+(indent-tree (syntax-find-child-n <if-statement> 'statements 1))
+(indent-tree (syntax-find-child-n <if-statement> 'statements 2))
+(indent-tree (syntax-find-child-n <if-statement> 'statements 3))
+(format-child <if-statement> 'sym-full-stop 'no-space 'new-line)
+(format-child <if-statement> 'if 'new-line 'space)
+(set-format 'say 'soft-new-line 'space)
+
+; (format-child <output-statement> 'string 'new-line 'new-line)
+(format-syntax-tree <statement> (make-format 'space 'new-line))
+
+;(indent-child <checks> 'statements)
+
+(indent-tree <statements>)

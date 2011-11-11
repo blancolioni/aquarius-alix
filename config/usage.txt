@@ -1,0 +1,22 @@
+Usage: aquarius [options] [files ...]
+
+Options:
+  -v, --version:     Show version information and quit.
+  -?, --help:        Show this help information.
+
+  -a name, --action=name:      Run action 'name' on input file
+  -d classes, --debug=classes: Enable debug output (see below)
+  -f, --filter:                Run as a filter (read standard input, write
+                               to standard output)
+  -g name, --grammar=name:     Use grammar 'name' to process input
+  -i path, --input=path:       Read file from path
+  -P prj, --project=prj        Load project from file prj
+  -o path, --output=path:      Write rendered file to path
+  -r name, --render=name:      Use renderer 'name' to format output
+  -s name, --style=name:       Apply style 'name' to output
+  -t arch, --target=arch:      Use arch as the target (default is found by
+                               running the command 'arch')
+Grammars: Ada, Gnat project, EBNF, aquarius-config, Klein, Plugin, Script
+Renderers: Text, Latex, HTML
+Styles: default
+Targets: 6510 pdp11

@@ -1,0 +1,44 @@
+top-level ::= source-file
+
+line-comment := "--"
+
+identifier       ::= regex "[A-Za-z_][A-Za-z0-9_\-]*"
+string-literal   ::= regex """([~""]*("""")*)*"""
+terminal-literal ::= regex "'[A-Za-z_\-]'"
+integer-literal  ::= regex "[0-9]+"
+
+source-file ::= { definition }
+
+definition ::= value-definition | rule-definition
+
+value-definition ::= identifier '=' expression
+
+expression ::= string-literal | integer-literal
+
+rule-definition ::= identifier '::=' -> definition-body
+
+definition-body ::= regex-body | syntax-body
+
+regex-body ::= 'regex' string-literal
+
+syntax-body ::= { rule }
+
+rule ::= repeat-optional-rule
+       | repeat-required-rule
+       | choice-rule
+       | sequence-rule
+       | optional-rule
+
+repeat-optional-rule ::= '{' repeater '}'
+
+repeat-required-rule ::= '<' repeater '>'
+
+repeater ::= rule [ '/' terminal ]
+
+choice-rule ::= < rule / '|' >
+
+sequence-rule ::= < terminal >
+
+optional-rule ::= '[' rule ']'
+
+terminal ::= identifier | terminal-literal

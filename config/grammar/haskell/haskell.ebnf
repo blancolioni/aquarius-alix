@@ -1,0 +1,31 @@
+top_level ::= module
+case_sensitive = true
+
+varid     ::= standard haskell_varid
+conid     ::= standard haskell_conid
+varsym    ::= standard haskell_varsym
+consym    ::= standard haskell_consym
+
+character_literal  ::= standard ada_character_literal
+string_literal     ::= standard ada_string_literal
+
+delimiter          ::= delimiters "()[]{};"
+comment            ::= standard ada_comment
+
+module ::= 'module' conid 'where' top_decls
+
+top_decls ::= { top_decl }
+
+top_decl ::= class_decl | type_signature | value_decl
+
+class_decl ::= 'class' condid varid 'where' decls
+
+decls ::= '{' { decl / ';' } '}'
+
+decl ::= type_signature | value_decl
+
+type_signature ::= { var / ',' } '::' type_expr
+
+var ::= varid | '(' varsym ')'
+
+value_decl

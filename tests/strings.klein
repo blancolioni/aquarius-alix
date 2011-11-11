@@ -1,0 +1,7 @@
+--  string parsing test
+procedure Strings is
+   S : String;
+begin
+   S := "hi there!";
+end Strings;
+

@@ -1,0 +1,24 @@
+with "aquarius_errors.gpr";
+with "tagatha.gpr";
+with "aquarius_syntax.gpr";
+with "settings";
+with "aquarius_base";
+with "aquarius_debug";
+with "aquarius_composition";
+with "aquarius_ast";
+with "aquarius_trees";
+
+project Aquarius_Programs is
+
+   for Object_Dir use "../obj";
+   for Exec_Dir use "../bin";
+
+   package Builder renames Settings.Builder;
+
+   package Compiler renames Settings.Compiler;
+
+   package Binder renames Settings.Binder;
+   for Source_Dirs use ("../src/grammar", "../src/programs");
+
+end Aquarius_Programs;
+

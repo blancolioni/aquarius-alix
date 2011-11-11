@@ -1,0 +1,217 @@
+database Harriet.Db is
+
+table Clock is
+   Day     : Natural;
+end Clock;
+
+table Terrain is
+   unique key Name : String (32);
+   Movement_Cost : Float;
+   Attrition     : Integer;
+   Supply_Limit  : Integer;
+   Defence       : Integer;
+   Is_Water      : Boolean;
+   Red           : Integer;
+   Green         : Integer;
+   Blue          : Integer;
+end Terrain;
+
+table Terrain_Index is
+   unique key Index : Natural;
+   Terrain;
+end Terrain_Index;
+
+table Owner;
+
+table Owned is
+   unique key Owner;
+end Owned;
+
+table Owned_Template;
+
+table Employer;
+
+table Employee;
+
+table Commodity_Group is
+   unique key Name : String (32);
+end Commodity_Group;
+
+table Commodity is
+   unique key Name : String (32);
+   key Commodity_Group;
+   Cost    : Float;
+end Commodity;
+
+table Container;
+
+table Stock is
+  key Container;
+  Commodity;
+  Quantity : Float;
+  compound unique key Container_Commodity is Container, Commodity;
+end Stock;
+
+table Consumer is
+end Consumer;
+
+table Agent is
+   Cash : Float;
+end Agent;
+
+table Needs_Group is
+   unique key Name : String (32);
+end Needs_Group;
+
+table Consumer_Needs is
+   key Consumer;
+   Needs_Group;
+   key Commodity;
+   Quantity : Float;
+   compound key Consumer_And_Needs is Consumer, Needs_Group;
+end Consumer_Needs;
+
+table Pop_Group : Consumer is
+   unique key Name : String (32);
+   Sprite           : Natural;
+   Strata           : (Poor, Middle, Rich);
+end Pop_Group;
+
+type Production_Stage is (Input, Throughput, Output);
+
+table Owner_Template is
+   Owned_Template;
+   Pop_Group;
+   Production_Stage;
+   Multiplier        : Float;
+   compound unique key Owner_Template_Group is Owned_Template, Pop_Group;
+end Owner_Template;
+
+table Employer_Template;
+
+table Employee_Template is
+   Employer_Template;
+   Pop_Group;
+   Production_Stage;
+   Multiplier        : Float;
+   compound key Employer_Template_Group is Employer_Template, Pop_Group;
+end Employee_Template;
+
+table Production : Consumer, Employer_Template, Owned_Template is
+   unique key Name : String (32);
+   key Output_Goods : Commodity;
+   Output_Quantity  : Float;
+end Production;
+
+table Culture_Group is
+   unique key Name : String (32);
+end Culture_Group;
+
+table Culture is
+   unique key Name : String (32);
+   key Culture_Group;
+end Culture;
+
+table Religion_Group is
+   unique key Name : string (32);
+end Religion_Group;
+
+table Religion is
+   unique key Name : string (32);
+   Religion_Group;
+end Religion;
+
+type Name_Type is (First_Name, Last_Name);
+
+table Culture_Name is
+   unique key Name : string (32);
+   Name_Type;
+   key Culture;
+   compound key Name_Of_Culture is Culture, Name_Type;
+end Culture_Name;
+
+table Map_Province is
+   unique key Name  : String (32);
+   unique key Index : Natural;
+   Red      : Natural;
+   Green    : Natural;
+   Blue     : Natural;
+   compound unique key Colour is Red, Green, Blue;
+end Map_Province;
+
+table Country : Agent is
+   unique key Name     : String (32);
+   unique key Tag      : String (3);
+   key Capital         : Natural := 0;
+   key Primary_Culture : Culture;
+   key Religion;
+   Red      : Natural;
+   Green    : Natural;
+   Blue     : Natural;
+   compound unique key Colour is Red, Green, Blue;
+end Country;
+
+table Region;
+
+table Province is
+   unique key Name   : String (32);
+   unique key Index  : Natural;
+   key Owner         : Country;
+   key Controller    : Country;
+   key Trade_Goods   : Commodity;
+   Key Region;
+   Life_Rating       : Natural;
+end Province;
+
+table Regional_Capital is
+   unique key Province;
+   unique key Region;
+   key Capital   : Province;
+end Regional_Capital;
+
+table Core is
+   key Country;
+   key Province;
+end Core;
+
+table Population : Agent, Consumer, Employee, Container is
+   key Province;
+   key Pop_Group;
+   key Culture;
+   key Religion;
+   Size    : Natural;
+end Population;
+
+table Producer : Agent, Consumer, Employer, Container is
+   key Province;
+   key Production;
+end Producer;
+
+table Market : Container is
+   unique key Province;
+end Market;
+
+table Price is
+   key Market;
+   key Commodity;
+   Price : Float;
+   compound unique key Market_And_Commodity is Market, Commodity;
+end Price;
+
+table Demand is
+   key Market;
+   key Commodity;
+   key Needs_Group;
+   Demand   : Float;
+   compound key Market_Demand is Market, Commodity;
+   compound unique key Market_Demand_By_Need is Market, Commodity, Needs_Group;
+end Demand;
+
+table Supply is
+   key Market;
+   key Commodity;
+   Supply   : Float;
+   compound key Market_Supply is Market, Commodity;
+end Supply;
+
+end Harriet.Db;

@@ -1,0 +1,21 @@
+---------
+-- Gcd --
+---------
+
+procedure Gcd is
+
+  A, B : Integer;
+  T : Integer;
+
+begin
+
+  A := 34;
+  B := 12;
+
+  until B = 0 loop
+    T := B;
+    B := A mod B;
+    A := T;
+  end loop;
+end Gcd;
+

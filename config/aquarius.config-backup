@@ -1,0 +1,102 @@
+file_extensions
+{
+   ada = ada;
+   ads = ada;
+   adb = ada;
+   ebnf = ebnf;
+   kls = klein;
+   klb = klein;
+}
+
+styles
+{
+  default
+  {
+    keyword
+    {
+      foreground = purple;
+    }
+    comment
+    {
+      foreground = firebrick;
+    }
+    string
+    {
+      foreground = rosybrown;
+    }
+    function_name
+    {
+      foreground = blue1;
+    }
+    variable_name
+    {
+      foreground = darkgoldenrod;
+    }
+    type_name
+    {
+      foreground = forestgreen;
+    }
+    warning
+    {
+      underline = true;
+    }
+    error
+    {
+      foreground = red;
+    }
+  }
+}
+
+colours
+{
+  black
+  {
+    r = 0;
+    g = 0;
+    b = 0;
+  }
+  black
+  {
+    r = 255;
+    g = 255;
+    b = 255;
+  }
+  firebrick
+  {
+    r = 178;
+    g = 34;
+    b = 34;
+  }
+  purple
+  {
+    r = 160;
+    g = 32;
+    b = 240;
+  }
+  rosybrown
+  {
+    r = 188;
+    g = 143;
+    b = 143;
+  }
+  blue1
+  {
+    r = 0;
+    g = 0;
+    b = 255;
+  }
+  darkgoldenrod
+  {
+    r = 184;
+    g = 134;
+    b = 11;
+  }
+  forestgreen
+  {
+    r = 34;
+    g = 139;
+    b = 34;
+  }
+
+}
+

@@ -1,0 +1,48 @@
+1. Bad location for new lines chosen.
+
+Example:
+
+   type Root_Agent_Type is abstract
+     new Grendel.Objects.
+         Root_Named_Object and Grendel.
+                               Stock.
+                               Stocker_Interface and Grendel.Markets.Client_Interface with private;
+
+Aquarius should not insert new lines unless there can be a space at that position.
+
+2. Linked formatting.
+
+Example:
+
+   function Last_Income
+     (Agent : Root_Agent_Type) return Money.Money_Type;
+
+If there's a new line inserted after Last_Income, there should also be
+one before the return keyword.
+
+I do not have a generic rule for this.
+
+3. Lining up symbols
+
+Example:
+
+   procedure Set_Need (Agent : in out Root_Agent_Type;
+                       Item : in Grendel.Commodities.Commodity_Type;
+                       Level : in Need_Level;
+                       Quantity : in Quantities.Quantity);
+
+The colons should be aligned vertically.
+
+We can say that matching subtrees in a repeater should be aligned,
+leading to this result:
+
+   procedure Set_Need (Agent    : in out Root_Agent_Type;
+                       Item     : in Grendel.Commodities.Commodity_Type;
+                       Level    : in Need_Level;
+                       Quantity : in Quantities.Quantity);
+
+Align token if:
+  - token is a terminal
+  - token is not at the end of the line
+  - token is a direct child of the repeater
+

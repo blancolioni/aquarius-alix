@@ -1,0 +1,18 @@
+case-sensitive = false
+top-level ::= config_list
+
+identifier ::= regex "[A-Za-z_][A-Za-z0-9_]*"
+integer    ::= regex "[0-9]+"
+string     ::= regex """([~""]*("""")*)*"""
+
+config_list = { config_item }
+
+config_item = identifier (nested_item | value_item)
+
+nested_item = '{' config_list '}'
+
+value_item = '=' value ';'
+
+value = identifier | integer | string
+
+

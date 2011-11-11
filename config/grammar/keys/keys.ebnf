@@ -1,0 +1,21 @@
+top_level ::= key_binding_list
+
+identifier ::= standard ada_identifier
+integer    ::= standard ada_numeric_literal
+string     ::= standard ada_string_literal
+character  ::= standard ada_character_literal
+delimiter  ::= delimiters "[]-:;"
+
+key_binding_list ::= { key_binding ';' }
+
+key_binding ::= key_sequence ':' binding
+
+key_sequence ::= < key >
+
+key ::= character
+      | 'c' '-' key
+      | 'm' '-' key
+      | 'cm' '-' key
+      | '[' identifier ']'
+
+binding ::= identifier { identifier }

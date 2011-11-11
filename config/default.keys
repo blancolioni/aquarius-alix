@@ -1,0 +1,9 @@
+[tab]: Move_By_Terminal foreward;
+[left_tab] : Move_By_Terminal backward;
+[up]: Move_Up;
+[down]: Move_Down;
+[left]: Move_Left;
+[right]: Move_Right;
+C-[right]: Move_By_Terminal foreward;
+C-[left]: Move_By_Terminal backward;
+

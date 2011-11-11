@@ -1,0 +1,147 @@
+top_level ::= program_unit
+case_sensitive = false
+
+identifier         ::= standard ada_identifier
+numeric_literal    ::= standard ada_numeric_literal
+character_literal  ::= standard ada_character_literal
+string_literal     ::= standard ada_string_literal
+delimiter          ::= delimiters "&()+,;|"
+symbol             ::= standard ada_symbol
+comment            ::= standard ada_comment
+
+program_unit ::= { context_clause } subprogram ';'
+
+context_clause ::= 'with' package_reference ';'
+                 | 'use' package_reference ';'
+
+package_reference ::= < identifier / '.' >
+
+subprogram ::= procedure_declaration
+             | package_spec when spec
+             | package_body when body
+
+package_spec ::= 'package' defining_package_name : function_name 'is'
+                    list_of_definitions
+                 'end' matching_end_identifier : function_name
+
+package_body ::= 'package' 'body' defining_package_name : function_name 'is'
+	  	    list_of_declarations
+                 'end' matching_end_identifier : function_name
+
+defining_package_name ::= identifier
+
+list_of_definitions ::= { definition ';' }
+
+list_of_declarations ::= { declaration ';' }
+
+definition ::= variable_declaration | type_declaration | procedure_definition
+
+procedure_definition ::= 'procedure' identifier : function_name
+                                [ formal_argument_list ]
+
+formal_argument_list ::= '(' < formal_argument / ';' > ')'
+
+formal_argument ::= defining_identifier_list ':' named_type
+
+procedure_declaration ::= procedure_definition [ 'is'
+                                block
+                          'end' matching_end_identifier : function_name ]
+
+block ::= list_of_declarations 'begin' sequence_of_statements
+
+declaration ::= variable_declaration
+              | procedure_declaration
+              | type_declaration
+
+variable_declaration ::= defining_identifier_list ':' named_type
+
+defining_identifier_list ::= < identifier : variable_name / ',' >
+
+type_declaration ::= 'type' identifier : type_name 'is' type_definition
+
+type_definition ::= named_type
+                  | access_type
+                  | record_type
+
+named_type ::= qualified_identifier : type_name
+
+access_type ::= 'access' named_type
+
+record_type ::= 'record' record_component_list 'end' 'record'
+              | 'null' 'record'
+
+record_component_list ::= < component_definition ';' >
+
+component_definition ::= defining_identifier_list ':' named_type
+
+sequence_of_statements ::= { [ label ] statement ';' }
+
+label ::= '<<' identifier '>>'
+
+statement ::= null_statement
+            | object_statement
+	    | if_statement
+            | until_statement
+	    | goto_statement
+
+null_statement ::= 'null'
+
+object_statement ::= name [ ':=' expression ]
+
+name ::= direct_name { name_qualifier }
+
+direct_name ::= identifier
+
+name_qualifier ::= component_name        when record
+                 | expanded_name         when package
+                 | actual_argument_list  when procedure
+
+component_name       ::= '.' ('all' when access | identifier)
+expanded_name        ::= '.' (identifier | operator_name)
+actual_argument_list ::= '(' < expression / ','> ')'
+
+operator_name ::= string_literal
+
+if_statement ::= 'if' expression 'then' sequence_of_statements
+		 { 'elsif' expression 'then' sequence_of_statements }
+		 [ 'else' sequence_of_statements ]
+		 'end' 'if'
+
+until_statement ::= 'until' expression 'loop' sequence_of_statements
+                    'end' 'loop'
+
+goto_statement ::= 'goto' identifier
+
+expression ::= relation [ boolean_operator relation ]
+
+boolean_operator ::= 'and' [ 'then' ]
+                   | 'or' ['else']
+                   | 'xor'
+
+relation ::=
+     simple_expression [relational_operator simple_expression]
+
+relational_operator ::= '=' | '/=' | '<' | '<=' | '>' | '>='
+
+simple_expression ::= [unary_adding_operator] term {binary_adding_operator term}
+
+unary_adding_operator ::= '-' | '+'
+
+binary_adding_operator ::= '+' | '-' | '&'
+
+term ::= factor {multiplying_operator factor}
+
+multiplying_operator ::= '*' | '/' | 'mod' | 'rem'
+
+factor ::= primary ['**' primary] | 'abs' primary | 'not' primary
+
+primary ::= numeric_literal
+          | character_literal
+          | string_literal : string
+          | name
+          | '(' expression ')'
+
+
+qualified_identifier ::= < identifier / '.' >
+
+matching_end_identifier ::= < identifier / '.' >

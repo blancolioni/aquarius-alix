@@ -1,0 +1,55 @@
+top_level ::= database_declaration
+case_sensitive = false
+
+identifier ::= standard ada_identifier
+integer    ::= standard ada_numeric_literal
+string     ::= standard ada_string_literal
+delimiter  ::= delimiters "();,"
+comment    ::= standard ada_comment
+symbol     ::= standard ada_symbol
+
+format list_of_declarations indented_child
+format list_of_fields indented_child
+
+format ';' no_space_before no_space_after new_line_after
+format '.' no_space_before no_space_after
+format ',' no_space_before space_after
+format '(' space_before no_space_after
+format ')' no_space_before space_after
+
+database_declaration ::=
+    'database' name 'is'
+        list_of_declarations
+    'end' [ 'database' ] name ';'
+
+list_of_declarations ::= { declaration ';' }
+
+declaration ::= table_declaration
+              | type_declaration
+
+table_declaration ::= 'table' identifier [ ':' < identifier / ',' >  ]
+                         [ 'is' list_of_fields 'end' [ 'table' ] identifier ]
+
+list_of_fields ::= { field ';' }
+
+field ::= data_field
+        | compound_key_field
+
+data_field ::= [ ['unique'] 'key' ] identifier [ ':' type ] [ ':=' static_expression ]
+
+static_expression ::= integer | string
+
+compound_key_field ::= 'compound' ['unique'] 'key' identifier 'is' < identifier / ',' >
+
+type ::= named_type
+       | enumeration_type
+
+named_type ::= identifier [ constraint ]
+
+constraint ::= '(' integer ')'
+
+enumeration_type ::= '(' < identifier / ',' > ')'
+
+type_declaration ::= 'type' identifier 'is' type
+
+name ::= < identifier / '.' >

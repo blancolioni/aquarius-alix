@@ -1,0 +1,19 @@
+project Settings is
+
+   for Languages use ("Ada");
+   for Source_Files use ();
+
+   package Builder is
+      for Default_Switches ("ada") use ("-s", "-k", "-g", "-C", "-j5", "-p");
+   end Builder;
+
+   package Compiler is
+      for Default_Switches ("ada") use ("-gnatVa", "-gnatwec.cf.h.ijklmp.pr.r.stu.u.x", "-g", "-gnat05", "-gnato", "-fstack-check", "-gnata", "-gnatyaAbBcefhiklnOprsStux");
+   end Compiler;
+
+   package Binder is
+      for Default_Switches ("ada") use ("-g", "-r");
+   end Binder;
+
+end Settings;
+
