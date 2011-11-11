@@ -11,7 +11,7 @@ begin
    --  In this case, the start node is the X in X'Range,
    --  and the stop node is := in the assignment statement.
    --  The parse action execution assumes that the stop node
-   --  by going right and up.
+   --  can be found by going right and up.
    if Index in X'Range then
       Index := Index + 1;
    end if;
