@@ -1,0 +1,107 @@
+; -*- scheme -*-
+
+(define (line-of-dashes length)
+  (define (lod length) (if (= length 0) '() (cons #\- (lod (- length 1)))))
+  (list->string (lod length)))
+
+(define (copy-terminal from to name index)
+  (set-symbol (get-child-n to name index)
+	      (get-symbol (get-child-n from name index))))
+
+(define null-statement
+  (create-filled-tree <statement>
+		      (list (create-filled-tree <null-statement> '()))))
+
+(define (sequence-of-statements seq)
+  (create-filled-tree <sequence-of-statements>
+		      (list (list (list '() seq)))))
+
+(define empty-block
+ (create-filled-tree <block>
+		     (list (create-filled-tree <list-of-declarations> '())
+			   (sequence-of-statements null-statement))))
+
+(define (copy-definitions from)
+  (define (cd from-list)
+    (if (null? from-list) '()
+	(let* ((tail (cd (cdr from-list)))
+	       (car-from (car from-list))
+	       (head (cond ((terminal? car-from) '())
+			   ((has-child car-from 'subprogram-declaration)
+			    (copy-tree car-from ada-grammar 'generate-body))
+			   (#t '())))
+	       )
+	  (if (eq? head '()) tail (cons head tail)))))
+  (define (proc-less proc1 proc2)
+    (define (get-proc-name proc)
+      (get-subprogram-name
+       (get-child proc 'subprogram-declaration)))
+    (string<? (get-proc-name proc1) (get-proc-name proc2)))
+  
+  (create-tree-from-symbols ada-grammar <list-of-declarations>
+			    (let* ((body (cd (get-sub-trees from)))
+				   (sorted-body (stable-sort body proc-less)))
+			      sorted-body)))
+
+
+(default-rule 'generate-body
+  (copy-tree current-tree current-grammar 'generate-body))
+
+(define (create-package-body name decl-list)
+  (create-tree-from-symbols ada-grammar <package-body>
+			    (list 'body name 'is 'skip-line
+				  decl-list
+				  'end name)))
+
+(rule 'generate-body <package-spec>
+      (let* 
+	  ((spec-decl (get-child current-tree 'package-spec-declaration))
+	   (decl-list (get-child spec-decl 'list-of-declarations))
+	   (decls (copy-definitions decl-list))
+	   (name (get-child current-tree 'package-name))
+	   )
+	(create-package-body name decls))
+      )
+
+(rule 'generate-body <procedure-specification>
+      (create-tree-from-symbols
+       ada-grammar <procedure-declaration>
+       (let* ((name (get-tree-name (get-child current-tree 'procedure-name)))
+	      (name-len (string-length name)))
+	 (list (new-line-comment current-grammar 
+				 (line-of-dashes (+ 6 name-len)))
+	       (new-line-comment current-grammar
+				 (string-append "-- "
+						name
+						" --"))
+	       (new-line-comment current-grammar
+				 (line-of-dashes (+ 6 name-len)))
+	       'skip-line
+	       current-tree
+	       'is 'begin 'null ";" 'end name))))
+
+(rule 'generate-body <function-specification>
+      (create-tree-from-symbols
+       ada-grammar <function-declaration>
+       (let* ((name (get-tree-name (get-child current-tree 'function-name)))
+	      (name-len (string-length name)))
+	 (list (new-line-comment current-grammar 
+				 (line-of-dashes (+ 6 name-len)))
+	       (new-line-comment current-grammar
+				 (string-append "-- "
+						name
+						" --"))
+	       (new-line-comment current-grammar
+				 (line-of-dashes (+ 6 name-len)))
+	       'skip-line
+	       current-tree
+	       'is 'begin 'null ";" 'end name))))
+
+(define (get-tree-name tree)
+  (cond ((empty-program-tree? tree) "")
+	((terminal? tree) (symbol->string (get-name tree)))
+	(#t (string-append (get-tree-name (get-first-child tree))
+			   (get-tree-name (get-right-sibling tree))))))
+
+(define (get-subprogram-name tree)
+  (get-tree-name (program-tree-dfs tree 'qualified-reference)))

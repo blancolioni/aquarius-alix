@@ -1,0 +1,43 @@
+1. Multiple private withs
+
+This works:
+  private with P;
+  package Test is ...
+
+This doesn't:
+  private with P;
+  private with Q;
+  package Test is ...
+
+The problem is that the private keyword is ambiguous, since it can
+also be part of a private package declaration:
+
+  private with P;
+  private package Test is ..
+
+A single private with works because of some extra special ambiguity
+processing.
+
+2. Loop variables not declared
+
+Using a loop variable in the body of the loop generates an error:
+
+   for I in 1 .. 10 loop
+      Ada.Text_IO.Put_Line (Integer'Image (I));
+   end loop;
+
+generates
+
+   "I" is undefined
+
+3. Error when package has no body, even if it doesn't need one.
+
+For example, the following package spec:
+
+   package P is
+   end P;
+
+does not need a body; indeed the language definition forbids one.
+Aquarius doesn't know about this, so it complains about the missing
+body.
+

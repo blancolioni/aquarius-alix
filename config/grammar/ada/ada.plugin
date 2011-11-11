@@ -1,0 +1,152 @@
+project Ada_Plugin is
+
+  parser : parse;
+  generator : code;
+
+  package Names parser is
+    Defining_Qualified_Reference after;
+    Qualified_Reference after Identifier;
+    Defining_Qualified_Reference before;
+    Object_Reference before;
+    Object_Reference after;
+    Direct_Name after;
+    Expanded_Name after;
+    Attribute_Reference after;
+    Actual_Argument_List after;
+  end Names;
+
+  package Names.Gen generator is
+    Direct_Name after;
+    Object_Reference after;
+  end Names.Gen;
+
+  package Ch02 parser is
+    Numeric_Literal after;
+  end Ch02;
+
+  package Ch03 parser is
+    Access_Type_Definition after Subtype_Mark
+      as Access_Type_After_Subtype_Mark;
+    Array_Type_Definition before;
+    Component_Definition after;
+    Derived_Type_Definition after Qualified_Reference
+      as Derived_Type_After_Qualified_Reference;
+    Enumerated_Type_Definition after Enumerated_Literal;
+    Enumerated_Type_Definition before;
+    Modular_Type_Definition before;
+    Modular_Type_Definition after Static_Expression;
+    Interface_Type_Definition after Interface
+       as Interface_Type_After_Interface;
+    Private_Type_Definition before;
+    Range_Type_Definition after;
+    Record_Type_Definition before;
+    Record_Type_Definition before Component_Definition
+                    as Record_Type_Definition_Before_Component;
+    Function_Type_Definition before as Subprogram_Type_Definition_Before;
+    Procedure_Type_Definition before as Subprogram_Type_Definition_Before;
+    Subtype_Declaration after;
+    Subtype_Indication after Subtype_Mark;
+    Subtype_Mark after;
+    Type_Declaration after;
+    Type_Declaration before;
+    Type_Definition after;
+    Type_Header after;
+    Type_Indication after;
+    Variable_Declaration after;
+
+    Record_Component_List before Variant_Record_Element
+         as Transfer_Type;
+    Variant_Record_Element before Variant_Case
+         as Transfer_Type;
+    Variant_Case before Record_Component_List
+         as Transfer_Type;
+
+    Type_Declaration before Type_Definition as Transfer_Entry;
+
+    Block before;
+    List_Of_Declarations after;
+
+  end Ch03;
+
+  package Ch04 parser is
+    Relation after as Sub_Expression_After;
+    Simple_Expression after as Sub_Expression_After;
+    Term after as Sub_Expression_After;
+    Factor after as Sub_Expression_After;
+    Factor after Not;
+    Primary after;
+    Boolean_Operator after as Binary_Operator_After;
+    Relational_Operator after as Binary_Operator_After;
+    Binary_Adding_Operator after as Binary_Operator_After;
+    Multiplying_Operator after as Binary_Operator_After;
+    Exponentation_Operator after as Binary_Operator_After;
+    Unary_Adding_Operator after as Unary_Operator_After;
+    Unary_Primary_Operator after as Unary_Operator_After;
+    Expression after;
+
+  end Ch04;
+
+  package Ch04.Gen generator is
+    Expression after as Sub_Expression_After;
+    Primary after Numeric_Literal;
+    Primary after Object_Reference;
+    Relation after as Sub_Expression_After;
+    Simple_Expression after as Sub_Expression_After;
+    Term after as Sub_Expression_After;
+    Factor after as Sub_Expression_After;
+    Exponentation_Operator after as Operator_After;
+    Multiplying_Operator after as Operator_After;
+    Binary_Adding_Operator after as Operator_After;
+    Relational_Operator after as Operator_After;
+    Boolean_Operator after as Operator_After;
+  end Ch04.Gen;
+
+  package Ch05 parser is
+    Procedure_Call before Object_Reference;
+    Assignment_Statement before Expression
+      as Assignment_Before_Expression;
+    Assignment_Statement after as Assignment_After;
+    While_Statement_Header before Expression as Boolean_Expression_Before;
+  end Ch05;
+
+  package Ch05.Gen generator is
+    Assignment_Statement after as Assignment_After;
+    While_Statement_Header after Expression as Transfer_Tagatha_Fragment;
+    While_Statement_Header after;
+    Loop_Statement before;
+    Loop_Statement after;
+    Statement after;
+  end Ch05.Gen;
+
+  package Ch06 parser is
+    Procedure_Specification before;
+    Function_Specification before;
+    Procedure_Specification after Defining_Program_Unit_Name
+      as Procedure_Spec_After_Defining_Name;
+    Function_Specification after Defining_Program_Unit_Name
+      as Procedure_Spec_After_Defining_Name;
+    Function_Specification before Formal_Argument_Spec
+      as Spec_Before_Arguments;
+    Procedure_Specification before Formal_Argument_Spec
+      as Spec_Before_Arguments;
+    Formal_Argument_Spec before Formal_Argument
+      as Spec_Before_Arguments;
+    Formal_Argument after;
+    Function_Specification after Type_Indication;
+  end Ch06;
+
+  package Ch07 parser is
+    Package_Spec after Defining_Package_Name;
+  end Ch07;
+
+  package Ch10 parser is
+    Compilation_Unit before;
+    With_Clause after;
+  end Ch10;
+
+  package Ch10.Gen generator is
+    Compilation_Unit before;
+    Compilation_Unit after;
+  end Ch10.Gen;
+
+end Ada_Plugin;

@@ -1,0 +1,26 @@
+function New_Package (Name : String) return Program is
+   with Name        => "New Package",
+        Menu_Path   => "Ada",
+        Description => "Create a new package",
+        Enabled     => True
+begin
+   return Top $ package <Name> is end <Name>;
+end New_Package;
+
+procedure Generate_Body (Item : Compilation_Unit)
+   with Name         => "Generate Body",
+        Menu_Path    => "Ada",
+        Description  => "Generate a body stub for the current package"
+        Enabled      => Item -> Package_Declaration -> Package_Spec ->
+                        Package_Spec_Declaration
+is
+begin
+   Decls := Item --> List_Of_Declarations -> { declaration };
+   Subprs := Decls / Subprogram_Declaration;
+   Subprs.Sort (--> Defining_Program_Unit_Name or String_Literal);
+   Sub_Bodies := new List_Of_Declarations (Subprs.Map (To_Subprogram_Body));
+   Generated := New_Package_Body (Item --> Defining_Package_name,
+                                  Sub_Bodies);
+   Generated.Show_Buffer;
+
+end Generate_Body;

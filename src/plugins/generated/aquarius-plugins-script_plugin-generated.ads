@@ -1,0 +1,6 @@
+with Aquarius.Plugins.Script_Plugin;
+with Aquarius.Grammars;
+package Aquarius.Plugins.Script_Plugin.Generated is
+   procedure Bind_Actions (Plugin : in out Script_Plugin_Type;
+                           Grammar : in Grammars.Aquarius_Grammar);
+end Aquarius.Plugins.Script_Plugin.Generated;

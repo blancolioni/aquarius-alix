@@ -1,0 +1,153 @@
+; -*- scheme -*-
+
+(add-grammar-path 'alan ".")
+(add-grammar-path 'alan "/home/fraser/lib/alan")
+
+(add-semantic-phase current-grammar 'entries)
+(add-semantic-phase current-grammar 'check)
+
+(sem-phase <adventure> 'entries 'before
+	   (begin
+	     (create-symbol-table current-tree)
+	     )
+	   )
+
+(define (id-text id) (get-name (get-first-child id)))
+
+(sem-phase <directive> 'entries 'before
+	   ; TODO: load the reference into a buffer
+	   '()
+	   )
+
+(define (add-id-list-entries buf tree id-list tag)
+  (for-each-child id-list 'id
+		  (lambda (x)
+		    (new-unique-name buf (id-text x)
+				     tag tree))))
+
+(define (add-id-entry buf tree tag)
+  (set-property tree 'entry
+		(new-unique-name buf
+				 (id-text (get-child tree 'id))
+				 tag tree)))
+
+(sem-phase <verb-header> 'entries 'before
+	   (add-id-list-entries current-buffer current-tree
+				(get-child current-tree 'id-list)
+				'verb))
+
+
+(sem-phase <location-header> 'entries 'before
+	   (add-id-entry current-buffer current-tree 'location))
+
+(sem-phase <location-body> 'entries 'before
+	   (create-symbol-table current-tree))
+
+(sem-phase <object-header> 'entries 'before
+	   (add-id-entry current-buffer current-tree 'object))
+
+(sem-phase <container-header> 'entries 'before
+	   (add-id-entry current-buffer current-tree 'container))
+
+(sem-phase <event-header> 'entries 'before
+	   (add-id-entry current-buffer current-tree 'event))
+
+(sem-phase <actor-header> 'entries 'before
+	   (add-id-entry current-buffer current-tree 'actor))
+
+(sem-phase <where> 'check 'after
+	   (sem-choice current-tree
+		       `((here (add-tag ,current-tree 'where 'here))
+			 (nearby (add-tag ,current-tree 'where 'nearby))
+			 (at (add-tag ,current-tree 'where
+				      '(at ,(get-tag 
+					    (get-child current-tree 'what)
+					    'what))))
+			 (in (add-tag ,current-tree 'where
+				      '(in ,(get-tag 
+					    (get-child current-tree 'what)
+					    'what))))
+			 )))
+
+(sem-phase <what> 'check 'before
+	   (let ((id-child (get-child current-tree 'id)))
+	     (if (not (empty-program-tree? id-child))
+		 (if (check-identifier current-buffer id-child 'any)
+		     (add-tag current-tree 'entry 
+			      (get-tag id-child 'entry))))))
+
+(sem-phase <what> 'check 'after
+	   (sem-choice current-tree
+		       `((object (add-tag ,current-tree 'what 'object))
+			 (location (add-tag ,current-tree 'what 'location))
+			 (actor (add-tag ,current-tree 'what 'actor))
+			 (id (add-tag ,current-tree 'what
+				      (get-tag ,current-tree 'entry))))))
+
+(sem-phase <start> 'check 'after
+	   (begin
+	     (define (loc-error)
+	       (report-error current-buffer current-tree
+			     "start location must be in or at"))
+	     (let* ((where-tag (get-tag (get-child current-tree 'where)
+					'where))
+		    (table (get-symbol-table current-tree))
+		    (entry (new-table-entry '__start 'start))
+		    )
+	       (cond ((not (pair? where-tag)) (loc-error))
+		     ((or (eq? (car where-tag) 'at)
+			  (eq? (car where-tag) 'in))
+		      (table-entry-add-property entry
+						(car where-tag)
+						(cadr where-tag)))
+		     (#t (loc-error)))
+	       (table-insert table entry))))
+
+(sem-phase <location> 'entries 'before
+	   (tree-create-properties current-tree))
+
+(sem-phase <exit> 'check 'before
+	   (begin
+	     (check-identifier current-buffer (get-child current-tree 'id)
+			       'location)
+	     (let ((ids (get-child current-tree 'id-list)))
+	       (for-each-child ids 'id
+			       (lambda (x)
+				 (add-exit-verb
+				  current-buffer current-tree
+				  (get-property current-tree 'entry)
+				  (id-text x)
+				  (get-tag (get-child current-tree 'id)
+					   'entry)
+				  (get-child current-tree 'exit-body)))))))
+
+(define (add-exit-verb buf tree loc verb-name target body)
+  (if (not (has-property loc 'verb-table))
+      (set-property loc 'verb-table (new-symbol-table)))
+  (let ((verb-table (get-property loc 'verb-table))
+	)
+    (new-unique-name buf verb-name 'verb tree 
+		     (list 'exit loc) (list 'body body))))
+
+(define (check-identifier buf tree tag)
+  (let* ((target (id-text tree))
+	 (target-entry
+	  (if (eq? tag 'any)
+	      (table-get (get-symbol-table tree) target)
+	      (table-get-with-tag (get-symbol-table tree)
+				  target tag #T))))
+    (if (not (table-entry-found? target-entry))
+	(begin
+	  (report-error buf tree
+			(string-append 
+			 "undefined" 
+			 (if (eq? tag 'any) ""
+			     (string-append " "
+					    (symbol->string tag)))
+			 ": " 
+			 (symbol->string target)))
+	  #f)
+	(begin
+	  (add-tag tree 'entry target-entry)
+	  #t))))
+

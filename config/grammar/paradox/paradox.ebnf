@@ -1,0 +1,27 @@
+top_level = config_list
+case_sensitive = true
+
+identifier         ::= standard ada_identifier
+numeric_literal    ::= standard ada_numeric_literal
+character_literal  ::= standard ada_character_literal
+string_literal     ::= standard ada_string_literal
+delimiter          ::= delimiters "{}="
+comment            ::= standard hash_line_comment
+
+format '{' space_before new_line_after indent_after
+format '}' space_before new_line_before new_line_after outdent_after
+format config_entry new_line_after
+format config_list indented_child
+
+config_list ::= { config_item }
+
+config_item ::= [ name '=' ] config_entry
+
+name ::= identifier | numeric_literal
+
+config_entry ::= nested_item | value
+
+nested_item ::= '{' config_list '}'
+
+value ::= identifier | numeric_literal | string_literal
+

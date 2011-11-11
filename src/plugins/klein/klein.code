@@ -1,0 +1,211 @@
+; -*- scheme -*-
+
+(define (next-label) (list 'quote (gensym "L")))
+(define (next-temp) (list 'quote (gensym "t")))
+
+(define (get-child-id-text tree) (get-name (get-child tree 'identifier)))
+
+(define (make-op op target) (string->symbol
+			     (string-append (symbol->string op)
+					    "-"
+					    (symbol->string target))))
+
+(define (code-identifier table id tmp)
+      (let* ((target (get-name id))
+	     (target-entry (table-get-with-tag table target 'variable #T)))
+	(list (move-to-temp target-entry tmp))))
+
+
+(code <program> 'before
+      (list (list 'subprogram-preamble
+		  (list 'quote (get-child-id-text current-tree)))))
+
+(code <program> 'after '((return-from-subprogram)))
+
+(code <block> 'before '((begin-frame)))
+(code <block> 'begin '((allocate-stack)))
+(code <block> 'after '((end-frame)))
+
+(code <variable-declaration> 'after
+      (for-each-child current-tree 'identifier
+		      (lambda (x) (create-stack-entry x))))
+
+(code <label> 'after 
+      (list (list 'label (get-name (get-child current-tree 'identifier)))))
+
+(code <write-statement> 'after '((write-integer)))
+(code <writeln-statement> 'after '((write-integer) (write-newline)))
+
+(code <assignment-statement> 'after
+      (let* ((target (get-name (get-child current-tree 'identifier)))
+	     (target-entry (table-get-with-tag (get-symbol-table current-tree)
+					       target 'variable #T))
+	     (source (get-tag (get-child current-tree 'expression) 'temp)))
+	(list (if (stack-variable? target-entry)
+		  (list 'move-temp-to-stack-variable
+			(get-stack-size target-entry)
+			source
+			(get-stack-index target-entry))
+		  (list 'move-temp-to-external
+			(get-stack-size target-entry)
+			source
+			(get-external-name target-entry))))))
+
+(define (code-primary tree temp children)
+  (begin
+    (cond ((null? children) '())
+	  ((has-child tree (caar children))
+	   (begin
+	     (add-tag tree 'temp temp)
+	     ((primitive-eval (cadar children))
+	      temp 
+	      (get-child tree (caar children))))
+	   )
+	  (#t (code-primary tree temp (cdr children))))))
+
+(code <primary> 'after
+      (code-primary current-tree (next-temp)
+		    '(
+		      (identifier
+		       (lambda (tmp x) (code-identifier 
+					(get-symbol-table x) x tmp)))
+		      (integer-literal
+		       (lambda (tmp x)
+			 (begin
+			   (list
+			    (list 'move-integer-to-temp
+				  'integer-size
+				  (string->number
+				   (symbol-text (get-symbol x)))
+				  tmp))))
+		       (input (lambda (tmp x) '((read-integer tmp))))
+		       ))))
+
+(code <if-statement> 'before
+      (let ((exit-label (next-label))
+	    (skip-label (next-label)))
+	(begin
+	  (tree-create-properties current-tree)
+	  (set-property current-tree 'exit-label exit-label)
+	  (set-property current-tree 'skip-label skip-label)
+	  '())))
+
+(code <if-statement> 'then
+      (list (list 'branch-zero 
+		  (get-tag (get-left-sibling current-tree) 'temp)
+		  (get-property current-tree 'skip-label))))
+
+(code <if-statement> 'elsif
+      (let ((new-skip-label (next-label))
+	    (old-skip-label (get-property current-tree 'skip-label)))
+	(begin
+	  (set-property current-tree 'skip-label new-skip-label)
+	  (list (list 'jump (get-property current-tree 'exit-label))
+		(list 'label old-skip-label)))))
+
+(code <if-statement> 'else
+      (let ((new-skip-label (next-label))
+	    (old-skip-label (get-property current-tree 'skip-label)))
+	(begin
+	  (set-property current-tree 'skip-label new-skip-label)
+	  (list (list 'jump (get-property current-tree 'exit-label))
+		(list 'label old-skip-label)))))
+
+(code <if-statement> 'end
+      (list (list 'label (get-property current-tree 'skip-label))
+	    (list 'label (get-property current-tree 'exit-label))))
+
+(code <until-statement> 'before
+      (let ((label1 (next-label))
+	    (label2 (next-label))
+	    )
+	(begin
+	  (tree-create-properties current-tree)
+	  (set-property current-tree 'loopback-label label1)
+	  (set-property current-tree 'exit-label label2)
+	  (list (list 'label label1)))))
+
+(code <until-statement> 'loop
+      (list (list 'branch-not-zero
+		  (get-tag (get-left-sibling current-tree) 'temp)
+		  (get-property current-tree 'exit-label))))
+
+(code <until-statement> 'after
+      (list (list 'jump (get-property current-tree 'loopback-label))
+	    (list 'label (get-property current-tree 'exit-label))))
+
+(define (code-op tree assq-list op-name size left right)
+  (if (has-child tree op-name)
+      (let ((temp (next-temp)))
+	(begin
+	  (add-tag tree 'temp temp)
+	  (list (list 'apply size
+		      (list 'quote
+			    (assq-ref  assq-list
+				       (get-name (get-first-child
+						  (get-child tree op-name)))))
+		      left right temp))))
+      '()))
+
+(define (code-bin-op tree op-name size left right)
+  (code-op tree op-assq op-name size left right))
+(define (code-unary-op tree op-name size left)
+  (code-op tree unary-op-assq op-name size left '()))
+
+(define (code-expression-tree tree op-name child-syntax size)
+  (let ((children (find-children-with-syntax tree child-syntax)))
+    (if (null? (cdr children))
+	(add-tag tree 'temp (get-tag (car children) 'temp))
+	(code-bin-op tree op-name size
+		     (get-tag (car children) 'temp)
+		     (get-tag (cadr children) 'temp)))))
+
+(code <expression> 'after
+      (code-expression-tree current-tree 'logical-operator
+			    <relation> 'integer-size))
+
+(code <relation> 'after
+      (code-expression-tree current-tree 'relational-operator
+			    <simple-expression> 'integer-size))
+
+(code <simple-expression> 'after
+      (let ((binary (code-expression-tree current-tree
+					  'binary-adding-operator
+					  <term> 'integer-size)))
+	(append binary
+		(code-unary-op current-tree 'unary-adding-operator
+			       'integer-size
+			       (get-tag current-tree 'temp)))))
+			     
+
+(code <term> 'after
+      (code-expression-tree current-tree 'multiplying-operator
+			    <factor> 'integer-size))
+
+(code <factor> 'after
+      (add-tag current-tree 'temp 
+	       (get-tag (get-child current-tree 'primary) 'temp)))
+	  
+
+(define op-assq '((= .   op-equal)
+		  (/= .  op-not-equal)
+		  (< .   op-less)
+		  (<= .  op-less-equal)
+		  (> .   op-greater)
+		  (>= .  op-greater-equal)
+		  (+ .   op-add)
+		  (- .   op-subtract)
+		  (* .   op-multiply)
+		  (/ .   op-divide)
+		  (mod . op-mod)
+		  (and . op-and)
+		  (or .  op-or)
+		  (xor . op-xor)
+		  ))
+
+(define unary-op-assq '((+ . op-none)
+			(- . op-negate)))
+
+(define (create-stack-entry id)
+  (let ((entry (get-entry-from-id id 'variable)))
+    (list 'stack-variable (type-get-stack-size (get-property entry 'type)))))

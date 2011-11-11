@@ -1,0 +1,639 @@
+top_level = compilation_unit
+case_sensitive = false
+
+identifier         ::= standard ada_identifier
+numeric_literal    ::= standard ada_numeric_literal
+character_literal  ::= standard ada_character_literal
+string_literal     ::= standard ada_string_literal
+delimiter          ::= delimiters "&()+,;|"
+symbol             ::= standard ada_symbol
+comment            ::= standard ada_comment
+
+format 'overriding' space_before new_line_after
+format context_clause new_line_after
+format list_of_declarations indented_child
+format sequence_of_statements indented_child
+format record_type_definition new_line_before indent_before outdent_after
+format record_component_list indented_child
+format formal_argument_spec soft_new_line
+format actual_argument_list soft_new_line
+format default_value_expression soft_new_line
+format function_return_type soft_new_line
+format type_definition soft_new_line
+format procedure_declaration new_line_after
+format function_declaration new_line_after
+format 'generic' new_line_after
+format generic_formal_parameter_list indented_child
+format interface_inheritance soft_new_line
+
+format ';' no_space_before no_space_after new_line_after
+format '.' no_space_before no_space_after
+format '(' space_before no_space_after
+format ')' no_space_before space_after
+format ',' no_space_before space_after
+format ''' no_space_before no_space_after
+
+compilation_unit ::= { context_clause }
+	             top_level_subprogram_declaration
+
+list_of_context_clauses ::= { context_clause }
+
+top_level_subprogram_declaration ::= [ 'private' ] subprogram_declaration
+
+context_clause ::= with_clause | use_clause | pragma_spec
+
+with_clause ::= ['limited'] ['private'] 'with' < withed_unit_name : package_name / ',' > ';'
+
+use_clause ::= 'use' < external_unit_name / ',' > ';'
+
+qualified_reference ::= < identifier / '.' >
+
+defining_qualified_reference ::= < identifier / '.' >
+
+subprogram_declaration ::= procedure_declaration | function_declaration |
+                           package_declaration | generic_declaration |
+                           generic_instantiation
+
+subprogram_specification ::=
+    procedure_specification
+  | function_specification
+
+procedure_declaration ::=
+   procedure_specification [ subprogram_body ] ';'
+
+function_declaration ::=
+   function_specification [ subprogram_body ] ';'
+
+procedure_specification ::=
+   [ overriding_indication ]
+   'procedure' defining_program_unit_name
+            [ formal_argument_spec ]
+
+function_specification ::=
+   [ overriding_indication ]
+   'function' (defining_program_unit_name | string_literal)
+         [ formal_argument_spec ]
+         'return' type_indication
+
+overriding_indication ::= ['not'] 'overriding'
+
+subprogram_body ::= 'is' ('abstract' | 'null' | block ) |
+                    'renames' object_reference
+
+formal_argument_spec ::=
+   '(' < formal_argument / ';'> ')'
+
+formal_argument ::=
+   defining_identifier_list ':' [ mode ] subtype_mark
+                                          [ ':=' default_expression ]
+mode ::= 'in'
+       | 'out'
+       | 'in' 'out'
+       | [ 'not' 'null' ] 'access' [ 'constant' ]
+
+package_declaration ::= package_spec | package_body
+
+package_spec ::= 'package' defining_package_name
+                  ('is' package_spec_declaration |
+                   'renames' qualified_reference ) ';'
+
+package_spec_declaration ::=
+                   list_of_declarations
+		   [ private_part]
+                   'end' [ matching_name ]
+
+matching_name ::= < identifier / '.' > | operator_symbol
+
+private_part ::=   'private' list_of_declarations
+
+generic_instantiation ::=
+     'package' defining_program_unit_name 'is'
+       'new' generic_package_name [generic_actual_part] ';'
+   | 'procedure' defining_program_unit_name 'is'
+       'new' generic_procedure_name [generic_actual_part] ';'
+   | 'function' defining_designator 'is'
+       'new' generic_function_name [generic_actual_part] ';'
+
+generic_actual_part ::= '(' < generic_association / ','> ')'
+
+generic_association ::= static_expression
+                      | identifier '=>' static_expression
+                      | operator_symbol '=>' static_expression
+
+defining_designator ::= defining_program_unit_name | defining_operator_symbol
+
+defining_operator_symbol ::= operator_symbol
+
+operator_symbol ::= string_literal
+
+package_body ::= 'package' 'body' package_name 'is'
+                     list_of_declarations
+                     [ 'begin' handled_sequence_of_statements ]
+                     'end' [ package_name ] ';'
+
+
+generic_declaration ::=
+   'generic' generic_formal_parameter_list
+   (procedure_declaration | function_declaration | package_declaration)
+
+generic_formal_parameter_list ::=
+    { generic_formal_parameter_declaration }
+generic_formal_parameter_declaration ::=
+      formal_object_declaration
+    | formal_type_declaration
+    | formal_subprogram_declaration
+    | formal_package_declaration
+
+formal_object_declaration ::=
+   defining_identifier_list ':' mode subtype_mark
+         [ ':=' default_expression ] ';'
+
+formal_type_declaration ::=
+   'type' defining_identifier [discriminant_part] 'is'
+       formal_type_definition ';'
+
+formal_type_definition ::=
+     formal_private_type_definition
+   | formal_derived_type_definition
+   | formal_discrete_type_definition
+   | formal_signed_integer_type_definition
+   | formal_modular_type_definition
+   | formal_floating_point_definition
+   | formal_ordinary_fixed_point_definition
+   | formal_decimal_fixed_point_definition
+   | formal_array_type_definition
+   | formal_access_type_definition
+
+
+formal_private_type_definition ::=
+    [['abstract'] 'tagged'] ['limited'] 'private'
+
+formal_derived_type_definition ::=
+   ['abstract'] 'new' subtype_mark [ 'with' 'private' ]
+
+formal_discrete_type_definition ::= '(' '<>' ')'
+
+formal_signed_integer_type_definition ::= 'range' '<>'
+
+formal_modular_type_definition ::= 'mod' '<>'
+
+formal_floating_point_definition ::= 'digits' '<>'
+
+formal_ordinary_fixed_point_definition ::= 'delta' '<>'
+
+formal_decimal_fixed_point_definition ::= 'delta' '<>' 'digits' '<>'
+
+formal_array_type_definition ::= array_type_definition
+
+formal_access_type_definition ::= access_type_definition
+
+formal_subprogram_declaration ::=
+   'with' subprogram_specification [ 'is' subprogram_default ] ';'
+
+formal_package_declaration ::=
+   'with' 'package' defining_identifier 'is' 'new'
+       generic_package_name formal_package_actual_part ';'
+
+generic_package_name ::= package_name
+
+formal_package_actual_part ::= '(' '<>' ')' | generic_actual_part
+
+subprogram_default ::= default_name | '<>'
+
+default_name ::= subprogram_name
+
+default_expression ::= expression
+
+block ::=
+   list_of_declarations
+   'begin'
+	handled_sequence_of_statements
+   'end' block_name
+
+list_of_declarations ::= { declaration }
+
+declaration ::= type_declaration | subtype_declaration |
+                incomplete_type_declaration |
+                variable_declaration | named_number_declaration |
+                pragma_spec |
+                subprogram_declaration | use_clause |
+                use_type_clause | representation_clause
+
+representation_clause ::= attribute_definition_clause
+
+use_type_clause ::= 'use' 'type' type_indication ';'
+
+subtype_declaration ::= 'subtype' subtype_name 'is' type_indication ';'
+
+type_declaration ::= type_header [type_discriminator]
+                                 'is' type_qualifiers type_definition ';'
+
+incomplete_type_declaration ::=
+          'type' defining_identifier [type_discriminator] [ 'is' 'tagged' ] ';'
+
+type_discriminator ::=
+ 	'(' discriminant_list ')'
+
+discriminant_list ::= identifier ':' type_indication
+	 [ ':=' static_expression ]
+
+type_qualifiers ::= ['abstract'] ['tagged'] ['limited']
+
+variable_declaration ::=
+   defining_identifier_list ':' (variable_type | exception) ';'
+
+exception ::= 'exception' [ renaming ]
+
+variable_type ::= [ 'aliased' ] [ 'constant' ] type_indication
+                         [ ( default_value | renaming ) ]
+
+default_value ::= ':=' default_value_expression
+renaming ::= 'renames' object_reference
+
+default_value_expression ::= expression
+
+named_number_declaration ::=
+     defining_identifier_list ':' 'constant' ':=' static_expression ';'
+
+defining_identifier_list ::= < defining_identifier / ',' >
+
+defining_identifier ::= identifier
+
+type_indication ::= subtype_indication
+                  | access_definition
+                  | array_type_definition
+
+type_constraint ::= ( '(' expression [ '..' expression ] ')' )
+                  | ( ''' ( identifier | 'range' | 'access'))
+                  | ('range' bounded_range)
+
+type_definition ::= derived_type_definition | record_type_definition |
+                    array_type_definition | private_type_definition |
+		    enumerated_type_definition | access_type_definition |
+		    range_type_definition | function_type_definition |
+                    modular_type_definition |
+		    procedure_type_definition | interface_type_definition
+
+range_type_definition ::= 'range' (bounded_range | '<>')
+modular_type_definition ::= 'mod' static_expression
+
+bounded_range ::= static_expression '..' static_expression
+
+access_type_definition ::=
+      'access' [ general_access_modifier ] subtype_mark
+
+general_access_modifier ::= 'all' | 'constant'
+
+function_type_definition ::= 'access' 'function' [ formal_argument_spec ]
+                                function_return_type
+
+function_return_type ::= 'return' type_indication
+
+procedure_type_definition ::= 'access' 'procedure' [ formal_argument_spec ]
+
+enumerated_type_definition ::=
+	'(' < enumerated_literal / ',' > ')'
+
+enumerated_literal ::= identifier | character_literal
+
+private_type_definition ::= 'private'
+
+derived_type_definition ::= 'new' qualified_reference
+                               { interface_inheritance }
+                               [ 'with' ( record_type_definition | 'private' )]
+
+interface_inheritance ::= 'and' qualified_reference
+
+interface_type_definition ::=
+         [ ('limited' | 'task' | 'protected' | 'synchronized') ] 'interface'
+                { 'and' subtype_mark }
+
+
+record_type_definition ::= 'record' record_component_list 'end' 'record'
+                         | 'null' 'record'
+
+record_component_list ::= { component_definition ';' }
+                          [ variant_record_element ]
+
+component_definition ::= defining_identifier_list ':' type_indication
+                                      [ ':=' default_expression ]
+                       | 'null'
+
+variant_record_element ::=
+    'case' identifier 'is' < variant_case > 'end' 'case' ';'
+
+variant_case ::= 'when' variant_case_options '=>' record_component_list
+
+variant_case_options ::= < identifier / '|' > | 'others'
+
+array_type_definition ::=
+ 	'array' '(' < array_bound / ',' > ')' 'of' type_indication
+
+array_bound ::= explicitly_typed_array_bound
+              | bounded_range
+
+explicitly_typed_array_bound ::=
+	type_name [ 'range' ( bounded_range | '<>' ) ]
+      | type_name ''' 'range'
+
+handled_sequence_of_statements ::=
+    sequence_of_statements
+    [ 'exception' < exception_handler > ]
+
+sequence_of_statements ::= < single_statement >
+
+single_statement ::= [ label ] statement
+
+label ::= '<<' identifier '>>'
+
+statement ::= null_statement | procedure_call | assignment_statement |
+              if_statement | return_statement | declare_statement |
+              loop_statement | exit_statement | case_statement |
+  	      raise_statement | pragma_spec
+
+null_statement ::= 'null' ';'
+
+raise_statement ::= 'raise' [ qualified_reference ] [ exception_message ] ';'
+
+exception_message ::= 'with' expression
+
+procedure_call ::= object_reference ';'
+
+assignment_statement ::=
+   object_reference ':=' expression ';'
+
+object_reference ::= direct_name { name_qualifier }
+
+direct_name ::= identifier
+
+name_qualifier ::= '.' expanded_name
+                 | actual_argument_list
+                 | attribute_reference
+                 | '(' expression '..' expression ')'
+
+expanded_name        ::= 'all' | identifier | operator_name
+actual_argument_list ::= '(' < actual_argument / ','> ')'
+
+operator_name ::= string_literal
+
+attribute_reference ::= ''' ( identifier | 'access' | 'range'
+                            | '(' expression ')'
+
+actual_argument ::= expression
+                  | identifier '=>' expression
+
+if_statement ::= 'if' expression 'then' sequence_of_statements
+                 { 'elsif' expression 'then' sequence_of_statements }
+                 [ 'else' sequence_of_statements ]
+                 'end' 'if' ';'
+
+case_statement ::= 'case' expression 'is'
+                     case_list
+		   'end' 'case' ';'
+
+case_list ::= < 'when' case_option '=>'
+                            sequence_of_statements >
+
+case_option ::= case_option_list
+              | 'others'
+
+case_option_list ::=
+     < (qualified_reference | numeric_literal | character_literal) / '|' >
+
+
+return_statement ::= 'return' [expression] ';'
+
+exit_statement ::= 'exit' [ 'when' expression ] ';'
+
+declare_statement ::=
+   [ 'declare'
+     list_of_declarations ]
+   'begin'
+	handled_sequence_of_statements
+   'end' [ identifier ] ';'
+
+declare_block_name ::= identifier
+
+loop_statement ::=
+                 [ loop_statement_header ]
+                    'loop'
+                        sequence_of_statements
+                    'end' 'loop' [ identifier ] ';'
+
+loop_statement_header ::=
+         while_statement_header | for_statement_header
+
+loop_name ::= identifier ':'
+
+while_statement_header ::= 'while' expression
+
+for_statement_header ::=
+   'for' identifier 'in' [ 'reverse' ] for_loop_discrete_range
+
+for_loop_discrete_range ::= object_reference [ for_loop_subrange ]
+                          | bounded_range
+
+for_loop_subrange ::= 'range' bounded_range
+                    | ''' 'range'
+
+static_expression ::= expression
+
+expression ::=
+    relation { boolean_operator relation }
+
+relation ::=
+	simple_expression [ (relational_operator simple_expression  |
+			    ['not'] 'in' (range | subtype_mark)) ]
+
+simple_expression ::=
+    [ unary_adding_operator ] term { binary_adding_operator term }
+
+term ::= factor { multiplying_operator factor }
+
+factor ::= primary [ exponentation_operator primary ]
+       | unary_primary_operator primary
+
+primary ::= numeric_literal | string_literal : string |
+            object_reference | 'null' |
+            parenthesised_expression | aggregate |
+	    character_literal | allocator
+
+boolean_operator ::=
+	'and' | 'and' 'then' | 'or' | 'or' 'else' | 'xor'
+
+relational_operator ::= '=' | '/=' | '<' | '<=' | '>' | '>='
+
+binary_adding_operator ::= '+' | '-' | '&'
+
+unary_adding_operator ::= '+' | '-'
+
+unary_primary_operator ::= 'abs' | 'not'
+
+multiplying_operator ::= '*' | '/' | 'mod' | 'rem'
+
+exponentation_operator ::= '**'
+
+allocator ::= 'new' (qualified_expression | subtype_indication)
+
+subtype_indication ::= subtype_mark [ type_constraint ]
+
+subtype_mark ::= object_reference
+
+constraint ::= scalar_constraint | composite_constraint
+
+scalar_constraint ::= range_constraint
+
+composite_constraint ::= '(' < discrete_range_or_discriminant / ',' > ')'
+
+discrete_range_or_discriminant ::=
+	expression |
+	subtype_mark constraint |
+	range |
+	< discriminant_selector_name / '|' > '=>' expression
+
+discrete_range ::= discrete_subtype_indication | range
+
+discrete_subtype_indication ::= subtype_indication
+
+range ::= range_attribute_reference |
+          simple_expression '..' simple_expression
+
+range_attribute_reference ::= prefix ''' range_attribute_designator
+
+range_constraint ::= 'range' range
+
+range_attribute_designator ::= 'range' [ '(' static_expression ')' ]
+
+discriminant_part ::=
+   unknown_discriminant_part | known_discriminant_part
+
+unknown_discriminant_part ::= '(' '<>' ')'
+
+known_discriminant_part ::=
+   '(' { discriminant_specification / ';' } ')'
+
+discriminant_specification ::=
+   defining_identifier_list ':' ( subtype_mark | access_definition )
+      [ ':=' default_expression ]
+
+access_definition ::= [ null_exclusion ] access_object
+
+null_exclusion ::= 'not' 'null'
+
+access_object ::= access_type_definition
+                | function_type_definition
+                | procedure_type_definition
+
+prefix ::= name
+
+qualified_expression ::=
+   name [ ''' (aggregate | '(' expression ')') ]
+
+discriminant_constraint ::=
+   '(' < discriminant_association / ',' > ')'
+
+discriminant_association ::=
+   [ < discriminant_selector_name / '|' > '=>' ] expression
+
+discriminant_selector_name ::= identifier
+
+operator ::= ('*' | '/' | 'mod' | 'rem') |
+             ('+' | '-') |
+             ('>' | '<' | '<=' | '>=' | '/=' | '=') |
+             (('and' [ 'then' ]) | ('or' [ 'else' ]) ) |
+             ('&')
+
+atomic_expression ::= object_reference | numeric_literal | string_literal |
+                      character_literal | 'null' |
+                      parenthesised_expression |
+                      aggregate
+
+parenthesised_expression ::= '(' expression ')'
+
+aggregate ::=
+    '(' object_reference 'with' selector '=>' expression ')'
+  | '(' selector '=>' expression ')'
+  | '(' object_reference 'with' selector_expression ','
+                                < selector_expression / ',' > ')'
+  | '(' selector_expression ',' < selector_expression / ',' > ')'
+
+selector_expression ::= selector '=>' expression
+                      | expression
+
+object_reference_with ::=
+	object_reference 'with'
+
+selector ::= list_of_selector_items | 'others'
+
+list_of_selector_items ::= < selector_item [ '..' selector_item] / '|' >
+
+selector_item ::=
+	identifier | character_literal | numeric_literal
+
+exception_handler ::=
+   'when' < identifier / '.' > '=>' sequence_of_statements
+
+pragma_spec ::=
+   'pragma' identifier [ '(' pragma_arg_list ')' ] ';'
+
+pragma_arg_list ::= < pragma_arg / ',' >
+
+pragma_arg ::= expression
+
+attribute_definition_clause ::=
+	'for' local_name ''' attribute_designator 'use'
+		 ( expression | record_representation ) ';'
+
+local_name ::= identifier
+
+attribute_designator ::= identifier [ '(' static_expression ')' ] |
+			'access' | 'delta' | 'digits'
+
+record_representation ::=
+   'record' [ mod_clause ]
+       { component_clause }
+   'end' 'record' ';'
+
+mod_clause ::= 'at' 'mod' static_expression ';'
+
+component_clause ::=
+	component_local_name 'at' position 'range' first_bit '..' last_bit ';'
+
+component_local_name ::= name
+
+position ::= static_expression
+
+first_bit ::= static_simple_expression
+
+last_bit ::= static_simple_expression
+
+static_simple_expression ::= simple_expression
+
+type_header ::= 'type' type_name
+
+procedure_name ::= qualified_reference
+
+function_name ::= qualified_reference
+
+package_name ::= qualified_reference
+defining_package_name ::= defining_qualified_reference : package_name
+
+subprogram_name ::= qualified_reference | operator_symbol
+
+external_unit_name ::= qualified_reference
+withed_unit_name ::= < identifier / '.' >
+
+subtype_name ::= identifier
+
+type_name ::= identifier
+
+block_name ::= name | operator_symbol
+
+defining_program_unit_name ::= defining_qualified_reference : function_name
+
+generic_procedure_name ::= name
+generic_function_name  ::= name
+
+exception_name ::= name
+
+name ::= < identifier / '.' >

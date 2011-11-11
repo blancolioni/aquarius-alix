@@ -1,0 +1,31 @@
+project C64 is
+
+   for Source_Dirs use ("./src",
+                        "./src/6502",
+                        "./src/main",
+                        "./src/kernel",
+                        "./src/vicii");
+   for Object_Dir use "./obj";
+   for Exec_Dir use "./bin";
+   for Main use ("c64-main.adb");
+
+   package Linker is
+      for Default_Switches ("ada") use ("-g", "-fprofile-generate");
+   end Linker;
+
+   package Binder is
+      for Default_Switches ("ada") use ("-E", "-r");
+   end Binder;
+
+   package Compiler is
+      for Default_Switches ("ada") use ("-g", "-gnatwae",
+                                        "-gnatVa", "-gnatyabcefhiklmnoprst",
+                                         "-gnata", "-gnat05", "-gnato");
+   end Compiler;
+
+   package Builder is
+      for Default_Switches ("ada") use ("-j5", "-s", "-k", "-g");
+   end Builder;
+
+end C64;
+

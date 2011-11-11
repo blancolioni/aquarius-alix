@@ -1,0 +1,100 @@
+with Ada.Strings.Maps;
+
+package Aquarius.Lexers is
+
+   --  General lexing functions
+
+   --  Lexer: a machine that accepts a single character
+   type Lexer is private;
+
+   --  Null_Lexer is a lexer that doesn't match anything
+   function Null_Lexer return Lexer;
+
+   --  joining lexers
+   function "&" (Left, Right : Lexer) return Lexer;
+   function "or" (Left, Right : Lexer) return Lexer;
+
+   --  not is only for single rule lexers: it negates the rule.
+   function "not" (Left : Lexer) return Lexer;
+
+   --  Repetition (zero or more times)
+   --  For zero or more, use Optional (Repeat (...))
+   function Repeat (Item : Lexer) return Lexer;
+
+   --  Optional
+   function Optional (Item : Lexer) return Lexer;
+
+   --  Scanning particular characters or sets of characters
+   function Letter       return Lexer;
+   function Lowercase    return Lexer;
+   function Uppercase    return Lexer;
+   function Digit        return Lexer;
+   function Hex_Digit    return Lexer;
+   function Alphanumeric return Lexer;
+   function Graphic      return Lexer;
+   function Any          return Lexer;
+
+   function End_Of_Line  return Lexer;
+
+   function Literal (Ch : Character) return Lexer;
+
+   --  Convenience function for a lexer that recognises
+   --  exactly one of the characters in S
+
+   function One_Of (S : String) return Lexer;
+
+   --  Symbol_Lexer creates a lexer that parses the longest
+   --  sequence of characters that matches one of the given
+   --  space-separated symbols
+   function Symbol_Lexer (S : String) return Lexer;
+
+   function Run (Lex    : in     Lexer;
+                 Text   : in     String)
+                return Natural;
+
+   function Start (Lex : in Lexer)
+                  return Ada.Strings.Maps.Character_Set;
+
+private
+
+   type Lexer_Type is (Terminal, Sequence, Repeat, Optional, Choice);
+
+   type Lexer_Rule_Type is (Built_In, Condition, Single_Character,
+                            Or_Rule);
+
+   type Lexer_State is (End_Of_Line, End_Of_File);
+
+   type Lexer_Rule (Rule_Type : Lexer_Rule_Type) is
+      record
+         Negate : Boolean;
+         case Rule_Type is
+            when Built_In =>
+               Fn : not null access
+                 function (Ch : Character) return Boolean;
+            when Condition =>
+               State : Lexer_State;
+            when Single_Character =>
+               Match : Character;
+            when Or_Rule =>
+               Left, Right : access Lexer_Rule;
+         end case;
+      end record;
+
+   type Lexer_Node (Node_Type : Lexer_Type) is
+      record
+         case Node_Type is
+            when Terminal =>
+               Rule   : access Lexer_Rule;
+            when Sequence =>
+               First       : access Lexer_Node;
+               Rest        : access Lexer_Node;
+            when Repeat | Optional =>
+               Child       : access Lexer_Node;
+            when Choice =>
+               Left, Right : access Lexer_Node;
+         end case;
+      end record;
+
+   type Lexer is access Lexer_Node;
+
+end Aquarius.Lexers;

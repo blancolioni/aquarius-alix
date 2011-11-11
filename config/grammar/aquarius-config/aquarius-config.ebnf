@@ -1,0 +1,22 @@
+top_level ::= config_list
+case_sensitive = false
+
+identifier ::= standard ada_identifier
+integer    ::= standard ada_numeric_literal
+string     ::= standard ada_string_literal
+delimiter  ::= delimiters "{};=:"
+comment    ::= standard ada_comment
+
+config_list ::= { config_item }
+
+config_item ::= identifier config_entry
+
+config_entry ::= nested_item | value_item
+
+nested_item ::= '{' config_list '}'
+
+value_item ::= '=' value ';'
+
+value ::= identifier | integer | string
+
+

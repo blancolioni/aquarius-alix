@@ -1,0 +1,4 @@
+createBody = transform
+  Compilation_Unit -> Subprogram_Declaration
+  Subprogram_Declaration.Generic_Declaration -> 
+     createBody .

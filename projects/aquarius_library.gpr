@@ -1,0 +1,18 @@
+with "settings";
+
+project Aquarius_Library is
+
+   for Object_Dir use "../obj";
+   for Exec_Dir use "../bin";
+   for Source_Dirs use ("../src", "../src/buffers", "../src/composition", "../src/debug", "../src/entries", "../src/environment", "../src/errors", "../src/files", "../src/grammar", "../src/interface", "../src/messages", "../src/plugins", 
+"../src/plugins/ada", "../src/plugins/ebnf", "../src/plugins/haskell", "../src/plugins/klein", "../src/plugins/projects", "../src/programs", "../src/projects", "../src/syntax", "../src/target", "../src/tokens", "../src/trees", "../src/types", 
+"../src/values", "../src/watchers", "../src/plugins/ada/generated", "../../../tagatha/src", "../src/tagatha", "../src/vm");
+
+   package Binder renames Settings.Binder;
+
+   package Compiler renames Settings.Compiler;
+
+   package Builder renames Settings.Builder;
+
+end Aquarius_Library;
+

@@ -1,0 +1,19 @@
+plugin Kit version 0.1 is
+
+group parser : parse is
+
+after database_declaration.name do
+   let base_package_name = flat_image (name);
+   let base_package_spec = ada_plugin.create (compilation_unit, ["package ", base_package_name, " is"]);
+   let table_enum   = ada_plugin.create (type_declaration, ["type Table_Type is (No_Table_Type"]);
+   let t = database_declaration;
+   t.create_symbol_table;
+   t.set_property ("package_base", base_package_name);
+   t.set_property ("base_package", base_package_spec);
+   base_package_spec.list_of_declarations.append (table_enum);
+
+after table_declaration do
+    let table_name = identifier.text;
+    tree.table_enum.append ([",", table_name]);
+
+end parser;

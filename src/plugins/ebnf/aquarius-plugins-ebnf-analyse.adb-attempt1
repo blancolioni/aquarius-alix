@@ -1,0 +1,512 @@
+with Aquarius.Errors;
+with Aquarius.Grammars;
+with Aquarius.Grammars.Builtin;
+with Aquarius.Lexers;
+with Aquarius.Programs;                 use Aquarius.Programs;
+with Aquarius.Programs.Properties;
+with Aquarius.Syntax;
+with Aquarius.Tokens;
+with Aquarius.Trace;
+with Aquarius.Trees;
+
+package body Aquarius.Plugins.EBNF.Analyse is
+
+   package Syntax_Property renames Aquarius.Programs.Properties.Syntax;
+
+   ----------------------
+   -- After_Definition --
+   ----------------------
+
+   procedure After_Definition
+     (Target : access Aquarius.Actions.Actionable'Class)
+   is
+      Tree         : constant Aquarius.Trees.Tree :=
+        Aquarius.Trees.Tree (Target);
+      Definition   : constant Program_Tree := Program_Tree (Target);
+      Defined_Name : constant Program_Tree :=
+        Program_Tree (Definition.Leaf ("identifier"));
+      Name         : constant String := Defined_Name.Text;
+      Grammar      : constant Aquarius.Grammars.Aquarius_Grammar :=
+        Aquarius.Grammars.Aquarius_Grammar (Tree.Property ("grammar"));
+      Syntax_Definition : constant Program_Tree :=
+        Program_Tree (Tree.Breadth_First_Search ("syntax-body"));
+      Standard_Definition : constant Program_Tree :=
+        Program_Tree (Tree.Breadth_First_Search ("standard-body"));
+      Delimiter_Definition : constant Program_Tree :=
+        Program_Tree (Tree.Breadth_First_Search ("delimiter-body"));
+      Value_Definition : constant Program_Tree :=
+        Program_Tree (Tree.Breadth_First_Search ("value-definition"));
+   begin
+
+      Aquarius.Programs.Debug_Dump_Program (Definition);
+
+      if Syntax_Definition /= null then
+
+         declare
+            use type Aquarius.Syntax.Syntax_Tree;
+            Definition : constant Aquarius.Syntax.Syntax_Tree :=
+              Aquarius.Programs.Properties.Syntax.Get (Syntax_Definition);
+            Rule       : constant Aquarius.Syntax.Syntax_Tree :=
+              Grammar.Get_Definition (Name);
+         begin
+            pragma Assert (Rule = Definition);
+         end;
+      elsif Standard_Definition /= null then
+         declare
+            use Aquarius.Lexers;
+            Standard_Name : constant String :=
+              Standard_Definition.Leaf ("identifier").Text;
+            Lex : constant Lexer :=
+              Aquarius.Grammars.Builtin.Standard_Lexer (Standard_Name);
+         begin
+            Aquarius.Trace.Put_Line (Aquarius.Trace.Plugins,
+                                     "adding standard lexer: " &
+                                       Standard_Name);
+            if Lex = Null_Lexer then
+               Aquarius.Errors.Error (Standard_Definition,
+                                      "unrecognised standard lexer");
+            else
+               Grammar.Add_Class_Terminal (Tree, Name, Lex, False,
+                                           Name = "comment");
+            end if;
+         end;
+      elsif Delimiter_Definition /= null then
+         declare
+            use Aquarius.Lexers;
+            String_Text : constant String :=
+              Delimiter_Definition.Leaf ("string").Text;
+            Text        : constant String :=
+              String_Text (String_Text'First + 1 ..
+                             String_Text'Last - 1);
+         begin
+            Aquarius.Trace.Put_Line (Aquarius.Trace.Plugins,
+                                     "adding delimiters: " & Text);
+            Grammar.Add_Class_Terminal (Tree, Name,
+                                        One_Of (Text), True);
+         end;
+      elsif Value_Definition /= null then
+         declare
+            Child : constant Aquarius.Trees.Tree :=
+              Value_Definition.Breadth_First_Search ("expression");
+            Value : constant Aquarius.Trees.Tree := Child.First_Leaf;
+         begin
+            Grammar.Add_Value (Child, Name, Value.Text);
+         end;
+      else
+         Aquarius.Errors.Error (Tree, "no definition found");
+      end if;
+   end After_Definition;
+
+   -----------------------
+   -- After_Nested_Rule --
+   -----------------------
+
+   procedure After_Nested_Rule
+     (Target : access Aquarius.Actions.Actionable'Class)
+   is
+      use Aquarius.Programs.Properties.Syntax;
+      Tree         : constant Program_Tree := Program_Tree (Target);
+      S_Body : constant Program_Tree :=
+        Program_Tree (Tree.Breadth_First_Search ("syntax-body"));
+   begin
+      Set (Tree, Get (S_Body));
+   end After_Nested_Rule;
+
+   -------------------------
+   -- After_Optional_Rule --
+   -------------------------
+
+   procedure After_Optional_Rule
+     (Target : access Aquarius.Actions.Actionable'Class)
+   is
+      use Aquarius.Syntax;
+      Tree         : constant Program_Tree := Program_Tree (Target);
+      Grammar      : constant Aquarius.Grammars.Aquarius_Grammar :=
+        Aquarius.Grammars.Aquarius_Grammar (Tree.Property ("grammar"));
+      Frame        : constant Aquarius.Tokens.Token_Frame :=
+        Grammar.Frame;
+      Option : constant Syntax_Tree := New_Optional (Frame, Tree);
+      Child  : constant Aquarius.Trees.Tree :=
+        Tree.Breadth_First_Search ("sequence-of-rules");
+   begin
+
+      Option.Add_Child (Programs.Properties.Syntax.Get
+                          (Program_Tree (Child)));
+      Programs.Properties.Syntax.Set (Tree, Option);
+   end After_Optional_Rule;
+
+   --------------------------------
+   -- After_Repeat_Optional_Rule --
+   --------------------------------
+
+   procedure After_Repeat_Optional_Rule
+     (Target : access Aquarius.Actions.Actionable'Class)
+   is
+      use Aquarius.Syntax;
+      Tree         : constant Program_Tree := Program_Tree (Target);
+      Grammar      : constant Aquarius.Grammars.Aquarius_Grammar :=
+        Aquarius.Grammars.Aquarius_Grammar (Tree.Property ("grammar"));
+      Frame        : constant Aquarius.Tokens.Token_Frame :=
+        Grammar.Frame;
+      Repeat : constant Syntax_Tree :=
+        New_Repeat (Frame, Tree, True, null);
+      Child  : constant Program_Tree :=
+        Program_Tree (Tree.Breadth_First_Search ("repeater"));
+   begin
+      Repeat.Add_Child (Programs.Properties.Syntax.Get (Child));
+      Programs.Properties.Syntax.Set (Tree, Repeat);
+      if Child.Has_Property ("separator") then
+         Repeat.Set_Separator (Syntax_Tree (Child.Property ("separator")));
+      end if;
+   end After_Repeat_Optional_Rule;
+
+   --------------------------------
+   -- After_Repeat_Required_Rule --
+   --------------------------------
+
+   procedure After_Repeat_Required_Rule
+     (Target : access Aquarius.Actions.Actionable'Class)
+   is
+      use Aquarius.Syntax;
+      Tree         : constant Program_Tree := Program_Tree (Target);
+      Grammar      : constant Aquarius.Grammars.Aquarius_Grammar :=
+        Aquarius.Grammars.Aquarius_Grammar (Tree.Property ("grammar"));
+      Frame        : constant Aquarius.Tokens.Token_Frame :=
+        Grammar.Frame;
+      Repeat : constant Syntax_Tree :=
+        New_Repeat (Frame, Tree, False, null);
+      Child  : constant Program_Tree :=
+        Program_Tree (Tree.Breadth_First_Search ("repeater"));
+   begin
+      Repeat.Add_Child (Programs.Properties.Syntax.Get (Child));
+      Programs.Properties.Syntax.Set (Tree, Repeat);
+      if Child.Has_Property ("separator") then
+         Repeat.Set_Separator (Syntax_Tree (Child.Property ("separator")));
+      end if;
+   end After_Repeat_Required_Rule;
+
+   --------------------
+   -- After_Repeater --
+   --------------------
+
+   procedure After_Repeater
+     (Target : access Aquarius.Actions.Actionable'Class)
+   is
+      use Aquarius.Syntax;
+      Tree         : constant Program_Tree := Program_Tree (Target);
+      Child  : constant Aquarius.Trees.Tree :=
+        Tree.Breadth_First_Search ("sequence-of-rules");
+      Separator_Child : constant Program_Tree :=
+        Program_Tree (Tree.Breadth_First_Search ("separator"));
+   begin
+      Programs.Properties.Syntax.Set (Tree,
+                                      Programs.Properties.Syntax.Get (Child));
+      if Separator_Child /= null then
+         Tree.Set_Property ("separator",
+                            Programs.Properties.Syntax.Get (Separator_Child));
+      end if;
+   end After_Repeater;
+
+   ----------------
+   -- After_Rule --
+   ----------------
+
+   procedure After_Rule
+     (Target : access Aquarius.Actions.Actionable'Class)
+   is
+      Tree         : constant Program_Tree := Program_Tree (Target);
+      Child : Aquarius.Trees.Tree := Tree.First_Child;
+   begin
+      while Child.Name = "" loop
+         Child := Child.First_Child;
+      end loop;
+      Programs.Properties.Syntax.Set (Tree,
+                                      Programs.Properties.Syntax.Get (Child));
+   end After_Rule;
+
+   ---------------------
+   -- After_Separator --
+   ---------------------
+
+   procedure After_Separator
+     (Target : access Aquarius.Actions.Actionable'Class)
+   is
+      use Aquarius.Syntax;
+      Tree         : constant Program_Tree := Program_Tree (Target);
+      Child  : constant Aquarius.Trees.Tree :=
+        Tree.Breadth_First_Search ("terminal-rule");
+   begin
+      Programs.Properties.Syntax.Set (Tree,
+                                      Programs.Properties.Syntax.Get (Child));
+   end After_Separator;
+
+   -----------------------------
+   -- After_Sequence_Of_Rules --
+   -----------------------------
+
+   procedure After_Sequence_Of_Rules
+     (Target : access Aquarius.Actions.Actionable'Class)
+   is
+      Tree         : constant Program_Tree := Program_Tree (Target);
+      Grammar      : constant Aquarius.Grammars.Aquarius_Grammar :=
+        Aquarius.Grammars.Aquarius_Grammar (Tree.Property ("grammar"));
+      Frame        : constant Aquarius.Tokens.Token_Frame :=
+        Grammar.Frame;
+      Items  : constant Aquarius.Trees.Array_Of_Trees :=
+        Tree.Get_Matching_Children ("rule");
+      Result : constant Aquarius.Syntax.Syntax_Tree :=
+        Aquarius.Syntax.New_Sequence (Frame, Tree);
+   begin
+      for I in Items'Range loop
+         declare
+            Child : constant Aquarius.Syntax.Syntax_Tree :=
+              Aquarius.Syntax.Syntax_Tree
+              (Programs.Properties.Syntax.Get (Items (I)));
+         begin
+            Aquarius.Trace.Put_Line (Aquarius.Trace.Plugins,
+                                     "add child: " &
+                                       Child.Image);
+            Result.Add_Child (Child);
+         end;
+
+      end loop;
+
+      Programs.Properties.Syntax.Set (Tree, Result);
+
+   end After_Sequence_Of_Rules;
+
+   -------------------------
+   -- After_Sequence_Rule --
+   -------------------------
+
+   procedure After_Sequence_Rule
+     (Target : access Aquarius.Actions.Actionable'Class)
+   is
+      Tree         : constant Program_Tree := Program_Tree (Target);
+      Grammar      : constant Aquarius.Grammars.Aquarius_Grammar :=
+        Aquarius.Grammars.Aquarius_Grammar (Tree.Property ("grammar"));
+      Frame        : constant Aquarius.Tokens.Token_Frame :=
+        Grammar.Frame;
+      Items  : constant Aquarius.Trees.Array_Of_Trees :=
+        Tree.Get_Matching_Children ("terminal-rule");
+      Result : constant Aquarius.Syntax.Syntax_Tree :=
+        Aquarius.Syntax.New_Sequence (Frame, Tree);
+   begin
+      for I in Items'Range loop
+         Result.Add_Child (Programs.Properties.Syntax.Get (Items (I)));
+      end loop;
+      Programs.Properties.Syntax.Set (Tree, Result);
+   end After_Sequence_Rule;
+
+   -----------------------
+   -- After_Syntax_Body --
+   -----------------------
+
+   procedure After_Syntax_Body
+     (Target : access Aquarius.Actions.Actionable'Class)
+   is
+      Tree         : constant Program_Tree := Program_Tree (Target);
+      Grammar      : constant Aquarius.Grammars.Aquarius_Grammar :=
+        Aquarius.Programs.Properties.Grammars.Get (Tree);
+      Frame        : constant Aquarius.Tokens.Token_Frame :=
+        Grammar.Frame;
+      Choices : constant Aquarius.Trees.Array_Of_Trees :=
+        Tree.Get_Matching_Children ("sequence-of-rules");
+   begin
+      if Choices'Length = 0 then
+         null;   --  error already reported in Before_Syntax_Body
+      elsif Choices'Length = 1 then
+         null;   --  tree already recorded
+      else
+         declare
+            use type Aquarius.Syntax.Syntax_Class;
+            Choice : constant Aquarius.Syntax.Syntax_Tree;
+         begin
+            if Syntax_Property.Exists (Tree) then
+               --  this must be a choice tree, because of Before_Syntax_Body
+               Choice := Syntax_Property.Get (Tree);
+               pragma Assert (Choice.Syntax_Class =
+                              Aquarius.Syntax.Choice);
+            else
+               Choice := Aquarius.Syntax.New_Choice (Frame, Tree);
+            end if;
+
+            for I in Choices'Range loop
+               Choice.Add_Child (Get (Choices (I)));
+            end loop;
+
+            if not Syntax_Property.Exists (Tree) then
+               Syntax_Property.Set (Tree, Choice);
+            end if;
+         end;
+      end if;
+   end After_Syntax_Body;
+
+   -------------------------
+   -- After_Terminal_Rule --
+   -------------------------
+
+   procedure After_Terminal_Rule
+     (Target : access Aquarius.Actions.Actionable'Class)
+   is
+      Tree         : constant Program_Tree := Program_Tree (Target);
+      Name_Reference   : constant Program_Tree :=
+        Program_Tree (Tree.Leaf ("identifier"));
+      Class_Spec      : constant Program_Tree :=
+        Program_Tree (Tree.Breadth_First_Search ("class_spec"));
+      Leaf             : constant Program_Tree :=
+        Program_Tree (Tree.First_Leaf);
+      Name             : constant String := Leaf.Text;
+      G                : constant Aquarius.Grammars.Aquarius_Grammar :=
+        Programs.Properties.Grammar.Get (Tree);
+      Value            : Aquarius.Syntax.Syntax_Tree;
+   begin
+      Aquarius.Trace.Put_Line (Aquarius.Trace.Plugins,
+                               "after terminal: " & Name);
+      if Name_Reference /= null then
+         Value := G.Reference_Name (Tree, Name);
+      else
+         Value := G.Reference_Terminal (Tree, Name (Name'First + 1 ..
+                                                      Name'Last - 1));
+      end if;
+      if Class_Spec /= null then
+         declare
+            Class_Value : constant Aquarius.Syntax.Syntax_Tree :=
+              Aquarius.Syntax.New_Sequence (G.Frame, Tree);
+         begin
+            Class_Value.Set_Render_Class
+              (Class_Spec.Leaf ("identifier").Text);
+            Class_Value.Add_Child (Value);
+            Value := Class_Value;
+         end;
+      end if;
+      Programs.Properties.Syntax.Set (Tree, Value);
+   end After_Terminal_Rule;
+
+   ----------------
+   -- After_When --
+   ----------------
+
+   procedure After_When
+     (Target : access Aquarius.Actions.Actionable'Class)
+   is
+      Tree  : constant Program_Tree := Program_Tree (Target);
+      Rule  : constant Program_Tree := Program_Tree (Tree.Left_Sibling);
+      Rule_Syntax   : constant Aquarius.Syntax.Syntax_Tree :=
+        Aquarius.Syntax.Syntax_Tree (Rule.Property ("syntax"));
+      Preconditions : constant Program_Tree :=
+        Tree.Program_Child ("sequence_of_identifiers");
+
+   begin
+      if Preconditions /= null then
+         declare
+            Properties    : constant Array_Of_Program_Trees :=
+              Preconditions.Direct_Children ("identifier");
+         begin
+
+            for I in Properties'Range loop
+               Rule_Syntax.Add_Precondition_Property
+                 (Properties (I).First_Leaf.Text);
+            end loop;
+         end;
+      end if;
+
+   end After_When;
+
+   -----------------------
+   -- Before_Definition --
+   -----------------------
+
+   procedure Before_Definition
+     (Target : access Aquarius.Actions.Actionable'Class)
+   is
+      Tree         : constant Aquarius.Trees.Tree :=
+        Aquarius.Trees.Tree (Target);
+      Definition   : constant Program_Tree := Program_Tree (Target);
+      Defined_Name : constant Program_Tree :=
+        Program_Tree (Definition.Leaf ("identifier"));
+      Name         : constant String := Defined_Name.Text;
+      Grammar      : constant Aquarius.Grammars.Aquarius_Grammar :=
+        Aquarius.Grammars.Aquarius_Grammar (Tree.Property ("grammar"));
+      Syntax_Definition : constant Program_Tree :=
+        Program_Tree (Tree.Breadth_First_Search ("syntax-body"));
+   begin
+      if Syntax_Definition /= null then
+         Aquarius.Trace.Put_Line (Aquarius.Trace.Plugins,
+                                  "pre-defining syntax body for " & Name);
+         declare
+            Rule       : constant Aquarius.Syntax.Syntax_Tree :=
+              Grammar.Add_Non_Terminal (Tree, Name);
+         begin
+            Syntax_Property.Set (Syntax_Definition, Rule);
+         end;
+      end if;
+   end Before_Definition;
+
+   ------------------------------
+   -- Before_Sequence_Of_Rules --
+   ------------------------------
+
+   procedure Before_Sequence_Of_Rules
+     (Target : access Aquarius.Actions.Actionable'Class)
+   is
+      Tree         : constant Program_Tree := Program_Tree (Target);
+      Grammar      : constant Aquarius.Grammars.Aquarius_Grammar :=
+        Aquarius.Grammars.Aquarius_Grammar (Tree.Property ("grammar"));
+      Frame        : constant Aquarius.Tokens.Token_Frame :=
+        Grammar.Frame;
+      Items  : constant Aquarius.Trees.Array_Of_Trees :=
+        Tree.Get_Matching_Children ("rule");
+      Result : constant Aquarius.Syntax.Syntax_Tree :=
+        Aquarius.Syntax.New_Sequence (Frame, Tree);
+   begin
+      if Items'Length = 1 then
+         Syntax_Property.Set (Items (1), Syntax_Property.Get (Tree));
+      else
+         Result := Aquarius.Syntax.New_Sequence (Frame, Tree);
+      for I in Items'Range loop
+         declare
+            Child : constant Aquarius.Syntax.Syntax_Tree :=
+              Aquarius.Syntax.Syntax_Tree
+              (Programs.Properties.Syntax.Get (Items (I)));
+         begin
+            Aquarius.Trace.Put_Line (Aquarius.Trace.Plugins,
+                                     "add child: " &
+                                       Child.Image);
+            Result.Add_Child (Child);
+         end;
+
+      end loop;
+
+      Programs.Properties.Syntax.Set (Tree, Result);
+
+   end Before_Sequence_Of_Rules;
+
+   ------------------------
+   -- Before_Syntax_Body --
+   ------------------------
+
+   procedure Before_Syntax_Body
+     (Target : access Aquarius.Actions.Actionable'Class)
+   is
+      use Aquarius.Syntax;
+      Tree         : constant Program_Tree := Program_Tree (Target);
+      Grammar      : constant Aquarius.Grammars.Aquarius_Grammar :=
+        Aquarius.Grammars.Aquarius_Grammar (Tree.Property ("grammar"));
+      Frame        : constant Aquarius.Tokens.Token_Frame :=
+        Grammar.Frame;
+      Choices : constant Aquarius.Trees.Array_Of_Trees :=
+        Tree.Get_Matching_Children ("sequence-of-rules");
+   begin
+      if Choices'Length = 0 then
+         Aquarius.Errors.Error (Tree, "missing rule");
+      elsif Choices'Length = 1 then
+         Syntax_Property.Set (Choices (1),
+                              Syntax_Property.Get (Tree));
+      elsif Syntax_Property.Get (Tree).Syntax_Class = Sequence then
+         Syntax_Property.Get (Tree).Replace_Class (Choice);
+      end if;
+   end Before_Syntax_Body;
+
+end Aquarius.Plugins.EBNF.Analyse;
+

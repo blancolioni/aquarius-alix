@@ -1,0 +1,202 @@
+;  -*-scheme-*-
+
+; (property <block> '(symbol-table))
+
+; (property <identifier-list> '((value 'identifier)))
+
+; (property <variable-declaration> 
+; 	  '((entry-list (list 'variable (eval-child identifier-list)))))
+
+(set-format 'sym-semicolon 'no-space 'new-line)
+(set-format 'sym-full-stop 'no-space 'no-space)
+(set-format 'sym-single-quote 'no-space 'no-space)
+(set-format 'begin 'new-line 'new-line)
+(set-format 'end 'new-line 'space)
+(set-format 'sym-left-paren 'match-space 'no-space)
+(set-format 'sym-right-paren 'no-space 'match-space)
+;(set-format 'sym-comma 'no-space (list 'space 'soft-new-line))
+(set-format 'sym-comma 'no-space 'space)
+;(set-format 'return 'new-line 'space)
+(set-format 'is 'space (list 'soft-new-line 'space))
+;(set-format 'then 'space 'new-line)
+;(set-format 'else 'space 'new-line)
+(set-format 'declare 'space 'new-line)
+(set-format 'generic 'space 'new-line)
+
+(format-child <loop-statement> 'loop 'space 'new-line)
+(format-child <case-statement> 'is 'space 'new-line)
+(format-child <case-list> '=> 'space 'new-line)
+(format-child <non-null-record-type> 'record 'new-line 'new-line)
+(format-child <if-statement> 'then 'space 'new-line)
+(format-child-n <if-statement> 'then 2 'space 'new-line)
+(format-child <if-statement> 'else 'space 'new-line)
+
+(format-child <array-or-call-subreference> 'sym-left-paren
+	      (list 'match-space 'soft-new-line) 'no-space)
+(format-child <handled-sequence-of-statements> 'exception
+	      'new-line 'new-line)
+(format-child <exception-handler> '=> 'space 'new-line)
+(format-option <formal-argument-spec> 'narrow)
+
+; The following should work, but doesn't because format options
+; are not currently propagated.  Should they be?
+(format-option <function-declaration> 'narrow)
+
+(format-syntax-tree
+ (child-path <subprogram-body> (list 'is))
+ (lambda (tree)
+   (let ((args (scan-left tree 'formal-argument-spec 'subprogram-declaration)))
+     (if (and (not (empty-program-tree? args))
+	      (has-alternative-format args)
+	      (eq? (alternative-format-name args) 'narrow))
+	 (make-format 'new-line 'new-line)
+	 (make-format 'space 'new-line)))
+   )
+ )
+
+(format-syntax-tree
+ (child-path <function-specification> (list 'return))
+ (lambda (tree)
+   (let ((args (scan-left tree 'formal-argument-spec 'function-declaration)))
+     (if (and (not (empty-program-tree? args))
+	      (has-alternative-format args)
+	      (eq? (alternative-format-name args) 'narrow))
+	 (make-format 'new-line 'space)
+	 (make-format 'space 'space)))
+   )
+ )
+
+(format-syntax-tree (child-path <package-spec> (list 'is))
+		    (make-format 'space 'new-line))
+(format-syntax-tree (child-path <package-body> (list 'is))
+		    (make-format 'space 'new-line))
+
+(format-syntax-tree (child-path <call-or-assignment-statement> (list ':=))
+		    (make-format 'space (list 'space 'soft-new-line)))
+(format-syntax-tree (child-path <variable-type> (list ':=))
+		    (make-format 'space (list 'space 'soft-new-line)))
+(format-syntax-tree (child-path <expression-or-aggregate> (list 'sym-comma))
+		    (make-format 'no-space (list 'space 'soft-new-line)))
+;(format-syntax-tree (child-path <call-args> (list 'sym-comma))
+;		    (make-format 'no-space (list 'space 'soft-new-line)))
+
+(format-syntax-tree (child-path <array-or-call-subreference> (list 'sym-comma))
+		    (make-format 'no-space (list 'space 'soft-new-line)))
+
+(format-syntax-tree (child-path <binary-adding-operator> (list '&))
+		    (make-format 'space (list 'space 'soft-new-line)))
+
+; (opt-format-syntax-tree 
+;  (child-path <subprogram-body> (list 'is)) 'narrow 
+;  (make-format 'new-line 'new-line))
+; (format-syntax-tree 
+;  (child-path <subprogram-body> (list 'is))
+;  (make-format 'space 'new-line))
+
+(format-syntax-tree
+ (child-path <list-of-formal-arguments> (list 'sym-semicolon))
+ (make-format 'no-space 'space))
+(opt-format-syntax-tree
+ (child-path <list-of-formal-arguments> (list 'sym-semicolon))
+ 'narrow
+ (make-format 'no-space 'new-line))
+(opt-indent-tree-n <formal-argument-spec> 'narrow 2)
+(opt-indent-tree-n <list-of-formal-arguments> 'narrow 1)
+(opt-indent-tree-n (syntax-find-child <function-specification> 'return)
+		   'narrow 2)
+(indent-tree-n <generic-instantiation> 2)
+
+; (indent-tree-n <call-args> 1)
+
+(opt-format-syntax-tree
+ (child-path <formal-argument-spec> (list 'sym-left-paren))
+ 'narrow
+ (make-format 'new-line 'no-space))
+;(opt-format-syntax-tree
+; (child-path <formal-argument-spec> (list 'sym-right-paren))
+; 'narrow
+; (make-format 'no-space 'new-line))
+
+(indent-child <generic-declaration> 'generic-formal-parameter-declaration)
+(indent-child <package-body> 'list-of-declarations)
+(indent-child <package-spec-declaration> 'list-of-declarations)
+(indent-child <private-part> 'list-of-declarations)
+
+(indent-child <type-definition> 'record-type-definition)
+(indent-child <non-null-record-type> 'record-element-list)
+(indent-child <variant-record-element> 'variant-case)
+(indent-child <variant-case> 'record-element-list)
+
+;(indent-child-n <package-spec> 'generic-instantiation 2)
+
+(opt-indent-child-n <procedure-declaration> 'narrow 'formal-argument-spec 2)
+(opt-indent-child-n <function-declaration> 'narrow 'formal-argument-spec 2)
+(opt-indent-child-n <function-declaration> 'narrow 'function-return-spec 2)
+
+; (indent-child <generic-declaration> 'generic-formal-arguments)
+
+(indent-child <block> 'list-of-declarations)
+(indent-child <declare-statement> 'list-of-declarations)
+
+(indent-child <case-statement> 'case-list)
+
+(indent-child <derived-type-definition> 'record-type-definition)
+
+;(indent-child <handled-sequence-of-statements> 'sequence-of-statements)
+(indent-child <handled-sequence-of-statements> 'exception-handler)
+(indent-child <sequence-of-statements> 'single-statement)
+
+(align-child <record-element-list>
+	     (list 'record-element-definition 'sym-colon))
+
+(align-child <list-of-declarations>
+	     (list 'declaration 'variable-declaration ':))
+
+(align-child <list-of-formal-arguments>
+	     (list 'formal-argument))
+
+(align-child <list-of-formal-arguments> 
+	     (list 'formal-argument ':))
+
+(align-child <list-of-formal-arguments>
+	     (list 'formal-argument 'type-indication))
+
+(align-child <list-of-formal-arguments>
+	     (list 'formal-argument ':=))
+
+(align-child <generic-actual-part> 
+	     (list 'generic-association '=>))
+
+(align-child <generic-declaration>
+	     (list 'generic-formal-parameter-declaration
+		   'formal-object-declaration ':))
+
+;(align-child <list-of-formal-arguments>
+;	     (list 'formal-argument))
+
+
+;(super-class <type-indication>)
+(super-class <procedure-name>)
+(super-class <function-name>)
+(super-class <package-name>)
+(super-class <external-unit-name>)
+(super-class <type-header>)
+
+;;;=========================================
+; terminal case formats
+
+(define case-exceptions
+  '(("text_io" . "Text_IO")
+    ("wl" . "WL")
+    )
+  )
+
+(format-terminal current-grammar 'keyword string-downcase)
+
+(format-terminal current-grammar 'identifier
+		 (lambda (x)
+		   (let ((special (assoc-ref case-exceptions x)))
+		     (if (not special)
+			 (ada-case-identifier x)
+			 special))))
+

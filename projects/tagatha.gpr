@@ -1,0 +1,27 @@
+with "settings";
+
+project Tagatha is
+
+   type Gtkada_Kind_Type is
+      ("static", "relocatable");
+   for Object_Dir use "../obj";
+   for Exec_Dir use "../bin";
+   LIBRARY_TYPE : Gtkada_Kind_Type := external ("LIBRARY_TYPE");
+
+   package Builder renames Settings.Builder;
+
+   package Compiler renames Settings.Compiler;
+
+   package Binder renames Settings.Binder;
+
+   case LIBRARY_TYPE is
+
+      when "static" =>
+         for Source_Dirs use ("../src/tagatha", "../../../tagatha/src");
+
+      when "relocatable" =>
+         for Source_Dirs use ("../src/tagatha");
+   end case;
+
+end Tagatha;
+

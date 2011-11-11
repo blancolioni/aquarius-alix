@@ -1,0 +1,62 @@
+top_level = rules_file
+case_sensitive = false
+
+identifier         ::= standard ada_identifier
+numeric_literal    ::= standard ada_numeric_literal
+character_literal  ::= standard ada_character_literal
+string_literal     ::= standard ada_string_literal
+delimiter          ::= delimiters "&()+,;|"
+symbol             ::= standard ada_symbol
+comment            ::= standard ada_comment
+
+format ';' no_space_before no_space_after new_line_after
+format '(' no_space_before no_space_after
+format ')' no_space_before no_space_after
+format 'is' new_line_after space_before
+format ',' no_space_before space_after
+format declaration indent_child
+format identifier space_before space_after
+
+
+source_file ::= { context_clause } project
+
+context_clause ::= 'with' string_literal ';'
+
+project ::= 'project' identifier 'is' < declaration ';' > 'end' identifier ';'
+
+declaration ::= action_group_declaration
+              | setting_declaration
+              | package_declaration
+              | action_handler
+
+action_group_declaration ::= identifier ':' identifier
+
+setting_declaration ::= 'for' setting_name 'use' value
+
+setting_name ::= identifier [ '(' setting_argument ')' ]
+
+setting_argument ::= string_literal
+
+value ::= simple_value | '(' list_value ')'
+
+simple_value ::= string_literal
+
+list_value ::= < simple_value / ',' >
+
+package_declaration ::= 'package' qualified_identifier identifier 'is'
+                           < declaration ';' >
+                        'end' qualified_identifier
+
+qualified_identifier ::= < identifier / '.' >
+
+action_handler ::=
+  target_node position_indicator [ child_node ] [ renamed_handler ]
+
+renamed_handler ::= 'as' identifier
+
+target_node ::= identifier
+
+child_node ::= identifier
+
+position_indicator ::= 'before' | 'after'
+

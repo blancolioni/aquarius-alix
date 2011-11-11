@@ -1,0 +1,35 @@
+;  -*-scheme-*-
+
+(set-format 'sym-semicolon 'no-space 'new-line)
+(set-format 'begin 'new-line 'new-line)
+(set-format 'end 'new-line 'space)
+(set-format 'sym-left-paren 'match-space 'no-space)
+(set-format 'sym-right-paren 'no-space 'match-space)
+(set-format 'sym-comma 'no-space 'space)
+(set-format 'is 'space 'new-line)
+(set-format 'then 'space 'new-line)
+(set-format 'else 'space 'new-line)
+(set-format '>> 'space 'new-line)
+
+(indent-child <list-of-declarations> 'declaration)
+; (indent-child <block> 'sequence-of-statements)
+(indent-child <sequence-of-statements> 'statement)
+(indent-child <package-spec> 'list-of-definitions)
+(indent-child <package-body> 'list-of-declarations)
+
+(format-child <until-statement> 'loop 'space 'new-line)
+
+(set-vertical-gap (syntax-find-child <list-of-declarations> 'sym-semicolon) 1)
+
+(define case-exceptions
+  '(("text_io" . "Text_IO")))
+
+(format-terminal current-grammar 'keyword string-downcase)
+
+(format-terminal current-grammar 'identifier
+		 (lambda (x)
+		   (let ((special (assoc-ref case-exceptions x)))
+		     (if (not special)
+			 (ada-case-identifier x)
+			 special))))
+

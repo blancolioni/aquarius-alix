@@ -1,0 +1,131 @@
+; -*- scheme -*-
+
+(define (line-of-dashes length)
+  (define (lod length) (if (= length 0) '() (cons #\- (lod (- length 1)))))
+  (list->string (lod length)))
+
+(define (copy-terminal from to name index)
+  (set-symbol (get-child-n to name index)
+	      (get-symbol (get-child-n from name index))))
+
+(define null-statement
+  (create-filled-tree <statement>
+		      (list (create-filled-tree <null-statement> '()))))
+
+(define (sequence-of-statements seq)
+  (create-filled-tree <sequence-of-statements>
+		      (list (list (list '() seq)))))
+
+(define empty-block
+ (create-filled-tree <block>
+		     (list (create-filled-tree <list-of-declarations> '())
+			   (sequence-of-statements null-statement))))
+
+(define (copy-definitions from)
+  (define (cd from-list)
+    (if (null? from-list) '()
+	(let ((tail (cd (cdr from-list)))
+	      (head
+	       (cond
+		((terminal? (car from-list)) '())
+		((has-child (car from-list) 'variable-declaration)
+		 '())
+		((has-child (car from-list) 'procedure-definition)
+		 (copy-tree (car from-list)
+			    current-grammar
+			    'generate-body)))))
+	  (if (eq? head '()) tail (cons head tail)))))
+  (define (proc-less proc1 proc2)
+    (define (get-proc-name proc)
+      (symbol->string (get-name (get-child
+				 (get-first-child proc)
+				 'identifier))))
+    (string<? (get-proc-name proc1) (get-proc-name proc2)))
+
+  (create-filled-tree <list-of-declarations>
+		      (let* ((body (cd (get-sub-trees from)))
+			     (sorted-body (stable-sort body proc-less)))
+			(list sorted-body))))
+
+(default-rule 'generate-body
+  (copy-tree current-tree current-grammar 'generate-body))
+
+(rule 'generate-body <package-spec>
+      (let* 
+	  ((decls (copy-definitions 
+		   (get-child current-tree 'list-of-definitions)))
+	   (result (create-filled-tree <package-body>
+				       (list decls))))
+	(copy-terminal current-tree result 'identifier 1)
+	(copy-terminal current-tree result 'identifier 2)
+	(add-new-line-after (get-child result 'is))
+	result))
+
+(rule 'generate-body <procedure-definition>
+      (create-filled-tree 
+       <procedure-declaration>
+       (let* ((name-sym (get-symbol (get-child current-tree 'identifier)))
+	      (name (symbol-text name-sym))
+	      (name-len (string-length name)))
+	 (list (new-line-comment current-grammar 
+				 (line-of-dashes (+ 6 name-len)))
+	       (new-line-comment current-grammar
+				 (string-append "-- "
+						name
+						" --"))
+	       (new-line-comment current-grammar
+				 (line-of-dashes (+ 6 name-len)))
+	       'skip-line
+	       (get-symbol (get-child current-tree 'identifier))
+	       empty-block
+	       (get-symbol (get-child current-tree 'identifier))))))
+
+
+(define (stack-variable? entry)
+  (has-property entry 'stack-variable))
+
+(define (get-stack-size entry)
+  (type-get-stack-size (get-property entry 'type)))
+
+(define (get-type entry)
+  (get-property entry 'type))
+
+(define (get-stack-index entry)
+  (get-property entry 'stack-index))
+
+(define (get-external-name entry) 
+  (string->symbol
+   (string-append
+    (symbol->string (get-property entry 'enclosing-unit))
+    "__"
+    (symbol->string (table-entry-name entry)))))
+
+(define (move-to-temp entry tmp)
+  (if (stack-variable? entry)
+      (list 'move-stack-variable-to-temp
+	    (get-stack-size entry)
+	    (get-stack-index entry)
+	    tmp)
+      (list 'move-external-to-temp
+	    (get-stack-size entry)
+	    (get-external-name entry)
+	    tmp)))
+
+(define (set-from-temp entry tmp)
+  (if (stack-variable? entry)
+      (list 'move-temp-to-stack-variable
+	    (get-stack-size entry)
+	    tmp
+	    (get-stack-index entry))
+      (list 'move-temp-to-external
+	    (get-stack-size entry)
+	    tmp
+	    (get-external-name entry))))
+
+(define (type-get-stack-size type)
+  (cond ((eq? type 'integer) 'integer-size)
+	((eq? type 'float) 'float-size)
+	(#t 0)))
+
+(define (get-entry-from-id id tag)
+  (table-get-with-tag (get-symbol-table id) (get-name id) tag #T))

@@ -1,0 +1,9 @@
+procedure Simple is
+
+   X : Integer;
+
+begin
+
+   Y := 4;
+
+end Simple;

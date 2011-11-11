@@ -1,0 +1,14 @@
+package Simple_IO is
+
+   --  we can't do strings yet!
+   --  procedure Put (S : String);
+   --  procedure Put_Line (S : String);
+
+   --  "simple" is not the half of it
+   procedure New_Line;
+
+   procedure Set_Col (Column : Integer);
+
+   Col : Integer;
+
+end Simple_IO;

@@ -1,0 +1,40 @@
+with "aquarius_target.gpr";
+with "aquarius_buffers.gpr";
+with "aquarius_programs.gpr";
+with "aquarius_ui.gpr";
+with "gtkada";
+with "settings";
+with "aquarius_base";
+with "aquarius_debug";
+with "aquarius_ast";
+with "aquarius_trees";
+with "aquarius_env";
+with "aquarius_lexers";
+with "aquarius_editor";
+
+project Aquarius_Main is
+
+   type Gtkada_Kind_Type is
+      ("static", "relocatable");
+   for Source_Dirs use ("../src/main");
+   for Object_Dir use "../obj";
+   for Exec_Dir use "../bin";
+   Library_Type : Gtkada_Kind_Type := external ("LIBRARY_TYPE");
+
+   package Builder renames Settings.Builder;
+
+   package Compiler renames Settings.Compiler;
+
+   package Binder renames Settings.Binder;
+
+   case Library_Type is
+
+      when "static" =>
+         for Main use ("aquarius-main.adb");
+
+      when "relocatable" =>
+
+   end case;
+
+end Aquarius_Main;
+
