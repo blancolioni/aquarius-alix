@@ -1,6 +1,6 @@
 with Ada.Containers.Vectors;
 with Ada.Directories;
-with Ada.Environment_Variables;
+--  with Ada.Environment_Variables;
 with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
@@ -15,6 +15,8 @@ with Aquarius.Trees;
 with Aquarius.Projects;
 with Aquarius.Interaction.Console;
 with Aquarius.UI.Console;
+
+with Aquarius.Config_Paths;
 
 package body Aquarius.Configuration is
 
@@ -52,7 +54,7 @@ package body Aquarius.Configuration is
 
    function Find_Child (Start       : Cursor;
                         Child_Name  : String)
-                        return Cursor;
+                       return Cursor;
 
    --------------------------
    -- Aquarius_Config_File --
@@ -123,13 +125,15 @@ package body Aquarius.Configuration is
 
    function Config_Folder_Path return String is
    begin
-      if Ada.Directories.Exists (".dev") then
-         return Ada.Directories.Compose (Ada.Directories.Current_Directory,
-                                         "config");
-      else
-         return Ada.Directories.Compose
-           (Ada.Environment_Variables.Value ("HOME"), ".aquarius");
-      end if;
+      return Aquarius.Config_Paths.Config_Path;
+
+      --  if Ada.Directories.Exists (".dev") then
+      --     return Ada.Directories.Compose (Ada.Directories.Current_Directory,
+      --                                     "config");
+      --  else
+      --     return Ada.Directories.Compose
+      --       (Ada.Environment_Variables.Value ("HOME"), ".aquarius");
+      --  end if;
    end Config_Folder_Path;
 
    -----------
