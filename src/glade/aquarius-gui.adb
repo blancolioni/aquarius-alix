@@ -10,8 +10,8 @@ with Gtk.Window;
 
 with Aquarius.Configuration;
 
-with Aquarius.Bubbles.Notes;
-with Aquarius.Bubbles.Collections;
+--  with Aquarius.Bubbles.Notes;
+--  with Aquarius.Bubbles.Collections;
 
 with Aquarius.GUI.Main;
 with Aquarius.GUI.Menu;
@@ -28,7 +28,8 @@ package body Aquarius.GUI is
    Local_Current_UI       : constant access Aquarius.UI.Aquarius_UI'Class :=
      new Gtk_UI;
 
-   Local_Bubble_Collection : Bubbles.Collections.Aquarius_Bubble_Collection;
+   --  Local_Bubble_Collection :
+   --  Bubbles.Collections.Aquarius_Bubble_Collection;
 
    ---------------------
    -- Current_Project --
@@ -66,9 +67,9 @@ package body Aquarius.GUI is
 
       Local_Current_Project := With_Project;
 
-      Aquarius.Bubbles.Collections.Add_Bubble
-        (To     => Local_Bubble_Collection,
-         Bubble => Aquarius.Bubbles.Notes.Create_Note);
+      --  Aquarius.Bubbles.Collections.Add_Bubble
+      --    (To     => Local_Bubble_Collection,
+      --     Bubble => Aquarius.Bubbles.Notes.Create_Note);
 
       Gtk.Main.Set_Locale;
       Gtk.Main.Init;

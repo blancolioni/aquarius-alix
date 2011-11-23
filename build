@@ -1,2 +1,0 @@
-#!/bin/sh
-gnatmake -P projects/aquarius.gpr
