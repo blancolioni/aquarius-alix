@@ -1,3 +1,5 @@
+--  with Ada.Text_IO;
+
 with Aquarius.Errors;
 with Aquarius.Syntax.Checks;
 
@@ -100,7 +102,8 @@ package body Aquarius.Programs.Parser is
      (Current : in     List_Of_Ambiguities.Cursor;
       Parent  : in     Program_Tree;
       Child   : in     Program_Tree)
-     return Ambiguity;
+      return Ambiguity
+   with Pre => Child /= null;
 
    procedure Parse_String (Context : in out Parse_Context;
                            Line    : in     String);
@@ -428,6 +431,14 @@ package body Aquarius.Programs.Parser is
          raise Constraint_Error with "new ambiguity: child is null";
       end if;
 
+--        Ada.Text_IO.Put_Line
+--          ("New_Ambiguity: Child = " & Child.Image);
+--
+--        if Parent /= null then
+--           Ada.Text_IO.Put_Line
+--             ("New_Ambiguity: Parent = " & Parent.Image);
+--        end if;
+
       if Free_Ambiguity_List.Is_Empty then
          A := new Ambiguity_Record;
       else
@@ -460,6 +471,12 @@ package body Aquarius.Programs.Parser is
       This_A      : constant Ambiguity :=
         List_Of_Ambiguities.Element (Current);
    begin
+--        Ada.Text_IO.Put_Line
+--          ("Parse_Ambiguous_Token: [" & Tok_Text & "]");
+--        if Right /= null then
+--           Ada.Text_IO.Put_Line ("   right: " & Right.Image);
+--        end if;
+
       This_A.Active := False;
       for I in Options'Range loop
          declare
@@ -467,6 +484,8 @@ package body Aquarius.Programs.Parser is
             A     : constant Ambiguity :=
               New_Ambiguity (Current, Parent, Child);
          begin
+--              Ada.Text_IO.Put_Line ("  option" & I'Img &
+--                                    ": " & Child.Image);
             Child.Set_Foster_Parent (Parent);
             Child.Expand_All;
             A.Location :=
@@ -657,6 +676,13 @@ package body Aquarius.Programs.Parser is
             Without_Optional : constant Program_Tree := Make_Subtree;
             A : Ambiguity;
          begin
+
+--              Ada.Text_IO.Put_Line
+--                ("Ambiguous optional node at [" & Tok_Text & "]");
+--              Ada.Text_IO.Put_Line
+--                ("    parent node is [" & Parent.Image & "]");
+--              Ada.Text_IO.Put_Line
+--                ("    optional node is [" & With_Optional.Image & "]");
 
             A := New_Ambiguity (Current, Parent, With_Optional);
             A.Location :=
@@ -1733,18 +1759,18 @@ package body Aquarius.Programs.Parser is
 --                       "Resolving ambiguity because " &
 --                       "no other ambiguity shares parent");
 
---                       Ada.Text_IO.Put_Line
---                         (Ada.Text_IO.Standard_Error,
---                          "   " & Aquarius.Trees.Cursors.Image (A.Location));
-
-                  --  Ada.Text_IO.Put_Line ("Selecting: " &
-                  --                          A.Top.Image);
-                  --  Ada.Text_IO.Put_Line ("  parent = " &
-                  --                          A.Parent.Image);
-                  --  if A.Right /= null then
-                  --     Ada.Text_IO.Put_Line ("  right = " &
-                  --                             A.Right.Image);
-                  --  end if;
+--                    Ada.Text_IO.Put_Line
+--                      (Ada.Text_IO.Standard_Error,
+--                       "   " & Aquarius.Trees.Cursors.Image (A.Location));
+--
+--                    Ada.Text_IO.Put_Line ("Selecting: " &
+--                                            A.Top.Image);
+--                    Ada.Text_IO.Put_Line ("  parent = " &
+--                                            A.Parent.Image);
+--                    if A.Right /= null then
+--                       Ada.Text_IO.Put_Line ("  right = " &
+--                                               A.Right.Image);
+--                    end if;
 
                   Top_Parent := A.Parent;
 
@@ -1766,7 +1792,7 @@ package body Aquarius.Programs.Parser is
                            A.Parent.Replace_Child (A.Right, A.Top);
 
                         else
-                           A.Parent.Replace_Child (A.Right, A.Top);
+                           --  A.Parent.Replace_Child (A.Right, A.Top);
                            A.Right.Add_Left_Sibling (A.Top);
                         end if;
                      end;
