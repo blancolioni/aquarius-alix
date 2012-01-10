@@ -78,8 +78,11 @@ package body Aquarius.Types is
    function Description (Item : Named_Type_Record)
                         return String
    is
+      Root_Item : Root_Aquarius_Type'Class renames
+        Root_Aquarius_Type'Class (Item);
    begin
-      return Ada.Tags.External_Tag (Root_Aquarius_Type'Class (Item)'Tag);
+      return Ada.Tags.External_Tag (Root_Item'Tag);
+      --  Root_Aquarius_Type'Class (Item)'Tag);
    end Description;
 
    -------------------------
