@@ -84,12 +84,14 @@ formal_argument_spec ::=
    '(' < formal_argument / ';'> ')'
 
 formal_argument ::=
-   defining_identifier_list ':' [ mode ] subtype_mark
-                                          [ ':=' default_expression ]
+   defining_identifier_list ':' formal_argument_type
+
+formal_argument_type ::= [ mode ] subtype_mark [ ':=' default_expression ]
+                       | access_definition
+
 mode ::= 'in'
        | 'out'
        | 'in' 'out'
-       | [ 'not' 'null' ] 'access' [ 'constant' ]
 
 package_declaration ::= package_spec | package_body
 
@@ -443,7 +445,9 @@ expression ::=
 
 relation ::=
 	simple_expression [ (relational_operator simple_expression  |
-			    ['not'] 'in' (range | subtype_mark)) ]
+			    ['not'] 'in' (explicit_range | subtype_mark)) ]
+
+explicit_range ::= simple_expression '..' simple_expression
 
 simple_expression ::=
     [ unary_adding_operator ] term { binary_adding_operator term }
@@ -572,6 +576,7 @@ selector_item ::=
 
 exception_handler ::=
    'when' < identifier / '.' > '=>' sequence_of_statements
+ | 'when' [ identifier ':' ] 'others' '=>' sequence_of_statements
 
 pragma_spec ::=
    'pragma' identifier [ '(' pragma_arg_list ')' ] ';'
