@@ -33,9 +33,10 @@ package Aquarius.Trees is
    procedure Initialise_Tree
      (Item      : in out Root_Tree_Type;
       Location  : in     Aquarius.Source.Source_Position;
-      Temporary : in     Boolean := False)
-   with Post => Aquarius.Source.Show (Item.Get_Location) =
-     Aquarius.Source.Show (Location);
+      Temporary : in     Boolean := False);
+
+   --  with Post => Aquarius.Source.Show (Item.Get_Location) =
+   --    Aquarius.Source.Show (Location);
 
    overriding
    function Location_Name

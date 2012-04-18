@@ -64,7 +64,7 @@ package body Aquarius.Grammars.Builtin is
       Ada_Comments :=
         Literal ('-') & Literal ('-') & Repeat (Any);
       Ada_Symbols :=
-        One_Of ("=>*:/.<-'") & Optional (One_Of ("=>*:/.<-"));
+        One_Of ("=>*:/.<-'") & Optional (One_Of ("=>*:/.<"));
       Ada_Delimiters := One_Of ("&()+,;|");
       Ada_Apostrophe := Literal (''');
 

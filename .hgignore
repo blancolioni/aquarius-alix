@@ -4,3 +4,4 @@ syntax: glob
 *~
 b~*.ad[bs]
 build/bin/*
+
