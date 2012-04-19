@@ -148,7 +148,7 @@ package body Aquarius.GUI is
       declare
          F : constant Aquarius.GUI.Fragments.Aquarius_Fragment :=
                Aquarius.GUI.Fragments.Create_Note_Fragment
-                 (200, 400,
+                 (500, 200,
                   "Welcome to Aquarius!" & Character'Val (10)
                     & "Double-click an entity to the right to start");
       begin

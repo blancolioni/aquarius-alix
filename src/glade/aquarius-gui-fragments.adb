@@ -2,6 +2,7 @@ with Glib;
 with Gtk.Enums;
 with Gtk.Text_View;
 
+with Aquarius.GUI.Text;
 with Aquarius.Rendering.GUI;
 with Aquarius.Styles;
 
@@ -15,6 +16,18 @@ package body Aquarius.GUI.Fragments is
 
    overriding
    procedure Render (Fragment : in out Note_Fragment_Type);
+
+   ----------------
+   -- Background --
+   ----------------
+
+   function Background
+     (Fragment : Root_Fragment_Type'Class)
+      return Aquarius.Fonts.Aquarius_Colour
+   is
+   begin
+      return Fragment.Background;
+   end Background;
 
    --------------------------
    -- Create_Note_Fragment --
@@ -34,6 +47,8 @@ package body Aquarius.GUI.Fragments is
       Gtk.Text_Buffer.Gtk_New (Fragment.Text_Buffer);
       Fragment.Width := Width;
       Fragment.Height := Height;
+      Fragment.Set_Background
+        (Aquarius.Fonts.Parse_Colour ("yellow"));
       Fragment.Renderer :=
         Aquarius.Rendering.GUI.New_GUI_Renderer
           (Fragment.Text_Buffer);
@@ -55,6 +70,13 @@ package body Aquarius.GUI.Fragments is
       Gtk.Text_View.Gtk_New (Text_View);
       Text_View.Set_Size_Request (Width  => Glib.Gint (Fragment.Width),
                                   Height => Glib.Gint (Fragment.Height));
+      Text_View.Modify_Font (Aquarius.GUI.Text.Default_Font);
+      Text_View.Modify_Bg
+        (Gtk.Enums.State_Normal,
+         Aquarius.GUI.Text.Get_Gdk_Colour
+           (Gtk.Widget.Get_Default_Colormap,
+            Fragment.Background));
+
       Text_View.Set_Buffer (Fragment.Text_Buffer);
       Text_View.Set_Wrap_Mode (Wrap_Mode => Gtk.Enums.Wrap_Word);
       Text_View.Show;
@@ -76,6 +98,17 @@ package body Aquarius.GUI.Fragments is
          Text     => Ada.Strings.Unbounded.To_String (Fragment.Text));
       R.End_Render;
    end Render;
+
+   --------------------
+   -- Set_Background --
+   --------------------
+
+   procedure Set_Background (Fragment : in out Root_Fragment_Type'Class;
+                             Background : Aquarius.Fonts.Aquarius_Colour)
+   is
+   begin
+      Fragment.Background := Background;
+   end Set_Background;
 
    ---------------
    -- Set_Title --
