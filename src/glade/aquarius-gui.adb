@@ -14,11 +14,14 @@ with Aquarius.Configuration;
 --  with Aquarius.Bubbles.Collections;
 
 with Aquarius.GUI.Main;
+with Aquarius.GUI.Manager;
 with Aquarius.GUI.Menu;
 with Aquarius.GUI.Message_View;
 with Aquarius.GUI.Source;
 with Aquarius.GUI.Text;
 with Aquarius.GUI.Views;
+
+with Aquarius.GUI.Fragments;
 
 with Aquarius.Buffers;
 
@@ -71,43 +74,47 @@ package body Aquarius.GUI is
       --    (To     => Local_Bubble_Collection,
       --     Bubble => Aquarius.Bubbles.Notes.Create_Note);
 
-      Gtk.Main.Set_Locale;
+      --  Gtk.Main.Set_Locale;
       Gtk.Main.Init;
       Gtk.Builder.Gtk_New (Builder);
 
       Ada.Text_IO.Put_Line ("Loading: " &
                               Aquarius.Configuration.Get_Library_Path &
-                              "/Aquarius.ui");
+                              "/aquarius-fragments.glade");
 
       declare
          use type Glib.Error.GError;
          Error : constant Glib.Error.GError :=
                    Builder.Add_From_File
                      (Filename => Aquarius.Configuration.Get_Library_Path &
-                      "/Aquarius.ui");
+                              "/aquarius-fragments.glade");
       begin
          if Error /= null then
             raise Program_Error with
               "Error opening GUI definition: " &
             Aquarius.Configuration.Get_Library_Path &
-            "/Aquarius.ui";
+            "/aquarius-fragments.glade";
          end if;
       end;
 
       Ada.Text_IO.Put_Line ("done");
 
+      if False then
+         Aquarius.GUI.Main.Initialise (Builder);
+         Aquarius.GUI.Menu.Initialise (Builder);
+         Aquarius.GUI.Message_View.Initialise (Builder);
+         Aquarius.GUI.Source.Initialise (Builder);
+      end if;
+
       Aquarius.GUI.Text.Initialise;
-      Aquarius.GUI.Main.Initialise (Builder);
-      Aquarius.GUI.Menu.Initialise (Builder);
-      Aquarius.GUI.Message_View.Initialise (Builder);
-      Aquarius.GUI.Source.Initialise (Builder);
+      Aquarius.GUI.Manager.Initialise (Builder);
       Aquarius.GUI.Views.Initialise (Builder);
 
       declare
          Main_Window : constant Gtk.Window.Gtk_Window :=
                          Gtk.Window.Gtk_Window
                            (Builder.Get_Object
-                              ("Aquarius_Main_Window"));
+                              ("Aquarius_Main"));
          Pixbuf      : Gdk.Pixbuf.Gdk_Pixbuf;
          Error       : Glib.Error.GError;
       begin
@@ -130,13 +137,25 @@ package body Aquarius.GUI is
          end if;
 
          Aquarius.GUI.Views.Update_Views (Local_Current_Project);
-         Aquarius.GUI.Source.Load_Buffer
-           (Local_Current_Project.Get_Main_Buffer);
+--           Aquarius.GUI.Source.Load_Buffer
+--             (Local_Current_Project.Get_Main_Buffer);
       end;
 
-      if With_File /= "" then
-         Aquarius.GUI.Source.Load_File (With_File);
-      end if;
+--        if With_File /= "" then
+--           Aquarius.GUI.Source.Load_File (With_File);
+--        end if;
+
+      declare
+         F : constant Aquarius.GUI.Fragments.Aquarius_Fragment :=
+               Aquarius.GUI.Fragments.Create_Note_Fragment
+                 (200, 400,
+                  "Welcome to Aquarius!" & Character'Val (10)
+                    & "Double-click an entity to the right to start");
+      begin
+
+         Aquarius.GUI.Manager.Add_Fragment (F);
+
+      end;
 
       Gtk.Main.Main;
    end Launch_GUI;
