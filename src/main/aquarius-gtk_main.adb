@@ -3,7 +3,6 @@ with Aquarius.Command_Line;
 with Aquarius.Driver;
 with Aquarius.GUI;
 with Aquarius.Projects;
-;
 with Aquarius.Trees.Properties;
 
 procedure Aquarius.Gtk_Main is

@@ -13,7 +13,6 @@ with Aquarius.Rendering;
 with Aquarius.Rendering.Manager;
 with Aquarius.Styles;
 with Aquarius.Target.Manager;
-;
 with Aquarius.Trees.Cursors;
 with Aquarius.Version;
 
