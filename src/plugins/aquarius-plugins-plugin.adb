@@ -227,13 +227,13 @@ package body Aquarius.Plugins.Plugin is
          if Have_Child then
             return "procedure Actionable_" & Handler_Name &
               " (Target_Actionable : " &
-              "not null access Actions.Actionable'Class;" &
+              "not null access Aquarius.Actions.Actionable'Class;" &
               "Child_Actionable : " &
-              "not null access Actions.Actionable'Class)";
+              "not null access Aquarius.Actions.Actionable'Class)";
          else
             return "procedure Actionable_" & Handler_Name &
               " (Target_Actionable : " &
-              "not null access Actions.Actionable'Class)";
+              "not null access Aquarius.Actions.Actionable'Class)";
          end if;
       end Handler_Spec;
 
@@ -304,7 +304,7 @@ package body Aquarius.Plugins.Plugin is
             Result (I) :=
               Make_Tree ("declaration",
                          Ada_Case (Action_Groups (I).Name) &
-                           ": Actions.Action_Group;");
+                           ": Aquarius.Actions.Action_Group;");
          end loop;
          return Result;
       end Action_Decls;
@@ -327,7 +327,7 @@ package body Aquarius.Plugins.Plugin is
                  Make_Tree ("statement",
                             "Grammar.Add_Action_Group (""" &
                               Group_Name & """, " &
-                              "Actions." &
+                              "Aquarius.Actions." &
                               Ada_Case (Trigger_Name) &
                               "_Trigger, " &
                               Ada_Case (Group_Name) & ");");
@@ -443,13 +443,13 @@ package body Aquarius.Plugins.Plugin is
       use Ada.Characters.Latin_1;
    begin
       return Make_Tree ("compilation_unit",
-                        "with " & Project_Name & ";" &
-                          "with Aquarius.Grammars;" &
-                          "package " & Package_Name & " is" & LF &
-                          "   procedure Bind_Actions (Plugin : in out " &
-                          Plugin_Name & "_Type;" &
-                          "Grammar : in Grammars.Aquarius_Grammar);" &
-                          "end " & Package_Name & ";");
+                        "with " & Project_Name & ";"
+                        & "with Aquarius.Grammars;"
+                        & "package " & Package_Name & " is" & LF
+                        & "   procedure Bind_Actions (Plugin : in out "
+                        & Plugin_Name & "_Type;"
+                        & "Grammar : in Aquarius.Grammars.Aquarius_Grammar);"
+                        & "end " & Package_Name & ";");
    end Create_Spec;
 
    -----------------------
