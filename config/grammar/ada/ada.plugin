@@ -1,9 +1,9 @@
 project Ada_Plugin is
 
-  parser : parse;
+  check : semantic;
   generator : code;
 
-  package Names parser is
+  package Names check is
     Defining_Qualified_Reference after;
     Qualified_Reference after Identifier;
     Defining_Qualified_Reference before;
@@ -20,11 +20,11 @@ project Ada_Plugin is
     Object_Reference after;
   end Names.Gen;
 
-  package Ch02 parser is
+  package Ch02 check is
     Numeric_Literal after;
   end Ch02;
 
-  package Ch03 parser is
+  package Ch03 check is
     Access_Type_Definition after Subtype_Mark
       as Access_Type_After_Subtype_Mark;
     Array_Type_Definition before;
@@ -68,7 +68,7 @@ project Ada_Plugin is
 
   end Ch03;
 
-  package Ch04 parser is
+  package Ch04 check is
     Relation after as Sub_Expression_After;
     Simple_Expression after as Sub_Expression_After;
     Term after as Sub_Expression_After;
@@ -101,7 +101,7 @@ project Ada_Plugin is
     Boolean_Operator after as Operator_After;
   end Ch04.Gen;
 
-  package Ch05 parser is
+  package Ch05 check is
     Procedure_Call before Object_Reference;
     Assignment_Statement before Expression
       as Assignment_Before_Expression;
@@ -118,7 +118,7 @@ project Ada_Plugin is
     Statement after;
   end Ch05.Gen;
 
-  package Ch06 parser is
+  package Ch06 check is
     Procedure_Specification before;
     Function_Specification before;
     Procedure_Specification after Defining_Program_Unit_Name
@@ -135,11 +135,11 @@ project Ada_Plugin is
     Function_Specification after Type_Indication;
   end Ch06;
 
-  package Ch07 parser is
+  package Ch07 check is
     Package_Spec after Defining_Package_Name;
   end Ch07;
 
-  package Ch10 parser is
+  package Ch10 check is
     Compilation_Unit before;
     With_Clause after;
   end Ch10;
