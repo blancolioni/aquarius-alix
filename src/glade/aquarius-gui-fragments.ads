@@ -2,6 +2,7 @@ private with Ada.Strings.Unbounded;
 private with Gtk.Text_Buffer;
 
 with Aquarius.Fonts;
+with Aquarius.Programs;
 with Aquarius.Rendering;
 
 with Gtk.Widget;
@@ -32,6 +33,10 @@ package Aquarius.GUI.Fragments is
    function Create_Note_Fragment
      (Width, Height : in     Positive;
       Initial_Text  : in     String)
+      return Aquarius_Fragment;
+
+   function Create_Program_Fragment
+     (Program       : in     Aquarius.Programs.Program_Tree)
       return Aquarius_Fragment;
 
 private

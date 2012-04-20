@@ -3,8 +3,11 @@ with Gtk.Enums;
 with Gtk.Text_View;
 
 with Aquarius.GUI.Text;
+with Aquarius.Programs.Arrangements;
 with Aquarius.Rendering.GUI;
 with Aquarius.Styles;
+with Aquarius.Trees;
+with Aquarius.Trees.Cursors;
 
 package body Aquarius.GUI.Fragments is
 
@@ -16,6 +19,15 @@ package body Aquarius.GUI.Fragments is
 
    overriding
    procedure Render (Fragment : in out Note_Fragment_Type);
+
+   type Program_Fragment_Type is
+     new Root_Fragment_Type with
+      record
+         Program : Aquarius.Programs.Program_Tree;
+      end record;
+
+   overriding
+   procedure Render (Fragment : in out Program_Fragment_Type);
 
    ----------------
    -- Background --
@@ -57,6 +69,30 @@ package body Aquarius.GUI.Fragments is
       return Fragment;
    end Create_Note_Fragment;
 
+   -----------------------------
+   -- Create_Program_Fragment --
+   -----------------------------
+
+   function Create_Program_Fragment
+     (Program       : in     Aquarius.Programs.Program_Tree)
+      return Aquarius_Fragment
+   is
+      Fragment : constant Aquarius_Fragment :=
+                   new Program_Fragment_Type
+                     '(Root_Fragment_Type with
+                       Program => Program);
+   begin
+      Gtk.Text_Buffer.Gtk_New (Fragment.Text_Buffer);
+      Fragment.Width  := 300;
+      Fragment.Height := 400;
+      Fragment.Renderer :=
+        Aquarius.Rendering.GUI.New_GUI_Renderer
+          (Fragment.Text_Buffer);
+      Fragment.Renderer.Set_Style
+        (Aquarius.Styles.Default_Style);
+      return Fragment;
+   end Create_Program_Fragment;
+
    -------------------
    -- Create_Widget --
    -------------------
@@ -97,6 +133,19 @@ package body Aquarius.GUI.Fragments is
          Class    => "normal",
          Text     => Ada.Strings.Unbounded.To_String (Fragment.Text));
       R.End_Render;
+   end Render;
+
+   overriding
+   procedure Render (Fragment : in out Program_Fragment_Type) is
+      Cursor : constant Aquarius.Trees.Cursors.Cursor :=
+                 Aquarius.Trees.Cursors.Left_Of_Tree
+                   (Fragment.Program);
+   begin
+      Aquarius.Programs.Arrangements.Arrange (Fragment.Program,
+                                              Cursor,
+                                              0);
+      Aquarius.Programs.Arrangements.Render
+        (Fragment.Program, Fragment.Renderer, Cursor, "");
    end Render;
 
    --------------------
