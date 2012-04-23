@@ -1,8 +1,12 @@
 with Ada.Text_IO;
 with Ada.Containers.Doubly_Linked_Lists;
+with Ada.Containers.Indefinite_Vectors;
 with Ada.Unchecked_Deallocation;
 
 package body Aquarius.Tasks is
+
+   package Change_Vectors is
+     new Ada.Containers.Indefinite_Vectors (Positive, String);
 
    type Task_Access is access all Root_Task_Type'Class;
 
@@ -15,9 +19,13 @@ package body Aquarius.Tasks is
       procedure Add_Task (Item : Task_Access);
       entry Next_Task (Item : out Task_Access);
       procedure Stop;
+      procedure Set_Changed (Name : String);
+      procedure Clear_Changed (Name : String);
+      function Changed (Name : String) return Boolean;
    private
-      Tasks : Task_Lists.List;
+      Tasks         : Task_Lists.List;
       Stopping_Flag : Boolean := False;
+      Changes       : Change_Vectors.Vector;
    end Task_Manager;
 
    task Task_Execution;
@@ -34,6 +42,33 @@ package body Aquarius.Tasks is
    begin
       Task_Manager.Add_Task (T);
    end Add_Task;
+
+   -------------
+   -- Changed --
+   -------------
+
+   function Changed (Name : String) return Boolean is
+   begin
+      return Task_Manager.Changed (Name);
+   end Changed;
+
+   -------------------
+   -- Clear_Changed --
+   -------------------
+
+   procedure Clear_Changed (Name : String) is
+   begin
+      Task_Manager.Clear_Changed (Name);
+   end Clear_Changed;
+
+   -----------------
+   -- Set_Changed --
+   -----------------
+
+   procedure Set_Changed (Name : String) is
+   begin
+      Task_Manager.Set_Changed (Name);
+   end Set_Changed;
 
    ----------
    -- Stop --
@@ -82,6 +117,34 @@ package body Aquarius.Tasks is
          Tasks.Append (Item);
       end Add_Task;
 
+      -------------
+      -- Changed --
+      -------------
+
+      function Changed (Name : String) return Boolean is
+      begin
+         for I in 1 .. Changes.Last_Index loop
+            if Changes.Element (I) = Name then
+               return True;
+            end if;
+         end loop;
+         return False;
+      end Changed;
+
+      -------------------
+      -- Clear_Changed --
+      -------------------
+
+      procedure Clear_Changed (Name : String) is
+      begin
+         for I in 1 .. Changes.Last_Index loop
+            if Changes.Element (I) = Name then
+               Changes.Delete (I);
+               return;
+            end if;
+         end loop;
+      end Clear_Changed;
+
       ---------------
       -- Next_Task --
       ---------------
@@ -106,6 +169,20 @@ package body Aquarius.Tasks is
       begin
          return Natural (Tasks.Length);
       end Num_Tasks;
+
+      -----------------
+      -- Set_Changed --
+      -----------------
+
+      procedure Set_Changed (Name : String) is
+      begin
+         for I in 1 .. Changes.Last_Index loop
+            if Changes.Element (I) = Name then
+               return;
+            end if;
+         end loop;
+         Changes.Append (Name);
+      end Set_Changed;
 
       ----------
       -- Stop --

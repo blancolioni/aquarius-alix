@@ -151,9 +151,8 @@ package body Aquarius.GUI.Views is
       if Target = null then
          declare
             Buffer : constant Aquarius.Buffers.Aquarius_Buffer :=
-                       Current_Project.Get_Buffer (Node.Text);
+                       Current_Project.Get_Buffer (Node.Text, True);
          begin
-            Buffer.Load;
             return Buffer.Program;
          end;
       else
@@ -203,10 +202,11 @@ package body Aquarius.GUI.Views is
                           Current_Project.Get_Buffer
                             (Aquarius.Source.Get_File_Name
                                (Aquarius.Source.Get_Source_File
-                                  (Location)));
+                                  (Location)),
+                             False);
             Fragment  : constant Aquarius.Fragments.Aquarius_Fragment :=
                           Aquarius.Fragments.Programs.Create_Program
-                            (200, 400, Buffer.Program);
+                            (300, 300, Buffer.Program);
          begin
             Aquarius.GUI.Manager.Add_Fragment
               (Fragment, 20, 20);

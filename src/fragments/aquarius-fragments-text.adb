@@ -37,6 +37,7 @@ package body Aquarius.Fragments.Text is
 
       Text_View.Set_Buffer (Fragment.Text_Buffer);
       Text_View.Set_Wrap_Mode (Wrap_Mode => Gtk.Enums.Wrap_Word);
+      Text_View.Set_Border_Width (5);
       Text_View.Show;
       Fragment.Widget := Gtk.Widget.Gtk_Widget (Text_View);
    end Create_Widget;

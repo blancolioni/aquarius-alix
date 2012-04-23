@@ -13,11 +13,14 @@ with Aquarius.Entries.Packages;
 
 with Aquarius.UI.Console;
 
+with Aquarius.Tasks;
+
 package body Aquarius.Projects is
 
    procedure Find_Entries
      (Project : in out Aquarius_Project_Type'Class;
       Program : Aquarius.Programs.Program_Tree);
+   --  This does not work if trees are being loaded in the background!
 
    ---------------
    -- Add_Entry --
@@ -56,7 +59,7 @@ package body Aquarius.Projects is
       use type Aquarius.Buffers.Aquarius_Buffer;
    begin
       Project.Main_Source := Aquarius.Names.To_Aquarius_Name (Name);
-      Project.Main_Buffer := Project.Get_Buffer (Name);
+      Project.Main_Buffer := Project.Get_Buffer (Name, False);
       --  Main_Buffer may be null at this point, since it's not
       --  required to set up the source folders before the main
       --  file name.
@@ -153,8 +156,9 @@ package body Aquarius.Projects is
    ----------------
 
    function Get_Buffer
-     (Project   : not null access Aquarius_Project_Type'Class;
-      File_Name : String)
+     (Project     : not null access Aquarius_Project_Type'Class;
+      File_Name   : String;
+      Synchronous : Boolean)
       return Aquarius.Buffers.Aquarius_Buffer
    is
 
@@ -189,11 +193,13 @@ package body Aquarius.Projects is
                end if;
             end;
             Buffer :=
-              Aquarius.Buffers.New_Buffer_From_File (Project.Project_UI,
-                                                     Path, Project);
+              Aquarius.Buffers.New_Buffer_From_File
+                (Project.Project_UI,
+                 Path, Project);
             Project.Buffers.Append (Buffer);
-            Buffer.Load;
+            Buffer.Load (Synchronous);
             Project.Find_Entries (Buffer.Program);
+            Aquarius.Tasks.Set_Changed ("GUI");
             return Buffer;
          else
             return null;
@@ -214,7 +220,8 @@ package body Aquarius.Projects is
       if Project.Main_Buffer = null then
          Project.Main_Buffer :=
            Get_Buffer (Project,
-                       Aquarius.Names.To_String (Project.Main_Source));
+                       Aquarius.Names.To_String (Project.Main_Source),
+                       False);
          if Project.Main_Buffer = null then
             Aquarius.Errors.Error
               (null,
@@ -237,7 +244,7 @@ package body Aquarius.Projects is
    is
       use type Aquarius.Buffers.Aquarius_Buffer;
       Buffer : constant Aquarius.Buffers.Aquarius_Buffer :=
-        Project.Get_Buffer (File_Name);
+        Project.Get_Buffer (File_Name, True);
    begin
       if Buffer /= null then
          return Buffer.Program;
@@ -363,7 +370,7 @@ package body Aquarius.Projects is
            Aquarius.Buffers.New_Buffer_From_File (Project.Project_UI,
                                                   Path, Project'Access);
          Project.Buffers.Append (Buffer);
-         Buffer.Load;
+         Buffer.Load (True);
          Find_Entries (Project, Buffer.Program);
       end;
    end Load_Dependency;

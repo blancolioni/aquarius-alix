@@ -30,11 +30,15 @@ package Aquarius.Projects is
                         return Aquarius.Programs.Program_Tree;
 
    function Get_Buffer
-     (Project   : not null access Aquarius_Project_Type'Class;
-      File_Name : String)
+     (Project     : not null access Aquarius_Project_Type'Class;
+      File_Name   : String;
+      Synchronous : Boolean)
       return Aquarius.Buffers.Aquarius_Buffer;
    --  Get_Buffer will return the buffer if it exists, otherwise it
    --  will create a new buffer and add it to the project
+   --  If Synchronous is True, the semantic analysis will happen
+   --  before the function returns, otherwise it will be performed
+   --  in the background.
 
    procedure Load_Dependency
      (Project   : in out Aquarius_Project_Type'Class;

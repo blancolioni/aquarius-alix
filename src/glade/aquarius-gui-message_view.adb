@@ -108,7 +108,7 @@ package body Aquarius.GUI.Message_View is
          Loc_Line : constant Positive := Loc.Location_Line;
          Loc_Col  : constant Positive := Loc.Location_Column;
          Buffer   : constant Aquarius.Buffers.Aquarius_Buffer :=
-           Current_Project.Get_Buffer (Loc_Name);
+           Current_Project.Get_Buffer (Loc_Name, False);
       begin
          Ada.Text_IO.Put_Line ("Handle_Mark_Set:" &
                                Loc_Line'Img & Loc_Col'Img);

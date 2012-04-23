@@ -143,7 +143,7 @@ package body Aquarius.GUI.Text is
    begin
       Local_Default_Font :=
         Pango.Font.To_Font_Description ("Liberation mono",
-                                        Size => 14);
+                                        Size => 10);
       Color_Map := Gtk.Widget.Get_Default_Colormap;
       Gdk.Color.Set_Rgb (Default_Background,
                          65535, 65535, 65535);
