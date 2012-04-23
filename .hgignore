@@ -4,4 +4,6 @@ syntax: glob
 *~
 b~*.ad[bs]
 build/bin/*
-
+build/obj/*
+*.orig
+src/environment/aquarius-config_paths.ads
