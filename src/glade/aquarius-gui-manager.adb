@@ -8,7 +8,20 @@ with Gtk.Main;
 with Gtk.Widget;
 with Gtk.Window;
 
+with Aquarius.Geometry;
+
 package body Aquarius.GUI.Manager is
+
+   type GUI_Layout is
+     new Aquarius.Geometry.Layout_Area with null record;
+
+   overriding
+   procedure On_Item_Placed
+     (Layout : in out GUI_Layout;
+      Item   : in out Aquarius.Geometry.Rectangle'Class;
+      X, Y   : Integer);
+
+   Fragment_Layout : GUI_Layout;
 
    type Position is
       record
@@ -37,11 +50,14 @@ package body Aquarius.GUI.Manager is
    -- Add_Fragment --
    ------------------
 
-   procedure Add_Fragment (Item : Aquarius.GUI.Fragments.Aquarius_Fragment) is
-      Widget : constant Gtk.Widget.Gtk_Widget := Item.Create_Widget;
+   procedure Add_Fragment
+     (Item      : Aquarius.Fragments.Aquarius_Fragment;
+      Suggest_X : Integer;
+      Suggest_Y : Integer)
+   is
    begin
-      Main_Window.Put (Widget, 20, 20);
-      Item.Render;
+      Item.Create_Widget;
+      Fragment_Layout.Add_Item (Item, Suggest_X, Suggest_Y);
    end Add_Fragment;
 
    ---------------------
@@ -77,6 +93,20 @@ package body Aquarius.GUI.Manager is
       Resize_Cb.Connect (Main_Window, "size_allocate",
                          On_Resize'Access);
    end Initialise;
+
+   overriding
+   procedure On_Item_Placed
+     (Layout : in out GUI_Layout;
+      Item   : in out Aquarius.Geometry.Rectangle'Class;
+      X, Y   : Integer)
+   is
+      pragma Unreferenced (Layout);
+      Fragment : Aquarius.Fragments.Root_Fragment_Type'Class renames
+                   Aquarius.Fragments.Root_Fragment_Type'Class (Item);
+   begin
+      Main_Window.Put (Fragment.Widget, Glib.Gint (X), Glib.Gint (Y));
+      Fragment.Render;
+   end On_Item_Placed;
 
    ---------------
    -- On_Resize --
