@@ -24,7 +24,6 @@ with Aquarius.GUI.Views;
 with Aquarius.Fragments.Notes;
 
 with Aquarius.Buffers;
-with Aquarius.Tasks;
 
 package body Aquarius.GUI is
 
@@ -159,8 +158,6 @@ package body Aquarius.GUI is
       end;
 
       Gtk.Main.Main;
-
-      Aquarius.Tasks.Stop;
 
    end Launch_GUI;
 
