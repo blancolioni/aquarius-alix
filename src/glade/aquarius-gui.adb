@@ -36,10 +36,10 @@ package body Aquarius.GUI is
    --  Local_Bubble_Collection :
    --  Bubbles.Collections.Aquarius_Bubble_Collection;
 
-   Idle_Id : Glib.Main.G_Source_Id;
-   pragma Warnings (Off, Idle_Id);
+   Timeout_Id : Glib.Main.G_Source_Id;
+   pragma Warnings (Off, Timeout_Id);
 
-   function Idle return Boolean;
+   function Timeout return Boolean;
 
    ---------------------
    -- Current_Project --
@@ -62,20 +62,6 @@ package body Aquarius.GUI is
    begin
       return Local_Current_UI;
    end Current_UI;
-
-   ----------
-   -- Idle --
-   ----------
-
-   function Idle return Boolean is
-   begin
-      if Aquarius.Tasks.Changed ("GUI") then
-         Aquarius.Tasks.Clear_Changed ("GUI");
-         --  Update_GUI;
-         Ada.Text_IO.Put_Line ("Updating GUI");
-      end if;
-      return True;
-   end Idle;
 
    ----------------
    -- Launch_GUI --
@@ -178,7 +164,8 @@ package body Aquarius.GUI is
 
       end;
 
-      Idle_Id := Glib.Main.Idle_Add (Idle'Access);
+      Timeout_Id := Glib.Main.Timeout_Add (Interval => 100,
+                                           Func     => Timeout'Access);
 
       Gtk.Main.Main;
 
@@ -209,6 +196,20 @@ package body Aquarius.GUI is
       Aquarius.GUI.Source.Load_Buffer
         (Aquarius.Buffers.Aquarius_Buffer (Item));
    end Show_Interactor;
+
+   -------------
+   -- Timeout --
+   -------------
+
+   function Timeout return Boolean is
+   begin
+      if Aquarius.Tasks.Changed ("GUI") then
+         Aquarius.Tasks.Clear_Changed ("GUI");
+         --  Update_GUI;
+         Ada.Text_IO.Put_Line ("Updating GUI");
+      end if;
+      return True;
+   end Timeout;
 
    -------------------------
    -- Update_Message_View --
