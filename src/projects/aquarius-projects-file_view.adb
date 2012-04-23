@@ -61,23 +61,28 @@ package body Aquarius.Projects.File_View is
             Search        : Search_Type;
             Next_Entry    : Directory_Entry_Type;
          begin
-            Root.Add_Child (New_Folder);
-            Start_Search (Search, Full_Path, "",
-                          (Ordinary_File => True, others => False));
-            while More_Entries (Search) loop
-               Get_Next_Entry (Search, Next_Entry);
-               if Project.Have_Buffer (Simple_Name (Next_Entry)) then
-                  New_File := New_File_Tree_Node (Simple_Name (Next_Entry));
-                  New_Folder.Add_Child (New_File);
-               end if;
-            end loop;
-            End_Search (Search);
-         exception
-            when Ada.IO_Exceptions.Name_Error =>
+            if Exists (Full_Path) then
+               Root.Add_Child (New_Folder);
+               Start_Search (Search, Full_Path, "",
+                             (Ordinary_File => True, others => False));
+               while More_Entries (Search) loop
+                  Get_Next_Entry (Search, Next_Entry);
+                  if Project.Have_Buffer (Simple_Name (Next_Entry)) then
+                     New_File := New_File_Tree_Node (Simple_Name (Next_Entry));
+                     New_Folder.Add_Child (New_File);
+                  end if;
+               end loop;
+               End_Search (Search);
+            else
                Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error,
                                      "no such directory: " &
                                        Full_Path);
-
+            end if;
+         exception
+            when Ada.IO_Exceptions.Name_Error =>
+               Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error,
+                                     "bad path: " &
+                                       Full_Path);
          end;
       end loop;
       return Root;
