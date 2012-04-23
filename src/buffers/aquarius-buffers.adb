@@ -238,7 +238,10 @@ package body Aquarius.Buffers is
    -- Load --
    ----------
 
-   procedure Load (Buffer : in out Aquarius_Buffer_Record'Class) is
+   procedure Load
+     (Buffer      : in out Aquarius_Buffer_Record'Class;
+      Synchronous : Boolean)
+   is
       use Ada.Strings.Unbounded;
    begin
       Buffer.Contents :=
@@ -247,14 +250,21 @@ package body Aquarius.Buffers is
                                         Buffer'Access,
                                         Buffer.Buffer_UI,
                                         To_String (Buffer.Full_Path));
-      declare
-         Action : Aquarius.Tasks.Actions.Action_Task_Type;
-      begin
-         Action.Create (Buffer.Grammar,
-                        Aquarius.Actions.Semantic_Trigger,
-                        Buffer.Contents);
-         Action.Add_Task;
-      end;
+
+      if Synchronous then
+         Buffer.Grammar.Run_Action_Trigger
+           (Start      => Buffer.Contents,
+            Trigger    => Aquarius.Actions.Semantic_Trigger);
+      else
+         declare
+            Action : Aquarius.Tasks.Actions.Action_Task_Type;
+         begin
+            Action.Create (Buffer.Grammar,
+                           Aquarius.Actions.Semantic_Trigger,
+                           Buffer.Contents);
+            Action.Add_Task;
+         end;
+      end if;
 
    end Load;
 
@@ -270,7 +280,7 @@ package body Aquarius.Buffers is
       Result : constant Aquarius_Buffer :=
         New_Buffer_From_File (UI, Path);
    begin
-      Result.Load;
+      Result.Load (True);
       return Result;
    end Load_Buffer_From_File;
 

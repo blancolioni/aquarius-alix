@@ -40,7 +40,9 @@ package Aquarius.Buffers is
    --  Create a buffer for the given file using the given project.
    --  The file is not loaded.
 
-   procedure Load (Buffer : in out Aquarius_Buffer_Record'Class);
+   procedure Load
+     (Buffer      : in out Aquarius_Buffer_Record'Class;
+      Synchronous : Boolean);
 
    function Load_Buffer_From_File
      (UI      : not null access Aquarius.UI.Aquarius_UI'Class;

@@ -9,6 +9,10 @@ package Aquarius.Tasks is
 
    procedure Stop;
 
+   procedure Set_Changed (Name : String);
+   procedure Clear_Changed (Name : String);
+   function Changed (Name : String) return Boolean;
+
 private
 
    type Root_Task_Type is abstract tagged null record;
