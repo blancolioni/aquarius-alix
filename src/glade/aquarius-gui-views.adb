@@ -21,8 +21,9 @@ with Aquarius.Programs;
 with Aquarius.Source;
 with Aquarius.Trees;
 
-with Aquarius.GUI.Fragments;
 with Aquarius.GUI.Manager;
+
+with Aquarius.Fragments.Programs;
 
 package body Aquarius.GUI.Views is
 
@@ -203,12 +204,12 @@ package body Aquarius.GUI.Views is
                             (Aquarius.Source.Get_File_Name
                                (Aquarius.Source.Get_Source_File
                                   (Location)));
-            Fragment  : constant Aquarius.GUI.Fragments.Aquarius_Fragment :=
-                          Aquarius.GUI.Fragments.Create_Program_Fragment
-                            (Buffer.Program);
+            Fragment  : constant Aquarius.Fragments.Aquarius_Fragment :=
+                          Aquarius.Fragments.Programs.Create_Program
+                            (200, 400, Buffer.Program);
          begin
             Aquarius.GUI.Manager.Add_Fragment
-              (Fragment);
+              (Fragment, 20, 20);
          end;
       end if;
    end Row_Activated_Callback;

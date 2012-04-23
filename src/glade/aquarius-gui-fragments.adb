@@ -41,6 +41,15 @@ package body Aquarius.GUI.Fragments is
       return Fragment.Background;
    end Background;
 
+   ------------
+   -- Bottom --
+   ------------
+
+   function Bottom (Fragment : Root_Fragment_Type'Class) return Integer is
+   begin
+      return Fragment.Y + Fragment.Height;
+   end Bottom;
+
    --------------------------
    -- Create_Note_Fragment --
    --------------------------
@@ -120,6 +129,24 @@ package body Aquarius.GUI.Fragments is
    end Create_Widget;
 
    ------------
+   -- Height --
+   ------------
+
+   function Height (Fragment : Root_Fragment_Type'Class) return Positive is
+   begin
+      return Fragment.Height;
+   end Height;
+
+   ----------
+   -- Left --
+   ----------
+
+   function Left (Fragment : Root_Fragment_Type'Class) return Integer is
+   begin
+      return Fragment.X;
+   end Left;
+
+   ------------
    -- Render --
    ------------
 
@@ -135,6 +162,10 @@ package body Aquarius.GUI.Fragments is
       R.End_Render;
    end Render;
 
+   ------------
+   -- Render --
+   ------------
+
    overriding
    procedure Render (Fragment : in out Program_Fragment_Type) is
       Cursor : constant Aquarius.Trees.Cursors.Cursor :=
@@ -148,6 +179,15 @@ package body Aquarius.GUI.Fragments is
         (Fragment.Program, Fragment.Renderer, Cursor, "");
    end Render;
 
+   -----------
+   -- Right --
+   -----------
+
+   function Right (Fragment : Root_Fragment_Type'Class) return Integer is
+   begin
+      return Fragment.X + Fragment.Width;
+   end Right;
+
    --------------------
    -- Set_Background --
    --------------------
@@ -158,6 +198,18 @@ package body Aquarius.GUI.Fragments is
    begin
       Fragment.Background := Background;
    end Set_Background;
+
+   ------------------
+   -- Set_Position --
+   ------------------
+
+   procedure Set_Position (Fragment : in out Root_Fragment_Type'Class;
+                           X, Y     : Integer)
+   is
+   begin
+      Fragment.X := X;
+      Fragment.Y := Y;
+   end Set_Position;
 
    ---------------
    -- Set_Title --
@@ -179,5 +231,41 @@ package body Aquarius.GUI.Fragments is
    begin
       return Ada.Strings.Unbounded.To_String (Fragment.Title);
    end Title;
+
+   ---------
+   -- Top --
+   ---------
+
+   function Top (Fragment : Root_Fragment_Type'Class) return Integer is
+   begin
+      return Fragment.Y;
+   end Top;
+
+   -----------
+   -- Width --
+   -----------
+
+   function Width (Fragment : Root_Fragment_Type'Class) return Positive is
+   begin
+      return Fragment.Width;
+   end Width;
+
+   -------
+   -- X --
+   -------
+
+   function X (Fragment : Root_Fragment_Type'Class) return Integer is
+   begin
+      return Fragment.X;
+   end X;
+
+   -------
+   -- Y --
+   -------
+
+   function Y (Fragment : Root_Fragment_Type'Class) return Integer is
+   begin
+      return Fragment.Y;
+   end Y;
 
 end Aquarius.GUI.Fragments;

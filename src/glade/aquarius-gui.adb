@@ -21,7 +21,7 @@ with Aquarius.GUI.Source;
 with Aquarius.GUI.Text;
 with Aquarius.GUI.Views;
 
-with Aquarius.GUI.Fragments;
+with Aquarius.Fragments.Notes;
 
 with Aquarius.Buffers;
 
@@ -146,14 +146,14 @@ package body Aquarius.GUI is
 --        end if;
 
       declare
-         F : constant Aquarius.GUI.Fragments.Aquarius_Fragment :=
-               Aquarius.GUI.Fragments.Create_Note_Fragment
-                 (500, 200,
+         F : constant Aquarius.Fragments.Aquarius_Fragment :=
+               Aquarius.Fragments.Notes.Create_Note
+                 (500, 100,
                   "Welcome to Aquarius!" & Character'Val (10)
                     & "Double-click an entity to the right to start");
       begin
 
-         Aquarius.GUI.Manager.Add_Fragment (F);
+         Aquarius.GUI.Manager.Add_Fragment (F, 20, 20);
 
       end;
 

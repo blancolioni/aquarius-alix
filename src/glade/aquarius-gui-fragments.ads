@@ -28,6 +28,20 @@ package Aquarius.GUI.Fragments is
 
    procedure Render (Fragment : in out Root_Fragment_Type) is abstract;
 
+   procedure Set_Position (Fragment : in out Root_Fragment_Type'Class;
+                           X, Y     : Integer);
+
+   function X (Fragment : Root_Fragment_Type'Class) return Integer;
+   function Y (Fragment : Root_Fragment_Type'Class) return Integer;
+
+   function Width (Fragment : Root_Fragment_Type'Class) return Positive;
+   function Height (Fragment : Root_Fragment_Type'Class) return Positive;
+
+   function Top (Fragment : Root_Fragment_Type'Class) return Integer;
+   function Left (Fragment : Root_Fragment_Type'Class) return Integer;
+   function Right (Fragment : Root_Fragment_Type'Class) return Integer;
+   function Bottom (Fragment : Root_Fragment_Type'Class) return Integer;
+
    type Aquarius_Fragment is access all Root_Fragment_Type'Class;
 
    function Create_Note_Fragment
@@ -43,6 +57,7 @@ private
 
    type Root_Fragment_Type is abstract tagged
       record
+         X, Y          : Integer;
          Width, Height : Positive;
          Title         : Ada.Strings.Unbounded.Unbounded_String;
          Background    : Aquarius.Fonts.Aquarius_Colour;
