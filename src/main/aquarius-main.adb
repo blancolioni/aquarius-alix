@@ -16,6 +16,7 @@ with Aquarius.Rendering;
 with Aquarius.Rendering.Manager;
 with Aquarius.Styles;
 with Aquarius.Target.Manager;
+with Aquarius.Tasks;
 with Aquarius.Trees.Cursors;
 with Aquarius.Version;
 
@@ -222,6 +223,8 @@ begin
       Aquarius.Editor.Start_Editor (Aquarius.GUI.Current_UI);
    end if;
 
+   Aquarius.Tasks.Stop;
+
 exception
 
    when E : others =>
@@ -229,5 +232,6 @@ exception
                             Ada.Exceptions.Exception_Message (E));
       Ada.Text_IO.Put_Line ("Press return to exit ...");
       Ada.Text_IO.Skip_Line;
+      Aquarius.Tasks.Stop;
 
 end Aquarius.Main;
