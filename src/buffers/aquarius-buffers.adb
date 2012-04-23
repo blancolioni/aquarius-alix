@@ -11,6 +11,8 @@ with Aquarius.Tokens;
 with Aquarius.Trees.Cursors;
 with Aquarius.Trees.Properties;
 
+with Aquarius.Tasks.Actions;
+
 package body Aquarius.Buffers is
 
    function New_Empty_Buffer
@@ -245,8 +247,15 @@ package body Aquarius.Buffers is
                                         Buffer'Access,
                                         Buffer.Buffer_UI,
                                         To_String (Buffer.Full_Path));
-      Buffer.Grammar.Run_Action_Trigger (Buffer.Contents,
-                                         Aquarius.Actions.Semantic_Trigger);
+      declare
+         Action : Aquarius.Tasks.Actions.Action_Task_Type;
+      begin
+         Action.Create (Buffer.Grammar,
+                        Aquarius.Actions.Semantic_Trigger,
+                        Buffer.Contents);
+         Action.Add_Task;
+      end;
+
    end Load;
 
    ---------------------------
