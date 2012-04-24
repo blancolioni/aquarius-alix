@@ -227,6 +227,7 @@ package body Aquarius.GUI.Views is
       end loop;
 
       for I in 1 .. Project.View_Count loop
+         Project.View (I).Reload;
          Add_View (Project.View (I));
       end loop;
    end Update_Views;

@@ -205,7 +205,7 @@ package body Aquarius.GUI is
    begin
       if Aquarius.Tasks.Changed ("GUI") then
          Aquarius.Tasks.Clear_Changed ("GUI");
-         --  Update_GUI;
+         Aquarius.GUI.Views.Update_Views (Local_Current_Project);
          Ada.Text_IO.Put_Line ("Updating GUI");
       end if;
       return True;
