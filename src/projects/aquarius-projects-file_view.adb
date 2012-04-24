@@ -6,6 +6,9 @@ package body Aquarius.Projects.File_View is
 
    type File_View_Type is new Root_Project_View with null record;
 
+   overriding
+   procedure Reload (View : in out File_View_Type);
+
    type File_Tree_Type is new Root_Project_Tree with null record;
 
    function Create_Tree
@@ -133,5 +136,15 @@ package body Aquarius.Projects.File_View is
    begin
       return Result;
    end New_File_Tree_Node;
+
+   ------------
+   -- Reload --
+   ------------
+
+   overriding
+   procedure Reload (View : in out File_View_Type) is
+   begin
+      View.View_Contents := Create_Tree (View.Project);
+   end Reload;
 
 end Aquarius.Projects.File_View;

@@ -4,6 +4,9 @@ package body Aquarius.Projects.Package_View is
 
    type Package_View_Type is new Root_Project_View with null record;
 
+   overriding
+   procedure Reload (View : in out Package_View_Type) is null;
+
    type Package_Tree_Type is new Root_Project_Tree with
       record
          Package_Entry : Aquarius.Entries.Table_Entry;

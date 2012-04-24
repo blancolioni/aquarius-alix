@@ -7,6 +7,9 @@ package body Aquarius.Projects.Entry_View is
          Associated_Entry : Aquarius.Entries.Table_Entry;
       end record;
 
+   overriding
+   procedure Reload (View : in out Entry_View_Type) is null;
+
    function Create_Tree (Project : access Aquarius_Project_Type'Class)
                         return Aquarius.Trees.Tree;
 
