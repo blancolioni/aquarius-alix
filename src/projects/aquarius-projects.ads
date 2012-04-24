@@ -91,6 +91,9 @@ package Aquarius.Projects is
    function Contents (View : not null access Root_Project_View)
                      return Aquarius.Trees.Tree;
 
+   procedure Reload (View : in out Root_Project_View)
+   is abstract;
+
    function View_Count (Project : not null access Aquarius_Project_Type'Class)
                        return Natural;
 
