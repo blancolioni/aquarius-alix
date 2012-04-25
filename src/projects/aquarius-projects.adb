@@ -9,18 +9,11 @@ with Aquarius.Projects.Entry_View;
 with Aquarius.Projects.File_View;
 with Aquarius.Projects.Package_View;
 
-with Aquarius.Entries.Packages;
-
 with Aquarius.UI.Console;
 
 with Aquarius.Tasks;
 
 package body Aquarius.Projects is
-
-   procedure Find_Entries
-     (Project : in out Aquarius_Project_Type'Class;
-      Program : Aquarius.Programs.Program_Tree);
-   --  This does not work if trees are being loaded in the background!
 
    ---------------
    -- Add_Entry --
@@ -47,6 +40,7 @@ package body Aquarius.Projects is
       else
          To_Project.Entries.Insert (It, New_Entry);
       end if;
+      Aquarius.Tasks.Set_Changed ("GUI");
    end Add_Entry;
 
    --------------
@@ -114,43 +108,6 @@ package body Aquarius.Projects is
       return Result (1 .. Count);
    end Filter_Entries;
 
-   ------------------
-   -- Find_Entries --
-   ------------------
-
-   procedure Find_Entries
-     (Project : in out Aquarius_Project_Type'Class;
-      Program : Aquarius.Programs.Program_Tree)
-   is
-      use Aquarius.Trees;
-
-      function Match (T : Tree) return Boolean;
-
-      function Match (T : Tree) return Boolean is
-      begin
-         return Aquarius.Programs.Program_Tree (T).Has_Symbol_Table;
-      end Match;
-
-      Ts : constant Array_Of_Trees := Search (Program, Match'Access);
-   begin
-      for I in Ts'Range loop
-         declare
-            Table : constant Aquarius.Entries.Symbol_Table :=
-              Aquarius.Programs.Program_Tree (Ts (I)).Symbol_Table;
-            Es : constant Aquarius.Entries.Array_Of_Entries :=
-              Table.Get_Contents;
-         begin
-            for J in Es'Range loop
-               if Es (J).Declaration /= null and then
-                 not Aquarius.Entries.Packages.Is_Package_Reference (Es (J))
-               then
-                  Project.Add_Entry (Es (J));
-               end if;
-            end loop;
-         end;
-      end loop;
-   end Find_Entries;
-
    ----------------
    -- Get_Buffer --
    ----------------
@@ -198,7 +155,6 @@ package body Aquarius.Projects is
                  Path, Project);
             Project.Buffers.Append (Buffer);
             Buffer.Load (Synchronous);
-            Project.Find_Entries (Buffer.Program);
             Aquarius.Tasks.Set_Changed ("GUI");
             return Buffer;
          else
@@ -371,7 +327,6 @@ package body Aquarius.Projects is
                                                   Path, Project'Access);
          Project.Buffers.Append (Buffer);
          Buffer.Load (True);
-         Find_Entries (Project, Buffer.Program);
       end;
    end Load_Dependency;
 
