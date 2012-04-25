@@ -133,6 +133,7 @@ project Ada_Plugin is
       as Spec_Before_Arguments;
     Formal_Argument after;
     Function_Specification after Type_Indication;
+    Procedure_Declaration after;
   end Ch06;
 
   package Ch07 check is
