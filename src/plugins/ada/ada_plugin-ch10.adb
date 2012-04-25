@@ -108,6 +108,14 @@ package body Ada_Plugin.Ch10 is
 
       Compilation_Unit.Symbol_Table.Insert (Procedure_Entry);
 
+      declare
+         Project : constant Aquarius.Projects.Aquarius_Project :=
+                     Aquarius.Trees.Properties.Get_Project
+                       (Compilation_Unit.all);
+      begin
+         Project.Add_Entry (Procedure_Entry);
+      end;
+
    end Procedure_Spec_After_Defining_Name;
 
    ------------------

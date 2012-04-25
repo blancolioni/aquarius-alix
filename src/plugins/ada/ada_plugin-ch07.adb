@@ -1,4 +1,5 @@
 with Aquarius.Entries.Packages;
+with Aquarius.Trees.Properties;
 
 package body Ada_Plugin.Ch07 is
 
@@ -12,41 +13,49 @@ package body Ada_Plugin.Ch07 is
      (Package_Spec : in Aquarius.Programs.Program_Tree;
       Package_Name : in Aquarius.Programs.Program_Tree)
    is
+      use Aquarius.Entries;
+
+      Reference        : constant Program_Tree :=
+                           Package_Name.Program_Child
+                             ("defining_qualified_reference");
+      Defining_Name    : constant Aquarius.Programs.Program_Tree :=
+                           Program_Tree
+                             (Reference.Property
+                                (Plugin.Last_Identifier_Property));
+      Package_Entry    : Aquarius.Entries.Table_Entry;
+      Parent_Entry     : Aquarius.Entries.Table_Entry;
+      Compilation_Unit : constant Program_Tree :=
+                           Program_Tree (Package_Spec.Property
+                                         (Plugin.Compilation_Unit_Property));
    begin
+      if Reference.Has_Entry then
+         Parent_Entry := Reference.Get_Entry;
+      end if;
+
+      Package_Spec.Create_Symbol_Table;
+
+      Package_Entry :=
+        Aquarius.Entries.Packages.New_Package_Entry
+          (Defining_Name.Standard_Text,
+           Parent_Entry,
+           Package_Name,
+           Package_Spec.Symbol_Table);
+      Package_Spec.Set_Entry (Package_Entry);
+
+      if not Compilation_Unit.Has_Entry then
+         Compilation_Unit.Set_Entry (Package_Entry);
+      end if;
+
+      Compilation_Unit.Symbol_Table.Insert (Package_Entry);
+
       declare
-         use Aquarius.Entries;
-
-         Reference     : constant Program_Tree :=
-           Package_Name.Program_Child ("defining_qualified_reference");
-         Defining_Name : constant Aquarius.Programs.Program_Tree :=
-           Program_Tree
-           (Reference.Property (Plugin.Last_Identifier_Property));
-         Package_Entry : Aquarius.Entries.Table_Entry;
-         Parent_Entry  : Aquarius.Entries.Table_Entry;
-         Compilation_Unit : constant Program_Tree :=
-           Program_Tree (Package_Spec.Property
-                           (Plugin.Compilation_Unit_Property));
+         Project : constant Aquarius.Projects.Aquarius_Project :=
+                     Aquarius.Trees.Properties.Get_Project
+                       (Compilation_Unit.all);
       begin
-         if Reference.Has_Entry then
-            Parent_Entry := Reference.Get_Entry;
-         end if;
-
-         Package_Spec.Create_Symbol_Table;
-
-         Package_Entry :=
-           Aquarius.Entries.Packages.New_Package_Entry
-           (Defining_Name.Standard_Text,
-            Parent_Entry,
-            Package_Name,
-            Package_Spec.Symbol_Table);
-         Package_Spec.Set_Entry (Package_Entry);
-
-         if not Compilation_Unit.Has_Entry then
-            Compilation_Unit.Set_Entry (Package_Entry);
-         end if;
-
-         Compilation_Unit.Symbol_Table.Insert (Package_Entry);
+         Project.Add_Entry (Package_Entry);
       end;
+
    end Package_Spec_After_Defining_Package_Name;
 
 end Ada_Plugin.Ch07;

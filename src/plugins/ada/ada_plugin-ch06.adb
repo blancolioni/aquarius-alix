@@ -1,4 +1,5 @@
 with Aquarius.Entries.Objects;
+with Aquarius.Trees.Properties;
 with Aquarius.Types.Maps;
 with Aquarius.Values;
 
@@ -86,6 +87,18 @@ package body Ada_Plugin.Ch06 is
       Spec.Create_Symbol_Table;
    end Function_Specification_Before;
 
+   procedure Procedure_Declaration_After
+     (Procedure_Declaration : Program_Tree)
+   is
+      Spec : constant Program_Tree :=
+               Procedure_Declaration.Program_Child
+                 ("procedure_specification");
+   begin
+      if Procedure_Declaration.Program_Child ("subprogram_body") /= null then
+         Spec.Get_Entry.Set_Implementation (Procedure_Declaration);
+      end if;
+   end Procedure_Declaration_After;
+
    ----------------------------------------
    -- Procedure_Spec_After_Defining_Name --
    ----------------------------------------
@@ -128,6 +141,14 @@ package body Ada_Plugin.Ch06 is
       end if;
 
       Compilation_Unit.Symbol_Table.Insert (Procedure_Entry);
+
+      declare
+         Project : constant Aquarius.Projects.Aquarius_Project :=
+                     Aquarius.Trees.Properties.Get_Project
+                       (Compilation_Unit.all);
+      begin
+         Project.Add_Entry (Procedure_Entry);
+      end;
 
    end Procedure_Spec_After_Defining_Name;
 
