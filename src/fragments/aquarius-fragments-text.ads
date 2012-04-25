@@ -6,7 +6,7 @@ package Aquarius.Fragments.Text is
 
    overriding
    procedure Create_Widget
-     (Fragment : in out Text_Fragment);
+     (Fragment : not null access Text_Fragment);
 
 private
 

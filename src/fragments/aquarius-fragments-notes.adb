@@ -19,6 +19,23 @@ package body Aquarius.Fragments.Notes is
       return Result;
    end Create_Note;
 
+   ------------------
+   -- On_Key_Press --
+   ------------------
+
+   overriding
+   function On_Key_Press (Fragment : in out Note_Fragment;
+                          Position : in     Aquarius.Layout.Position;
+                          Key      : in     Aquarius.Keys.Aquarius_Key)
+                          return Boolean
+   is
+      pragma Unreferenced (Fragment);
+      pragma Unreferenced (Position);
+      pragma Unreferenced (Key);
+   begin
+      return False;
+   end On_Key_Press;
+
    ------------
    -- Render --
    ------------
