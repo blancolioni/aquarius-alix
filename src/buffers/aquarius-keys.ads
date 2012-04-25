@@ -15,7 +15,10 @@ package Aquarius.Keys is
                    return Aquarius_Key;
 
    function Is_Character (Key  : Aquarius_Key) return Boolean;
+   --  Return True if Key represents a self-inserting character
+
    function Is_Function  (Key : Aquarius_Key) return Boolean;
+   --  return True if Key represents a function key
 
    function Character_Key (Ch    : Character) return Aquarius_Key;
    function Get_Character (Key : Aquarius_Key) return Character;
@@ -34,6 +37,7 @@ package Aquarius.Keys is
    Home_Key    : constant Aquarius_Key;
    End_Key     : constant Aquarius_Key;
    Back_Space  : constant Aquarius_Key;
+   Line_Feed   : constant Aquarius_Key;
 
 private
 
@@ -52,6 +56,7 @@ private
    Home_Key    : constant Aquarius_Key := 16#F008#;
    End_Key     : constant Aquarius_Key := 16#F009#;
    Back_Space  : constant Aquarius_Key := 16#F00A#;
+   Line_Feed   : constant Aquarius_Key := 16#F00B#;
 
    subtype Function_Keys is Aquarius_Key range 16#F100# .. 16#F1FF#;
 
