@@ -50,8 +50,8 @@ qualified_reference ::= < identifier / '.' >
 
 defining_qualified_reference ::= < identifier / '.' >
 
-subprogram_declaration ::= procedure_declaration | function_declaration |
-                           package_declaration | generic_declaration |
+subprogram_declaration ::= procedure_declaration | function_declaration
+                         | package_declaration | generic_declaration |
                            generic_instantiation
 
 subprogram_specification ::=
