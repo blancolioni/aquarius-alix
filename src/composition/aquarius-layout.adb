@@ -97,6 +97,15 @@ package body Aquarius.Layout is
    end Fill;
 
    ----------
+   -- Next --
+   ----------
+
+   procedure Next (Pos : in out Position) is
+   begin
+      Pos.Column := Pos.Column + 1;
+   end Next;
+
+   ----------
    -- Show --
    ----------
 
