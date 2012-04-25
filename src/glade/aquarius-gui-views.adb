@@ -206,7 +206,9 @@ package body Aquarius.GUI.Views is
                              False);
             Fragment  : constant Aquarius.Fragments.Aquarius_Fragment :=
                           Aquarius.Fragments.Programs.Create_Program
-                            (300, 300, Buffer.Program);
+                            (300, 300,
+                             Buffer.Grammar,
+                             Program);
          begin
             Aquarius.GUI.Manager.Add_Fragment
               (Fragment, 20, 20);
