@@ -20,15 +20,18 @@ package Aquarius.Layout is
 
    function "+" (Pos     : Position;
                  Columns : Count)
-                return Position;
+                 return Position;
 
-   --  Fill: split the text into lines so that it fills the given
-   --  width.  If Justify is true, the right margin will be
-   --  justified.
+   procedure Next (Pos : in out Position);
+   --  move to next column
 
    function Fill (Text    : String;
                   Width   : Positive;
                   Justify : Boolean)
-                 return String;
+                  return String;
+
+   --  Fill: split the text into lines so that it fills the given
+   --  width.  If Justify is true, the right margin will be
+   --  justified.
 
 end Aquarius.Layout;
