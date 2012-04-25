@@ -56,6 +56,11 @@ package Aquarius.Entries is
                         return Table_Entry;
    function Declaration (Item : access Table_Entry_Record)
                         return Aquarius.Trees.Tree;
+   function Implementation (Item : access Table_Entry_Record)
+                            return Aquarius.Trees.Tree;
+   --  See note for Set_Implementation below.  May return same tree
+   --  as Declaration
+
    function Incomplete (Item : access Table_Entry_Record) return Boolean;
 
    procedure Set_Complete (Item     : access Table_Entry_Record;
@@ -67,6 +72,13 @@ package Aquarius.Entries is
    procedure Set_Declaration
      (Item        : access Table_Entry_Record;
       Declaration : access Aquarius.Trees.Root_Tree_Type'Class);
+
+   procedure Set_Implementation
+     (Item           : access Table_Entry_Record;
+      Implementation : access Aquarius.Trees.Root_Tree_Type'Class);
+   --  Provide the program tree which implements this entry, as opposed
+   --  to the one which declares it.  In many languages, this will be
+   --  the same, and Set_Implementation need never be called.
 
    procedure Add_Watcher
      (To_Object : not null access Table_Entry_Record;
@@ -205,13 +217,14 @@ private
 
    type Table_Entry_Record is abstract new Root_Aquarius_Object with
       record
-         Name          : Ada.Strings.Unbounded.Unbounded_String;
-         Display_Name  : Ada.Strings.Unbounded.Unbounded_String;
-         Declaration   : Aquarius.Trees.Tree;
-         Owner         : Symbol_Table;
-         Entry_Owner   : Table_Entry;
-         Complete      : Boolean;
-         Watchers      : Aquarius.Watchers.Watcher_List;
+         Name           : Ada.Strings.Unbounded.Unbounded_String;
+         Display_Name   : Ada.Strings.Unbounded.Unbounded_String;
+         Declaration    : Aquarius.Trees.Tree;
+         Implementation : Aquarius.Trees.Tree;
+         Owner          : Symbol_Table;
+         Entry_Owner    : Table_Entry;
+         Complete       : Boolean;
+         Watchers       : Aquarius.Watchers.Watcher_List;
       end record;
 
    type Entry_Constraint is abstract tagged

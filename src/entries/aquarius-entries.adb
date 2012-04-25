@@ -57,10 +57,11 @@ package body Aquarius.Entries is
       Declaration : access Aquarius.Trees.Root_Tree_Type'Class)
    is
    begin
-      Item.Name        := Ada.Strings.Unbounded.To_Unbounded_String (Name);
-      Item.Declaration := Aquarius.Trees.Tree (Declaration);
-      Item.Owner       := null;
-      Item.Complete    := True;
+      Item.Name           := Ada.Strings.Unbounded.To_Unbounded_String (Name);
+      Item.Declaration    := Aquarius.Trees.Tree (Declaration);
+      Item.Implementation := Item.Declaration;
+      Item.Owner          := null;
+      Item.Complete       := True;
    end Create_Entry;
 
    -----------------------------------------
@@ -186,6 +187,17 @@ package body Aquarius.Entries is
    begin
       return Get (Table.Map.First);
    end Get_Contents;
+
+   --------------------
+   -- Implementation --
+   --------------------
+
+   function Implementation (Item : access Table_Entry_Record)
+                            return Aquarius.Trees.Tree
+   is
+   begin
+      return Item.Implementation;
+   end Implementation;
 
    ----------------
    -- Incomplete --
@@ -613,6 +625,7 @@ package body Aquarius.Entries is
    is
    begin
       Item.Declaration := Aquarius.Trees.Tree (Declaration);
+      Item.Implementation := Item.Declaration;
    end Set_Declaration;
 
    ----------------------
@@ -626,6 +639,18 @@ package body Aquarius.Entries is
    begin
       Item.Display_Name := To_Unbounded_String (Display_Name);
    end Set_Display_Name;
+
+   ------------------------
+   -- Set_Implementation --
+   ------------------------
+
+   procedure Set_Implementation
+     (Item           : access Table_Entry_Record;
+      Implementation : access Aquarius.Trees.Root_Tree_Type'Class)
+   is
+   begin
+      Item.Implementation := Aquarius.Trees.Tree (Implementation);
+   end Set_Implementation;
 
    --------------------
    -- Set_Value_Size --
