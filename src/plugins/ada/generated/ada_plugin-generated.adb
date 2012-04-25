@@ -197,6 +197,8 @@ package body Ada_Plugin.Generated is
         (Target_Actionable : not null access Aquarius.Actions.Actionable'Class);
       procedure Actionable_Function_Specification_After_Type_Indication (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
                                                                          Child_Actionable : not null access Aquarius.Actions.Actionable'Class);
+      procedure Actionable_Procedure_Declaration_After
+        (Target_Actionable : not null access Aquarius.Actions.Actionable'Class);
    end Ch06;
    package Ch07 is
       procedure Actionable_Package_Spec_After_Defining_Package_Name (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
@@ -778,6 +780,12 @@ package body Ada_Plugin.Generated is
            (Target_Actionable), Aquarius.Programs.Program_Tree
            (Child_Actionable));
       end Actionable_Function_Specification_After_Type_Indication;
+      procedure Actionable_Procedure_Declaration_After
+        (Target_Actionable : not null access Aquarius.Actions.Actionable'Class) is
+      begin
+         Ada_Plugin.Ch06.Procedure_Declaration_After (Aquarius.Programs.Program_Tree
+           (Target_Actionable));
+      end Actionable_Procedure_Declaration_After;
    end Ch06;
    package body Ch07 is
       procedure Actionable_Package_Spec_After_Defining_Package_Name (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
@@ -1077,6 +1085,9 @@ package body Ada_Plugin.Generated is
       Plugin.Register_Action ("function_specification",
                               "type_indication", Check, Aquarius.After,
                               Ch06.Actionable_Function_Specification_After_Type_Indication'access);
+      Plugin.Register_Action ("procedure_declaration", Check,
+                              Aquarius.After,
+                              Ch06.Actionable_Procedure_Declaration_After'access);
       Plugin.Register_Action ("package_spec", "defining_package_name",
                               Check, Aquarius.After,
                               Ch07.Actionable_Package_Spec_After_Defining_Package_Name'access);

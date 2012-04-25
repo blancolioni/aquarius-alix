@@ -15,6 +15,9 @@ package Ada_Plugin.Ch06 is
    procedure Procedure_Spec_After_Defining_Name
      (Procedure_Spec, Procedure_Name  : Program_Tree);
 
+   procedure Procedure_Declaration_After
+     (Procedure_Declaration : Program_Tree);
+
    procedure Spec_Before_Arguments
      (Spec : Program_Tree;
       Args : Program_Tree);
