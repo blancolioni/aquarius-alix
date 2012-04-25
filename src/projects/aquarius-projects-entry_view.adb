@@ -8,7 +8,7 @@ package body Aquarius.Projects.Entry_View is
       end record;
 
    overriding
-   procedure Reload (View : in out Entry_View_Type) is null;
+   procedure Reload (View : in out Entry_View_Type);
 
    function Create_Tree (Project : access Aquarius_Project_Type'Class)
                         return Aquarius.Trees.Tree;
@@ -16,9 +16,9 @@ package body Aquarius.Projects.Entry_View is
    function New_Entry_Tree_Node (Item : Aquarius.Entries.Table_Entry)
                                 return Aquarius.Trees.Tree;
 
-   ----------------------
+   -----------------------
    -- Create_Entry_View --
-   ----------------------
+   -----------------------
 
    procedure Create_Entry_View
      (Project : access Aquarius_Project_Type'Class)
@@ -74,11 +74,11 @@ package body Aquarius.Projects.Entry_View is
               To_Unbounded_String
                 (Item.Display_Name & " (" &
                  Aquarius.Source.Show
-                   (Item.Declaration.Get_Location) &
+                   (Item.Implementation.Get_Location) &
                  ")"),
             Target =>
               Aquarius.Programs.Program_Tree
-                (Item.Declaration),
+                (Item.Implementation),
             Associated_Entry => Item);
 
          declare
@@ -93,5 +93,15 @@ package body Aquarius.Projects.Entry_View is
 
       return Result;
    end New_Entry_Tree_Node;
+
+   ------------
+   -- Reload --
+   ------------
+
+   overriding
+   procedure Reload (View : in out Entry_View_Type) is
+   begin
+      View.View_Contents := Create_Tree (View.Project);
+   end Reload;
 
 end Aquarius.Projects.Entry_View;
