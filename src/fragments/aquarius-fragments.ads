@@ -4,6 +4,8 @@ with Gtk.Widget;
 
 with Aquarius.Fonts;
 with Aquarius.Geometry;
+with Aquarius.Keys;
+with Aquarius.Layout;
 with Aquarius.Rendering;
 
 package Aquarius.Fragments is
@@ -32,12 +34,20 @@ package Aquarius.Fragments is
    overriding
    function Height (Fragment : Root_Fragment_Type) return Positive;
 
+   function On_Key_Press (Fragment : in out Root_Fragment_Type;
+                          Position : in     Aquarius.Layout.Position;
+                          Key      : in     Aquarius.Keys.Aquarius_Key)
+                          return Boolean
+                          is abstract;
+   --  Handle the key.  Return True if it was fully handled, false if
+   --  not (in which case it is passed to the default handler)
+
 --     overriding
 --     procedure Set_Position (Fragment : in out Root_Fragment_Type;
 --                             X, Y     : in     Integer);
 
    procedure Create_Widget
-     (Fragment : in out Root_Fragment_Type)
+     (Fragment : not null access Root_Fragment_Type)
    is abstract;
 
    function Widget
