@@ -59,6 +59,8 @@ package Aquarius.Programs is
    procedure Create_Symbol_Table (Tree : in out Program_Tree_Type);
    function Symbol_Table (Tree : Program_Tree_Type)
                          return Aquarius.Entries.Symbol_Table;
+   procedure Set_Symbol_Table (Tree  : in out Program_Tree_Type;
+                               Table : Aquarius.Entries.Symbol_Table);
 
    function Program_Root (Item : Program_Tree_Type'Class)
                          return Program_Tree;
