@@ -1107,9 +1107,6 @@ package body Aquarius.Programs is
             Parent : Program_Tree := Last_Node.Program_Parent;
          begin
             while Aquarius.Trees.Is_Null (Parent.Right_Sibling) loop
---                 Ada.Text_IO.Put_Line
---                   (Ada.Text_IO.Standard_Error,
---                    "no right sibling: " & Parent.Image);
                if Parent.Program_Parent = null then
                   Ada.Text_IO.Put_Line
                     (Ada.Text_IO.Standard_Error,
@@ -1236,6 +1233,18 @@ package body Aquarius.Programs is
          It := Program_Tree (It.Parent);
       end loop;
    end Set_Source_Position;
+
+   ----------------------
+   -- Set_Symbol_Table --
+   ----------------------
+
+   procedure Set_Symbol_Table (Tree  : in out Program_Tree_Type;
+                               Table : Aquarius.Entries.Symbol_Table)
+   is
+      use Aquarius.Properties;
+   begin
+      Tree.Set_Property (Symbol_Table_Property, Table);
+   end Set_Symbol_Table;
 
    ---------------
    -- Set_Type --
