@@ -25,6 +25,10 @@ package Tagatha.Constants is
                       return Tagatha.Labels.Tagatha_Label;
    function Show (Item : Tagatha_Constant) return String;
 
+   function Get_Octet (From_Constant : Tagatha_Constant;
+                       Octet_Index   : Positive)
+                       return Natural;
+
 private
 
    type Constant_Value_Type is (V_Integer,
