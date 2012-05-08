@@ -21,7 +21,7 @@ package body Ada_Plugin.Ch10.Gen is
 
       Unit.Finish_Unit;
       Unit.Optimise;
-      Unit.Write ("x86_64");
+      Unit.Write ("6502");
 
    end Compilation_Unit_After;
 
@@ -40,7 +40,7 @@ package body Ada_Plugin.Ch10.Gen is
         Aquarius.Source.Get_File_Name
         (Aquarius.Source.Get_Source_File (Tree.Get_Location));
    begin
-      Unit.Create_Unit (Top_Entry.Name, Source_Name, 0, 0);
+      Unit.Create_Unit (Top_Entry.Name, Source_Name, 0, 3);
       Aquarius.Trees.Properties.Set_Tagatha
         (Tree.all,
          Aquarius.Tagatha_Object.Create_Tagatha_Object (Unit));

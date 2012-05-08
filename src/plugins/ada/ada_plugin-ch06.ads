@@ -18,11 +18,22 @@ package Ada_Plugin.Ch06 is
    procedure Procedure_Declaration_After
      (Procedure_Declaration : Program_Tree);
 
+   procedure Function_Declaration_After
+     (Function_Declaration : Program_Tree);
+
    procedure Spec_Before_Arguments
+     (Spec : Program_Tree;
+      Args : Program_Tree);
+
+   procedure Spec_After_Arguments
      (Spec : Program_Tree;
       Args : Program_Tree);
 
    procedure Formal_Argument_After
      (Arg  : Program_Tree);
+
+   procedure Subprogram_Before_Body
+     (Spec       : Program_Tree;
+      Subprogram : Program_Tree);
 
 end Ada_Plugin.Ch06;

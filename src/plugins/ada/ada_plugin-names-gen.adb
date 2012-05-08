@@ -18,9 +18,17 @@ package body Ada_Plugin.Names.Gen is
                Offset : constant Integer :=
                  Aquarius.Entries.Objects.Frame_Offset (E);
             begin
-               Name.Set_Fragment
-                 (Tagatha.Fragments.Reference_Local
-                    (Tagatha.Local_Offset (-1 * Offset)));
+               if Offset > 0 then
+                  --  argument
+                  Name.Set_Fragment
+                    (Tagatha.Fragments.Reference_Argument
+                       (Tagatha.Argument_Offset (Offset)));
+               else
+                  --  local variable
+                  Name.Set_Fragment
+                    (Tagatha.Fragments.Reference_Local
+                       (Tagatha.Local_Offset (-1 * Offset)));
+               end if;
             end;
          end if;
       end if;
