@@ -24,6 +24,9 @@ package body Aquarius.Editor is
                                Aquarius.Trees.Properties.Get_Project
                                  (Project_Buffer.Program.all);
          begin
+            if Aquarius.Command_Line.Action /= "" then
+               Project.Run_Actions (Aquarius.Command_Line.Action);
+            end if;
             Aquarius.GUI.Launch_GUI (With_Project => Project);
          end;
       else

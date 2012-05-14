@@ -1,5 +1,6 @@
-with Ada.Containers.Vectors;
-with Ada.Strings.Unbounded;
+private with Ada.Containers.Indefinite_Vectors;
+private with Ada.Containers.Vectors;
+private with Ada.Strings.Unbounded;
 
 with Aquarius.Buffers;
 with Aquarius.Entries;
@@ -129,6 +130,12 @@ package Aquarius.Projects is
      return Aquarius_Project;
    --  Create a default project which contains only the given file
 
+   procedure Run_Actions
+     (Project     : in out Aquarius_Project_Type'Class;
+      Group_Name  : in String);
+   --  Attempt to run actions from the given Group_Name for each source
+   --  file in the project as it is loaded.
+
 private
 
    type Root_Project_View is
@@ -180,21 +187,25 @@ private
                                   Aquarius.Entries.Table_Entry,
                                   Aquarius.Entries."=");
 
+   package String_Vectors is
+     new Ada.Containers.Indefinite_Vectors (Positive, String);
+
    type Aquarius_Project_Type is
      new Root_Aquarius_Object
      and Aquarius.Programs.Root_Program_Tree_Store
    with
       record
-         Name          : Aquarius.Names.Aquarius_Name;
-         Full_Path     : Aquarius.Names.Aquarius_Name;
-         Search_Path   : Aquarius.Source.File_System.Search_Path_List;
-         Main_Source   : Aquarius.Names.Aquarius_Name;
-         Main_Buffer   : Aquarius.Buffers.Aquarius_Buffer;
-         Buffers       : Loaded_Buffer_Vector.Vector;
-         Views         : View_Vector.Vector;
-         Grammar_Names : Aquarius.Names.Name_List;
-         Project_UI    : access Aquarius.UI.Aquarius_UI'Class;
-         Entries       : Project_Entries_Vector.Vector;
+         Name            : Aquarius.Names.Aquarius_Name;
+         Full_Path       : Aquarius.Names.Aquarius_Name;
+         Search_Path     : Aquarius.Source.File_System.Search_Path_List;
+         Main_Source     : Aquarius.Names.Aquarius_Name;
+         Main_Buffer     : Aquarius.Buffers.Aquarius_Buffer;
+         Buffers         : Loaded_Buffer_Vector.Vector;
+         Views           : View_Vector.Vector;
+         Grammar_Names   : Aquarius.Names.Name_List;
+         Project_UI      : access Aquarius.UI.Aquarius_UI'Class;
+         Entries         : Project_Entries_Vector.Vector;
+         Pending_Actions : String_Vectors.Vector;
       end record;
 
 end Aquarius.Projects;
