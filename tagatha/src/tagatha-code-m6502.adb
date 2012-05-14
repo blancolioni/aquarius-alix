@@ -734,6 +734,7 @@ package body Tagatha.Code.M6502 is
          when Op_Div | Op_Mod =>
             if Dest_Size = 1 then
                Instruction (Asm, "JSR", "div_8");
+               T.Registers (X).Have_Value := False;
             elsif Dest_Size = 2 then
                Instruction (Asm, "JSR", "div_16");
             else
