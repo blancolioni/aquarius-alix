@@ -535,7 +535,7 @@ package body Ada_Plugin.Names is
                   if Current = null then
                      Aquarius.Errors.Error (Identifier,
                                             Identifier.Text &
-                                              " not declared in" &
+                                              " not declared in " &
                                               P.Name);
                   end if;
                end if;
