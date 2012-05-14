@@ -326,7 +326,8 @@ variant_record_element ::=
 
 variant_case ::= 'when' variant_case_options '=>' record_component_list
 
-variant_case_options ::= < identifier / '|' > | 'others'
+variant_case_options ::= < identifier / '|' >
+                       | 'others'
 
 array_type_definition ::=
  	'array' '(' < array_bound / ',' > ')' 'of' type_indication
@@ -351,11 +352,13 @@ label ::= '<<' identifier '>>'
 statement ::= null_statement | procedure_call | assignment_statement |
               if_statement | return_statement | declare_statement |
               loop_statement | exit_statement | case_statement |
-  	      raise_statement | pragma_spec
+  	      raise_statement | pragma_spec | delay_statement
 
 null_statement ::= 'null' ';'
 
 raise_statement ::= 'raise' [ qualified_reference ] [ exception_message ] ';'
+
+delay_statement ::= 'delay' ['until'] expression ';'
 
 exception_message ::= 'with' expression
 
@@ -400,7 +403,7 @@ case_option ::= case_option_list
               | 'others'
 
 case_option_list ::=
-     < (qualified_reference | numeric_literal | character_literal) / '|' >
+     < (qualified_reference | numeric_literal | character_literal | bounded_range) / '|' >
 
 
 return_statement ::= 'return' [expression] ';'
