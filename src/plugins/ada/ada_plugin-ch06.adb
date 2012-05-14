@@ -74,6 +74,47 @@ package body Ada_Plugin.Ch06 is
 
    end Function_Declaration_After;
 
+   -------------------------------------------------
+   -- Function_Spec_After_Defining_String_Literal --
+   -------------------------------------------------
+
+   procedure Function_Spec_After_Defining_String_Literal
+     (Function_Spec, String_Literal  : Program_Tree)
+   is
+      use Aquarius.Entries;
+      Function_Entry : Aquarius.Entries.Table_Entry;
+      Compilation_Unit : constant Program_Tree :=
+        Program_Tree (Function_Spec.Property
+                      (Plugin.Compilation_Unit_Property));
+   begin
+
+      Function_Entry :=
+        Aquarius.Entries.Objects.New_Object_Entry
+        (String_Literal.Standard_Text,
+         Function_Spec,
+         Function_Spec.Get_Type,
+         Aquarius.Values.No_Value,
+         True);
+      Function_Entry.Set_Display_Name (String_Literal.Text);
+
+      Function_Spec.Set_Entry (Function_Entry);
+
+      if not Compilation_Unit.Has_Entry then
+         Compilation_Unit.Set_Entry (Function_Entry);
+      end if;
+
+      Compilation_Unit.Symbol_Table.Insert (Function_Entry);
+
+      declare
+         Project : constant Aquarius.Projects.Aquarius_Project :=
+                     Aquarius.Trees.Properties.Get_Project
+                       (Compilation_Unit.all);
+      begin
+         Project.Add_Entry (Function_Entry);
+      end;
+
+   end Function_Spec_After_Defining_String_Literal;
+
    --------------------------------------------------
    -- Function_Specification_After_Type_Indication --
    --------------------------------------------------
@@ -131,10 +172,12 @@ package body Ada_Plugin.Ch06 is
       use Aquarius.Entries;
 
       Reference     : constant Program_Tree :=
-        Procedure_Name.Program_Child ("defining_qualified_reference");
+                        Procedure_Name.Program_Child
+                          ("defining_qualified_reference");
       Defining_Name : constant Aquarius.Programs.Program_Tree :=
-        Program_Tree
-        (Reference.Property (Plugin.Last_Identifier_Property));
+                        Program_Tree
+                          (Reference.Property
+                             (Plugin.Last_Identifier_Property));
       Procedure_Entry : Aquarius.Entries.Table_Entry;
       Parent_Entry  : Aquarius.Entries.Table_Entry;
       pragma Warnings (Off, Parent_Entry);
