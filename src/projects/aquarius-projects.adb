@@ -1,9 +1,11 @@
 with Ada.Directories;
 with Ada.Strings.Fixed;
+with Ada.Text_IO;
 
 with Aquarius.Configuration;
 with Aquarius.Errors;
 with Aquarius.Grammars.Manager;
+with Aquarius.Messages;
 
 with Aquarius.Projects.Entry_View;
 with Aquarius.Projects.File_View;
@@ -327,6 +329,26 @@ package body Aquarius.Projects is
                                                   Path, Project'Access);
          Project.Buffers.Append (Buffer);
          Buffer.Load (True);
+
+         declare
+            Messages : Aquarius.Messages.Message_List;
+         begin
+            Buffer.Program.Get_Messages (Messages);
+            if Aquarius.Messages.Message_Count  (Messages) > 0 then
+               declare
+                  use Aquarius.Messages;
+               begin
+                  for I in 1 .. Message_Count (Messages) loop
+                     Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error,
+                                           Show (Get_Message (Messages, I)));
+                  end loop;
+               end;
+            else
+               for Act of Project.Pending_Actions loop
+                  Buffer.Grammar.Run_Actions (Act, Buffer.Program);
+               end loop;
+            end if;
+         end;
       end;
    end Load_Dependency;
 
@@ -458,6 +480,18 @@ package body Aquarius.Projects is
       end if;
       From_Project.Entries.Delete (It);
    end Remove_Entry;
+
+   -----------------
+   -- Run_Actions --
+   -----------------
+
+   procedure Run_Actions
+     (Project     : in out Aquarius_Project_Type'Class;
+      Group_Name  : in String)
+   is
+   begin
+      Project.Pending_Actions.Append (Group_Name);
+   end Run_Actions;
 
    ------------
    -- Target --
