@@ -74,7 +74,7 @@ package body Aquarius.Buffers is
       return Boolean
    is
    begin
-      return Left.Show_Location < Right.Show_Location;
+      return Left.Name < Aquarius_Buffer (Right).Name;
    end Before;
 
    -----------------
