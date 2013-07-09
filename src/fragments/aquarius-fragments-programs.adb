@@ -54,6 +54,7 @@ package body Aquarius.Fragments.Programs is
       Program_Fragment (Result.all).Grammar := Grammar;
       Program_Fragment (Result.all).Cursor  :=
         Aquarius.Trees.Cursors.Left_Of_Tree (Program);
+      Result.Background := Aquarius.Fonts.White;
 
       Aquarius.Programs.Parser.Initialise_Parse_Context
         (Context     => Program_Fragment (Result.all).Context,
