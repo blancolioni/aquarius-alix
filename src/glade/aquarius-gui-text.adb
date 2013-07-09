@@ -1,7 +1,7 @@
 with Glib;
 
 with Gtk.Text_Tag_Table;
-with Gtk.Widget;
+--  with Gtk.Widget;
 
 with Pango.Enums;
 
@@ -10,7 +10,7 @@ package body Aquarius.GUI.Text is
    Local_Default_Font : Pango.Font.Pango_Font_Description;
    Default_Foreground : Gdk.Color.Gdk_Color;
    Default_Background : Gdk.Color.Gdk_Color;
-   Color_Map          : Gdk.Color.Gdk_Colormap;
+--     Color_Map          : Gdk.Color.Gdk_Colormap;
 
    ------------------
    -- Default_Font --
@@ -62,19 +62,17 @@ package body Aquarius.GUI.Text is
    -- Get_Gdk_Colour --
    --------------------
 
-   function Get_Gdk_Colour (Colormap : Gdk.Color.Gdk_Colormap;
-                            Colour   : Aquarius.Fonts.Aquarius_Colour)
+   function Get_Gdk_Colour (Colour   : Aquarius.Fonts.Aquarius_Colour)
                            return Gdk.Color.Gdk_Color
    is
       use Glib, Gdk.Color;
       Result  : Gdk.Color.Gdk_Color;
-      Success : Boolean;
    begin
       Set_Rgb (Result,
                Guint16 (Aquarius.Fonts.Red (Colour)) * 256,
                Guint16 (Aquarius.Fonts.Green (Colour)) * 256,
                Guint16 (Aquarius.Fonts.Blue (Colour)) * 256);
-      Alloc_Color (Colormap, Result, Success => Success);
+      --  Alloc_Color (Colormap, Result, Success => Success);
       return Result;
    end Get_Gdk_Colour;
 
@@ -121,12 +119,12 @@ package body Aquarius.GUI.Text is
             if Has_Foreground (Font) then
                Gdk.Color.Set_Property
                  (Result, Foreground_Gdk_Property,
-                  Get_Gdk_Colour (Color_Map, Get_Foreground (Font)));
+                  Get_Gdk_Colour (Get_Foreground (Font)));
             end if;
             if Has_Background (Font) then
                Gdk.Color.Set_Property
                  (Result, Background_Gdk_Property,
-                  Get_Gdk_Colour (Color_Map, Get_Background (Font)));
+                  Get_Gdk_Colour (Get_Background (Font)));
             end if;
          end;
       end if;
@@ -139,19 +137,19 @@ package body Aquarius.GUI.Text is
 
    procedure Initialise is
       use Gtk.Text_Tag_Table;
-      Success : Boolean;
+--        Success : Boolean;
    begin
       Local_Default_Font :=
-        Pango.Font.To_Font_Description ("Liberation mono",
+        Pango.Font.To_Font_Description ("Courier new",
                                         Size => 10);
-      Color_Map := Gtk.Widget.Get_Default_Colormap;
+      --  Color_Map := Gtk.Widget.Get_Default_Colormap;
       Gdk.Color.Set_Rgb (Default_Background,
                          65535, 65535, 65535);
-      Gdk.Color.Alloc_Color (Color_Map, Default_Background,
-                             Success => Success);
+--        Gdk.Color.Alloc_Color (Color_Map, Default_Background,
+--                               Success => Success);
       Gdk.Color.Set_Rgb (Default_Foreground, 0, 0, 0);
-      Gdk.Color.Alloc_Color (Color_Map, Default_Foreground,
-                             Success => Success);
+--        Gdk.Color.Alloc_Color (Color_Map, Default_Foreground,
+--                               Success => Success);
 
    end Initialise;
 

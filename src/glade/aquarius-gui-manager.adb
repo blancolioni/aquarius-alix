@@ -117,10 +117,9 @@ package body Aquarius.GUI.Manager is
    is
       pragma Unreferenced (Layout);
 
-      Width, Height : Glib.Gint;
+      Width, Height : Glib.Guint;
    begin
-      Width := Main_Window.Get_Allocation_Width;
-      Height := Main_Window.Get_Allocation_Height;
+      Main_Window.Get_Size (Width, Height);
       Local_Current_Position.Bottom :=
         Local_Current_Position.Top + Integer (Height);
       Local_Current_Position.Right :=
