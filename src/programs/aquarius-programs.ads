@@ -97,12 +97,12 @@ package Aquarius.Programs is
    --  Finds all named children of Item and concatenates their text
    --  representations
 
+   function Chosen_Tree (Item : not null access Program_Tree_Type)
+                        return Program_Tree;
    --  Chosen_Tree: Item must refer to a choice tree
    --  (not counting single-item sequence children).
    --  Return the first named child of the choice that
    --  was made.
-   function Chosen_Tree (Item : not null access Program_Tree_Type)
-                        return Program_Tree;
 
    overriding
    function Has_Named_Property (Item : Program_Tree_Type;
@@ -208,8 +208,6 @@ package Aquarius.Programs is
 
    function Minimum_Indent (Item : Program_Tree_Type)
                            return Aquarius.Source.Column_Number;
-
-   --  procedure Debug_Dump_Program (Item : Program_Tree);
 
    procedure Set_Error (Item  : in out Program_Tree_Type;
                         Value : in Boolean);

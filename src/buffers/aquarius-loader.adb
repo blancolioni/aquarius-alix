@@ -18,7 +18,7 @@ with Aquarius.UI.Console;
 package body Aquarius.Loader is
 
    Show_Full_Path : constant Boolean := True;
-   --  If true, the full path of each file is displaed while loading it
+   --  If true, the full path of each file is displayed while loading it
 
    function Load
      (Grammar    : in Aquarius.Grammars.Aquarius_Grammar;
