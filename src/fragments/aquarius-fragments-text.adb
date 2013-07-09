@@ -14,12 +14,12 @@ with Aquarius.Styles;
 
 package body Aquarius.Fragments.Text is
 
-   function To_Aquarius_Key (Event : Gdk.Event.Gdk_Event_Key)
+   function To_Aquarius_Key (Event : Gdk.Event.Gdk_Event)
                              return Aquarius.Keys.Aquarius_Key;
 
    function Handle_Key_Press
      (View     : access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Event    : in     Gdk.Event.Gdk_Event_Key;
+      Event    : in     Gdk.Event.Gdk_Event;
       Fragment : in     Aquarius_Fragment)
      return Boolean;
 
@@ -51,8 +51,7 @@ package body Aquarius.Fragments.Text is
       Text_View.Modify_Bg
         (Gtk.Enums.State_Normal,
          Aquarius.GUI.Text.Get_Gdk_Colour
-           (Gtk.Widget.Get_Default_Colormap,
-            Fragment.Background));
+           (Fragment.Background));
 
       Key_Press_Callback.Connect
         (Text_View, "key_press_event",
@@ -72,7 +71,7 @@ package body Aquarius.Fragments.Text is
 
    function Handle_Key_Press
      (View     : access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Event    : in     Gdk.Event.Gdk_Event_Key;
+      Event    : in     Gdk.Event.Gdk_Event;
       Fragment : in     Aquarius_Fragment)
      return Boolean
    is
@@ -102,7 +101,7 @@ package body Aquarius.Fragments.Text is
    -- To_Aquarius_Key --
    ---------------------
 
-   function To_Aquarius_Key (Event : Gdk.Event.Gdk_Event_Key)
+   function To_Aquarius_Key (Event : Gdk.Event.Gdk_Event)
                             return Aquarius.Keys.Aquarius_Key
    is
       use Gdk.Types, Gdk.Types.Keysyms;
