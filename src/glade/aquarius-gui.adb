@@ -91,12 +91,15 @@ package body Aquarius.GUI is
 
       declare
          use type Glib.Error.GError;
-         Error : constant Glib.Error.GError :=
-                   Builder.Add_From_File
-                     (Filename => Aquarius.Configuration.Get_Library_Path &
-                              "/aquarius-fragments.glade");
+         use type Glib.Guint;
+         Error : aliased Glib.Error.GError;
+         Result : constant Glib.Guint :=
+                    Builder.Add_From_File
+                      (Filename => Aquarius.Configuration.Get_Library_Path &
+                                  "/aquarius-fragments.glade",
+                       Error    => Error'Access);
       begin
-         if Error /= null then
+         if Result = 0 then
             raise Program_Error with
               "Error opening GUI definition: " &
             Aquarius.Configuration.Get_Library_Path &

@@ -43,12 +43,12 @@ package body Aquarius.GUI.Source is
    procedure Create_Source_View
      (Buffer : Aquarius.Buffers.Aquarius_Buffer);
 
-   function To_Aquarius_Key (Event : Gdk.Event.Gdk_Event_Key)
+   function To_Aquarius_Key (Event : Gdk.Event.Gdk_Event)
                             return Aquarius.Keys.Aquarius_Key;
 
    function Handle_Key_Press
      (View   : access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Event  : in     Gdk.Event.Gdk_Event_Key;
+      Event  : in     Gdk.Event.Gdk_Event;
       Buffer : in     Aquarius.Buffers.Aquarius_Buffer)
      return Boolean;
 
@@ -105,7 +105,7 @@ package body Aquarius.GUI.Source is
 
    function Handle_Key_Press
      (View   : access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Event  : in     Gdk.Event.Gdk_Event_Key;
+      Event  : in     Gdk.Event.Gdk_Event;
       Buffer : in     Aquarius.Buffers.Aquarius_Buffer)
      return Boolean
    is
@@ -217,7 +217,7 @@ package body Aquarius.GUI.Source is
    -- To_Aquarius_Key --
    ---------------------
 
-   function To_Aquarius_Key (Event : Gdk.Event.Gdk_Event_Key)
+   function To_Aquarius_Key (Event : Gdk.Event.Gdk_Event)
                             return Aquarius.Keys.Aquarius_Key
    is
       use Gdk.Types, Gdk.Types.Keysyms;
