@@ -22,9 +22,11 @@ format ''' no_space_before no_space_after
 compilation_unit ::= top_level_interface_declaration
 
 top_level_interface_declaration ::=
-   'interface' identifier [ ':' < identifier / ',' > ] 'is'
+   'interface' qualified_identifier [ ':' < qualified_identifier / ',' > ] 'is'
       list_of_declarations
-   'end' identifier ';'
+   'end' qualified_identifier ';'
+
+qualified_identifier ::= < identifier / '.' >
 
 list_of_declarations ::= { declaration ';' }
 
