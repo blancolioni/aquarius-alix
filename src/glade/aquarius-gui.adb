@@ -96,20 +96,20 @@ package body Aquarius.GUI is
          Result : constant Glib.Guint :=
                     Builder.Add_From_File
                       (Filename => Aquarius.Configuration.Get_Library_Path &
-                                  "/aquarius-fragments.glade",
+                                  "/Aquarius.ui",
                        Error    => Error'Access);
       begin
          if Result = 0 then
             raise Program_Error with
               "Error opening GUI definition: " &
             Aquarius.Configuration.Get_Library_Path &
-            "/aquarius-fragments.glade";
+            "/Aquarius.glade";
          end if;
       end;
 
       Ada.Text_IO.Put_Line ("done");
 
-      if False then
+      if True then
          Aquarius.GUI.Main.Initialise (Builder);
          Aquarius.GUI.Menu.Initialise (Builder);
          Aquarius.GUI.Message_View.Initialise (Builder);
@@ -117,14 +117,14 @@ package body Aquarius.GUI is
       end if;
 
       Aquarius.GUI.Text.Initialise;
-      Aquarius.GUI.Manager.Initialise (Builder);
+      --  Aquarius.GUI.Manager.Initialise (Builder);
       Aquarius.GUI.Views.Initialise (Builder);
 
       declare
          Main_Window : constant Gtk.Window.Gtk_Window :=
                          Gtk.Window.Gtk_Window
                            (Builder.Get_Object
-                              ("Aquarius_Main"));
+                              ("Aquarius_Main_Window"));
          Pixbuf      : Gdk.Pixbuf.Gdk_Pixbuf;
          Error       : Glib.Error.GError;
       begin
@@ -155,17 +155,19 @@ package body Aquarius.GUI is
 --           Aquarius.GUI.Source.Load_File (With_File);
 --        end if;
 
-      declare
-         F : constant Aquarius.Fragments.Aquarius_Fragment :=
-               Aquarius.Fragments.Notes.Create_Note
-                 (500, 100,
-                  "Welcome to Aquarius!" & Character'Val (10)
-                    & "Double-click an entity to the right to start");
-      begin
+      if False then
+         declare
+            F : constant Aquarius.Fragments.Aquarius_Fragment :=
+                  Aquarius.Fragments.Notes.Create_Note
+                    (500, 100,
+                     "Welcome to Aquarius!" & Character'Val (10)
+                     & "Double-click an entity to the right to start");
+         begin
 
-         Aquarius.GUI.Manager.Add_Fragment (F, 20, 20);
+            Aquarius.GUI.Manager.Add_Fragment (F, 20, 20);
 
-      end;
+         end;
+      end if;
 
       Timeout_Id := Glib.Main.Timeout_Add (Interval => 100,
                                            Func     => Timeout'Access);
