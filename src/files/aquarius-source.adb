@@ -1,3 +1,4 @@
+with Ada.Directories;
 with Ada.Strings.Fixed;
 
 package body Aquarius.Source is
@@ -22,6 +23,16 @@ package body Aquarius.Source is
          return Left.File.Get_File_Name < Right.File.Get_File_Name;
       end if;
    end "<";
+
+   --------------------------
+   -- Containing_Directory --
+   --------------------------
+
+   function Containing_Directory (From : Source_File) return String is
+   begin
+      return Ada.Directories.Containing_Directory
+        (From.Get_Full_Path);
+   end Containing_Directory;
 
    -----------------
    -- End_Of_File --
