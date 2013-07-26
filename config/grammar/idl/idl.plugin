@@ -1,0 +1,5 @@
+project IDL_Plugin is
+
+   check : semantic;
+   
+end IDL_Plugin;

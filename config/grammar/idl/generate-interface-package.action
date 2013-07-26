@@ -1,0 +1,29 @@
+@declare Package_Name : constant String := 
+@   Tree.Top_Level_Declaration.Qualified_Identifier;
+@Set_Output (Ada_File_Name (Package_Name));
+@for Context of Tree.Contexts loop
+with [Context];
+@end loop;
+
+package [Package_Name] is
+
+@for Tree.Top_Level_Declaration.List_Of_Declarations loop
+@   case Tree is
+@      when Constant_Declaration =>
+   [Identifier (1)] : constant [Identifier (2)] := [Expression];
+@      when Type_Declaration =>
+   type [Identifier] is
+@         case Type_Definition is
+@            when Record_Type_Definition =>
+      record
+@               for Record_Components loop
+         [Identifier] : [Ada_Name];
+@               end loop;
+      end record;
+@            when New_Type_Definition =>
+                new [Qualified_Identifier'Image];
+@         end case;
+@      when Subprogram_Declaration =>
+@         null;
+@   end case;
+@end loop;

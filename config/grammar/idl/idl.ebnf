@@ -30,7 +30,11 @@ qualified_identifier ::= < identifier / '.' >
 
 list_of_declarations ::= { declaration ';' }
 
-declaration ::= subprogram_declaration | type_declaration
+declaration ::= subprogram_declaration | type_declaration | constant_declaration
+
+constant_declaration ::= identifier ':' 'constant' [ identifier ] ':=' expression
+
+expression ::= numeric_literal | identifier
 
 subprogram_declaration ::= function_declaration | procedure_declaration
 
@@ -41,6 +45,9 @@ procedure_declaration ::= 'procedure' identifier [ formal_arguments ]
 type_declaration ::= 'type' identifier 'is' type_definition
 
 type_definition ::= record_type_definition
+                  | new_type_definition
+                  
+new_type_definition ::= 'new' qualified_identifier
 
 record_type_definition ::=
    'record' record_components 'end' 'record'
@@ -55,4 +62,4 @@ formal_argument ::= identifier ':' [ argument_spec ] typeref
 
 argument_spec ::= 'in' | 'in' 'out' | 'out'
 
-typeref ::= [ 'interface' ] identifier
+typeref ::= [ 'interface' ] qualified_identifier
