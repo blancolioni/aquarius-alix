@@ -1,4 +1,4 @@
-private with Ada.Containers.Indefinite_Vectors;
+private with Ada.Containers.Vectors;
 private with Ada.Containers.Hashed_Maps;
 private with Ada.Strings.Unbounded.Hash;
 
@@ -21,7 +21,9 @@ package Aquarius.Script is
       Node    : not null access Aquarius.Actions.Actionable'Class;
       Parent  : access Aquarius.Actions.Actionable'Class);
 
-   function New_Script (Name : String) return Aquarius_Script;
+   function New_Script (Name : String;
+                        Path : String)
+                        return Aquarius_Script;
 
    type Script_Environment is private;
 
@@ -31,8 +33,9 @@ package Aquarius.Script is
                       Environment : in out Script_Environment)
       is abstract;
 
-   procedure Append (Script : in out Root_Aquarius_Script'Class;
-                     Item   : in     Root_Script_Element'Class);
+   procedure Append
+     (Script : in out Root_Aquarius_Script'Class;
+      Item   : not null access Root_Script_Element'Class);
 
    type Script_Element is access all Root_Script_Element'Class;
 
@@ -42,8 +45,7 @@ private
      abstract new Root_Aquarius_Object with null record;
 
    package Script_Element_Vectors is
-      new Ada.Containers.Indefinite_Vectors (Positive,
-                                             Root_Script_Element'Class);
+     new Ada.Containers.Vectors (Positive, Script_Element);
 
    type Environment_Entry is access all Root_Aquarius_Object'Class;
 
@@ -85,6 +87,7 @@ private
      new Root_Aquarius_Object with
       record
          Name     : Ada.Strings.Unbounded.Unbounded_String;
+         Path     : Environment_Entry;
          Elements : Script_Element_Vectors.Vector;
       end record;
 
