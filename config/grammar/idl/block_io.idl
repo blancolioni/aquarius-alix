@@ -1,0 +1,17 @@
+interface Block_IO is
+
+   type Device_Geometry is
+      record
+         Block_Size  : Word_32;
+         Block_Count : Word_32;
+       end record;
+       
+   function Get_Geometry return Device_Geometry;
+   
+   procedure Read_Block (Block_Index  : in Word_32;
+                         Block_Buffer : in Address);
+
+   procedure Write_Block (Block_Index  : in Word_32;
+                          Block_Buffer : in Address);
+
+end Block_IO;
