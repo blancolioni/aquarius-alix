@@ -1,0 +1,5 @@
+plugin IDL version 0.1 is
+   group run_check : semantic is
+      after compilation_unit do
+         external ("check");
+   end check;

@@ -162,7 +162,9 @@ package body Aquarius.Source.File_System is
             File.Current_Line (Length) := Ch;
          end if;
       end loop;
-      Ada.Text_IO.Skip_Line (File.File);
+      if not Ada.Text_IO.End_Of_File (File.File) then
+         Ada.Text_IO.Skip_Line (File.File);
+      end if;
       File.Current_Line_Length := Length;
    end Next_Line;
 
