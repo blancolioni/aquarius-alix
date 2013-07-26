@@ -4,6 +4,7 @@ with Aquarius.Errors;
 with Aquarius.Names;
 with Aquarius.Plugins.Dynamic;
 with Aquarius.Script.Expressions;
+with Aquarius.Source;
 with Aquarius.Trees;
 
 package body Aquarius.Plugins.Script_Plugin.Bindings is
@@ -48,7 +49,6 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
      (Parent : Aquarius.Programs.Program_Tree;
       Child  : Aquarius.Programs.Program_Tree)
    is
-      pragma Unreferenced (Child);
       Time_Definition : constant Program_Tree :=
         Program_Tree (Parent.Property (Plugin.Property_Action_Time));
       Parent_Context  : constant Program_Tree :=
@@ -65,8 +65,17 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
         Target_Plugin.Get_Action_Group (Group_Name);
       Script         : constant Aquarius.Script.Aquarius_Script :=
           Aquarius.Script.Aquarius_Script
-          (Parent.Property (Plugin.Property_Action_Script));
+                            (Parent.Property (Plugin.Property_Action_Script));
+      Exprs           : constant Array_Of_Program_Trees :=
+                          Child.Direct_Children
+                            (Name => "expression");
    begin
+      for I in Exprs'Range loop
+         Script.Append
+           (Item =>
+              Aquarius.Script.Script_Element
+                (Exprs (I).Property (Plugin.Property_Expression)));
+      end loop;
       if Parent_Context = null then
          Ada.Text_IO.Put_Line ("script: " & Time_Definition.Text &
                                " " & Child_Context.Text);
@@ -121,7 +130,9 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Parent.Set_Property
         (Plugin.Property_Action_Script,
          Aquarius.Script.New_Script
-           ("internal"));
+           (Name => "internal",
+            Path => Aquarius.Source.Containing_Directory
+              (Parent.Source)));
    end Action_Before_Action_Definition;
 
    --------------------------------
@@ -240,6 +251,8 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
         (Plugin.Property_Expression,
          Item.Chosen_Tree.Property
            (Plugin.Property_Expression));
+
+
    end Expression_After;
 
    -----------------------------
@@ -295,9 +308,18 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Group      : Aquarius.Actions.Action_Group;
    begin
       Parent.Set_Property (Plugin.Property_Plugin, New_Plugin);
-      New_Plugin.Create_Action_Group
+      Ada.Text_IO.Put_Line
+        (Plugin.Name
+         & ": new action group "
+         & Ids (1).Text
+         & " with trigger "
+         & Ids (2).Text);
+--        New_Plugin.Create_Action_Group
+--          (Ids (1).Text, Trigger, Group);
+      New_Plugin.Grammar.Add_Action_Group
         (Ids (1).Text, Trigger, Group);
       New_Plugin.Add_Action_Group (Group);
+
       Parent.Set_Property (Plugin.Property_Group_Name,
                            Aquarius.Names.Name_Value (Ids (1).Text));
    end Group_Declaration_Before_List_Of_Actions;

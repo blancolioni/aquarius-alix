@@ -1,3 +1,4 @@
+with Aquarius.Names;
 with Aquarius.Script.Library;
 
 package body Aquarius.Script is
@@ -7,7 +8,7 @@ package body Aquarius.Script is
    ------------
 
    procedure Append (Script : in out Root_Aquarius_Script'Class;
-                     Item   : in     Root_Script_Element'Class)
+                     Item   : not null access Root_Script_Element'Class)
    is
    begin
       Script.Elements.Append (Item);
@@ -39,8 +40,11 @@ package body Aquarius.Script is
    is
       Env : Script_Environment;
    begin
-      Insert (Env, Environment_Entry (Parent));
+      if Parent /= null then
+         Insert (Env, Environment_Entry (Parent));
+      end if;
       Insert (Env, Environment_Entry (Node));
+      Insert (Env, Script.Path);
       for Element of Script.Elements loop
          Element.Execute (Env);
       end loop;
@@ -110,10 +114,17 @@ package body Aquarius.Script is
    -- New_Script --
    ----------------
 
-   function New_Script (Name : String) return Aquarius_Script is
+   function New_Script (Name : String;
+                        Path : String)
+                        return Aquarius_Script
+   is
       Result : constant Aquarius_Script := new Root_Aquarius_Script;
    begin
       Result.Name := Ada.Strings.Unbounded.To_Unbounded_String (Name);
+      Result.Path :=
+        new Bound_Entry'
+          (Bound_Name  => Ada.Strings.Unbounded.To_Unbounded_String ("path"),
+           Bound_Value => Aquarius.Names.Name_Value (Path));
       return Result;
    end New_Script;
 

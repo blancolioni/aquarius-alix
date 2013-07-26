@@ -1,3 +1,5 @@
+with Ada.Text_IO;
+
 with Aquarius.Programs;
 
 package body Aquarius.Script.Library is
@@ -27,6 +29,11 @@ package body Aquarius.Script.Library is
       Args : Aquarius.Script.Expressions.Array_Of_Expressions)
       return Aquarius.Script.Expressions.Expression_Access;
 
+   function External
+     (Env  : Script_Environment;
+      Args : Aquarius.Script.Expressions.Array_Of_Expressions)
+      return Aquarius.Script.Expressions.Expression_Access;
+
    -----------------------------
    -- Create_Standard_Library --
    -----------------------------
@@ -37,6 +44,10 @@ package body Aquarius.Script.Library is
       It := new Standard_Library_Object'
         (Name    => new String'("flat_image"),
          Execute => Flat_Image'Access);
+      Insert (Standard_Library, It);
+      It := new Standard_Library_Object'
+        (Name    => new String'("external"),
+         Execute => External'Access);
       Insert (Standard_Library, It);
    end Create_Standard_Library;
 
@@ -53,6 +64,25 @@ package body Aquarius.Script.Library is
    begin
       return Standard_Library_Object (Item.all).Execute (Env, Args);
    end Execute;
+
+   --------------
+   -- External --
+   --------------
+
+   function External
+     (Env  : Script_Environment;
+      Args : Aquarius.Script.Expressions.Array_Of_Expressions)
+      return Aquarius.Script.Expressions.Expression_Access
+   is
+   begin
+      Ada.Text_IO.Put_Line
+        ("Calling external action: "
+         & Bound_Entry (Find (Env, "path").all).Bound_Value.Name
+         & "/"
+         & Args (Args'First).Name
+         & ".action");
+      return Args (Args'First);
+   end External;
 
    ----------------
    -- Flat_Image --
