@@ -37,13 +37,20 @@ if_statement ::= 'if' expression 'then' sequence_of_statements
                  [ 'else' sequence_of_statements ]
                  'end' 'if'
 
-case_statement ::= 'case' expression 'is' < 'when' expression '=>' sequence_of_statements > 'end' 'case'
+case_statement ::= 'case' expression 'is' < case_option > 'end' 'case'
+
+case_option ::= 'when' identifier '=>' sequence_of_statements
 
 for_loop_statement ::=
+   for_all_loop
+ | for_tree_loop
+
+for_all_loop ::=
    'for' 'all' loop_statement
- | 'for' qualified_identifier loop_statement
- | 'for' identifier 'of' expression loop_statement
- 
+
+for_tree_loop ::=
+   'for' identifier loop_statement
+   
 loop_statement ::= 'loop' sequence_of_statements 'end' 'loop'
 
 qualified_identifier ::= < identifier / '.' >
@@ -84,13 +91,11 @@ multiplying_operator ::= '*' | '/' | 'mod' | 'rem'
 
 object_reference ::= explicit_object_reference | implicit_object_reference
 
-explicit_object_reference ::= direct_name { name_qualifier }
+explicit_object_reference ::= identifier { name_qualifier }
 
 implicit_object_reference ::= { name_qualifier }
 
 tree_reference ::= '/' < identifier / '/' >
-
-direct_name ::= identifier
 
 name_qualifier ::= '.' identifier
                  | actual_argument_list

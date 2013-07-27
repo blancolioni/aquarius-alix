@@ -355,14 +355,19 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                              (Bound_Name, Bound_Value));
    end Let_Expression_After_Binding;
 
+   ------------------------------
+   -- Literal_Expression_After --
+   ------------------------------
+
    procedure Literal_Expression_After
      (Item : Aquarius.Programs.Program_Tree)
    is
       Literal : constant Program_Tree := Item.Chosen_Tree;
+      Text    : constant String := Literal.Text;
    begin
       Item.Set_Property (Plugin.Property_Expression,
                          Aquarius.Script.Expressions.String_Expression
-                           (Literal.Text));
+                           (Text (Text'First + 1 .. Text'Last - 1)));
    end Literal_Expression_After;
 
    ----------------------------------------------------------

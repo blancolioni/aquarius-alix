@@ -1,6 +1,8 @@
-with Ada.Text_IO;
-
 with Aquarius.Programs;
+
+with Aquarius.Actions.Interpreter;
+with Aquarius.Grammars.Manager;
+with Aquarius.Loader;
 
 package body Aquarius.Script.Library is
 
@@ -15,7 +17,7 @@ package body Aquarius.Script.Library is
    type Standard_Library_Object is
      new Root_Aquarius_Object with
       record
-         Name    : access String;
+         Name : Ada.Strings.Unbounded.Unbounded_String;
          Execute : Standard_Library_Function;
       end record;
 
@@ -39,16 +41,18 @@ package body Aquarius.Script.Library is
    -----------------------------
 
    procedure Create_Standard_Library is
-      It : Environment_Entry;
+      use Ada.Strings.Unbounded;
    begin
-      It := new Standard_Library_Object'
-        (Name    => new String'("flat_image"),
-         Execute => Flat_Image'Access);
-      Insert (Standard_Library, It);
-      It := new Standard_Library_Object'
-        (Name    => new String'("external"),
-         Execute => External'Access);
-      Insert (Standard_Library, It);
+      Insert (Standard_Library, "flat_image",
+              (Aquarius_Object_Entry,
+               new Standard_Library_Object'
+                 (Name    => To_Unbounded_String ("flat_image"),
+                  Execute => Flat_Image'Access)));
+      Insert (Standard_Library, "external",
+              (Aquarius_Object_Entry,
+               new Standard_Library_Object'
+                 (Name    => To_Unbounded_String ("external"),
+                  Execute => External'Access)));
    end Create_Standard_Library;
 
    -------------
@@ -74,13 +78,25 @@ package body Aquarius.Script.Library is
       Args : Aquarius.Script.Expressions.Array_Of_Expressions)
       return Aquarius.Script.Expressions.Expression_Access
    is
+      use Ada.Strings.Unbounded;
+      Path : constant String :=
+               To_String (Find (Env, "path").String_Value)
+               & "/"
+               & Args (Args'First).Name
+               & ".action";
+      Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
+                  Aquarius.Grammars.Manager.Get_Grammar_For_File (Path);
+      Action : constant Aquarius.Programs.Program_Tree :=
+                  Aquarius.Loader.Load_From_File
+                    (Grammar => Grammar,
+                     Path    => Path);
+      Program : constant Aquarius.Programs.Program_Tree :=
+                  Aquarius.Programs.Program_Tree
+                    (Find (Env, "node").Object_Value);
    begin
-      Ada.Text_IO.Put_Line
-        ("Calling external action: "
-         & Bound_Entry (Find (Env, "path").all).Bound_Value.Name
-         & "/"
-         & Args (Args'First).Name
-         & ".action");
+      Aquarius.Actions.Interpreter.Interpret_Action
+        (Action => Action,
+         Target => Program);
       return Args (Args'First);
    end External;
 
@@ -109,7 +125,7 @@ package body Aquarius.Script.Library is
    function Name (Item : Standard_Library_Object) return String
    is
    begin
-      return Item.Name.all;
+      return Ada.Strings.Unbounded.To_String (Item.Name);
    end Name;
 
    --------------
