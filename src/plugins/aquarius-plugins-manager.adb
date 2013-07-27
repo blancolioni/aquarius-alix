@@ -119,7 +119,7 @@ package body Aquarius.Plugins.Manager is
          declare
             Path : constant String :=
               Aquarius.Configuration.Get_Grammar_Path (Name) &
-              "plugin.script";
+              Name & ".plugin";
          begin
             if not Ada.Directories.Exists (Path) then
                Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error,

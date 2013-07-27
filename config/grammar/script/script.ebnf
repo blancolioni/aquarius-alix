@@ -27,7 +27,11 @@ plugin_declaration ::= 'plugin' identifier 'version' version_spec 'is'
 
 version_spec ::= < numeric_literal / '.' >
 
-list_of_group_declarations ::= { group_declaration }
+list_of_group_declarations ::= { declaration }
+
+declaration ::= property_declaration | group_declaration
+
+property_declaration ::= 'property' identifier ';'
 
 group_declaration ::= 'group' identifier ':' identifier 'is'
    list_of_actions

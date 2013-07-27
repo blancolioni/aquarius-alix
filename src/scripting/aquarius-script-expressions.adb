@@ -97,10 +97,11 @@ package body Aquarius.Script.Expressions is
       if Item.Call_Args /= null
         and then Item.Call_Args'Length > 0
       then
-         return Aquarius.Script.Library.Execute (Fn, Environment,
+         return Aquarius.Script.Library.Execute (Fn.Object_Value,
+                                                 Environment,
                                                  Item.Call_Args.all);
       else
-         return Fn;
+         return null;
       end if;
    end Evaluate;
 
@@ -129,12 +130,13 @@ package body Aquarius.Script.Expressions is
    is
       Result : constant access Root_Aquarius_Object'Class :=
         Evaluate (Expression_Element'Class (Item), Environment);
-      Current : Environment_Entry := Find (Environment, "$");
+      Current : constant Environment_Entry :=
+                  Find (Environment, "$");
    begin
-      if Current = null then
-         Current := Bind_Object ("$", Result);
+      if Current.Entry_Type = Null_Entry then
+         Insert (Environment, "$", (Aquarius_Object_Entry, Result));
       else
-         Bound_Entry (Current.all).Bound_Value := Result;
+         Replace (Environment, "$", (Aquarius_Object_Entry, Result));
       end if;
    end Execute;
 
@@ -146,12 +148,11 @@ package body Aquarius.Script.Expressions is
    procedure Execute (Item        : in     Let_Expression_Element;
                       Environment : in out Script_Environment)
    is
+      use Ada.Strings.Unbounded;
       New_Entry : constant Environment_Entry :=
-        new Bound_Entry'(Root_Aquarius_Object with
-                           Bound_Name => Item.Bound_Name,
-                         Bound_Value => Item.Bound_Value);
+                    (Aquarius_Object_Entry, Item.Bound_Value);
    begin
-      Replace (Environment, New_Entry);
+      Replace (Environment, To_String (Item.Bound_Name), New_Entry);
    end Execute;
 
    ---------------------------
@@ -211,7 +212,7 @@ package body Aquarius.Script.Expressions is
    overriding
    function Name (Item : String_Expression_Element) return String is
    begin
-      return """" & Ada.Strings.Unbounded.To_String (Item.Text) & """";
+      return Ada.Strings.Unbounded.To_String (Item.Text);
    end Name;
 
    -----------------------

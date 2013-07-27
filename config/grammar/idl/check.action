@@ -1,7 +1,7 @@
 for all loop
    case Tree is
       when Typeref =>
-         if interface then
+         if Interface_Typeref then
             .Ada_Name := Qualified_Identifier'Image & "_Interface";
          else
             .Ada_Name := Qualified_Identifier'Image;
