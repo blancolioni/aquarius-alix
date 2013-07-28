@@ -23,11 +23,11 @@ format list_of_actions indent_child
 source_file ::= plugin_declaration
 
 plugin_declaration ::= 'plugin' identifier 'version' version_spec 'is'
-                          list_of_group_declarations
+                          list_of_declarations
 
 version_spec ::= < numeric_literal / '.' >
 
-list_of_group_declarations ::= { declaration }
+list_of_declarations ::= { declaration }
 
 declaration ::= property_declaration | group_declaration
 

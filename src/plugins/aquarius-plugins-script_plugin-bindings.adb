@@ -370,11 +370,11 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                            (Text (Text'First + 1 .. Text'Last - 1)));
    end Literal_Expression_After;
 
-   ----------------------------------------------------------
-   -- Plugin_Declaration_Before_List_Of_Group_Declarations --
-   ----------------------------------------------------------
+   ----------------------------------------------------
+   -- Plugin_Declaration_Before_List_Of_Declarations --
+   ----------------------------------------------------
 
-   procedure Plugin_Declaration_Before_List_Of_Group_Declarations
+   procedure Plugin_Declaration_Before_List_Of_Declarations
      (Parent : Aquarius.Programs.Program_Tree;
       Child  : Aquarius.Programs.Program_Tree)
    is
@@ -388,7 +388,30 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
         (Plugin_Name, Plugin_Version);
    begin
       Parent.Program_Root.Set_Property (Plugin.Property_Plugin, New_Plugin);
-   end Plugin_Declaration_Before_List_Of_Group_Declarations;
+   end Plugin_Declaration_Before_List_Of_Declarations;
+
+   --------------------------------
+   -- Property_Declaration_After --
+   --------------------------------
+
+   procedure Property_Declaration_After
+     (Item : Aquarius.Programs.Program_Tree)
+   is
+      New_Plugin : constant Aquarius_Plugin :=
+                     Aquarius_Plugin
+                       (Item.Property (Plugin.Property_Plugin));
+      New_Property : Aquarius.Properties.Property_Type;
+   begin
+      Ada.Text_IO.Put_Line
+        (New_Plugin.Name & ": new property: "
+           & Item.Program_Child ("identifier").Standard_Text);
+      Aquarius.Properties.Create_Property
+        (Pool      => New_Plugin.Grammar.all,
+         Prop      => New_Property,
+         Name      => Item.Program_Child ("identifier").Standard_Text,
+         Inherited => False,
+         Has_Value => True);
+   end Property_Declaration_After;
 
    ---------------------------
    -- With_Expression_After --
