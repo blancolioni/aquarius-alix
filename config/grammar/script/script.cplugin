@@ -3,7 +3,8 @@ project Aquarius.Plugins.Script_Plugin is
    parser : parse;
 
    package Bindings parser is
-      plugin_declaration before list_of_group_declarations;
+      plugin_declaration before list_of_declarations;
+      property_declaration after;
       group_declaration before list_of_actions;
       group_declaration after list_of_actions;
       group_declaration before;

@@ -2,9 +2,12 @@ with Aquarius.Programs;
 
 package Aquarius.Plugins.Script_Plugin.Bindings is
 
-   procedure Plugin_Declaration_Before_List_Of_Group_Declarations
+   procedure Plugin_Declaration_Before_List_Of_Declarations
      (Parent : Aquarius.Programs.Program_Tree;
       Child  : Aquarius.Programs.Program_Tree);
+
+   procedure Property_Declaration_After
+     (Item : Aquarius.Programs.Program_Tree);
 
    procedure Group_Declaration_Before
      (Item : Aquarius.Programs.Program_Tree);
