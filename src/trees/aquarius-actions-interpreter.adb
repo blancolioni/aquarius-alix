@@ -208,6 +208,16 @@ package body Aquarius.Actions.Interpreter is
                return Evaluate_Object_Reference (Env, Child.Chosen_Tree, Node);
             elsif Child.Name = "numeric_literal" then
                return (Object_Value, Child);
+            elsif Child.Name = "string_literal" then
+               declare
+                  String_Text : constant String := Child.Text;
+               begin
+                  return (String_Value,
+                          Ada.Strings.Unbounded.To_Unbounded_String
+                            (String_Text
+                               (String_Text'First + 1 ..
+                                  String_Text'Last - 1)));
+               end;
             else
                return (Object_Value, Child);
             end if;
@@ -469,6 +479,35 @@ package body Aquarius.Actions.Interpreter is
                       Action.Chosen_Tree;
          begin
             Interpret (Env, Child, Node);
+         end;
+      elsif Action.Name = "procedure_call_statement" then
+         declare
+            use Ada.Strings.Unbounded;
+            Identifier : constant Program_Tree :=
+                           Action.Program_Child ("identifier");
+            Procedure_Name : constant String :=
+                               Identifier.Standard_Text;
+            Key            : constant Unbounded_String :=
+                               To_Unbounded_String (Procedure_Name);
+            Arg_Trees      : constant Array_Of_Program_Trees :=
+                               Action.Direct_Children ("expression");
+            Arg_Values     : Array_Of_Values (Arg_Trees'Range);
+         begin
+            if Library_Function_Map.Contains (Key) then
+               for I in Arg_Trees'Range loop
+                  Arg_Values (I) :=
+                    Evaluate (Env, Arg_Trees (I), Node);
+               end loop;
+               declare
+                  Result : constant Expression_Value :=
+                             Library_Function_Map.Element (Key) (Arg_Values);
+                  pragma Unreferenced (Result);
+               begin
+                  null;
+               end;
+            else
+               Error (Action, Node, "undefined: " & Procedure_Name);
+            end if;
          end;
       elsif Action.Name = "for_loop_statement" then
          Interpret (Env, Action.Chosen_Tree, Node);
