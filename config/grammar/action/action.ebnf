@@ -26,11 +26,20 @@ compilation_unit ::= sequence_of_statements
 
 sequence_of_statements ::= { statement ';' }
 
-statement ::= for_loop_statement | case_statement | if_statement | assignment_statement | null_statement
+statement ::= for_loop_statement | case_statement | if_statement | assignment_statement
+            | procedure_call_statement | declare_statement | null_statement
 
 null_statement ::= 'null'
 
 assignment_statement ::= object_reference ':=' expression
+
+procedure_call_statement ::= qualified_identifier [ '(' < expression / ',' > ')' ]
+
+declare_statement ::= 'declare' declaration
+
+declaration ::= object_declaration
+
+object_declaration ::= identifier ':' [ 'constant' ] qualified_identifier [ ':=' expression ]
 
 if_statement ::= 'if' expression 'then' sequence_of_statements
                  { 'elsif' expression 'then' sequence_of_statements }
@@ -44,12 +53,16 @@ case_option ::= 'when' identifier '=>' sequence_of_statements
 for_loop_statement ::=
    for_all_loop
  | for_tree_loop
+ | iterator_loop
 
 for_all_loop ::=
    'for' 'all' loop_statement
 
 for_tree_loop ::=
-   'for' identifier loop_statement
+   'for' qualified_identifier loop_statement
+   
+iterator_loop ::=
+   'for' identifier 'of' object_reference loop_statement
    
 loop_statement ::= 'loop' sequence_of_statements 'end' 'loop'
 
