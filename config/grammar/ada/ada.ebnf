@@ -77,7 +77,7 @@ function_specification ::=
 
 overriding_indication ::= ['not'] 'overriding'
 
-subprogram_body ::= 'is' ('abstract' | 'null' | block ) |
+subprogram_body ::= 'is' ('abstract' | 'null' | '(' expression ')' | block ) |
                     'renames' object_reference
 
 formal_argument_spec ::=
@@ -222,6 +222,7 @@ declaration ::= type_declaration | subtype_declaration |
                 use_type_clause | representation_clause
 
 representation_clause ::= attribute_definition_clause
+                        | record_representation_clause
 
 use_type_clause ::= 'use' 'type' type_indication ';'
 
@@ -589,9 +590,11 @@ pragma_arg_list ::= < pragma_arg / ',' >
 pragma_arg ::= expression
 
 attribute_definition_clause ::=
-	'for' local_name ''' attribute_designator 'use'
-		 ( expression | record_representation ) ';'
+	'for' local_name ''' attribute_designator 'use' expression ';'
 
+record_representation_clause ::=
+   'for' local_name 'use' record_representation ';'
+   
 local_name ::= identifier
 
 attribute_designator ::= identifier [ '(' static_expression ')' ] |
@@ -600,7 +603,7 @@ attribute_designator ::= identifier [ '(' static_expression ')' ] |
 record_representation ::=
    'record' [ mod_clause ]
        { component_clause }
-   'end' 'record' ';'
+   'end' 'record'
 
 mod_clause ::= 'at' 'mod' static_expression ';'
 
