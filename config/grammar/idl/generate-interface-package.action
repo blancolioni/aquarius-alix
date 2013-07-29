@@ -1,3 +1,4 @@
+@!aquarius:actionscript
 @declare Package_Name : constant String := 
 @   Tree.Top_Level_Declaration.Qualified_Identifier;
 @Set_Output (Ada_File_Name (Package_Name));

@@ -1,6 +1,7 @@
 with System.Assertions;
 
 with Ada.Directories;
+with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with Aquarius.Programs.Parser;
@@ -9,11 +10,16 @@ with Aquarius.Source;
 with Aquarius.Source.File_System;
 with Aquarius.Syntax;
 with Aquarius.Tokens;
+with Aquarius.Transformers;
 with Aquarius.Trees.Cursors;
 with Aquarius.Trees.Properties;
 
 with Aquarius.Interaction.Console;
 with Aquarius.UI.Console;
+
+with Aquarius.Transformers.Action_Script;
+pragma Unreferenced (Aquarius.Transformers.Action_Script);
+--  just for the body elaboration
 
 package body Aquarius.Loader is
 
@@ -210,6 +216,48 @@ package body Aquarius.Loader is
      return Aquarius.Programs.Program_Tree
    is
    begin
+      --  check first line of the file for special instructions
+      declare
+         use Ada.Text_IO;
+         File : File_Type;
+      begin
+         Open (File, In_File, Path);
+         declare
+            Line : constant String := Get_Line (File);
+         begin
+            Close (File);
+            if Line'Length > 10
+              and then Line (Line'First .. Line'First + 10) = "@!aquarius:"
+            then
+               Ada.Text_IO.Put_Line
+                 ("special: " & Line (Line'First + 11 .. Line'Last));
+               declare
+                  use Ada.Directories;
+                  use Ada.Strings, Ada.Strings.Fixed;
+                  use Aquarius.Transformers;
+                  Transformer : constant Root_Transformer_Type'Class :=
+                                  Get_Transformer
+                                    (Trim
+                                       (Line (Line'First + 11 .. Line'Last),
+                                        Both));
+                  Destination_Path : constant String :=
+                                       Compose
+                                         (Containing_Directory (Path),
+                                          "_" & Simple_Name (Path));
+               begin
+                  Execute_Transformer (Transformer      => Transformer,
+                                       Source_Path      => Path,
+                                       Destination_Path => Destination_Path);
+                  return Load_From_File
+                    (Grammar    => Grammar,
+                     Project    => Projects.New_Empty_Project,
+                     Interactor => Interaction.Console.Console_Interactor,
+                     UI         => Aquarius.UI.Console.Console_UI,
+                     Path       => Destination_Path);
+               end;
+            end if;
+         end;
+      end;
       return Load_From_File
         (Grammar    => Grammar,
          Project    => Projects.New_Empty_Project,
