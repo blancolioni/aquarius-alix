@@ -1,30 +1,41 @@
 @!aquarius:actionscript
 @declare Package_Name : constant String := 
-@   Tree.Top_Level_Declaration.Qualified_Identifier;
-@Set_Output (Ada_File_Name (Package_Name));
-@for Context of Tree.Contexts loop
+@   Tree.Top_Level_Interface_Declaration.Qualified_Identifier'Image;
+@declare Interface_Name : constant String :=
+@   Tree.Top_Level_Interface_Declaration.Qualified_Identifier'Last'Image;
+@Set_Output (Ada_Specification_Name (Package_Name));
+@--  for Context of Tree.Contexts loop
 with [Context];
-@end loop;
+@--  end loop;
 
 package [Package_Name] is
 
-@for Tree.Top_Level_Declaration.List_Of_Declarations loop
+   type Root_[Interface_Name]_Interface is
+      limited interface
+      and Root_Rose_Interface;
+      
+@for Tree.Top_Level_Interface_Declaration.List_Of_Declarations loop
 @   case Tree is
 @      when Constant_Declaration =>
    [Identifier (1)] : constant [Identifier (2)] := [Expression];
 @      when Type_Declaration =>
-   type [Identifier] is
+   type [.Identifier] is
 @         case Type_Definition is
 @            when Record_Type_Definition =>
       record
-@               for Record_Components loop
-         [Identifier] : [Ada_Name];
+@               for record_component of .Record_Components loop
+         [.Identifier] : [.Typeref.Ada_Name];
 @               end loop;
       end record;
 @            when New_Type_Definition =>
                 new [Qualified_Identifier'Image];
 @         end case;
 @      when Subprogram_Declaration =>
-@         null;
+
+   not overriding
+   [(if .Function_Declaration then "function" else "procedure")] [.Identifier] 
+     (Item : in out [Interface_Name])
+   is abstract;
+   
 @   end case;
 @end loop;
