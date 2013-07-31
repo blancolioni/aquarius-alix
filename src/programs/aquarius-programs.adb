@@ -131,10 +131,14 @@ package body Aquarius.Programs is
       Items  : constant Array_Of_Program_Trees :=
         Item.Direct_Children (Skip_Separators => False);
    begin
-      for I in Items'Range loop
-         Result := Result & Items (I).Text;
-      end loop;
-      return To_String (Result);
+      if Items'Length > 0 then
+         for I in Items'Range loop
+            Result := Result & Items (I).Text;
+         end loop;
+         return To_String (Result);
+      else
+         return Item.Text;
+      end if;
    end Concatenate_Children;
 
    -------------------------
@@ -650,6 +654,16 @@ package body Aquarius.Programs is
       return not Item.Syntax.Has_Token and then
         Item.Syntax.Name = "";
    end Internal_Tree;
+
+   ---------------
+   -- Is_Choice --
+   ---------------
+
+   function Is_Choice  (Item : Program_Tree_Type) return Boolean is
+      use Aquarius.Syntax;
+   begin
+      return Item.Syntax.Syntax_Class = Choice;
+   end Is_Choice;
 
    ----------------
    -- Is_Comment --

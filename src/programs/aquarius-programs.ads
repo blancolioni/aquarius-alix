@@ -174,6 +174,10 @@ package Aquarius.Programs is
    function Get_Token (Item : Program_Tree_Type'Class)
                       return Aquarius.Tokens.Token;
 
+   function Is_Choice
+     (Item : Program_Tree_Type)
+     return Boolean;
+
    function Is_Comment
      (Item : Program_Tree_Type)
      return Boolean;
