@@ -59,7 +59,7 @@ for_all_loop ::=
    'for' 'all' loop_statement
 
 for_tree_loop ::=
-   'for' qualified_identifier loop_statement
+   'for' object_reference loop_statement
    
 iterator_loop ::=
    'for' identifier 'of' object_reference loop_statement
@@ -84,11 +84,14 @@ factor ::= primary
 
 primary ::= numeric_literal | string_literal : string
           | object_reference | tree_reference
-          | 'null' | parenthesised_expression |
-	        character_literal
+          | 'null' | parenthesised_expression
+	      | if_expression | character_literal
 
 parenthesised_expression ::= '(' expression ')'
-            
+
+if_expression ::= 
+  '(' 'if' expression 'then' expression { 'elsif' expression 'then' expression } 'else' expression ')'
+  
 boolean_operator ::=
 	'and' | 'and' 'then' | 'or' | 'or' 'else' | 'xor'
 
