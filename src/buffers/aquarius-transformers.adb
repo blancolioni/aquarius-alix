@@ -62,7 +62,7 @@ package body Aquarius.Transformers is
                                     else Index (Full_Line, "]", Next + 1));
                      begin
                         if Next = 0 or else Finish = 0 then
-                           Transformer.On_Text_Line
+                           Transformer.On_Text
                              (Full_Line (Start .. Full_Line'Last));
                            Start := Full_Line'Last + 1;
                         else
@@ -76,6 +76,7 @@ package body Aquarius.Transformers is
                         end if;
                      end;
                   end loop;
+                  Transformer.On_Text_Line ("");
                end;
             end if;
          end;
