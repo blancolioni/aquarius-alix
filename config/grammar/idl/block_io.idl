@@ -1,4 +1,4 @@
-interface Block_IO is
+interface Rose.Interfaces.Block_IO is
 
    type Device_Geometry is
       record
@@ -14,4 +14,4 @@ interface Block_IO is
    procedure Write_Block (Block_Index  : in Word_32;
                           Block_Buffer : in Address);
 
-end Block_IO;
+end Rose.Interfaces.Block_IO;
