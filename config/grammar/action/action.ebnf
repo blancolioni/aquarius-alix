@@ -116,14 +116,11 @@ tree_reference ::= '/' < identifier / '/' >
 name_qualifier ::= record_selector
                  | subtree_selector
                  | actual_argument_list
-                 | attribute_reference
 
 subtree_selector ::= '/' identifier
 
 record_selector ::= '.' identifier
 
 actual_argument_list ::= '(' < actual_argument / ','> ')'
-
-attribute_reference ::= ''' identifier
 
 actual_argument ::= expression
