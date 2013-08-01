@@ -1,7 +1,5 @@
-with Aquarius.VM.Values;
-
 package Aquarius.VM.Library is
 
-   function Standard_Library return Aquarius.VM.Values.VM_Environment;
+   function Standard_Library return VM_Environment;
 
 end Aquarius.VM.Library;

@@ -19,7 +19,7 @@ package body Aquarius.UI.Menus is
 
    procedure Activate (Item : Aquarius_Menu) is
    begin
-      Item.Command.Command_Result := VM.Values.Null_Value;
+      Item.Command.Command_Result := VM.Null_Value;
       Item.Command.Execute;
    end Activate;
 
@@ -28,7 +28,7 @@ package body Aquarius.UI.Menus is
    -----------------------
 
    function Activation_Result (Item : Aquarius_Menu)
-                              return Aquarius.VM.Values.VM_Value
+                              return Aquarius.VM.VM_Value
    is
    begin
       return Item.Command.Command_Result;
@@ -117,7 +117,7 @@ package body Aquarius.UI.Menus is
 
    procedure Set_Result
      (Item   : not null access Root_Menu_Command'Class;
-      Result : Aquarius.VM.Values.VM_Value)
+      Result : Aquarius.VM.VM_Value)
    is
    begin
       Item.Command_Result := Result;
