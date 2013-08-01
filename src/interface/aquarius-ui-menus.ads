@@ -1,4 +1,4 @@
-with Aquarius.VM.Values;
+with Aquarius.VM;
 
 package Aquarius.UI.Menus is
 
@@ -11,7 +11,7 @@ package Aquarius.UI.Menus is
 
    procedure Set_Result
      (Item   : not null access Root_Menu_Command'Class;
-      Result : Aquarius.VM.Values.VM_Value);
+      Result : Aquarius.VM.VM_Value);
 
    function Command_UI (Item : not null access Root_Menu_Command'Class)
                        return access Aquarius_UI'Class;
@@ -40,7 +40,7 @@ package Aquarius.UI.Menus is
 
    procedure Activate (Item : Aquarius_Menu);
    function Activation_Result (Item : Aquarius_Menu)
-     return Aquarius.VM.Values.VM_Value;
+     return Aquarius.VM.VM_Value;
 
 private
 
@@ -51,7 +51,7 @@ private
    type Root_Menu_Command is abstract tagged
       record
          Menu_UI        : access Aquarius_UI'Class;
-         Command_Result : Aquarius.VM.Values.VM_Value;
+         Command_Result : Aquarius.VM.VM_Value;
       end record;
 
 end Aquarius.UI.Menus;

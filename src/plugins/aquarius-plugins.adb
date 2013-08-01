@@ -14,7 +14,7 @@ package body Aquarius.Plugins is
      new Aquarius.UI.Menus.Root_Menu_Command with
       record
          Plugin  : Aquarius_Plugin;
-         Command : Aquarius.VM.Values.VM_Value;
+         Command : Aquarius.VM.VM_Value;
       end record;
 
    overriding
@@ -66,7 +66,7 @@ package body Aquarius.Plugins is
 
    function Environment
      (Plugin : not null access Aquarius_Plugin_Type'Class)
-     return Aquarius.VM.Values.VM_Environment
+     return Aquarius.VM.VM_Environment
    is
    begin
       return Plugin.VM_Env;
@@ -78,17 +78,17 @@ package body Aquarius.Plugins is
 
    overriding
    procedure Execute (Item : not null access Plugin_Menu_Command) is
-      Result : constant VM.Values.VM_Value :=
-                 Aquarius.VM.Values.Evaluate (Item.Command,
+      Result : constant VM.VM_Value :=
+                 Aquarius.VM.Evaluate (Item.Command,
                                               Item.Plugin.VM_Env);
    begin
-      if VM.Values.Has_Tree (Result) then
+      if VM.Has_Tree (Result) then
          declare
             Buffer : constant Aquarius.Buffers.Aquarius_Buffer :=
                        Aquarius.Buffers.New_Buffer_From_Tree
               (Item.Command_UI, "new buffer",
                Aquarius.Programs.Program_Tree
-                 (VM.Values.To_Tree (Result)));
+                 (VM.To_Tree (Result)));
          begin
             Item.Command_UI.Show_Interactor (Buffer);
          end;
@@ -160,10 +160,10 @@ package body Aquarius.Plugins is
          Inherited => False,
          Has_Value => False);
       Plugin.VM_Env :=
-        Aquarius.VM.Values.New_Environment
+        Aquarius.VM.New_Environment
         (Aquarius.VM.Library.Standard_Library);
-      Aquarius.VM.Values.Insert (Plugin.VM_Env, "grammar",
-                                 Aquarius.VM.Values.To_Value (Grammar));
+      Aquarius.VM.Insert (Plugin.VM_Env, "grammar",
+                                 Aquarius.VM.To_Value (Grammar));
    end Load;
 
    -----------------
@@ -176,9 +176,9 @@ package body Aquarius.Plugins is
       External_Name : String;
       Menu_Path     : String;
       Description   : String;
-      Definition    : Aquarius.VM.Values.VM_Value)
+      Definition    : Aquarius.VM.VM_Value)
    is
-      use Aquarius.VM.Values;
+      use Aquarius.VM;
    begin
       Insert (Plugin.VM_Env, Internal_Name, Definition);
       Set_Property (Plugin.VM_Env, Internal_Name, "external_name",

@@ -8,7 +8,7 @@ with Aquarius.Script;
 with Aquarius.Entries;
 with Aquarius.Types;
 
-with Aquarius.VM.Values;
+with Aquarius.VM;
 
 private with Ada.Containers.Hashed_Maps;
 private with Ada.Strings.Fixed.Hash;
@@ -129,7 +129,7 @@ package Aquarius.Plugins is
 
    function Environment
      (Plugin : not null access Aquarius_Plugin_Type'Class)
-     return Aquarius.VM.Values.VM_Environment;
+     return Aquarius.VM.VM_Environment;
 
    procedure New_Command
      (Plugin        : not null access Aquarius_Plugin_Type'Class;
@@ -137,7 +137,7 @@ package Aquarius.Plugins is
       External_Name : String;
       Menu_Path     : String;
       Description   : String;
-      Definition    : Aquarius.VM.Values.VM_Value);
+      Definition    : Aquarius.VM.VM_Value);
 
 private
 
@@ -165,7 +165,7 @@ private
       record
          Grammar         : Aquarius.Grammars.Aquarius_Grammar;
          Standard        : Aquarius.Entries.Symbol_Table;
-         VM_Env          : Aquarius.VM.Values.VM_Environment;
+         VM_Env          : Aquarius.VM.VM_Environment;
          Change_Handlers : Change_Handler_Map.Map;
          Action_Groups   : Group_Map.Map;
          Group_List      : Aquarius.Actions.Action_Group_List;
