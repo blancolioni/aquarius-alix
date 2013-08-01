@@ -109,7 +109,7 @@ object_reference ::= explicit_object_reference | implicit_object_reference
 
 explicit_object_reference ::= identifier { name_qualifier }
 
-implicit_object_reference ::= { name_qualifier }
+implicit_object_reference ::= < name_qualifier >
 
 tree_reference ::= '/' < identifier / '/' >
 
