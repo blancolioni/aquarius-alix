@@ -1,13 +1,14 @@
 with Ada.Characters.Handling;
-with Ada.Containers.Hashed_Maps;
 with Ada.Strings.Unbounded;
-with Ada.Strings.Unbounded.Hash_Case_Insensitive;
 with Ada.Text_IO;
-with Ada.Unchecked_Deallocation;
 
 with Aquarius.Grammars;
 with Aquarius.Properties;
+with Aquarius.Properties.String_Sets;
 with Aquarius.Trees.Properties;
+
+with Aquarius.VM;
+with Aquarius.VM.Library;
 
 package body Aquarius.Actions.Interpreter is
 
@@ -28,83 +29,6 @@ package body Aquarius.Actions.Interpreter is
          end case;
       end record;
 
-   type Library_Function_Index is new Positive;
-
-   type Expression_Value_Type is (No_Value,
-                                  String_Value, Object_Value,
-                                  Library_Function_Value);
-
-   type Expression_Value
-     (Value_Type : Expression_Value_Type := No_Value) is
-      record
-         case Value_Type is
-            when No_Value =>
-               null;
-            when String_Value =>
-               String_Text : Ada.Strings.Unbounded.Unbounded_String;
-            when Object_Value =>
-               Object      : access Root_Aquarius_Object'Class;
-            when Library_Function_Value =>
-               Function_Index : Library_Function_Index;
-         end case;
-      end record;
-
-   function To_Name (Value : Expression_Value) return String;
-   function To_String (Value : Expression_Value) return String;
-   function To_Boolean (Value : Expression_Value) return Boolean;
-
-   package Environment_Maps is
-     new Ada.Containers.Hashed_Maps
-       (Key_Type        => Ada.Strings.Unbounded.Unbounded_String,
-        Element_Type    => Expression_Value,
-        Hash            => Ada.Strings.Unbounded.Hash_Case_Insensitive,
-        Equivalent_Keys => Ada.Strings.Unbounded."=");
-
-   type Environment_Record;
-   type Environment is access Environment_Record;
-   type Environment_Record is
-      record
-         Parent : Environment;
-         Map    : Environment_Maps.Map;
-         Output : access Ada.Text_IO.File_Type;
-      end record;
-
-   function Create_Environment
-     (Parent : Environment)
-      return Environment;
-
-   procedure Release_Environment
-     (Env : in out Environment);
-
-   function Lookup
-     (Env     : Environment;
-      Context : Program_Tree;
-      Name    : String)
-      return Expression_Value;
-
-   function Lookup
-     (Env     : Environment;
-      Name    : String)
-      return Expression_Value
-   is (Lookup (Env, null, Name));
-
-   procedure Insert
-     (Env   : Environment;
-      Name  : String;
-      Value : Expression_Value);
-
-   type Array_Of_Values is array (Positive range <>) of Expression_Value;
-   type Library_Function is access
-     function (Env       : Environment;
-               Arguments : Array_Of_Values) return Expression_Value;
-
-   package Library_Vectors is
-     new Ada.Containers.vectors
-       (Library_Function_Index, Library_Function);
-
-   Library_Function_Vector   : Library_Vectors.Vector;
-   Attribute_Function_Vector : Library_Vectors.Vector;
-
    type Aquarius_Writer is
      new Root_Aquarius_Object with
       record
@@ -118,228 +42,135 @@ package body Aquarius.Actions.Interpreter is
    is (Ada.Strings.Unbounded.To_String (Writer.File_Name));
 
    function Fn_Ada_Specification_Name
-     (Env       : Environment;
-      Arguments : Array_Of_Values)
-      return Expression_Value;
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
 
-   function Fn_New_Line (Env       : Environment;
-                         Arguments : Array_Of_Values) return Expression_Value;
-   function Fn_Put_Line (Env       : Environment;
-                         Arguments : Array_Of_Values) return Expression_Value;
-   function Fn_Put (Env       : Environment;
-                    Arguments : Array_Of_Values) return Expression_Value;
+   function Fn_Create_Set
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
+
+   function Fn_New_Line
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
+
+   function Fn_Put_Line
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
+
+   function Fn_Put
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
+
    function Fn_Set_Output
-     (Env       : Environment;
-      Arguments : Array_Of_Values)
-      return Expression_Value;
-
-   function Attribute_Image
-     (Env       : Environment;
-      Arguments : Array_Of_Values)
-      return Expression_Value;
-
-   function Attribute_Last
-     (Env       : Environment;
-      Arguments : Array_Of_Values)
-      return Expression_Value;
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
 
    Got_Library : Boolean := False;
-   Library     : Environment;
+   Library     : Aquarius.VM.VM_Environment;
 
-   procedure Create_Library (Env : Environment);
+   procedure Create_Library (Env : Aquarius.VM.VM_Environment);
 
    procedure Error
      (Action  : Program_Tree;
       Node    : Program_Tree;
       Message : String);
 
-   procedure Interpret (Env    : Environment;
+   procedure Interpret (Env    : Aquarius.VM.VM_Environment;
                         Action : Aquarius.Programs.Program_Tree;
                         Node   : Aquarius.Programs.Program_Tree);
 
    procedure Interpret_Case_Options
-     (Env     : Environment;
-      Value   : Expression_Value;
+     (Env     : Aquarius.VM.VM_Environment;
+      Value   : Aquarius.VM.VM_Value;
       Options : Aquarius.Programs.Array_Of_Program_Trees;
       Node    : Aquarius.Programs.Program_Tree);
 
    procedure Interpret_If_Statement
-     (Env     : Environment;
+     (Env     : Aquarius.VM.VM_Environment;
       Options : Aquarius.Programs.Array_Of_Program_Trees;
       Node    : Aquarius.Programs.Program_Tree);
 
    procedure Scan
-     (Env    : Environment;
+     (Env    : Aquarius.VM.VM_Environment;
       Action : Aquarius.Programs.Program_Tree;
       Top    : Aquarius.Programs.Program_Tree);
 
    function Evaluate
-     (Env    : Environment;
+     (Env    : Aquarius.VM.VM_Environment;
       Action : Aquarius.Programs.Program_Tree;
       Node   : Aquarius.Programs.Program_Tree)
-      return Expression_Value;
+      return Aquarius.VM.VM_Value;
 
    function Evaluate_If_Expression
-     (Env    : Environment;
+     (Env    : Aquarius.VM.VM_Environment;
       Action : Aquarius.Programs.Program_Tree;
       Node   : Aquarius.Programs.Program_Tree)
-      return Expression_Value;
-
-   function Evaluate_Attribute
-     (Env       : Environment;
-      Attribute : Aquarius.Programs.Program_Tree;
-      Object    : Expression_Value)
-      return Expression_Value;
+      return Aquarius.VM.VM_Value;
 
    function Evaluate_Record_Selector
-     (Env       : Environment;
-      Current   : Expression_Value;
+     (Env       : Aquarius.VM.VM_Environment;
+      Current   : Aquarius.VM.VM_Value;
       Selector  : String)
-      return Expression_Value;
+      return Aquarius.VM.VM_Value;
 
    function Evaluate_Object_Reference
-     (Env    : Environment;
+     (Env    : Aquarius.VM.VM_Environment;
       Action : Aquarius.Programs.Program_Tree;
       Node   : Aquarius.Programs.Program_Tree)
-      return Expression_Value;
+      return Aquarius.VM.VM_Value;
 
    function Get_Assignment_Target
-     (Env    : Environment;
+     (Env    : Aquarius.VM.VM_Environment;
       Action : Program_Tree;
       Node   : Program_Tree)
       return Assignment_Target;
 
    function Get_Tree
-     (Env     : Environment;
+     (Env     : Aquarius.VM.VM_Environment;
       Context : Program_Tree;
       Name    : String)
       return Program_Tree;
 
    procedure Set
      (Target : Assignment_Target;
-      Value  : Expression_Value);
-
-   ---------------------
-   -- Attribute_Image --
-   ---------------------
-
-   function Attribute_Image
-     (Env       : Environment;
-      Arguments : Array_Of_Values)
-      return Expression_Value
-   is
-      pragma Unreferenced (Env);
-      use Ada.Strings.Unbounded;
-      Object : constant Expression_Value :=
-                 Arguments (Arguments'First);
-   begin
-      case Object.Value_Type is
-         when No_Value =>
-            return (String_Value, Null_Unbounded_String);
-         when String_Value =>
-            return Object;
-         when Library_Function_Value =>
-            return (String_Value, To_Unbounded_String ("<library function>"));
-         when Object_Value =>
-            if Object.Object.all in Program_Tree_Type'Class then
-               return (String_Value,
-                       To_Unbounded_String
-                         (Program_Tree
-                            (Object.Object).Concatenate_Children));
-            else
-               return (String_Value,
-                       To_Unbounded_String (Object.Object.Name));
-            end if;
-      end case;
-   end Attribute_Image;
-
-   --------------------
-   -- Attribute_Last --
-   --------------------
-
-   function Attribute_Last
-     (Env       : Environment;
-      Arguments : Array_Of_Values)
-      return Expression_Value
-   is
-      pragma Unreferenced (Env);
-      use Ada.Strings.Unbounded;
-      Object : constant Expression_Value :=
-                 Arguments (Arguments'First);
-   begin
-      case Object.Value_Type is
-         when No_Value =>
-            return (String_Value, Null_Unbounded_String);
-         when String_Value =>
-            return Object;
-         when Library_Function_Value =>
-            return (String_Value, To_Unbounded_String ("<library function>"));
-         when Object_Value =>
-            if Object.Object.all in Program_Tree_Type'Class then
-               declare
-                  Children : constant Array_Of_Program_Trees :=
-                               Program_Tree (Object.Object).Direct_Children;
-               begin
-                  if Children'Length > 0 then
-                     return (Object_Value, Children (Children'Last));
-                  else
-                     return Object;
-                  end if;
-               end;
-            else
-               return (String_Value,
-                       To_Unbounded_String (Object.Object.Name));
-            end if;
-      end case;
-   end Attribute_Last;
-
-   ------------------------
-   -- Create_Environment --
-   ------------------------
-
-   function Create_Environment
-     (Parent : Environment)
-      return Environment
-   is
-   begin
-      return Env : constant Environment := new Environment_Record do
-         Env.Parent := Parent;
-      end return;
-   end Create_Environment;
+      Value  : Aquarius.VM.VM_Value);
 
    --------------------
    -- Create_Library --
    --------------------
 
-   procedure Create_Library (Env : Environment) is
-      procedure Make (V    : in out Library_Vectors.Vector;
-                      Name : String;
-                      Fn   : Library_Function);
+   procedure Create_Library (Env : Aquarius.VM.VM_Environment) is
+      procedure Make (Name : String;
+                      Fn   : Aquarius.VM.Evaluator);
 
       ----------
       -- Make --
       ----------
 
-      procedure Make (V    : in out Library_Vectors.Vector;
-                      Name : String;
-                      Fn   : Library_Function)
+      procedure Make (Name : String;
+                      Fn   : Aquarius.VM.Evaluator)
       is
       begin
-         V.Append (Fn);
-         Insert (Env, Name, (Library_Function_Value, V.Last_Index));
+         Aquarius.VM.Insert
+           (Env   => Env,
+            Name  => Name,
+            Value => Aquarius.VM.To_Value (Fn));
       end Make;
 
    begin
-      Make (Library_Function_Vector,
-            "ada_specification_name",
+      Make ("ada_specification_name",
             Fn_Ada_Specification_Name'Access);
-      Make (Library_Function_Vector, "new_line", Fn_New_Line'Access);
-      Make (Library_Function_Vector, "put_line", Fn_Put_Line'Access);
-      Make (Library_Function_Vector, "put", Fn_Put'Access);
-      Make (Library_Function_Vector, "set_output", Fn_Set_Output'Access);
-
-      Make (Attribute_Function_Vector, "__attr_image", Attribute_Image'Access);
-      Make (Attribute_Function_Vector, "__attr_last", Attribute_Last'Access);
+      Make ("create_set", Fn_Create_Set'Access);
+      Make ("new_line", Fn_New_Line'Access);
+      Make ("put_line", Fn_Put_Line'Access);
+      Make ("put", Fn_Put'Access);
+      Make ("set_output", Fn_Set_Output'Access);
 
    end Create_Library;
 
@@ -364,10 +195,10 @@ package body Aquarius.Actions.Interpreter is
    --------------
 
    function Evaluate
-     (Env    : Environment;
+     (Env    : Aquarius.VM.VM_Environment;
       Action : Aquarius.Programs.Program_Tree;
       Node   : Aquarius.Programs.Program_Tree)
-      return Expression_Value
+      return Aquarius.VM.VM_Value
    is
    begin
       if Action.Name = "expression" then
@@ -388,16 +219,15 @@ package body Aquarius.Actions.Interpreter is
             if Child.Name = "object_reference" then
                return Evaluate_Object_Reference (Env, Child.Chosen_Tree, Node);
             elsif Child.Name = "numeric_literal" then
-               return (Object_Value, Child);
+               return VM.To_Value (Integer'Value (Child.Text));
             elsif Child.Name = "string_literal" then
                declare
                   String_Text : constant String := Child.Text;
                begin
-                  return (String_Value,
-                          Ada.Strings.Unbounded.To_Unbounded_String
-                            (String_Text
-                               (String_Text'First + 1 ..
-                                  String_Text'Last - 1)));
+                  return VM.To_Value
+                    (String_Text
+                       (String_Text'First + 1 ..
+                          String_Text'Last - 1));
                end;
             elsif Child.Name = "parenthesised_expression" then
                return Evaluate
@@ -405,49 +235,25 @@ package body Aquarius.Actions.Interpreter is
             elsif Child.Name = "if_expression" then
                return Evaluate_If_Expression (Env, Child, Node);
             else
-               return (Object_Value, Child);
+               return VM.To_Value (Child);
             end if;
          end;
       else
          Ada.Text_IO.Put_Line
            ("cannot evaluate expression: " & Action.Name);
-         return (Value_Type => No_Value);
+         return VM.Null_Value;
       end if;
    end Evaluate;
 
-   ------------------------
-   -- Evaluate_Attribute --
-   ------------------------
-
-   function Evaluate_Attribute
-     (Env    : Environment;
-      Attribute : Aquarius.Programs.Program_Tree;
-      Object    : Expression_Value)
-      return Expression_Value
-   is
-      use Ada.Strings.Unbounded;
-      Attribute_Name : constant String :=
-                         Attribute.Program_Child ("identifier").Standard_Text;
-      Library_Name   : constant String :=
-                         "__attr_" & Attribute_Name;
-      Library_Value  : constant Expression_Value :=
-                         Lookup (Env, Library_Name);
-   begin
-      if Library_Value.Value_Type = Library_Function_Value then
-         return Attribute_Function_Vector.Element
-           (Library_Value.Function_Index)
-           (Env, (1 => Object));
-      else
-         Ada.Text_IO.Put_Line (Attribute_Name & ": no such attribute");
-         return (Value_Type => No_Value);
-      end if;
-   end Evaluate_Attribute;
+   ----------------------------
+   -- Evaluate_If_Expression --
+   ----------------------------
 
    function Evaluate_If_Expression
-     (Env    : Environment;
+     (Env    : Aquarius.VM.VM_Environment;
       Action : Aquarius.Programs.Program_Tree;
       Node   : Aquarius.Programs.Program_Tree)
-      return Expression_Value
+      return Aquarius.VM.VM_Value
    is
       Options : constant Array_Of_Program_Trees :=
                   Action.Direct_Children;
@@ -468,10 +274,10 @@ package body Aquarius.Actions.Interpreter is
          elsif Option.Name = "expression" then
             if Condition then
                declare
-                  Check : constant Expression_Value :=
+                  Check : constant Aquarius.VM.VM_Value :=
                             Evaluate (Env, Option, Node);
                begin
-                  Success := To_Boolean (Check);
+                  Success := VM.To_Boolean (Check);
                   Condition := False;
                end;
             elsif Success then
@@ -490,12 +296,12 @@ package body Aquarius.Actions.Interpreter is
    -------------------------------
 
    function Evaluate_Object_Reference
-     (Env    : Environment;
+     (Env    : Aquarius.VM.VM_Environment;
       Action : Aquarius.Programs.Program_Tree;
       Node   : Aquarius.Programs.Program_Tree)
-      return Expression_Value
+      return Aquarius.VM.VM_Value
    is
-      Current : Expression_Value;
+      Current : Aquarius.VM.VM_Value;
       Qualifiers : constant Array_Of_Program_Trees :=
                      Action.Direct_Children ("name_qualifier");
    begin
@@ -505,13 +311,13 @@ package body Aquarius.Actions.Interpreter is
                      Action.Program_Child ("identifier").Standard_Text;
          begin
             if Name = "tree" then
-               Current := (Object_Value, Node);
+               Current := VM.To_Value (Node);
             else
-               Current := Lookup (Env, Node, Name);
+               Current := VM.Get_Value (Env, Name);
             end if;
          end;
       else
-         Current := (Object_Value, Node);
+         Current := VM.To_Value (Node);
       end if;
 
       for Q of Qualifiers loop
@@ -519,11 +325,7 @@ package body Aquarius.Actions.Interpreter is
             Choice : constant Program_Tree :=
                        Q.Chosen_Tree;
          begin
-            if Choice.Name = "attribute_reference" then
-               Current :=
-                 Evaluate_Attribute
-                   (Env, Choice, Current);
-            elsif Choice.Name = "record_selector" then
+            if Choice.Name = "record_selector" then
                declare
                   Component_Name : constant String :=
                                      Choice.Program_Child
@@ -534,28 +336,19 @@ package body Aquarius.Actions.Interpreter is
                       (Env, Current, Component_Name);
                end;
             elsif Choice.Name = "actual_argument_list" then
-               if Current.Value_Type /= Library_Function_Value then
-                  Error (Q, Node,
-                         "cannot treat value (" & To_String (Current)
-                         & ") as function");
-               else
-                  declare
-                     Arg_Trees  : constant Array_Of_Program_Trees :=
-                                    Choice.Direct_Children ("actual_argument");
-                     Arg_Values : Array_Of_Values (Arg_Trees'Range);
-                  begin
-                     for I in Arg_Trees'Range loop
-                        Arg_Values (I) :=
-                          Evaluate (Env,
-                                    Arg_Trees (I).Program_Child ("expression"),
-                                    Node);
-                     end loop;
-                     Current :=
-                       Library_Function_Vector.Element
-                         (Current.Function_Index)
-                         (Env, Arg_Values);
-                  end;
-               end if;
+               declare
+                  Arg_Trees  : constant Array_Of_Program_Trees :=
+                                 Choice.Direct_Children ("actual_argument");
+                  Arg_Values : VM.Array_Of_Values (Arg_Trees'Range);
+               begin
+                  for I in Arg_Trees'Range loop
+                     Arg_Values (I) :=
+                       Evaluate (Env,
+                                 Arg_Trees (I).Program_Child ("expression"),
+                                 Node);
+                  end loop;
+                  Current := VM.Apply (Current, Env, Arg_Values);
+               end;
             else
                Error (Action, Node, "unimplemented: " & Choice.Name);
             end if;
@@ -563,6 +356,7 @@ package body Aquarius.Actions.Interpreter is
       end loop;
 
       return Current;
+
    end Evaluate_Object_Reference;
 
    ------------------------------
@@ -570,46 +364,84 @@ package body Aquarius.Actions.Interpreter is
    ------------------------------
 
    function Evaluate_Record_Selector
-     (Env       : Environment;
-      Current   : Expression_Value;
+     (Env       : Aquarius.VM.VM_Environment;
+      Current   : Aquarius.VM.VM_Value;
       Selector  : String)
-      return Expression_Value
+      return Aquarius.VM.VM_Value
    is
-      pragma Unreferenced (Env);  --  for now
+      pragma Unreferenced (Env);
    begin
-      case Current.Value_Type is
-         when No_Value =>
-            return Current;
-         when String_Value =>
-            raise Constraint_Error with
-              "strings can't be accessed like records yet";
-         when Library_Function_Value =>
-            raise Constraint_Error with
-              "library functions can't be accessed like records";
-         when Object_Value =>
-            if Current.Object.all in Program_Tree_Type'Class then
-               declare
-                  P : constant Program_Tree :=
-                        Program_Tree (Current.Object);
-                  Grammar    : constant Grammars.Aquarius_Grammar :=
-                                 Aquarius.Trees.Properties.Get_Grammar (P);
-               begin
-                  if Grammar.Have_Property_Type (Selector) then
-                     return (Object_Value,
-                             P.Property
-                               (Grammar.Get_Property_Type (Selector)));
-                  elsif P.Program_Child (Selector) /= null then
-                     return (Object_Value,
-                             P.Program_Child (Selector));
-                  else
-                     return (Value_Type => No_Value);
-                  end if;
-               end;
-            else
-               raise Constraint_Error with
-                 "cannot apply record selector to " & Current.Object.Name;
-            end if;
-      end case;
+      return VM.Get_Method (Current, Selector);
+--
+--        case Current.Value_Type is
+--           when No_Value =>
+--              return Current;
+--           when Number_Value =>
+--              raise Constraint_Error with
+--                "numbers can't be accessed like records yet";
+--           when String_Value =>
+--              raise Constraint_Error with
+--                "strings can't be accessed like records yet";
+--           when Library_Function_Value =>
+--              declare
+--                 No_Arguments : Array_Of_Values (1 .. 0);
+--                 Value : constant Aquarius.VM.VM_Value :=
+--                           Library_Function_Vector.Element
+--                             (Current.Function_Index)
+--                             (Env, No_Arguments);
+--              begin
+--                 if Value.Value_Type = Library_Function_Value then
+--                    raise Constraint_Error with
+--                      "library functions can't be accessed like records";
+--                 else
+--                    return Evaluate_Record_Selector
+--                      (Env, Value, Selector);
+--                 end if;
+--              end;
+--           when Object_Value =>
+--              if Current.Object.all in Program_Tree_Type'Class then
+--                 declare
+--                    P : constant Program_Tree :=
+--                          Program_Tree (Current.Object);
+--                    Grammar    : constant Grammars.Aquarius_Grammar :=
+--                                   Aquarius.Trees.Properties.Get_Grammar (P);
+--                 begin
+--                    Ada.Text_IO.Put_Line
+--                      (Ada.Text_IO.Standard_Error,
+--                       "record_selector: "
+--                       & P.Name
+--                       & "."
+--                       & Selector
+--                       & " = "
+--                       & (if P.Program_Child (Selector) /= null
+--                         then P.Program_Child (Selector).Name
+--                         else "<>"));
+--
+--                    if Grammar.Have_Property_Type (Selector) then
+--                       return (Object_Value,
+--                               P.Property
+--                                 (Grammar.Get_Property_Type (Selector)));
+--                    elsif P.Program_Child (Selector) /= null then
+--                       return (Object_Value,
+--                               P.Program_Child (Selector));
+--                    elsif P.Is_Choice
+--                      and then P.Chosen_Tree.Program_Child (Selector) /= null
+--                    then
+--                       return (Object_Value,
+--                               P.Chosen_Tree.Program_Child (Selector));
+--                    else
+--                       return (Value_Type => No_Value);
+--                    end if;
+--                 end;
+--              else
+--                 declare
+--                    Property_Function : constant Aquarius.VM.VM_Value :=
+--                                          Lookup (Env, "__prop_" & Selector);
+--                 begin
+--                    null;
+--                 end;
+--              end if;
+--        end case;
    end Evaluate_Record_Selector;
 
    -------------------------------
@@ -617,14 +449,14 @@ package body Aquarius.Actions.Interpreter is
    -------------------------------
 
    function Fn_Ada_Specification_Name
-     (Env       : Environment;
-      Arguments : Array_Of_Values)
-      return Expression_Value
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value
    is
       pragma Unreferenced (Env);
       use Ada.Characters.Handling;
       Package_Name : constant String :=
-                       To_String (Arguments (Arguments'First));
+                       VM.To_String (Arguments (Arguments'First));
       Result : String := Package_Name;
    begin
       for I in Result'Range loop
@@ -634,25 +466,40 @@ package body Aquarius.Actions.Interpreter is
             Result (I) := To_Lower (Result (I));
          end if;
       end loop;
-      return (String_Value,
-              Ada.Strings.Unbounded.To_Unbounded_String
-                (Result & ".ads"));
+      return VM.To_Value (Result & ".ads");
    end Fn_Ada_Specification_Name;
+
+   -------------------
+   -- Fn_Create_Set --
+   -------------------
+
+   function Fn_Create_Set
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value
+   is
+      pragma Unreferenced (Env);
+      pragma Unreferenced (Arguments);
+      New_Set : constant access Root_Aquarius_Object'Class :=
+                  new Aquarius.Properties.String_Sets.String_Set_Property_Type;
+   begin
+      return VM.To_Value (New_Set);
+   end Fn_Create_Set;
 
    -----------------
    -- Fn_New_Line --
    -----------------
 
    function Fn_New_Line
-     (Env       : Environment;
-      Arguments : Array_Of_Values)
-      return Expression_Value
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value
    is
       pragma Unreferenced (Env);
       pragma Unreferenced (Arguments);
    begin
       Ada.Text_IO.New_Line;
-      return (Value_Type => No_Value);
+      return VM.Null_Value;
    end Fn_New_Line;
 
    ------------
@@ -660,9 +507,9 @@ package body Aquarius.Actions.Interpreter is
    ------------
 
    function Fn_Put
-     (Env       : Environment;
-      Arguments : Array_Of_Values)
-      return Expression_Value
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value
    is
       pragma Unreferenced (Env);
    begin
@@ -670,9 +517,9 @@ package body Aquarius.Actions.Interpreter is
 --           if Arg.Value_Type = Object_Value then
 --              Ada.Text_IO.Put_Line (Program_Tree (Arg.Object).Image);
 --           end if;
-         Ada.Text_IO.Put (To_String (Arg));
+         Ada.Text_IO.Put (VM.To_String (Arg));
       end loop;
-      return (Value_Type => No_Value);
+      return VM.Null_Value;
    end Fn_Put;
 
    -----------------
@@ -680,17 +527,17 @@ package body Aquarius.Actions.Interpreter is
    -----------------
 
    function Fn_Put_Line
-     (Env       : Environment;
-      Arguments : Array_Of_Values)
-      return Expression_Value
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value
    is
       pragma Unreferenced (Env);
    begin
       for Arg of Arguments loop
-         Ada.Text_IO.Put (To_String (Arg));
+         Ada.Text_IO.Put (VM.To_String (Arg));
       end loop;
       Ada.Text_IO.New_Line;
-      return (Value_Type => No_Value);
+      return VM.Null_Value;
    end Fn_Put_Line;
 
    -------------------
@@ -698,22 +545,22 @@ package body Aquarius.Actions.Interpreter is
    -------------------
 
    function Fn_Set_Output
-     (Env       : Environment;
-      Arguments : Array_Of_Values)
-      return Expression_Value
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value
    is
-      Name : constant String := To_String (Arguments (Arguments'First));
+      Name : constant String :=
+               VM.To_String (Arguments (Arguments'First));
       Writer : Aquarius_Writer :=
                  (Ada.Strings.Unbounded.To_Unbounded_String (Name),
                   new Ada.Text_IO.File_Type);
-      Value  : constant Expression_Value :=
-                 (Object_Value, new Aquarius_Writer'(Writer));
+      Value  : constant Aquarius.VM.VM_Value :=
+                 VM.To_Value
+                   (new Aquarius_Writer'(Writer));
    begin
       Ada.Text_IO.Create (Writer.File.all, Ada.Text_IO.Out_File, Name);
       Ada.Text_IO.Set_Output (Writer.File.all);
-      Env.Map.Insert
-        (Ada.Strings.Unbounded.To_Unbounded_String ("__output"),
-         Value);
+      VM.Insert (Env, "__output", Value);
       return Value;
    end Fn_Set_Output;
 
@@ -722,7 +569,7 @@ package body Aquarius.Actions.Interpreter is
    ---------------------------
 
    function Get_Assignment_Target
-     (Env    : Environment;
+     (Env    : Aquarius.VM.VM_Environment;
       Action : Program_Tree;
       Node   : Program_Tree)
       return Assignment_Target
@@ -788,7 +635,7 @@ package body Aquarius.Actions.Interpreter is
    --------------
 
    function Get_Tree
-     (Env    : Environment;
+     (Env    : Aquarius.VM.VM_Environment;
       Context : Program_Tree;
       Name    : String)
       return Program_Tree
@@ -802,34 +649,12 @@ package body Aquarius.Actions.Interpreter is
       end if;
    end Get_Tree;
 
-   ------------
-   -- Insert --
-   ------------
-
-   procedure Insert
-     (Env   : Environment;
-      Name  : String;
-      Value : Expression_Value)
-   is
-      use Ada.Strings.Unbounded;
-      use Environment_Maps;
-      Key : constant Unbounded_String :=
-              To_Unbounded_String (Name);
-      Position : constant Cursor := Env.Map.Find (Key);
-   begin
-      if Has_Element (Position) then
-         Env.Map.Replace_Element (Position, Value);
-      else
-         Env.Map.Insert (Key, Value);
-      end if;
-   end Insert;
-
    ---------------
    -- Interpret --
    ---------------
 
    procedure Interpret
-     (Env    : Environment;
+     (Env    : Aquarius.VM.VM_Environment;
       Action : Aquarius.Programs.Program_Tree;
       Node   : Aquarius.Programs.Program_Tree)
    is
@@ -870,13 +695,13 @@ package body Aquarius.Actions.Interpreter is
                                     Declared_Identifier.Standard_Text;
             Initial_Value_Tree  : constant Program_Tree :=
                                     Action.Program_Child ("expression");
-            Value               : constant Expression_Value :=
+            Value               : constant Aquarius.VM.VM_Value :=
                                     (if Initial_Value_Tree /= null
                                      then Evaluate
                                        (Env, Initial_Value_Tree, Node)
-                                     else (Value_Type => No_Value));
+                                     else VM.Null_Value);
          begin
-            Insert (Env, Declared_Name, Value);
+            VM.Insert (Env, Declared_Name, Value);
          end;
       elsif Action.Name = "procedure_call_statement" then
          declare
@@ -887,27 +712,21 @@ package body Aquarius.Actions.Interpreter is
                                Identifier.Standard_Text;
             Arg_Trees      : constant Array_Of_Program_Trees :=
                                Action.Direct_Children ("expression");
-            Arg_Values     : Array_Of_Values (Arg_Trees'Range);
-            Fn_Value       : constant Expression_Value :=
-                               Lookup (Env, Procedure_Name);
+            Arg_Values     : VM.Array_Of_Values (Arg_Trees'Range);
+            Fn_Value       : constant Aquarius.VM.VM_Value :=
+                               VM.Get_Value (Env, Procedure_Name);
          begin
-            if Fn_Value.Value_Type = Library_Function_Value then
-               for I in Arg_Trees'Range loop
-                  Arg_Values (I) :=
-                    Evaluate (Env, Arg_Trees (I), Node);
-               end loop;
-               declare
-                  Result : constant Expression_Value :=
-                             Library_Function_Vector.Element
-                               (Fn_Value.Function_Index)
-                               (Env, Arg_Values);
-                  pragma Unreferenced (Result);
-               begin
-                  null;
-               end;
-            else
-               Error (Action, Node, "undefined: " & Procedure_Name);
-            end if;
+            for I in Arg_Trees'Range loop
+               Arg_Values (I) :=
+                 Evaluate (Env, Arg_Trees (I), Node);
+            end loop;
+            declare
+               Result : constant Aquarius.VM.VM_Value :=
+                          VM.Apply (Fn_Value, Env, Arg_Values);
+               pragma Unreferenced (Result);
+            begin
+               null;
+            end;
          end;
       elsif Action.Name = "for_loop_statement" then
          Interpret (Env, Action.Chosen_Tree, Node);
@@ -923,7 +742,7 @@ package body Aquarius.Actions.Interpreter is
          end;
       elsif Action.Name = "for_tree_loop" then
          declare
-            Loop_Value     : constant Expression_Value :=
+            Loop_Value     : constant Aquarius.VM.VM_Value :=
                                Evaluate_Object_Reference
                                  (Env    => Env,
                                   Action =>
@@ -938,13 +757,13 @@ package body Aquarius.Actions.Interpreter is
          begin
             Ada.Text_IO.Put_Line
               (Ada.Text_IO.Standard_Error,
-               "for " & Node.Name & "/" & To_String (Loop_Value));
-            if Loop_Value.Value_Type = Object_Value
-              and then Loop_Value.Object.all in Program_Tree_Type'Class
+               "for " & Node.Name & "/" & VM.To_String (Loop_Value));
+            if VM.Has_Tree (Loop_Value)
+              and then VM.To_Tree (Loop_Value).all in Program_Tree_Type'Class
             then
                declare
                   Tree : constant Program_Tree :=
-                           Program_Tree (Loop_Value.Object);
+                           Program_Tree (VM.To_Tree (Loop_Value));
                   Children : constant Array_Of_Program_Trees :=
                                Tree.Direct_Children;
                begin
@@ -957,7 +776,7 @@ package body Aquarius.Actions.Interpreter is
                end;
             else
                Error (Action, Node,
-                      "unable to loop with " & To_String (Loop_Value));
+                      "unable to loop with " & VM.To_String (Loop_Value));
             end if;
          end;
       elsif Action.Name = "iterator_loop" then
@@ -965,7 +784,7 @@ package body Aquarius.Actions.Interpreter is
             Iterator_Name  : constant String :=
                                Action.Program_Child
                                  ("identifier").Standard_Text;
-            Loop_Value     : constant Expression_Value :=
+            Loop_Value     : constant Aquarius.VM.VM_Value :=
                                Evaluate_Object_Reference
                                  (Env    => Env,
                                   Action =>
@@ -981,13 +800,13 @@ package body Aquarius.Actions.Interpreter is
             Ada.Text_IO.Put_Line
               (Ada.Text_IO.Standard_Error,
                "for " & Iterator_Name & " of "
-               & Node.Name & "/" & To_String (Loop_Value));
-            if Loop_Value.Value_Type = Object_Value
-              and then Loop_Value.Object.all in Program_Tree_Type'Class
+               & Node.Name & "/" & VM.To_String (Loop_Value));
+            if VM.Has_Tree (Loop_Value)
+              and then VM.To_Tree (Loop_Value).all in Program_Tree_Type'Class
             then
                declare
                   Tree : constant Program_Tree :=
-                           Program_Tree (Loop_Value.Object);
+                           Program_Tree (VM.To_Tree (Loop_Value));
                   Children : constant Array_Of_Program_Trees :=
                                Tree.Direct_Children
                                  (Iterator_Name);
@@ -1001,14 +820,14 @@ package body Aquarius.Actions.Interpreter is
                end;
             else
                Error (Action, Node,
-                      "unable to loop with " & To_String (Loop_Value));
+                      "unable to loop with " & VM.To_String (Loop_Value));
             end if;
          end;
       elsif Action.Name = "case_statement" then
          declare
             Expression : constant Program_Tree :=
                            Action.Program_Child ("expression");
-            Case_Value : constant Expression_Value :=
+            Case_Value : constant Aquarius.VM.VM_Value :=
                            Evaluate (Env, Expression, Node);
             Case_Options : constant Array_Of_Program_Trees :=
                              Action.Direct_Children ("case_option");
@@ -1028,7 +847,7 @@ package body Aquarius.Actions.Interpreter is
                          (Env,
                           Action.Program_Child ("object_reference"),
                           Node);
-            Value  : constant Expression_Value :=
+            Value  : constant Aquarius.VM.VM_Value :=
                        Evaluate (Env,
                                  Action.Program_Child ("expression"),
                                  Node);
@@ -1048,19 +867,20 @@ package body Aquarius.Actions.Interpreter is
    is
    begin
       if not Got_Library then
-         Library := Create_Environment (null);
+         Library := VM.New_Environment (VM.Library.Standard_Library);
          Create_Library (Library);
          Got_Library := True;
       end if;
 
       declare
-         Env : Environment := Create_Environment (Library);
+         Env : Aquarius.VM.VM_Environment :=
+                 VM.New_Environment (Library);
       begin
          Interpret (Env, Action, Target);
-         Release_Environment (Env);
+         VM.Release_Environment (Env);
       exception
          when others =>
-            Release_Environment (Env);
+            VM.Release_Environment (Env);
             raise;
       end;
    end Interpret_Action;
@@ -1070,19 +890,19 @@ package body Aquarius.Actions.Interpreter is
    ----------------------------
 
    procedure Interpret_Case_Options
-     (Env    : Environment;
-      Value   : Expression_Value;
+     (Env    : Aquarius.VM.VM_Environment;
+      Value   : Aquarius.VM.VM_Value;
       Options : Aquarius.Programs.Array_Of_Program_Trees;
       Node    : Aquarius.Programs.Program_Tree)
    is
       Choice : Program_Tree;
-      Value_Text : constant String := To_Name (Value);
+      Value_Text : constant String := VM.To_String (Value);
    begin
-      if Value.Value_Type = Object_Value
-        and then Value.Object.all in Program_Tree_Type'Class
-        and then Program_Tree (Value.Object).Is_Choice
+      if VM.Has_Tree (Value)
+        and then VM.To_Tree (Value).all in Program_Tree_Type'Class
+        and then Program_Tree (VM.To_Tree (Value)).Is_Choice
       then
-         Choice := Program_Tree (Value.Object).Chosen_Tree;
+         Choice := Program_Tree (VM.To_Tree (Value)).Chosen_Tree;
       end if;
 
       for Option of Options loop
@@ -1108,7 +928,7 @@ package body Aquarius.Actions.Interpreter is
    ----------------------------
 
    procedure Interpret_If_Statement
-     (Env    : Environment;
+     (Env    : Aquarius.VM.VM_Environment;
       Options : Aquarius.Programs.Array_Of_Program_Trees;
       Node    : Aquarius.Programs.Program_Tree)
    is
@@ -1119,10 +939,10 @@ package body Aquarius.Actions.Interpreter is
             null;
          elsif Option.Name = "expression" then
             declare
-               Check : constant Expression_Value :=
+               Check : constant Aquarius.VM.VM_Value :=
                          Evaluate (Env, Option, Node);
             begin
-               Success := To_Boolean (Check);
+               Success := VM.To_Boolean (Check);
             end;
          elsif Option.Name = "sequence_of_statements" then
             if Success then
@@ -1139,70 +959,12 @@ package body Aquarius.Actions.Interpreter is
       end loop;
    end Interpret_If_Statement;
 
-   ------------
-   -- Lookup --
-   ------------
-
-   function Lookup
-     (Env     : Environment;
-      Context : Program_Tree;
-      Name    : String)
-      return Expression_Value
-   is
-      use Ada.Strings.Unbounded;
-      Key : constant Unbounded_String :=
-              To_Unbounded_String (Name);
-   begin
-      if Context /= null
-        and then Context.Program_Child (Name) /= null
-      then
-         return (Object_Value, Context.Program_Child (Name));
-      else
-         declare
-            M : Environment := Env;
-         begin
-            while M /= null loop
-               if M.Map.Contains (Key) then
-                  return M.Map.Element (Key);
-               else
-                  M := M.Parent;
-               end if;
-            end loop;
-            Ada.Text_IO.Put_Line
-              (Ada.Text_IO.Standard_Error,
-               "undefined: " & Name);
-            return (Value_Type => No_Value);
-         end;
-      end if;
-   end Lookup;
-
-   -------------------------
-   -- Release_Environment --
-   -------------------------
-
-   procedure Release_Environment
-     (Env : in out Environment)
-   is
-      procedure Free is
-        new Ada.Unchecked_Deallocation
-          (Environment_Record, Environment);
-      Writer : constant Expression_Value :=
-                 Lookup (Env, "__output");
-   begin
-      if Writer.Value_Type = Object_Value then
-         Ada.Text_IO.Set_Output
-           (Ada.Text_IO.Standard_Output);
-         Ada.Text_IO.Close (Aquarius_Writer (Writer.Object.all).File.all);
-      end if;
-      Free (Env);
-   end Release_Environment;
-
    ----------
    -- Scan --
    ----------
 
    procedure Scan
-     (Env    : Environment;
+     (Env    : Aquarius.VM.VM_Environment;
       Action : Aquarius.Programs.Program_Tree;
       Top    : Aquarius.Programs.Program_Tree)
    is
@@ -1221,7 +983,7 @@ package body Aquarius.Actions.Interpreter is
 
    procedure Set
      (Target : Assignment_Target;
-      Value  : Expression_Value)
+      Value  : Aquarius.VM.VM_Value)
    is
    begin
       case Target.Target_Type is
@@ -1233,86 +995,11 @@ package body Aquarius.Actions.Interpreter is
                Target.Tree.Name & "."
                & Aquarius.Properties.Get_Name (Target.Property)
                & " := "
-               & To_String (Value));
-            case Value.Value_Type is
-               when No_Value =>
-                  Target.Tree.Clear_Property (Target.Property);
-               when String_Value =>
-                  Target.Tree.Set_Property
-                    (Target.Property,
-                     Aquarius.Names.Name_Value
-                       (Ada.Strings.Unbounded.To_String
-                          (Value.String_Text)));
-               when Library_Function_Value =>
-                  Ada.Text_IO.Put_Line
-                    (Ada.Text_IO.Standard_Error,
-                     "can't store a library function in a property yet");
-               when Object_Value =>
-                  Target.Tree.Set_Property
-                    (Target.Property, Value.Object);
-            end case;
+               & VM.To_String (Value));
+            Target.Tree.Set_Property
+              (Target.Property,
+               VM.To_Property (Value));
       end case;
    end Set;
-
-   ----------------
-   -- To_Boolean --
-   ----------------
-
-   function To_Boolean (Value : Expression_Value) return Boolean is
-      use Ada.Strings.Unbounded;
-   begin
-      case Value.Value_Type is
-         when No_Value =>
-            return False;
-         when Library_Function_Value =>
-            return True;  -- wrong, of course
-         when String_Value =>
-            return Value.String_Text /= Null_Unbounded_String;
-         when Object_Value =>
-            return Value.Object /= null;
-      end case;
-   end To_Boolean;
-
-   -------------
-   -- To_Name --
-   -------------
-
-   function To_Name (Value : Expression_Value) return String is
-      use Ada.Strings.Unbounded;
-   begin
-      case Value.Value_Type is
-         when No_Value =>
-            return "_";
-         when Library_Function_Value =>
-            return "<library_function>";
-         when String_Value =>
-            return To_String (Value.String_Text);
-         when Object_Value =>
-            return Value.Object.Name;
-      end case;
-   end To_Name;
-
-   ---------------
-   -- To_String --
-   ---------------
-
-   function To_String (Value : Expression_Value) return String is
-      use Ada.Strings.Unbounded;
-   begin
-      case Value.Value_Type is
-         when No_Value =>
-            return "_";
-         when Library_Function_Value =>
-            return "<library_function>";
-         when String_Value =>
-            return To_String (Value.String_Text);
-         when Object_Value =>
-            if Value.Object.all in Program_Tree_Type'Class then
-               return Program_Tree (Value.Object).Concatenate_Children;
-            else
-               return Value.Object.Name;
-            end if;
-      end case;
-   end To_String;
 
 end Aquarius.Actions.Interpreter;
