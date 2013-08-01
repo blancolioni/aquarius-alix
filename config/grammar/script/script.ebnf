@@ -31,7 +31,7 @@ list_of_declarations ::= { declaration }
 
 declaration ::= property_declaration | group_declaration
 
-property_declaration ::= 'property' identifier ';'
+property_declaration ::= 'property' identifier [ 'inherited' ] ';'
 
 group_declaration ::= 'group' identifier ':' identifier 'is'
    list_of_actions
