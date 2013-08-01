@@ -33,7 +33,7 @@ null_statement ::= 'null'
 
 assignment_statement ::= object_reference ':=' expression
 
-procedure_call_statement ::= identifier [ '(' < expression / ',' > ')' ]
+procedure_call_statement ::= object_reference
 
 declare_statement ::= 'declare' declaration
 
