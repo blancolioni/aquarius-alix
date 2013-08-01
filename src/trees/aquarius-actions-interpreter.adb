@@ -349,6 +349,22 @@ package body Aquarius.Actions.Interpreter is
                   end loop;
                   Current := VM.Apply (Current, Env, Arg_Values);
                end;
+            elsif Choice.Name = "subtree_selector" then
+               declare
+                  Subtree_Name : constant String :=
+                                   Choice.Program_Child
+                                     ("identifier").Standard_Text;
+               begin
+                  if VM.Has_Tree (Current) then
+                     Current :=
+                       VM.To_Value
+                         (VM.To_Tree (Current).Breadth_First_Search
+                          (Subtree_Name));
+                  else
+                     Error (Action, Node,
+                            VM.To_String (Current) & ": not a tree");
+                  end if;
+               end;
             else
                Error (Action, Node, "unimplemented: " & Choice.Name);
             end if;
@@ -659,9 +675,13 @@ package body Aquarius.Actions.Interpreter is
       Node   : Aquarius.Programs.Program_Tree)
    is
    begin
-      if False then
-         Ada.Text_IO.Put_Line ("action: " & Action.Name);
-         Ada.Text_IO.Put_Line ("node: " & Node.Name);
+      if True then
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "action: " & Action.Name);
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "node: " & Node.Name);
       end if;
       if Action.Name = "compilation_unit" then
          Interpret (Env,

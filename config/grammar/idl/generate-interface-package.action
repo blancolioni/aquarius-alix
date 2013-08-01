@@ -14,7 +14,7 @@ package [Package_Name] is
       limited interface
       and Root_Rose_Interface;
       
-@for Tree.Top_Level_Interface_Declaration.List_Of_Declarations loop
+@for /Top_Level_Interface_Declaration/List_Of_Declarations loop
 @   case Tree is
 @      when Constant_Declaration =>
    [Identifier (1)] : constant [Identifier (2)] := [Expression];
