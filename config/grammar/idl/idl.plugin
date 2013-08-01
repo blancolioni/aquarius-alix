@@ -1,5 +1,8 @@
 plugin IDL version 0.1 is
+
    property ada_name;
+   property contexts inherited;
+   
    group run_check : semantic is
       after compilation_unit do
          external ("check");
