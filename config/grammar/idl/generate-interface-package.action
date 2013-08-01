@@ -1,8 +1,8 @@
 @!aquarius:actionscript
 @declare Package_Name : constant String := 
-@   Tree.Top_Level_Interface_Declaration.Qualified_Identifier'Image;
+@   Tree.Top_Level_Interface_Declaration.Qualified_Identifier.Image;
 @declare Interface_Name : constant String :=
-@   Tree.Top_Level_Interface_Declaration.Qualified_Identifier'Last'Image;
+@   Tree.Top_Level_Interface_Declaration.Qualified_Identifier.Last.Image;
 @Set_Output (Ada_Specification_Name (Package_Name));
 @--  for Context of Tree.Contexts loop
 with [Context];
@@ -28,14 +28,24 @@ package [Package_Name] is
 @               end loop;
       end record;
 @            when New_Type_Definition =>
-                new [Qualified_Identifier'Image];
+                new [Qualified_Identifier.Image];
 @         end case;
 @      when Subprogram_Declaration =>
 
    not overriding
-   [(if .Function_Declaration then "function" else "procedure")] [.Identifier] 
-     (Item : in out [Interface_Name])
+   [(if .Function_Declaration then "function" else "procedure")] [.Identifier]
+     (Item : in out [Interface_Name]
+@ if .Formal_Arguments then
+@ for Formal_Argument of .Formal_Arguments loop
+     ; [.Identifier] : [(if .Argument_Spec then .Argument_Spec else "")] [.Typeref.Ada_Name]
+@ end loop;
+@ end if;
+     )
+@ if .Function_Declaration then
+     return [.Typeref.Ada_Name]
+@ end if;
    is abstract;
-   
 @   end case;
 @end loop;
+
+end [Package_Name];
