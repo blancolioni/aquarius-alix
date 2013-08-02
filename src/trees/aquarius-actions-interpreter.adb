@@ -146,31 +146,33 @@ package body Aquarius.Actions.Interpreter is
    --------------------
 
    procedure Create_Library (Env : Aquarius.VM.VM_Environment) is
-      procedure Make (Name : String;
-                      Fn   : Aquarius.VM.Evaluator);
+      procedure Make (Name      : String;
+                      Fn        : Aquarius.VM.Evaluator;
+                      Arg_Count : Natural);
 
       ----------
       -- Make --
       ----------
 
-      procedure Make (Name : String;
-                      Fn   : Aquarius.VM.Evaluator)
+      procedure Make (Name      : String;
+                      Fn        : Aquarius.VM.Evaluator;
+                      Arg_Count : Natural)
       is
       begin
          Aquarius.VM.Insert
            (Env   => Env,
             Name  => Name,
-            Value => Aquarius.VM.To_Value (Fn));
+            Value => Aquarius.VM.To_Value (Fn, Arg_Count));
       end Make;
 
    begin
       Make ("ada_specification_name",
-            Fn_Ada_Specification_Name'Access);
-      Make ("create_set", Fn_Create_Set'Access);
-      Make ("new_line", Fn_New_Line'Access);
-      Make ("put_line", Fn_Put_Line'Access);
-      Make ("put", Fn_Put'Access);
-      Make ("set_output", Fn_Set_Output'Access);
+            Fn_Ada_Specification_Name'Access, 0);
+      Make ("create_set", Fn_Create_Set'Access, 0);
+      Make ("new_line", Fn_New_Line'Access, 0);
+      Make ("put_line", Fn_Put_Line'Access, 1);
+      Make ("put", Fn_Put'Access, 1);
+      Make ("set_output", Fn_Set_Output'Access, 1);
 
    end Create_Library;
 
@@ -385,9 +387,10 @@ package body Aquarius.Actions.Interpreter is
       Selector  : String)
       return Aquarius.VM.VM_Value
    is
-      pragma Unreferenced (Env);
    begin
-      return VM.Get_Method (Current, Selector);
+      return VM.Evaluate
+        (VM.Get_Method (Current, Selector),
+         Env);
 --
 --        case Current.Value_Type is
 --           when No_Value =>
@@ -675,7 +678,7 @@ package body Aquarius.Actions.Interpreter is
       Node   : Aquarius.Programs.Program_Tree)
    is
    begin
-      if True then
+      if False then
          Ada.Text_IO.Put_Line
            (Ada.Text_IO.Standard_Error,
             "action: " & Action.Name);

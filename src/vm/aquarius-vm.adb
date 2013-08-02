@@ -1,6 +1,7 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Strings.Fixed;
 with Ada.Tags;
+with Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
 
 with Aquarius.Names;
@@ -177,9 +178,36 @@ package body Aquarius.VM is
          when Val_Entry =>
             Result := Evaluate (Item.Val_Value, Env);
          when Val_Primitive =>
-            Result := Item;
+            if Item.Arg_Count = 0 then
+               declare
+                  No_Args : Array_Of_Values (1 .. 0);
+               begin
+                  Result := Item.Fn (Env, No_Args);
+               end;
+            else
+               Result := Item;
+            end if;
          when Val_Method_Call =>
-            Result := Item;
+            declare
+               Class : constant String := Class_Name (Item.Val_Object);
+               Lib_Name : constant String :=
+                            Class & "__" & To_String (Item.Val_Method);
+               Lib_Value : constant VM_Value :=
+                             Get_Value (Env, Lib_Name);
+            begin
+               if Lib_Value /= null then
+                  if Lib_Value.Arg_Count = 0 then
+                     Result := Lib_Value.Fn (Env, (1 => Item.Val_Object));
+                  else
+                     Result := Item;
+                  end if;
+               else
+                  raise Constraint_Error with
+                    "object " & To_String (Item.Val_Object)
+                    & " has no method named '"
+                    & To_String (Item.Val_Method);
+               end if;
+            end;
          when Val_Class =>
             Result := Item;
       end case;
@@ -422,7 +450,9 @@ package body Aquarius.VM is
             return Ada.Strings.Fixed.Trim (Integer'Image (Item.Int_Value),
                                            Ada.Strings.Both);
          when Val_Property =>
-            if Item.Prop_Value.all in
+            if Item.Prop_Value = null then
+               return "/nil/";
+            elsif Item.Prop_Value.all in
               Aquarius.Programs.Program_Tree_Type'Class
             then
                return Aquarius.Programs.Program_Tree
@@ -460,6 +490,11 @@ package body Aquarius.VM is
 
    function To_Boolean (Value : VM_Value) return Boolean is
    begin
+
+      Ada.Text_IO.Put_Line
+        (Ada.Text_IO.Standard_Error,
+         "To_Boolean: " & To_String (Value));
+
       if Value = null then
          return False;
       end if;
@@ -470,7 +505,7 @@ package body Aquarius.VM is
          when Val_Integer =>
             return Value.Int_Value /= 0;
          when Val_Property =>
-            return True;
+            return Value.Prop_Value /= null;
          when Val_Cons =>
             return True;
          when Val_Entry =>
@@ -589,11 +624,12 @@ package body Aquarius.VM is
    --------------
 
    function To_Value
-     (Item     : Evaluator)
+     (Item      : Evaluator;
+      Arg_Count : Natural)
       return VM_Value
    is
    begin
-      return New_Value ((Val_Primitive, Item));
+      return New_Value ((Val_Primitive, Item, Arg_Count));
    end To_Value;
 
    --------------
@@ -604,9 +640,8 @@ package body Aquarius.VM is
                       Default_Values : Array_Of_Values)
                       return VM_Value
    is
-      pragma Unreferenced (Default_Values);
    begin
-      return To_Value (Item);
+      return To_Value (Item, Default_Values'Length);
    end To_Value;
 
 end Aquarius.VM;

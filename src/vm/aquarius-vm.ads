@@ -55,7 +55,8 @@ package Aquarius.VM is
    type Evaluator is access function (Env  : VM_Environment;
                                       Args : Array_Of_Values) return VM_Value;
 
-   function To_Value (Item     : Evaluator)
+   function To_Value (Item      : Evaluator;
+                      Arg_Count : Natural)
                       return VM_Value;
 
    function To_Value (Item     : Evaluator;
@@ -134,6 +135,7 @@ private
                Val_Method   : Ada.Strings.Unbounded.Unbounded_String;
             when Val_Primitive =>
                Fn           : Evaluator;
+               Arg_Count    : Natural;
             when Val_Class =>
                Class_Name   : Ada.Strings.Unbounded.Unbounded_String;
                Member_Names : String_Vectors.Vector;
