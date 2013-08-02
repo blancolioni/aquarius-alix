@@ -1,8 +1,8 @@
 @!aquarius:actionscript
 @declare Package_Name : constant String := 
-@   Tree.Top_Level_Interface_Declaration.Qualified_Identifier.Image;
+@   /Top_Level_Interface_Declaration/Qualified_Identifier.Image;
 @declare Interface_Name : constant String :=
-@   Tree.Top_Level_Interface_Declaration.Qualified_Identifier.Last.Image;
+@   /Top_Level_Interface_Declaration/Qualified_Identifier.Last.Image;
 @Set_Output (Ada_Specification_Name (Package_Name));
 @--  for Context of Tree.Contexts loop
 with [Context];
@@ -19,8 +19,8 @@ package [Package_Name] is
 @      when Constant_Declaration =>
    [Identifier (1)] : constant [Identifier (2)] := [Expression];
 @      when Type_Declaration =>
-   type [.Identifier] is
-@         case Type_Definition is
+   type [/Identifier.Image] is
+@         case /Type_Definition is
 @            when Record_Type_Definition =>
       record
 @               for record_component of .Record_Components loop
@@ -33,16 +33,16 @@ package [Package_Name] is
 @      when Subprogram_Declaration =>
 
    not overriding
-   [(if .Function_Declaration then "function" else "procedure")] [.Identifier]
+   [(if /Function_Declaration then "function" else "procedure")] [/Identifier]
      (Item : in out [Interface_Name]
-@ if .Formal_Arguments then
-@ for Formal_Argument of .Formal_Arguments loop
-     ; [.Identifier] : [(if .Argument_Spec then .Argument_Spec else "")] [.Typeref.Ada_Name]
+@ if /Formal_Arguments then
+@ for Formal_Argument of /Formal_Arguments loop
+     ; [/Identifier] : [(if /Argument_Spec then /Argument_Spec else "")] [/Typeref.Ada_Name]
 @ end loop;
 @ end if;
      )
 @ if .Function_Declaration then
-     return [.Typeref.Ada_Name]
+     return [/Typeref.Ada_Name]
 @ end if;
    is abstract;
 @   end case;
