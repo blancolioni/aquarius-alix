@@ -52,10 +52,6 @@ package body Aquarius.Configuration is
                          Path  : String)
                         return Cursor;
 
-   function Find_Child (Start       : Cursor;
-                        Child_Name  : String)
-                       return Cursor;
-
    --------------------------
    -- Aquarius_Config_File --
    --------------------------
