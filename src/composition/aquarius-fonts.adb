@@ -47,6 +47,15 @@ package body Aquarius.Fonts is
       return (Black, White, Bold, Italic, Underlined, False, False);
    end Create_Font;
 
+   --------------
+   -- From_RGB --
+   --------------
+
+   function From_RGB (R, G, B : Colour_Range) return Aquarius_Colour is
+   begin
+      return (R, G, B);
+   end From_RGB;
+
    --------------------
    -- Get_Background --
    --------------------

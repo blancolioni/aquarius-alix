@@ -51,6 +51,8 @@ package Aquarius.Fonts is
 
    function Hex_Colour (Item : Colour_Range) return String;
 
+   function From_RGB (R, G, B : Colour_Range) return Aquarius_Colour;
+
 private
 
    type Aquarius_Colour is
