@@ -122,7 +122,11 @@ package Aquarius.Programs is
    function Layout_Start_Column (Item : Program_Tree_Type)
                                   return Aquarius.Layout.Count;
    function Layout_End_Column (Item : Program_Tree_Type)
-                                return Aquarius.Layout.Count;
+                               return Aquarius.Layout.Count;
+   function Contains_Position (Item : Program_Tree_Type;
+                               Position : Aquarius.Layout.Position)
+                               return Boolean;
+
    procedure Set_Layout_Position (Item : in out Program_Tree_Type;
                                   Pos  : in     Aquarius.Layout.Position);
 

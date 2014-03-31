@@ -141,6 +141,22 @@ package body Aquarius.Programs is
       end if;
    end Concatenate_Children;
 
+   -----------------------
+   -- Contains_Position --
+   -----------------------
+
+   function Contains_Position (Item : Program_Tree_Type;
+                               Position : Aquarius.Layout.Position)
+                               return Boolean
+   is
+   begin
+      return Position.Line in
+        Item.Layout_Start_Position.Line .. Item.Layout_End_Position.Line
+        and then
+          Position.Column in
+            Item.Layout_Start_Column .. Item.Layout_End_Column;
+   end Contains_Position;
+
    -------------------------
    -- Create_Symbol_Table --
    -------------------------
