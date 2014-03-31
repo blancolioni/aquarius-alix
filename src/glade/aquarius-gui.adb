@@ -73,6 +73,9 @@ package body Aquarius.GUI is
    is
       use type Aquarius.Projects.Aquarius_Project;
       Builder : Gtk.Builder.Gtk_Builder;
+      Builder_File_Path : constant String :=
+                            Aquarius.Configuration.Get_Library_Path &
+                            "/Aquarius.UI";
    begin
 
       Local_Current_Project := With_Project;
@@ -85,9 +88,7 @@ package body Aquarius.GUI is
       Gtk.Main.Init;
       Gtk.Builder.Gtk_New (Builder);
 
-      Ada.Text_IO.Put_Line ("Loading: " &
-                              Aquarius.Configuration.Get_Library_Path &
-                              "/aquarius-fragments.glade");
+      Ada.Text_IO.Put_Line ("Loading: " & Builder_File_Path);
 
       declare
          use type Glib.Error.GError;
@@ -95,15 +96,12 @@ package body Aquarius.GUI is
          Error : aliased Glib.Error.GError;
          Result : constant Glib.Guint :=
                     Builder.Add_From_File
-                      (Filename => Aquarius.Configuration.Get_Library_Path &
-                                  "/Aquarius.ui",
+                      (Filename => Builder_File_Path,
                        Error    => Error'Access);
       begin
          if Result = 0 then
             raise Program_Error with
-              "Error opening GUI definition: " &
-            Aquarius.Configuration.Get_Library_Path &
-            "/Aquarius.glade";
+              "Error opening GUI definition: " & Builder_File_Path;
          end if;
       end;
 
@@ -147,8 +145,8 @@ package body Aquarius.GUI is
          end if;
 
          Aquarius.GUI.Views.Update_Views (Local_Current_Project);
---           Aquarius.GUI.Source.Load_Buffer
---             (Local_Current_Project.Get_Main_Buffer);
+         Aquarius.GUI.Source.Load_Buffer
+           (Local_Current_Project.Get_Main_Buffer);
       end;
 
 --        if With_File /= "" then
