@@ -17,6 +17,13 @@ with Aquarius.Tasks;
 
 package body Aquarius.Projects is
 
+   function Ends_With
+     (X : String;
+      Suffix : String)
+      return Boolean
+   is (X'Length > Suffix'Length
+       and then X (X'Last - Suffix'Length + 1 .. X'Last) = Suffix);
+
    ---------------
    -- Add_Entry --
    ---------------
@@ -53,9 +60,16 @@ package body Aquarius.Projects is
                        Name    : in     String)
    is
       use type Aquarius.Buffers.Aquarius_Buffer;
+      Name_With_Extension : constant String :=
+                              (if Ends_With (Name, ".adb")
+                               then Name
+                               else Name & ".adb");
+
    begin
-      Project.Main_Source := Aquarius.Names.To_Aquarius_Name (Name);
-      Project.Main_Buffer := Project.Get_Buffer (Name, False);
+      Project.Main_Source :=
+        Aquarius.Names.To_Aquarius_Name (Name_With_Extension);
+      Project.Main_Buffer :=
+        Project.Get_Buffer (Name_With_Extension, False);
       --  Main_Buffer may be null at this point, since it's not
       --  required to set up the source folders before the main
       --  file name.
