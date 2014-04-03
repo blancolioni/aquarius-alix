@@ -144,6 +144,13 @@ package Aquarius.Programs is
                           Location : in     Aquarius.Source.Source_Position)
                          return Program_Tree;
 
+   function Find_Node_Containing
+     (Top      : not null access Program_Tree_Type'Class;
+      Location : in     Aquarius.Layout.Position)
+      return Program_Tree;
+   --  Find a child of Top which contains the given Location and return it.
+   --  Return null if no such child exists.
+
    function Vertical_Gap_Before (Item : not null access Program_Tree_Type)
                                 return Aquarius.Layout.Count;
 
@@ -197,6 +204,15 @@ package Aquarius.Programs is
    function Is_Separator
      (Item : Program_Tree_Type)
      return Boolean;
+
+   function Scan_Terminal
+     (Start : not null access Program_Tree_Type'Class;
+      Count : Integer)
+      return Program_Tree
+   with Pre => Start.Is_Terminal;
+   --  Scan /Count/ terminals forward (if Count > 0) or backward
+   --  (if Count < 0).  If Count = 0 then Start will be returned
+   --  Start must be a terminal
 
    function Has_Space_After
      (Item : Program_Tree_Type)
