@@ -147,23 +147,16 @@ package body Aquarius.GUI.Source is
       Buffer : in     Aquarius.Buffers.Aquarius_Buffer)
      return Boolean
    is
-      use Aquarius.Layout;
+      pragma Unreferenced (View);
       use type Aquarius.Keys.Aquarius_Key;
       Key : constant Aquarius.Keys.Aquarius_Key :=
-        To_Aquarius_Key (Event);
-      TB  : constant Gtk.Text_Buffer.Gtk_Text_Buffer :=
-        View.Get_Buffer;
-      Cursor_Iter   : Gtk.Text_Iter.Gtk_Text_Iter;
-      Line, Col     : Gint;
+              To_Aquarius_Key (Event);
+      Handled : Boolean := False;
    begin
-      TB.Get_Iter_At_Mark (Cursor_Iter, TB.Get_Insert);
-      Line := Gtk.Text_Iter.Get_Line (Cursor_Iter);
-      Col  := Gtk.Text_Iter.Get_Line_Offset (Cursor_Iter);
-
       if Key /= Aquarius.Keys.Null_Key then
-         return Buffer.On_Key ((Count (Line) + 1, Count (Col) + 1), Key);
+         Handled := Buffer.On_Key (Key);
       end if;
-      return True;
+      return Handled;
    end Handle_Key_Press;
 
    ----------------

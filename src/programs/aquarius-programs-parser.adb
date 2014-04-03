@@ -1,6 +1,7 @@
 --  with Ada.Text_IO;
 
 with Aquarius.Errors;
+with Aquarius.Properties;
 with Aquarius.Syntax.Checks;
 
 with Aquarius.Trees.Properties;
@@ -204,6 +205,7 @@ package body Aquarius.Programs.Parser is
       Interactive : in  Boolean;
       Run_Actions : in  Boolean := True)
    is
+      use type Aquarius.Grammars.Aquarius_Grammar;
       Start_Ambiguity : constant Ambiguity :=
         New_Ambiguity (List_Of_Ambiguities.No_Element, null, Root);
 
@@ -215,6 +217,11 @@ package body Aquarius.Programs.Parser is
                   Interactive    => Interactive,
                   Run_Actions    => Run_Actions,
                   Vertical_Space => 0);
+      if Grammar = null then
+         Context.Grammar :=
+           Aquarius.Grammars.Aquarius_Grammar
+             (Root.Property (Aquarius.Properties.Grammar_Property));
+      end if;
       Context.Ambiguities.Append (Start_Ambiguity);
    end Initialise_Parse_Context;
 
