@@ -357,6 +357,7 @@ package body Aquarius.Buffers is
          end;
       elsif Raw_Key (Key) = Back_Space then
          Buffer.Editor.Backspace;
+         Handled := False;
       else
          Handled := False;
       end if;
