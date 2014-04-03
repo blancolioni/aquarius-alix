@@ -119,6 +119,12 @@ package body Aquarius.Programs.Editor is
             if Editor.Edit_Terminal /= null then
                if Tok = Editor.Edit_Terminal.Get_Token then
                   --  replace the text of the existing token
+                  Ada.Text_IO.Put_Line
+                    ("Replace: ["
+                     & Editor.Edit_Terminal.Text
+                     & "] -> ["
+                     & Text
+                     & "]");
                   Editor.Edit_Terminal.Fill (Text);
                   Editor.Edit_Terminal := null;
                   --  TODO: update semantics
@@ -456,6 +462,9 @@ package body Aquarius.Programs.Editor is
                  Scan_Terminal (Editor.Left_Terminal, 1);
                New_Cursor :=
                  Aquarius.Trees.Cursors.Right_Of_Tree (Editor.Left_Terminal);
+               Editor.Join_Left :=
+                 Editor.Left_Terminal.Contains_Position
+                   (Point);
             end if;
             Aquarius.Programs.Parser.Set_Cursor
               (Editor.Context, New_Cursor);
