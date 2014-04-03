@@ -430,6 +430,46 @@ package body Aquarius.Programs is
       end if;
    end Find_Node_At;
 
+   --------------------------
+   -- Find_Node_Containing --
+   --------------------------
+
+   function Find_Node_Containing
+     (Top      : not null access Program_Tree_Type'Class;
+      Location : in     Aquarius.Layout.Position)
+      return Program_Tree
+   is
+      use type Aquarius.Layout.Position;
+      Last_Terminal : Program_Tree := null;
+
+      procedure Find (Current : not null access Program_Tree_Type'Class);
+
+      ----------
+      -- Find --
+      ----------
+
+      procedure Find
+        (Current : not null access Program_Tree_Type'Class)
+      is
+      begin
+         if Current.Is_Terminal then
+            if Current.Contains_Position (Location) then
+               Last_Terminal := Program_Tree (Current);
+            else
+               return;
+            end if;
+         else
+            for I in 1 .. Current.Child_Count loop
+               Find (Current.Program_Child (I));
+            end loop;
+         end if;
+      end Find;
+
+   begin
+      Find (Top);
+      return Last_Terminal;
+   end Find_Node_Containing;
+
    -------------------------
    -- First_Program_Child --
    -------------------------
@@ -1154,6 +1194,39 @@ package body Aquarius.Programs is
       end if;
 
    end Run_Actions;
+
+   -------------------
+   -- Scan_Terminal --
+   -------------------
+
+   function Scan_Terminal
+     (Start : not null access Program_Tree_Type'Class;
+      Count : Integer)
+      return Program_Tree
+   is
+      It : Program_Tree := Program_Tree (Start);
+      Acc : Natural := 0;
+   begin
+
+      while Acc < abs Count loop
+         if Count > 0 then
+            It := Program_Tree (It.Next_Leaf);
+         else
+            It := Program_Tree (It.Previous_Leaf);
+         end if;
+
+         exit when It = null;
+
+         if It.Is_Terminal
+           and then It.Text /= ""
+         then
+            Acc := Acc + 1;
+         end if;
+      end loop;
+
+      return It;
+
+   end Scan_Terminal;
 
    ------------------------
    -- Separator_New_Line --
