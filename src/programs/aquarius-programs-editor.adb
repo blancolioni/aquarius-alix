@@ -7,6 +7,8 @@ package body Aquarius.Programs.Editor is
      (Input : Input_Buffer;
       Position : Aquarius.Layout.Position)
       return Boolean;
+   --  Return True if the given position is within the text of the input,
+   --  or immediately to its right
 
    procedure Set_Cursor
      (Input        : in out Input_Buffer;
@@ -199,7 +201,7 @@ package body Aquarius.Programs.Editor is
                        Input.Start.Column;
       End_Column   : constant Aquarius.Layout.Count :=
                        Input.Start.Column
-                         + Aquarius.Layout.Count (Input.Length) - 1;
+                         + Aquarius.Layout.Count (Input.Length);
    begin
       return Input.Start.Line = Position.Line
         and then Position.Column in Start_Column .. End_Column;
@@ -374,6 +376,7 @@ package body Aquarius.Programs.Editor is
         Input.Buffer (Input.Cursor .. Input.Length);
       Input.Buffer (Input.Cursor) := Ch;
       Input.Length := Input.Length + 1;
+      Input.Changed := True;
    end Insert_Character;
 
    ----------------
@@ -447,6 +450,11 @@ package body Aquarius.Programs.Editor is
          then
             Complete_Edit (Editor);
          end if;
+
+         Editor.Input.Length := 0;
+         Editor.Input.Changed := False;
+         Editor.Input.Active := False;
+
          Editor.Left_Terminal  := Editor.Top.Find_Node_At (Point);
 
          declare
