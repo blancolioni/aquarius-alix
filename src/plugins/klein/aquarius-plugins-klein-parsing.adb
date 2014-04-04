@@ -226,7 +226,7 @@ package body Aquarius.Plugins.Klein.Parsing is
       Package_Name    : Unbounded_String;
       Grammar        : constant Aquarius.Grammars.Aquarius_Grammar :=
         Get_Grammar (Item);
-      UI             : constant access Aquarius.UI.Aquarius_UI'Class :=
+      UI             : constant Aquarius.UI.Aquarius_UI :=
         Get_UI (Item.all);
       Project        : constant Aquarius.Projects.Aquarius_Project :=
         Get_Project (Item.all);

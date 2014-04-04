@@ -1,5 +1,6 @@
 with Ada.Strings.Fixed;
 
+with Aquarius.Colours;
 with Aquarius.Configuration;
 
 package body Aquarius.Styles is
@@ -63,7 +64,7 @@ package body Aquarius.Styles is
                               Get_Value (Child, "background", "");
                Font       : Aquarius.Fonts.Aquarius_Font :=
                  Aquarius.Fonts.Create_Font
-                 (Aquarius.Fonts.Parse_Colour (Foreground),
+                 (Aquarius.Colours.Parse_Colour (Foreground),
                   Bold       => Bold,
                   Italic     => Italic,
                   Underlined => Underlined);
@@ -71,7 +72,7 @@ package body Aquarius.Styles is
                if Background /= "" then
                   Aquarius.Fonts.Set_Background
                     (Font,
-                     Aquarius.Fonts.Parse_Colour (Background));
+                     Aquarius.Colours.Parse_Colour (Background));
                end if;
                if Class = "default" then
                   Result.Default_Font := Font;

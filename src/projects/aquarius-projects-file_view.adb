@@ -70,7 +70,9 @@ package body Aquarius.Projects.File_View is
                              (Ordinary_File => True, others => False));
                while More_Entries (Search) loop
                   Get_Next_Entry (Search, Next_Entry);
-                  if Project.Have_Buffer (Simple_Name (Next_Entry)) then
+                  if True
+                    or else Project.Have_Buffer (Simple_Name (Next_Entry))
+                  then
                      New_File := New_File_Tree_Node (Simple_Name (Next_Entry));
                      New_Folder.Add_Child (New_File);
                   end if;
@@ -110,7 +112,9 @@ package body Aquarius.Projects.File_View is
             Index  : Positive := Result'First;
          begin
             while Index <= Result'Last and then
-              (Result (Index) = '/' or else Result (Index) = '.')
+              (Result (Index) = '/'
+               or else Result (Index) = '.'
+               or else Result (Index) = '\')
             loop
                Index := Index + 1;
             end loop;

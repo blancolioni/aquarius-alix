@@ -1,62 +1,50 @@
-with Aquarius.Configuration;
-
 package body Aquarius.Fonts is
-
-   -----------
-   -- Black --
-   -----------
-
-   function Black return Aquarius_Colour is
-   begin
-      return Parse_Colour ("black");
-   end Black;
-
-   ----------
-   -- Blue --
-   ----------
-
-   function Blue  (Colour : Aquarius_Colour) return Colour_Range is
-   begin
-      return Colour.Blue;
-   end Blue;
 
    -----------------
    -- Create_Font --
    -----------------
 
-   function Create_Font (Foreground : Aquarius_Colour;
-                         Bold       : Boolean         := False;
-                         Italic     : Boolean         := False;
-                         Underlined : Boolean         := False)
-                        return Aquarius_Font
+   function Create_Font
+     (Foreground : Aquarius.Colours.Aquarius_Colour;
+      Bold       : Boolean         := False;
+      Italic     : Boolean         := False;
+      Underlined : Boolean         := False)
+      return Aquarius_Font
    is
    begin
-      return (Foreground, White, Bold, Italic, Underlined, True, False);
+      return (Foreground, Aquarius.Colours.White,
+              Bold, Italic, Underlined, True, False);
    end Create_Font;
 
    -----------------
    -- Create_Font --
    -----------------
 
-   function Create_Font (Bold       : Boolean         := False;
-                         Italic     : Boolean         := False;
-                         Underlined : Boolean         := False)
-                        return Aquarius_Font
+   function Create_Font
+     (Bold       : Boolean         := False;
+      Italic     : Boolean         := False;
+      Underlined : Boolean         := False)
+      return Aquarius_Font
    is
    begin
-      return (Black, White, Bold, Italic, Underlined, False, False);
+      return (Aquarius.Colours.Black,
+              Aquarius.Colours.White,
+              Bold, Italic, Underlined, False, False);
    end Create_Font;
 
    --------------------
    -- Get_Background --
    --------------------
 
-   function Get_Background (Font : Aquarius_Font) return Aquarius_Colour is
+   function Get_Background
+     (Font : Aquarius_Font)
+      return Aquarius.Colours.Aquarius_Colour
+   is
    begin
       if Font.Have_Background then
          return Font.Background;
       else
-         return White;
+         return Aquarius.Colours.White;
       end if;
    end Get_Background;
 
@@ -64,23 +52,17 @@ package body Aquarius.Fonts is
    -- Get_Foreground --
    --------------------
 
-   function Get_Foreground (Font : Aquarius_Font) return Aquarius_Colour is
+   function Get_Foreground
+     (Font : Aquarius_Font)
+      return Aquarius.Colours.Aquarius_Colour
+   is
    begin
       if Font.Have_Foreground then
          return Font.Foreground;
       else
-         return Black;
+         return Aquarius.Colours.Black;
       end if;
    end Get_Foreground;
-
-   -----------
-   -- Green --
-   -----------
-
-   function Green (Colour : Aquarius_Colour) return Colour_Range is
-   begin
-      return Colour.Green;
-   end Green;
 
    --------------------
    -- Has_Background --
@@ -99,18 +81,6 @@ package body Aquarius.Fonts is
    begin
       return Font.Have_Foreground;
    end Has_Foreground;
-
-   ----------------
-   -- Hex_Colour --
-   ----------------
-
-   function Hex_Colour (Item : Colour_Range) return String is
-      Hex_Digit : constant array (Colour_Range range 0 .. 15) of Character :=
-        "0123456789ABCDEF";
-
-   begin
-      return (Hex_Digit (Item / 16), Hex_Digit (Item mod 16));
-   end Hex_Colour;
 
    -------------
    -- Is_Bold --
@@ -139,36 +109,13 @@ package body Aquarius.Fonts is
       return Font.Underlined;
    end Is_Underlined;
 
-   ------------------
-   -- Parse_Colour --
-   ------------------
-
-   function Parse_Colour (Colour_Spec : String) return Aquarius_Colour is
-      use Aquarius.Configuration;
-      Position : constant Cursor := Get_Cursor ("/colours/" & Colour_Spec);
-      R, G, B  : Integer;
-   begin
-      R := Get_Value (Position, "r");
-      G := Get_Value (Position, "g");
-      B := Get_Value (Position, "b");
-      return (Colour_Range (R), Colour_Range (G), Colour_Range (B));
-   end Parse_Colour;
-
-   ---------
-   -- Red --
-   ---------
-
-   function Red   (Colour : Aquarius_Colour) return Colour_Range is
-   begin
-      return Colour.Red;
-   end Red;
-
    --------------------
    -- Set_Background --
    --------------------
 
-   procedure Set_Background (Font   : in out Aquarius_Font;
-                             Colour : in     Aquarius_Colour)
+   procedure Set_Background
+     (Font   : in out Aquarius_Font;
+      Colour : in     Aquarius.Colours.Aquarius_Colour)
    is
    begin
       Font.Background := Colour;
@@ -190,8 +137,9 @@ package body Aquarius.Fonts is
    -- Set_Foreground --
    --------------------
 
-   procedure Set_Foreground (Font   : in out Aquarius_Font;
-                             Colour : in     Aquarius_Colour)
+   procedure Set_Foreground
+     (Font   : in out Aquarius_Font;
+      Colour : in     Aquarius.Colours.Aquarius_Colour)
    is
    begin
       Font.Foreground := Colour;
@@ -219,14 +167,5 @@ package body Aquarius.Fonts is
    begin
       Font.Underlined := Value;
    end Set_Underlined;
-
-   -----------
-   -- White --
-   -----------
-
-   function White return Aquarius_Colour is
-   begin
-      return Parse_Colour ("white");
-   end White;
 
 end Aquarius.Fonts;

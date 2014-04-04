@@ -11,17 +11,17 @@ with Aquarius.Tokens;
 with Aquarius.Trees.Cursors;
 with Aquarius.Trees.Properties;
 
-with Aquarius.Tasks.Actions;
+--  with Aquarius.Tasks.Actions;
 
 package body Aquarius.Buffers is
 
    function New_Empty_Buffer
-     (UI      : not null access Aquarius.UI.Aquarius_UI'Class;
+     (UI   : Aquarius.UI.Aquarius_UI;
       Grammar : Aquarius.Grammars.Aquarius_Grammar)
      return Aquarius_Buffer;
 
    function New_Program_Buffer
-     (UI      : not null access Aquarius.UI.Aquarius_UI'Class;
+     (UI   : Aquarius.UI.Aquarius_UI;
       Grammar : Aquarius.Grammars.Aquarius_Grammar)
      return Aquarius_Buffer;
 
@@ -251,19 +251,20 @@ package body Aquarius.Buffers is
                                         Buffer.Buffer_UI,
                                         To_String (Buffer.Full_Path));
 
-      if Synchronous then
+      if True or else Synchronous then
          Buffer.Grammar.Run_Action_Trigger
            (Start      => Buffer.Contents,
             Trigger    => Aquarius.Actions.Semantic_Trigger);
       else
-         declare
-            Action : Aquarius.Tasks.Actions.Action_Task_Type;
-         begin
-            Action.Create (Buffer.Grammar,
-                           Aquarius.Actions.Semantic_Trigger,
-                           Buffer.Contents);
-            Action.Add_Task;
-         end;
+         null;
+--           declare
+--              Action : Aquarius.Tasks.Actions.Action_Task_Type;
+--           begin
+--              Action.Create (Buffer.Grammar,
+--                             Aquarius.Actions.Semantic_Trigger,
+--                             Buffer.Contents);
+--              Action.Add_Task;
+--           end;
       end if;
 
    end Load;
@@ -273,7 +274,7 @@ package body Aquarius.Buffers is
    ---------------------------
 
    function Load_Buffer_From_File
-     (UI      : not null access Aquarius.UI.Aquarius_UI'Class;
+     (UI   : Aquarius.UI.Aquarius_UI;
       Path    : String)
      return Aquarius_Buffer
    is
@@ -426,7 +427,7 @@ package body Aquarius.Buffers is
    --------------------------
 
    function New_Buffer_From_File
-     (UI   : not null access Aquarius.UI.Aquarius_UI'Class;
+     (UI   : Aquarius.UI.Aquarius_UI;
       Path : String)
      return Aquarius_Buffer
    is
@@ -441,7 +442,7 @@ package body Aquarius.Buffers is
    --------------------------
 
    function New_Buffer_From_File
-     (UI      : not null access Aquarius.UI.Aquarius_UI'Class;
+     (UI   : Aquarius.UI.Aquarius_UI;
       Path    : String;
       Store   : not null access Programs.Root_Program_Tree_Store'Class)
      return Aquarius_Buffer
@@ -471,7 +472,7 @@ package body Aquarius.Buffers is
    --------------------------
 
    function New_Buffer_From_Tree
-     (UI      : not null access Aquarius.UI.Aquarius_UI'Class;
+     (UI   : Aquarius.UI.Aquarius_UI;
       Name    : String;
       Program : not null access Programs.Program_Tree_Type'Class)
       return Aquarius_Buffer
@@ -491,7 +492,7 @@ package body Aquarius.Buffers is
    ----------------------
 
    function New_Empty_Buffer
-     (UI           : not null access Aquarius.UI.Aquarius_UI'Class;
+     (UI   : Aquarius.UI.Aquarius_UI;
       Grammar_Name : String)
      return Aquarius_Buffer
    is
@@ -506,7 +507,7 @@ package body Aquarius.Buffers is
    ----------------------
 
    function New_Empty_Buffer
-     (UI      : not null access Aquarius.UI.Aquarius_UI'Class;
+     (UI   : Aquarius.UI.Aquarius_UI;
       Grammar : Aquarius.Grammars.Aquarius_Grammar)
      return Aquarius_Buffer
    is
@@ -528,7 +529,7 @@ package body Aquarius.Buffers is
    ------------------------
 
    function New_Program_Buffer
-     (UI      : not null access Aquarius.UI.Aquarius_UI'Class;
+     (UI   : Aquarius.UI.Aquarius_UI;
       Grammar : Aquarius.Grammars.Aquarius_Grammar)
      return Aquarius_Buffer
    is
@@ -805,13 +806,13 @@ package body Aquarius.Buffers is
    -- Show_Location --
    -------------------
 
-   function Show_Location
-     (Location : Aquarius_Buffer_Record)
-     return String
-   is
-   begin
-      return Location.Name;
-   end Show_Location;
+--     function Show_Location
+--       (Location : Aquarius_Buffer_Record)
+--       return String
+--     is
+--     begin
+--        return Location.Name;
+--     end Show_Location;
 
    ------------
    -- Update --

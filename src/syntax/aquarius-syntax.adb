@@ -31,6 +31,7 @@ package body Aquarius.Syntax is
          Symbol_Cached     : Aquarius.Tokens.Token_Set;
          Symbol_Begins     : Aquarius.Tokens.Token_Set;
          Actions           : Aquarius.Actions.Action_Instance_List;
+         X_Ref_Child       : Syntax_Tree;
          Has_Table         : Boolean := False;
          Has_Properties    : Boolean := False;
          Has_Format        : Boolean := False;
@@ -174,6 +175,18 @@ package body Aquarius.Syntax is
       end loop;
       return False;
    end Check_Precondition;
+
+   --------------------------
+   -- Cross_Reference_Name --
+   --------------------------
+
+   function Cross_Reference_Name
+     (Item : Syntax_Tree_Record'Class)
+      return Syntax_Tree
+   is
+   begin
+      return Item.Node.X_Ref_Child;
+   end Cross_Reference_Name;
 
    -----------------
    -- Declaration --
@@ -352,6 +365,18 @@ package body Aquarius.Syntax is
    begin
       return Item.Node.Special_Format;
    end Get_Special_Format;
+
+   -------------------------
+   -- Has_Cross_Reference --
+   -------------------------
+
+   function Has_Cross_Reference
+     (Item : Syntax_Tree_Record'Class)
+      return Boolean
+   is
+   begin
+      return Item.Node.X_Ref_Child /= null;
+   end Has_Cross_Reference;
 
    ----------------
    -- Has_Format --
@@ -936,6 +961,18 @@ package body Aquarius.Syntax is
       pragma Assert (Is_Begins_Cached (Tree, Tok));
       pragma Assert (Cached_Begins (Tree, Tok) = Begins);
    end Set_Begins;
+
+   -------------------------
+   -- Set_Cross_Reference --
+   -------------------------
+
+   procedure Set_Cross_Reference
+     (Item       : in out Syntax_Tree_Record'Class;
+      Name_Child : Syntax_Tree)
+   is
+   begin
+      Item.Node.X_Ref_Child := Name_Child;
+   end Set_Cross_Reference;
 
    ---------------------
    -- Set_Declaration --

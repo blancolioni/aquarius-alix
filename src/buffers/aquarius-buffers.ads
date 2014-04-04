@@ -26,14 +26,14 @@ package Aquarius.Buffers is
    type Buffer_View is interface;
 
    function New_Buffer_From_File
-     (UI   : not null access Aquarius.UI.Aquarius_UI'Class;
+     (UI   : Aquarius.UI.Aquarius_UI;
       Path : String)
       return Aquarius_Buffer;
    --  Create a buffer for the given file with a default project.
    --  The file is not loaded.
 
    function New_Buffer_From_File
-     (UI      : not null access Aquarius.UI.Aquarius_UI'Class;
+     (UI   : Aquarius.UI.Aquarius_UI;
       Path    : String;
       Store   : not null access Programs.Root_Program_Tree_Store'Class)
      return Aquarius_Buffer;
@@ -45,17 +45,17 @@ package Aquarius.Buffers is
       Synchronous : Boolean);
 
    function Load_Buffer_From_File
-     (UI      : not null access Aquarius.UI.Aquarius_UI'Class;
+     (UI   : Aquarius.UI.Aquarius_UI;
       Path    : String)
      return Aquarius_Buffer;
 
    function New_Empty_Buffer
-     (UI           : not null access Aquarius.UI.Aquarius_UI'Class;
+     (UI   : Aquarius.UI.Aquarius_UI;
       Grammar_Name : String)
       return Aquarius_Buffer;
 
    function New_Buffer_From_Tree
-     (UI      : not null access Aquarius.UI.Aquarius_UI'Class;
+     (UI   : Aquarius.UI.Aquarius_UI;
       Name    : in     String;
       Program : not null access Programs.Program_Tree_Type'Class)
       return Aquarius_Buffer;
@@ -93,9 +93,9 @@ package Aquarius.Buffers is
    --  A buffer "contains" all the messages of its internal program tree
 
    --  Show_Location: name of the buffer
-   function Show_Location
-     (Location : Aquarius_Buffer_Record)
-     return String;
+--     function Show_Location
+--       (Location : Aquarius_Buffer_Record)
+--       return String;
 
    overriding
    function Location_Name (Location : Aquarius_Buffer_Record)
@@ -158,7 +158,7 @@ private
      and Aquarius.Messages.Message_Location
      and Aquarius.Interaction.Interactor with
       record
-         Buffer_UI      : access Aquarius.UI.Aquarius_UI'Class;
+         Buffer_UI   : Aquarius.UI.Aquarius_UI;
          File_Buffer    : Boolean;
          Grammar        : Aquarius.Grammars.Aquarius_Grammar;
          Program_Store  : Aquarius.Programs.Program_Tree_Store;

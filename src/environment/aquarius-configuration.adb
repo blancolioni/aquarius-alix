@@ -274,7 +274,19 @@ package body Aquarius.Configuration is
       Child : constant Cursor := Find_Child (Position, Value_Name);
    begin
       if Child /= null then
-         return Ada.Strings.Unbounded.To_String (Child.Value);
+         declare
+            Result : constant String :=
+                       Ada.Strings.Unbounded.To_String (Child.Value);
+         begin
+            if Result'Length >= 2
+              and then Result (Result'First) = '"'
+              and then Result (Result'Last) = '"'
+            then
+               return Result (Result'First + 1 .. Result'Last - 1);
+            else
+               return Result;
+            end if;
+         end;
       else
          return Default_Value;
       end if;
@@ -324,6 +336,21 @@ package body Aquarius.Configuration is
    begin
       return Position /= null;
    end Has_Element;
+
+   ------------------
+   -- Last_Project --
+   ------------------
+
+   function Last_Project return String is
+      Position : constant Cursor :=
+                   Get_Cursor ("/last_project");
+   begin
+      if Has_Element (Position) then
+         return Get_Value (Position, "path", "");
+      else
+         return "";
+      end if;
+   end Last_Project;
 
    ------------------------
    -- Load_Configuration --

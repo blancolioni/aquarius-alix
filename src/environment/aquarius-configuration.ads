@@ -6,6 +6,8 @@ package Aquarius.Configuration is
 
    procedure Load_Configuration;
 
+   function Last_Project return String;
+
    function Get_Grammar_Path (Grammar_Name : String) return String;
    function Get_Library_Path return String;
 

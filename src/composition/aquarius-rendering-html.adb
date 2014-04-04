@@ -1,6 +1,7 @@
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
+with Aquarius.Colours;
 with Aquarius.Fonts;
 
 package body Aquarius.Rendering.Html is
@@ -94,6 +95,7 @@ package body Aquarius.Rendering.Html is
    function With_Font (Font : Aquarius.Fonts.Aquarius_Font;
                        Text : String) return String
    is
+      use Aquarius.Colours;
       use Aquarius.Fonts;
 
       function Html_Colour (Colour : Aquarius_Colour) return String;

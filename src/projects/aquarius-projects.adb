@@ -11,7 +11,7 @@ with Aquarius.Projects.Package_View;
 
 with Aquarius.UI.Console;
 
-with Aquarius.Tasks;
+--  with Aquarius.Tasks;
 
 package body Aquarius.Projects is
 
@@ -40,7 +40,7 @@ package body Aquarius.Projects is
       else
          To_Project.Entries.Insert (It, New_Entry);
       end if;
-      Aquarius.Tasks.Set_Changed ("GUI");
+      --  Aquarius.Tasks.Set_Changed ("GUI");
    end Add_Entry;
 
    --------------
@@ -155,7 +155,9 @@ package body Aquarius.Projects is
                  Path, Project);
             Project.Buffers.Append (Buffer);
             Buffer.Load (Synchronous);
-            Aquarius.Tasks.Set_Changed ("GUI");
+            Project.Load_References (Buffer.Program);
+
+            --  Aquarius.Tasks.Set_Changed ("GUI");
             return Buffer;
          else
             return null;
@@ -327,8 +329,62 @@ package body Aquarius.Projects is
                                                   Path, Project'Access);
          Project.Buffers.Append (Buffer);
          Buffer.Load (True);
+         Project.Load_References (Buffer.Program);
       end;
    end Load_Dependency;
+
+   ---------------------
+   -- Load_References --
+   ---------------------
+
+   procedure Load_References
+     (Project : in out Aquarius_Project_Type'Class;
+      Program : in     Aquarius.Programs.Program_Tree)
+   is
+
+      procedure Load (P : Aquarius.Programs.Program_Tree);
+
+      ----------
+      -- Load --
+      ----------
+
+      procedure Load (P : Aquarius.Programs.Program_Tree) is
+      begin
+         if P.Has_Cross_Reference then
+            declare
+               use Ada.Strings.Unbounded;
+               use type Aquarius.Trees.Tree;
+               Name_Child : constant Aquarius.Programs.Program_Tree :=
+                              P.Cross_Reference_Name;
+               Last : constant Aquarius.Trees.Tree :=
+                        Name_Child.Last_Leaf;
+               Id : Unbounded_String := Null_Unbounded_String;
+               Std : Unbounded_String := Null_Unbounded_String;
+               It : Aquarius.Trees.Tree := Name_Child.First_Leaf;
+            begin
+               loop
+                  Id := Id & It.Text;
+                  Std := Std & It.Standard_Text;
+                  exit when It = Last;
+                  It := It.Next_Leaf;
+               end loop;
+               Aquarius.References.Add_Specification
+                 (Project.References,
+                  To_String (Id),
+                  To_String (Std),
+                  "",
+                  P);
+            end;
+         else
+            for I in 1 .. P.Child_Count loop
+               Load (P.Program_Child (I));
+            end loop;
+         end if;
+      end Load;
+
+   begin
+      Load (Program);
+   end Load_References;
 
    ----------
    -- Name --
@@ -380,7 +436,7 @@ package body Aquarius.Projects is
 
    function New_Default_Project
      (For_File    : String;
-      UI          : not null access Aquarius.UI.Aquarius_UI'Class)
+      UI          : Aquarius.UI.Aquarius_UI)
       return Aquarius_Project
    is
       Result : constant Aquarius_Project :=
@@ -414,7 +470,7 @@ package body Aquarius.Projects is
    function New_Project
      (Name      : String;
       Directory : String;
-      UI        : not null access Aquarius.UI.Aquarius_UI'Class)
+      UI        : Aquarius.UI.Aquarius_UI)
      return Aquarius_Project
    is
       Result : Aquarius_Project_Type;
@@ -424,6 +480,7 @@ package body Aquarius.Projects is
       Aquarius.Source.File_System.Set_Base_Path (Result.Search_Path,
                                                  Directory);
       Result.Project_UI := UI;
+      Result.References := Aquarius.References.New_Reference_List;
       return new Aquarius_Project_Type'(Result);
    end New_Project;
 
@@ -433,7 +490,7 @@ package body Aquarius.Projects is
 
    function New_Project
      (Directory : String;
-      UI        : not null access Aquarius.UI.Aquarius_UI'Class)
+      UI        : Aquarius.UI.Aquarius_UI)
       return Aquarius_Project
    is
    begin
@@ -441,6 +498,18 @@ package body Aquarius.Projects is
                           Ada.Directories.Containing_Directory (Directory),
                           UI);
    end New_Project;
+
+   ----------------
+   -- References --
+   ----------------
+
+   function References
+     (Project : Aquarius_Project_Type'Class)
+      return Aquarius.References.Reference_List
+   is
+   begin
+      return Project.References;
+   end References;
 
    ------------------
    -- Remove_Entry --

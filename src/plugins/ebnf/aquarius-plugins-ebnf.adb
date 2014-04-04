@@ -81,6 +81,10 @@ package body Aquarius.Plugins.EBNF is
          Analyse.After_Format_Definition'Access);
 
       Plugin.Register_Action
+        ("xref-definition", Analysis, After,
+         Analyse.After_Cross_Reference_Definition'Access);
+
+      Plugin.Register_Action
         ("syntax-body", Analysis, After,
          Analyse.After_Syntax_Body'Access);
 

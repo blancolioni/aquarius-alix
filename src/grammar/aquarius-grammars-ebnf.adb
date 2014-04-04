@@ -49,6 +49,7 @@ package body Aquarius.Grammars.EBNF is
          New_Choice (Grammar.Frame, Internal),
          (Grammar.Reference_Name (Internal, "value-definition"),
           Grammar.Reference_Name (Internal, "format-definition"),
+          Grammar.Reference_Name (Internal, "xref-definition"),
           Grammar.Reference_Name (Internal, "rule-definition")));
       Add_Non_Terminal
         (Grammar, "value-definition",
@@ -63,6 +64,13 @@ package body Aquarius.Grammars.EBNF is
           Grammar.Reference_Name (Internal, "terminal-or-rule"),
           Grammar.Reference_Name (Internal, "list-of-formats",
                           Indent_Rule => True)));
+      Add_Non_Terminal
+        (Grammar, "xref-definition",
+         New_Sequence (Grammar.Frame, Internal),
+         (Grammar.Reference_Terminal (Internal, "xref"),
+          Grammar.Reference_Name (Internal, "identifier"),
+          Grammar.Reference_Name (Internal, "terminal-or-rule")));
+
       Add_Non_Terminal (Grammar, "terminal-or-rule",
                         New_Choice (Grammar.Frame, Internal),
                         (Grammar.Reference_Name (Internal, "identifier"),

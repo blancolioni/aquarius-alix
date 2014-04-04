@@ -156,6 +156,19 @@ package body Aquarius.Programs is
       Tree.Have_Symbol_Table := True;
    end Create_Symbol_Table;
 
+   --------------------------
+   -- Cross_Reference_Name --
+   --------------------------
+
+   function Cross_Reference_Name
+     (Item : Program_Tree_Type'Class)
+      return Program_Tree
+   is
+      pragma Assert (Item.Has_Cross_Reference);
+   begin
+      return Item.Program_Child (Item.Syntax.Cross_Reference_Name.Name);
+   end Cross_Reference_Name;
+
    ------------------------
    -- Debug_Dump_Program --
    ------------------------
@@ -508,6 +521,19 @@ package body Aquarius.Programs is
    begin
       return Aquarius.Trees.Properties.Get_Type (Program);
    end Get_Type;
+
+   -------------------------
+   -- Has_Cross_Reference --
+   -------------------------
+
+   function Has_Cross_Reference
+     (Item : Program_Tree_Type'Class)
+      return Boolean
+   is
+   begin
+      return not Aquarius.Syntax.Is_Empty (Item.Syntax)
+        and then Item.Syntax.Has_Cross_Reference;
+   end Has_Cross_Reference;
 
    ---------------
    -- Has_Entry --
@@ -983,6 +1009,23 @@ package body Aquarius.Programs is
       end loop;
       return It;
    end Program_Root;
+
+   ------------------
+   -- Render_Class --
+   ------------------
+
+   function Render_Class (Item : Program_Tree_Type'Class) return String is
+   begin
+      if not Aquarius.Syntax.Is_Empty (Item.Render_Class) then
+         return Item.Render_Class.Render_Class;
+      elsif Item.Syntax.Has_Token then
+         return Aquarius.Tokens.Get_Token_Class_Name
+           (Item.Syntax.Frame,
+            Item.Syntax.Token);
+      else
+         return "normal";
+      end if;
+   end Render_Class;
 
    -----------------
    -- Run_Actions --

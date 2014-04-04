@@ -31,6 +31,52 @@ package body Aquarius.Plugins.EBNF.Analyse is
       Value : Aquarius.Syntax.Syntax_Tree)
      renames Aquarius.Trees.Properties.Set_Syntax;
 
+   --------------------------------------
+   -- After_Cross_Reference_Definition --
+   --------------------------------------
+
+   procedure After_Cross_Reference_Definition
+     (Target : not null access Aquarius.Actions.Actionable'Class)
+   is
+      Tree           : constant Program_Tree := Program_Tree (Target);
+      Grammar        : constant Aquarius.Grammars.Aquarius_Grammar :=
+                         Aquarius.Trees.Properties.Get_Grammar (Tree.all);
+      Reference_Node : constant Program_Tree :=
+                         Tree.Program_Child ("identifier");
+      Rule              : constant Aquarius.Syntax.Syntax_Tree :=
+                            Grammar.Reference_Name
+                              (Reference_Node, Reference_Node.Text);
+      Child_Item     : constant Program_Tree :=
+                         Tree.Program_Child ("terminal-or-rule");
+      Terminal      : constant Program_Tree :=
+        Child_Item.Program_Child ("terminal");
+      Non_Terminal  : constant Program_Tree :=
+        Child_Item.Program_Child ("identifier");
+   begin
+
+      if Terminal /= null then
+         declare
+            Terminal_Name : constant String := Terminal.Text;
+            Token         : constant String :=
+              Terminal_Name (Terminal_Name'First + 1 ..
+                               Terminal_Name'Last - 1);
+            Name_Child    : constant Aquarius.Syntax.Syntax_Tree :=
+                              Grammar.Reference_Terminal (Terminal, Token);
+         begin
+            Rule.Set_Cross_Reference (Name_Child);
+         end;
+      else
+         declare
+            Non_Terminal_Name : constant String := Non_Terminal.Text;
+            Name_Child        : constant Aquarius.Syntax.Syntax_Tree :=
+              Grammar.Reference_Name (Non_Terminal, Non_Terminal_Name);
+         begin
+            Rule.Set_Cross_Reference (Name_Child);
+         end;
+      end if;
+
+   end After_Cross_Reference_Definition;
+
    -----------------------------
    -- After_Format_Definition --
    -----------------------------
