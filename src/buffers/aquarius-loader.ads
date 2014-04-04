@@ -9,7 +9,7 @@ package Aquarius.Loader is
      (Grammar    : in     Aquarius.Grammars.Aquarius_Grammar;
       Project    : not null access Programs.Root_Program_Tree_Store'Class;
       Interactor : not null access Interaction.Interactor'Class;
-      UI         : not null access Aquarius.UI.Aquarius_UI'Class;
+      UI         : Aquarius.UI.Aquarius_UI;
       Path       : in     String)
      return Aquarius.Programs.Program_Tree;
 
@@ -25,7 +25,7 @@ package Aquarius.Loader is
    function Load_From_File
      (Grammar    : in     Aquarius.Grammars.Aquarius_Grammar;
       Project    : not null access Programs.Root_Program_Tree_Store'Class;
-      UI         : not null access Aquarius.UI.Aquarius_UI'Class;
+      UI         : Aquarius.UI.Aquarius_UI;
       Path       : in     String)
      return Aquarius.Programs.Program_Tree;
    --  Load file using default interactor (console)

@@ -326,6 +326,20 @@ package Aquarius.Syntax is
 
    procedure Plugin_Mark (Item : in out Syntax_Tree_Record);
 
+   procedure Set_Cross_Reference
+     (Item       : in out Syntax_Tree_Record'Class;
+      Name_Child : Syntax_Tree);
+   --  The syntax given by Item can be the target of a cross-reference,
+   --  named by its child Name_Child
+
+   function Has_Cross_Reference
+     (Item : Syntax_Tree_Record'Class)
+      return Boolean;
+
+   function Cross_Reference_Name
+     (Item : Syntax_Tree_Record'Class)
+      return Syntax_Tree;
+
    not overriding
    function Declaration (Item : Syntax_Tree_Record)
                         return Aquarius.Trees.Tree;

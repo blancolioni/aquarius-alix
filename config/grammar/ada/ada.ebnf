@@ -25,6 +25,8 @@ format function_declaration new_line_after
 format 'generic' new_line_after
 format generic_formal_parameter_list indented_child
 format interface_inheritance soft_new_line
+format new_generic_package indented_child
+format generic_actual_part indented_child
 
 format ';' no_space_before no_space_after new_line_after
 format '.' no_space_before no_space_after
@@ -32,6 +34,11 @@ format '(' space_before no_space_after
 format ')' no_space_before space_after
 format ',' no_space_before space_after
 format ''' no_space_before no_space_after
+
+xref procedure_declaration defining_program_unit_name
+xref function_declaration defining_program_unit_name
+xref package_spec defining_package_name
+xref type_declaration type_name
 
 compilation_unit ::= { context_clause }
 	             top_level_subprogram_declaration
@@ -68,12 +75,18 @@ procedure_specification ::=
    [ overriding_indication ]
    'procedure' defining_program_unit_name
             [ formal_argument_spec ]
-
+       [ 'with' list_of_aspects ]
+       
 function_specification ::=
    [ overriding_indication ]
    'function' (defining_program_unit_name | string_literal)
          [ formal_argument_spec ]
          'return' type_indication
+       [ 'with' list_of_aspects ]
+
+list_of_aspects ::= < aspect / ',' >
+
+aspect ::= identifier '=>' expression
 
 overriding_indication ::= ['not'] 'overriding'
 
@@ -109,12 +122,13 @@ matching_name ::= < identifier / '.' > | operator_symbol
 private_part ::=   'private' list_of_declarations
 
 generic_instantiation ::=
-     'package' defining_program_unit_name 'is'
-       'new' generic_package_name [generic_actual_part] ';'
+     'package' defining_program_unit_name 'is' new_generic_package ';'
    | 'procedure' defining_program_unit_name 'is'
        'new' generic_procedure_name [generic_actual_part] ';'
    | 'function' defining_designator 'is'
        'new' generic_function_name [generic_actual_part] ';'
+
+new_generic_package ::= 'new' generic_package_name [generic_actual_part] ';'
 
 generic_actual_part ::= '(' < generic_association / ','> ')'
 
@@ -403,7 +417,13 @@ case_option_list ::=
      < (qualified_reference | numeric_literal | character_literal) / '|' >
 
 
-return_statement ::= 'return' [expression] ';'
+return_statement ::= simple_return | extended_return
+
+simple_return ::= 'return' [expression] ';'
+
+extended_return ::= 'return' identifier ':' [ 'constant' ] type_indication [ ':=' expression ] 'do'
+                        sequence_of_statements
+                    'end' 'return' ';'
 
 exit_statement ::= 'exit' [ 'when' expression ] ';'
 
@@ -431,6 +451,7 @@ while_statement_header ::= 'while' expression
 
 for_statement_header ::=
    'for' identifier 'in' [ 'reverse' ] for_loop_discrete_range
+ | 'for' identifier 'of' [ 'reverse' ] object_reference
 
 for_loop_discrete_range ::= object_reference [ for_loop_subrange ]
                           | bounded_range
@@ -553,6 +574,9 @@ atomic_expression ::= object_reference | numeric_literal | string_literal |
                       aggregate
 
 parenthesised_expression ::= '(' expression ')'
+                           | '(' conditional_expression ')'
+                           
+conditional_expression ::= 'if' expression 'then' expression 'else' expression
 
 aggregate ::=
     '(' object_reference 'with' selector '=>' expression ')'

@@ -1,7 +1,7 @@
 package body Aquarius.Paths is
 
-   Unix_Paths : constant Boolean := True;
-   Separator  : constant Character := '/';
+   Unix_Paths : constant Boolean := False;
+   Separator  : constant Character := '\';
 
    ----------------
    -- Join_Paths --

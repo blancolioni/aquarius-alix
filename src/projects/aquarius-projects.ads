@@ -5,6 +5,7 @@ with Aquarius.Buffers;
 with Aquarius.Entries;
 with Aquarius.Names;
 with Aquarius.Programs;
+with Aquarius.References;
 with Aquarius.Source.File_System;
 with Aquarius.Trees;
 with Aquarius.UI;
@@ -62,12 +63,12 @@ package Aquarius.Projects is
    function New_Project
      (Name      : String;
       Directory : String;
-      UI        : not null access Aquarius.UI.Aquarius_UI'Class)
+      UI        : Aquarius.UI.Aquarius_UI)
      return Aquarius_Project;
 
    function New_Project
      (Directory : String;
-      UI        : not null access Aquarius.UI.Aquarius_UI'Class)
+      UI        : Aquarius.UI.Aquarius_UI)
      return Aquarius_Project;
 
    function New_Empty_Project
@@ -75,7 +76,7 @@ package Aquarius.Projects is
 
    function New_Default_Project
      (For_File    : String;
-      UI          : not null access Aquarius.UI.Aquarius_UI'Class)
+      UI        : Aquarius.UI.Aquarius_UI)
       return Aquarius_Project;
    --  New_Default_Project: creates a project with default settings,
    --  which references only the given file.  No attempt is made to
@@ -128,6 +129,14 @@ package Aquarius.Projects is
      (File_Path : String)
      return Aquarius_Project;
    --  Create a default project which contains only the given file
+
+   function References
+     (Project : Aquarius_Project_Type'Class)
+      return Aquarius.References.Reference_List;
+
+   procedure Load_References
+     (Project : in out Aquarius_Project_Type'Class;
+      Program : in     Aquarius.Programs.Program_Tree);
 
 private
 
@@ -193,8 +202,9 @@ private
          Buffers       : Loaded_Buffer_Vector.Vector;
          Views         : View_Vector.Vector;
          Grammar_Names : Aquarius.Names.Name_List;
-         Project_UI    : access Aquarius.UI.Aquarius_UI'Class;
+         Project_UI    : Aquarius.UI.Aquarius_UI;
          Entries       : Project_Entries_Vector.Vector;
+         References    : Aquarius.References.Reference_List;
       end record;
 
 end Aquarius.Projects;

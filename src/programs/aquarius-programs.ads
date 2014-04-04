@@ -196,6 +196,8 @@ package Aquarius.Programs is
 
    function Has_Symbol_Table (Item : Program_Tree_Type) return Boolean;
 
+   function Render_Class (Item : Program_Tree_Type'Class) return String;
+
    procedure Fill (Item : in out Program_Tree_Type;
                    Text : in     String);
 
@@ -206,6 +208,14 @@ package Aquarius.Programs is
 
    function Minimum_Indent (Item : Program_Tree_Type)
                            return Aquarius.Source.Column_Number;
+
+   function Has_Cross_Reference
+     (Item : Program_Tree_Type'Class)
+      return Boolean;
+
+   function Cross_Reference_Name
+     (Item : Program_Tree_Type'Class)
+      return Program_Tree;
 
    --  procedure Debug_Dump_Program (Item : Program_Tree);
 

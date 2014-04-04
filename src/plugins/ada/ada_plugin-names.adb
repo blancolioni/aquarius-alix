@@ -1,3 +1,5 @@
+with Ada.Text_IO;
+
 with Aquarius.Programs;                 use Aquarius.Programs;
 with Aquarius.Trees.Properties;         use Aquarius.Trees.Properties;
 
@@ -568,6 +570,13 @@ package body Ada_Plugin.Names is
             Tree.Set_Entry (Current);
          end if;
       end if;
+   exception
+      when others =>
+         Ada.Text_IO.Put_Line ("exception in "
+                               & "Qualified_Reference_After_Identifier");
+         Ada.Text_IO.Put_Line ("   " & Tree.Image);
+         Ada.Text_IO.Put_Line ("   " & Identifier.Image);
+         raise;
    end Qualified_Reference_After_Identifier;
 
    -----------------------

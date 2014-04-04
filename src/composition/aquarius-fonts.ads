@@ -1,3 +1,5 @@
+with Aquarius.Colours;
+
 package Aquarius.Fonts is
 
    type Aquarius_Font is private;
@@ -8,15 +10,12 @@ package Aquarius.Fonts is
    function Has_Foreground (Font : Aquarius_Font) return Boolean;
    function Has_Background (Font : Aquarius_Font) return Boolean;
 
-   type Aquarius_Colour is private;
-   type Colour_Range is range 0 .. 255;
+   function Get_Foreground (Font : Aquarius_Font)
+                            return Aquarius.Colours.Aquarius_Colour;
+   function Get_Background (Font : Aquarius_Font)
+                            return Aquarius.Colours.Aquarius_Colour;
 
-   function Get_Foreground (Font : Aquarius_Font) return Aquarius_Colour;
-   function Get_Background (Font : Aquarius_Font) return Aquarius_Colour;
-
-   function Parse_Colour (Colour_Spec : String) return Aquarius_Colour;
-
-   function Create_Font (Foreground : Aquarius_Colour;
+   function Create_Font (Foreground : Aquarius.Colours.Aquarius_Colour;
                          Bold       : Boolean         := False;
                          Italic     : Boolean         := False;
                          Underlined : Boolean         := False)
@@ -37,31 +36,17 @@ package Aquarius.Fonts is
                              Value : in     Boolean);
 
    procedure Set_Foreground (Font   : in out Aquarius_Font;
-                             Colour : in     Aquarius_Colour);
+                             Colour : in     Aquarius.Colours.Aquarius_Colour);
 
    procedure Set_Background (Font   : in out Aquarius_Font;
-                             Colour : in     Aquarius_Colour);
-
-   function Black return Aquarius_Colour;
-   function White return Aquarius_Colour;
-
-   function Red   (Colour : Aquarius_Colour) return Colour_Range;
-   function Green (Colour : Aquarius_Colour) return Colour_Range;
-   function Blue  (Colour : Aquarius_Colour) return Colour_Range;
-
-   function Hex_Colour (Item : Colour_Range) return String;
+                             Colour : in     Aquarius.Colours.Aquarius_Colour);
 
 private
 
-   type Aquarius_Colour is
-      record
-         Red, Green, Blue : Colour_Range;
-      end record;
-
    type Aquarius_Font is
       record
-         Foreground               : Aquarius_Colour;
-         Background               : Aquarius_Colour;
+         Foreground               : Aquarius.Colours.Aquarius_Colour;
+         Background               : Aquarius.Colours.Aquarius_Colour;
          Bold, Italic, Underlined : Boolean           := False;
          Have_Foreground          : Boolean           := False;
          Have_Background          : Boolean           := False;

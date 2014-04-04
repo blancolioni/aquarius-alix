@@ -52,7 +52,7 @@ package Aquarius.Trees.Properties is
 
    function Get_UI
      (Tree : Root_Tree_Type'Class)
-     return access Aquarius.UI.Aquarius_UI'Class;
+     return Aquarius.UI.Aquarius_UI;
 
    function Has_Entry
      (Tree : Root_Tree_Type'Class)
@@ -128,7 +128,7 @@ package Aquarius.Trees.Properties is
 
    procedure Set_UI
      (Tree  : in out Root_Tree_Type'Class;
-      Value : not null access Aquarius.UI.Aquarius_UI'Class);
+      Value : Aquarius.UI.Aquarius_UI);
 
    procedure Clear_Entry
      (Tree  : in out Root_Tree_Type'Class);

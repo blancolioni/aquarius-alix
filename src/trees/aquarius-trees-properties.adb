@@ -146,10 +146,10 @@ package body Aquarius.Trees.Properties is
 
    function Get_UI
      (Tree : Root_Tree_Type'Class)
-     return access Aquarius.UI.Aquarius_UI'Class
+     return Aquarius.UI.Aquarius_UI
    is
    begin
-      return Aquarius.UI.Aquarius_UI (Tree.Property (UI_Property).all)'Access;
+      return Aquarius.UI.Aquarius_UI (Tree.Property (UI_Property));
    end Get_UI;
 
    ---------------
@@ -377,10 +377,10 @@ package body Aquarius.Trees.Properties is
 
    procedure Set_UI
      (Tree  : in out Root_Tree_Type'Class;
-      Value : not null access Aquarius.UI.Aquarius_UI'Class)
+      Value : Aquarius.UI.Aquarius_UI)
    is
    begin
-      Tree.Set_Property (UI_Property, Value);
+      Set_Property (Tree, UI_Property, Value);
    end Set_UI;
 
 end Aquarius.Trees.Properties;

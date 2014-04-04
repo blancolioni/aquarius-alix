@@ -14,6 +14,8 @@ package Aquarius.Plugins.EBNF.Analyse is
      (Target : not null access Aquarius.Actions.Actionable'Class);
    procedure After_Format_Definition
      (Target : not null access Aquarius.Actions.Actionable'Class);
+   procedure After_Cross_Reference_Definition
+     (Target : not null access Aquarius.Actions.Actionable'Class);
    procedure After_Syntax_Body
      (Target : not null access Aquarius.Actions.Actionable'Class);
    procedure After_Sequence_Of_Rules
