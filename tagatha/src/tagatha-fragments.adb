@@ -176,6 +176,10 @@ package body Tagatha.Fragments is
       return Result;
    end Integer_Constant;
 
+   --------------
+   -- Operator --
+   --------------
+
    function Operator (Op     : Tagatha_Operator;
                       Negate : Boolean          := False;
                       Size   : Tagatha_Size     := Default_Integer_Size)
@@ -211,6 +215,24 @@ package body Tagatha.Fragments is
       Result.Records.Append ((Fragment_Type => Push_Fragment));
       return Result;
    end Push;
+
+   ------------------------
+   -- Reference_Argument --
+   ------------------------
+
+   function Reference_Argument
+     (Offset   : in Argument_Offset;
+      Size     : in Tagatha_Size  := Default_Integer_Size)
+     return Tagatha_Fragment
+   is
+      Result : Tagatha_Fragment;
+   begin
+      Result.Records.Append ((Fragment_Type => Operand_Fragment,
+                              Reference     =>
+                                Tagatha.Operands.Argument_Operand (Offset),
+                              Size          => Size));
+      return Result;
+   end Reference_Argument;
 
    ---------------------
    -- Reference_Local --

@@ -16,6 +16,7 @@ package body Aquarius.Fragments.Notes is
                                     Text => To_Unbounded_String (Text));
    begin
       Result.Initialise (Width, Height);
+      Result.Background := Aquarius.Fonts.White;
       return Result;
    end Create_Note;
 

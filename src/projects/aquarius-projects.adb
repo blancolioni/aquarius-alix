@@ -1,9 +1,11 @@
 with Ada.Directories;
 with Ada.Strings.Fixed;
+with Ada.Text_IO;
 
 with Aquarius.Configuration;
 with Aquarius.Errors;
 with Aquarius.Grammars.Manager;
+with Aquarius.Messages;
 
 with Aquarius.Projects.Entry_View;
 with Aquarius.Projects.File_View;
@@ -14,6 +16,13 @@ with Aquarius.UI.Console;
 --  with Aquarius.Tasks;
 
 package body Aquarius.Projects is
+
+   function Ends_With
+     (X : String;
+      Suffix : String)
+      return Boolean
+   is (X'Length > Suffix'Length
+       and then X (X'Last - Suffix'Length + 1 .. X'Last) = Suffix);
 
    ---------------
    -- Add_Entry --
@@ -51,9 +60,16 @@ package body Aquarius.Projects is
                        Name    : in     String)
    is
       use type Aquarius.Buffers.Aquarius_Buffer;
+      Name_With_Extension : constant String :=
+                              (if Ends_With (Name, ".adb")
+                               then Name
+                               else Name & ".adb");
+
    begin
-      Project.Main_Source := Aquarius.Names.To_Aquarius_Name (Name);
-      Project.Main_Buffer := Project.Get_Buffer (Name, False);
+      Project.Main_Source :=
+        Aquarius.Names.To_Aquarius_Name (Name_With_Extension);
+      Project.Main_Buffer :=
+        Project.Get_Buffer (Name_With_Extension, False);
       --  Main_Buffer may be null at this point, since it's not
       --  required to set up the source folders before the main
       --  file name.
@@ -330,6 +346,25 @@ package body Aquarius.Projects is
          Project.Buffers.Append (Buffer);
          Buffer.Load (True);
          Project.Load_References (Buffer.Program);
+         declare
+            Messages : Aquarius.Messages.Message_List;
+         begin
+            Buffer.Program.Get_Messages (Messages);
+            if Aquarius.Messages.Message_Count  (Messages) > 0 then
+               declare
+                  use Aquarius.Messages;
+               begin
+                  for I in 1 .. Message_Count (Messages) loop
+                     Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error,
+                                           Show (Get_Message (Messages, I)));
+                  end loop;
+               end;
+            else
+               for Act of Project.Pending_Actions loop
+                  Buffer.Grammar.Run_Actions (Act, Buffer.Program);
+               end loop;
+            end if;
+         end;
       end;
    end Load_Dependency;
 
@@ -527,6 +562,18 @@ package body Aquarius.Projects is
       end if;
       From_Project.Entries.Delete (It);
    end Remove_Entry;
+
+   -----------------
+   -- Run_Actions --
+   -----------------
+
+   procedure Run_Actions
+     (Project     : in out Aquarius_Project_Type'Class;
+      Group_Name  : in String)
+   is
+   begin
+      Project.Pending_Actions.Append (Group_Name);
+   end Run_Actions;
 
    ------------
    -- Target --

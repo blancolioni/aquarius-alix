@@ -125,15 +125,26 @@ project Ada_Plugin is
       as Procedure_Spec_After_Defining_Name;
     Function_Specification after Defining_Program_Unit_Name
       as Procedure_Spec_After_Defining_Name;
+    Function_Specification after String_Literal
+      as Function_Spec_After_Defining_String_Literal
     Function_Specification before Formal_Argument_Spec
       as Spec_Before_Arguments;
     Procedure_Specification before Formal_Argument_Spec
       as Spec_Before_Arguments;
+    Function_Specification after Formal_Argument_Spec
+      as Spec_After_Arguments;
+    Procedure_Specification after Formal_Argument_Spec
+      as Spec_After_Arguments;
     Formal_Argument_Spec before Formal_Argument
       as Spec_Before_Arguments;
     Formal_Argument after;
     Function_Specification after Type_Indication;
     Procedure_Declaration after;
+    Function_Declaration after;
+    Procedure_Declaration before Subprogram_Body
+      as Subprogram_Before_Body;
+    Function_Declaration before Subprogram_Body
+      as Subprogram_Before_Body;
   end Ch06;
 
   package Ch07 check is

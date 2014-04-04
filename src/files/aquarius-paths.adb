@@ -1,7 +1,16 @@
+with Ada.Strings.Fixed;
+with Ada.Strings.Maps;
+
 package body Aquarius.Paths is
 
-   Unix_Paths : constant Boolean := False;
-   Separator  : constant Character := '\';
+   Unix_Paths : constant Boolean := True;
+   Separator  : constant Character := '/';
+
+   Standard_Separator : constant Character := '/';
+
+   Standardise_Path : constant Ada.Strings.Maps.Character_Mapping :=
+                        Ada.Strings.Maps.To_Mapping
+                          ("\", (1 => Standard_Separator));
 
    ----------------
    -- Join_Paths --
@@ -39,55 +48,74 @@ package body Aquarius.Paths is
    -- To_Aquarius_Path --
    ----------------------
 
-   function To_Aquarius_Path (OS_Path : String) return Aquarius_Path is
-      Result : Aquarius_Path;
-      Start  : Positive       := OS_Path'First;
+   function To_Aquarius_Path (From_OS_Path : String) return Aquarius_Path is
+      Result  : Aquarius_Path;
+      Standard_Path : constant String :=
+                  Ada.Strings.Fixed.Translate
+                    (Source  => From_OS_Path,
+                     Mapping => Standardise_Path);
+      Start  : Positive       := Standard_Path'First;
       Index  : Positive;
    begin
       if not Unix_Paths and then
-        OS_Path'Length > 1 and then
-        OS_Path (OS_Path'First + 1) = ':'
+        Standard_Path'Length > 1 and then
+        Standard_Path (Standard_Path'First + 1) = ':'
       then
          declare
             Prefix : constant String :=
-                       OS_Path (OS_Path'First .. OS_Path'First + 1);
+                       Standard_Path
+                         (Standard_Path'First .. Standard_Path'First + 1);
          begin
             Result.Prefix := To_Unbounded_String (Prefix);
-            Start := OS_Path'First + 2;
+            Start := Standard_Path'First + 2;
          end;
       end if;
 
-      Result.Absolute := OS_Path (Start) = Separator;
+      Result.Absolute := Standard_Path (Start) = Standard_Separator;
 
       if Result.Absolute then
          Start := Start + 1;
       end if;
 
-      while Start < OS_Path'Last loop
+      while Start < Standard_Path'Last loop
 
-         while Start <= OS_Path'Last
-           and then OS_Path (Start) = Separator
+         while Start <= Standard_Path'Last
+           and then Standard_Path (Start) = Standard_Separator
          loop
             Start := Start + 1;
          end loop;
 
-         exit when Start > OS_Path'Last;
+         exit when Start > Standard_Path'Last;
 
          Index := Start;
-         while Index <= OS_Path'Last
-           and then OS_Path (Index) /= Separator
-         loop
-            Index := Index + 1;
-         end loop;
-
-         if Index > Start then
-            Result.Elements.Append
-              (To_Unbounded_String (OS_Path (Start .. Index - 1)));
-            Start := Index;
+         if Index < Standard_Path'Last
+           and then Standard_Path (Index .. Index + 1) = ".."
+           and then (Index = Standard_Path'Last - 1
+                     or else Standard_Path (Index + 2) = Standard_Separator)
+           and then Result.Elements.Last_Index > 0
+         then
+            Result.Elements.Delete_Last;
+            Start := Index + 2;
+         elsif Index < Standard_Path'Last
+           and then Standard_Path (Index) = '.'
+           and then Standard_Path (Index + 1) = Standard_Separator
+         then
+            Start := Index + 1;
          else
-            exit;
-         end if;
+            while Index <= Standard_Path'Last
+              and then Standard_Path (Index) /= Standard_Separator
+            loop
+               Index := Index + 1;
+            end loop;
 
+            if Index > Start then
+               Result.Elements.Append
+                 (To_Unbounded_String (Standard_Path (Start .. Index - 1)));
+               Start := Index;
+            else
+               exit;
+            end if;
+         end if;
       end loop;
 
       return Result;
@@ -102,13 +130,13 @@ package body Aquarius.Paths is
       Result : Unbounded_String;
    begin
       if Path.Absolute then
-         Result := Path.Prefix & Separator;
+         Result := Path.Prefix & OS_Separator;
       end if;
 
       for I in 1 .. Path.Elements.Last_Index loop
          Result := Result & Path.Elements.Element (I);
          if I < Path.Elements.Last_Index then
-            Result := Result & Separator;
+            Result := Result & OS_Separator;
          end if;
       end loop;
 

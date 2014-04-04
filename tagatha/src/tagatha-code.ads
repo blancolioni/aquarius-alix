@@ -7,7 +7,7 @@ package Tagatha.Code is
 
    procedure Put_Line (A    : in out Assembly;
                        Line : in     String)
-      is abstract;
+   is abstract;
 
    type Translator is abstract tagged private;
 

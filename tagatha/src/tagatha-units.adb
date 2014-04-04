@@ -173,10 +173,10 @@ package body Tagatha.Units is
       New_Value : constant Tagatha_Data := (Integer_Data, Size, Value);
    begin
       case Unit.Current_Segment is
-      when Executable | Read_Only =>
-         Unit.Unit.Read_Only_Segment.Append (New_Value);
-      when Read_Write =>
-         Unit.Unit.Read_Write_Segment.Append (New_Value);
+         when Executable | Read_Only =>
+            Unit.Unit.Read_Only_Segment.Append (New_Value);
+         when Read_Write =>
+            Unit.Unit.Read_Write_Segment.Append (New_Value);
       end case;
       Increment_Address (Unit);
    end Data;
@@ -662,14 +662,15 @@ package body Tagatha.Units is
                           Unit.Argument_Words,
                           Unit.Frame_Words);
       for I in Unit.Unit.Transfers.all'Range loop
+         if I = Unit.Unit.Transfers'Last
+           and then Unit.Last_Label /= Tagatha.Labels.No_Label
+         then
+            Target.Label (File_Assembly_Type'Class (File),
+                          Unit.Last_Label);
+         end if;
          Target.Encode (File_Assembly_Type'Class (File),
                         Unit.Unit.Transfers (I));
       end loop;
-
-      if Unit.Last_Label /= Tagatha.Labels.No_Label then
-         Target.Label (File_Assembly_Type'Class (File),
-                       Unit.Last_Label);
-      end if;
 
       Target.End_Frame (File_Assembly_Type'Class (File),
                         Unit.Argument_Words,

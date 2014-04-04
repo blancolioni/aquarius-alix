@@ -59,6 +59,8 @@ package Aquarius.Programs is
    procedure Create_Symbol_Table (Tree : in out Program_Tree_Type);
    function Symbol_Table (Tree : Program_Tree_Type)
                          return Aquarius.Entries.Symbol_Table;
+   procedure Set_Symbol_Table (Tree  : in out Program_Tree_Type;
+                               Table : Aquarius.Entries.Symbol_Table);
 
    function Program_Root (Item : Program_Tree_Type'Class)
                          return Program_Tree;
@@ -95,12 +97,12 @@ package Aquarius.Programs is
    --  Finds all named children of Item and concatenates their text
    --  representations
 
+   function Chosen_Tree (Item : not null access Program_Tree_Type)
+                        return Program_Tree;
    --  Chosen_Tree: Item must refer to a choice tree
    --  (not counting single-item sequence children).
    --  Return the first named child of the choice that
    --  was made.
-   function Chosen_Tree (Item : not null access Program_Tree_Type)
-                        return Program_Tree;
 
    overriding
    function Has_Named_Property (Item : Program_Tree_Type;
@@ -120,7 +122,11 @@ package Aquarius.Programs is
    function Layout_Start_Column (Item : Program_Tree_Type)
                                   return Aquarius.Layout.Count;
    function Layout_End_Column (Item : Program_Tree_Type)
-                                return Aquarius.Layout.Count;
+                               return Aquarius.Layout.Count;
+   function Contains_Position (Item : Program_Tree_Type;
+                               Position : Aquarius.Layout.Position)
+                               return Boolean;
+
    procedure Set_Layout_Position (Item : in out Program_Tree_Type;
                                   Pos  : in     Aquarius.Layout.Position);
 
@@ -137,6 +143,13 @@ package Aquarius.Programs is
    function Find_Node_At (Parent   : not null access Program_Tree_Type'Class;
                           Location : in     Aquarius.Source.Source_Position)
                          return Program_Tree;
+
+   function Find_Node_Containing
+     (Top      : not null access Program_Tree_Type'Class;
+      Location : in     Aquarius.Layout.Position)
+      return Program_Tree;
+   --  Find a child of Top which contains the given Location and return it.
+   --  Return null if no such child exists.
 
    function Vertical_Gap_Before (Item : not null access Program_Tree_Type)
                                 return Aquarius.Layout.Count;
@@ -172,6 +185,10 @@ package Aquarius.Programs is
    function Get_Token (Item : Program_Tree_Type'Class)
                       return Aquarius.Tokens.Token;
 
+   function Is_Choice
+     (Item : Program_Tree_Type)
+     return Boolean;
+
    function Is_Comment
      (Item : Program_Tree_Type)
      return Boolean;
@@ -187,6 +204,15 @@ package Aquarius.Programs is
    function Is_Separator
      (Item : Program_Tree_Type)
      return Boolean;
+
+   function Scan_Terminal
+     (Start : not null access Program_Tree_Type'Class;
+      Count : Integer)
+      return Program_Tree
+   with Pre => Start.Is_Terminal;
+   --  Scan /Count/ terminals forward (if Count > 0) or backward
+   --  (if Count < 0).  If Count = 0 then Start will be returned
+   --  Start must be a terminal
 
    function Has_Space_After
      (Item : Program_Tree_Type)
@@ -216,8 +242,6 @@ package Aquarius.Programs is
    function Cross_Reference_Name
      (Item : Program_Tree_Type'Class)
       return Program_Tree;
-
-   --  procedure Debug_Dump_Program (Item : Program_Tree);
 
    procedure Set_Error (Item  : in out Program_Tree_Type;
                         Value : in Boolean);

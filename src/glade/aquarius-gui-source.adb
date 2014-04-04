@@ -16,6 +16,8 @@ with Gtk.Text_Buffer;
 with Gtk.Text_Iter;
 with Gtk.Text_View;
 
+with Gtk.Widget;
+
 with Aquarius.Keys;
 with Aquarius.Layout;
 with Aquarius.Rendering.GUI;
@@ -43,12 +45,12 @@ package body Aquarius.GUI.Source is
    procedure Create_Source_View
      (Buffer : Aquarius.Buffers.Aquarius_Buffer);
 
-   function To_Aquarius_Key (Event : Gdk.Event.Gdk_Event_Key)
+   function To_Aquarius_Key (Event : Gdk.Event.Gdk_Event)
                             return Aquarius.Keys.Aquarius_Key;
 
    function Handle_Key_Press
      (View   : access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Event  : in     Gdk.Event.Gdk_Event_Key;
+      Event  : in     Gdk.Event.Gdk_Event;
       Buffer : in     Aquarius.Buffers.Aquarius_Buffer)
      return Boolean;
 
@@ -56,6 +58,16 @@ package body Aquarius.GUI.Source is
       new Gtk.Handlers.User_Return_Callback
      (Gtk.Text_View.Gtk_Text_View_Record, Boolean,
       Aquarius.Buffers.Aquarius_Buffer);
+
+   procedure Handle_Cursor_Movement
+     (Widget : access Gtk.Text_Buffer.Gtk_Text_Buffer_Record'Class;
+      Event  : in Gdk.Event.Gdk_Event;
+      Buffer : in     Aquarius.Buffers.Aquarius_Buffer);
+
+   package Cursor_Movement_Callback is
+     new Gtk.Handlers.User_Callback
+       (Gtk.Text_Buffer.Gtk_Text_Buffer_Record,
+        Aquarius.Buffers.Aquarius_Buffer);
 
    ------------------------
    -- Create_Source_View --
@@ -79,7 +91,7 @@ package body Aquarius.GUI.Source is
       Gtk.Text_View.Gtk_New (Text_View, Text_Buffer);
       Scrolled.Add (Text_View);
       Key_Press_Callback.Connect
-        (Text_View, "key_press_event",
+        (Text_View, Gtk.Widget.Signal_Key_Press_Event,
          Key_Press_Callback.To_Marshaller (Handle_Key_Press'Access),
          Buffer);
       Text_View.Modify_Font (Aquarius.GUI.Text.Default_Font);
@@ -96,8 +108,34 @@ package body Aquarius.GUI.Source is
       Text_View.Grab_Focus;
       Source_Info.Append ((Text_Buffer => Text_View.Get_Buffer,
                            Text_View   => Text_View));
+      Cursor_Movement_Callback.Connect
+        (Text_Buffer, "notify::cursor-position",
+         Cursor_Movement_Callback.To_Marshaller
+           (Handle_Cursor_Movement'Access),
+         Buffer);
 
    end Create_Source_View;
+
+   ----------------------------
+   -- Handle_Cursor_Movement --
+   ----------------------------
+
+   procedure Handle_Cursor_Movement
+     (Widget : access Gtk.Text_Buffer.Gtk_Text_Buffer_Record'Class;
+      Event  : in Gdk.Event.Gdk_Event;
+      Buffer : in     Aquarius.Buffers.Aquarius_Buffer)
+   is
+      pragma Unreferenced (Event);
+      use Aquarius.Layout;
+      use type Aquarius.Keys.Aquarius_Key;
+      Cursor_Iter   : Gtk.Text_Iter.Gtk_Text_Iter;
+      Line, Col     : Gint;
+   begin
+      Widget.Get_Iter_At_Mark (Cursor_Iter, Widget.Get_Insert);
+      Line := Gtk.Text_Iter.Get_Line (Cursor_Iter);
+      Col  := Gtk.Text_Iter.Get_Line_Offset (Cursor_Iter);
+      Buffer.Set_Point ((Count (Line) + 1, Count (Col) + 1));
+   end Handle_Cursor_Movement;
 
    ----------------------
    -- Handle_Key_Press --
@@ -105,27 +143,20 @@ package body Aquarius.GUI.Source is
 
    function Handle_Key_Press
      (View   : access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Event  : in     Gdk.Event.Gdk_Event_Key;
+      Event  : in     Gdk.Event.Gdk_Event;
       Buffer : in     Aquarius.Buffers.Aquarius_Buffer)
      return Boolean
    is
-      use Aquarius.Layout;
+      pragma Unreferenced (View);
       use type Aquarius.Keys.Aquarius_Key;
       Key : constant Aquarius.Keys.Aquarius_Key :=
-        To_Aquarius_Key (Event);
-      TB  : constant Gtk.Text_Buffer.Gtk_Text_Buffer :=
-        View.Get_Buffer;
-      Cursor_Iter   : Gtk.Text_Iter.Gtk_Text_Iter;
-      Line, Col     : Gint;
+              To_Aquarius_Key (Event);
+      Handled : Boolean := False;
    begin
-      TB.Get_Iter_At_Mark (Cursor_Iter, TB.Get_Insert);
-      Line := Gtk.Text_Iter.Get_Line (Cursor_Iter);
-      Col  := Gtk.Text_Iter.Get_Line_Offset (Cursor_Iter);
-
       if Key /= Aquarius.Keys.Null_Key then
-         return Buffer.On_Key ((Count (Line) + 1, Count (Col) + 1), Key);
+         Handled := Buffer.On_Key (Key);
       end if;
-      return True;
+      return Handled;
    end Handle_Key_Press;
 
    ----------------
@@ -217,7 +248,7 @@ package body Aquarius.GUI.Source is
    -- To_Aquarius_Key --
    ---------------------
 
-   function To_Aquarius_Key (Event : Gdk.Event.Gdk_Event_Key)
+   function To_Aquarius_Key (Event : Gdk.Event.Gdk_Event)
                             return Aquarius.Keys.Aquarius_Key
    is
       use Gdk.Types, Gdk.Types.Keysyms;

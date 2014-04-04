@@ -187,10 +187,16 @@ package body Ada_Plugin.Generated is
                                                                                      Child_Actionable : not null access Aquarius.Actions.Actionable'Class);
       procedure Actionable_Function_Specification_After_Defining_Program_Unit_Name (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
                                                                                     Child_Actionable : not null access Aquarius.Actions.Actionable'Class);
+      procedure Actionable_Function_Specification_After_String_Literal (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
+                                                                        Child_Actionable : not null access Aquarius.Actions.Actionable'Class);
       procedure Actionable_Function_Specification_Before_Formal_Argument_Spec (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
                                                                                Child_Actionable : not null access Aquarius.Actions.Actionable'Class);
       procedure Actionable_Procedure_Specification_Before_Formal_Argument_Spec (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
                                                                                 Child_Actionable : not null access Aquarius.Actions.Actionable'Class);
+      procedure Actionable_Function_Specification_After_Formal_Argument_Spec (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
+                                                                              Child_Actionable : not null access Aquarius.Actions.Actionable'Class);
+      procedure Actionable_Procedure_Specification_After_Formal_Argument_Spec (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
+                                                                               Child_Actionable : not null access Aquarius.Actions.Actionable'Class);
       procedure Actionable_Formal_Argument_Spec_Before_Formal_Argument (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
                                                                         Child_Actionable : not null access Aquarius.Actions.Actionable'Class);
       procedure Actionable_Formal_Argument_After
@@ -199,6 +205,12 @@ package body Ada_Plugin.Generated is
                                                                          Child_Actionable : not null access Aquarius.Actions.Actionable'Class);
       procedure Actionable_Procedure_Declaration_After
         (Target_Actionable : not null access Aquarius.Actions.Actionable'Class);
+      procedure Actionable_Function_Declaration_After
+        (Target_Actionable : not null access Aquarius.Actions.Actionable'Class);
+      procedure Actionable_Procedure_Declaration_Before_Subprogram_Body (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
+                                                                         Child_Actionable : not null access Aquarius.Actions.Actionable'Class);
+      procedure Actionable_Function_Declaration_Before_Subprogram_Body (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
+                                                                        Child_Actionable : not null access Aquarius.Actions.Actionable'Class);
    end Ch06;
    package Ch07 is
       procedure Actionable_Package_Spec_After_Defining_Package_Name (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
@@ -746,6 +758,13 @@ package body Ada_Plugin.Generated is
            (Target_Actionable), Aquarius.Programs.Program_Tree
            (Child_Actionable));
       end Actionable_Function_Specification_After_Defining_Program_Unit_Name;
+      procedure Actionable_Function_Specification_After_String_Literal (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
+                                                                        Child_Actionable : not null access Aquarius.Actions.Actionable'Class) is
+      begin
+         Ada_Plugin.Ch06.Procedure_Spec_After_Defining_Name (Aquarius.Programs.Program_Tree
+           (Target_Actionable), Aquarius.Programs.Program_Tree
+           (Child_Actionable));
+      end Actionable_Function_Specification_After_String_Literal;
       procedure Actionable_Function_Specification_Before_Formal_Argument_Spec (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
                                                                                Child_Actionable : not null access Aquarius.Actions.Actionable'Class) is
       begin
@@ -760,6 +779,20 @@ package body Ada_Plugin.Generated is
            (Target_Actionable), Aquarius.Programs.Program_Tree
            (Child_Actionable));
       end Actionable_Procedure_Specification_Before_Formal_Argument_Spec;
+      procedure Actionable_Function_Specification_After_Formal_Argument_Spec (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
+                                                                              Child_Actionable : not null access Aquarius.Actions.Actionable'Class) is
+      begin
+         Ada_Plugin.Ch06.Spec_After_Arguments (Aquarius.Programs.Program_Tree
+           (Target_Actionable), Aquarius.Programs.Program_Tree
+           (Child_Actionable));
+      end Actionable_Function_Specification_After_Formal_Argument_Spec;
+      procedure Actionable_Procedure_Specification_After_Formal_Argument_Spec (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
+                                                                               Child_Actionable : not null access Aquarius.Actions.Actionable'Class) is
+      begin
+         Ada_Plugin.Ch06.Spec_After_Arguments (Aquarius.Programs.Program_Tree
+           (Target_Actionable), Aquarius.Programs.Program_Tree
+           (Child_Actionable));
+      end Actionable_Procedure_Specification_After_Formal_Argument_Spec;
       procedure Actionable_Formal_Argument_Spec_Before_Formal_Argument (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
                                                                         Child_Actionable : not null access Aquarius.Actions.Actionable'Class) is
       begin
@@ -786,6 +819,26 @@ package body Ada_Plugin.Generated is
          Ada_Plugin.Ch06.Procedure_Declaration_After (Aquarius.Programs.Program_Tree
            (Target_Actionable));
       end Actionable_Procedure_Declaration_After;
+      procedure Actionable_Function_Declaration_After
+        (Target_Actionable : not null access Aquarius.Actions.Actionable'Class) is
+      begin
+         Ada_Plugin.Ch06.Function_Declaration_After (Aquarius.Programs.Program_Tree
+           (Target_Actionable));
+      end Actionable_Function_Declaration_After;
+      procedure Actionable_Procedure_Declaration_Before_Subprogram_Body (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
+                                                                         Child_Actionable : not null access Aquarius.Actions.Actionable'Class) is
+      begin
+         Ada_Plugin.Ch06.Subprogram_Before_Body (Aquarius.Programs.Program_Tree
+           (Target_Actionable), Aquarius.Programs.Program_Tree
+           (Child_Actionable));
+      end Actionable_Procedure_Declaration_Before_Subprogram_Body;
+      procedure Actionable_Function_Declaration_Before_Subprogram_Body (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
+                                                                        Child_Actionable : not null access Aquarius.Actions.Actionable'Class) is
+      begin
+         Ada_Plugin.Ch06.Subprogram_Before_Body (Aquarius.Programs.Program_Tree
+           (Target_Actionable), Aquarius.Programs.Program_Tree
+           (Child_Actionable));
+      end Actionable_Function_Declaration_Before_Subprogram_Body;
    end Ch06;
    package body Ch07 is
       procedure Actionable_Package_Spec_After_Defining_Package_Name (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
@@ -1069,6 +1122,9 @@ package body Ada_Plugin.Generated is
                               Aquarius.After,
                               Ch06.Actionable_Function_Specification_After_Defining_Program_Unit_Name'access);
       Plugin.Register_Action ("function_specification",
+                              "string_literal", Check, Aquarius.After,
+                              Ch06.Actionable_Function_Specification_After_String_Literal'access);
+      Plugin.Register_Action ("function_specification",
                               "formal_argument_spec", Check,
                               Aquarius.Before,
                               Ch06.Actionable_Function_Specification_Before_Formal_Argument_Spec'access);
@@ -1076,6 +1132,14 @@ package body Ada_Plugin.Generated is
                               "formal_argument_spec", Check,
                               Aquarius.Before,
                               Ch06.Actionable_Procedure_Specification_Before_Formal_Argument_Spec'access);
+      Plugin.Register_Action ("function_specification",
+                              "formal_argument_spec", Check,
+                              Aquarius.After,
+                              Ch06.Actionable_Function_Specification_After_Formal_Argument_Spec'access);
+      Plugin.Register_Action ("procedure_specification",
+                              "formal_argument_spec", Check,
+                              Aquarius.After,
+                              Ch06.Actionable_Procedure_Specification_After_Formal_Argument_Spec'access);
       Plugin.Register_Action ("formal_argument_spec",
                               "formal_argument", Check,
                               Aquarius.Before,
@@ -1088,6 +1152,17 @@ package body Ada_Plugin.Generated is
       Plugin.Register_Action ("procedure_declaration", Check,
                               Aquarius.After,
                               Ch06.Actionable_Procedure_Declaration_After'access);
+      Plugin.Register_Action ("function_declaration", Check,
+                              Aquarius.After,
+                              Ch06.Actionable_Function_Declaration_After'access);
+      Plugin.Register_Action ("procedure_declaration",
+                              "subprogram_body", Check,
+                              Aquarius.Before,
+                              Ch06.Actionable_Procedure_Declaration_Before_Subprogram_Body'access);
+      Plugin.Register_Action ("function_declaration",
+                              "subprogram_body", Check,
+                              Aquarius.Before,
+                              Ch06.Actionable_Function_Declaration_Before_Subprogram_Body'access);
       Plugin.Register_Action ("package_spec", "defining_package_name",
                               Check, Aquarius.After,
                               Ch07.Actionable_Package_Spec_After_Defining_Package_Name'access);

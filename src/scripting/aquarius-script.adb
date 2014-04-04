@@ -7,26 +7,11 @@ package body Aquarius.Script is
    ------------
 
    procedure Append (Script : in out Root_Aquarius_Script'Class;
-                     Item   : in     Root_Script_Element'Class)
+                     Item   : not null access Root_Script_Element'Class)
    is
    begin
       Script.Elements.Append (Item);
    end Append;
-
-   -----------------
-   -- Bind_Object --
-   -----------------
-
-   function Bind_Object (Name   : String;
-                         Item   : not null access Root_Aquarius_Object'Class)
-                        return Environment_Entry
-   is
-   begin
-      return new Bound_Entry'
-        (Root_Aquarius_Object with
-           Bound_Name => Ada.Strings.Unbounded.To_Unbounded_String (Name),
-           Bound_Value => Item);
-   end Bind_Object;
 
    -------------
    -- Execute --
@@ -39,8 +24,13 @@ package body Aquarius.Script is
    is
       Env : Script_Environment;
    begin
-      Insert (Env, Environment_Entry (Parent));
-      Insert (Env, Environment_Entry (Node));
+      if Parent /= null then
+         Insert (Env, "parent", (Aquarius_Object_Entry,
+                 Root_Aquarius_Object'Class (Parent.all)'Access));
+      end if;
+      Insert (Env, "node", (Aquarius_Object_Entry,
+              Root_Aquarius_Object'Class (Node.all)'Access));
+      Insert (Env, "path", (String_Entry, Script.Path));
       for Element of Script.Elements loop
          Element.Execute (Env);
       end loop;
@@ -53,7 +43,7 @@ package body Aquarius.Script is
 
    function Find (Env  : Script_Environment;
                   Name : String)
-                 return Environment_Entry
+                  return Environment_Entry
    is
       Key : constant Ada.Strings.Unbounded.Unbounded_String :=
         Ada.Strings.Unbounded.To_Unbounded_String (Name);
@@ -68,7 +58,7 @@ package body Aquarius.Script is
             if Std.Map.Contains (Key) then
                return Std.Map.Element (Key);
             else
-               return null;
+               return (Entry_Type => Null_Entry);
             end if;
          end;
       end if;
@@ -79,10 +69,11 @@ package body Aquarius.Script is
    ------------
 
    procedure Insert (Env  : in out Script_Environment;
+                     Name : in     String;
                      Item : in     Environment_Entry)
    is
    begin
-      Env.Map.Insert (Ada.Strings.Unbounded.To_Unbounded_String (Item.Name),
+      Env.Map.Insert (Ada.Strings.Unbounded.To_Unbounded_String (Name),
                       Item);
    end Insert;
 
@@ -96,24 +87,18 @@ package body Aquarius.Script is
       return Ada.Strings.Unbounded.To_String (Item.Name);
    end Name;
 
-   ----------
-   -- Name --
-   ----------
-
-   overriding
-   function Name (Item : Bound_Entry) return String is
-   begin
-      return Ada.Strings.Unbounded.To_String (Item.Bound_Name);
-   end Name;
-
    ----------------
    -- New_Script --
    ----------------
 
-   function New_Script (Name : String) return Aquarius_Script is
+   function New_Script (Name : String;
+                        Path : String)
+                        return Aquarius_Script
+   is
       Result : constant Aquarius_Script := new Root_Aquarius_Script;
    begin
       Result.Name := Ada.Strings.Unbounded.To_Unbounded_String (Name);
+      Result.Path := Ada.Strings.Unbounded.To_Unbounded_String (Path);
       return Result;
    end New_Script;
 
@@ -122,10 +107,11 @@ package body Aquarius.Script is
    -------------
 
    procedure Replace (Env  : in out Script_Environment;
+                      Name : in     String;
                       Item : in     Environment_Entry)
    is
       Key : constant Ada.Strings.Unbounded.Unbounded_String :=
-        Ada.Strings.Unbounded.To_Unbounded_String (Item.Name);
+        Ada.Strings.Unbounded.To_Unbounded_String (Name);
       Element : constant Environment_Maps.Cursor :=
         Env.Map.Find (Key);
    begin

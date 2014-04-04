@@ -1,0 +1,126 @@
+top_level = compilation_unit
+case_sensitive = false
+
+identifier         ::= standard ada_identifier
+numeric_literal    ::= standard ada_numeric_literal
+character_literal  ::= standard ada_character_literal
+string_literal     ::= standard ada_string_literal
+delimiter          ::= delimiters "&()+,;|"
+symbol             ::= standard ada_symbol
+comment            ::= standard ada_comment
+
+format sequence_of_statements indented_child
+format actual_argument_list soft_new_line
+
+format ';' no_space_before no_space_after new_line_after
+format '.' no_space_before no_space_after
+format '(' space_before no_space_after
+format ')' no_space_before space_after
+format ',' no_space_before space_after
+format ''' no_space_before no_space_after
+format ':=' space_before space_after soft_new_line
+
+format 'is' new_line_after
+
+compilation_unit ::= sequence_of_statements
+
+sequence_of_statements ::= { statement ';' }
+
+statement ::= for_loop_statement | case_statement | if_statement | assignment_statement
+            | procedure_call_statement | declare_statement | null_statement
+
+null_statement ::= 'null'
+
+assignment_statement ::= object_reference ':=' expression
+
+procedure_call_statement ::= object_reference
+
+declare_statement ::= 'declare' declaration
+
+declaration ::= object_declaration
+
+object_declaration ::= identifier ':' [ 'constant' ] qualified_identifier [ ':=' expression ]
+
+if_statement ::= 'if' expression 'then' sequence_of_statements
+                 { 'elsif' expression 'then' sequence_of_statements }
+                 [ 'else' sequence_of_statements ]
+                 'end' 'if'
+
+case_statement ::= 'case' expression 'is' < case_option > 'end' 'case'
+
+case_option ::= 'when' identifier '=>' sequence_of_statements
+
+for_loop_statement ::=
+   for_all_loop
+ | for_tree_loop
+ | iterator_loop
+
+for_all_loop ::=
+   'for' 'all' loop_statement
+
+for_tree_loop ::=
+   'for' object_reference loop_statement
+   
+iterator_loop ::=
+   'for' identifier 'of' object_reference loop_statement
+   
+loop_statement ::= 'loop' sequence_of_statements 'end' 'loop'
+
+qualified_identifier ::= < identifier / '.' >
+
+expression ::=
+    relation { boolean_operator relation }
+
+relation ::=
+	simple_expression [ relational_operator simple_expression ]
+
+simple_expression ::=
+    [ unary_adding_operator ] term { binary_adding_operator term }
+
+term ::= factor { multiplying_operator factor }
+
+factor ::= primary
+       | unary_primary_operator primary
+
+primary ::= numeric_literal | string_literal : string
+          | object_reference | tree_reference
+          | 'null' | parenthesised_expression
+	      | if_expression | character_literal
+
+parenthesised_expression ::= '(' expression ')'
+
+if_expression ::= 
+  '(' 'if' expression 'then' expression { 'elsif' expression 'then' expression } 'else' expression ')'
+  
+boolean_operator ::=
+	'and' | 'and' 'then' | 'or' | 'or' 'else' | 'xor'
+
+relational_operator ::= '=' | '/=' | '<' | '<=' | '>' | '>='
+
+binary_adding_operator ::= '+' | '-' | '&'
+
+unary_adding_operator ::= '+' | '-'
+
+unary_primary_operator ::= 'abs' | 'not'
+
+multiplying_operator ::= '*' | '/' | 'mod' | 'rem'
+
+object_reference ::= explicit_object_reference | implicit_object_reference
+
+explicit_object_reference ::= identifier { name_qualifier }
+
+implicit_object_reference ::= < name_qualifier >
+
+tree_reference ::= '/' < identifier / '/' >
+
+name_qualifier ::= record_selector
+                 | subtree_selector
+                 | actual_argument_list
+
+subtree_selector ::= '/' identifier
+
+record_selector ::= '.' identifier
+
+actual_argument_list ::= '(' < actual_argument / ','> ')'
+
+actual_argument ::= expression

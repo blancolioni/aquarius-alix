@@ -17,6 +17,10 @@ package Aquarius.Configuration is
    function Get_Child   (Position : Cursor;
                          Index    : Positive)
                         return Cursor;
+   function Find_Child (Start       : Cursor;
+                        Child_Name  : String)
+                       return Cursor;
+
    function Get_Name    (Position : Cursor) return String;
 
    function Get_Value (Position      : Cursor;

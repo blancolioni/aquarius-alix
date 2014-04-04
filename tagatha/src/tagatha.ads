@@ -24,6 +24,9 @@ package Tagatha is
       Op_Negate, Op_Complement, Op_Test,
       Op_Dereference);
 
+   subtype Multiplication_Operator is
+     Tagatha_Operator range Op_Mul .. Op_Mod;
+
    subtype Zero_Argument_Operator is
      Tagatha_Operator range Op_Nop .. Op_Nop;
 

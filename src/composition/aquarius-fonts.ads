@@ -41,6 +41,8 @@ package Aquarius.Fonts is
    procedure Set_Background (Font   : in out Aquarius_Font;
                              Colour : in     Aquarius.Colours.Aquarius_Colour);
 
+   function From_RGB (R, G, B : Colour_Range) return Aquarius_Colour;
+
 private
 
    type Aquarius_Font is

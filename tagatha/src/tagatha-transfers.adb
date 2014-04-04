@@ -435,7 +435,7 @@ package body Tagatha.Transfers is
       use type Tagatha.Labels.Tagatha_Label;
       use type Tagatha.Temporaries.Temporary;
    begin
-      if Left.Op /= Right.Op or else Left.Modifiers /= Right.Modifiers then
+      if Left.Op /= Right.Op then
          return False;
       else
          case Left.Op is

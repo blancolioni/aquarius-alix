@@ -57,6 +57,64 @@ package body Ada_Plugin.Ch06 is
 
    end Formal_Argument_After;
 
+   --------------------------------
+   -- Function_Declaration_After --
+   --------------------------------
+
+   procedure Function_Declaration_After
+     (Function_Declaration : Program_Tree)
+   is
+      Spec : constant Program_Tree :=
+               Function_Declaration.Program_Child
+                 ("function_specification");
+   begin
+      if Function_Declaration.Program_Child ("subprogram_body") /= null then
+         Spec.Get_Entry.Set_Implementation (Function_Declaration);
+      end if;
+
+   end Function_Declaration_After;
+
+   -------------------------------------------------
+   -- Function_Spec_After_Defining_String_Literal --
+   -------------------------------------------------
+
+   procedure Function_Spec_After_Defining_String_Literal
+     (Function_Spec, String_Literal  : Program_Tree)
+   is
+      use Aquarius.Entries;
+      Function_Entry : Aquarius.Entries.Table_Entry;
+      Compilation_Unit : constant Program_Tree :=
+        Program_Tree (Function_Spec.Property
+                      (Plugin.Compilation_Unit_Property));
+   begin
+
+      Function_Entry :=
+        Aquarius.Entries.Objects.New_Object_Entry
+        (String_Literal.Standard_Text,
+         Function_Spec,
+         Function_Spec.Get_Type,
+         Aquarius.Values.No_Value,
+         True);
+      Function_Entry.Set_Display_Name (String_Literal.Text);
+
+      Function_Spec.Set_Entry (Function_Entry);
+
+      if not Compilation_Unit.Has_Entry then
+         Compilation_Unit.Set_Entry (Function_Entry);
+      end if;
+
+      Compilation_Unit.Symbol_Table.Insert (Function_Entry);
+
+      declare
+         Project : constant Aquarius.Projects.Aquarius_Project :=
+                     Aquarius.Trees.Properties.Get_Project
+                       (Compilation_Unit.all);
+      begin
+         Project.Add_Entry (Function_Entry);
+      end;
+
+   end Function_Spec_After_Defining_String_Literal;
+
    --------------------------------------------------
    -- Function_Specification_After_Type_Indication --
    --------------------------------------------------
@@ -87,6 +145,10 @@ package body Ada_Plugin.Ch06 is
       Spec.Create_Symbol_Table;
    end Function_Specification_Before;
 
+   ---------------------------------
+   -- Procedure_Declaration_After --
+   ---------------------------------
+
    procedure Procedure_Declaration_After
      (Procedure_Declaration : Program_Tree)
    is
@@ -97,6 +159,7 @@ package body Ada_Plugin.Ch06 is
       if Procedure_Declaration.Program_Child ("subprogram_body") /= null then
          Spec.Get_Entry.Set_Implementation (Procedure_Declaration);
       end if;
+
    end Procedure_Declaration_After;
 
    ----------------------------------------
@@ -109,10 +172,12 @@ package body Ada_Plugin.Ch06 is
       use Aquarius.Entries;
 
       Reference     : constant Program_Tree :=
-        Procedure_Name.Program_Child ("defining_qualified_reference");
+                        Procedure_Name.Program_Child
+                          ("defining_qualified_reference");
       Defining_Name : constant Aquarius.Programs.Program_Tree :=
-        Program_Tree
-        (Reference.Property (Plugin.Last_Identifier_Property));
+                        Program_Tree
+                          (Reference.Property
+                             (Plugin.Last_Identifier_Property));
       Procedure_Entry : Aquarius.Entries.Table_Entry;
       Parent_Entry  : Aquarius.Entries.Table_Entry;
       pragma Warnings (Off, Parent_Entry);
@@ -165,6 +230,31 @@ package body Ada_Plugin.Ch06 is
       Spec.Create_Symbol_Table;
    end Procedure_Specification_Before;
 
+   --------------------------
+   -- Spec_After_Arguments --
+   --------------------------
+
+   procedure Spec_After_Arguments
+     (Spec : Program_Tree;
+      Args : Program_Tree)
+   is
+      pragma Unreferenced (Args);
+
+      use Aquarius.Entries;
+
+      Stack_Object : constant Entry_Constraint'Class :=
+                       Create_Proposition_Constraint
+                         (Aquarius.Entries.Objects.Is_Stack_Object'Access);
+      Entries      : constant Array_Of_Entries :=
+                       Spec.Symbol_Table.Search (Stack_Object);
+      Offset  : Positive := 1;
+   begin
+      for I in Entries'Range loop
+         Aquarius.Entries.Objects.Set_Frame_Offset (Entries (I), Offset);
+         Offset := Offset + 1;
+      end loop;
+   end Spec_After_Arguments;
+
    ---------------------------
    -- Spec_Before_Arguments --
    ---------------------------
@@ -178,5 +268,18 @@ package body Ada_Plugin.Ch06 is
          Args.Set_Type (Spec.Get_Type);
       end if;
    end Spec_Before_Arguments;
+
+   ----------------------------
+   -- Subprogram_Before_Body --
+   ----------------------------
+
+   procedure Subprogram_Before_Body
+     (Spec       : Program_Tree;
+      Subprogram : Program_Tree)
+   is
+   begin
+      Subprogram.Set_Symbol_Table
+        (Spec.First_Program_Child.Symbol_Table);
+   end Subprogram_Before_Body;
 
 end Ada_Plugin.Ch06;

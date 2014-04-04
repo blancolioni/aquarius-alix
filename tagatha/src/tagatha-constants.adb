@@ -42,6 +42,27 @@ package body Tagatha.Constants is
       return Item.Label_Value;
    end Get_Label;
 
+   ---------------
+   -- Get_Octet --
+   ---------------
+
+   function Get_Octet (From_Constant : Tagatha_Constant;
+                       Octet_Index   : Positive)
+                       return Natural
+   is
+   begin
+      case From_Constant.Value_Type is
+         when V_Integer =>
+            return Natural (From_Constant.Integer_Value
+                            / (2 ** ((Octet_Index - 1) * 8))
+                            mod 256);
+         when V_Floating_Point =>
+            return 0;
+         when V_Label =>
+            return 0;
+      end case;
+   end Get_Octet;
+
    ----------------------
    -- Integer_Constant --
    ----------------------

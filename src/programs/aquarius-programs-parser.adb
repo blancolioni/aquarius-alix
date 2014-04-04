@@ -1,6 +1,7 @@
 --  with Ada.Text_IO;
 
 with Aquarius.Errors;
+with Aquarius.Properties;
 with Aquarius.Syntax.Checks;
 
 with Aquarius.Trees.Properties;
@@ -204,6 +205,7 @@ package body Aquarius.Programs.Parser is
       Interactive : in  Boolean;
       Run_Actions : in  Boolean := True)
    is
+      use type Aquarius.Grammars.Aquarius_Grammar;
       Start_Ambiguity : constant Ambiguity :=
         New_Ambiguity (List_Of_Ambiguities.No_Element, null, Root);
 
@@ -215,6 +217,11 @@ package body Aquarius.Programs.Parser is
                   Interactive    => Interactive,
                   Run_Actions    => Run_Actions,
                   Vertical_Space => 0);
+      if Grammar = null then
+         Context.Grammar :=
+           Aquarius.Grammars.Aquarius_Grammar
+             (Root.Property (Aquarius.Properties.Grammar_Property));
+      end if;
       Context.Ambiguities.Append (Start_Ambiguity);
    end Initialise_Parse_Context;
 
@@ -1754,24 +1761,6 @@ package body Aquarius.Programs.Parser is
 
                if not Has_Element (Other) then
 
---                    Ada.Text_IO.Put_Line
---                      (Ada.Text_IO.Standard_Error,
---                       "Resolving ambiguity because " &
---                       "no other ambiguity shares parent");
-
---                    Ada.Text_IO.Put_Line
---                      (Ada.Text_IO.Standard_Error,
---                       "   " & Aquarius.Trees.Cursors.Image (A.Location));
---
---                    Ada.Text_IO.Put_Line ("Selecting: " &
---                                            A.Top.Image);
---                    Ada.Text_IO.Put_Line ("  parent = " &
---                                            A.Parent.Image);
---                    if A.Right /= null then
---                       Ada.Text_IO.Put_Line ("  right = " &
---                                               A.Right.Image);
---                    end if;
-
                   Top_Parent := A.Parent;
 
                   Other := A.Previous;
@@ -1848,18 +1837,6 @@ package body Aquarius.Programs.Parser is
               (Aquarius.Trees.Cursors.Get_Left_Tree
                  (Context.Ambiguities.First_Element.Location));
          begin
-
---              Ada.Text_IO.Put_Line
---                (Ada.Text_IO.Standard_Error,
---                 "Update_Ambiguities: running parse actions");
---              Ada.Text_IO.Put_Line
---                (Ada.Text_IO.Standard_Error,
---                 "   Cursor location: " &
---                 Aquarius.Trees.Cursors.Image
---                   (Context.Ambiguities.First_Element.Location));
---              Ada.Text_IO.Put_Line
---                (Ada.Text_IO.Standard_Error,
---                 "   Top_Parent: " & Top_Parent.Image);
 
             Context.Grammar.Run_Action_Trigger
               (Top_Parent, Stop_At,

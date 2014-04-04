@@ -1,5 +1,5 @@
 with Ada.Directories;
-with Ada.Strings.Fixed;
+with Ada.Text_IO;
 
 with Aquarius.Actions;
 with Aquarius.Grammars.Manager;
@@ -7,8 +7,6 @@ with Aquarius.Loader;
 with Aquarius.Programs.Arrangements;
 with Aquarius.Projects;
 with Aquarius.Rendering.Manager;
-with Aquarius.Tokens;
-with Aquarius.Trees.Cursors;
 with Aquarius.Trees.Properties;
 
 --  with Aquarius.Tasks.Actions;
@@ -24,27 +22,6 @@ package body Aquarius.Buffers is
      (UI   : Aquarius.UI.Aquarius_UI;
       Grammar : Aquarius.Grammars.Aquarius_Grammar)
      return Aquarius_Buffer;
-
-   procedure Scan_Token
-     (Buffer      : not null access Aquarius_Buffer_Record'Class;
-      Text        : in     String;
-      Force       : in     Boolean;
-      Length      :    out Natural;
-      Tok         :    out Aquarius.Tokens.Token);
-
-   procedure Insert_Character
-     (Buffer : not null access Aquarius_Buffer_Record'Class;
-      Char   : in     Character);
-
-   function Check_Token
-     (Buffer : not null access Aquarius_Buffer_Record'Class;
-      Force  : in     Boolean)
-     return Boolean;
-
-   procedure Move_By_Terminal
-     (Buffer  : not null access Aquarius_Buffer_Record'Class;
-      Current : in out Aquarius.Trees.Cursors.Cursor;
-      Forward : in     Boolean);
 
    procedure Set_Program
      (Buffer  : not null access Aquarius_Buffer_Record'Class;
@@ -74,76 +51,8 @@ package body Aquarius.Buffers is
       return Boolean
    is
    begin
-      return Left.Show_Location < Right.Show_Location;
+      return Left.Name < Aquarius_Buffer (Right).Name;
    end Before;
-
-   -----------------
-   -- Check_Token --
-   -----------------
-
-   function Check_Token
-     (Buffer : not null access Aquarius_Buffer_Record'Class;
-      Force  : in     Boolean)
-      return Boolean
-   is
-      use Aquarius.Programs.Parser;
-      Tok       : Aquarius.Tokens.Token;
-      Length    : Natural;
-      Got_Token : Boolean := False;
-      Start     : constant Natural :=
-        Ada.Strings.Fixed.Index_Non_Blank
-        (Buffer.Input_Buffer (1 .. Buffer.Input_Length));
-   begin
-      if Start = 0 then
-         Buffer.Input_Length := 0;
-         return False;
-      end if;
-
-      while Buffer.Input_Length > 0 loop
-         Scan_Token (Buffer,
-                     Buffer.Input_Buffer (1 .. Buffer.Input_Length),
-                     Force, Length, Tok);
-         exit when Length = 0;
-         Got_Token := True;
-         Aquarius.Source.Set_Position
-           (Buffer.File_Position,
-            Aquarius.Source.Line_Number (Buffer.Point_Position.Line),
-            Aquarius.Source.Column_Number (Buffer.Point_Position.Column));
-
-         declare
-            use type Aquarius.Tokens.Token;
-            Text : constant String := Buffer.Input_Buffer (Start .. Length);
-         begin
-            if Buffer.Changing and then
-              Tok = Buffer.Editing_Node.Get_Token
-            then
-               Buffer.Editing_Node.Fill (Text);
-            elsif Token_OK (Tok, Buffer.File_Position, Buffer.Parsing) then
-               Parse_Token (Tok, Buffer.File_Position, Text, Buffer.Parsing);
-            else
-               Buffer.Input_Length := Buffer.Input_Length - 1;
-               Buffer.Input_Position := Buffer.Input_Position - 1;
-               exit;
-            end if;
-            Buffer.Input_Buffer (1 .. Buffer.Input_Length - Length) :=
-              Buffer.Input_Buffer (Length + 1 .. Buffer.Input_Length);
-            Buffer.Input_Length := Buffer.Input_Length - Length;
-            Buffer.Input_Position := Buffer.Input_Position - Length;
-         end;
-      end loop;
-
-      if Got_Token and then
-        not Aquarius.Programs.Parser.Is_Ambiguous (Buffer.Parsing)
-      then
-         Aquarius.Programs.Arrangements.Arrange (Buffer.Contents);
-         Render (Buffer);
-         Buffer.Buffer_UI.Update_Message_View;
-         return True;
-      else
-         return False;
-      end if;
-
-   end Check_Token;
 
    --------------------
    -- Clear_Messages --
@@ -208,31 +117,6 @@ package body Aquarius.Buffers is
    begin
       return Buffer.Grammar;
    end Grammar;
-
-   ----------------------
-   -- Insert_Character --
-   ----------------------
-
-   procedure Insert_Character
-     (Buffer : not null access Aquarius_Buffer_Record'Class;
-      Char   : in     Character)
-   is
-      use type Aquarius.Layout.Count;
-   begin
-      if not Buffer.Typing then
-         Buffer.Typing     := True;
-         Buffer.Input_Length := 0;
-         Buffer.Input_Position := 1;
-      end if;
-      Buffer.Input_Buffer
-        (Buffer.Input_Position + 1 .. Buffer.Input_Length + 1) :=
-        Buffer.Input_Buffer (Buffer.Input_Position .. Buffer.Input_Length);
-      Buffer.Input_Length := Buffer.Input_Length + 1;
-      Buffer.Input_Buffer (Buffer.Input_Position) := Char;
-      Buffer.Input_Position := Buffer.Input_Position + 1;
-      Buffer.Point_Position.Column :=
-        Buffer.Point_Position.Column + 1;
-   end Insert_Character;
 
    ----------
    -- Load --
@@ -321,94 +205,6 @@ package body Aquarius.Buffers is
    begin
       return Location.Name;
    end Location_Name;
-
-   ----------------------
-   -- Move_By_Terminal --
-   ----------------------
-
-   procedure Move_By_Terminal
-     (Buffer  : not null access Aquarius_Buffer_Record'Class;
-      Current : in out Aquarius.Trees.Cursors.Cursor;
-      Forward : in     Boolean)
-   is
-      use type Aquarius.Trees.Tree;
-      use Aquarius.Trees.Cursors;
-      use Aquarius.Programs;
-      It : Aquarius.Trees.Tree;
-
-      function Is_Filled_Terminal
-        (T : not null access constant Aquarius.Trees.Root_Tree_Type'Class)
-        return Boolean;
-
-      ------------------------
-      -- Is_Filled_Terminal --
-      ------------------------
-
-      function Is_Filled_Terminal
-        (T : not null access constant Aquarius.Trees.Root_Tree_Type'Class)
-        return Boolean
-      is
-         P : constant Program_Tree_Type'Class :=
-               Program_Tree_Type'Class (T.all);
-      begin
-         return P.Is_Terminal and then P.Text /= "";
-      end Is_Filled_Terminal;
-
-   begin
-      if Forward then
-
-         if Is_Off_Right (Current) then
-            It := Get_Left_Tree (Current).Next_Leaf;
-         else
-            It := Get_Right_Tree (Current);
-         end if;
-
-         if It /= null then
-
-            It := It.First_Leaf;
-
-         end if;
-
-         if It /= null then
-
-            It := It.Search_Leaves (Aquarius.Trees.Forewards,
-                                    Is_Filled_Terminal'Access);
-         end if;
-
-         if It /= null then
-            Current := Right_Of_Tree (It);
-            Buffer.Current_Render.Set_Point
-              (Program_Tree (It).Layout_End_Position);
-            Aquarius.Programs.Parser.Set_Cursor (Buffer.Parsing,
-                                                 Current);
-         end if;
-      else
-         if Is_Off_Left (Current) then
-            It := Get_Right_Tree (Current).Previous_Leaf;
-         else
-            It := Get_Left_Tree (Current);
-         end if;
-
-         if It /= null then
-
-            It := It.Previous_Leaf;
-
-         end if;
-
-         if It /= null then
-            It := It.Search_Leaves (Aquarius.Trees.Backwards,
-                                    Is_Filled_Terminal'Access);
-         end if;
-
-         if It /= null then
-            Current := Left_Of_Tree (It);
-            Buffer.Current_Render.Set_Point
-              (Program_Tree (It).Layout_End_Position);
-            Aquarius.Programs.Parser.Set_Cursor (Buffer.Parsing,
-                                                 Current);
-         end if;
-      end if;
-   end Move_By_Terminal;
 
    ----------
    -- Name --
@@ -550,98 +346,121 @@ package body Aquarius.Buffers is
                     Key    : in     Aquarius.Keys.Aquarius_Key)
                    return Boolean
    is
-      pragma Unreferenced (Buffer);
-      pragma Unreferenced (Key);
+      use Aquarius.Keys;
+      Handled : Boolean := True;
    begin
-      return False;
+      if Is_Character (Key) then
+         declare
+            Echo : Boolean;
+         begin
+            Buffer.Editor.Insert_Character (Get_Character (Key), Echo);
+            Handled := not Echo;
+         end;
+      elsif Raw_Key (Key) = Back_Space then
+         Buffer.Editor.Backspace;
+         Handled := False;
+      else
+         Handled := False;
+      end if;
+      return Handled;
    end On_Key;
-
-   --     use Aquarius.Keys;
-   --  begin
-   --     if Is_Character (Key) then
-   --        Buffer.Insert_Character (Get_Character (Key));
-   --        return Check_Token (Buffer, False);
-   --     elsif Raw_Key (Key) = Back_Space then
-   --        if Buffer.Input_Length > 0 then
-   --           Buffer.Input_Length := Buffer.Input_Length - 1;
-   --           return False;
-   --        else
-   --           return True;
-   --        end if;
-   --     else
-   --        declare
-   --           Handled : constant Boolean := Check_Token (Buffer, True);
-   --        begin
-   --           if Raw_Key (Key) = Tab or else Raw_Key (Key) = Left_Tab then
-   --              Move_By_Terminal (Buffer, Buffer.Point_Cursor,
-   --                                Raw_Key (Key) = Tab);
-   --              return True;
-   --           else
-   --              return Handled;
-   --           end if;
-   --        end;
-   --     end if;
-   --  end On_Key;
 
    ------------
    -- On_Key --
    ------------
 
-   function On_Key (Buffer : not null access Aquarius_Buffer_Record'Class;
-                    Pos    : in     Aquarius.Layout.Position;
-                    Key    : in     Aquarius.Keys.Aquarius_Key)
-                   return Boolean
-   is
-      use type Aquarius.Keys.Aquarius_Key;
-      use Aquarius.Layout;
-      use Aquarius.Programs;
-      Left_Terminal : constant Program_Tree :=
-        Buffer.Contents.Find_Node_At (Pos);
-   begin
-      if Buffer.Typing and then
-        Aquarius.Keys.Is_Character (Key) and then
-        Pos = Buffer.Point_Position
-      then
-         Insert_Character (Buffer,
-                           Aquarius.Keys.Get_Character (Key));
-         return Check_Token (Buffer, False);
-      end if;
-
-      declare
-         Cursor : Aquarius.Trees.Cursors.Cursor;
-      begin
-         if Left_Terminal /= null then
-            Cursor :=
-              Aquarius.Trees.Cursors.Right_Of_Tree (Left_Terminal);
-         else
-            Cursor :=
-              Aquarius.Trees.Cursors.Left_Of_Tree (Buffer.Contents);
-         end if;
-         Aquarius.Programs.Parser.Set_Cursor (Buffer.Parsing,
-                                              Cursor);
-      end;
-
-      Buffer.Input_Length := 0;
-      Buffer.Point_Position := Pos;
-
-      if Aquarius.Keys.Is_Character (Key) then
-         Insert_Character (Buffer,
-                           Aquarius.Keys.Get_Character (Key));
-         return Check_Token (Buffer, False);
-      elsif Aquarius.Keys.Raw_Key (Key) = Aquarius.Keys.Tab then
-         declare
-            Cursor : Aquarius.Trees.Cursors.Cursor :=
-              Aquarius.Programs.Parser.Get_Cursor (Buffer.Parsing);
-         begin
-            Buffer.Move_By_Terminal
-              (Cursor,
-               Forward => not Aquarius.Keys.Shift (Key));
-            return True;
-         end;
-      end if;
-
-      return False;
-   end On_Key;
+--     function On_Key (Buffer : not null access Aquarius_Buffer_Record'Class;
+--                      Pos    : in     Aquarius.Layout.Position;
+--                      Key    : in     Aquarius.Keys.Aquarius_Key)
+--                     return Boolean
+--     is
+--     begin
+--        if Aquarius.Keys.Is_Character (Key) then
+--           Buffer.Editor.Insert_Character
+--
+--        use type Aquarius.Keys.Aquarius_Key;
+--        use Aquarius.Layout;
+--        use Aquarius.Programs;
+--        Left_Terminal : constant Program_Tree :=
+--          Buffer.Contents.Find_Node_At (Pos);
+--     begin
+--        if Buffer.Typing and then
+--          Aquarius.Keys.Is_Character (Key) and then
+--          Pos = Buffer.Point_Position
+--        then
+--           Buffer.Changing := True;
+--           Insert_Character (Buffer,
+--                             Aquarius.Keys.Get_Character (Key));
+--           return Check_Token (Buffer, False);
+--        end if;
+--
+--        declare
+--           Cursor : Aquarius.Trees.Cursors.Cursor;
+--        begin
+--           if Left_Terminal /= null then
+--
+--              if Left_Terminal.Contains_Position (Pos)
+--                and then Aquarius.Keys.Is_Character (Key)
+--              then
+--                 declare
+--                    Text : constant String := Left_Terminal.Text;
+--                 begin
+--                    Buffer.Input_Length := Text'Length;
+--                    Buffer.Input_Buffer (1 .. Buffer.Input_Length) :=
+--                      Text;
+--                    Buffer.Input_Position :=
+--                 Natural (Pos.Column - Left_Terminal.Layout_Start_Column)
+--                      + 1;
+--                    Buffer.Typing := True;
+--                    Buffer.Changing := True;
+--                    Buffer.Editing_Node := Left_Terminal;
+--                    Ada.Text_IO.Put_Line
+--                      ("Buffer: "
+--                       & Buffer.Input_Buffer (1 .. Buffer.Input_Length));
+--                 end;
+--              end if;
+--
+--              Cursor :=
+--                Aquarius.Trees.Cursors.Right_Of_Tree (Left_Terminal);
+--           else
+--              Cursor :=
+--                Aquarius.Trees.Cursors.Left_Of_Tree (Buffer.Contents);
+--              Buffer.Input_Length := 0;
+--           end if;
+--
+--           Aquarius.Programs.Parser.Set_Cursor (Buffer.Parsing,
+--                                                Cursor);
+--           Ada.Text_IO.Put_Line ("Cursor: "
+--                                 & Aquarius.Trees.Cursors.Image (Cursor));
+--        end;
+--
+--        Buffer.Point_Position := Pos;
+--
+--        if Aquarius.Keys.Is_Character (Key) then
+--           Insert_Character (Buffer,
+--                             Aquarius.Keys.Get_Character (Key));
+--           return Check_Token (Buffer, False);
+--        elsif Aquarius.Keys.Raw_Key (Key) = Aquarius.Keys.Tab then
+--           declare
+--              Cursor : Aquarius.Trees.Cursors.Cursor :=
+--                Aquarius.Programs.Parser.Get_Cursor (Buffer.Parsing);
+--           begin
+--              Buffer.Move_By_Terminal
+--                (Cursor,
+--                 Forward => not Aquarius.Keys.Shift (Key));
+--              return True;
+--           end;
+--        elsif Aquarius.Keys.Raw_Key (Key) = Aquarius.Keys.Back_Space then
+--           if Buffer.Input_Length > 0 then
+--              Buffer.Input_Length := Buffer.Input_Length - 1;
+--              return False;
+--           else
+--              return True;
+--           end if;
+--        end if;
+--
+--        return False;
+--     end On_Key;
 
    -------------
    -- Program --
@@ -683,44 +502,25 @@ package body Aquarius.Buffers is
         Aquarius.Programs.Parser.Get_Cursor
         (Buffer.Parsing);
    begin
+
+      Ada.Text_IO.Put_Line ("Start render: " & Buffer.Name);
+
+      Buffer.Rendering := True;
+
       Aquarius.Programs.Arrangements.Arrange (Buffer.Contents,
                                               Cursor,
-                                              Buffer.Input_Length);
+                                              0);
+
       Aquarius.Programs.Arrangements.Render
         (Buffer.Contents,
          Aquarius.Rendering.Aquarius_Renderer (Display),
          Cursor,
-         Buffer.Input_Buffer (1 .. Buffer.Input_Length));
+         "");
+
+      Buffer.Rendering := False;
+      Ada.Text_IO.Put_Line ("Finish render: " & Buffer.Name);
+
    end Render;
-
-   ----------------
-   -- Scan_Token --
-   ----------------
-
-   procedure Scan_Token
-     (Buffer      : not null access Aquarius_Buffer_Record'Class;
-      Text        : in     String;
-      Force       : in     Boolean;
-      Length      :    out Natural;
-      Tok         :    out Aquarius.Tokens.Token)
-   is
-      Complete    : Boolean;
-      Have_Class  : Boolean;
-      Class       : Aquarius.Tokens.Token_Class;
-      First, Next : Natural := 1;
-   begin
-      Aquarius.Tokens.Scan (Buffer.Grammar.Frame, Text,
-                            False, Complete, Have_Class,
-                            Class, Tok, First, Next);
-      if (Force and then Next > 0) or else
-        (Have_Class and then Complete and then Next < Text'Length)
-      then
-         Length := Next;
-      else
-         Length := 0;
-      end if;
-
-   end Scan_Token;
 
    ------------------------
    -- Set_Current_Render --
@@ -731,9 +531,16 @@ package body Aquarius.Buffers is
       Display : not null access
       Aquarius.Rendering.Root_Aquarius_Renderer'Class)
    is
+      use type Aquarius.Programs.Editor.Program_Editor;
    begin
       Buffer.Current_Render :=
         Aquarius.Rendering.Aquarius_Renderer (Display);
+      if Buffer.Editor = null then
+         Buffer.Editor :=
+           Aquarius.Programs.Editor.Create_Editor
+             (Buffer.Contents);
+         Buffer.Editor.Add_Renderer (Buffer, Buffer.Contents);
+      end if;
    end Set_Current_Render;
 
    ---------------
@@ -743,35 +550,43 @@ package body Aquarius.Buffers is
    procedure Set_Point (Buffer : not null access Aquarius_Buffer_Record'Class;
                         Point  : in     Aquarius.Layout.Position)
    is
-      use Aquarius.Layout;
-      Right_Tree : Aquarius.Programs.Program_Tree;
+--        use Aquarius.Layout;
+--        Right_Tree : constant Aquarius.Programs.Program_Tree :=
+--                       Buffer.Contents.Find_Node_Containing (Point);
    begin
 
-      Right_Tree := Buffer.Contents.Find_Node_At (Point);
-      if Point = Buffer.Point_Position then
-         return;
-      end if;
+      Buffer.Editor.Set_Point (Point);
 
-      Aquarius.Programs.Parser.Set_Cursor
-        (Buffer.Parsing,
-         Aquarius.Trees.Cursors.Left_Of_Tree (Right_Tree));
-      Buffer.Node_Offset  := Point.Column - Right_Tree.Layout_Start_Column;
-      --  FIXME: if anything has already been typed, parse it and
-      --  insert it or create error trees
-      declare
-         Text : constant String := Right_Tree.Text;
-      begin
-         Buffer.Input_Length := Text'Length;
-         Buffer.Input_Buffer (1 .. Text'Length) := Text;
-         Buffer.Input_Position :=
-           Positive (Point.Column -
-                       Right_Tree.Layout_Start_Position.Column + 1);
-         Buffer.Changing     := True;
-         Buffer.Typing       := True;
-         Buffer.Editing_Node := Right_Tree;
-      end;
-      Buffer.Point_Position := Point;
-      Buffer.Current_Render.Set_Point (Point);
+--        if Point = Buffer.Point_Position then
+--           return;
+--        end if;
+--
+--        if Buffer.Changing then
+--           --  FIXME: if anything has already been typed, parse it and
+--           --  insert it or create error trees
+--           null;
+--        end if;
+--
+--        Ada.Text_IO.Put_Line
+--          ("Set_Point: " & Right_Tree.Image);
+--
+--        Aquarius.Programs.Parser.Set_Cursor
+--          (Buffer.Parsing,
+--           Aquarius.Trees.Cursors.Left_Of_Tree (Right_Tree));
+--
+--     Buffer.Node_Offset  := Point.Column - Right_Tree.Layout_Start_Column;
+--
+--        declare
+--           Text : constant String := Right_Tree.Text;
+--        begin
+--           Buffer.Input_Length := Text'Length;
+--           Buffer.Input_Buffer (1 .. Text'Length) := Text;
+--           Buffer.Input_Position := Positive (Buffer.Node_Offset + 1);
+--           Buffer.Typing       := True;
+--           Buffer.Editing_Node := Right_Tree;
+--        end;
+--        Buffer.Point_Position := Point;
+--        Buffer.Current_Render.Set_Point (Point);
    end Set_Point;
 
    -----------------
@@ -794,6 +609,9 @@ package body Aquarius.Buffers is
          Root         => Buffer.Contents,
          Interactive  => True);
       Buffer.Node_Offset := 0;
+--        Buffer.Editor :=
+--          Aquarius.Programs.Editor.Create_Editor
+--            (Buffer.Contents);
 
       --  Buffer.Buffer_File :=
       --    Aquarius.Source.Buffers.Buffer_File (Result);
@@ -826,6 +644,38 @@ package body Aquarius.Buffers is
       pragma Unreferenced (Start);
    begin
       Item.Render;
+   end Update;
+
+   ------------
+   -- Update --
+   ------------
+
+   overriding procedure Update
+     (Buffer  : in out Aquarius_Buffer_Record;
+      Point   : Aquarius.Trees.Cursors.Cursor;
+      Partial : String)
+   is
+   begin
+      Ada.Text_IO.Put_Line ("Start update: " & Buffer.Name);
+      Ada.Text_IO.Put_Line
+        ("  point: "
+         & Aquarius.Trees.Cursors.Image (Point));
+
+      Buffer.Rendering := True;
+
+      Aquarius.Programs.Arrangements.Arrange
+        (Item           => Buffer.Contents,
+         Point          => Point,
+         Partial_Length => Partial'Length);
+
+      Aquarius.Programs.Arrangements.Render
+        (Program  => Buffer.Contents,
+         Renderer => Buffer.Current_Render,
+         Point    => Point,
+         Partial  => Partial);
+
+      Buffer.Rendering := False;
+      Ada.Text_IO.Put_Line ("Finish update: " & Buffer.Name);
    end Update;
 
 end Aquarius.Buffers;

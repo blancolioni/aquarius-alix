@@ -2,7 +2,7 @@ with Ada.Characters.Latin_1;
 
 with Aquarius.Entries.Packages;
 with Aquarius.Errors;
-with Aquarius.VM.Values;
+with Aquarius.VM;
 
 with Ada_Plugin.App_A01;
 with Ada_Plugin.Names;
@@ -46,7 +46,7 @@ package body Ada_Plugin is
    procedure Create_Environment
      (Plugin     : not null access Ada_Plugin_Type'Class)
    is
-      use Aquarius.VM.Values;
+      use Aquarius.VM;
       use Ada.Characters.Latin_1;
    begin
       Plugin.New_Command
