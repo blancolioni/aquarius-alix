@@ -10,7 +10,7 @@ package Aquarius.Paths is
 --                          File_Name : String)
 --                          return String;
 
-   function To_Aquarius_Path (OS_Path : String) return Aquarius_Path;
+   function To_Aquarius_Path (From_OS_Path : String) return Aquarius_Path;
 
    function Join_Paths (Left, Right : Aquarius_Path) return Aquarius_Path;
 

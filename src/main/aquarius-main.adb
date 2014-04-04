@@ -135,6 +135,9 @@ begin
 
          Ada.Text_IO.Put_Line ("done");
 
+         Grammar.Run_Action_Trigger (Input,
+                                     Aquarius.Actions.Semantic_Trigger);
+
          declare
             use Aquarius.Messages;
             List : Message_List;
@@ -152,9 +155,6 @@ begin
 
          if Command_Line.Action /= "" then
             Grammar.Run_Actions (Command_Line.Action, Input);
-         else
-            Grammar.Run_Action_Trigger (Input,
-                                        Aquarius.Actions.Semantic_Trigger);
          end if;
 
          declare

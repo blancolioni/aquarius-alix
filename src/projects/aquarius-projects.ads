@@ -1,5 +1,6 @@
-with Ada.Containers.Vectors;
-with Ada.Strings.Unbounded;
+private with Ada.Containers.Indefinite_Vectors;
+private with Ada.Containers.Vectors;
+private with Ada.Strings.Unbounded;
 
 with Aquarius.Buffers;
 with Aquarius.Entries;
@@ -189,22 +190,26 @@ private
                                   Aquarius.Entries.Table_Entry,
                                   Aquarius.Entries."=");
 
+   package String_Vectors is
+     new Ada.Containers.Indefinite_Vectors (Positive, String);
+
    type Aquarius_Project_Type is
      new Root_Aquarius_Object
      and Aquarius.Programs.Root_Program_Tree_Store
    with
       record
-         Name          : Aquarius.Names.Aquarius_Name;
-         Full_Path     : Aquarius.Names.Aquarius_Name;
-         Search_Path   : Aquarius.Source.File_System.Search_Path_List;
-         Main_Source   : Aquarius.Names.Aquarius_Name;
-         Main_Buffer   : Aquarius.Buffers.Aquarius_Buffer;
-         Buffers       : Loaded_Buffer_Vector.Vector;
-         Views         : View_Vector.Vector;
-         Grammar_Names : Aquarius.Names.Name_List;
+         Name            : Aquarius.Names.Aquarius_Name;
+         Full_Path       : Aquarius.Names.Aquarius_Name;
+         Search_Path     : Aquarius.Source.File_System.Search_Path_List;
+         Main_Source     : Aquarius.Names.Aquarius_Name;
+         Main_Buffer     : Aquarius.Buffers.Aquarius_Buffer;
+         Buffers         : Loaded_Buffer_Vector.Vector;
+         Views           : View_Vector.Vector;
+         Grammar_Names   : Aquarius.Names.Name_List;
          Project_UI    : Aquarius.UI.Aquarius_UI;
-         Entries       : Project_Entries_Vector.Vector;
+         Entries         : Project_Entries_Vector.Vector;
          References    : Aquarius.References.Reference_List;
+         Pending_Actions : String_Vectors.Vector;
       end record;
 
 end Aquarius.Projects;

@@ -153,13 +153,22 @@ package Aquarius.Tokens is
       Text      : in String)
      return Token;
 
-   --  Create a token defined by the source text, such as a string,
-   --  identifier, or number
    procedure Create_Source_Token
      (Frame     : in out Token_Frame;
       Text      : in     String;
       Tok       :    out Token);
+   --  Create a token defined by the source text, such as a string,
+   --  identifier, or number
 
+   procedure Scan (Frame      : in     Token_Frame;
+                   Text       : in     String;
+                   Partial    : in     Boolean;
+                   Complete   :    out Boolean;
+                   Have_Class :    out Boolean;
+                   Class      :    out Token_Class;
+                   Tok        :    out Token;
+                   First      : in out Positive;
+                   Last       :    out Natural);
    --  Scan: scan from the beginning of Text, looking for the first
    --  token.  If a complete token is found, Complete is set to True
    --  and the class, token and the first and last index of the token
@@ -171,16 +180,6 @@ package Aquarius.Tokens is
    --  contain a full line, for example if it is being entered
    --  interactively.  If Partial is False, then the end of text
    --  will be treated as a delimiter.
-
-   procedure Scan (Frame      : in     Token_Frame;
-                   Text       : in     String;
-                   Partial    : in     Boolean;
-                   Complete   :    out Boolean;
-                   Have_Class :    out Boolean;
-                   Class      :    out Token_Class;
-                   Tok        :    out Token;
-                   First      : in out Positive;
-                   Last       :    out Natural);
 
 private
 

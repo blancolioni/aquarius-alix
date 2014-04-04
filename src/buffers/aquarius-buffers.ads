@@ -6,9 +6,11 @@ with Aquarius.Keys;
 with Aquarius.Layout;
 with Aquarius.Messages;
 with Aquarius.Programs;
+with Aquarius.Programs.Editor;
 with Aquarius.Programs.Parser;
 with Aquarius.Rendering;
 with Aquarius.Trees;
+with Aquarius.Trees.Cursors;
 with Aquarius.UI;
 
 private with Aquarius.Source;
@@ -17,6 +19,7 @@ package Aquarius.Buffers is
 
    type Aquarius_Buffer_Record is
      new Root_Aquarius_Object
+     and Aquarius.Programs.Editor.Aquarius_Rendering_Interface
      and Aquarius.Messages.Message_Location
      and Aquarius.Interaction.Interactor
      with private;
@@ -131,17 +134,18 @@ package Aquarius.Buffers is
      (Item  : in out Aquarius_Buffer_Record;
       Start : not null access Aquarius.Trees.Root_Tree_Type'Class);
 
+   --  Implementation of editor rendering interface
+   overriding procedure Update
+     (Buffer  : in out Aquarius_Buffer_Record;
+      Point   : Aquarius.Trees.Cursors.Cursor;
+      Partial : String);
+
    --  Basic buffer operations
    procedure Set_Point (Buffer : not null access Aquarius_Buffer_Record'Class;
                         Point  : in     Aquarius.Layout.Position);
 
    --  On_Key returns True if the key has been handled
    function On_Key (Buffer : not null access Aquarius_Buffer_Record'Class;
-                    Key    : in     Aquarius.Keys.Aquarius_Key)
-                   return Boolean;
-
-   function On_Key (Buffer : not null access Aquarius_Buffer_Record'Class;
-                    Pos    : in     Aquarius.Layout.Position;
                     Key    : in     Aquarius.Keys.Aquarius_Key)
                    return Boolean;
 
@@ -155,10 +159,12 @@ private
 
    type Aquarius_Buffer_Record is
      new Root_Aquarius_Object
+     and Aquarius.Programs.Editor.Aquarius_Rendering_Interface
      and Aquarius.Messages.Message_Location
      and Aquarius.Interaction.Interactor with
       record
          Buffer_UI   : Aquarius.UI.Aquarius_UI;
+         Editor         : Aquarius.Programs.Editor.Program_Editor;
          File_Buffer    : Boolean;
          Grammar        : Aquarius.Grammars.Aquarius_Grammar;
          Program_Store  : Aquarius.Programs.Program_Tree_Store;
@@ -170,14 +176,9 @@ private
          Point_Position : Aquarius.Layout.Position;
          Parsing        : Aquarius.Programs.Parser.Parse_Context;
          Node_Offset    : Aquarius.Layout.Count;
-         Typing         : Boolean := False;
-         Changing       : Boolean := False;
-         Editing_Node   : Aquarius.Programs.Program_Tree;
-         Input_Buffer   : String (1 .. 200);
-         Input_Length   : Natural  := 0;
-         Input_Position : Positive := 1;
          Buffer_File    : Aquarius.Source.Source_File;
          File_Position  : Aquarius.Source.Source_Position;
+         Rendering      : Boolean := False;
       end record;
 
 end Aquarius.Buffers;

@@ -90,7 +90,7 @@ aspect ::= identifier '=>' expression
 
 overriding_indication ::= ['not'] 'overriding'
 
-subprogram_body ::= 'is' ('abstract' | 'null' | block ) |
+subprogram_body ::= 'is' ('abstract' | 'null' | '(' expression ')' | block ) |
                     'renames' object_reference
 
 formal_argument_spec ::=
@@ -236,6 +236,7 @@ declaration ::= type_declaration | subtype_declaration |
                 use_type_clause | representation_clause
 
 representation_clause ::= attribute_definition_clause
+                        | record_representation_clause
 
 use_type_clause ::= 'use' 'type' type_indication ';'
 
@@ -340,7 +341,8 @@ variant_record_element ::=
 
 variant_case ::= 'when' variant_case_options '=>' record_component_list
 
-variant_case_options ::= < identifier / '|' > | 'others'
+variant_case_options ::= < identifier / '|' >
+                       | 'others'
 
 array_type_definition ::=
  	'array' '(' < array_bound / ',' > ')' 'of' type_indication
@@ -365,11 +367,13 @@ label ::= '<<' identifier '>>'
 statement ::= null_statement | procedure_call | assignment_statement |
               if_statement | return_statement | declare_statement |
               loop_statement | exit_statement | case_statement |
-  	      raise_statement | pragma_spec
+  	      raise_statement | pragma_spec | delay_statement
 
 null_statement ::= 'null' ';'
 
 raise_statement ::= 'raise' [ qualified_reference ] [ exception_message ] ';'
+
+delay_statement ::= 'delay' ['until'] expression ';'
 
 exception_message ::= 'with' expression
 
@@ -414,7 +418,7 @@ case_option ::= case_option_list
               | 'others'
 
 case_option_list ::=
-     < (qualified_reference | numeric_literal | character_literal) / '|' >
+     < (qualified_reference | numeric_literal | character_literal | bounded_range) / '|' >
 
 
 return_statement ::= simple_return | extended_return
@@ -610,9 +614,11 @@ pragma_arg_list ::= < pragma_arg / ',' >
 pragma_arg ::= expression
 
 attribute_definition_clause ::=
-	'for' local_name ''' attribute_designator 'use'
-		 ( expression | record_representation ) ';'
+	'for' local_name ''' attribute_designator 'use' expression ';'
 
+record_representation_clause ::=
+   'for' local_name 'use' record_representation ';'
+   
 local_name ::= identifier
 
 attribute_designator ::= identifier [ '(' static_expression ')' ] |
@@ -621,7 +627,7 @@ attribute_designator ::= identifier [ '(' static_expression ')' ] |
 record_representation ::=
    'record' [ mod_clause ]
        { component_clause }
-   'end' 'record' ';'
+   'end' 'record'
 
 mod_clause ::= 'at' 'mod' static_expression ';'
 

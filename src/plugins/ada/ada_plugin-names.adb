@@ -348,8 +348,8 @@ package body Ada_Plugin.Names is
       if Aquarius.Entries.Packages.Is_Package_Reference (Object_Entry) then
 
          Get_Symbol_Table (Object_Entry).Add_Watcher (Plugin, Name_Node);
-         Set_Symbol_Table (Element_Name_Tree.all,
-                           Get_Symbol_Table (Object_Entry));
+         Element_Name_Tree.Set_Symbol_Table
+           (Get_Symbol_Table (Object_Entry));
 
          declare
             Element_Entries  : constant Aquarius.Entries.Array_Of_Entries :=
@@ -537,7 +537,7 @@ package body Ada_Plugin.Names is
                   if Current = null then
                      Aquarius.Errors.Error (Identifier,
                                             Identifier.Text &
-                                              " not declared in" &
+                                              " not declared in " &
                                               P.Name);
                   end if;
                end if;

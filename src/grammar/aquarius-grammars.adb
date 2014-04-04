@@ -623,9 +623,10 @@ package body  Aquarius.Grammars is
    -- Run_Actions --
    -----------------
 
-   procedure Run_Actions (Grammar      : in Aquarius_Grammar_Record;
+   procedure Run_Actions
+     (Grammar      : in Aquarius_Grammar_Record;
       Group_Name   : in String;
-                          Start        : in Aquarius.Programs.Program_Tree)
+      Start        : in Aquarius.Programs.Program_Tree)
    is
       Group : constant Aquarius.Actions.Action_Group :=
         Aquarius.Actions.Get_Group (Grammar.Actions, Group_Name);

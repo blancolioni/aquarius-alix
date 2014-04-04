@@ -21,9 +21,11 @@ with Aquarius.Programs;
 with Aquarius.Source;
 with Aquarius.Trees;
 
-with Aquarius.GUI.Manager;
+with Aquarius.GUI.Source;
 
-with Aquarius.Fragments.Programs;
+--  with Aquarius.GUI.Manager;
+
+--  with Aquarius.Fragments.Programs;
 
 package body Aquarius.GUI.Views is
 
@@ -186,10 +188,11 @@ package body Aquarius.GUI.Views is
 --          Natural (View_Book.Get_Current_Page) + 1;
    begin
       Gtk.Tree_Selection.Get_Selected (Selection, Model, Iter);
-      if not Model.Has_Child (Iter) then
+      if not Gtk.Tree_Model.Has_Child (Model, Iter) then
          declare
             Node_Addr : constant System.Address :=
-                          Model.Get_Address (Iter, 1);
+                          Gtk.Tree_Model.Get_Address
+                            (Model, Iter, 1);
             Node      : constant Aquarius.Projects.Project_Tree :=
                           Aquarius.Projects.Project_Tree
                             (Project_Tree_To_Access.To_Pointer
@@ -204,14 +207,10 @@ package body Aquarius.GUI.Views is
                                (Aquarius.Source.Get_Source_File
                                   (Location)),
                              False);
-            Fragment  : constant Aquarius.Fragments.Aquarius_Fragment :=
-                          Aquarius.Fragments.Programs.Create_Program
-                            (300, 300,
-                             Buffer.Grammar,
-                             Program);
          begin
-            Aquarius.GUI.Manager.Add_Fragment
-              (Fragment, 20, 20);
+            Aquarius.GUI.Source.Load_Buffer (Buffer);
+--              Aquarius.GUI.Manager.Add_Fragment
+--                (Fragment, 20, 20);
          end;
       end if;
    end Row_Activated_Callback;

@@ -131,11 +131,31 @@ package body Aquarius.Programs is
       Items  : constant Array_Of_Program_Trees :=
         Item.Direct_Children (Skip_Separators => False);
    begin
-      for I in Items'Range loop
-         Result := Result & Items (I).Text;
-      end loop;
-      return To_String (Result);
+      if Items'Length > 0 then
+         for I in Items'Range loop
+            Result := Result & Items (I).Text;
+         end loop;
+         return To_String (Result);
+      else
+         return Item.Text;
+      end if;
    end Concatenate_Children;
+
+   -----------------------
+   -- Contains_Position --
+   -----------------------
+
+   function Contains_Position (Item : Program_Tree_Type;
+                               Position : Aquarius.Layout.Position)
+                               return Boolean
+   is
+   begin
+      return Position.Line in
+        Item.Layout_Start_Position.Line .. Item.Layout_End_Position.Line
+        and then
+          Position.Column in
+            Item.Layout_Start_Column .. Item.Layout_End_Column;
+   end Contains_Position;
 
    -------------------------
    -- Create_Symbol_Table --
@@ -423,6 +443,46 @@ package body Aquarius.Programs is
       end if;
    end Find_Node_At;
 
+   --------------------------
+   -- Find_Node_Containing --
+   --------------------------
+
+   function Find_Node_Containing
+     (Top      : not null access Program_Tree_Type'Class;
+      Location : in     Aquarius.Layout.Position)
+      return Program_Tree
+   is
+      use type Aquarius.Layout.Position;
+      Last_Terminal : Program_Tree := null;
+
+      procedure Find (Current : not null access Program_Tree_Type'Class);
+
+      ----------
+      -- Find --
+      ----------
+
+      procedure Find
+        (Current : not null access Program_Tree_Type'Class)
+      is
+      begin
+         if Current.Is_Terminal then
+            if Current.Contains_Position (Location) then
+               Last_Terminal := Program_Tree (Current);
+            else
+               return;
+            end if;
+         else
+            for I in 1 .. Current.Child_Count loop
+               Find (Current.Program_Child (I));
+            end loop;
+         end if;
+      end Find;
+
+   begin
+      Find (Top);
+      return Last_Terminal;
+   end Find_Node_Containing;
+
    -------------------------
    -- First_Program_Child --
    -------------------------
@@ -676,6 +736,16 @@ package body Aquarius.Programs is
       return not Item.Syntax.Has_Token and then
         Item.Syntax.Name = "";
    end Internal_Tree;
+
+   ---------------
+   -- Is_Choice --
+   ---------------
+
+   function Is_Choice  (Item : Program_Tree_Type) return Boolean is
+      use Aquarius.Syntax;
+   begin
+      return Item.Syntax.Syntax_Class = Choice;
+   end Is_Choice;
 
    ----------------
    -- Is_Comment --
@@ -1150,9 +1220,6 @@ package body Aquarius.Programs is
             Parent : Program_Tree := Last_Node.Program_Parent;
          begin
             while Aquarius.Trees.Is_Null (Parent.Right_Sibling) loop
---                 Ada.Text_IO.Put_Line
---                   (Ada.Text_IO.Standard_Error,
---                    "no right sibling: " & Parent.Image);
                if Parent.Program_Parent = null then
                   Ada.Text_IO.Put_Line
                     (Ada.Text_IO.Standard_Error,
@@ -1170,6 +1237,39 @@ package body Aquarius.Programs is
       end if;
 
    end Run_Actions;
+
+   -------------------
+   -- Scan_Terminal --
+   -------------------
+
+   function Scan_Terminal
+     (Start : not null access Program_Tree_Type'Class;
+      Count : Integer)
+      return Program_Tree
+   is
+      It : Program_Tree := Program_Tree (Start);
+      Acc : Natural := 0;
+   begin
+
+      while Acc < abs Count loop
+         if Count > 0 then
+            It := Program_Tree (It.Next_Leaf);
+         else
+            It := Program_Tree (It.Previous_Leaf);
+         end if;
+
+         exit when It = null;
+
+         if It.Is_Terminal
+           and then It.Text /= ""
+         then
+            Acc := Acc + 1;
+         end if;
+      end loop;
+
+      return It;
+
+   end Scan_Terminal;
 
    ------------------------
    -- Separator_New_Line --
@@ -1279,6 +1379,18 @@ package body Aquarius.Programs is
          It := Program_Tree (It.Parent);
       end loop;
    end Set_Source_Position;
+
+   ----------------------
+   -- Set_Symbol_Table --
+   ----------------------
+
+   procedure Set_Symbol_Table (Tree  : in out Program_Tree_Type;
+                               Table : Aquarius.Entries.Symbol_Table)
+   is
+      use Aquarius.Properties;
+   begin
+      Tree.Set_Property (Symbol_Table_Property, Table);
+   end Set_Symbol_Table;
 
    ---------------
    -- Set_Type --

@@ -18,8 +18,7 @@ package Aquarius.GUI.Text is
    function Default_Tag_Entry (TB    : Gtk.Text_Buffer.Gtk_Text_Buffer)
                               return Gtk.Text_Tag.Gtk_Text_Tag;
 
-   function Get_Gdk_Colour (Colormap : Gdk.Color.Gdk_Colormap;
-                            Colour   : Aquarius.Fonts.Aquarius_Colour)
+   function Get_Gdk_Colour (Colour   : Aquarius.Fonts.Aquarius_Colour)
                            return Gdk.Color.Gdk_Color;
 
    function Default_Font return Pango.Font.Pango_Font_Description;
