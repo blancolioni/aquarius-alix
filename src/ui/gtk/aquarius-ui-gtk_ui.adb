@@ -17,6 +17,7 @@ with Gtk.Tree_View_Column;
 with Gtk.Widget;
 with Gtk.Window;
 
+with Aquarius.Buffers;
 --  with Aquarius.Colours.Gtk;
 with Aquarius.Config_Paths;
 with Aquarius.Programs.Arrangements;
@@ -230,9 +231,12 @@ package body Aquarius.UI.Gtk_UI is
                Program : constant Aquarius.Programs.Program_Tree :=
                            Aquarius.References.Reference_Program
                              (Gtk_UI (With_UI.all).Ref_List (Index));
+               Buffer  : constant Aquarius.Buffers.Aquarius_Buffer :=
+                           With_UI.Current_Project.Get_Buffer
+                             (Program);
                Section : constant Aquarius.Sections.Aquarius_Section :=
                            Aquarius.Sections.Code.New_Code_Section
-                             (Program.Show_Location);
+                             (Program.Show_Location, Buffer);
                Renderer : constant Aquarius.Rendering.Aquarius_Renderer :=
                             Aquarius.Rendering.Sections.New_Section_Renderer
                               (Section);
@@ -379,6 +383,7 @@ package body Aquarius.UI.Gtk_UI is
       Num         : Glib.Gint;
       pragma Warnings (Off, Num);
    begin
+      Root_UI_Type (User_Interface).Show_Project (Project);
       User_Interface.Project :=
         Aquarius.Projects.Aquarius_Project (Project);
       Gtk.Tree_Store.Gtk_New (Model,

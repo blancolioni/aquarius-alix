@@ -3,15 +3,47 @@ private with Ada.Containers.Hashed_Maps;
 private with Ada.Strings.Unbounded.Hash;
 
 with Aquarius.Colours;
+with Aquarius.Keys;
 with Aquarius.Layout;
 with Aquarius.Styles;
 
 package Aquarius.Sections is
 
+   type Section_Display_Interface is interface;
+
+   procedure Update (Display : in out Section_Display_Interface) is null;
+   procedure Set_Point (Display : in out Section_Display_Interface;
+                        Point   : Aquarius.Layout.Position)
+   is null;
+
    type Root_Aquarius_Section is tagged private;
+
+   procedure On_Key
+     (Section : in out Root_Aquarius_Section;
+      Key     : Aquarius.Keys.Aquarius_Key;
+      Handled : out Boolean);
 
    function Id (Section : Root_Aquarius_Section'Class)
                 return String;
+
+   function Point
+     (Section : Root_Aquarius_Section'Class)
+      return Aquarius.Layout.Position;
+
+   procedure Set_Point
+     (Section : in out Root_Aquarius_Section;
+      Point   : Aquarius.Layout.Position);
+
+   function Display
+     (Section : Root_Aquarius_Section'Class)
+      return access Section_Display_Interface'Class;
+
+   procedure Set_Display
+     (Section : in out Root_Aquarius_Section'Class;
+      Display : access Section_Display_Interface'Class);
+
+   procedure Clear
+     (Section : in out Root_Aquarius_Section'Class);
 
    procedure Set_Background (Section : in out Root_Aquarius_Section'Class;
                              Background : Aquarius.Colours.Aquarius_Colour);
@@ -87,7 +119,8 @@ private
          Max_Columns   : Natural := 0;
          Render_Width  : Natural := 200;
          Render_Height : Natural := 200;
-         Position      : Aquarius.Layout.Position := (1, 1);
+         Point         : Aquarius.Layout.Position := (1, 1);
+         Display       : access Section_Display_Interface'Class;
       end record;
 
    procedure Create (Item : in out Root_Aquarius_Section'Class;

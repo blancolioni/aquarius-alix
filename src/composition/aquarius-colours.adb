@@ -20,6 +20,15 @@ package body Aquarius.Colours is
       return Colour.Blue;
    end Blue;
 
+   --------------
+   -- From_RGB --
+   --------------
+
+   function From_RGB (R, G, B : Colour_Range) return Aquarius_Colour is
+   begin
+      return (R, G, B);
+   end From_RGB;
+
    -----------
    -- Green --
    -----------

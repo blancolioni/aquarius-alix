@@ -42,6 +42,11 @@ package Aquarius.Projects is
    --  before the function returns, otherwise it will be performed
    --  in the background.
 
+   function Get_Buffer
+     (Project : not null access Aquarius_Project_Type'Class;
+      Program : not null access Aquarius.Programs.Program_Tree_Type'Class)
+      return Aquarius.Buffers.Aquarius_Buffer;
+
    procedure Load_Dependency
      (Project   : in out Aquarius_Project_Type'Class;
       Reference : Aquarius.Programs.Program_Tree;
@@ -130,6 +135,10 @@ package Aquarius.Projects is
      (File_Path : String)
      return Aquarius_Project;
    --  Create a default project which contains only the given file
+
+   procedure Run_Actions
+     (Project     : in out Aquarius_Project_Type'Class;
+      Group_Name  : in String);
 
    function References
      (Project : Aquarius_Project_Type'Class)

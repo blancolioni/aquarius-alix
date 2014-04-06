@@ -28,6 +28,7 @@ package body Aquarius.Rendering.Sections is
    overriding
    procedure Begin_Render (Renderer : access Section_Renderer) is
    begin
+      Renderer.Section.Clear;
       Renderer.Pos := (1, 1);
    end Begin_Render;
 
@@ -37,9 +38,9 @@ package body Aquarius.Rendering.Sections is
 
    overriding
    procedure End_Render (Renderer : access Section_Renderer) is
-      pragma Unreferenced (Renderer);
    begin
-      null;
+      Renderer.Section.Display.Update;
+      Renderer.Section.Display.Set_Point (Renderer.Pos);
    end End_Render;
 
    --------------------------
@@ -65,8 +66,7 @@ package body Aquarius.Rendering.Sections is
                         Point    : in     Aquarius.Layout.Position)
    is
    begin
-      pragma Unreferenced (Renderer);
-      pragma Unreferenced (Point);
+      Renderer.Pos := Point;
    end Set_Point;
 
    --------------
