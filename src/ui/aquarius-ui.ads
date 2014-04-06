@@ -28,8 +28,11 @@ package Aquarius.UI is
    procedure Show_Project
      (User_Interface : in out Root_UI_Type;
       Project        : not null access
-        Aquarius.Projects.Aquarius_Project_Type'Class)
-   is null;
+        Aquarius.Projects.Aquarius_Project_Type'Class);
+
+   function Current_Project
+     (UI : Root_UI_Type'Class)
+      return access Aquarius.Projects.Aquarius_Project_Type'Class;
 
    type Aquarius_UI is access all Root_UI_Type'Class;
 
@@ -37,7 +40,8 @@ private
 
    type Root_UI_Type is abstract new Root_Aquarius_Object with
       record
-         Layout : Aquarius.Sections.Layout.Section_Layout;
+         Project : access Aquarius.Projects.Aquarius_Project_Type'Class;
+         Layout  : Aquarius.Sections.Layout.Section_Layout;
       end record;
 
 end Aquarius.UI;

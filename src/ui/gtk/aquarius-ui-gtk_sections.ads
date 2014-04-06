@@ -29,7 +29,7 @@ private
 
    type Gtk_Section_Record;
 
-   type Gtk_Section is access Gtk_Section_Record;
+   type Gtk_Section is access all Gtk_Section_Record;
 
    package Section_Maps is
      new Ada.Containers.Hashed_Maps

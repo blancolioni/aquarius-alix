@@ -3,8 +3,8 @@ with Ada.Strings.Maps;
 
 package body Aquarius.Paths is
 
-   Unix_Paths : constant Boolean := True;
-   Separator  : constant Character := '/';
+   Unix_Paths : constant Boolean := False;
+   Separator  : constant Character := '\';
 
    Standard_Separator : constant Character := '/';
 
@@ -130,13 +130,13 @@ package body Aquarius.Paths is
       Result : Unbounded_String;
    begin
       if Path.Absolute then
-         Result := Path.Prefix & OS_Separator;
+         Result := Path.Prefix & Separator;
       end if;
 
       for I in 1 .. Path.Elements.Last_Index loop
          Result := Result & Path.Elements.Element (I);
          if I < Path.Elements.Last_Index then
-            Result := Result & OS_Separator;
+            Result := Result & Separator;
          end if;
       end loop;
 

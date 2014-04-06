@@ -13,6 +13,15 @@ package body Aquarius.Sections is
          New_Line  : Boolean;
       end record;
 
+   type Default_Display_Type is
+     new Section_Display_Interface with null record;
+
+   overriding procedure Update
+     (Display : in out Default_Display_Type)
+   is null;
+
+   Default_Display : aliased Default_Display_Type;
+
    ----------------
    -- Background --
    ----------------
@@ -33,6 +42,20 @@ package body Aquarius.Sections is
       return To_String (Element.Class);
    end Class;
 
+   -----------
+   -- Clear --
+   -----------
+
+   procedure Clear
+     (Section : in out Root_Aquarius_Section'Class)
+   is
+   begin
+      Section.Elements.Clear;
+      Section.Line_Count := 1;
+      Section.Max_Columns := 0;
+      Section.Point := (1, 1);
+   end Clear;
+
    ------------
    -- Create --
    ------------
@@ -44,6 +67,22 @@ package body Aquarius.Sections is
       Item.Id := To_Unbounded_String (Id);
       Ada.Text_IO.Put_Line ("new section " & Id);
    end Create;
+
+   -------------
+   -- Display --
+   -------------
+
+   function Display
+     (Section : Root_Aquarius_Section'Class)
+      return access Section_Display_Interface'Class
+   is
+   begin
+      if Section.Display = null then
+         return Default_Display'Access;
+      else
+         return Section.Display;
+      end if;
+   end Display;
 
    --------
    -- Id --
@@ -105,8 +144,8 @@ package body Aquarius.Sections is
    begin
       Section.Line_Count := Section.Line_Count + 1;
       Section.Elements.Append (Element);
-      Section.Position.Line := Section.Position.Line + 1;
-      Section.Position.Column := 1;
+      Section.Point.Line := Section.Point.Line + 1;
+      Section.Point.Column := 1;
    end New_Line;
 
    --------------
@@ -117,6 +156,33 @@ package body Aquarius.Sections is
    begin
       return Element.New_Line;
    end New_Line;
+
+   ------------
+   -- On_Key --
+   ------------
+
+   procedure On_Key
+     (Section : in out Root_Aquarius_Section;
+      Key     : Aquarius.Keys.Aquarius_Key;
+      Handled : out Boolean)
+   is
+      pragma Unreferenced (Section);
+      pragma Unreferenced (Key);
+   begin
+      Handled := False;
+   end On_Key;
+
+   -----------
+   -- Point --
+   -----------
+
+   function Point
+     (Section : Root_Aquarius_Section'Class)
+      return Aquarius.Layout.Position
+   is
+   begin
+      return Section.Point;
+   end Point;
 
    ---------
    -- Put --
@@ -132,14 +198,14 @@ package body Aquarius.Sections is
          for I in Section.Line_Count .. Natural (Position.Line) - 1 loop
             Section.New_Line;
          end loop;
-         Section.Position.Line := Position.Line;
-         Section.Position.Column := 1;
+         Section.Point.Line := Position.Line;
+         Section.Point.Column := 1;
       end if;
-      if Section.Position.Column < Position.Column then
+      if Section.Point.Column < Position.Column then
          declare
             Space_Count : constant Positive :=
                             Positive
-                              (Position.Column - Section.Position.Column);
+                              (Position.Column - Section.Point.Column);
             Spaces      : constant String (1 .. Space_Count) :=
                             (others => ' ');
          begin
@@ -166,8 +232,8 @@ package body Aquarius.Sections is
                      New_Line => False);
    begin
       Section.Elements.Append (Element);
-      Section.Position.Column :=
-        Section.Position.Column + Aquarius.Layout.Count (Text'Length);
+      Section.Point.Column :=
+        Section.Point.Column + Aquarius.Layout.Count (Text'Length);
    end Put;
 
    --------------
@@ -188,8 +254,8 @@ package body Aquarius.Sections is
    begin
       Section.Elements.Append (Element);
       Section.Line_Count := Section.Line_Count + 1;
-      Section.Position.Line := Section.Position.Line + 1;
-      Section.Position.Column := 1;
+      Section.Point.Line := Section.Point.Line + 1;
+      Section.Point.Column := 1;
    end Put_Line;
 
    ------------
@@ -240,6 +306,34 @@ package body Aquarius.Sections is
    begin
       Section.Background := Background;
    end Set_Background;
+
+   -----------------
+   -- Set_Display --
+   -----------------
+
+   procedure Set_Display
+     (Section : in out Root_Aquarius_Section'Class;
+      Display : access Section_Display_Interface'Class)
+   is
+   begin
+      if Display = null then
+         Section.Display := Default_Display'Access;
+      else
+         Section.Display := Display;
+      end if;
+   end Set_Display;
+
+   ---------------
+   -- Set_Point --
+   ---------------
+
+   procedure Set_Point
+     (Section : in out Root_Aquarius_Section;
+      Point   : Aquarius.Layout.Position)
+   is
+   begin
+      Section.Point := Point;
+   end Set_Point;
 
    -----------------------
    -- Set_Rendered_Size --

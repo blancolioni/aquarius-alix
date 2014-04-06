@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <requires lib="gtk+" version="2.24"/>
+  <!-- interface-requires gtk+ 3.0 -->
   <object class="GtkWindow" id="Aquarius_Main_Window">
     <property name="can_focus">False</property>
     <child>
@@ -25,7 +25,6 @@
             <property name="can_focus">False</property>
             <child>
               <object class="GtkFixed" id="Section_Area">
-                <property name="height_request">800</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
               </object>
@@ -40,11 +39,18 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
-                  <object class="GtkTreeView" id="Identifiers">
+                  <object class="GtkScrolledWindow" id="scrolledwindow1">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <child internal-child="selection">
-                      <object class="GtkTreeSelection" id="treeview-selection"/>
+                    <property name="shadow_type">in</property>
+                    <child>
+                      <object class="GtkTreeView" id="Identifiers">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <child internal-child="selection">
+                          <object class="GtkTreeSelection" id="treeview-selection"/>
+                        </child>
+                      </object>
                     </child>
                   </object>
                   <packing>

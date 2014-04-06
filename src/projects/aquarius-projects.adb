@@ -181,6 +181,34 @@ package body Aquarius.Projects is
       end;
    end Get_Buffer;
 
+   ----------------
+   -- Get_Buffer --
+   ----------------
+
+   function Get_Buffer
+     (Project : not null access Aquarius_Project_Type'Class;
+      Program : not null access Aquarius.Programs.Program_Tree_Type'Class)
+      return Aquarius.Buffers.Aquarius_Buffer
+   is
+      use Aquarius.Programs;
+   begin
+      for B of Project.Buffers loop
+         if B.Program = Program_Tree (Program) then
+            return B;
+         end if;
+      end loop;
+
+      declare
+         Result : constant Aquarius.Buffers.Aquarius_Buffer :=
+                    Aquarius.Buffers.New_Buffer_From_Tree
+                      (null,
+                       Program.Location_Name,
+                       Program);
+      begin
+         return Result;
+      end;
+   end Get_Buffer;
+
    ---------------------
    -- Get_Main_Buffer --
    ---------------------

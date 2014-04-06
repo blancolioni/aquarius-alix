@@ -12,8 +12,8 @@ package body Aquarius.Styles is
    function Get_Colour
      (Config     : Aquarius.Configuration.Cursor;
       Child_Name : String;
-      Default_Colour : Aquarius.Fonts.Aquarius_Colour)
-      return Aquarius.Fonts.Aquarius_Colour;
+      Default_Colour : Aquarius.Colours.Aquarius_Colour)
+      return Aquarius.Colours.Aquarius_Colour;
 
    -------------------
    -- Default_Style --
@@ -49,11 +49,15 @@ package body Aquarius.Styles is
    -- Get_Colour --
    ----------------
 
+   ----------------
+   -- Get_Colour --
+   ----------------
+
    function Get_Colour
      (Config     : Aquarius.Configuration.Cursor;
       Child_Name : String;
-      Default_Colour : Aquarius.Fonts.Aquarius_Colour)
-      return Aquarius.Fonts.Aquarius_Colour
+      Default_Colour : Aquarius.Colours.Aquarius_Colour)
+      return Aquarius.Colours.Aquarius_Colour
    is
       use Aquarius.Configuration;
       Child : constant Cursor := Find_Child (Config, Child_Name);
@@ -61,7 +65,7 @@ package body Aquarius.Styles is
       if not Has_Element (Child) then
          return Default_Colour;
       elsif Child_Count (Child) = 0 then
-         return Aquarius.Fonts.Parse_Colour
+         return Aquarius.Colours.Parse_Colour
            (Get_Value (Config, Child_Name));
       else
          declare
@@ -69,10 +73,10 @@ package body Aquarius.Styles is
             G : constant Integer := Get_Value (Child, "g");
             B : constant Integer := Get_Value (Child, "b");
          begin
-            return Aquarius.Fonts.From_RGB
-              (Aquarius.Fonts.Colour_Range (R),
-               Aquarius.Fonts.Colour_Range (G),
-               Aquarius.Fonts.Colour_Range (B));
+            return Aquarius.Colours.From_RGB
+              (Aquarius.Colours.Colour_Range (R),
+               Aquarius.Colours.Colour_Range (G),
+               Aquarius.Colours.Colour_Range (B));
          end;
       end if;
    end Get_Colour;
@@ -96,9 +100,9 @@ package body Aquarius.Styles is
                Italic     : constant Boolean := Get_Value (Child, "italic");
                Underlined : constant Boolean :=
                               Get_Value (Child, "underline");
-               Foreground : constant Aquarius.Fonts.Aquarius_Colour :=
+               Foreground : constant Aquarius.Colours.Aquarius_Colour :=
                               Get_Colour (Child, "foreground",
-                                          Aquarius.Fonts.Black);
+                                          Aquarius.Colours.Black);
                Background : constant String  :=
                               Get_Value (Child, "background", "");
                Font       : Aquarius.Fonts.Aquarius_Font :=

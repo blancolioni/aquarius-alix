@@ -44,7 +44,6 @@ private
          Start_X     : Integer;
          Start_Y     : Integer;
          Section_UI  : Gtk_Sections.Gtk_Section_Map;
-         Project     : Aquarius.Projects.Aquarius_Project;
          Ref_Count   : Natural;
          Ref_List    : Aquarius.References.Array_Of_Locations (1 .. Max_Refs);
       end record;

@@ -14,6 +14,10 @@ package Aquarius.Colours is
    function Black return Aquarius_Colour;
    function White return Aquarius_Colour;
 
+   function From_RGB
+     (R, G, B : Aquarius.Colours.Colour_Range)
+      return Aquarius.Colours.Aquarius_Colour;
+
 private
 
    type Aquarius_Colour is
