@@ -37,15 +37,22 @@ private
    type Gtk_UI is
      new Root_UI_Type with
       record
-         Overview    : Gtk.Drawing_Area.Gtk_Drawing_Area;
-         Sections    : Gtk.Fixed.Gtk_Fixed;
-         Identifiers : Gtk.Tree_View.Gtk_Tree_View;
-         Search      : Gtk.GEntry.Gtk_Entry;
-         Start_X     : Integer;
-         Start_Y     : Integer;
-         Section_UI  : Gtk_Sections.Gtk_Section_Map;
-         Ref_Count   : Natural;
-         Ref_List    : Aquarius.References.Array_Of_Locations (1 .. Max_Refs);
+         Overview            : Gtk.Drawing_Area.Gtk_Drawing_Area;
+         Sections            : Gtk.Fixed.Gtk_Fixed;
+         Identifiers         : Gtk.Tree_View.Gtk_Tree_View;
+         Search              : Gtk.GEntry.Gtk_Entry;
+         Start_X             : Integer;
+         Start_Y             : Integer;
+         Section_UI          : Gtk_Sections.Gtk_Section_Map;
+         Ref_Count           : Natural;
+         Ref_List            :
+           Aquarius.References.Array_Of_Locations (1 .. Max_Refs);
+         Overview_Height     : Natural;
+         Overview_Width      : Natural;
+         Section_Area_Height : Natural;
+         Section_Area_Width  : Natural;
       end record;
+
+   type Gtk_UI_Access is access all Gtk_UI'Class;
 
 end Aquarius.UI.Gtk_UI;

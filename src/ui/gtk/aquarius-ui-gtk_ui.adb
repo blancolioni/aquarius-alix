@@ -1,9 +1,8 @@
 with Ada.Text_IO;
-with Ada.Integer_Text_IO;
 
 with Glib.Error;
 
---  with Gdk.Color;
+with Gdk.Cairo;
 
 with Gtk.Builder;
 with Gtk.Cell_Renderer_Text;
@@ -17,8 +16,11 @@ with Gtk.Tree_View_Column;
 with Gtk.Widget;
 with Gtk.Window;
 
+with Cairo;
+with Cairo.Image_Surface;
+
 with Aquarius.Buffers;
---  with Aquarius.Colours.Gtk;
+with Aquarius.Colours;
 with Aquarius.Config_Paths;
 with Aquarius.Programs.Arrangements;
 with Aquarius.Rendering.Sections;
@@ -31,41 +33,46 @@ package body Aquarius.UI.Gtk_UI is
    package Main_Window_Callback is
      new Gtk.Handlers.Callback (Gtk.Window.Gtk_Window_Record);
 
-   package Drawing_Area_UI_Callback is
+   package Widget_UI_Callback is
      new Gtk.Handlers.User_Return_Callback
-       (Widget_Type => Gtk.Drawing_Area.Gtk_Drawing_Area_Record,
+       (Widget_Type => Gtk.Widget.Gtk_Widget_Record,
         Return_Type => Boolean,
-        User_Type   => Aquarius_UI);
+        User_Type   => Gtk_UI_Access);
 
    package Search_Text_Changed_Callback is
      new Gtk.Handlers.User_Callback
        (Widget_Type => Gtk.GEntry.Gtk_Entry_Record,
-        User_Type   => Aquarius_UI);
+        User_Type   => Gtk_UI_Access);
 
    package Select_Item_Callback is
      new Gtk.Handlers.User_Callback
        (Widget_Type => Gtk.Tree_View.Gtk_Tree_View_Record,
-        User_Type   => Aquarius_UI);
+        User_Type   => Gtk_UI_Access);
 
    procedure Destroy_Handler (W : access Gtk.Window.Gtk_Window_Record'Class);
 
    function Configure_Overview_Handler
-     (W       : access Gtk.Drawing_Area.Gtk_Drawing_Area_Record'Class;
-      With_UI : Aquarius_UI)
+     (W       : access Gtk.Widget.Gtk_Widget_Record'Class;
+      With_UI : Gtk_UI_Access)
       return Boolean;
 
-   function Expose_Overview_Handler
-     (W       : access Gtk.Drawing_Area.Gtk_Drawing_Area_Record'Class;
-      With_UI : Aquarius_UI)
+   function Configure_Section_Area_Handler
+     (W       : access Gtk.Widget.Gtk_Widget_Record'Class;
+      With_UI : Gtk_UI_Access)
+      return Boolean;
+
+   function Draw_Overview_Handler
+     (W       : access Gtk.Widget.Gtk_Widget_Record'Class;
+      With_UI : Gtk_UI_Access)
       return Boolean;
 
    procedure On_Search_Text_Changed
      (W       : access Gtk.GEntry.Gtk_Entry_Record'Class;
-      With_UI : Aquarius_UI);
+      With_UI : Gtk_UI_Access);
 
    procedure On_Reference_Activated
      (Widget  : access Gtk.Tree_View.Gtk_Tree_View_Record'Class;
-      With_UI : Aquarius_UI);
+      With_UI : Gtk_UI_Access);
 
    procedure Render_Overview (With_UI : in out Gtk_UI'Class);
    procedure Render_Sections (With_UI : in out Gtk_UI'Class);
@@ -78,15 +85,35 @@ package body Aquarius.UI.Gtk_UI is
    --------------------------------
 
    function Configure_Overview_Handler
-     (W       : access Gtk.Drawing_Area.Gtk_Drawing_Area_Record'Class;
-      With_UI : Aquarius_UI)
+     (W       : access Gtk.Widget.Gtk_Widget_Record'Class;
+      With_UI : Gtk_UI_Access)
       return Boolean
    is
-      pragma Unreferenced (W);
+      Alloc : Gtk.Widget.Gtk_Allocation;
    begin
-      Render_Overview (Gtk_UI (With_UI.all));
+      W.Get_Allocation (Alloc);
+      With_UI.Overview_Height := Natural (Alloc.Height);
+      With_UI.Overview_Width := Natural (Alloc.Width);
+      W.Queue_Draw;
       return True;
    end Configure_Overview_Handler;
+
+   ------------------------------------
+   -- Configure_Section_Area_Handler --
+   ------------------------------------
+
+   function Configure_Section_Area_Handler
+     (W       : access Gtk.Widget.Gtk_Widget_Record'Class;
+      With_UI : Gtk_UI_Access)
+      return Boolean
+   is
+      Alloc : Gtk.Widget.Gtk_Allocation;
+   begin
+      W.Get_Allocation (Alloc);
+      With_UI.Section_Area_Height := Natural (Alloc.Height);
+      With_UI.Section_Area_Width := Natural (Alloc.Width);
+      return True;
+   end Configure_Section_Area_Handler;
 
    ---------------------
    -- Destroy_Handler --
@@ -100,20 +127,16 @@ package body Aquarius.UI.Gtk_UI is
       Gtk.Main.Main_Quit;
    end Destroy_Handler;
 
-   -----------------------------
-   -- Expose_Overview_Handler --
-   -----------------------------
-
-   function Expose_Overview_Handler
-     (W       : access Gtk.Drawing_Area.Gtk_Drawing_Area_Record'Class;
-      With_UI : Aquarius_UI)
+   function Draw_Overview_Handler
+     (W       : access Gtk.Widget.Gtk_Widget_Record'Class;
+      With_UI : Gtk_UI_Access)
       return Boolean
    is
       pragma Unreferenced (W);
    begin
-      Render_Overview (Gtk_UI (With_UI.all));
+      Render_Overview (With_UI.all);
       return True;
-   end Expose_Overview_Handler;
+   end Draw_Overview_Handler;
 
    ----------
    -- Init --
@@ -170,16 +193,21 @@ package body Aquarius.UI.Gtk_UI is
         Gtk.Fixed.Gtk_Fixed
           (Builder.Get_Object ("Section_Area"));
 
-      Drawing_Area_UI_Callback.Connect
-        (With_UI.Overview, Gtk.Widget.Signal_Visibility_Notify_Event,
-         Drawing_Area_UI_Callback.To_Marshaller
-           (Expose_Overview_Handler'Access),
-         Aquarius_UI (With_UI));
-      Drawing_Area_UI_Callback.Connect
+      Widget_UI_Callback.Connect
+        (With_UI.Overview, Gtk.Widget.Signal_Draw,
+         Widget_UI_Callback.To_Marshaller
+           (Draw_Overview_Handler'Access),
+         With_UI);
+      Widget_UI_Callback.Connect
         (With_UI.Overview, "configure-event",
-         Drawing_Area_UI_Callback.To_Marshaller
+         Widget_UI_Callback.To_Marshaller
            (Configure_Overview_Handler'Access),
-         Aquarius_UI (With_UI));
+         With_UI);
+      Widget_UI_Callback.Connect
+        (With_UI.Sections, "configure-event",
+         Widget_UI_Callback.To_Marshaller
+           (Configure_Section_Area_Handler'Access),
+         With_UI);
 
       Aquarius.UI.Gtk_Text.Initialise;
 
@@ -204,7 +232,7 @@ package body Aquarius.UI.Gtk_UI is
         (With_UI.Search, Gtk.Editable.Signal_Changed,
          Search_Text_Changed_Callback.To_Marshaller
            (On_Search_Text_Changed'Access),
-         Aquarius_UI (With_UI));
+         With_UI);
 
    end Init;
 
@@ -214,7 +242,7 @@ package body Aquarius.UI.Gtk_UI is
 
    procedure On_Reference_Activated
      (Widget  : access Gtk.Tree_View.Gtk_Tree_View_Record'Class;
-      With_UI : Aquarius_UI)
+      With_UI : Gtk_UI_Access)
    is
       Model  : Gtk.Tree_Model.Gtk_Tree_Model;
       Selection : constant Gtk.Tree_Selection.Gtk_Tree_Selection :=
@@ -263,7 +291,7 @@ package body Aquarius.UI.Gtk_UI is
 
    procedure On_Search_Text_Changed
      (W       : access Gtk.GEntry.Gtk_Entry_Record'Class;
-      With_UI : Aquarius_UI)
+      With_UI : Gtk_UI_Access)
    is
       pragma Unreferenced (W);
    begin
@@ -276,12 +304,20 @@ package body Aquarius.UI.Gtk_UI is
 
    procedure Render_Overview (With_UI : in out Gtk_UI'Class) is
 
---        Window : constant Gdk.Gdk_Window :=
---                   With_UI.Overview.Get_Window;
---        GC     : Gdk.Gdk_GC;
-
+      use Glib;
       procedure Render (Section       : Aquarius.Sections.Aquarius_Section;
                         X, Y          : Integer);
+
+      Scale : Gdouble;
+
+      Surface : constant Cairo.Cairo_Surface :=
+                  Cairo.Image_Surface.Create
+                    (Cairo.Image_Surface.Cairo_Format_ARGB32,
+                     Gint (With_UI.Overview_Width),
+                     Gint (With_UI.Overview_Height));
+
+      Context : Cairo.Cairo_Context :=
+                  Cairo.Create (Surface);
 
       ------------
       -- Render --
@@ -290,35 +326,69 @@ package body Aquarius.UI.Gtk_UI is
       procedure Render (Section       : Aquarius.Sections.Aquarius_Section;
                         X, Y          : Integer)
       is
---           Bg : Gdk.Color.Gdk_Color :=
---                  Aquarius.Colours.Gtk.To_Gdk_Color (Section.Background);
---           Success : Boolean;
-      begin
-         Ada.Text_IO.Put ("overview: " & Section.Id & " at (");
-         Ada.Integer_Text_IO.Put (X, 1);
-         Ada.Text_IO.Put (",");
-         Ada.Integer_Text_IO.Put (Y, 1);
-         Ada.Text_IO.Put (") ");
-         Ada.Integer_Text_IO.Put (Section.Render_Width, 1);
-         Ada.Text_IO.Put ("x");
-         Ada.Integer_Text_IO.Put (Section.Render_Height, 1);
-         Ada.Text_IO.New_Line;
+         use Aquarius.Colours;
+         use Aquarius.UI.Gtk_Sections;
 
---           Gdk.GC.Set_Foreground
---             (GC, Bg);
---           Gdk.Drawable.Draw_Rectangle
---             (Window, GC, True,
---              Glib.Gint (X / 10),
---              Glib.Gint (Y / 10),
---              Glib.Gint (Section.Render_Width / 10),
---              Glib.Gint (Section.Render_Height / 10));
+         Width, Height : Natural;
+         Item : constant Gtk_Section :=
+                      (if Exists (With_UI.Section_UI, Section.Id)
+                       then Get (With_UI.Section_UI, Section.Id)
+                       else Create (Section, With_UI.Section_UI));
+         Bg       : constant Aquarius_Colour :=
+                      Section.Background;
+
+      begin
+
+         Get_Display_Size (Item, Width, Height);
+
+         Cairo.Set_Source_Rgb
+           (Context,
+            Gdouble (Red (Bg)) / 255.0,
+            Gdouble (Green (Bg)) / 255.0,
+            Gdouble (Blue (Bg)) / 255.0);
+         Cairo.Rectangle (Context,
+                          Gdouble (X) * Scale,
+                          Gdouble (Y) * Scale,
+                          Gdouble (Width) * Scale,
+                          Gdouble (Height) * Scale);
+         Cairo.Fill (Context);
       end Render;
 
    begin
-      --  Gdk.GC.Gdk_New (GC, Window);
+
+      declare
+         Alloc : Gtk.Widget.Gtk_Allocation;
+      begin
+         With_UI.Sections.Get_Allocation (Alloc);
+         With_UI.Section_Area_Width := Natural (Alloc.Width);
+         With_UI.Section_Area_Height := Natural (Alloc.Height);
+         Scale := Gdouble (With_UI.Overview_Height) / Gdouble (Alloc.Height);
+      end;
+
+      Cairo.Set_Source_Rgb (Context, 0.8, 0.8, 0.8);
+      Cairo.Rectangle (Context, 0.0, 0.0,
+                       Gdouble (With_UI.Overview_Width),
+                       Gdouble (With_UI.Overview_Height));
+      Cairo.Fill (Context);
+
+      Cairo.Set_Source_Rgb (Context, 0.9, 0.9, 0.9);
+      Cairo.Rectangle (Context,
+                       Gdouble (With_UI.Start_X) * Scale, 1.0,
+                       Gdouble (With_UI.Section_Area_Width) * Scale,
+                       Gdouble (With_UI.Overview_Height - 2));
+      Cairo.Fill (Context);
+
       Aquarius.Sections.Layout.Render_Overview
         (Layout   => With_UI.Layout,
          Renderer => Render'Access);
+
+      Cairo.Destroy (Context);
+      Context := Gdk.Cairo.Create (With_UI.Overview.Get_Window);
+      Cairo.Set_Source_Surface (Context, Surface, 0.0, 0.0);
+      Cairo.Paint (Context);
+      Cairo.Destroy (Context);
+      Cairo.Surface_Destroy (Surface);
+
    end Render_Overview;
 
    ---------------------
