@@ -118,6 +118,21 @@ package body Aquarius.UI.Gtk_Sections is
       return Map.Map.Element (To_Unbounded_String (Name));
    end Get;
 
+   ----------------------
+   -- Get_Display_Size --
+   ----------------------
+
+   procedure Get_Display_Size
+     (Section : Gtk_Section;
+      Width, Height : out Natural)
+   is
+      Alloc : Gtk.Widget.Gtk_Allocation;
+   begin
+      Section.Text_View.Get_Allocation (Alloc);
+      Width := Natural (Alloc.Width);
+      Height := Natural (Alloc.Height);
+   end Get_Display_Size;
+
    ----------------------------
    -- Handle_Cursor_Movement --
    ----------------------------
