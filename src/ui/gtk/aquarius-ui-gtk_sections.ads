@@ -25,6 +25,10 @@ package Aquarius.UI.Gtk_Sections is
                      Target : Gtk.Fixed.Gtk_Fixed;
                      X, Y   : Integer);
 
+   function Displayed
+     (Section : Gtk_Section)
+      return Boolean;
+
    procedure Get_Display_Size
      (Section : Gtk_Section;
       Width, Height : out Natural);

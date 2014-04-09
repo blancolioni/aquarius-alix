@@ -90,6 +90,18 @@ package body Aquarius.UI.Gtk_Sections is
       return Result;
    end Create;
 
+   ---------------
+   -- Displayed --
+   ---------------
+
+   function Displayed
+     (Section : Gtk_Section)
+      return Boolean
+   is
+   begin
+      return Section.Displayed;
+   end Displayed;
+
    ------------
    -- Exists --
    ------------
@@ -230,9 +242,9 @@ package body Aquarius.UI.Gtk_Sections is
    begin
       if New_View then
          Gtk.Text_View.Gtk_New (Item.Text_View);
-         Item.Text_View.Modify_Base
-           (Gtk.Enums.State_Normal,
-            Aquarius.Colours.Gtk.To_Gdk_Color
+         Item.Text_View.Override_Background_Color
+           (Gtk.Enums.Gtk_State_Flag_Normal,
+            Aquarius.Colours.Gtk.To_Gdk_RGBA
               (Item.Section.Background));
          Key_Press_Callback.Connect
            (Item.Text_View, Gtk.Widget.Signal_Key_Press_Event,

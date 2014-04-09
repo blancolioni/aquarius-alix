@@ -3,6 +3,7 @@ with Ada.Text_IO;
 with Glib.Error;
 
 with Gdk.Cairo;
+with Gdk.Event;
 
 with Gtk.Builder;
 with Gtk.Cell_Renderer_Text;
@@ -63,6 +64,12 @@ package body Aquarius.UI.Gtk_UI is
 
    function Draw_Overview_Handler
      (W       : access Gtk.Widget.Gtk_Widget_Record'Class;
+      With_UI : Gtk_UI_Access)
+      return Boolean;
+
+   function On_Overview_Button_Press
+     (W       : access Gtk.Widget.Gtk_Widget_Record'Class;
+      Event   : Gdk.Event.Gdk_Event;
       With_UI : Gtk_UI_Access)
       return Boolean;
 
@@ -189,6 +196,15 @@ package body Aquarius.UI.Gtk_UI is
       With_UI.Overview :=
         Gtk.Drawing_Area.Gtk_Drawing_Area
           (Builder.Get_Object ("Overview"));
+      declare
+         use type Gdk.Event.Gdk_Event_Mask;
+      begin
+         With_UI.Overview.Add_Events
+           (Events =>
+              Gdk.Event.Button_Press_Mask or Gdk.Event.Button_Release_Mask
+            or Gdk.Event.Button_Motion_Mask);
+      end;
+
       With_UI.Sections :=
         Gtk.Fixed.Gtk_Fixed
           (Builder.Get_Object ("Section_Area"));
@@ -203,6 +219,12 @@ package body Aquarius.UI.Gtk_UI is
          Widget_UI_Callback.To_Marshaller
            (Configure_Overview_Handler'Access),
          With_UI);
+      Widget_UI_Callback.Connect
+        (With_UI.Overview, Gtk.Widget.Signal_Button_Press_Event,
+         Widget_UI_Callback.To_Marshaller
+           (On_Overview_Button_Press'Access),
+         With_UI);
+
       Widget_UI_Callback.Connect
         (With_UI.Sections, "configure-event",
          Widget_UI_Callback.To_Marshaller
@@ -235,6 +257,28 @@ package body Aquarius.UI.Gtk_UI is
          With_UI);
 
    end Init;
+
+   ------------------------------
+   -- On_Overview_Button_Press --
+   ------------------------------
+
+   function On_Overview_Button_Press
+     (W       : access Gtk.Widget.Gtk_Widget_Record'Class;
+      Event   : Gdk.Event.Gdk_Event;
+      With_UI : Gtk_UI_Access)
+      return Boolean
+   is
+      pragma Unreferenced (W);
+      use type Glib.Guint;
+   begin
+      if Event.Button.Button = 1 then
+         With_UI.Start_X := Natural (Event.Button.X);
+         With_UI.Overview.Queue_Draw;
+         With_UI.Sections.Queue_Draw;
+         return True;
+      end if;
+      return False;
+   end On_Overview_Button_Press;
 
    ----------------------------
    -- On_Reference_Activated --
@@ -339,19 +383,21 @@ package body Aquarius.UI.Gtk_UI is
 
       begin
 
-         Get_Display_Size (Item, Width, Height);
+         if Displayed (Item) then
+            Get_Display_Size (Item, Width, Height);
 
-         Cairo.Set_Source_Rgb
-           (Context,
-            Gdouble (Red (Bg)) / 255.0,
-            Gdouble (Green (Bg)) / 255.0,
-            Gdouble (Blue (Bg)) / 255.0);
-         Cairo.Rectangle (Context,
-                          Gdouble (X) * Scale,
-                          Gdouble (Y) * Scale,
-                          Gdouble (Width) * Scale,
-                          Gdouble (Height) * Scale);
-         Cairo.Fill (Context);
+            Cairo.Set_Source_Rgb
+              (Context,
+               Gdouble (Red (Bg)) / 255.0,
+               Gdouble (Green (Bg)) / 255.0,
+               Gdouble (Blue (Bg)) / 255.0);
+            Cairo.Rectangle (Context,
+                             Gdouble (X) * Scale,
+                             Gdouble (Y) * Scale,
+                             Gdouble (Width) * Scale,
+                             Gdouble (Height) * Scale);
+            Cairo.Fill (Context);
+         end if;
       end Render;
 
    begin
@@ -373,7 +419,7 @@ package body Aquarius.UI.Gtk_UI is
 
       Cairo.Set_Source_Rgb (Context, 0.9, 0.9, 0.9);
       Cairo.Rectangle (Context,
-                       Gdouble (With_UI.Start_X) * Scale, 1.0,
+                       Gdouble (With_UI.Start_X), 1.0,
                        Gdouble (With_UI.Section_Area_Width) * Scale,
                        Gdouble (With_UI.Overview_Height - 2));
       Cairo.Fill (Context);

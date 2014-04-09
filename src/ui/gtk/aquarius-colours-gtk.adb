@@ -20,4 +20,20 @@ package body Aquarius.Colours.Gtk is
       return Result;
    end To_Gdk_Color;
 
+   -----------------
+   -- To_Gdk_RGBA --
+   -----------------
+
+   function To_Gdk_RGBA
+     (Colour : Aquarius_Colour)
+      return Gdk.RGBA.Gdk_RGBA
+   is
+      use Glib;
+   begin
+      return (Red => Gdouble (Colour.Red) / 256.0,
+              Green => Gdouble (Colour.Green) / 256.0,
+              Blue  => Gdouble (Colour.Blue) / 256.0,
+              Alpha => 1.0);
+   end To_Gdk_RGBA;
+
 end Aquarius.Colours.Gtk;
