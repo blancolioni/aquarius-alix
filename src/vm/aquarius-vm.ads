@@ -74,7 +74,8 @@ package Aquarius.VM is
       Name       : String)
       return VM_Value;
 
-   function New_Environment (Parent : VM_Environment)
+   function New_Environment (Name   : String;
+                             Parent : VM_Environment)
                             return VM_Environment;
 
    procedure Release_Environment
@@ -153,6 +154,7 @@ private
 
    type VM_Environment_Record is
       record
+         Name   : Ada.Strings.Unbounded.Unbounded_String;
          Parent : VM_Environment;
          Map    : Env_Map.Map;
       end record;
