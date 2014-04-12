@@ -24,6 +24,7 @@ package Aquarius.Programs is
    type Program_Tree is access all Program_Tree_Type'Class;
 
    type Array_Of_Program_Trees is array (Positive range <>) of Program_Tree;
+   Empty_Program_Tree_Array : Array_Of_Program_Trees (1 .. 0);
 
    function New_Program_Tree (Syntax   : Aquarius.Syntax.Syntax_Tree)
                              return Program_Tree;
