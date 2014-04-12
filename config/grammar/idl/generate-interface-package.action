@@ -23,8 +23,8 @@ package [Package_Name] is
 @         case /Type_Definition is
 @            when Record_Type_Definition =>
       record
-@               for record_component of .Record_Components loop
-         [.Identifier] : [.Typeref.Ada_Name];
+@               for record_component of /Record_Components loop
+         [/Identifier] : [/Typeref.Ada_Name];
 @               end loop;
       end record;
 @            when New_Type_Definition =>
@@ -41,7 +41,7 @@ package [Package_Name] is
 @ end loop;
 @ end if;
      )
-@ if .Function_Declaration then
+@ if /Function_Declaration then
      return [/Typeref.Ada_Name]
 @ end if;
    is abstract;

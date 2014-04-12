@@ -3,15 +3,15 @@ for all loop
       when Compilation_Unit =>
          .Contexts := Create_Set;
       when Typeref =>
-         if .Interface_Typeref then
+         if /Interface_Typeref then
             .Ada_Name := Qualified_Identifier.Image & "_Interface";
             .Contexts.Insert (Qualified_Identifier.Image);
          else
-            .Ada_Name := Qualified_Identifier.Image;
-            if Qualified_Identifier.Length = 1 then
-               .Contexts.Insert (Type_Package (Qualified_Identifier.Image));
+            .Ada_Name := /Qualified_Identifier.Image;
+            if /Qualified_Identifier.Length = 1 then
+               Tree.Contexts.Insert (/Qualified_Identifier.Image);
             else
-               .Contexts.Insert (Concat (Qualified_Identifier, 1, Qualified_Identifier.Length - 2));
+               Tree.Contexts.Insert (Concat (/Qualified_Identifier, 1, /Qualified_Identifier.Length - 2));
             end if;
          end if;
    end case;
