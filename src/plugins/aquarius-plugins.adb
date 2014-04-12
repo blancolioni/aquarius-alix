@@ -161,7 +161,8 @@ package body Aquarius.Plugins is
          Has_Value => False);
       Plugin.VM_Env :=
         Aquarius.VM.New_Environment
-        (Aquarius.VM.Library.Standard_Library);
+          ("plugin-" & Aquarius_Plugin_Type'Class (Plugin.all).Name,
+           Aquarius.VM.Library.Standard_Library);
       Aquarius.VM.Insert (Plugin.VM_Env, "grammar",
                                  Aquarius.VM.To_Value (Grammar));
    end Load;
