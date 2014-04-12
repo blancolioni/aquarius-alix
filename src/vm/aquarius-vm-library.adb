@@ -1,7 +1,9 @@
+with Ada.Characters.Handling;
+with Ada.Tags;
+
 with Aquarius.Grammars;
 with Aquarius.Programs;
 with Aquarius.Programs.Parser;
-with Ada.Tags;
 with Aquarius.Trees;
 
 package body Aquarius.VM.Library is
@@ -43,6 +45,11 @@ package body Aquarius.VM.Library is
       Args : Aquarius.VM.Array_Of_Values)
       return Aquarius.VM.VM_Value;
 
+   function Eval_Method_Ada_Name
+     (Env  : Aquarius.VM.VM_Environment;
+      Args : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
+
    function Eval_Method_First
      (Env  : Aquarius.VM.VM_Environment;
       Args : Aquarius.VM.Array_Of_Values)
@@ -76,7 +83,7 @@ package body Aquarius.VM.Library is
      return VM_Environment
    is
       Env : constant VM_Environment :=
-              New_Environment (Null_Environment);
+              New_Environment ("standard", Null_Environment);
    begin
       Insert (Env, "->",
               To_Value (Eval_Get_Named_Direct_Child'Access,
@@ -115,7 +122,7 @@ package body Aquarius.VM.Library is
            (Env         => Env,
             Class_Name  => Class_Name,
             Method_Name => "name",
-            Value       => To_Value (Eval_Method_Name'Access, 0));
+            Value       => To_Value (Eval_Method_Name'Access, 1));
       end;
 
       declare
@@ -138,17 +145,17 @@ package body Aquarius.VM.Library is
            (Env         => Env,
             Class_Name  => Class_Name,
             Method_Name => "first",
-            Value       => To_Value (Eval_Method_First'Access, 0));
+            Value       => To_Value (Eval_Method_First'Access, 1));
          Insert
            (Env         => Env,
             Class_Name  => Class_Name,
             Method_Name => "last",
-            Value       => To_Value (Eval_Method_Last'Access, 0));
+            Value       => To_Value (Eval_Method_Last'Access, 1));
          Insert
            (Env         => Env,
             Class_Name  => Class_Name,
             Method_Name => "length",
-            Value       => To_Value (Eval_Method_Length'Access, 0));
+            Value       => To_Value (Eval_Method_Length'Access, 1));
       end;
 
       declare
@@ -169,7 +176,15 @@ package body Aquarius.VM.Library is
            (Env         => Env,
             Class_Name  => Class_Name,
             Method_Name => "image",
-            Value       => To_Value (Eval_Method_Image'Access, 0));
+            Value       => To_Value (Eval_Method_Image'Access, 1));
+         if False then
+            Program_Tree_Class.Member_Names.Append ("ada_name");
+            Insert
+              (Env         => Env,
+               Class_Name  => Class_Name,
+               Method_Name => "ada_name",
+               Value       => To_Value (Eval_Method_Ada_Name'Access, 1));
+         end if;
       end;
 
       return Env;
@@ -320,6 +335,38 @@ package body Aquarius.VM.Library is
       return Error_Value ("no such child: " & Name & Index'Img);
 
    end Eval_Get_Named_Direct_Child;
+
+   --------------------------
+   -- Eval_Method_Ada_Name --
+   --------------------------
+
+   function Eval_Method_Ada_Name
+     (Env  : Aquarius.VM.VM_Environment;
+      Args : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value
+   is
+      pragma Unreferenced (Env);
+      use Aquarius.Programs;
+      Program : constant Program_Tree :=
+                  Program_Tree (Args (Args'First).Prop_Value);
+      Result  : String := Program.Concatenate_Children;
+      First   : Boolean := True;
+   begin
+      for I in Result'Range loop
+         case Result (I) is
+            when '_' | '.' =>
+               First := True;
+            when 'a' .. 'z' =>
+               if First then
+                  Result (I) := Ada.Characters.Handling.To_Upper (Result (I));
+               end if;
+               First := False;
+            when others =>
+               null;
+         end case;
+      end loop;
+      return To_Value (Result);
+   end Eval_Method_Ada_Name;
 
    -----------------------
    -- Eval_Method_First --
