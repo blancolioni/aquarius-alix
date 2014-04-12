@@ -33,7 +33,7 @@ null_statement ::= 'null'
 
 assignment_statement ::= object_reference ':=' expression
 
-procedure_call_statement ::= object_reference
+procedure_call_statement ::= object_reference [ actual_argument_list ]
 
 declare_statement ::= 'declare' declaration
 
@@ -83,7 +83,7 @@ factor ::= primary
        | unary_primary_operator primary
 
 primary ::= numeric_literal | string_literal : string
-          | object_reference | tree_reference
+          | object_reference
           | 'null' | parenthesised_expression
 	      | if_expression | character_literal
 
