@@ -1,5 +1,3 @@
-with Ada.Strings.Fixed;
-
 package body Aquarius.Names is
 
    ---------
@@ -141,18 +139,8 @@ package body Aquarius.Names is
    ----------------------
 
    function To_Aquarius_Name (Item : String) return Aquarius_Name is
-      use Ada.Strings.Fixed;
    begin
-      if Item'Length > Max_Short_Length then
-         return (Long, new String'(Item));
-      else
-         declare
-            Text : String (1 .. Max_Short_Length) := (others => ' ');
-         begin
-            Text (1 .. Item'Length) := Item;
-            return (Short, Text);
-         end;
-      end if;
+      return To_Unbounded_String (Item);
    end To_Aquarius_Name;
 
    ---------------
@@ -161,12 +149,8 @@ package body Aquarius.Names is
 
    function To_String (Item : Aquarius_Name) return String is
    begin
-      case Item.Length_Class is
-         when Short =>
-            return Ada.Strings.Fixed.Trim (Item.Text, Ada.Strings.Right);
-         when Long =>
-            return Item.Long_Text.all;
-      end case;
+      return Ada.Strings.Unbounded.To_String
+        (Ada.Strings.Unbounded.Unbounded_String (Item));
    end To_String;
 
 end Aquarius.Names;
