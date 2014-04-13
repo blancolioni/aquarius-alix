@@ -1,3 +1,6 @@
+private with Ada.Containers.Indefinite_Hashed_Maps;
+private with Ada.Strings.Fixed.Hash;
+
 with Aquarius.Actions;
 with Aquarius.Entries;
 with Aquarius.Layout;
@@ -109,6 +112,21 @@ package Aquarius.Programs is
    function Has_Named_Property (Item : Program_Tree_Type;
                                 Name : String)
                                return Boolean;
+
+   function Has_Property
+     (Item : Program_Tree_Type;
+      Name : String)
+      return Boolean;
+
+   function Property
+     (Item : Program_Tree_Type;
+      Name : String)
+      return access Root_Aquarius_Object'Class;
+
+   procedure Set_Property
+     (Item : in out Program_Tree_Type;
+      Name : String;
+      Value : access Root_Aquarius_Object'Class);
 
    overriding
    function Text (Item : Program_Tree_Type) return String;
@@ -276,6 +294,15 @@ package Aquarius.Programs is
 
 private
 
+   type Aquarius_Object_Access is access all Root_Aquarius_Object'Class;
+
+   package Aquarius_Object_Maps is
+     new Ada.Containers.Indefinite_Hashed_Maps
+       (Key_Type        => String,
+        Element_Type    => Aquarius_Object_Access,
+        Hash            => Ada.Strings.Fixed.Hash,
+        Equivalent_Keys => "=");
+
    type Program_Tree_Type is
      new Aquarius.Trees.Root_Tree_Type
      and Aquarius.Actions.Actionable
@@ -305,6 +332,7 @@ private
          Offset_Rule       : Aquarius.Source.Source_Position;
          Render_Class      : Aquarius.Syntax.Syntax_Tree;
          Fragment          : Tagatha.Fragments.Tagatha_Fragment;
+         Object_Props      : Aquarius_Object_Maps.Map;
       end record;
 
    procedure Free (Item : in out Program_Tree);
