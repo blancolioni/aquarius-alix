@@ -1,7 +1,6 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Strings.Fixed;
 with Ada.Tags;
-with Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
 
 with Aquarius.Names;
@@ -55,7 +54,7 @@ package body Aquarius.VM is
          when Val_Entry =>
             Result := Item;
          when Val_Primitive =>
-            Result := Item;
+            Result := Item.Fn (Env, Args);
          when Val_Class =>
             Result := Item;
          when Val_Method_Call =>
@@ -188,26 +187,39 @@ package body Aquarius.VM is
                Result := Item;
             end if;
          when Val_Method_Call =>
-            declare
-               Class : constant String := Class_Name (Item.Val_Object);
-               Lib_Name : constant String :=
-                            Class & "__" & To_String (Item.Val_Method);
-               Lib_Value : constant VM_Value :=
-                             Get_Value (Env, Lib_Name);
-            begin
-               if Lib_Value /= null then
-                  if Lib_Value.Arg_Count = 0 then
-                     Result := Lib_Value.Fn (Env, (1 => Item.Val_Object));
+            if Has_Tree (Item.Val_Object)
+              and then
+                Aquarius.Programs.Program_Tree
+                  (To_Tree (Item.Val_Object)).Has_Property
+                (To_String (Item.Val_Method))
+            then
+               Result := To_Value
+                 (Aquarius.Programs.Program_Tree
+                    (To_Tree (Item.Val_Object)).Property
+                  (To_String (Item.Val_Method)));
+            else
+               declare
+                  Class     : constant String := Class_Name (Item.Val_Object);
+                  Lib_Name  : constant String :=
+                                Class & "__" & To_String (Item.Val_Method);
+                  Lib_Value : constant VM_Value :=
+                                Get_Value (Env, Lib_Name);
+               begin
+                  if Lib_Value /= null then
+                     if Lib_Value.Arg_Count = 1 then
+                        Result := Lib_Value.Fn (Env, (1 => Item.Val_Object));
+                     else
+                        Result := Item;
+                     end if;
                   else
-                     Result := Item;
+                     raise Constraint_Error with
+                       "object " & To_String (Item.Val_Object)
+                       & " has no method named '"
+                       & To_String (Item.Val_Method)
+                       & "'";
                   end if;
-               else
-                  raise Constraint_Error with
-                    "object " & To_String (Item.Val_Object)
-                    & " has no method named '"
-                    & To_String (Item.Val_Method);
-               end if;
-            end;
+               end;
+            end if;
          when Val_Class =>
             Result := Item;
       end case;
@@ -294,6 +306,10 @@ package body Aquarius.VM is
          return V;
       elsif V.Class /= Val_Entry then
          return Error_Value ("non-entry value found for " & Name);
+      elsif V.Val_Value.Class = Val_Primitive
+        and then V.Val_Value.Arg_Count = 0
+      then
+         return Evaluate (V.Val_Value, Env);
       else
          return V.Val_Value;
       end if;
@@ -305,9 +321,22 @@ package body Aquarius.VM is
 
    function Has_Tree (Item : VM_Value) return Boolean is
    begin
-      return Item.Class = Val_Property and then
-        Item.Prop_Value.all in Aquarius.Trees.Root_Tree_Type'Class;
+      return Item /= null
+        and then Item.Class = Val_Property
+        and then Item.Prop_Value.all in Aquarius.Trees.Root_Tree_Type'Class;
    end Has_Tree;
+
+   ---------------
+   -- Has_Value --
+   ---------------
+
+   function Has_Value (Env  : VM_Environment;
+                       Name : String)
+                       return Boolean
+   is
+   begin
+      return Get_Entry_Value (Env, Name) /= null;
+   end Has_Value;
 
    ----------
    -- Head --
@@ -365,11 +394,13 @@ package body Aquarius.VM is
    ---------------------
 
    function New_Environment
-     (Parent : VM_Environment)
+     (Name   : String;
+      Parent : VM_Environment)
       return VM_Environment
    is
       Result : constant VM_Environment := new VM_Environment_Record;
    begin
+      Result.Name := Ada.Strings.Unbounded.To_Unbounded_String (Name);
       Result.Parent := Parent;
       Active_Environments.Append (Result);
       return Result;
@@ -427,7 +458,8 @@ package body Aquarius.VM is
                                                 Create => True);
    begin
       if V.Properties = null then
-         V.Properties := New_Environment (Env);
+         V.Properties :=
+           New_Environment (To_String (V) & " properties", Env);
       end if;
       Insert (V.Properties, Prop_Name, Prop_Value);
    end Set_Property;
@@ -452,11 +484,13 @@ package body Aquarius.VM is
          when Val_Property =>
             if Item.Prop_Value = null then
                return "/nil/";
-            elsif Item.Prop_Value.all in
-              Aquarius.Programs.Program_Tree_Type'Class
-            then
-               return Aquarius.Programs.Program_Tree
-                 (Item.Prop_Value).Concatenate_Children;
+--              elsif Item.Prop_Value.all in
+--                Aquarius.Programs.Program_Tree_Type'Class
+--                and then Aquarius.Programs.Program_Tree_Type
+--                  (Item.Prop_Value.all).Is_Terminal
+--              then
+--                 return Aquarius.Programs.Program_Tree
+--                   (Item.Prop_Value).Text;
             else
                return Item.Prop_Value.Name;
             end if;
@@ -466,7 +500,7 @@ package body Aquarius.VM is
             return '[' & To_String (Item.Val_Name) &
               ": " & Show (Item.Val_Value) & "]";
          when Val_Primitive =>
-            return "(primitive)";
+            return "(primitive" & Item.Arg_Count'Img & ")";
          when Val_Method_Call =>
             return Show (Item.Val_Object) & "."
               & To_String (Item.Val_Method);
@@ -490,10 +524,6 @@ package body Aquarius.VM is
 
    function To_Boolean (Value : VM_Value) return Boolean is
    begin
-
-      Ada.Text_IO.Put_Line
-        (Ada.Text_IO.Standard_Error,
-         "To_Boolean: " & To_String (Value));
 
       if Value = null then
          return False;

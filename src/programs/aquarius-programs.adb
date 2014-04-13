@@ -41,7 +41,8 @@ package body Aquarius.Programs is
       Indent_Rule          => False,
       Offset_Rule          => Aquarius.Source.No_Source_Position,
       Render_Class         => null,
-      Fragment             => Tagatha.Fragments.Empty_Fragment);
+      Fragment             => Tagatha.Fragments.Empty_Fragment,
+      Object_Props         => Aquarius_Object_Maps.Empty_Map);
 
    --  After a node is changed, update any entry it references
    procedure Update_Entry
@@ -643,6 +644,19 @@ package body Aquarius.Programs is
       end if;
    end Has_Named_Property;
 
+   ------------------
+   -- Has_Property --
+   ------------------
+
+   function Has_Property
+     (Item : Program_Tree_Type;
+      Name : String)
+      return Boolean
+   is
+   begin
+      return Item.Object_Props.Contains (Name);
+   end Has_Property;
+
    ---------------------
    -- Has_Space_After --
    ---------------------
@@ -1097,6 +1111,21 @@ package body Aquarius.Programs is
       end if;
    end Render_Class;
 
+
+   --------------
+   -- Property --
+   --------------
+
+   function Property
+     (Item : Program_Tree_Type;
+      Name : String)
+      return access Root_Aquarius_Object'Class
+   is
+   begin
+      return Item.Object_Props.Element (Name);
+   end Property;
+
+
    -----------------
    -- Run_Actions --
    -----------------
@@ -1339,6 +1368,23 @@ package body Aquarius.Programs is
    begin
       Item.Start_Position := Pos;
    end Set_Layout_Position;
+
+   ------------------
+   -- Set_Property --
+   ------------------
+
+   procedure Set_Property
+     (Item : in out Program_Tree_Type;
+      Name : String;
+      Value : access Root_Aquarius_Object'Class)
+   is
+   begin
+      if Item.Object_Props.Contains (Name) then
+         Item.Object_Props.Replace (Name, Aquarius_Object_Access (Value));
+      else
+         Item.Object_Props.Insert (Name, Aquarius_Object_Access (Value));
+      end if;
+   end Set_Property;
 
    ----------------------------
    -- Set_Separator_New_Line --

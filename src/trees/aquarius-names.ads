@@ -1,4 +1,5 @@
-with Ada.Containers.Vectors;
+private with Ada.Containers.Vectors;
+private with Ada.Strings.Unbounded;
 
 package Aquarius.Names is
 
@@ -49,19 +50,7 @@ package Aquarius.Names is
 
 private
 
-   type Aquarius_Name_Length_Class is (Short, Long);
-
-   Max_Short_Length : constant := 16;
-
-   type Aquarius_Name (Length_Class : Aquarius_Name_Length_Class := Short) is
-      record
-         case Length_Class is
-            when Short =>
-               Text      : String (1 .. Max_Short_Length) := (others => ' ');
-            when Long =>
-               Long_Text : access String;
-         end case;
-      end record;
+   type Aquarius_Name is new Ada.Strings.Unbounded.Unbounded_String;
 
    package Name_Vectors is
       new Ada.Containers.Vectors (Positive, Aquarius_Name);
