@@ -380,7 +380,7 @@ package body Aquarius.VM.Library is
       pragma Unreferenced (Env);
       use Aquarius.Trees;
    begin
-      return To_Value (Tree (Args (Args'First).Prop_Value).First_Child);
+      return To_Value (Tree (Args (Args'First).Prop_Value).First_Leaf);
    end Eval_Method_First;
 
    -----------------------
@@ -413,7 +413,7 @@ package body Aquarius.VM.Library is
       pragma Unreferenced (Env);
       use Aquarius.Trees;
    begin
-      return To_Value (Tree (Args (Args'First).Prop_Value).Last_Child);
+      return To_Value (Tree (Args (Args'First).Prop_Value).Last_Leaf);
    end Eval_Method_Last;
 
    ------------------------
