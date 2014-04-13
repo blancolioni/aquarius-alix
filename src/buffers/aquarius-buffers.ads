@@ -49,7 +49,7 @@ package Aquarius.Buffers is
 
    function Load_Buffer_From_File
      (UI   : Aquarius.UI.Aquarius_UI;
-      Path    : String)
+      Path : String)
      return Aquarius_Buffer;
 
    function New_Empty_Buffer
@@ -163,7 +163,7 @@ private
      and Aquarius.Messages.Message_Location
      and Aquarius.Interaction.Interactor with
       record
-         Buffer_UI   : Aquarius.UI.Aquarius_UI;
+         Buffer_UI      : Aquarius.UI.Aquarius_UI;
          Editor         : Aquarius.Programs.Editor.Program_Editor;
          File_Buffer    : Boolean;
          Grammar        : Aquarius.Grammars.Aquarius_Grammar;

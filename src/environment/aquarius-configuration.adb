@@ -357,16 +357,16 @@ package body Aquarius.Configuration is
       Grammar      : constant Aquarius.Grammars.Aquarius_Grammar :=
         Aquarius.Grammars.Manager.Get_Grammar ("aquarius-config");
       Config_File  : constant Aquarius.Programs.Program_Tree :=
-        Aquarius.Loader.Load_From_File
-        (Grammar    => Grammar,
-         Project    =>
-           Aquarius.Projects.New_Default_Project
-           (Aquarius_Config_File),
-           Interactor =>
-           Aquarius.Interaction.Console.Console_Interactor,
-         UI         =>
-           Aquarius.UI.Console.Console_UI,
-         Path       => Aquarius_Config_File);
+                       Aquarius.Loader.Load_From_File
+                         (Grammar    => Grammar,
+                          Project    =>
+                            Aquarius.Projects.New_Default_Project
+                              (Aquarius_Config_File),
+                          Interactor =>
+                            Aquarius.Interaction.Console.Console_Interactor,
+                          UI         =>
+                            Aquarius.UI.Console.Console_UI,
+                          Path       => Aquarius_Config_File);
       Errors       : Aquarius.Messages.Message_List;
    begin
 

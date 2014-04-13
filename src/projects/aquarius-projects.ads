@@ -81,7 +81,7 @@ package Aquarius.Projects is
      return Aquarius_Project;
 
    function New_Default_Project
-     (For_File    : String;
+     (For_File  : String;
       UI        : Aquarius.UI.Aquarius_UI)
       return Aquarius_Project;
    --  New_Default_Project: creates a project with default settings,
@@ -215,9 +215,9 @@ private
          Buffers         : Loaded_Buffer_Vector.Vector;
          Views           : View_Vector.Vector;
          Grammar_Names   : Aquarius.Names.Name_List;
-         Project_UI    : Aquarius.UI.Aquarius_UI;
+         Project_UI      : Aquarius.UI.Aquarius_UI;
          Entries         : Project_Entries_Vector.Vector;
-         References    : Aquarius.References.Reference_List;
+         References      : Aquarius.References.Reference_List;
          Pending_Actions : String_Vectors.Vector;
       end record;
 

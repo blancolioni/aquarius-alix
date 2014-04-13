@@ -140,8 +140,9 @@ package body Aquarius.GUI is
       begin
          if Local_Current_Project = null then
             Local_Current_Project :=
-              Aquarius.Projects.New_Default_Project (With_File,
-                                                     Local_Current_UI);
+              Aquarius.Projects.New_Default_Project
+                (With_File,
+                 Local_Current_UI);
          end if;
 
          Aquarius.GUI.Views.Update_Views (Local_Current_Project);
