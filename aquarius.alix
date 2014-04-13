@@ -15,6 +15,7 @@ source_dir = src/errors
 source_dir = src/files
 source_dir = src/glade
 source_dir = src/grammar
+# source_dir = src/main
 source_dir = src/messages
 source_dir = src/plugins
 source_dir = src/plugins/ada

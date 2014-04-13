@@ -1,4 +1,4 @@
-package XAquarius.Tasks is
+package Aquarius.Tasks is
 
    type Root_Task_Type is abstract tagged private;
 
