@@ -81,6 +81,10 @@ package Aquarius.VM is
    procedure Release_Environment
      (Env : in out VM_Environment);
 
+   function Has_Value (Env  : VM_Environment;
+                       Name : String)
+                       return Boolean;
+
    function Get_Value (Env  : VM_Environment;
                        Name : String)
                       return VM_Value;
