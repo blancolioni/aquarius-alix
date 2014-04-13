@@ -34,7 +34,7 @@ package [Package_Name] is
 
    not overriding
    [(if /Function_Declaration then "function" else "procedure")] [/Identifier]
-     (Item : in out [Interface_Name]
+     (Item : in out Root_[Interface_Name]_Interface
 @ if /Formal_Arguments then
 @ for Formal_Argument of /Formal_Arguments loop
      ; [/Identifier] : [(if /Argument_Spec then /Argument_Spec else "")] [/Typeref.Ada_Name]
