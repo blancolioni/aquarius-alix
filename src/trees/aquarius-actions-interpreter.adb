@@ -1,11 +1,10 @@
 with Ada.Characters.Handling;
+with Ada.Exceptions;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
-with Aquarius.Grammars;
 with Aquarius.Properties;
 with Aquarius.Properties.String_Sets;
-with Aquarius.Trees.Properties;
 
 with Aquarius.VM;
 with Aquarius.VM.Library;
@@ -13,6 +12,8 @@ with Aquarius.VM.Library;
 package body Aquarius.Actions.Interpreter is
 
    use Aquarius.Programs;
+
+   Trace : constant Boolean := False;
 
    type Assignment_Target_Type is (No_Target, Property_Target);
 
@@ -25,7 +26,7 @@ package body Aquarius.Actions.Interpreter is
                null;
             when Property_Target =>
                Tree     : Program_Tree;
-               Property : Aquarius.Properties.Property_Type;
+               Property : Ada.Strings.Unbounded.Unbounded_String;
          end case;
       end record;
 
@@ -167,7 +168,7 @@ package body Aquarius.Actions.Interpreter is
 
    begin
       Make ("ada_specification_name",
-            Fn_Ada_Specification_Name'Access, 0);
+            Fn_Ada_Specification_Name'Access, 1);
       Make ("create_set", Fn_Create_Set'Access, 0);
       Make ("new_line", Fn_New_Line'Access, 0);
       Make ("put_line", Fn_Put_Line'Access, 1);
@@ -188,6 +189,7 @@ package body Aquarius.Actions.Interpreter is
    begin
       Ada.Text_IO.Put_Line
         (Ada.Text_IO.Standard_Error,
+         Node.Show_Location & ": " &
          Action.Name & "/" & Node.Name & ": " & Message);
       raise Constraint_Error;
    end Error;
@@ -336,6 +338,11 @@ package body Aquarius.Actions.Interpreter is
                   Current :=
                     Evaluate_Record_Selector
                       (Env, Current, Component_Name);
+               exception
+                  when E : others =>
+                     Error (Choice, Node,
+                            Ada.Exceptions.Exception_Message (E));
+                     raise;
                end;
             elsif Choice.Name = "actual_argument_list" then
                declare
@@ -352,16 +359,34 @@ package body Aquarius.Actions.Interpreter is
                   Current := VM.Apply (Current, Env, Arg_Values);
                end;
             elsif Choice.Name = "subtree_selector" then
+               if Trace then
+                  Ada.Text_IO.Put_Line
+                    (Ada.Text_IO.Standard_Error,
+                     "subtree_selector: current = " & VM.To_String (Current));
+               end if;
+
                declare
                   Subtree_Name : constant String :=
                                    Choice.Program_Child
                                      ("identifier").Standard_Text;
                begin
+                  if Trace then
+                     Ada.Text_IO.Put_Line
+                       (Ada.Text_IO.Standard_Error,
+                        "subtree_selector: subtree = " & Subtree_Name);
+                  end if;
+
                   if VM.Has_Tree (Current) then
                      Current :=
                        VM.To_Value
                          (VM.To_Tree (Current).Breadth_First_Search
                           (Subtree_Name));
+                     if Trace then
+                        Ada.Text_IO.Put_Line
+                          (Ada.Text_IO.Standard_Error,
+                           "subtree_selector: new current = "
+                           & VM.To_String (Current));
+                     end if;
                   else
                      Error (Action, Node,
                             VM.To_String (Current) & ": not a tree");
@@ -533,10 +558,12 @@ package body Aquarius.Actions.Interpreter is
       pragma Unreferenced (Env);
    begin
       for Arg of Arguments loop
---           if Arg.Value_Type = Object_Value then
---              Ada.Text_IO.Put_Line (Program_Tree (Arg.Object).Image);
---           end if;
-         Ada.Text_IO.Put (VM.To_String (Arg));
+         if Aquarius.VM.Has_Tree (Arg) then
+            Ada.Text_IO.Put
+              (Program_Tree (Aquarius.VM.To_Tree (Arg)).Concatenate_Children);
+         else
+            Ada.Text_IO.Put (VM.To_String (Arg));
+         end if;
       end loop;
       return VM.Null_Value;
    end Fn_Put;
@@ -570,13 +597,14 @@ package body Aquarius.Actions.Interpreter is
    is
       Name : constant String :=
                VM.To_String (Arguments (Arguments'First));
-      Writer : Aquarius_Writer :=
-                 (Ada.Strings.Unbounded.To_Unbounded_String (Name),
-                  new Ada.Text_IO.File_Type);
+      Writer : constant access Aquarius_Writer :=
+                 new Aquarius_Writer'
+                   (Ada.Strings.Unbounded.To_Unbounded_String (Name),
+                    new Ada.Text_IO.File_Type);
       Value  : constant Aquarius.VM.VM_Value :=
-                 VM.To_Value
-                   (new Aquarius_Writer'(Writer));
+                 VM.To_Value (Writer);
    begin
+      Ada.Text_IO.Put_Line ("redirect output to: " & Name);
       Ada.Text_IO.Create (Writer.File.all, Ada.Text_IO.Out_File, Name);
       Ada.Text_IO.Set_Output (Writer.File.all);
       VM.Insert (Env, "__output", Value);
@@ -601,8 +629,6 @@ package body Aquarius.Actions.Interpreter is
                       else Node);
       Qualifiers : constant Array_Of_Program_Trees :=
                      Action.Direct_Children ("name_qualifier");
-      Grammar    : constant Grammars.Aquarius_Grammar :=
-                     Aquarius.Trees.Properties.Get_Grammar (Node);
    begin
       if Qualifiers'Length = 0 then
          Error (Action, Node, "cannot assign to tree");
@@ -623,7 +649,7 @@ package body Aquarius.Actions.Interpreter is
                      begin
                         if I = Qualifiers'Last then
                            return (Property_Target, T,
-                                   Grammar.Get_Property_Type
+                                   Ada.Strings.Unbounded.To_Unbounded_String
                                      (Property_Name));
                         else
                            declare
@@ -724,32 +750,46 @@ package body Aquarius.Actions.Interpreter is
                                        (Env, Initial_Value_Tree, Node)
                                      else VM.Null_Value);
          begin
+            if Trace then
+               Ada.Text_IO.Put_Line
+                 (Ada.Text_IO.Standard_Error,
+                  "declare " & Declared_Name
+                  & " = " & Aquarius.VM.To_String (Value));
+            end if;
             VM.Insert (Env, Declared_Name, Value);
          end;
       elsif Action.Name = "procedure_call_statement" then
          declare
             use Ada.Strings.Unbounded;
+            use type VM.VM_Value;
             Identifier : constant Program_Tree :=
                            Action.Program_Child ("identifier");
             Procedure_Name : constant String :=
                                Identifier.Standard_Text;
+            Argument_List  : constant Program_Tree :=
+                               Action.Program_Child ("actual_argument_list");
             Arg_Trees      : constant Array_Of_Program_Trees :=
-                               Action.Direct_Children ("expression");
+                               (if Argument_List /= null
+                                then Argument_List.Direct_Children
+                                  ("expression")
+                                else Empty_Program_Tree_Array);
             Arg_Values     : VM.Array_Of_Values (Arg_Trees'Range);
             Fn_Value       : constant Aquarius.VM.VM_Value :=
                                VM.Get_Value (Env, Procedure_Name);
          begin
-            for I in Arg_Trees'Range loop
-               Arg_Values (I) :=
-                 Evaluate (Env, Arg_Trees (I), Node);
-            end loop;
-            declare
-               Result : constant Aquarius.VM.VM_Value :=
-                          VM.Apply (Fn_Value, Env, Arg_Values);
-               pragma Unreferenced (Result);
-            begin
-               null;
-            end;
+            if Fn_Value /= VM.Null_Value then
+               for I in Arg_Trees'Range loop
+                  Arg_Values (I) :=
+                    Evaluate (Env, Arg_Trees (I), Node);
+               end loop;
+               declare
+                  Result : constant Aquarius.VM.VM_Value :=
+                             VM.Apply (Fn_Value, Env, Arg_Values);
+                  pragma Unreferenced (Result);
+               begin
+                  null;
+               end;
+            end if;
          end;
       elsif Action.Name = "for_loop_statement" then
          Interpret (Env, Action.Chosen_Tree, Node);
@@ -778,9 +818,11 @@ package body Aquarius.Actions.Interpreter is
                                Loop_Statement.Program_Child
                                  ("sequence_of_statements");
          begin
-            Ada.Text_IO.Put_Line
-              (Ada.Text_IO.Standard_Error,
-               "for " & Node.Name & "/" & VM.To_String (Loop_Value));
+            if Trace then
+               Ada.Text_IO.Put_Line
+                 (Ada.Text_IO.Standard_Error,
+                  "for " & Node.Name & "/" & VM.To_String (Loop_Value));
+            end if;
             if VM.Has_Tree (Loop_Value)
               and then VM.To_Tree (Loop_Value).all in Program_Tree_Type'Class
             then
@@ -791,9 +833,12 @@ package body Aquarius.Actions.Interpreter is
                                Tree.Direct_Children;
                begin
                   for I in Children'Range loop
-                     Ada.Text_IO.Put_Line
-                       (Ada.Text_IO.Standard_Error,
-                        "  loop: " & Children (I).Name);
+                     if Trace then
+                        Ada.Text_IO.Put_Line
+                          (Ada.Text_IO.Standard_Error,
+                           "  loop: " & Children (I).Name);
+                     end if;
+
                      Interpret (Env, Sequence, Children (I));
                   end loop;
                end;
@@ -820,10 +865,13 @@ package body Aquarius.Actions.Interpreter is
                                Loop_Statement.Program_Child
                                  ("sequence_of_statements");
          begin
-            Ada.Text_IO.Put_Line
-              (Ada.Text_IO.Standard_Error,
-               "for " & Iterator_Name & " of "
-               & Node.Name & "/" & VM.To_String (Loop_Value));
+            if Trace then
+               Ada.Text_IO.Put_Line
+                 (Ada.Text_IO.Standard_Error,
+                  "for " & Iterator_Name & " of "
+                  & Node.Name & "/" & VM.To_String (Loop_Value));
+            end if;
+
             if VM.Has_Tree (Loop_Value)
               and then VM.To_Tree (Loop_Value).all in Program_Tree_Type'Class
             then
@@ -835,9 +883,11 @@ package body Aquarius.Actions.Interpreter is
                                  (Iterator_Name);
                begin
                   for I in Children'Range loop
-                     Ada.Text_IO.Put_Line
-                       (Ada.Text_IO.Standard_Error,
-                        "  loop: " & Children (I).Name);
+                     if Trace then
+                        Ada.Text_IO.Put_Line
+                          (Ada.Text_IO.Standard_Error,
+                           "  loop: " & Children (I).Name);
+                     end if;
                      Interpret (Env, Sequence, Children (I));
                   end loop;
                end;
@@ -890,16 +940,29 @@ package body Aquarius.Actions.Interpreter is
    is
    begin
       if not Got_Library then
-         Library := VM.New_Environment (VM.Library.Standard_Library);
+         Library :=
+           VM.New_Environment ("library", VM.Library.Standard_Library);
          Create_Library (Library);
          Got_Library := True;
       end if;
 
       declare
-         Env : Aquarius.VM.VM_Environment :=
-                 VM.New_Environment (Library);
+         use Aquarius.VM;
+         Env : VM_Environment :=
+                 New_Environment ("action", Library);
       begin
          Interpret (Env, Action, Target);
+         if Has_Value (Env, "__output") then
+            declare
+               Writer : constant access Aquarius_Writer :=
+                          Aquarius_Writer
+                            (To_Property
+                               (Get_Value (Env, "__output")).all)'Access;
+            begin
+               Ada.Text_IO.Set_Output (Ada.Text_IO.Standard_Output);
+               Ada.Text_IO.Close (Writer.File.all);
+            end;
+         end if;
          VM.Release_Environment (Env);
       exception
          when others =>
@@ -958,13 +1021,26 @@ package body Aquarius.Actions.Interpreter is
       Success    : Boolean := False;
    begin
       for Option of Options loop
+         if Trace then
+            Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error,
+                                  Option.Image);
+         end if;
+
          if Option.Name = "if" then
             null;
          elsif Option.Name = "expression" then
+--              Ada.Text_IO.Put_Line
+--                (Ada.Text_IO.Standard_Error,
+--                 "Evaluating: " & Node.Image);
             declare
                Check : constant Aquarius.VM.VM_Value :=
                          Evaluate (Env, Option, Node);
             begin
+               if Trace then
+                  Ada.Text_IO.Put_Line
+                    (Ada.Text_IO.Standard_Error,
+                     "Result: " & VM.To_String (Check));
+               end if;
                Success := VM.To_Boolean (Check);
             end;
          elsif Option.Name = "sequence_of_statements" then
@@ -1011,16 +1087,18 @@ package body Aquarius.Actions.Interpreter is
    begin
       case Target.Target_Type is
          when No_Target =>
-            null;
+            Ada.Text_IO.Put_Line ("assignment: no target");
          when Property_Target =>
-            Ada.Text_IO.Put_Line
-              (Ada.Text_IO.Standard_Error,
-               Target.Tree.Name & "."
-               & Aquarius.Properties.Get_Name (Target.Property)
-               & " := "
-               & VM.To_String (Value));
+            if Trace then
+               Ada.Text_IO.Put_Line
+                 (Ada.Text_IO.Standard_Error,
+                  Target.Tree.Name & "."
+                  & Ada.Strings.Unbounded.To_String (Target.Property)
+                  & " := "
+                  & VM.To_String (Value));
+            end if;
             Target.Tree.Set_Property
-              (Target.Property,
+              (Ada.Strings.Unbounded.To_String (Target.Property),
                VM.To_Property (Value));
       end case;
    end Set;
