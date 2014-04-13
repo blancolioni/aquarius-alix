@@ -1,11 +1,10 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Strings.Fixed;
 with Ada.Tags;
-with Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
 
 with Aquarius.Names;
---  with Aquarius.Programs;
+with Aquarius.Programs;
 
 package body Aquarius.VM is
 
@@ -55,7 +54,7 @@ package body Aquarius.VM is
          when Val_Entry =>
             Result := Item;
          when Val_Primitive =>
-            Result := Item;
+            Result := Item.Fn (Env, Args);
          when Val_Class =>
             Result := Item;
          when Val_Method_Call =>
@@ -190,11 +189,13 @@ package body Aquarius.VM is
          when Val_Method_Call =>
             if Has_Tree (Item.Val_Object)
               and then
-                To_Tree (Item.Val_Object).Has_Property
+                Aquarius.Programs.Program_Tree
+                  (To_Tree (Item.Val_Object)).Has_Property
                 (To_String (Item.Val_Method))
             then
                Result := To_Value
-                 (To_Tree (Item.Val_Object).Property
+                 (Aquarius.Programs.Program_Tree
+                    (To_Tree (Item.Val_Object)).Property
                   (To_String (Item.Val_Method)));
             else
                declare
@@ -320,9 +321,22 @@ package body Aquarius.VM is
 
    function Has_Tree (Item : VM_Value) return Boolean is
    begin
-      return Item.Class = Val_Property and then
-        Item.Prop_Value.all in Aquarius.Trees.Root_Tree_Type'Class;
+      return Item /= null
+        and then Item.Class = Val_Property
+        and then Item.Prop_Value.all in Aquarius.Trees.Root_Tree_Type'Class;
    end Has_Tree;
+
+   ---------------
+   -- Has_Value --
+   ---------------
+
+   function Has_Value (Env  : VM_Environment;
+                       Name : String)
+                       return Boolean
+   is
+   begin
+      return Get_Entry_Value (Env, Name) /= null;
+   end Has_Value;
 
    ----------
    -- Head --
@@ -472,9 +486,11 @@ package body Aquarius.VM is
                return "/nil/";
 --              elsif Item.Prop_Value.all in
 --                Aquarius.Programs.Program_Tree_Type'Class
+--                and then Aquarius.Programs.Program_Tree_Type
+--                  (Item.Prop_Value.all).Is_Terminal
 --              then
 --                 return Aquarius.Programs.Program_Tree
---                   (Item.Prop_Value).Concatenate_Children;
+--                   (Item.Prop_Value).Text;
             else
                return Item.Prop_Value.Name;
             end if;
@@ -508,10 +524,6 @@ package body Aquarius.VM is
 
    function To_Boolean (Value : VM_Value) return Boolean is
    begin
-
-      Ada.Text_IO.Put_Line
-        (Ada.Text_IO.Standard_Error,
-         "To_Boolean: " & To_String (Value));
 
       if Value = null then
          return False;
