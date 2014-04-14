@@ -5,4 +5,5 @@ plugin IDL version 0.1 is
          external ("check");
          external ("generate-interface-package");
          external ("generate-client-spec");
+         external ("generate-client-body");
    end check;
