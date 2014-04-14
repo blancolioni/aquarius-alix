@@ -44,8 +44,9 @@ package Aquarius.VM is
    function To_String (Value : VM_Value) return String;
    function To_Value (Item : String) return VM_Value;
 
+   function Has_Property (Value : VM_Value) return Boolean;
    function To_Property (Value : VM_Value)
-                        return access Root_Aquarius_Object'Class;
+                         return access Root_Aquarius_Object'Class;
    function To_Value (Item : access Root_Aquarius_Object'Class)
                       return VM_Value;
 
@@ -92,6 +93,10 @@ package Aquarius.VM is
    procedure Insert (Env   : VM_Environment;
                      Name  : String;
                      Value : VM_Value);
+
+   procedure Replace (Env   : VM_Environment;
+                      Name  : String;
+                      Value : VM_Value);
 
    procedure Insert (Env         : VM_Environment;
                      Class_Name  : String;

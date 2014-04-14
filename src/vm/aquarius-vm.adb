@@ -66,8 +66,10 @@ package body Aquarius.VM is
                              Get_Value (Env, Lib_Name);
             begin
                if Lib_Value /= null then
-                  Result := Apply (Lib_Value.Val_Value, Env,
-                                   Item.Val_Object & Args);
+                  Result := Lib_Value.Fn (Env, Item.Val_Object & Args);
+
+--                    Result := Apply (Lib_Value.Val_Value, Env,
+--                                     Item.Val_Object & Args);
                else
                   raise Constraint_Error with
                     "object " & To_String (Item.Val_Object)
@@ -315,6 +317,16 @@ package body Aquarius.VM is
       end if;
    end Get_Value;
 
+   ------------------
+   -- Has_Property --
+   ------------------
+
+   function Has_Property (Value : VM_Value) return Boolean is
+   begin
+      return Value.Class = Val_Property
+        and then Value.Prop_Value /= null;
+   end Has_Property;
+
    --------------
    -- Has_Tree --
    --------------
@@ -323,6 +335,7 @@ package body Aquarius.VM is
    begin
       return Item /= null
         and then Item.Class = Val_Property
+        and then Item.Prop_Value /= null
         and then Item.Prop_Value.all in Aquarius.Trees.Root_Tree_Type'Class;
    end Has_Tree;
 
@@ -443,6 +456,22 @@ package body Aquarius.VM is
       Active_Environments.Delete (Position);
       Free (Env);
    end Release_Environment;
+
+   -------------
+   -- Replace --
+   -------------
+
+   procedure Replace
+     (Env   : VM_Environment;
+      Name  : String;
+      Value : VM_Value)
+   is
+      Key : constant Unbounded_String := To_Unbounded_String (Name);
+      V   : constant VM_Value :=
+        New_Value ((Val_Entry, Key, null, Value));
+   begin
+      Env.Map.Replace (Key, V);
+   end Replace;
 
    ------------------
    -- Set_Property --
