@@ -1,16 +1,16 @@
 package body Aquarius.Properties.String_Sets is
 
-   ------------
-   -- Insert --
-   ------------
+   -------------
+   -- Include --
+   -------------
 
-   procedure Insert
+   procedure Include
      (Property : in out String_Set_Property_Type'Class;
       Value    : in     String)
    is
    begin
-      Property.Set.Insert (Value);
-   end Insert;
+      Property.Set.Include (Value);
+   end Include;
 
    -------------
    -- Iterate --

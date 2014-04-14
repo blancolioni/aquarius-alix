@@ -11,7 +11,7 @@ package Aquarius.Properties.String_Sets is
      (Item : String_Set_Property_Type)
       return String;
 
-   procedure Insert
+   procedure Include
      (Property : in out String_Set_Property_Type'Class;
       Value    : in     String);
 
