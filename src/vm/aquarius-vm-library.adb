@@ -4,6 +4,7 @@ with Ada.Tags;
 with Aquarius.Grammars;
 with Aquarius.Programs;
 with Aquarius.Programs.Parser;
+with Aquarius.Properties.String_Sets;
 with Aquarius.Trees;
 
 package body Aquarius.VM.Library is
@@ -56,6 +57,11 @@ package body Aquarius.VM.Library is
       return Aquarius.VM.VM_Value;
 
    function Eval_Method_Image
+     (Env  : Aquarius.VM.VM_Environment;
+      Args : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
+
+   function Eval_Method_Include
      (Env  : Aquarius.VM.VM_Environment;
       Args : Aquarius.VM.Array_Of_Values)
       return Aquarius.VM.VM_Value;
@@ -185,6 +191,27 @@ package body Aquarius.VM.Library is
                Method_Name => "ada_name",
                Value       => To_Value (Eval_Method_Ada_Name'Access, 1));
          end if;
+      end;
+
+      declare
+         use Ada.Strings.Unbounded;
+         use Aquarius.Properties.String_Sets;
+         Class_Name         : constant String :=
+                                Ada.Tags.External_Tag
+                                  (String_Set_Property_Type'Tag);
+         String_Set_Class   : VM_Value_Record :=
+                                (Val_Class,
+                                 To_Unbounded_String (Class_Name),
+                                 String_Vectors.Empty_Vector);
+      begin
+         Derive (Env, Ada.Tags.External_Tag (Root_Aquarius_Object'Tag),
+                 Class_Name, String_Set_Class);
+         String_Set_Class.Member_Names.Append ("include");
+         Insert
+           (Env         => Env,
+            Class_Name  => Class_Name,
+            Method_Name => "include",
+            Value       => To_Value (Eval_Method_Include'Access, 2));
       end;
 
       return Env;
@@ -400,6 +427,26 @@ package body Aquarius.VM.Library is
    begin
       return To_Value (Result);
    end Eval_Method_Image;
+
+   -------------------------
+   -- Eval_Method_Include --
+   -------------------------
+
+   function Eval_Method_Include
+     (Env  : Aquarius.VM.VM_Environment;
+      Args : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value
+   is
+      pragma Unreferenced (Env);
+      use Aquarius.Properties.String_Sets;
+      Set : constant access String_Set_Property_Type'Class :=
+              String_Set_Property_Type'Class
+                (Args (Args'First).Prop_Value.all)'Access;
+      Value : constant String := To_String (Args (Args'First + 1));
+   begin
+      Set.Include (Value);
+      return Args (Args'First);
+   end Eval_Method_Include;
 
    ----------------------
    -- Eval_Method_Last --
