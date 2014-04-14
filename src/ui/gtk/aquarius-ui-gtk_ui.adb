@@ -9,6 +9,8 @@ with Gtk.Builder;
 with Gtk.Cell_Renderer_Text;
 with Gtk.Editable;
 with Gtk.Handlers;
+pragma Elaborate_All (Gtk.Handlers);
+
 with Gtk.Main;
 with Gtk.Tree_Model;
 with Gtk.Tree_Selection;

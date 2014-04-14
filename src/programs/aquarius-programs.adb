@@ -1094,6 +1094,19 @@ package body Aquarius.Programs is
       return It;
    end Program_Root;
 
+   --------------
+   -- Property --
+   --------------
+
+   function Property
+     (Item : Program_Tree_Type;
+      Name : String)
+      return access Root_Aquarius_Object'Class
+   is
+   begin
+      return Item.Object_Props.Element (Name);
+   end Property;
+
    ------------------
    -- Render_Class --
    ------------------
@@ -1110,21 +1123,6 @@ package body Aquarius.Programs is
          return "normal";
       end if;
    end Render_Class;
-
-
-   --------------
-   -- Property --
-   --------------
-
-   function Property
-     (Item : Program_Tree_Type;
-      Name : String)
-      return access Root_Aquarius_Object'Class
-   is
-   begin
-      return Item.Object_Props.Element (Name);
-   end Property;
-
 
    -----------------
    -- Run_Actions --

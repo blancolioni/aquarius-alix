@@ -7,6 +7,8 @@ with Gdk.Types.Keysyms;
 
 with Gtk.Enums;
 with Gtk.Handlers;
+pragma Elaborate_All (Gtk.Handlers);
+
 with Gtk.Text_Buffer;
 with Gtk.Text_Iter;
 with Gtk.Text_Tag;
