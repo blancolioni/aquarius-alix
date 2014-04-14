@@ -15,7 +15,8 @@ package body Aquarius.Actions.Interpreter is
 
    Trace : constant Boolean := False;
 
-   type Assignment_Target_Type is (No_Target, Property_Target);
+   type Assignment_Target_Type is (No_Target, Property_Target,
+                                   Environment_Target);
 
    type Assignment_Target
      (Target_Type : Assignment_Target_Type := No_Target)
@@ -27,6 +28,9 @@ package body Aquarius.Actions.Interpreter is
             when Property_Target =>
                Tree     : Program_Tree;
                Property : Ada.Strings.Unbounded.Unbounded_String;
+            when Environment_Target =>
+               Env      : Aquarius.VM.VM_Environment;
+               Name     : Ada.Strings.Unbounded.Unbounded_String;
          end case;
       end record;
 
@@ -41,6 +45,11 @@ package body Aquarius.Actions.Interpreter is
      (Writer : Aquarius_Writer)
       return String
    is (Ada.Strings.Unbounded.To_String (Writer.File_Name));
+
+   function Fn_Ada_Body_Name
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
 
    function Fn_Ada_Specification_Name
      (Env       : Aquarius.VM.VM_Environment;
@@ -58,6 +67,11 @@ package body Aquarius.Actions.Interpreter is
       return Aquarius.VM.VM_Value;
 
    function Fn_New_Line
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
+
+   function Fn_Add
      (Env       : Aquarius.VM.VM_Environment;
       Arguments : Aquarius.VM.Array_Of_Values)
       return Aquarius.VM.VM_Value;
@@ -165,9 +179,17 @@ package body Aquarius.Actions.Interpreter is
       Right    : Aquarius.VM.VM_Value)
       return Aquarius.VM.VM_Value
    is
-      Op : constant VM.VM_Value := VM.Get_Value (Env, Operator);
+      use Aquarius.VM;
+      Op : constant VM_Value := Get_Value (Env, Operator);
    begin
-      return VM.Apply (Op, Env, (Left, Right));
+      if Op = Null_Value then
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "unknown operator: " & Operator);
+         return Left;
+      else
+         return VM.Apply (Op, Env, (Left, Right));
+      end if;
    end Apply_Operator;
 
    --------------------
@@ -195,8 +217,11 @@ package body Aquarius.Actions.Interpreter is
       end Make;
 
    begin
+      Make ("ada_body_name",
+            Fn_Ada_Body_Name'Access, 1);
       Make ("ada_specification_name",
             Fn_Ada_Specification_Name'Access, 1);
+      Make ("+", Fn_Add'Access, 2);
       Make ("create_set", Fn_Create_Set'Access, 0);
       Make ("&", Fn_Join'Access, 2);
       Make ("new_line", Fn_New_Line'Access, 0);
@@ -545,6 +570,31 @@ package body Aquarius.Actions.Interpreter is
 --        end case;
    end Evaluate_Record_Selector;
 
+   ----------------------
+   -- Fn_Ada_Body_Name --
+   ----------------------
+
+   function Fn_Ada_Body_Name
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value
+   is
+      pragma Unreferenced (Env);
+      use Ada.Characters.Handling;
+      Package_Name : constant String :=
+                       VM.To_String (Arguments (Arguments'First));
+      Result : String := Package_Name;
+   begin
+      for I in Result'Range loop
+         if Result (I) = '.' then
+            Result (I) := '-';
+         else
+            Result (I) := To_Lower (Result (I));
+         end if;
+      end loop;
+      return VM.To_Value (Result & ".adb");
+   end Fn_Ada_Body_Name;
+
    -------------------------------
    -- Fn_Ada_Specification_Name --
    -------------------------------
@@ -569,6 +619,22 @@ package body Aquarius.Actions.Interpreter is
       end loop;
       return VM.To_Value (Result & ".ads");
    end Fn_Ada_Specification_Name;
+
+   ------------
+   -- Fn_Add --
+   ------------
+
+   function Fn_Add
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value
+   is
+      pragma Unreferenced (Env);
+      Left : VM.VM_Value renames Arguments (Arguments'First);
+      Right : VM.VM_Value renames Arguments (Arguments'First + 1);
+   begin
+      return VM.To_Value (VM.To_Integer (Left) + VM.To_Integer (Right));
+   end Fn_Add;
 
    -------------------
    -- Fn_Create_Set --
@@ -703,7 +769,9 @@ package body Aquarius.Actions.Interpreter is
                      Action.Direct_Children ("name_qualifier");
    begin
       if Qualifiers'Length = 0 then
-         Error (Action, Node, "cannot assign to tree");
+         return (Environment_Target, Env,
+                 Ada.Strings.Unbounded.To_Unbounded_String
+                   (Action.Program_Child ("identifier").Standard_Text));
       else
          declare
             T : Program_Tree := Start;
@@ -1240,6 +1308,17 @@ package body Aquarius.Actions.Interpreter is
             Target.Tree.Set_Property
               (Ada.Strings.Unbounded.To_String (Target.Property),
                VM.To_Property (Value));
+         when Environment_Target =>
+            if Trace then
+               Ada.Text_IO.Put_Line
+                 (Ada.Text_IO.Standard_Error,
+                  Ada.Strings.Unbounded.To_String (Target.Name)
+                  & " := "
+                  & VM.To_String (Value));
+            end if;
+            VM.Replace (Target.Env,
+                        Ada.Strings.Unbounded.To_String (Target.Name),
+                        Value);
       end case;
    end Set;
 
