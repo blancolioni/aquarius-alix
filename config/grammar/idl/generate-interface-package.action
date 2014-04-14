@@ -4,9 +4,9 @@
 @declare Interface_Name : constant String :=
 @   /Top_Level_Interface_Declaration/Qualified_Identifier.Last.Image;
 @Set_Output (Ada_Specification_Name (Package_Name));
-@--  for Context of Tree.Contexts loop
+@for Context of Top.Contexts loop
 with [Context];
-@--  end loop;
+@end loop;
 
 package [Package_Name] is
 
