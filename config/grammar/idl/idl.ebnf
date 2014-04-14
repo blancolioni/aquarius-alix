@@ -63,7 +63,12 @@ formal_argument ::= identifier ':' [ argument_spec ] typeref
 argument_spec ::= 'in' | 'in' 'out' | 'out'
 
 typeref ::= interface_typeref
+          | address_typeref
+          | word_typeref
           | standard_typeref
 
 interface_typeref ::= 'interface' qualified_identifier
+address_typeref ::= 'address'
+word_typeref ::= 'word' | 'word_32' | 'word_64'
+
 standard_typeref ::= qualified_identifier
