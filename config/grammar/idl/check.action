@@ -5,19 +5,19 @@ for all loop
       when Typeref =>
          if /Interface_Typeref then
             .Ada_Name := Qualified_Identifier.Image & "_Interface";
-            Put_Line (Top.Contexts.Include (Qualified_Identifier.Image));
+            Top.Contexts.Include (Qualified_Identifier.Image);
          elsif /Address_Typeref then
             .Ada_Name := "System.Address";
-            Put_Line (Top.Contexts.Include ("System"));
+            Top.Contexts.Include ("System");
          elsif /Word_Typeref then
             .Ada_Name := "Rose.Words.Word";
-            Put_Line (Top.Contexts.Include ("Rose.Words"));
+            Top.Contexts.Include ("Rose.Words");
          else
             .Ada_Name := /Qualified_Identifier.Image;
             if /Qualified_Identifier.Length = 1 then
-               Put_Line (Top.Contexts.Include (/Qualified_Identifier.Image));
+               Top.Contexts.Include (/Qualified_Identifier.Image);
             else
-               Put_Line (Top.Contexts.Include (Concat (/Qualified_Identifier, 1, /Qualified_Identifier.Length - 2)));
+               Top.Contexts.Include (Concat (/Qualified_Identifier, 1, /Qualified_Identifier.Length - 2));
             end if;
          end if;
    end case;
