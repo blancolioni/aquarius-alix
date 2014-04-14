@@ -1,7 +1,13 @@
+declare Next_Send_Word : Natural := 0;
+declare Next_Recv_Word : Natural := 0;
+declare Next_Send_Cap  : Natural := 0;
+declare Next_Recv_Cap  : Natural := 0;
+
 for all loop
    case Tree is
       when Compilation_Unit =>
          Top.Contexts := Create_Set;
+
       when Typeref =>
          if /Interface_Typeref then
             .Ada_Name := Qualified_Identifier.Image & "_Interface";
@@ -19,6 +25,22 @@ for all loop
             else
                Top.Contexts.Include (Concat (/Qualified_Identifier, 1, /Qualified_Identifier.Length - 2));
             end if;
+         end if;
+      when Subprogram_Declaration =>
+         Next_Send_Word := 0;
+         Next_Recv_Word := 0;
+         Next_Send_Cap := 0;
+         Next_Recv_Cap := 0;
+      when Formal_Argument =>
+         if /Argument_Spec then
+            if /Argument_Spec = "out" then
+               Next_Recv_Word := Next_Recv_Word + 1;
+               .Recv_Word := Next_Recv_Word;
+               .Send_Word := 0;
+            end if;
+         else
+            Next_Send_Word := Next_Send_Word + 1;
+            .Send_Word := Next_Send_Word;
          end if;
    end case;
 end loop;
