@@ -4,9 +4,10 @@ package body Aquarius.Names is
    -- "=" --
    ---------
 
-   function "=" (Left  : Aquarius_Name;
-                 Right : String)
-                return Boolean
+   overriding function "="
+     (Left  : Aquarius_Name;
+      Right : String)
+      return Boolean
    is
    begin
       return To_String (Left) = Right;
@@ -16,9 +17,10 @@ package body Aquarius.Names is
    -- "=" --
    ---------
 
-   function "=" (Left  : String;
-                 Right : Aquarius_Name)
-                return Boolean
+   overriding function "="
+     (Left  : String;
+      Right : Aquarius_Name)
+      return Boolean
    is
    begin
       return Left = To_String (Right);
@@ -147,7 +149,10 @@ package body Aquarius.Names is
    -- To_String --
    ---------------
 
-   function To_String (Item : Aquarius_Name) return String is
+   overriding function To_String
+     (Item : Aquarius_Name)
+      return String
+   is
    begin
       return Ada.Strings.Unbounded.To_String
         (Ada.Strings.Unbounded.Unbounded_String (Item));
