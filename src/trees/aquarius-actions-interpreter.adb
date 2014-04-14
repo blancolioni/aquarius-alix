@@ -712,7 +712,7 @@ package body Aquarius.Actions.Interpreter is
       Node   : Aquarius.Programs.Program_Tree)
    is
    begin
-      if False then
+      if Trace then
          Ada.Text_IO.Put_Line
            (Ada.Text_IO.Standard_Error,
             "action: " & Action.Name);
@@ -768,37 +768,52 @@ package body Aquarius.Actions.Interpreter is
          end;
       elsif Action.Name = "procedure_call_statement" then
          declare
-            use Ada.Strings.Unbounded;
-            use type VM.VM_Value;
-            Identifier : constant Program_Tree :=
-                           Action.Program_Child ("identifier");
-            Procedure_Name : constant String :=
-                               Identifier.Standard_Text;
-            Argument_List  : constant Program_Tree :=
-                               Action.Program_Child ("actual_argument_list");
-            Arg_Trees      : constant Array_Of_Program_Trees :=
-                               (if Argument_List /= null
-                                then Argument_List.Direct_Children
-                                  ("expression")
-                                else Empty_Program_Tree_Array);
-            Arg_Values     : VM.Array_Of_Values (Arg_Trees'Range);
-            Fn_Value       : constant Aquarius.VM.VM_Value :=
-                               VM.Get_Value (Env, Procedure_Name);
+            Object : constant Program_Tree :=
+                       Action.Program_Child ("object_reference");
+            Result : constant VM.VM_Value :=
+                       Evaluate_Object_Reference
+                         (Env, Object.Chosen_Tree, Node);
          begin
-            if Fn_Value /= VM.Null_Value then
-               for I in Arg_Trees'Range loop
-                  Arg_Values (I) :=
-                    Evaluate (Env, Arg_Trees (I), Node);
-               end loop;
-               declare
-                  Result : constant Aquarius.VM.VM_Value :=
-                             VM.Apply (Fn_Value, Env, Arg_Values);
-                  pragma Unreferenced (Result);
-               begin
-                  null;
-               end;
+            if Trace then
+               Ada.Text_IO.Put_Line
+                 (Ada.Text_IO.Standard_Error,
+                  "Call returns: " & VM.To_String (Result));
             end if;
          end;
+
+--           declare
+--              use Ada.Strings.Unbounded;
+--              use type VM.VM_Value;
+--              Identifier : constant Program_Tree :=
+--                             Action.Program_Child ("identifier");
+--              Procedure_Name : constant String :=
+--                                 Identifier.Standard_Text;
+--              Argument_List  : constant Program_Tree :=
+--                                 Action.Program_Child
+           --  ("actual_argument_list");
+--              Arg_Trees      : constant Array_Of_Program_Trees :=
+--                                 (if Argument_List /= null
+--                                  then Argument_List.Direct_Children
+--                                    ("expression")
+--                                  else Empty_Program_Tree_Array);
+--              Arg_Values     : VM.Array_Of_Values (Arg_Trees'Range);
+--              Fn_Value       : constant Aquarius.VM.VM_Value :=
+--                                 VM.Get_Value (Env, Procedure_Name);
+--           begin
+--              if Fn_Value /= VM.Null_Value then
+--                 for I in Arg_Trees'Range loop
+--                    Arg_Values (I) :=
+--                      Evaluate (Env, Arg_Trees (I), Node);
+--                 end loop;
+--                 declare
+--                    Result : constant Aquarius.VM.VM_Value :=
+--                               VM.Apply (Fn_Value, Env, Arg_Values);
+--                    pragma Unreferenced (Result);
+--                 begin
+--                    null;
+--                 end;
+--              end if;
+--           end;
       elsif Action.Name = "for_loop_statement" then
          Interpret (Env, Action.Chosen_Tree, Node);
       elsif Action.Name = "for_all_loop" then
