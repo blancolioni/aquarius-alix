@@ -205,6 +205,14 @@ package body Aquarius.Actions.Interpreter is
       return Aquarius.VM.VM_Value
    is
    begin
+      if Trace then
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "Evaluate: " & Action.Image);
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "    " & Action.Concatenate_Children);
+      end if;
       if Action.Name = "expression" then
          return Evaluate (Env, Action.Program_Child ("relation"), Node);
       elsif Action.Name = "relation" then
@@ -891,6 +899,35 @@ package body Aquarius.Actions.Interpreter is
                      Interpret (Env, Sequence, Children (I));
                   end loop;
                end;
+            elsif VM.Has_Property (Loop_Value)
+              and then VM.To_Property (Loop_Value).all in
+              Properties.String_Sets.String_Set_Property_Type'Class
+            then
+               declare
+                  Loop_Env : VM.VM_Environment :=
+                               VM.New_Environment (Iterator_Name & "_Loop",
+                                                   Env);
+                  procedure Process (Value : String);
+
+                  -------------
+                  -- Process --
+                  -------------
+
+                  procedure Process (Value : String) is
+                  begin
+                     VM.Replace (Loop_Env, Iterator_Name,
+                                 VM.To_Value (Value));
+                     Interpret (Loop_Env, Sequence, Node);
+                  end Process;
+
+               begin
+                  VM.Insert (Loop_Env, Iterator_Name, VM.Null_Value);
+
+                  Properties.String_Sets.String_Set_Property_Type'Class
+                    (VM.To_Property (Loop_Value).all).Iterate
+                    (Process'Access);
+                  VM.Release_Environment (Loop_Env);
+               end;
             else
                Error (Action, Node,
                       "unable to loop with " & VM.To_String (Loop_Value));
@@ -951,6 +988,8 @@ package body Aquarius.Actions.Interpreter is
          Env : VM_Environment :=
                  New_Environment ("action", Library);
       begin
+         Insert (Env, "top",
+                 To_Value (Target));
          Interpret (Env, Action, Target);
          if Has_Value (Env, "__output") then
             declare
