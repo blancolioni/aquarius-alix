@@ -1,17 +1,23 @@
 for all loop
    case Tree is
       when Compilation_Unit =>
-         .Contexts := Create_Set;
+         Top.Contexts := Create_Set;
       when Typeref =>
          if /Interface_Typeref then
             .Ada_Name := Qualified_Identifier.Image & "_Interface";
-            .Contexts.Insert (Qualified_Identifier.Image);
+            Put_Line (Top.Contexts.Include (Qualified_Identifier.Image));
+         elsif /Address_Typeref then
+            .Ada_Name := "System.Address";
+            Put_Line (Top.Contexts.Include ("System"));
+         elsif /Word_Typeref then
+            .Ada_Name := "Rose.Words.Word";
+            Put_Line (Top.Contexts.Include ("Rose.Words"));
          else
             .Ada_Name := /Qualified_Identifier.Image;
             if /Qualified_Identifier.Length = 1 then
-               Tree.Contexts.Insert (/Qualified_Identifier.Image);
+               Put_Line (Top.Contexts.Include (/Qualified_Identifier.Image));
             else
-               Tree.Contexts.Insert (Concat (/Qualified_Identifier, 1, /Qualified_Identifier.Length - 2));
+               Put_Line (Top.Contexts.Include (Concat (/Qualified_Identifier, 1, /Qualified_Identifier.Length - 2)));
             end if;
          end if;
    end case;
