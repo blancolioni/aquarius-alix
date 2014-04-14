@@ -564,7 +564,8 @@ package body Aquarius.VM is
          when Val_Integer =>
             return Value.Int_Value /= 0;
          when Val_Property =>
-            return Value.Prop_Value /= null;
+            return Value.Prop_Value /= null
+              and then Value.Prop_Value.Name /= "0";
          when Val_Cons =>
             return True;
          when Val_Entry =>
@@ -612,6 +613,11 @@ package body Aquarius.VM is
          return null;
       elsif Value.Class = Val_Property then
          return Value.Prop_Value;
+      elsif Value.Class = Val_Integer then
+         return Aquarius.Names.Name_Value
+           (Ada.Strings.Fixed.Trim
+              (Integer'Image (Value.Int_Value),
+               Ada.Strings.Left));
       else
          raise Constraint_Error with
            "cannot convert " & Show (Value) &
