@@ -52,6 +52,11 @@ package body Aquarius.Actions.Interpreter is
       Arguments : Aquarius.VM.Array_Of_Values)
       return Aquarius.VM.VM_Value;
 
+   function Fn_Join
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
+
    function Fn_New_Line
      (Env       : Aquarius.VM.VM_Environment;
       Arguments : Aquarius.VM.Array_Of_Values)
@@ -126,6 +131,13 @@ package body Aquarius.Actions.Interpreter is
       Node   : Aquarius.Programs.Program_Tree)
       return Aquarius.VM.VM_Value;
 
+   function Apply_Operator
+     (Env      : Aquarius.VM.VM_Environment;
+      Operator : String;
+      Left     : Aquarius.VM.VM_Value;
+      Right    : Aquarius.VM.VM_Value)
+      return Aquarius.VM.VM_Value;
+
    function Get_Assignment_Target
      (Env    : Aquarius.VM.VM_Environment;
       Action : Program_Tree;
@@ -141,6 +153,22 @@ package body Aquarius.Actions.Interpreter is
    procedure Set
      (Target : Assignment_Target;
       Value  : Aquarius.VM.VM_Value);
+
+   --------------------
+   -- Apply_Operator --
+   --------------------
+
+   function Apply_Operator
+     (Env      : Aquarius.VM.VM_Environment;
+      Operator : String;
+      Left     : Aquarius.VM.VM_Value;
+      Right    : Aquarius.VM.VM_Value)
+      return Aquarius.VM.VM_Value
+   is
+      Op : constant VM.VM_Value := VM.Get_Value (Env, Operator);
+   begin
+      return VM.Apply (Op, Env, (Left, Right));
+   end Apply_Operator;
 
    --------------------
    -- Create_Library --
@@ -170,6 +198,7 @@ package body Aquarius.Actions.Interpreter is
       Make ("ada_specification_name",
             Fn_Ada_Specification_Name'Access, 1);
       Make ("create_set", Fn_Create_Set'Access, 0);
+      Make ("&", Fn_Join'Access, 2);
       Make ("new_line", Fn_New_Line'Access, 0);
       Make ("put_line", Fn_Put_Line'Access, 1);
       Make ("put", Fn_Put'Access, 1);
@@ -219,7 +248,27 @@ package body Aquarius.Actions.Interpreter is
          return Evaluate
            (Env, Action.Program_Child ("simple_expression"), Node);
       elsif Action.Name = "simple_expression" then
-         return Evaluate (Env, Action.Program_Child ("term"), Node);
+         declare
+            Children : constant Array_Of_Program_Trees :=
+                         Action.Direct_Children;
+            Result   : VM.VM_Value :=
+                         Evaluate (Env, Children (Children'First), Node);
+            Current  : VM.VM_Value;
+            Operator : Program_Tree;
+            Index    : Positive := Children'First + 1;
+         begin
+            while Index <= Children'Last loop
+               Operator := Program_Tree (Children (Index).First_Leaf);
+               Index := Index + 1;
+               Current :=
+                 Evaluate (Env, Children (Index), Node);
+               Index := Index + 1;
+               Result :=
+                 Apply_Operator
+                   (Env, Operator.Text, Result, Current);
+            end loop;
+            return Result;
+         end;
       elsif Action.Name = "term" then
          return Evaluate (Env, Action.Program_Child ("factor"), Node);
       elsif Action.Name = "factor" then
@@ -538,6 +587,21 @@ package body Aquarius.Actions.Interpreter is
       return VM.To_Value (New_Set);
    end Fn_Create_Set;
 
+   -------------
+   -- Fn_Join --
+   -------------
+
+   function Fn_Join
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value
+   is
+      pragma Unreferenced (Env);
+   begin
+      return VM.To_Value (VM.To_String (Arguments (Arguments'First))
+                          & VM.To_String (Arguments (Arguments'First + 1)));
+   end Fn_Join;
+
    -----------------
    -- Fn_New_Line --
    -----------------
@@ -840,12 +904,16 @@ package body Aquarius.Actions.Interpreter is
             Sequence       : constant Program_Tree :=
                                Loop_Statement.Program_Child
                                  ("sequence_of_statements");
+            Loop_Env       : VM.VM_Environment :=
+                               VM.New_Environment ("Tree_Loop",
+                                                   Env);
          begin
             if Trace then
                Ada.Text_IO.Put_Line
                  (Ada.Text_IO.Standard_Error,
                   "for " & Node.Name & "/" & VM.To_String (Loop_Value));
             end if;
+            VM.Insert (Loop_Env, "first_loop", VM.To_Value (True));
             if VM.Has_Tree (Loop_Value)
               and then VM.To_Tree (Loop_Value).all in Program_Tree_Type'Class
             then
@@ -862,13 +930,21 @@ package body Aquarius.Actions.Interpreter is
                            "  loop: " & Children (I).Name);
                      end if;
 
-                     Interpret (Env, Sequence, Children (I));
+                     Interpret (Loop_Env, Sequence, Children (I));
+
+                     if I = Children'First then
+                        VM.Replace (Loop_Env, "first_loop",
+                                    VM.To_Value (False));
+                     end if;
+
                   end loop;
                end;
             else
                Error (Action, Node,
                       "unable to loop with " & VM.To_String (Loop_Value));
             end if;
+
+            VM.Release_Environment (Loop_Env);
          end;
       elsif Action.Name = "iterator_loop" then
          declare
@@ -887,6 +963,9 @@ package body Aquarius.Actions.Interpreter is
             Sequence       : constant Program_Tree :=
                                Loop_Statement.Program_Child
                                  ("sequence_of_statements");
+            Loop_Env       : VM.VM_Environment :=
+                               VM.New_Environment (Iterator_Name & "_Loop",
+                                                   Env);
          begin
             if Trace then
                Ada.Text_IO.Put_Line
@@ -894,6 +973,8 @@ package body Aquarius.Actions.Interpreter is
                   "for " & Iterator_Name & " of "
                   & Node.Name & "/" & VM.To_String (Loop_Value));
             end if;
+
+            VM.Insert (Loop_Env, "first_loop", VM.To_Value (True));
 
             if VM.Has_Tree (Loop_Value)
               and then VM.To_Tree (Loop_Value).all in Program_Tree_Type'Class
@@ -909,9 +990,14 @@ package body Aquarius.Actions.Interpreter is
                      if Trace then
                         Ada.Text_IO.Put_Line
                           (Ada.Text_IO.Standard_Error,
-                           "  loop: " & Children (I).Name);
+                           (if VM.To_Boolean
+                              (VM.Get_Value (Loop_Env, "first_loop"))
+                            then "  first " else "  ")
+                             & "loop: " & Children (I).Name);
                      end if;
-                     Interpret (Env, Sequence, Children (I));
+                     Interpret (Loop_Env, Sequence, Children (I));
+                     VM.Replace (Loop_Env, "first_loop", VM.To_Value (False));
+
                   end loop;
                end;
             elsif VM.Has_Property (Loop_Value)
@@ -919,9 +1005,6 @@ package body Aquarius.Actions.Interpreter is
               Properties.String_Sets.String_Set_Property_Type'Class
             then
                declare
-                  Loop_Env : VM.VM_Environment :=
-                               VM.New_Environment (Iterator_Name & "_Loop",
-                                                   Env);
                   procedure Process (Value : String);
 
                   -------------
@@ -933,6 +1016,8 @@ package body Aquarius.Actions.Interpreter is
                      VM.Replace (Loop_Env, Iterator_Name,
                                  VM.To_Value (Value));
                      Interpret (Loop_Env, Sequence, Node);
+                     VM.Replace (Loop_Env, "first_loop",
+                                 VM.To_Value (False));
                   end Process;
 
                begin
@@ -941,12 +1026,13 @@ package body Aquarius.Actions.Interpreter is
                   Properties.String_Sets.String_Set_Property_Type'Class
                     (VM.To_Property (Loop_Value).all).Iterate
                     (Process'Access);
-                  VM.Release_Environment (Loop_Env);
                end;
             else
                Error (Action, Node,
                       "unable to loop with " & VM.To_String (Loop_Value));
             end if;
+
+            VM.Release_Environment (Loop_Env);
          end;
       elsif Action.Name = "case_statement" then
          declare
