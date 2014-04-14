@@ -252,7 +252,6 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
          Item.Chosen_Tree.Property
            (Plugin.Property_Expression));
 
-
    end Expression_After;
 
    -----------------------------

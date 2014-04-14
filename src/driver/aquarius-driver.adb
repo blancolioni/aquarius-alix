@@ -72,7 +72,6 @@ procedure Aquarius.Driver is
       Set_Output (Standard_Output);
    end Show_Usage_Text;
 
-
 begin
 
    Aquarius.Configuration.Load_Configuration;
@@ -89,7 +88,6 @@ begin
       Show_Usage_Text;
       return;
    end if;
-
 
    Aquarius.Target.Manager.Set_Target (Aquarius.Command_Line.Target);
 
