@@ -201,9 +201,6 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Arguments : Aquarius.Script.Expressions.Array_Of_Expressions
         (Arg_Children'Range);
    begin
-      Ada.Text_IO.Put_Line ("call: " & Name & " /" &
-                            Natural'Image (Arguments'Length));
-
       for I in Arguments'Range loop
          Arguments (I) :=
            Aquarius.Script.Expressions.Expression_Access
