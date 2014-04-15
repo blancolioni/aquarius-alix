@@ -1,0 +1,95 @@
+@!aquarius:actionscript
+@declare Qualified_Name : constant String :=
+@   /Top_Level_Interface_Declaration/Qualified_Identifier.Image;
+@declare Package_Name : constant String := Qualified_Name & ".Server";
+@declare Base_Name : constant String :=
+@   /Top_Level_Interface_Declaration/Qualified_Identifier.Last.Image;
+@declare Interface_Name : constant String := Base_Name & "_Interface";
+@declare Client_Record_Name : constant String := Base_Name & "_Client_Interface";
+@declare Interface_Class_Name : constant String := "Root_" & Interface_Name;
+@declare Subprogram_Index : Integer := 0;
+@Set_Output (Ada_Body_Name (Package_Name));
+with Rose.System_Calls;
+with Rose.Rvm;
+
+package body [Package_Name] is
+
+@for /Top_Level_Interface_Declaration/List_Of_Declarations loop
+@   case Tree is
+@      when Subprogram_Declaration =>
+   procedure Handle_[/Identifier]
+     (Server_Interface : Rose.Interfaces.Rose_Interface;
+      Parameters       : in out Rose.System_Calls.Invocation_Record);
+      
+@   end case;
+@end loop;
+   ------------------
+   -- Start_Server --
+   ------------------
+   
+   procedure Start_Server
+     (Server : not null access [Interface_Class_Name]'Class
+@for /Top_Level_Interface_Declaration/List_Of_Declarations loop
+@   case Tree is
+@      when Subprogram_Declaration =>
+     ;[/Identifier]_Cap : out Rose.Objects.Capability
+@   end case;
+@end loop;
+     )
+   is
+   begin
+@Subprogram_Index := 0;
+@for /Top_Level_Interface_Declaration/List_Of_Declarations loop
+@   case Tree is
+@      when Subprogram_Declaration =>
+@         Subprogram_Index := Subprogram_Index + 1;
+      [/Identifier]_Cap :=
+        Rose.Rvm.Create_Capability (Rose_Interface (Server), [Subprogram_Index]);
+      Rose.Rvm.Register_Handler ([/Identifier]_Cap,
+                                 Handle_[/Identifier]'Access);
+@   end case;
+@end loop;
+   end Start_Server;
+
+@for /Top_Level_Interface_Declaration/List_Of_Declarations loop
+@   case Tree is
+@      when Subprogram_Declaration =>
+   procedure Handle_[/Identifier]
+     (Server_Interface : Rose.Interfaces.Rose_Interface;
+      Parameters       : in out Rose.System_Calls.Invocation_Record)
+   is
+      Server : constant [Interface_Name] := 
+        [Interface_Name] (Server_Interface);
+@ if /Formal_Arguments then
+@ for Formal_Argument of /Formal_Arguments loop
+     [/Identifier] : [/Typeref.Ada_Name];
+@ end loop;
+@ end if;
+   begin  
+@ if /Formal_Arguments then
+@ for Formal_Argument of /Formal_Arguments loop
+@       if .Send_Word then
+      Rose.System_Calls.Get_Data_Word (Parameters, [.Send_Word], [/Identifier]);
+@       end if;
+@ end loop;
+@ end if;
+      Server.[/Identifier]
+@ if /Formal_Arguments then
+@ for Formal_Argument of /Formal_Arguments loop
+        [(if First_Loop then "(" else ",")][/Identifier]
+@ end loop;
+@ end if;
+        );
+@ if /Formal_Arguments then
+@ for Formal_Argument of /Formal_Arguments loop
+@       if .Recv_Word then
+      Rose.System_Calls.Set_Data_Word (Parameters, [.Recv_Word], [/Identifier]);
+@       end if;
+@ end loop;
+@ end if;
+   end Handle_[/Identifier];
+      
+@   end case;
+@end loop;
+
+end [Package_Name];
