@@ -61,6 +61,11 @@ package body Aquarius.Actions.Interpreter is
       Arguments : Aquarius.VM.Array_Of_Values)
       return Aquarius.VM.VM_Value;
 
+   function Fn_Equal
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
+
    function Fn_Join
      (Env       : Aquarius.VM.VM_Environment;
       Arguments : Aquarius.VM.Array_Of_Values)
@@ -152,6 +157,12 @@ package body Aquarius.Actions.Interpreter is
       Right    : Aquarius.VM.VM_Value)
       return Aquarius.VM.VM_Value;
 
+   function Get_Object_Reference_Start
+     (Env    : Aquarius.VM.VM_Environment;
+      Action : Program_Tree;
+      Node   : Program_Tree)
+      return Program_Tree;
+
    function Get_Assignment_Target
      (Env    : Aquarius.VM.VM_Environment;
       Action : Program_Tree;
@@ -223,6 +234,7 @@ package body Aquarius.Actions.Interpreter is
             Fn_Ada_Specification_Name'Access, 1);
       Make ("+", Fn_Add'Access, 2);
       Make ("create_set", Fn_Create_Set'Access, 0);
+      Make ("=", Fn_Equal'Access, 2);
       Make ("&", Fn_Join'Access, 2);
       Make ("new_line", Fn_New_Line'Access, 0);
       Make ("put_line", Fn_Put_Line'Access, 1);
@@ -241,6 +253,13 @@ package body Aquarius.Actions.Interpreter is
       Message : String)
    is
    begin
+      Ada.Text_IO.Put_Line
+        (Ada.Text_IO.Standard_Error,
+         Action.Image);
+      Ada.Text_IO.Put_Line
+        (Ada.Text_IO.Standard_Error,
+         Node.Image);
+
       Ada.Text_IO.Put_Line
         (Ada.Text_IO.Standard_Error,
          Node.Show_Location & ": " &
@@ -265,14 +284,15 @@ package body Aquarius.Actions.Interpreter is
             "Evaluate: " & Action.Image);
          Ada.Text_IO.Put_Line
            (Ada.Text_IO.Standard_Error,
-            "    " & Action.Concatenate_Children);
+            "Node: " & Node.Image);
       end if;
-      if Action.Name = "expression" then
-         return Evaluate (Env, Action.Program_Child ("relation"), Node);
-      elsif Action.Name = "relation" then
-         return Evaluate
-           (Env, Action.Program_Child ("simple_expression"), Node);
-      elsif Action.Name = "simple_expression" then
+
+      if Action.Name = "expression"
+        or else Action.Name = "relation"
+        or else Action.Name = "simple_expression"
+        or else Action.Name = "term"
+        or else Action.Name = "factor"
+      then
          declare
             Children : constant Array_Of_Program_Trees :=
                          Action.Direct_Children;
@@ -294,10 +314,6 @@ package body Aquarius.Actions.Interpreter is
             end loop;
             return Result;
          end;
-      elsif Action.Name = "term" then
-         return Evaluate (Env, Action.Program_Child ("factor"), Node);
-      elsif Action.Name = "factor" then
-         return Evaluate (Env, Action.Program_Child ("primary"), Node);
       elsif Action.Name = "primary" then
          declare
             Child : constant Program_Tree := Action.Chosen_Tree;
@@ -653,6 +669,31 @@ package body Aquarius.Actions.Interpreter is
       return VM.To_Value (New_Set);
    end Fn_Create_Set;
 
+   --------------
+   -- Fn_Equal --
+   --------------
+
+   function Fn_Equal
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value
+   is
+      pragma Unreferenced (Env);
+      use Aquarius.VM;
+   begin
+      if Trace then
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "equal: " & To_String (Arguments (Arguments'First))
+            & ", " & To_String (Arguments (Arguments'First + 1)));
+      end if;
+
+      return VM.To_Value
+        (VM.Equal
+           (Arguments (Arguments'First),
+            Arguments (Arguments'First + 1)));
+   end Fn_Equal;
+
    -------------
    -- Fn_Join --
    -------------
@@ -759,12 +800,6 @@ package body Aquarius.Actions.Interpreter is
       Node   : Program_Tree)
       return Assignment_Target
    is
-      Start      : constant Program_Tree :=
-                     (if Action.Name = "explicit_object_reference"
-                      then Get_Tree
-                        (Env, Node,
-                         Action.Program_Child ("identifier").Standard_Text)
-                      else Node);
       Qualifiers : constant Array_Of_Program_Trees :=
                      Action.Direct_Children ("name_qualifier");
    begin
@@ -774,7 +809,9 @@ package body Aquarius.Actions.Interpreter is
                    (Action.Program_Child ("identifier").Standard_Text));
       else
          declare
-            T : Program_Tree := Start;
+            Start : constant Program_Tree :=
+                      Get_Object_Reference_Start (Env, Action, Node);
+            T     : Program_Tree := Start;
          begin
             for I in Qualifiers'Range loop
                declare
@@ -815,6 +852,46 @@ package body Aquarius.Actions.Interpreter is
 
    end Get_Assignment_Target;
 
+   --------------------------------
+   -- Get_Object_Reference_Start --
+   --------------------------------
+
+   function Get_Object_Reference_Start
+     (Env    : Aquarius.VM.VM_Environment;
+      Action : Program_Tree;
+      Node   : Program_Tree)
+      return Program_Tree
+   is
+   begin
+      if Action.Name = "explicit_object_reference" then
+         declare
+            Id : constant String :=
+                   Action.Program_Child ("identifier").Standard_Text;
+         begin
+            return Get_Tree (Env, Node, Id);
+         end;
+      elsif Action.Name = "object_reference" then
+         declare
+            Chosen : constant Program_Tree := Action.Chosen_Tree;
+         begin
+            if Chosen.Name = "explicit_object_reference" then
+               declare
+                  Id : constant String :=
+                         Chosen.Program_Child ("identifier").Standard_Text;
+                  Result : constant Program_Tree :=
+                             Get_Tree (Env, Node, Id);
+               begin
+                  return Result;
+               end;
+            else
+               return Node;
+            end if;
+         end;
+      else
+         return Node;
+      end if;
+   end Get_Object_Reference_Start;
+
    --------------
    -- Get_Tree --
    --------------
@@ -825,12 +902,11 @@ package body Aquarius.Actions.Interpreter is
       Name    : String)
       return Program_Tree
    is
-      pragma Unreferenced (Env);
    begin
       if Name = "tree" then
          return Context;
       else
-         return Context.Program_Child (Name);
+         return Program_Tree (VM.To_Tree (VM.Get_Value (Env, Name)));
       end if;
    end Get_Tree;
 
