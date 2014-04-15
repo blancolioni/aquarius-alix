@@ -9,6 +9,8 @@ package Aquarius.VM is
 
    type VM_Value is private;
 
+   function Equal (Left, Right : VM_Value) return Boolean;
+
    type VM_Environment is private;
 
    Null_Environment : constant VM_Environment;
@@ -107,6 +109,8 @@ package Aquarius.VM is
                            Name       : String;
                            Prop_Name  : String;
                            Prop_Value : VM_Value);
+
+   function Name (Env : VM_Environment) return String;
 
 private
 
