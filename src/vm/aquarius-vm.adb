@@ -498,9 +498,17 @@ package body Aquarius.VM is
    is
       Key : constant Unbounded_String := To_Unbounded_String (Name);
       V   : constant VM_Value :=
-        New_Value ((Val_Entry, Key, null, Value));
+              New_Value ((Val_Entry, Key, null, Value));
+      It  : VM_Environment := Env;
    begin
-      Env.Map.Replace (Key, V);
+      while It /= null and then not It.Map.Contains (Key) loop
+         It := It.Parent;
+      end loop;
+      if It /= null then
+         It.Map.Replace (Key, V);
+      else
+         raise Constraint_Error with "undeclared: " & Name;
+      end if;
    end Replace;
 
    ------------------
