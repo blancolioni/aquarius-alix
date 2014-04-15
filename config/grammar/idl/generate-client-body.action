@@ -41,7 +41,7 @@ package body [Package_Name] is
      (Item : in out [Client_Record_Name]
 @ if /Formal_Arguments then
 @ for Formal_Argument of /Formal_Arguments loop
-     ; [/Identifier] : [(if /Argument_Spec then /Argument_Spec else "")] [/Typeref.Ada_Name]
+     ; [/Identifier] : [.Mode] [/Typeref.Ada_Name]
 @ end loop;
 @ end if;
      )
