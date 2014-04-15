@@ -2,6 +2,7 @@ declare Next_Send_Word : Natural := 0;
 declare Next_Recv_Word : Natural := 0;
 declare Next_Send_Cap  : Natural := 0;
 declare Next_Recv_Cap  : Natural := 0;
+declare Current_Declaration : Tree := null;
 
 for all loop
    case Tree is
@@ -26,6 +27,10 @@ for all loop
                Top.Contexts.Include (Concat (/Qualified_Identifier, 1, /Qualified_Identifier.Length - 2));
             end if;
          end if;
+      when Declaration =>
+         Current_Declaration := Tree;
+         .Send_Words := 0;
+         .Recv_Words := 0;
       when Subprogram_Declaration =>
          Next_Send_Word := 0;
          Next_Recv_Word := 0;
@@ -33,14 +38,21 @@ for all loop
          Next_Recv_Cap := 0;
       when Formal_Argument =>
          if /Argument_Spec then
-            if /Argument_Spec = "out" then
+            if /Argument_Spec.Image = "out" then
                Next_Recv_Word := Next_Recv_Word + 1;
                .Recv_Word := Next_Recv_Word;
                .Send_Word := 0;
+            elsif /Argument_Spec.Image = "in" then
+               Next_Send_Word := Next_Send_Word + 1;
+               .Send_Word := Next_Send_Word;
+               .Recv_Word := 0;
             end if;
          else
             Next_Send_Word := Next_Send_Word + 1;
             .Send_Word := Next_Send_Word;
+            .Recv_Word := 0;
          end if;
+         Current_Declaration.Send_Words := Next_Send_Word;
+         Current_Declaration.Recv_Words := Next_Recv_Word;
    end case;
 end loop;
