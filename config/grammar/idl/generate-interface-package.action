@@ -12,6 +12,11 @@ package [Package_Name] is
 
    type Root_[Interface_Name]_Interface is
       limited interface
+@if /Top_Level_Interface_Declaration/Parent_Interfaces then
+@for /Top_Level_Interface_Declaration/Parent_Interfaces loop
+      and [.Image]
+@end loop;
+@end if;
       and Root_Rose_Interface;
       
 @for /Top_Level_Interface_Declaration/List_Of_Declarations loop
@@ -37,7 +42,7 @@ package [Package_Name] is
      (Item : in out Root_[Interface_Name]_Interface
 @ if /Formal_Arguments then
 @ for Formal_Argument of /Formal_Arguments loop
-     ; [/Identifier] : [(if /Argument_Spec then /Argument_Spec else "")] [/Typeref.Ada_Name]
+     ; [/Identifier] : [.Mode] [/Typeref.Ada_Name]
 @ end loop;
 @ end if;
      )
@@ -48,4 +53,7 @@ package [Package_Name] is
 @   end case;
 @end loop;
 
+   type [Interface_Name]_Interface is 
+     access all Root_[Interface_Name]_Interface'Class;
+     
 end [Package_Name];
