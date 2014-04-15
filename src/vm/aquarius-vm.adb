@@ -116,6 +116,21 @@ package body Aquarius.VM is
       return New_Value ((Val_Cons, Head, Tail));
    end Cons;
 
+   -----------
+   -- Equal --
+   -----------
+
+   function Equal (Left, Right : VM_Value) return Boolean is
+   begin
+      if Left = null then
+         return Right = null;
+      elsif Right = null then
+         return False;
+      else
+         return To_String (Left) = To_String (Right);
+      end if;
+   end Equal;
+
    -----------------
    -- Error_Value --
    -----------------
@@ -401,6 +416,21 @@ package body Aquarius.VM is
       end loop;
       return It;
    end Make_List;
+
+   ----------
+   -- Name --
+   ----------
+
+   function Name (Env : VM_Environment) return String is
+      Env_Name : constant String :=
+                   Ada.Strings.Unbounded.To_String (Env.Name);
+   begin
+      if Env.Parent /= null then
+         return Name (Env.Parent) & "." & Env_Name;
+      else
+         return Env_Name;
+      end if;
+   end Name;
 
    ---------------------
    -- New_Environment --

@@ -65,6 +65,9 @@ package body [Package_Name] is
          Ctrl.Header := 0;
          Ctrl.Flags  := (others => False);
          Ctrl.Flags (Send) := True;
+@if .Send_Words then
+         Ctrl.Last_Data_Word := [.Send_Words];
+@end if;
          Ctrl.Flags (Block) := True;
          Ctrl.Footer := 0;
       end;
