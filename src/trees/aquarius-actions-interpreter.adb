@@ -3,11 +3,15 @@ with Ada.Exceptions;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
+with Aquarius.Grammars.Manager;
 with Aquarius.Properties;
 with Aquarius.Properties.String_Sets;
 
 with Aquarius.VM;
 with Aquarius.VM.Library;
+
+with Aquarius.Loader;
+with Aquarius.Messages.Console;
 
 package body Aquarius.Actions.Interpreter is
 
@@ -81,6 +85,11 @@ package body Aquarius.Actions.Interpreter is
       Arguments : Aquarius.VM.Array_Of_Values)
       return Aquarius.VM.VM_Value;
 
+   function Fn_Load
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
+
    function Fn_Put_Line
      (Env       : Aquarius.VM.VM_Environment;
       Arguments : Aquarius.VM.Array_Of_Values)
@@ -92,6 +101,11 @@ package body Aquarius.Actions.Interpreter is
       return Aquarius.VM.VM_Value;
 
    function Fn_Set_Output
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
+
+   function Fn_To_File_Name
      (Env       : Aquarius.VM.VM_Environment;
       Arguments : Aquarius.VM.Array_Of_Values)
       return Aquarius.VM.VM_Value;
@@ -236,10 +250,12 @@ package body Aquarius.Actions.Interpreter is
       Make ("create_set", Fn_Create_Set'Access, 0);
       Make ("=", Fn_Equal'Access, 2);
       Make ("&", Fn_Join'Access, 2);
+      Make ("load", Fn_Load'Access, 1);
       Make ("new_line", Fn_New_Line'Access, 0);
       Make ("put_line", Fn_Put_Line'Access, 1);
       Make ("put", Fn_Put'Access, 1);
       Make ("set_output", Fn_Set_Output'Access, 1);
+      Make ("to_file_name", Fn_To_File_Name'Access, 2);
 
    end Create_Library;
 
@@ -709,6 +725,67 @@ package body Aquarius.Actions.Interpreter is
                           & VM.To_String (Arguments (Arguments'First + 1)));
    end Fn_Join;
 
+   -------------
+   -- Fn_Load --
+   -------------
+
+   function Fn_Load
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value
+   is
+      pragma Unreferenced (Env);
+      use type Aquarius.Grammars.Aquarius_Grammar;
+      File_Path   : constant String :=
+                      VM.To_String (Arguments (Arguments'First));
+      Grammar     : constant Aquarius.Grammars.Aquarius_Grammar :=
+                      Aquarius.Grammars.Manager.Get_Grammar_For_File
+                        (File_Path);
+      Input       : Aquarius.Programs.Program_Tree;
+   begin
+
+      if Grammar = null or else Grammar.Has_Errors then
+         Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error,
+                               "grammar file contains errors; exiting");
+         return VM.Null_Value;
+      end if;
+
+      Ada.Text_IO.Put_Line ("Loading " & File_Path);
+
+      Input :=
+        Aquarius.Loader.Load_From_File (Grammar, File_Path);
+
+      if Input = null then
+         Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error,
+                               "Cannot load '" & File_Path &
+                                 "'");
+         return VM.Null_Value;
+      end if;
+
+      Ada.Text_IO.Put_Line ("done");
+
+      Grammar.Run_Action_Trigger (Input,
+                                  Aquarius.Actions.Semantic_Trigger);
+
+      declare
+         use Aquarius.Messages;
+         List : Message_List;
+      begin
+         Input.Get_Messages (List);
+         if Message_Count (List) > 0 then
+            if Highest_Level (List) > Warning then
+               Aquarius.Messages.Console.Show_Messages (List);
+            end if;
+         else
+            Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error,
+                                  "no messages");
+         end if;
+      end;
+
+      return VM.To_Value (Input);
+
+   end Fn_Load;
+
    -----------------
    -- Fn_New_Line --
    -----------------
@@ -789,6 +866,33 @@ package body Aquarius.Actions.Interpreter is
       VM.Insert (Env, "__output", Value);
       return Value;
    end Fn_Set_Output;
+
+   ---------------------
+   -- Fn_To_File_Name --
+   ---------------------
+
+   function Fn_To_File_Name
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value
+   is
+      pragma Unreferenced (Env);
+      use Ada.Characters.Handling;
+      Package_Name : constant String :=
+                       VM.To_String (Arguments (Arguments'First));
+      Extension    : constant String :=
+                       VM.To_String (Arguments (Arguments'First + 1));
+      Result : String := Package_Name;
+   begin
+      for I in Result'Range loop
+         if Result (I) = '.' then
+            Result (I) := '-';
+         else
+            Result (I) := To_Lower (Result (I));
+         end if;
+      end loop;
+      return VM.To_Value (Result & "." & Extension);
+   end Fn_To_File_Name;
 
    ---------------------------
    -- Get_Assignment_Target --
@@ -923,10 +1027,10 @@ package body Aquarius.Actions.Interpreter is
       if Trace then
          Ada.Text_IO.Put_Line
            (Ada.Text_IO.Standard_Error,
-            "action: " & Action.Name);
+            "action: " & Action.Image);
          Ada.Text_IO.Put_Line
            (Ada.Text_IO.Standard_Error,
-            "node: " & Node.Name);
+            "node: " & Node.Image);
       end if;
       if Action.Name = "compilation_unit" then
          Interpret (Env,
