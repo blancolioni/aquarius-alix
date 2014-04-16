@@ -7,6 +7,8 @@ with Aquarius.Programs.Parser;
 with Aquarius.Properties.String_Sets;
 with Aquarius.Trees;
 
+with Aquarius.VM.Maps;
+
 package body Aquarius.VM.Library is
 
    Have_Standard_Library  : Boolean        := False;
@@ -24,6 +26,11 @@ package body Aquarius.VM.Library is
    function Eval_Get_Named_Direct_Child
      (Env  : Aquarius.VM.VM_Environment;
       Args : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
+
+   function Eval_Create_Map
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
       return Aquarius.VM.VM_Value;
 
    function Eval_Create_Tree
@@ -81,6 +88,26 @@ package body Aquarius.VM.Library is
       Args : Aquarius.VM.Array_Of_Values)
       return Aquarius.VM.VM_Value;
 
+   function Eval_Method_Map_Insert
+     (Env  : Aquarius.VM.VM_Environment;
+      Args : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
+
+   function Eval_Method_Map_Replace
+     (Env  : Aquarius.VM.VM_Environment;
+      Args : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
+
+   function Eval_Method_Map_Contains
+     (Env  : Aquarius.VM.VM_Environment;
+      Args : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
+
+   function Eval_Method_Map_Element
+     (Env  : Aquarius.VM.VM_Environment;
+      Args : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
+
    -----------------------------
    -- Create_Standard_Library --
    -----------------------------
@@ -90,11 +117,16 @@ package body Aquarius.VM.Library is
    is
       Env : constant VM_Environment :=
               New_Environment ("standard", Null_Environment);
+      No_Default_Values : Array_Of_Values (1 .. 0);
    begin
       Insert (Env, "->",
               To_Value (Eval_Get_Named_Direct_Child'Access,
                 (Null_Value, Null_Value,
                  To_Value (1))));
+      Insert (Env, "create_map",
+              To_Value
+                (Eval_Create_Map'Access,
+                 No_Default_Values));
       Insert (Env, "create_tree",
               To_Value (Eval_Create_Tree'Access,
                 (1 => Null_Value)));
@@ -214,6 +246,44 @@ package body Aquarius.VM.Library is
             Value       => To_Value (Eval_Method_Include'Access, 2));
       end;
 
+      declare
+         use Ada.Strings.Unbounded;
+         use Aquarius.VM.Maps;
+         Class_Name         : constant String :=
+                                Ada.Tags.External_Tag
+                                  (Map_Property_Type'Tag);
+         Map_Class   : VM_Value_Record :=
+                                (Val_Class,
+                                 To_Unbounded_String (Class_Name),
+                                 String_Vectors.Empty_Vector);
+      begin
+         Derive (Env, Ada.Tags.External_Tag (Root_Aquarius_Object'Tag),
+                 Class_Name, Map_Class);
+         Map_Class.Member_Names.Append ("insert");
+         Insert
+           (Env         => Env,
+            Class_Name  => Class_Name,
+            Method_Name => "insert",
+            Value       => To_Value (Eval_Method_Map_Insert'Access, 3));
+         Map_Class.Member_Names.Append ("replace");
+         Insert
+           (Env         => Env,
+            Class_Name  => Class_Name,
+            Method_Name => "replace",
+            Value       => To_Value (Eval_Method_Map_Replace'Access, 3));
+         Map_Class.Member_Names.Append ("contains");
+         Insert
+           (Env         => Env,
+            Class_Name  => Class_Name,
+            Method_Name => "contains",
+            Value       => To_Value (Eval_Method_Map_Contains'Access, 2));
+         Insert
+           (Env         => Env,
+            Class_Name  => Class_Name,
+            Method_Name => "element",
+            Value       => To_Value (Eval_Method_Map_Element'Access, 2));
+      end;
+
       return Env;
    end Create_Standard_Library;
 
@@ -276,6 +346,23 @@ package body Aquarius.VM.Library is
       return To_Value (Top_Tree);
 
    end Eval_Build_Tree;
+
+   ---------------------
+   -- Eval_Create_Map --
+   ---------------------
+
+   function Eval_Create_Map
+     (Env       : VM_Environment;
+      Arguments : Array_Of_Values)
+      return VM_Value
+   is
+      pragma Unreferenced (Env);
+      pragma Unreferenced (Arguments);
+      New_Map : constant access Root_Aquarius_Object'Class :=
+                  new Maps.Map_Property_Type;
+   begin
+      return VM.To_Value (New_Map);
+   end Eval_Create_Map;
 
    ----------------------
    -- Eval_Create_Stub --
@@ -477,6 +564,86 @@ package body Aquarius.VM.Library is
    begin
       return To_Value (Tree (Args (Args'First).Prop_Value).Child_Count);
    end Eval_Method_Length;
+
+   ------------------------------
+   -- Eval_Method_Map_Contains --
+   ------------------------------
+
+   function Eval_Method_Map_Contains
+     (Env  : Aquarius.VM.VM_Environment;
+      Args : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value
+   is
+      pragma Unreferenced (Env);
+      use Aquarius.VM.Maps;
+      Map : constant access Map_Property_Type'Class :=
+              Map_Property_Type'Class
+                (Args (Args'First).Prop_Value.all)'Access;
+      Key : constant String := To_String (Args (Args'First + 1));
+   begin
+      return To_Value (Map.Contains (Key));
+   end Eval_Method_Map_Contains;
+
+   -----------------------------
+   -- Eval_Method_Map_Element --
+   -----------------------------
+
+   function Eval_Method_Map_Element
+     (Env  : Aquarius.VM.VM_Environment;
+      Args : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value
+   is
+      pragma Unreferenced (Env);
+      use Aquarius.VM.Maps;
+      Map : constant access Map_Property_Type'Class :=
+              Map_Property_Type'Class
+                (Args (Args'First).Prop_Value.all)'Access;
+      Key : constant String := To_String (Args (Args'First + 1));
+   begin
+      return Map.Element (Key);
+   end Eval_Method_Map_Element;
+
+   ----------------------------
+   -- Eval_Method_Map_Insert --
+   ----------------------------
+
+   function Eval_Method_Map_Insert
+     (Env  : Aquarius.VM.VM_Environment;
+      Args : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value
+   is
+      pragma Unreferenced (Env);
+      use Aquarius.VM.Maps;
+      Map : constant access Map_Property_Type'Class :=
+              Map_Property_Type'Class
+                (Args (Args'First).Prop_Value.all)'Access;
+      Key : constant String := To_String (Args (Args'First + 1));
+      Value : constant VM_Value := Args (Args'First + 2);
+   begin
+      Map.Insert (Key, Value);
+      return Args (Args'First);
+   end Eval_Method_Map_Insert;
+
+   -----------------------------
+   -- Eval_Method_Map_Replace --
+   -----------------------------
+
+   function Eval_Method_Map_Replace
+     (Env  : Aquarius.VM.VM_Environment;
+      Args : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value
+   is
+      pragma Unreferenced (Env);
+      use Aquarius.VM.Maps;
+      Map : constant access Map_Property_Type'Class :=
+              Map_Property_Type'Class
+                (Args (Args'First).Prop_Value.all)'Access;
+      Key : constant String := To_String (Args (Args'First + 1));
+      Value : constant VM_Value := Args (Args'First + 2);
+   begin
+      Map.Replace (Key, Value);
+      return Args (Args'First);
+   end Eval_Method_Map_Replace;
 
    ----------------------
    -- Eval_Method_Name --
