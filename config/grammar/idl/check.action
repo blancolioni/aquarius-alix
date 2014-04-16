@@ -13,12 +13,15 @@ Top.Interface_Name := Base_Name & "_Interface";
 Top.Client_Record_Name := Base_Name & "_Client_Interface";
 Top.Interface_Class_Name := "Root_" & Interface_Name;
 Top.Contexts := Create_Set;
+Top.Bases := Create_Map;
+Top.Subprograms := Create_Map;
 
 for all loop
    case Tree is
       when Parent_Interfaces =>
          for Tree loop
             Top.Contexts.Include (.Image);
+            Top.Bases.Insert (.Image, Load (Top.Containing_Directory & "/" & To_File_Name (.Image, "idl")));
          end loop;
       when Typeref =>
          if /Interface_Typeref then
@@ -50,6 +53,7 @@ for all loop
          Next_Recv_Word := 0;
          Next_Send_Cap := 0;
          Next_Recv_Cap := 0;
+         Top.Subprograms.Insert (/Identifier.Image, Tree);
       when Formal_Argument =>
          if /Argument_Spec then
             if /Argument_Spec.Image = "out" then

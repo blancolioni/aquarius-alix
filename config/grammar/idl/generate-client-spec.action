@@ -16,11 +16,8 @@ with Rose.Objects;
 package [Package_Name] is
 
    function Create_Client
-@for /Top_Level_Interface_Declaration/List_Of_Declarations loop
-@   case Tree is
-@      when Subprogram_Declaration =>
-    [(if First_Loop then "(" else ";")][/Identifier]_Cap : Rose.Objects.Capability
-@   end case;
+@for P of Top.Subprograms loop
+    [(if First_Loop then "(" else ";")][P/Identifier]_Cap : Rose.Objects.Capability
 @end loop;
     ) return [Interface_Name];
 
@@ -29,22 +26,16 @@ private
    type [Client_Record_Name] is
      new [Interface_Name] with
       record
-@for /Top_Level_Interface_Declaration/List_Of_Declarations loop
-@   case Tree is
-@      when Subprogram_Declaration =>
-         [/Identifier]_Cap : Rose.Objects.Capability;
-@   end case;
+@for P of Top.Subprograms loop
+        [P/Identifier]_Cap : Rose.Objects.Capability;
 @end loop;
       end record;
 
-@for /Top_Level_Interface_Declaration/List_Of_Declarations loop
-@   case Tree is
-@      when Subprogram_Declaration =>
-
-   overriding [(if /Function_Declaration then "function" else "procedure")] [/Identifier]
+@for P of Top.Subprograms loop
+   overriding [(if P/Function_Declaration then "function" else "procedure")] [P/Identifier]
      (Item : in out [Client_Record_Name]
-@ if /Formal_Arguments then
-@ for Formal_Argument of /Formal_Arguments loop
+@ if P/Formal_Arguments then
+@ for Formal_Argument of P/Formal_Arguments loop
      ; [/Identifier] : [.Mode] [/Typeref.Ada_Name]
 @ end loop;
 @ end if;
@@ -52,7 +43,6 @@ private
 @ if /Function_Declaration then
      return [/Typeref.Ada_Name];
 @ end if;
-@   end case;
 @end loop;
 
 end [Package_Name];
