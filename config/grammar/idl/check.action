@@ -4,11 +4,22 @@ declare Next_Send_Cap  : Natural := 0;
 declare Next_Recv_Cap  : Natural := 0;
 declare Current_Declaration : Tree := null;
 
+Top.Qualified_Name :=
+   /Top_Level_Interface_Declaration/Qualified_Identifier.Image;
+Top.Package_Name := Qualified_Name & ".Client";
+Top.Base_Name :=
+   /Top_Level_Interface_Declaration/Qualified_Identifier.Last.Image;
+Top.Interface_Name := Base_Name & "_Interface";
+Top.Client_Record_Name := Base_Name & "_Client_Interface";
+Top.Interface_Class_Name := "Root_" & Interface_Name;
+Top.Contexts := Create_Set;
+
 for all loop
    case Tree is
-      when Compilation_Unit =>
-         Top.Contexts := Create_Set;
-
+      when Parent_Interfaces =>
+         for Tree loop
+            Top.Contexts.Include (.Image);
+         end loop;
       when Typeref =>
          if /Interface_Typeref then
             .Ada_Name := Qualified_Identifier.Image & "_Interface";
