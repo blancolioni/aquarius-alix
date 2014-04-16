@@ -9,6 +9,7 @@ with Aquarius.Properties.String_Sets;
 
 with Aquarius.VM;
 with Aquarius.VM.Library;
+with Aquarius.VM.Maps;
 
 with Aquarius.Loader;
 with Aquarius.Messages.Console;
@@ -1272,6 +1273,38 @@ package body Aquarius.Actions.Interpreter is
                   VM.Insert (Loop_Env, Iterator_Name, VM.Null_Value);
 
                   Properties.String_Sets.String_Set_Property_Type'Class
+                    (VM.To_Property (Loop_Value).all).Iterate
+                    (Process'Access);
+               end;
+            elsif VM.Has_Property (Loop_Value)
+              and then VM.To_Property (Loop_Value).all in
+              VM.Maps.Map_Property_Type'Class
+            then
+               declare
+                  procedure Process
+                    (Key   : String;
+                     Value : VM.VM_Value);
+
+                  -------------
+                  -- Process --
+                  -------------
+
+                  procedure Process
+                    (Key   : String;
+                     Value : VM.VM_Value)
+                  is
+                     pragma Unreferenced (Key);
+                  begin
+                     VM.Replace (Loop_Env, Iterator_Name, Value);
+                     Interpret (Loop_Env, Sequence, Node);
+                     VM.Replace (Loop_Env, "first_loop",
+                                 VM.To_Value (False));
+                  end Process;
+
+               begin
+                  VM.Insert (Loop_Env, Iterator_Name, VM.Null_Value);
+
+                  VM.Maps.Map_Property_Type'Class
                     (VM.To_Property (Loop_Value).all).Iterate
                     (Process'Access);
                end;
