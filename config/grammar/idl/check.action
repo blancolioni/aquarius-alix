@@ -6,12 +6,12 @@ declare Current_Declaration : Tree := null;
 
 Top.Qualified_Name :=
    /Top_Level_Interface_Declaration/Qualified_Identifier.Image;
-Top.Package_Name := Qualified_Name & ".Client";
+Top.Package_Name := Top.Qualified_Name;
 Top.Base_Name :=
    /Top_Level_Interface_Declaration/Qualified_Identifier.Last.Image;
-Top.Interface_Name := Base_Name & "_Interface";
-Top.Client_Record_Name := Base_Name & "_Client_Interface";
-Top.Interface_Class_Name := "Root_" & Interface_Name;
+Top.Interface_Name := Top.Base_Name & "_Interface";
+Top.Client_Record_Name := Top.Base_Name & "_Client_Interface";
+Top.Interface_Class_Name := "Root_" & Top.Interface_Name;
 Top.Contexts := Create_Set;
 Top.Bases := Create_Map;
 Top.Subprograms := Create_Map;
