@@ -1282,18 +1282,16 @@ package body Aquarius.Actions.Interpreter is
             then
                declare
                   procedure Process
-                    (Key   : String;
-                     Value : VM.VM_Value);
+                    (Value : VM.VM_Value);
 
                   -------------
                   -- Process --
                   -------------
 
                   procedure Process
-                    (Key   : String;
-                     Value : VM.VM_Value)
+                    (Value : VM.VM_Value)
                   is
-                     pragma Unreferenced (Key);
+                     --  pragma Unreferenced (Key);
                   begin
                      VM.Replace (Loop_Env, Iterator_Name, Value);
                      Interpret (Loop_Env, Sequence, Node);
@@ -1513,7 +1511,10 @@ package body Aquarius.Actions.Interpreter is
             if Trace then
                Ada.Text_IO.Put_Line
                  (Ada.Text_IO.Standard_Error,
-                  Target.Tree.Name & "."
+                  (if Target.Tree.Has_Property ("full_name")
+                   then Target.Tree.Property ("full_name").Name
+                   else Target.Tree.Name)
+                  & "."
                   & Ada.Strings.Unbounded.To_String (Target.Property)
                   & " := "
                   & VM.To_String (Value));
