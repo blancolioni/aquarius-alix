@@ -23,9 +23,11 @@ package body Aquarius.VM.Maps is
       Key      : String)
       return VM_Value
    is
+      Position : constant VM_Value_Lists.Cursor :=
+                   Property.Map.Element
+                     (Ada.Strings.Unbounded.To_Unbounded_String (Key));
    begin
-      return Property.Map.Element
-        (Ada.Strings.Unbounded.To_Unbounded_String (Key));
+      return VM_Value_Lists.Element (Position);
    end Element;
 
    ------------
@@ -38,8 +40,9 @@ package body Aquarius.VM.Maps is
       Value    : in     VM_Value)
    is
    begin
+      Property.List.Append (Value);
       Property.Map.Insert
-        (Ada.Strings.Unbounded.To_Unbounded_String (Key), Value);
+        (Ada.Strings.Unbounded.To_Unbounded_String (Key), Property.List.Last);
    end Insert;
 
    -------------
@@ -56,7 +59,22 @@ package body Aquarius.VM.Maps is
    begin
       for Position in Property.Map.Iterate loop
          Process (Ada.Strings.Unbounded.To_String (Key (Position)),
-                  Element (Position));
+                  VM_Value_Lists.Element (Element (Position)));
+      end loop;
+   end Iterate;
+
+   -------------
+   -- Iterate --
+   -------------
+
+   procedure Iterate
+     (Property : Map_Property_Type'Class;
+      Process  : not null access
+        procedure (Value : VM_Value))
+   is
+   begin
+      for V of Property.List loop
+         Process (V);
       end loop;
    end Iterate;
 
@@ -82,9 +100,11 @@ package body Aquarius.VM.Maps is
       Key      : in     String;
       Value    : in     VM_Value)
    is
+      Position : constant VM_Value_Lists.Cursor :=
+                   Property.Map.Element
+                     (Ada.Strings.Unbounded.To_Unbounded_String (Key));
    begin
-      Property.Map.Replace
-        (Ada.Strings.Unbounded.To_Unbounded_String (Key), Value);
+      Property.List.Replace_Element (Position, Value);
    end Replace;
 
 end Aquarius.VM.Maps;
