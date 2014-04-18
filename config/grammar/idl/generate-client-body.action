@@ -7,6 +7,7 @@
 @declare Interface_Name : constant String := Base_Name & "_Interface";
 @declare Client_Record_Name : constant String := Base_Name & "_Client_Interface";
 @declare Interface_Class_Name : constant String := "Root_" & Interface_Name;
+@declare Arg_Count : Natural := 0;
 @Set_Output (Ada_Body_Name (Package_Name));
 with Rose.Invocation;
 with Rose.System_Calls;
@@ -14,33 +15,67 @@ with Rose.System_Calls;
 package body [Package_Name] is
 
    function Create_Client
-@for /Top_Level_Interface_Declaration/List_Of_Declarations loop
-@   case Tree is
-@      when Subprogram_Declaration =>
-    [(if First_Loop then "(" else ";")][/Identifier]_Cap : Rose.Objects.Capability
-@   end case;
+@Arg_Count := 0;
+@for P of Top.Bases loop
+    [(if Arg_Count = 0 then "(" else ";")][P.Base_Name] : not null access [P.Package_Name].[P.Interface_Class_Name]'Class
+@   Arg_Count := Arg_Count + 1;
+@end loop;
+@for P of Top.Subprograms loop
+    [(if Arg_Count = 0 then "(" else ";")][P/Identifier]_Cap : Rose.Objects.Capability
+@   Arg_Count := Arg_Count + 1;
 @end loop;
     ) return [Interface_Name]
    is
    begin
       return new [Client_Record_Name]'
-@for /Top_Level_Interface_Declaration/List_Of_Declarations loop
-@   case Tree is
-@      when Subprogram_Declaration =>
-        [(if First_Loop then "(" else ",")][/Identifier]_Cap => [/Identifier]_Cap
-@   end case;
+@Arg_Count := 0;
+@for P of Top.Bases loop
+        [(if Arg_Count = 0 then "(" else ",")][P.Base_Name] => [P.Package_Name].[P.Base_Name]_Interface ([P.Base_Name])
+@   Arg_Count := Arg_Count + 1;
+@end loop;
+@for P of Top.Subprograms loop
+        [(if Arg_Count = 0 then "(" else ",")][P/Identifier]_Cap => [P/Identifier]_Cap
+@   Arg_Count := Arg_Count + 1;
 @end loop;
         );
-   end [Interface_Name];
+   end Create_Client;
 
-@for /Top_Level_Interface_Declaration/List_Of_Declarations loop
-@   case Tree is
-@      when Subprogram_Declaration =>
-
-   overriding [(if /Function_Declaration then "function" else "procedure")] [/Identifier]
+@for Base of Top.Bases loop
+@   for P of Base.Subprograms loop
+   overriding [(if P/Function_Declaration then "function" else "procedure")] [P/Identifier]
      (Item : in out [Client_Record_Name]
-@ if /Formal_Arguments then
-@ for Formal_Argument of /Formal_Arguments loop
+@        if P/Formal_Arguments then
+@           for Formal_Argument of P/Formal_Arguments loop
+     ; [/Identifier] : [.Mode] [/Typeref.Ada_Name]
+@           end loop;
+@        end if;
+     )
+@ if P/Function_Declaration then
+     return [P/Typeref.Ada_Name]
+@ end if;
+   is
+   begin
+@ if P/Function_Declaration then
+      return
+@ end if;
+      Item.[Base.Base_Name].[P/Identifier]
+@        if P/Formal_Arguments then
+@           for Formal_Argument of P/Formal_Arguments loop
+         [(if First_Loop then "(" else ",")][/Identifier]
+@           end loop;
+         )
+@        end if;
+      ;
+   end [P/Identifier];
+   
+@   end loop;
+@end loop;
+
+@for P of Top.Subprograms loop
+   overriding [(if P/Function_Declaration then "function" else "procedure")] [P/Identifier]
+     (Item : in out [Client_Record_Name]
+@ if P/Formal_Arguments then
+@ for Formal_Argument of P/Formal_Arguments loop
      ; [/Identifier] : [.Mode] [/Typeref.Ada_Name]
 @ end loop;
 @ end if;
@@ -52,10 +87,10 @@ package body [Package_Name] is
       use Rose.Invocation;
       Params : Invocation_Record;
    begin
-@ if /Formal_Arguments then
-@    for Formal_Argument of /Formal_Arguments loop
+@ if P/Formal_Arguments then
+@    for Formal_Argument of P/Formal_Arguments loop
 @       if .Send_Word then
-      Rose.System_Calls.Set_Data_Word (Params, [.Send_Word], [/Identifier]);
+      Rose.System_Calls.Set_Data_Word (Params, [.Send_Word], [P/Identifier]);
 @       end if;
 @ end loop;
 @ end if;
@@ -65,24 +100,23 @@ package body [Package_Name] is
          Ctrl.Header := 0;
          Ctrl.Flags  := (others => False);
          Ctrl.Flags (Send) := True;
-@if .Send_Words then
-         Ctrl.Last_Data_Word := [.Send_Words];
+@if P.Send_Words then
+         Ctrl.Last_Data_Word := [P.Send_Words];
 @end if;
          Ctrl.Flags (Block) := True;
          Ctrl.Footer := 0;
       end;
-      Params.Cap := Item.[/Identifier]_Cap;
+      Params.Cap := Item.[P/Identifier]_Cap;
       Rose.System_Calls.Invoke_Capability (Params);
-@ if /Formal_Arguments then
-@    for Formal_Argument of /Formal_Arguments loop
+@ if P/Formal_Arguments then
+@    for Formal_Argument of P/Formal_Arguments loop
 @       if .Recv_Word then
-      Rose.System_Calls.Get_Data_Word (Params, [.Recv_Word], [/Identifier]);
+      Rose.System_Calls.Get_Data_Word (Params, [.Recv_Word], [P/Identifier]);
 @       end if;
 @ end loop;
 @ end if;
-   end [/Identifier];
-   
-@   end case;
+   end [P/Identifier];
+
 @end loop;
 
 end [Package_Name];
