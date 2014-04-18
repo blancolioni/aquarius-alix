@@ -424,6 +424,11 @@ package body Aquarius.Actions.Interpreter is
       Qualifiers : constant Array_Of_Program_Trees :=
                      Action.Direct_Children ("name_qualifier");
    begin
+      if Action.Name = "object_reference" then
+         return Evaluate_Object_Reference
+           (Env, Action.Chosen_Tree, Node);
+      end if;
+
       if Action.Name = "explicit_object_reference" then
          declare
             Name : constant String :=
@@ -1173,12 +1178,6 @@ package body Aquarius.Actions.Interpreter is
                                Tree.Direct_Children;
                begin
                   for I in Children'Range loop
-                     if Trace then
-                        Ada.Text_IO.Put_Line
-                          (Ada.Text_IO.Standard_Error,
-                           "  loop: " & Children (I).Name);
-                     end if;
-
                      Interpret (Loop_Env, Sequence, Children (I));
 
                      if I = Children'First then
