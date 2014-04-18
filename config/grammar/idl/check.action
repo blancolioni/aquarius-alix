@@ -46,9 +46,9 @@ for all loop
          end if;
       when Declaration =>
          Current_Declaration := Tree;
+      when Subprogram_Declaration =>
          .Send_Words := 0;
          .Recv_Words := 0;
-      when Subprogram_Declaration =>
          Next_Send_Word := 0;
          Next_Recv_Word := 0;
          Next_Send_Cap := 0;
