@@ -4,6 +4,8 @@
 with Rose.Objects;
 
 package [Package_Name] is
+   
+   pragma Style_Checks (Off);   
 
    procedure Start_Server
      (Server : not null access [Top.Interface_Class_Name]'Class
