@@ -22,7 +22,7 @@ package [Package_Name] is
 @for /Top_Level_Interface_Declaration/List_Of_Declarations loop
 @   case Tree is
 @      when Constant_Declaration =>
-   [Identifier (1)] : constant [Identifier (2)] := [Expression];
+   [/Identifier] : constant [(if /Typeref then /Typeref else "")]:= [/Expression];
 @      when Type_Declaration =>
    type [/Identifier.Image] is
 @         case /Type_Definition is
