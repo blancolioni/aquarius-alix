@@ -34,7 +34,7 @@ list_of_declarations ::= { declaration ';' }
 
 declaration ::= subprogram_declaration | type_declaration | constant_declaration
 
-constant_declaration ::= identifier ':' 'constant' [ identifier ] ':=' expression
+constant_declaration ::= identifier ':' 'constant' [ typeref ] ':=' expression
 
 expression ::= numeric_literal | identifier
 
