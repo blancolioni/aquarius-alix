@@ -16,6 +16,8 @@ with Rose.Objects;
 
 package [Package_Name] is
 
+   pragma Style_Checks (Off);
+   
    function Create_Client
 @Arg_Count := 0;
 @for P of Top.Bases loop
@@ -40,7 +42,6 @@ private
          [P/Identifier]_Cap : Rose.Objects.Capability;
 @end loop;
       end record;
-
 @for Base of Top.Bases loop
 @   for P of Base.Subprograms loop
    overriding [(if P/Function_Declaration then "function" else "procedure")] [P/Identifier]
@@ -56,7 +57,6 @@ private
 @ end if;
 @   end loop;
 @end loop;
-
 @for P of Top.Subprograms loop
    overriding [(if P/Function_Declaration then "function" else "procedure")] [P/Identifier]
      (Item : in out [Client_Record_Name]

@@ -6,6 +6,8 @@ with Rose.System_Calls;
 with Rose.Rvm;
 
 package body [Package_Name] is
+   
+   pragma Style_Checks (Off);   
 
 @for Base of Top.Bases loop
 @   for P of Base.Subprograms loop
@@ -20,6 +22,80 @@ package body [Package_Name] is
       Parameters       : in out Rose.System_Calls.Invocation_Record);
 @end loop;
 
+@for Base of Top.Bases loop
+@   for P of Base.Subprograms loop
+   procedure Handle_[P/Identifier]
+     (Server_Interface : Rose.Interfaces.Rose_Interface;
+      Parameters       : in out Rose.System_Calls.Invocation_Record)
+   is
+      Server : constant [Top.Interface_Name] :=
+        [Top.Interface_Name] (Server_Interface);
+@ if P/Formal_Arguments then
+@ for Formal_Argument of P/Formal_Arguments loop
+     [/Identifier] : [/Typeref.Ada_Name];
+@ end loop;
+@ end if;
+   begin  
+@ if P/Formal_Arguments then
+@ for Formal_Argument of P/Formal_Arguments loop
+@       if .Send_Word then
+      Rose.System_Calls.Get_Data_Word (Parameters, [.Send_Word], [/Identifier]);
+@       end if;
+@ end loop;
+@ end if;
+      Server.[P/Identifier]
+@ if P/Formal_Arguments then
+@ for Formal_Argument of P/Formal_Arguments loop
+        [(if First_Loop then "(" else ",")][/Identifier]
+@ end loop;
+@ end if;
+        );
+@ if P/Formal_Arguments then
+@ for Formal_Argument of P/Formal_Arguments loop
+@       if .Recv_Word then
+      Rose.System_Calls.Set_Data_Word (Parameters, [.Recv_Word], [/Identifier]);
+@       end if;
+@ end loop;
+@ end if;
+   end Handle_[P/Identifier];
+@   end loop;
+@end loop;
+@for P of Top.Subprograms loop
+   procedure Handle_[P/Identifier]
+     (Server_Interface : Rose.Interfaces.Rose_Interface;
+      Parameters       : in out Rose.System_Calls.Invocation_Record)
+   is
+      Server : constant [Top.Interface_Name] :=
+        [Top.Interface_Name] (Server_Interface);
+@ if P/Formal_Arguments then
+@ for Formal_Argument of P/Formal_Arguments loop
+     [/Identifier] : [/Typeref.Ada_Name];
+@ end loop;
+@ end if;
+   begin  
+@ if P/Formal_Arguments then
+@ for Formal_Argument of P/Formal_Arguments loop
+@       if .Send_Word then
+      Rose.System_Calls.Get_Data_Word (Parameters, [.Send_Word], [/Identifier]);
+@       end if;
+@ end loop;
+@ end if;
+      Server.[P/Identifier]
+@ if P/Formal_Arguments then
+@ for Formal_Argument of P/Formal_Arguments loop
+        [(if First_Loop then "(" else ",")][/Identifier]
+@ end loop;
+@ end if;
+        );
+@ if P/Formal_Arguments then
+@ for Formal_Argument of P/Formal_Arguments loop
+@       if .Recv_Word then
+      Rose.System_Calls.Set_Data_Word (Parameters, [.Recv_Word], [/Identifier]);
+@       end if;
+@ end loop;
+@ end if;
+   end Handle_[P/Identifier];
+@end loop;
    ------------------
    -- Start_Server --
    ------------------
@@ -28,11 +104,11 @@ package body [Package_Name] is
      (Server : not null access [Top.Interface_Class_Name]'Class
 @for Base of Top.Bases loop
 @   for P of Base.Subprograms loop
-     ;[P/Identifier]_Cap : out Rose.Objects.Capability
+     ; [P/Identifier]_Cap : out Rose.Objects.Capability
 @   end loop;
 @end loop;
 @for P of Top.Subprograms loop
-     ;[P/Identifier]_Cap : out Rose.Objects.Capability
+     ; [P/Identifier]_Cap : out Rose.Objects.Capability
 @end loop;
      )
    is
@@ -54,80 +130,5 @@ package body [Package_Name] is
                                  Handle_[P/Identifier]'Access);
 @end loop;
    end Start_Server;
-
-@for Base of Top.Bases loop
-@   for P of Base.Subprograms loop
-   procedure Handle_[P/Identifier]
-     (Server_Interface : Rose.Interfaces.Rose_Interface;
-      Parameters       : in out Rose.System_Calls.Invocation_Record)
-   is
-      Server : constant [Top.Interface_Name] := 
-        [Top.Interface_Name] (Server_Interface);
-@ if P/Formal_Arguments then
-@ for Formal_Argument of P/Formal_Arguments loop
-     [P/Identifier] : [P/Typeref.Ada_Name];
-@ end loop;
-@ end if;
-   begin  
-@ if P/Formal_Arguments then
-@ for Formal_Argument of P/Formal_Arguments loop
-@       if .Send_Word then
-      Rose.System_Calls.Get_Data_Word (Parameters, [.Send_Word], [P/Identifier]);
-@       end if;
-@ end loop;
-@ end if;
-      Server.[P/Identifier]
-@ if /Formal_Arguments then
-@ for Formal_Argument of P/Formal_Arguments loop
-        [(if First_Loop then "(" else ",")][P/Identifier]
-@ end loop;
-@ end if;
-        );
-@ if P/Formal_Arguments then
-@ for Formal_Argument of P/Formal_Arguments loop
-@       if .Recv_Word then
-      Rose.System_Calls.Set_Data_Word (Parameters, [.Recv_Word], [P/Identifier]);
-@       end if;
-@ end loop;
-@ end if;
-   end Handle_[P/Identifier];
-@   end loop;
-@end loop;
-@for P of Top.Subprograms loop
-   procedure Handle_[P/Identifier]
-     (Server_Interface : Rose.Interfaces.Rose_Interface;
-      Parameters       : in out Rose.System_Calls.Invocation_Record);
-   is
-      Server : constant [Top.Interface_Name] := 
-        [Top.Interface_Name] (Server_Interface);
-@ if P/Formal_Arguments then
-@ for Formal_Argument of P/Formal_Arguments loop
-     [P/Identifier] : [P/Typeref.Ada_Name];
-@ end loop;
-@ end if;
-   begin  
-@ if P/Formal_Arguments then
-@ for Formal_Argument of P/Formal_Arguments loop
-@       if .Send_Word then
-      Rose.System_Calls.Get_Data_Word (Parameters, [.Send_Word], [P/Identifier]);
-@       end if;
-@ end loop;
-@ end if;
-      Server.[P/Identifier]
-@ if /Formal_Arguments then
-@ for Formal_Argument of P/Formal_Arguments loop
-        [(if First_Loop then "(" else ",")][P/Identifier]
-@ end loop;
-@ end if;
-        );
-@ if P/Formal_Arguments then
-@ for Formal_Argument of P/Formal_Arguments loop
-@       if .Recv_Word then
-      Rose.System_Calls.Set_Data_Word (Parameters, [.Recv_Word], [P/Identifier]);
-@       end if;
-@ end loop;
-@ end if;
-   end Handle_[P/Identifier];
-@end loop;
 
 end [Package_Name];

@@ -13,6 +13,8 @@ with Rose.Invocation;
 with Rose.System_Calls;
 
 package body [Package_Name] is
+   
+   pragma Style_Checks (Off);   
 
    function Create_Client
 @Arg_Count := 0;
@@ -39,7 +41,6 @@ package body [Package_Name] is
 @end loop;
         );
    end Create_Client;
-
 @for Base of Top.Bases loop
 @   for P of Base.Subprograms loop
    overriding [(if P/Function_Declaration then "function" else "procedure")] [P/Identifier]
@@ -70,7 +71,6 @@ package body [Package_Name] is
    
 @   end loop;
 @end loop;
-
 @for P of Top.Subprograms loop
    overriding [(if P/Function_Declaration then "function" else "procedure")] [P/Identifier]
      (Item : in out [Client_Record_Name]
@@ -90,7 +90,7 @@ package body [Package_Name] is
 @ if P/Formal_Arguments then
 @    for Formal_Argument of P/Formal_Arguments loop
 @       if .Send_Word then
-      Rose.System_Calls.Set_Data_Word (Params, [.Send_Word], [P/Identifier]);
+      Rose.System_Calls.Set_Data_Word (Params, [.Send_Word], [/Identifier]);
 @       end if;
 @ end loop;
 @ end if;
@@ -111,12 +111,11 @@ package body [Package_Name] is
 @ if P/Formal_Arguments then
 @    for Formal_Argument of P/Formal_Arguments loop
 @       if .Recv_Word then
-      Rose.System_Calls.Get_Data_Word (Params, [.Recv_Word], [P/Identifier]);
+      Rose.System_Calls.Get_Data_Word (Params, [.Recv_Word], [/Identifier]);
 @       end if;
 @ end loop;
 @ end if;
    end [P/Identifier];
-
 @end loop;
 
 end [Package_Name];

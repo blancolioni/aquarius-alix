@@ -10,6 +10,8 @@ with [Context];
 
 package [Package_Name] is
 
+   pragma Style_Checks (Off);
+   
    type Root_[Interface_Name]_Interface is
       limited interface
 @if /Top_Level_Interface_Declaration/Parent_Interfaces then
@@ -53,7 +55,7 @@ package [Package_Name] is
 @   end case;
 @end loop;
 
-   type [Interface_Name]_Interface is 
+   type [Interface_Name]_Interface is
      access all Root_[Interface_Name]_Interface'Class;
      
 end [Package_Name];
