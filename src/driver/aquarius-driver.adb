@@ -147,12 +147,11 @@ begin
             if Message_Count (List) > 0 then
                if Highest_Level (List) > Warning then
                   Aquarius.Messages.Console.Show_Messages (List);
-                  return;
                end if;
+            else
+               Ada.Text_IO.Put_Line ("no messages");
             end if;
          end;
-
-         Ada.Text_IO.Put_Line ("no messages");
 
          if Command_Line.Action /= "" then
             Grammar.Run_Actions (Command_Line.Action, Input);
@@ -166,7 +165,6 @@ begin
             if Message_Count (List) > 0 then
                if Highest_Level (List) > Warning then
                   Aquarius.Messages.Console.Show_Messages (List);
-                  return;
                end if;
             end if;
          end;
@@ -247,6 +245,9 @@ begin
                pragma Unreferenced (Main);
             begin
                UI.Show_Project (Project);
+            exception
+               when others =>
+                  null;
             end;
          end if;
 
