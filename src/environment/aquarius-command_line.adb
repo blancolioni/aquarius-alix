@@ -150,6 +150,16 @@ package body Aquarius.Command_Line is
    end Input_File;
 
    -----------------
+   -- Line_Length --
+   -----------------
+
+   function Line_Length  return Positive is
+      Line_Length_Text : constant String := Get_Argument ("l", "line-length");
+   begin
+      return Integer'Max (Integer'Value (Line_Length_Text), 1);
+   end Line_Length;
+
+   -----------------
    -- Output_File --
    -----------------
 
