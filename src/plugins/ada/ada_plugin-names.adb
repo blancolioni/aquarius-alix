@@ -263,7 +263,11 @@ package body Ada_Plugin.Names is
             end if;
          end;
 
-         Tree.Set_Entry (Current);
+         if Current = null then
+            null;
+         else
+            Tree.Set_Entry (Current);
+         end if;
 
       end loop;
 
