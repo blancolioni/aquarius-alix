@@ -160,9 +160,9 @@ package body Aquarius.Projects is
                                                G.Name)
                then
                   Aquarius.Names.Append (Project.Grammar_Names, G.Name);
-                  Project.Add_Search_Path
-                    (Ada.Directories.Compose
-                       (Aquarius.Configuration.Get_Library_Path, G.Name));
+--                    Project.Add_Search_Path
+--                      (Ada.Directories.Compose
+--                         (Aquarius.Configuration.Get_Library_Path, G.Name));
                end if;
             end;
             Buffer :=
@@ -602,6 +602,22 @@ package body Aquarius.Projects is
    begin
       Project.Pending_Actions.Append (Group_Name);
    end Run_Actions;
+
+   -----------------------
+   -- Scan_Search_Paths --
+   -----------------------
+
+   procedure Scan_Search_Paths
+     (Project : Aquarius_Project_Type'Class;
+      Process : not null access
+        procedure (Path : String))
+   is
+      use Aquarius.Source.File_System;
+   begin
+      for I in 1 .. Search_Path_Count (Project.Search_Path) loop
+         Process (Get_Search_Path (Project.Search_Path, I));
+      end loop;
+   end Scan_Search_Paths;
 
    ------------
    -- Target --
