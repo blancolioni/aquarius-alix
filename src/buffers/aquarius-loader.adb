@@ -135,22 +135,26 @@ package body Aquarius.Loader is
                     (Source_Pos, Aquarius.Source.Column_Number (First));
                   if Tok = Grammar.Comment_Token then
                      Add_Comment
-                       (Context,
+                       (Context, Tok_Pos,
                         Grammar.Make_Comment_Tree (Line (First .. Next)));
                   elsif Token_OK (Tok, Tok_Pos, Context) then
                      Parse_Token (Tok, Tok_Pos,
                                   Line (First .. Next), Context);
                   else
-                     Ada.Text_IO.Put_Line (Aquarius.Source.Show (Tok_Pos) &
-                                           ": syntax error at " &
-                                           Line (First .. Next));
+                     if False then
+                        Ada.Text_IO.Put_Line (Aquarius.Source.Show (Tok_Pos) &
+                                                ": syntax error at " &
+                                                Line (First .. Next));
+                     end if;
                      declare
                         use Aquarius.Trees.Cursors;
                         It : Cursor := Get_Cursor (Context);
                      begin
                         while not Is_At_Root (It) loop
-                           Ada.Text_IO.Put_Line
-                             (Aquarius.Trees.Cursors.Image (It));
+                           if False then
+                              Ada.Text_IO.Put_Line
+                                (Aquarius.Trees.Cursors.Image (It));
+                           end if;
                            Move_To_Left_Of_Parent (It);
                         end loop;
                         return Result;
