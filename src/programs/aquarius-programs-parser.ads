@@ -23,8 +23,9 @@ package Aquarius.Programs.Parser is
    procedure Set_Cursor (Context : in out Parse_Context;
                          Cursor  : in     Aquarius.Trees.Cursors.Cursor);
 
-   procedure Add_Comment (Context : in out Parse_Context;
-                          Comment : in     Program_Tree);
+   procedure Add_Comment (Context  : in out Parse_Context;
+                          Position : Aquarius.Source.Source_Position;
+                          Comment  : in     Program_Tree);
 
    procedure Add_Error (Context : in out Parse_Context;
                         Error   : in     Program_Tree);

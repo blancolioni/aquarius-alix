@@ -124,10 +124,23 @@ package body Aquarius.Programs.Parser is
    -- Add_Comment --
    -----------------
 
-   procedure Add_Comment (Context : in out Parse_Context;
-                          Comment : in     Program_Tree)
+   procedure Add_Comment (Context  : in out Parse_Context;
+                          Position : Aquarius.Source.Source_Position;
+                          Comment  : in     Program_Tree)
    is
    begin
+
+      declare
+         use Aquarius.Layout;
+      begin
+         Comment.Start_Position :=
+           (Positive_Count (Aquarius.Source.Get_Line (Position)),
+            Positive_Count (Aquarius.Source.Get_Column (Position)));
+         Comment.End_Position := (Comment.Start_Position.Line,
+                                  Comment.Start_Position.Column
+                                  + Count (Comment.Text'Length));
+      end;
+
       Context.Comments.Append (Comment);
       if Context.Vertical_Space > 0 then
          Comment.Set_Vertical_Gap_Before
@@ -775,7 +788,7 @@ package body Aquarius.Programs.Parser is
                Aquarius.Source.Column_Number (First));
             if Tok = Grammar.Comment_Token then
                Add_Comment
-                 (Context,
+                 (Context, Tok_Pos,
                   Grammar.Make_Comment_Tree (Line (First .. Next)));
             elsif Token_OK (Tok, Tok_Pos, Context) then
                Parse_Token (Tok, Tok_Pos,
@@ -994,6 +1007,17 @@ package body Aquarius.Programs.Parser is
       Set_User_Whitespace (Context, Current, Program);
 
       Program.Set_Source_Position (Tok_Pos);
+
+      declare
+         use Aquarius.Layout;
+      begin
+         Program.Start_Position :=
+           (Positive_Count (Aquarius.Source.Get_Line (Tok_Pos)),
+            Positive_Count (Aquarius.Source.Get_Column (Tok_Pos)));
+         Program.End_Position := (Program.Start_Position.Line,
+                                  Program.Start_Position.Column
+                                  + Count (Tok_Text'Length));
+      end;
 
       if Context.Run_Actions and then not Has_Ambiguities (Context) then
 
