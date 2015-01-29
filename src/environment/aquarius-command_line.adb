@@ -156,7 +156,11 @@ package body Aquarius.Command_Line is
    function Line_Length  return Positive is
       Line_Length_Text : constant String := Get_Argument ("l", "line-length");
    begin
-      return Integer'Max (Integer'Value (Line_Length_Text), 1);
+      if Line_Length_Text /= "" then
+         return Integer'Max (Integer'Value (Line_Length_Text), 1);
+      else
+         return 72;
+      end if;
    end Line_Length;
 
    -----------------
