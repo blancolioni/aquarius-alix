@@ -169,7 +169,9 @@ begin
             end if;
          end;
 
-         Aquarius.Programs.Arrangements.Arrange (Input);
+         Aquarius.Programs.Arrangements.Arrange
+           (Input,
+            Line_Length => Aquarius.Command_Line.Line_Length);
 
          if Command_Line.Renderer = "" then
             Renderer := Aquarius.Rendering.Manager.Load_Renderer ("text");
