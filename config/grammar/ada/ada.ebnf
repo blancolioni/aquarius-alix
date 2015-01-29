@@ -13,6 +13,7 @@ format 'overriding' space_before new_line_after
 format context_clause new_line_after
 format list_of_declarations indented_child
 format sequence_of_statements indented_child
+format exception_handler indented_child
 format record_type_definition new_line_before indent_before outdent_after
 format record_component_list indented_child
 format formal_argument_spec soft_new_line
@@ -27,6 +28,10 @@ format generic_formal_parameter_list indented_child
 format interface_inheritance soft_new_line
 format new_generic_package indented_child
 format generic_actual_part indented_child
+format boolean_operator soft_new_line
+format relational_operator soft_new_line
+format binary_adding_operator soft_new_line
+format multiplying_operator soft_new_line
 
 format ';' no_space_before no_space_after new_line_after
 format '.' no_space_before no_space_after
