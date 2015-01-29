@@ -220,6 +220,11 @@ package Aquarius.Trees is
       Match_Index : Positive := 1)
      return Tree;
 
+   procedure Breadth_First_Scan
+     (Top : Root_Tree_Type;
+      Process : not null access
+        procedure (Item : Tree));
+
    function Has_Name (Item : Tree) return Boolean;
 
    type Array_Of_Trees is array (Positive range <>) of Tree;
@@ -263,10 +268,11 @@ package Aquarius.Trees is
    --  Right, and Left is set to null (similarly if Right is an
    --  ancestor of Left).  If Left = Right, Ancestor is set to Left,
    --  while Left_Ancestor and Right_Ancestor are both set to null.
-   procedure Common_Ancestor (Left, Right    : not null access Root_Tree_Type;
-                              Ancestor       : out Tree;
-                              Left_Ancestor  : out Tree;
-                              Right_Ancestor : out Tree);
+   procedure Common_Ancestor
+     (Left, Right    : not null access Root_Tree_Type'Class;
+      Ancestor       : out Tree;
+      Left_Ancestor  : out Tree;
+      Right_Ancestor : out Tree);
 
    type Scan_Direction is (Backwards, Forewards);
 
