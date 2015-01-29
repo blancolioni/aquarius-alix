@@ -101,7 +101,11 @@ package body Aquarius.Source is
 
    function Get_File_Name (From : Source_File) return String is
    begin
-      return From.Get_File_Name;
+      if From = null then
+         return "(input)";
+      else
+         return From.Get_File_Name;
+      end if;
    end Get_File_Name;
 
    -------------------
