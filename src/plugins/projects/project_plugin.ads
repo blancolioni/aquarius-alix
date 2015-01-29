@@ -1,6 +1,7 @@
 with Aquarius.Grammars;
 with Aquarius.Plugins;
 private with Aquarius.Properties;
+private with Aquarius.Projects;
 
 package Project_Plugin is
 
@@ -26,6 +27,8 @@ private
    type Project_Plugin_Type is new Aquarius.Plugins.Aquarius_Plugin_Type with
       record
          Package_Property           : Property_Type;
+         Top_Project_Property       : Property_Type;
+         Meta_Project               : Aquarius.Projects.Aquarius_Project;
       end record;
 
    type Project_Plugin_Access is access all Project_Plugin_Type'Class;

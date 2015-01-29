@@ -1,11 +1,25 @@
 with Ada.Characters.Handling;
+with Ada.Directories;
 
+with Aquarius.Config_Paths;
+with Aquarius.UI.Console;
 with Aquarius.Programs;                 use Aquarius.Programs;
 with Aquarius.Projects;                 use Aquarius.Projects;
 with Aquarius.Source;
 with Aquarius.Trees.Properties;
 
+----------------------------
+-- Project_Plugin.Actions --
+----------------------------
+
 package body Project_Plugin.Actions is
+
+   function Load_Child_Project
+     (Name : String)
+      return Aquarius.Projects.Aquarius_Project;
+
+   procedure Context_Clause_After
+     (Target : not null access Aquarius.Actions.Actionable'Class);
 
    procedure Source_File_Before
      (Target : not null access Aquarius.Actions.Actionable'Class);
@@ -42,6 +56,9 @@ package body Project_Plugin.Actions is
   is
   begin
       Plugin.Register_Action
+        ("context_clause", Parser, Aquarius.After,
+         Context_Clause_After'Access);
+      Plugin.Register_Action
         ("source_file", Parser, Aquarius.Before,
          Source_File_Before'Access);
       Plugin.Register_Action
@@ -51,6 +68,72 @@ package body Project_Plugin.Actions is
         ("setting_declaration", Parser, Aquarius.After,
          Setting_Declaration_After'Access);
   end Bind_Parse_Actions;
+
+   --------------------------
+   -- Context_Clause_After --
+   --------------------------
+
+   procedure Context_Clause_After
+     (Target : not null access Aquarius.Actions.Actionable'Class)
+   is
+      Context_Clause : constant Program_Tree := Program_Tree (Target);
+      Id             : constant String :=
+                         Context_Clause.Program_Child
+                           ("string_literal").Standard_Text;
+      Aq_Project     : constant Aquarius.Projects.Aquarius_Project :=
+                         Load_Child_Project
+                           (Id (Id'First + 1 .. Id'Last - 1));
+
+      procedure Add_Search_Path (Path : String);
+
+      ---------------------
+      -- Add_Search_Path --
+      ---------------------
+
+      procedure Add_Search_Path (Path : String) is
+      begin
+         Aquarius.Trees.Properties.Get_Project
+           (Context_Clause.all).Add_Search_Path (Path);
+      end Add_Search_Path;
+
+   begin
+      Aq_Project.Scan_Search_Paths
+        (Add_Search_Path'Access);
+   end Context_Clause_After;
+
+   ------------------------
+   -- Load_Child_Project --
+   ------------------------
+
+   function Load_Child_Project
+     (Name : String)
+      return Aquarius.Projects.Aquarius_Project
+   is
+   begin
+      if Plugin.Meta_Project = null then
+         Plugin.Meta_Project :=
+           Aquarius.Projects.New_Project
+             ("meta.aqp", Aquarius.Config_Paths.Config_Path,
+              Aquarius.UI.Console.Console_UI);
+         Plugin.Meta_Project.Add_Search_Path
+           (Ada.Directories.Current_Directory);
+         Plugin.Meta_Project.Add_Search_Path
+           ("C:\GtkAda\lib\gnat");
+         Plugin.Meta_Project.Add_Search_Path
+           ("C:\Users\Fraser\alix");
+      end if;
+
+      declare
+         Child : constant Aquarius.Programs.Program_Tree :=
+                   Plugin.Meta_Project.Get_Program
+                     (Name & ".gpr");
+         Aq_Project     : constant Aquarius.Projects.Aquarius_Project :=
+                            Aquarius.Trees.Properties.Get_Project
+                              (Child.all);
+      begin
+         return Aq_Project;
+      end;
+   end Load_Child_Project;
 
   --------------------------------
   -- Package_Declaration_Before --
@@ -139,7 +222,8 @@ package body Project_Plugin.Actions is
        New_Project (Aquarius.Source.Get_Full_Path (Source_File.Source),
                     Aquarius.Trees.Properties.Get_UI (Source_File.all));
   begin
-     Aquarius.Trees.Properties.Set_Project (Source_File.all, P);
+      Aquarius.Trees.Properties.Set_Project (Source_File.all, P);
+      Source_File.Set_Property (Plugin.Top_Project_Property, P);
   end Source_File_Before;
 
   --------------------
