@@ -2,6 +2,8 @@ with Ada.Containers.Hashed_Maps;
 with Ada.Directories;
 with Ada.Text_IO;
 
+with Aquarius.Library;
+
 with Aquarius.Plugins.EBNF;
 with Aquarius.Plugins.Klein;
 with Aquarius.Plugins.Plugin;
@@ -78,6 +80,16 @@ package body Aquarius.Plugins.Manager is
    begin
       if Loaded_Plugins.Contains (To_Plugin_Map_Name (Name)) then
          return; -- n Loaded_Plugins.Element (To_Plugin_Map_Name (Name));
+      end if;
+
+      if not Aquarius.Library.Plugins_Enabled
+        and then Name /= "ebnf"
+        and then Name /= "project"
+      then
+         Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error,
+                               "warning: skipping plugin " & Name &
+                                 " because plugins are disabled");
+         return;
       end if;
 
       if Name = "ebnf" then

@@ -39,6 +39,10 @@ package body Project_Plugin is
                                "property-package-tree",
                                Inherited => True,
                                Has_Value => True);
+      Grammar.Create_Property (Plugin.Top_Project_Property,
+                               "property-top-project",
+                               Inherited => True,
+                               Has_Value => True);
    end Create_Properties;
 
    ----------
