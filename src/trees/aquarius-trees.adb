@@ -244,6 +244,35 @@ package body Aquarius.Trees is
       return Left.Location < Tree (Right).Location;
    end Before;
 
+   ------------------------
+   -- Breadth_First_Scan --
+   ------------------------
+
+   procedure Breadth_First_Scan
+     (Top : Root_Tree_Type;
+      Process : not null access
+        procedure (Item : Tree))
+   is
+      Stack : Tree_Stack.List;
+   begin
+      for I in 1 .. Top.Child_Count loop
+         Stack.Append (Top.Child (I));
+      end loop;
+
+      while not Stack.Is_Empty loop
+         declare
+            Item : constant Tree := Stack.First_Element;
+         begin
+            Stack.Delete_First;
+            Process (Item);
+            for I in 1 .. Item.Child_Count loop
+               Stack.Append (Item.Child (I));
+            end loop;
+         end;
+      end loop;
+
+   end Breadth_First_Scan;
+
    --------------------------
    -- Breadth_First_Search --
    --------------------------
@@ -373,10 +402,11 @@ package body Aquarius.Trees is
    -- Common_Ancestor --
    ---------------------
 
-   procedure Common_Ancestor (Left, Right    : not null access Root_Tree_Type;
-                              Ancestor       : out Tree;
-                              Left_Ancestor  : out Tree;
-                              Right_Ancestor : out Tree)
+   procedure Common_Ancestor
+     (Left, Right    : not null access Root_Tree_Type'Class;
+      Ancestor       : out Tree;
+      Left_Ancestor  : out Tree;
+      Right_Ancestor : out Tree)
    is
       Ancestors : Tree_Vectors.Vector;
       It : Tree;
