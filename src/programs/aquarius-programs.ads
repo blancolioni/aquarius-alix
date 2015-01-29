@@ -181,6 +181,10 @@ package Aquarius.Programs is
                                return Boolean;
    procedure Set_Separator_New_Line (Item : in out Program_Tree_Type'Class);
 
+   function Has_Soft_New_Line_Rule
+     (Item : Program_Tree_Type'Class)
+      return Boolean;
+
    function Soft_New_Line (Item : Program_Tree_Type'Class)
                           return Boolean;
 
