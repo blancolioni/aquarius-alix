@@ -64,6 +64,11 @@ package Aquarius.Projects is
    procedure Add_Main (Project : not null access Aquarius_Project_Type'Class;
                        Name    : in     String);
 
+   procedure Scan_Search_Paths
+     (Project : Aquarius_Project_Type'Class;
+      Process : not null access
+        procedure (Path : String));
+
    type Aquarius_Project is access all Aquarius_Project_Type'Class;
 
    function New_Project
@@ -202,6 +207,9 @@ private
    package String_Vectors is
      new Ada.Containers.Indefinite_Vectors (Positive, String);
 
+   package Project_Vectors is
+     new Ada.Containers.Vectors (Positive, Aquarius_Project);
+
    type Aquarius_Project_Type is
      new Root_Aquarius_Object
      and Aquarius.Programs.Root_Program_Tree_Store
@@ -219,6 +227,7 @@ private
          Entries         : Project_Entries_Vector.Vector;
          References      : Aquarius.References.Reference_List;
          Pending_Actions : String_Vectors.Vector;
+         Dependencies    : Project_Vectors.Vector;
       end record;
 
 end Aquarius.Projects;

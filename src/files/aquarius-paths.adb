@@ -32,7 +32,7 @@ package body Aquarius.Paths is
                null;
             elsif Elem = ".." then
                if Result.Elements.Length > 0 then
-                  Result.Elements.Delete (Left.Elements.Last_Index);
+                  Result.Elements.Delete_Last;
                else
                   Result.Elements.Append (Elem);
                end if;
@@ -71,6 +71,14 @@ package body Aquarius.Paths is
          end;
       end if;
 
+      if Standard_Path'Length >= 2
+        and then
+          Standard_Path (Standard_Path'First .. Standard_Path'First + 1)
+        = ".."
+      then
+         Result.Absolute := False;
+      end if;
+
       Result.Absolute := Standard_Path (Start) = Standard_Separator;
 
       if Result.Absolute then
@@ -88,7 +96,8 @@ package body Aquarius.Paths is
          exit when Start > Standard_Path'Last;
 
          Index := Start;
-         if Index < Standard_Path'Last
+         if False
+           and then Index < Standard_Path'Last
            and then Standard_Path (Index .. Index + 1) = ".."
            and then (Index = Standard_Path'Last - 1
                      or else Standard_Path (Index + 2) = Standard_Separator)
@@ -96,7 +105,8 @@ package body Aquarius.Paths is
          then
             Result.Elements.Delete_Last;
             Start := Index + 2;
-         elsif Index < Standard_Path'Last
+         elsif False
+           and then Index < Standard_Path'Last
            and then Standard_Path (Index) = '.'
            and then Standard_Path (Index + 1) = Standard_Separator
          then

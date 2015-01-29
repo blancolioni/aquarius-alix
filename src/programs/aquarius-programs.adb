@@ -389,7 +389,7 @@ package body Aquarius.Programs is
       is
       begin
          if Current.Is_Terminal then
-            if Current.Layout_End_Position <= Location then
+            if Current.Layout_Start_Position <= Location then
                Last_Terminal := Program_Tree (Current);
             else
                return;
