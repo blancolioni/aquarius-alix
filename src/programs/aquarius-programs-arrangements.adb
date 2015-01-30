@@ -236,6 +236,11 @@ package body Aquarius.Programs.Arrangements is
          Context.Current_Column := 1;
       end if;
 
+      if Item.Soft_New_Line then
+         Context.Need_New_Line := True;
+         Context.Current_Indent := Context.Current_Indent + 2;
+      end if;
+
       if Enabled (Rules.New_Line_Before) or else Item.New_Line_Before then
          Context.Need_New_Line := True;
       end if;
@@ -322,6 +327,10 @@ package body Aquarius.Programs.Arrangements is
                               Context.Current_Column);
       Item.End_Position := (Context.Current_Line,
                             Context.Current_Column + Item.Layout_Length);
+
+      if Item.Soft_New_Line then
+         Context.Current_Indent := Context.Current_Indent - 2;
+      end if;
 
       if False then
          declare
@@ -573,6 +582,7 @@ package body Aquarius.Programs.Arrangements is
          end if;
 
          if Got_Start then
+
             Remaining_Length := Line_Length - Program.Start_Position.Column;
             if Program.Is_Separator then
                if Separator /= null
