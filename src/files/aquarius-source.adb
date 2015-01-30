@@ -117,7 +117,7 @@ package body Aquarius.Source is
       return From.Get_Full_Path;
    end Get_Full_Path;
 
-   --------------
+  --------------
    -- Get_Line --
    --------------
 
@@ -145,6 +145,28 @@ package body Aquarius.Source is
         Position.File.Current_Line (1 .. Position.File.Current_Line_Length);
       Last := Position.File.Current_Line_Length;
    end Get_Line;
+
+   -----------------------
+   -- Get_Relative_Path --
+   -----------------------
+
+   function Get_Relative_Path (From : Source_File) return String is
+      Result  : constant String :=
+                  (if From = null
+                   then "(input)"
+                   else From.Get_Full_Path);
+      Current : constant String := Ada.Directories.Current_Directory;
+      Match   : constant String :=
+                  (if Result'Length >= Current'Length
+                   then Result (1 .. Current'Length)
+                   else "");
+   begin
+      if Match /= "" and then Match = Current then
+         return "." & Result (Match'Length + 1 .. Result'Last);
+      else
+         return Result;
+      end if;
+   end Get_Relative_Path;
 
    ---------------------
    -- Get_Source_File --
