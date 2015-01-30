@@ -100,6 +100,17 @@ package Aquarius.Formats is
    function Indent_Child (Offset : Indentation_Offset)
                          return Format_Rule;
 
+   function Opening return Format_Rule;
+   function Closing return Format_Rule;
+   --  Opening and closing terminals are those which bracket another piece
+   --  of syntax.  For example, in Ada 'if' and 'then' bracket an expression.
+   --  When the opening and closing termals start on the same line, but
+   --  after rendering they end up on different lines, the closing terminal
+   --  should be moved to its own line, in the same column as the opening.
+
+   --  If this is too complicated (which it is), let's think of a more
+   --  basic way of getting this effect.
+
    --  Example of indentation formats
 
    --  given the following syntax:
@@ -130,6 +141,7 @@ package Aquarius.Formats is
          Space_Before, Space_After       : Format_Rule;
          Soft_New_Line_Before            : Format_Rule;
          Soft_New_Line_After             : Format_Rule;
+         Opening, Closing                : Format_Rule;
       end record;
 
    function Rules (Format : Aquarius_Format) return Immediate_Rules;
@@ -158,7 +170,8 @@ package Aquarius.Formats is
 private
 
    type Format_Rule_Type is (No_Rule, Space_Rule, New_Line_Rule,
-                             Indent_Rule, Indent_Child_Rule);
+                             Indent_Rule, Indent_Child_Rule,
+                             Bracketing_Rule);
 
    type Format_Rule (Rule_Type : Format_Rule_Type := No_Rule) is
       record
@@ -172,7 +185,9 @@ private
             when New_Line_Rule =>
                Soft : Boolean;
             when Indent_Rule | Indent_Child_Rule =>
-               Offset : Indentation_Offset;
+               Offset    : Indentation_Offset;
+            when Bracketing_Rule =>
+               null;
          end case;
       end record;
 

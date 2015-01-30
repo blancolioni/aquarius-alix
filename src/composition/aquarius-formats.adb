@@ -30,6 +30,15 @@ package body Aquarius.Formats is
       end if;
    end Add_Rule;
 
+   -------------
+   -- Closing --
+   -------------
+
+   function Closing return Format_Rule is
+   begin
+      return (Bracketing_Rule, After, 0);
+   end Closing;
+
    ---------------------------------
    -- Default_Non_Terminal_Format --
    ---------------------------------
@@ -110,6 +119,13 @@ package body Aquarius.Formats is
                   return "new-line-after";
                end if;
             end if;
+         when Bracketing_Rule =>
+            case Item.Position is
+               when Before =>
+                  return "opening";
+               when After =>
+                  return "closing";
+            end case;
          when Indent_Rule =>
             if Item.Offset < 0 then
                return "outdent" &
@@ -287,6 +303,15 @@ package body Aquarius.Formats is
               Soft => False);
    end New_Line;
 
+   -------------
+   -- Opening --
+   -------------
+
+   function Opening return Format_Rule is
+   begin
+      return (Bracketing_Rule, Before, 0);
+   end Opening;
+
    --------------
    -- Priority --
    --------------
@@ -330,6 +355,13 @@ package body Aquarius.Formats is
                      else
                         Result.New_Line_After := Rule;
                      end if;
+               end case;
+            when Bracketing_Rule =>
+               case Position is
+                  when Before =>
+                     Result.Opening := Rule;
+                  when After =>
+                     Result.Closing := Rule;
                end case;
             when others =>
                null;
@@ -451,6 +483,10 @@ package body Aquarius.Formats is
          return Indent (After, -3);
       elsif S = "indent_child" then
          return Indent_Child (3);
+      elsif S = "opening" then
+         return Opening;
+      elsif S = "closing" then
+         return Closing;
       else
          raise Constraint_Error with "unknown format rule: " & Text;
       end if;
