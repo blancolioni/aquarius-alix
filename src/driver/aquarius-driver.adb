@@ -6,6 +6,7 @@ with Aquarius.Buffers;
 with Aquarius.Command_Line;
 with Aquarius.Configuration;
 with Aquarius.Grammars.Manager;
+with Aquarius.Library;
 with Aquarius.Loader;
 with Aquarius.Messages.Console;
 with Aquarius.Programs.Arrangements;
@@ -74,7 +75,8 @@ procedure Aquarius.Driver is
 
 begin
 
-   Aquarius.Configuration.Load_Configuration;
+   Aquarius.Library.Initialise
+     (Enable_Plugins => Aquarius.Command_Line.Enable_Plugins);
 
    if Command_Line.Version then
 
