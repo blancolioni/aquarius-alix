@@ -33,6 +33,10 @@ format relational_operator soft_new_line
 format binary_adding_operator soft_new_line
 format multiplying_operator soft_new_line
 
+format 'then' closing
+format 'loop' closing
+format 'is' closing
+
 format ';' no_space_before no_space_after new_line_after
 format '.' no_space_before no_space_after
 format '(' space_before no_space_after
