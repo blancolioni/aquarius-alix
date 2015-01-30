@@ -33,9 +33,9 @@ format relational_operator soft_new_line
 format binary_adding_operator soft_new_line
 format multiplying_operator soft_new_line
 
-format 'then' closing
-format 'loop' closing
-format 'is' closing
+format 'then' closing space_after space_before
+format 'loop' closing space_after space_before
+format 'is' closing space_after space_before
 
 format ';' no_space_before no_space_after new_line_after
 format '.' no_space_before no_space_after
@@ -44,6 +44,10 @@ format ')' no_space_before space_after
 format ',' no_space_before space_after
 format ''' no_space_before no_space_after
 format '=>' soft_new_line_after
+format 'with' soft_new_line_after space_after space_before
+format 'of' soft_new_line_before space_after space_before
+format ':' soft_new_line_after space_after space_before
+format 'return' soft_new_line_before space_after space_before
 
 xref procedure_declaration defining_program_unit_name
 xref function_declaration defining_program_unit_name
