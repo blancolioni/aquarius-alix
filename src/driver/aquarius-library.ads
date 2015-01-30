@@ -5,4 +5,6 @@ package Aquarius.Library is
 
    function Plugins_Enabled return Boolean;
 
+   procedure Enable_Plugins (Enabled : Boolean);
+
 end Aquarius.Library;

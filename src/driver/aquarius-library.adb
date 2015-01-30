@@ -7,6 +7,15 @@ package body Aquarius.Library is
    Local_Options : array (Option_Type) of Boolean :=
                      (Plugins_Enabled => True);
 
+   --------------------
+   -- Enable_Plugins --
+   --------------------
+
+   procedure Enable_Plugins (Enabled : Boolean) is
+   begin
+      Local_Options (Plugins_Enabled) := Enabled;
+   end Enable_Plugins;
+
    ----------------
    -- Initialise --
    ----------------
