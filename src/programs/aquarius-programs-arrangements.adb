@@ -127,6 +127,10 @@ package body Aquarius.Programs.Arrangements is
       Arrange (Item, Context);
       Aquarius.Messages.Files.Save_Messages
         ("arrangement.log", Context.Logging);
+   exception
+      when others =>
+         Aquarius.Messages.Files.Save_Messages
+           ("arrangement.log", Context.Logging);
    end Arrange;
 
    -------------
@@ -157,7 +161,11 @@ package body Aquarius.Programs.Arrangements is
         Item.Syntax.Get_Format;
       Rules        : constant Immediate_Rules := Formats.Rules (Format);
       Child_Indent : constant Indentation_Offset :=
-        Indent_Child (Format);
+                       Indent_Child (Format);
+      Before_Indent : constant Indentation_Offset :=
+                        Indent (Format, Before);
+      After_Indent : constant Indentation_Offset :=
+                        Indent (Format, After);
    begin
 
       if not Context.Rearranging
@@ -182,8 +190,16 @@ package body Aquarius.Programs.Arrangements is
          Context.Current_Indent := Context.Current_Indent + 2;
       end if;
 
-      if Child_Indent > 0 then
-         Log (Context, Item, "adding child indent of" & Child_Indent'Img);
+      if Child_Indent /= 0
+        or else Before_Indent /= 0
+        or else After_Indent /= 0
+      then
+         Log (Context, Item,
+              "format indent before: "
+              & " current =" & Context.Current_Indent'Img
+              & "; child =" & Child_Indent'Img
+              & "; before =" & Before_Indent'Img
+              & "; after =" & After_Indent'Img);
       end if;
 
       Context.Current_Indent :=
@@ -194,16 +210,29 @@ package body Aquarius.Programs.Arrangements is
                               Context.Current_Column);
       for I in 1 .. Item.Child_Count loop
          Arrange (Item.Program_Child (I), Context);
+         if Context.Stopped then
+            return;
+         end if;
       end loop;
 
-      if Child_Indent > 0 then
-         Log (Context, Item, "removing child indent of" & Child_Indent'Img);
+      if Child_Indent /= 0
+        or else Before_Indent /= 0
+        or else After_Indent /= 0
+      then
+         Log (Context, Item,
+              "format indent after: "
+              & " current =" & Context.Current_Indent'Img
+              & "; child =" & Child_Indent'Img
+              & "; before =" & Before_Indent'Img
+              & "; after =" & After_Indent'Img);
       end if;
+
       Context.Current_Indent :=
         Count (Indentation_Offset (Context.Current_Indent)
                  - Child_Indent + Indent (Format, After));
 
       if Item.Soft_New_Line then
+         Log (Context, Item, "removing soft new line indent");
          Context.Current_Indent := Context.Current_Indent - 2;
       end if;
 
@@ -331,18 +360,21 @@ package body Aquarius.Programs.Arrangements is
                               Context.Current_Column);
       Item.End_Position := (Context.Current_Line,
                             Context.Current_Column + Item.Layout_Length);
-      declare
-         Position : Aquarius.Source.Source_Position :=
-                      Item.Get_Location;
-      begin
-         Aquarius.Source.Set_Position
-           (Position => Position,
-            Line     =>
-              Aquarius.Source.Line_Number (Item.Start_Position.Line),
-            Column   =>
-              Aquarius.Source.Column_Number (Item.Start_Position.Column));
-         Item.Set_Location (Position);
-      end;
+
+      if False then
+         declare
+            Position : Aquarius.Source.Source_Position :=
+                         Item.Get_Location;
+         begin
+            Aquarius.Source.Set_Position
+              (Position => Position,
+               Line     =>
+                 Aquarius.Source.Line_Number (Item.Start_Position.Line),
+               Column   =>
+                 Aquarius.Source.Column_Number (Item.Start_Position.Column));
+            Item.Set_Location (Position);
+         end;
+      end if;
 
       Log (Context, Item, "start position: " & Show (Item.Start_Position));
       Log (Context, Item, "end position: " & Show (Item.Start_Position));
@@ -354,7 +386,7 @@ package body Aquarius.Programs.Arrangements is
          begin
             while It /= null and then It.Program_Left = null loop
                It.Start_Position := Item.Start_Position;
-               It.Set_Location (Item.Get_Location);
+               --  It.Set_Location (Item.Get_Location);
                It := It.Program_Parent;
             end loop;
          end;
@@ -585,7 +617,7 @@ package body Aquarius.Programs.Arrangements is
                   Program.Separator_NL := True;
                   Partial_Length := New_Line_Indent;
                end if;
-            elsif Program.Has_Soft_New_Line_Rule
+            elsif Program.Has_Soft_New_Line_Rule_Before
               and then Remaining_Length + Partial_Length
                 > Context.Right_Margin
             then
