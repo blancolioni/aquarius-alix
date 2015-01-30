@@ -236,7 +236,7 @@ package body Aquarius.Programs.Arrangements is
          Context.Current_Column := 1;
       end if;
 
-      if Enabled (Rules.New_Line_Before) then
+      if Enabled (Rules.New_Line_Before) or else Item.New_Line_Before then
          Context.Need_New_Line := True;
       end if;
 
@@ -545,6 +545,8 @@ package body Aquarius.Programs.Arrangements is
 
       Had_Soft_New_Line_After : Boolean := False;
 
+      Closing : constant Boolean := Enabled (Finish.Rules.Closing);
+
       procedure Apply_Newlines
         (Program : Program_Tree);
 
@@ -564,6 +566,9 @@ package body Aquarius.Programs.Arrangements is
             Got_Start := True;
             Last_Column_Index := Program.Start_Position.Column;
          elsif Program = Finish then
+            if Closing then
+               Finish.Set_New_Line_Before (Enabled => True);
+            end if;
             Got_Finish := True;
          end if;
 
@@ -601,7 +606,6 @@ package body Aquarius.Programs.Arrangements is
             end if;
 
             if Program.Has_Soft_New_Line_Rule_After then
-               Log (Context, Program, "soft new line follows this node");
                Had_Soft_New_Line_After := True;
             end if;
 
