@@ -1,6 +1,8 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Text_IO;
 
+with Aquarius.Library;
+
 package body Aquarius.Trees is
 
    Current_Node_Id : Natural := 0;
@@ -896,8 +898,13 @@ package body Aquarius.Trees is
    function Location_Name (Location : Root_Tree_Type) return String
    is
    begin
-      return Aquarius.Source.Get_File_Name
-        (Aquarius.Source.Get_Source_File (Location.Get_Location));
+      if Aquarius.Library.Show_Paths_In_Messages then
+         return Aquarius.Source.Get_Relative_Path
+           (Aquarius.Source.Get_Source_File (Location.Get_Location));
+      else
+         return Aquarius.Source.Get_File_Name
+           (Aquarius.Source.Get_Source_File (Location.Get_Location));
+      end if;
    end Location_Name;
 
    ----------
