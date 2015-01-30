@@ -87,7 +87,6 @@ package body Aquarius.Programs.Arrangements is
       end if;
 
       if Item.Name /= "" then
-         Log (Context, Item, "arranging");
          Log (Context, Item);
       end if;
 
@@ -101,7 +100,6 @@ package body Aquarius.Programs.Arrangements is
 
       if Item.Is_Terminal then
          Arrange_Terminal (Item, Context);
-         Log (Context, Item, "placed");
       else
          Arrange_Non_Terminal (Item, Context);
       end if;
@@ -180,31 +178,17 @@ package body Aquarius.Programs.Arrangements is
       end if;
 
       if Enabled (Rules.New_Line_Before) then
-         Log (Context, Item, "setting new line flag");
          Context.Need_New_Line := True;
       end if;
 
       if Item.Soft_New_Line then
-         Log (Context, Item, "setting soft new line flag");
          Context.Need_New_Line := True;
          Context.Current_Indent := Context.Current_Indent + 2;
       end if;
 
-      if Child_Indent /= 0
-        or else Before_Indent /= 0
-        or else After_Indent /= 0
-      then
-         Log (Context, Item,
-              "format indent before: "
-              & " current =" & Context.Current_Indent'Img
-              & "; child =" & Child_Indent'Img
-              & "; before =" & Before_Indent'Img
-              & "; after =" & After_Indent'Img);
-      end if;
-
       Context.Current_Indent :=
         Count (Indentation_Offset (Context.Current_Indent)
-                 + Child_Indent + Indent (Format, Before));
+               + Child_Indent + Before_Indent);
 
       Item.Start_Position := (Context.Current_Line,
                               Context.Current_Column);
@@ -215,24 +199,11 @@ package body Aquarius.Programs.Arrangements is
          end if;
       end loop;
 
-      if Child_Indent /= 0
-        or else Before_Indent /= 0
-        or else After_Indent /= 0
-      then
-         Log (Context, Item,
-              "format indent after: "
-              & " current =" & Context.Current_Indent'Img
-              & "; child =" & Child_Indent'Img
-              & "; before =" & Before_Indent'Img
-              & "; after =" & After_Indent'Img);
-      end if;
-
       Context.Current_Indent :=
         Count (Indentation_Offset (Context.Current_Indent)
-                 - Child_Indent + Indent (Format, After));
+               - Child_Indent + After_Indent);
 
       if Item.Soft_New_Line then
-         Log (Context, Item, "removing soft new line indent");
          Context.Current_Indent := Context.Current_Indent - 2;
       end if;
 
@@ -271,7 +242,6 @@ package body Aquarius.Programs.Arrangements is
 
       if Context.Need_New_Line then
          if not Context.Got_New_Line then
-            Log (Context, Item, "need a new line and don't have one");
             Context.Current_Line     := Context.Current_Line + 1;
             Context.Current_Column   := 1;
             Context.Need_New_Line := False;
@@ -282,7 +252,6 @@ package body Aquarius.Programs.Arrangements is
       end if;
 
       if Context.First_On_Line then
-         Log (Context, Item, "first on line");
          Log (Context, Item);
          if not Context.Rearranging
            and then Context.Previous_Terminal /= null
@@ -292,31 +261,26 @@ package body Aquarius.Programs.Arrangements is
             if Context.Previous_Terminal.End_Position.Column
               > Context.Right_Margin
             then
-               if False and then Context.Rearranging then
-                  Log (Context, Context.First_Terminal,
-                       "got an overflow while rearranging");
-               else
-                  declare
-                     Ancestor_Tree  : Aquarius.Trees.Tree;
-                     Left_Ancestor  : Aquarius.Trees.Tree;
-                     Right_Ancestor : Aquarius.Trees.Tree;
-                     Ancestor       : Program_Tree;
-                  begin
-                     Aquarius.Trees.Common_Ancestor
-                       (Left           => Context.First_Terminal,
-                        Right          => Context.Previous_Terminal,
-                        Ancestor       => Ancestor_Tree,
-                        Left_Ancestor  => Left_Ancestor,
-                        Right_Ancestor => Right_Ancestor);
-                     Ancestor := Program_Tree (Ancestor_Tree);
-                     Log (Context, Ancestor, "re-arranging");
-                     Re_Arrange (Ancestor, Context,
-                                 Context.First_Terminal,
-                                 Context.Previous_Terminal);
-                     Log (Context, Ancestor, "after re-arrangement");
-                     Log (Context, Ancestor);
-                  end;
-               end if;
+               declare
+                  Ancestor_Tree  : Aquarius.Trees.Tree;
+                  Left_Ancestor  : Aquarius.Trees.Tree;
+                  Right_Ancestor : Aquarius.Trees.Tree;
+                  Ancestor       : Program_Tree;
+               begin
+                  Aquarius.Trees.Common_Ancestor
+                    (Left           => Context.First_Terminal,
+                     Right          => Context.Previous_Terminal,
+                     Ancestor       => Ancestor_Tree,
+                     Left_Ancestor  => Left_Ancestor,
+                     Right_Ancestor => Right_Ancestor);
+                  Ancestor := Program_Tree (Ancestor_Tree);
+                  Log (Context, Ancestor, "re-arranging");
+                  Re_Arrange (Ancestor, Context,
+                              Context.First_Terminal,
+                              Context.Previous_Terminal);
+                  Log (Context, Ancestor, "after re-arrangement");
+                  Log (Context, Ancestor);
+               end;
             end if;
 
          end if;
@@ -328,9 +292,7 @@ package body Aquarius.Programs.Arrangements is
          if Context.Cancel_Indent then
             Context.Cancel_Indent := False;
          else
-            Log (Context, Item, "setting current column");
             Context.Current_Column   := Context.Current_Indent;
-            Log (Context, Item);
          end if;
       else
          declare
@@ -376,10 +338,6 @@ package body Aquarius.Programs.Arrangements is
          end;
       end if;
 
-      Log (Context, Item, "start position: " & Show (Item.Start_Position));
-      Log (Context, Item, "end position: " & Show (Item.Start_Position));
-      Log (Context, Item, "location: "
-           & Aquarius.Source.Show (Item.Get_Location));
       if Item.Program_Left = null then
          declare
             It : Program_Tree := Item.Program_Parent;
@@ -413,7 +371,6 @@ package body Aquarius.Programs.Arrangements is
       if Item.Separator_New_Line or else
         (Enabled (Rules.New_Line_After) and then Item.Is_Separator)
       then
-         Log (Context, Item, "separator new line");
          Context.Current_Line := Context.Current_Line + 1;
          declare
             Align_With : constant Program_Tree :=
@@ -624,13 +581,13 @@ package body Aquarius.Programs.Arrangements is
               and then Remaining_Length + Partial_Length
                 > Context.Right_Margin
             then
-               Log (Context, Program,
-                    "setting soft new line because remaining ="
-                    & Remaining_Length'Img
-                    & ", partial length ="
-                    & Partial_Length'Img
-                    & " and right margin ="
-                    & Context.Right_Margin'Img);
+--                 Log (Context, Program,
+--                      "setting soft new line because remaining ="
+--                      & Remaining_Length'Img
+--                      & ", partial length ="
+--                      & Partial_Length'Img
+--                      & " and right margin ="
+--                      & Context.Right_Margin'Img);
                Program.Set_Soft_New_Line;
                Partial_Length := New_Line_Indent;
             end if;
