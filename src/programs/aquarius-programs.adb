@@ -657,11 +657,28 @@ package body Aquarius.Programs is
       return Item.Object_Props.Contains (Name);
    end Has_Property;
 
-   ----------------------------
-   -- Has_Soft_New_Line_Rule --
-   ----------------------------
+   ----------------------------------
+   -- Has_Soft_New_Line_Rule_After --
+   ----------------------------------
 
-   function Has_Soft_New_Line_Rule
+   function Has_Soft_New_Line_Rule_After
+     (Item : Program_Tree_Type'Class)
+      return Boolean
+   is
+      Format       : constant Aquarius.Formats.Aquarius_Format :=
+                       Item.Syntax.Get_Format;
+      Rules        : constant Aquarius.Formats.Immediate_Rules :=
+                       Formats.Rules (Format);
+   begin
+      return Aquarius.Formats.Enabled (Rules.Soft_New_Line_After)
+        and then not Aquarius.Formats.Negative (Rules.Soft_New_Line_After);
+   end Has_Soft_New_Line_Rule_After;
+
+   -----------------------------------
+   -- Has_Soft_New_Line_Rule_Before --
+   -----------------------------------
+
+   function Has_Soft_New_Line_Rule_Before
      (Item : Program_Tree_Type'Class)
       return Boolean
    is
@@ -672,7 +689,7 @@ package body Aquarius.Programs is
    begin
       return Aquarius.Formats.Enabled (Rules.Soft_New_Line_Before)
         and then not Aquarius.Formats.Negative (Rules.Soft_New_Line_Before);
-   end Has_Soft_New_Line_Rule;
+   end Has_Soft_New_Line_Rule_Before;
 
    ---------------------
    -- Has_Space_After --

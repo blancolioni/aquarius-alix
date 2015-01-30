@@ -129,6 +129,7 @@ package Aquarius.Formats is
          New_Line_Before, New_Line_After : Format_Rule;
          Space_Before, Space_After       : Format_Rule;
          Soft_New_Line_Before            : Format_Rule;
+         Soft_New_Line_After             : Format_Rule;
       end record;
 
    function Rules (Format : Aquarius_Format) return Immediate_Rules;

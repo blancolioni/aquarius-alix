@@ -325,7 +325,11 @@ package body Aquarius.Formats is
                         Result.New_Line_Before := Rule;
                      end if;
                   when After =>
-                     Result.New_Line_After := Rule;
+                     if Format.Rules (I).Soft then
+                        Result.Soft_New_Line_After := Rule;
+                     else
+                        Result.New_Line_After := Rule;
+                     end if;
                end case;
             when others =>
                null;
@@ -433,8 +437,10 @@ package body Aquarius.Formats is
          return New_Line (After);
       elsif S = "new_line_before" then
          return New_Line (Before);
-      elsif S = "soft_new_line" then
+      elsif S = "soft_new_line" or else S = "soft_new_line_before" then
          return Soft_New_Line (Before);
+      elsif S = "soft_new_line_after" then
+         return Soft_New_Line (After);
       elsif S = "indent_before" then
          return Indent (Before, 3);
       elsif S = "indent_after" then
