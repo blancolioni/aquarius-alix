@@ -586,6 +586,8 @@ package body Aquarius.Programs.Arrangements is
                            Context.Current_Indent + 2;
       Last_Column_Index : Positive_Count := Context.Current_Indent;
 
+      Had_Soft_New_Line_After : Boolean := False;
+
       procedure Apply_Newlines
         (Program : Program_Tree);
 
@@ -617,7 +619,8 @@ package body Aquarius.Programs.Arrangements is
                   Program.Separator_NL := True;
                   Partial_Length := New_Line_Indent;
                end if;
-            elsif Program.Has_Soft_New_Line_Rule_Before
+            elsif (Program.Has_Soft_New_Line_Rule_Before
+                   or else Had_Soft_New_Line_After)
               and then Remaining_Length + Partial_Length
                 > Context.Right_Margin
             then
@@ -632,10 +635,17 @@ package body Aquarius.Programs.Arrangements is
                Partial_Length := New_Line_Indent;
             end if;
 
+            Had_Soft_New_Line_After := False;
+
             if Program.Is_Terminal then
                Partial_Length := Partial_Length
                  + Program.End_Position.Column - Last_Column_Index;
                Last_Column_Index := Program.End_Position.Column;
+            end if;
+
+            if Program.Has_Soft_New_Line_Rule_After then
+               Log (Context, Program, "soft new line follows this node");
+               Had_Soft_New_Line_After := True;
             end if;
 
          end if;
