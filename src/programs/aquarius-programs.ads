@@ -3,6 +3,7 @@ private with Ada.Strings.Fixed.Hash;
 
 with Aquarius.Actions;
 with Aquarius.Entries;
+with Aquarius.Formats;
 with Aquarius.Layout;
 with Aquarius.Messages;
 with Aquarius.Source;
@@ -189,10 +190,22 @@ package Aquarius.Programs is
      (Item : Program_Tree_Type'Class)
       return Boolean;
 
+   function Rules
+     (Item : Program_Tree_Type'Class)
+      return Aquarius.Formats.Immediate_Rules;
+
    function Soft_New_Line (Item : Program_Tree_Type'Class)
                           return Boolean;
 
    procedure Set_Soft_New_Line (Item : in out Program_Tree_Type'Class);
+
+   procedure Set_New_Line_Before
+     (Item    : in out Program_Tree_Type'Class;
+      Enabled : Boolean);
+
+   function New_Line_Before
+     (Item : Program_Tree_Type'Class)
+      return Boolean;
 
    overriding
    function Image (Item : Program_Tree_Type)
@@ -357,6 +370,7 @@ private
          Separator_Node    : Boolean;
          Separator_NL      : Boolean;
          Soft_NL           : Boolean;
+         NL                : Boolean;
          Overflow_Checked  : Boolean;
          Have_Symbol_Table : Boolean;
          Source_File       : Aquarius.Source.Source_File;
