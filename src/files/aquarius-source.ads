@@ -34,6 +34,7 @@ package Aquarius.Source is
 
    function Get_File_Name (From : Source_File) return String;
    function Get_Full_Path (From : Source_File) return String;
+   function Get_Relative_Path (From : Source_File) return String;
    function Containing_Directory (From : Source_File) return String;
 
    function Get_Character (Position : Source_Position) return Character;
