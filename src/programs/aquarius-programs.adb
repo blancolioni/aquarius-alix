@@ -4,7 +4,6 @@ with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 --  with Aquarius.Errors;
-with Aquarius.Formats;
 with Aquarius.Properties;
 with Aquarius.Trees.Properties;
 
@@ -29,6 +28,7 @@ package body Aquarius.Programs is
       Separator_Node       => False,
       Separator_NL         => False,
       Soft_NL              => False,
+      NL                   => False,
       Overflow_Checked     => False,
       Have_Symbol_Table    => False,
       Source_File          => Aquarius.Source.No_Source_File,
@@ -987,6 +987,18 @@ package body Aquarius.Programs is
       return Result;
    end New_Error_Tree;
 
+   ---------------------
+   -- New_Line_Before --
+   ---------------------
+
+   function New_Line_Before
+     (Item : Program_Tree_Type'Class)
+      return Boolean
+   is
+   begin
+      return Item.NL;
+   end New_Line_Before;
+
    -----------------
    -- New_Program --
    -----------------
@@ -1157,6 +1169,20 @@ package body Aquarius.Programs is
          return "normal";
       end if;
    end Render_Class;
+
+   -----------
+   -- Rules --
+   -----------
+
+   function Rules
+     (Item : Program_Tree_Type'Class)
+      return Aquarius.Formats.Immediate_Rules
+   is
+      Format    : constant Aquarius.Formats.Aquarius_Format :=
+                    Item.Syntax.Get_Format;
+   begin
+      return Aquarius.Formats.Rules (Format);
+   end Rules;
 
    -----------------
    -- Run_Actions --
@@ -1400,6 +1426,18 @@ package body Aquarius.Programs is
    begin
       Item.Start_Position := Pos;
    end Set_Layout_Position;
+
+   -------------------------
+   -- Set_New_Line_Before --
+   -------------------------
+
+   procedure Set_New_Line_Before
+     (Item    : in out Program_Tree_Type'Class;
+      Enabled : Boolean)
+   is
+   begin
+      Item.NL := Enabled;
+   end Set_New_Line_Before;
 
    ------------------
    -- Set_Property --
