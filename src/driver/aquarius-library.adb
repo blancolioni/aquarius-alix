@@ -2,10 +2,11 @@ with Aquarius.Configuration;
 
 package body Aquarius.Library is
 
-   type Option_Type is (Plugins_Enabled);
+   type Option_Type is (Plugins_Enabled, Show_Paths_In_Messages_Enabled);
 
    Local_Options : array (Option_Type) of Boolean :=
-                     (Plugins_Enabled => True);
+                     (Plugins_Enabled => True,
+                      Show_Paths_In_Messages_Enabled => False);
 
    --------------------
    -- Enable_Plugins --
@@ -21,11 +22,13 @@ package body Aquarius.Library is
    ----------------
 
    procedure Initialise
-     (Enable_Plugins : Boolean := True)
+     (Enable_Plugins         : Boolean := True;
+      Show_Paths_In_Messages : Boolean := False)
    is
    begin
       Aquarius.Configuration.Load_Configuration;
       Local_Options (Plugins_Enabled) := Enable_Plugins;
+      Local_Options (Show_Paths_In_Messages_Enabled) := Show_Paths_In_Messages;
    end Initialise;
 
    ---------------------
@@ -36,5 +39,14 @@ package body Aquarius.Library is
    begin
       return Local_Options (Plugins_Enabled);
    end Plugins_Enabled;
+
+   ----------------------------
+   -- Show_Paths_In_Messages --
+   ----------------------------
+
+   function Show_Paths_In_Messages return Boolean is
+   begin
+      return Local_Options (Show_Paths_In_Messages_Enabled);
+   end Show_Paths_In_Messages;
 
 end Aquarius.Library;
