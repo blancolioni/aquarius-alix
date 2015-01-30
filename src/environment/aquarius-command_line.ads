@@ -16,6 +16,7 @@ package Aquarius.Command_Line is
    function Project_Name return String;
 
    function Line_Length  return Positive;
+   function Enable_Plugins return Boolean;
 
    function Extra_Arguments return String;
 

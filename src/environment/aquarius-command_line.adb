@@ -5,11 +5,13 @@ package body Aquarius.Command_Line is
 
    function Get_Flag (Short_Name : String;
                       Long_Name  : String)
-                     return Boolean;
+                      return Boolean
+     with Pre => Short_Name /= "" or else Long_Name /= "";
 
    function Get_Argument (Short_Name : String;
                           Long_Name  : String)
-                         return String;
+                         return String
+     with Pre => Short_Name /= "" or else Long_Name /= "";
 
    ------------
    -- Action --
@@ -28,6 +30,15 @@ package body Aquarius.Command_Line is
    begin
       return Get_Argument ("d", "debug");
    end Enable_Debug;
+
+   --------------------
+   -- Enable_Plugins --
+   --------------------
+
+   function Enable_Plugins return Boolean is
+   begin
+      return not Get_Flag ("", "no-plugins");
+   end Enable_Plugins;
 
    ---------------------
    -- Extra_Arguments --
@@ -82,8 +93,9 @@ package body Aquarius.Command_Line is
             Argument : constant String := Ada.Command_Line.Argument (I);
          begin
             exit when Argument = "--";
-            if I < Ada.Command_Line.Argument_Count and then
-              Argument = Short_Argument
+            if Short_Name /= ""
+              and then I < Ada.Command_Line.Argument_Count
+              and then Argument = Short_Argument
             then
                return Ada.Command_Line.Argument (I + 1);
             elsif Ada.Strings.Fixed.Head (Argument, Long_Argument'Length)
@@ -114,7 +126,11 @@ package body Aquarius.Command_Line is
             Argument : constant String := Ada.Command_Line.Argument (I);
          begin
             exit when Argument = "--";
-            if Argument = Short_Flag or else Argument = Long_Flag then
+            if (Short_Name /= ""
+                and then  Argument = Short_Flag)
+              or else (Long_Name /= ""
+                       and then Argument = Long_Flag)
+            then
                return True;
             end if;
          end;
