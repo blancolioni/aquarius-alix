@@ -39,6 +39,7 @@ format '(' space_before no_space_after
 format ')' no_space_before space_after
 format ',' no_space_before space_after
 format ''' no_space_before no_space_after
+format '=>' soft_new_line_after
 
 xref procedure_declaration defining_program_unit_name
 xref function_declaration defining_program_unit_name
