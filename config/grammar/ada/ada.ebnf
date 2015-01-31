@@ -140,7 +140,7 @@ generic_instantiation ::=
    | 'function' defining_designator 'is'
        'new' generic_function_name [generic_actual_part] ';'
 
-new_generic_package ::= 'new' generic_package_name [generic_actual_part] ';'
+new_generic_package ::= 'new' generic_package_name [generic_actual_part]
 
 generic_actual_part ::= '(' < generic_association / ','> ')'
 
