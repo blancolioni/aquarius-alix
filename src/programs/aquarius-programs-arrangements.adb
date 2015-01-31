@@ -13,30 +13,32 @@ package body Aquarius.Programs.Arrangements is
 
    type Arrangement_Context is
       record
-         Need_New_Line     : Boolean             := False;
-         New_Line_Priority : Rule_Priority       := 1;
-         Got_New_Line      : Boolean             := False;
-         First_On_Line     : Boolean             := True;
-         First_Terminal    : Program_Tree;
-         Previous_Terminal : Program_Tree;
-         Previous_Indent   : Count               := 1;
-         Need_Space        : Boolean             := False;
-         No_Space          : Boolean             := False;
-         Cancel_Indent     : Boolean             := False;
-         Message_Level     : Aquarius.Messages.Message_Level :=
-           Aquarius.Messages.No_Message;
-         Space_Priority    : Rule_Priority       := 1;
-         Current_Line      : Count               := 1;
-         Current_Column    : Count               := 1;
-         Current_Position  : Count               := 0;
-         Current_Indent    : Positive_Count      := 1;
-         Right_Margin      : Positive_Count      := 72;
-         Rearranging       : Boolean             := False;
-         User_Text_Length  : Count               := 0;
-         User_Cursor       : Aquarius.Trees.Cursors.Cursor;
-         Logging           : Aquarius.Messages.Message_List;
-         Stop_Tree         : Program_Tree        := null;
-         Stopped           : Boolean             := False;
+         Need_New_Line      : Boolean             := False;
+         Need_Soft_New_Line : Boolean             := False;
+         Vertical_Gap       : Count               := 0;
+         New_Line_Priority  : Rule_Priority       := 1;
+         Got_New_Line       : Boolean             := False;
+         First_On_Line      : Boolean             := True;
+         First_Terminal     : Program_Tree;
+         Previous_Terminal  : Program_Tree;
+         Previous_Indent    : Count               := 1;
+         Need_Space         : Boolean             := False;
+         No_Space           : Boolean             := False;
+         Cancel_Indent      : Boolean             := False;
+         Message_Level      : Aquarius.Messages.Message_Level :=
+                                Aquarius.Messages.No_Message;
+         Space_Priority     : Rule_Priority       := 1;
+         Current_Line       : Count               := 1;
+         Current_Column     : Count               := 1;
+         Current_Position   : Count               := 0;
+         Current_Indent     : Positive_Count      := 1;
+         Right_Margin       : Positive_Count      := 72;
+         Rearranging        : Boolean             := False;
+         User_Text_Length   : Count               := 0;
+         User_Cursor        : Aquarius.Trees.Cursors.Cursor;
+         Logging            : Aquarius.Messages.Message_List;
+         Stop_Tree          : Program_Tree        := null;
+         Stopped            : Boolean             := False;
       end record;
 
    procedure Arrange
@@ -169,16 +171,8 @@ package body Aquarius.Programs.Arrangements is
       if not Context.Rearranging
         and then Item.Vertical_Gap_Before > 0
       then
-         Log (Context, Item, "vertical gap ="
-              & Aquarius.Layout.Count'Image (Item.Vertical_Gap_Before));
-
-         Context.Current_Line :=
-           Context.Current_Line + Item.Vertical_Gap_Before;
-         Context.Current_Column := 1;
-         Context.Need_New_Line := False;
-         Context.Got_New_Line  := True;
-         Context.Need_Space    := False;
-         Context.First_On_Line := True;
+         Context.Vertical_Gap :=
+           Context.Vertical_Gap + Item.Vertical_Gap_Before;
       end if;
 
       if Enabled (Rules.New_Line_Before) then
@@ -186,11 +180,7 @@ package body Aquarius.Programs.Arrangements is
       end if;
 
       if Item.Soft_New_Line then
-         Context.Need_New_Line := True;
-         Context.Current_Indent := Context.Current_Indent + 2;
-         Log (Context, Item,
-              "enter soft new line; new indent ="
-              & Context.Current_Indent'Img);
+         Context.Need_Soft_New_Line := True;
       end if;
 
       Context.Current_Indent :=
@@ -199,30 +189,18 @@ package body Aquarius.Programs.Arrangements is
 
       Item.Start_Position := (Context.Current_Line,
                               Context.Current_Column);
+
       for I in 1 .. Item.Child_Count loop
          Arrange (Item.Program_Child (I), Context);
-         if Context.Stopped then
---              if Item.Soft_New_Line then
---                 Context.Current_Indent := Context.Current_Indent - 2;
---                 Log (Context, Item,
---                      "leave soft new line; new indent ="
---                      & Context.Current_Indent'Img);
---              end if;
-
-            return;
-         end if;
+         exit when Context.Stopped;
       end loop;
+
+      Item.End_Position := (Context.Current_Line,
+                            Context.Current_Column);
 
       Context.Current_Indent :=
         Count (Indentation_Offset (Context.Current_Indent)
                - Child_Indent + After_Indent);
-
-      if Item.Soft_New_Line then
-         Context.Current_Indent := Context.Current_Indent - 2;
-         Log (Context, Item,
-              "leave soft new line; new indent ="
-              & Context.Current_Indent'Img);
-      end if;
 
       if Enabled (Rules.New_Line_After) then
          Context.Need_New_Line := True;
@@ -242,22 +220,21 @@ package body Aquarius.Programs.Arrangements is
    begin
 
       if not Context.Rearranging
-        and then Item.Vertical_Gap_Before > 0
+        and then Context.Vertical_Gap > 0
       then
          --  we already added all the vertical gaps when we first
          --  arranged this sub tree
          Log (Context, Item, "vertical gap before ="
-              & Aquarius.Layout.Count'Image (Item.Vertical_Gap_Before));
+              & Aquarius.Layout.Count'Image (Context.Vertical_Gap));
          Context.Current_Line :=
-           Context.Current_Line + Item.Vertical_Gap_Before;
+           Context.Current_Line + Context.Vertical_Gap;
          Context.Current_Column := 1;
-         Context.Need_New_Line := False;
-         Context.Got_New_Line  := True;
          Context.Need_Space    := False;
          Context.First_On_Line := True;
+         Context.Vertical_Gap  := 0;
       end if;
 
-      if Item.Soft_New_Line then
+      if Context.Need_Soft_New_Line then
          Context.Need_New_Line := True;
          Context.Current_Indent := Context.Current_Indent + 2;
          Log (Context, Item,
@@ -288,7 +265,10 @@ package body Aquarius.Programs.Arrangements is
          then
             Log (Context, Item, "checking previous line");
             Log (Context, Context.First_Terminal);
-            Log (Context, Context.Previous_Terminal);
+            Log (Context, Context.Previous_Terminal,
+                 "ends in column"
+                 & Positive_Count'Image
+                   (Context.Previous_Terminal.End_Position.Column));
             if Context.Previous_Terminal.End_Position.Column
               > Context.Right_Margin
             then
@@ -356,11 +336,12 @@ package body Aquarius.Programs.Arrangements is
 
       Log (Context, Item, "start: " & Show (Item.Start_Position));
 
-      if Item.Soft_New_Line then
+      if Context.Need_Soft_New_Line then
          Context.Current_Indent := Context.Current_Indent - 2;
          Log (Context, Item,
               "leave soft new line; new indent ="
               & Context.Current_Indent'Img);
+         Context.Need_Soft_New_Line := False;
       end if;
 
       if False then
