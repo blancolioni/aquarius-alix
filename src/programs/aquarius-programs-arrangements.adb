@@ -175,6 +175,10 @@ package body Aquarius.Programs.Arrangements is
          Context.Current_Line :=
            Context.Current_Line + Item.Vertical_Gap_Before;
          Context.Current_Column := 1;
+         Context.Need_New_Line := False;
+         Context.Got_New_Line  := True;
+         Context.Need_Space    := False;
+         Context.First_On_Line := True;
       end if;
 
       if Enabled (Rules.New_Line_Before) then
@@ -184,6 +188,9 @@ package body Aquarius.Programs.Arrangements is
       if Item.Soft_New_Line then
          Context.Need_New_Line := True;
          Context.Current_Indent := Context.Current_Indent + 2;
+         Log (Context, Item,
+              "enter soft new line; new indent ="
+              & Context.Current_Indent'Img);
       end if;
 
       Context.Current_Indent :=
@@ -195,6 +202,13 @@ package body Aquarius.Programs.Arrangements is
       for I in 1 .. Item.Child_Count loop
          Arrange (Item.Program_Child (I), Context);
          if Context.Stopped then
+--              if Item.Soft_New_Line then
+--                 Context.Current_Indent := Context.Current_Indent - 2;
+--                 Log (Context, Item,
+--                      "leave soft new line; new indent ="
+--                      & Context.Current_Indent'Img);
+--              end if;
+
             return;
          end if;
       end loop;
@@ -205,6 +219,9 @@ package body Aquarius.Programs.Arrangements is
 
       if Item.Soft_New_Line then
          Context.Current_Indent := Context.Current_Indent - 2;
+         Log (Context, Item,
+              "leave soft new line; new indent ="
+              & Context.Current_Indent'Img);
       end if;
 
       if Enabled (Rules.New_Line_After) then
@@ -234,11 +251,18 @@ package body Aquarius.Programs.Arrangements is
          Context.Current_Line :=
            Context.Current_Line + Item.Vertical_Gap_Before;
          Context.Current_Column := 1;
+         Context.Need_New_Line := False;
+         Context.Got_New_Line  := True;
+         Context.Need_Space    := False;
+         Context.First_On_Line := True;
       end if;
 
       if Item.Soft_New_Line then
          Context.Need_New_Line := True;
          Context.Current_Indent := Context.Current_Indent + 2;
+         Log (Context, Item,
+              "enter soft new line; new indent ="
+              & Context.Current_Indent'Img);
       end if;
 
       if Enabled (Rules.New_Line_Before) or else Item.New_Line_Before then
@@ -253,6 +277,7 @@ package body Aquarius.Programs.Arrangements is
             Context.Got_New_Line  := True;
             Context.Need_Space    := False;
             Context.First_On_Line := True;
+            Log (Context, Item, "got new line because need new line");
          end if;
       end if;
 
@@ -261,8 +286,9 @@ package body Aquarius.Programs.Arrangements is
          if not Context.Rearranging
            and then Context.Previous_Terminal /= null
          then
-            Log (Context, Context.First_Terminal, "previous line start");
-            Log (Context, Context.Previous_Terminal, "previous line finish");
+            Log (Context, Item, "checking previous line");
+            Log (Context, Context.First_Terminal);
+            Log (Context, Context.Previous_Terminal);
             if Context.Previous_Terminal.End_Position.Column
               > Context.Right_Margin
             then
@@ -328,8 +354,13 @@ package body Aquarius.Programs.Arrangements is
       Item.End_Position := (Context.Current_Line,
                             Context.Current_Column + Item.Layout_Length);
 
+      Log (Context, Item, "start: " & Show (Item.Start_Position));
+
       if Item.Soft_New_Line then
          Context.Current_Indent := Context.Current_Indent - 2;
+         Log (Context, Item,
+              "leave soft new line; new indent ="
+              & Context.Current_Indent'Img);
       end if;
 
       if False then
@@ -377,9 +408,10 @@ package body Aquarius.Programs.Arrangements is
            Context.Current_Column + Context.User_Text_Length;
       end if;
 
-      if Item.Separator_New_Line or else
-        (Enabled (Rules.New_Line_After) and then Item.Is_Separator)
-      then
+      if Item.Separator_New_Line then
+           --  or else
+        --  (Enabled (Rules.New_Line_After) and then Item.Is_Separator)
+      --  then
          Context.Current_Line := Context.Current_Line + 1;
          declare
             Align_With : constant Program_Tree :=
@@ -388,6 +420,14 @@ package body Aquarius.Programs.Arrangements is
             Context.Current_Column := Align_With.Layout_Start_Column;
          end;
          Context.Got_New_Line  := True;
+         if Item.Separator_New_Line then
+            Log (Context, Item, "got new line because of separator");
+         end if;
+         if Enabled (Rules.New_Line_After)
+           and then Item.Is_Separator
+         then
+            Log (Context, Item, "got new line because of rule");
+         end if;
          Context.Need_New_Line := False;
          Context.First_On_Line := True;
          Context.Cancel_Indent := True;
@@ -411,7 +451,9 @@ package body Aquarius.Programs.Arrangements is
             Context.Space_Priority := Priority (Rules.Space_After);
          end if;
 
-         if Enabled (Rules.New_Line_After) then
+         if Enabled (Rules.New_Line_After)
+           and then not Item.Is_Separator
+         then
             Context.Need_New_Line := True;
          end if;
       end if;
@@ -544,10 +586,7 @@ package body Aquarius.Programs.Arrangements is
       Got_Start  : Boolean    := False;
       Got_Finish : Boolean    := False;
 
-      Line_Length    : constant Positive_Count :=
-                         Finish.End_Position.Column;
       Partial_Length   : Positive_Count := Context.Current_Indent;
-      Remaining_Length : Count := Line_Length;
       New_Line_Indent  : constant Positive_Count :=
                            Context.Current_Indent + 2;
       Last_Column_Index : Positive_Count := Context.Current_Indent;
@@ -583,7 +622,6 @@ package body Aquarius.Programs.Arrangements is
 
          if Got_Start then
 
-            Remaining_Length := Line_Length - Program.Start_Position.Column;
             if Program.Is_Separator then
                if Separator /= null
                  and then Program.Syntax = Separator.Syntax
@@ -593,7 +631,7 @@ package body Aquarius.Programs.Arrangements is
                end if;
             elsif (Program.Has_Soft_New_Line_Rule_Before
                    or else Had_Soft_New_Line_After)
-              and then Remaining_Length + Partial_Length
+              and then Count (Program.Text'Length) + Partial_Length
                 > Context.Right_Margin
             then
 --                 Log (Context, Program,
@@ -654,6 +692,7 @@ package body Aquarius.Programs.Arrangements is
       Context.Current_Column   := 1;
       Context.Need_New_Line := False;
       Context.Got_New_Line  := True;
+      Log (Context, Item, "got new line because of rearrangement");
       Context.Need_Space    := False;
       Context.First_On_Line := True;
       Context.Previous_Indent := Context.Current_Indent;
