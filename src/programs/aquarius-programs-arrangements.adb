@@ -53,6 +53,9 @@ package body Aquarius.Programs.Arrangements is
      (Item    : in     Program_Tree;
       Context : in out Arrangement_Context);
 
+   procedure Check_Previous_Line_Length
+     (Context : in out Arrangement_Context);
+
    procedure Re_Arrange
      (Item    : in     Program_Tree;
       Context : in out Arrangement_Context;
@@ -125,6 +128,7 @@ package body Aquarius.Programs.Arrangements is
    begin
       Context.Right_Margin := Positive_Count (Line_Length);
       Arrange (Item, Context);
+      Check_Previous_Line_Length (Context);
       Aquarius.Messages.Files.Save_Messages
         ("arrangement.log", Context.Logging);
    exception
@@ -148,6 +152,7 @@ package body Aquarius.Programs.Arrangements is
       Context.User_Text_Length := Count (Partial_Length);
       Context.User_Cursor := Point;
       Arrange (Item, Context);
+      Check_Previous_Line_Length (Context);
    end Arrange;
 
    --------------------------
@@ -259,41 +264,11 @@ package body Aquarius.Programs.Arrangements is
       end if;
 
       if Context.First_On_Line then
-         Log (Context, Item);
+
          if not Context.Rearranging
            and then Context.Previous_Terminal /= null
          then
-            Log (Context, Item, "checking previous line");
-            Log (Context, Context.First_Terminal);
-            Log (Context, Context.Previous_Terminal,
-                 "ends in column"
-                 & Positive_Count'Image
-                   (Context.Previous_Terminal.End_Position.Column));
-            if Context.Previous_Terminal.End_Position.Column
-              > Context.Right_Margin
-            then
-               declare
-                  Ancestor_Tree  : Aquarius.Trees.Tree;
-                  Left_Ancestor  : Aquarius.Trees.Tree;
-                  Right_Ancestor : Aquarius.Trees.Tree;
-                  Ancestor       : Program_Tree;
-               begin
-                  Aquarius.Trees.Common_Ancestor
-                    (Left           => Context.First_Terminal,
-                     Right          => Context.Previous_Terminal,
-                     Ancestor       => Ancestor_Tree,
-                     Left_Ancestor  => Left_Ancestor,
-                     Right_Ancestor => Right_Ancestor);
-                  Ancestor := Program_Tree (Ancestor_Tree);
-                  Log (Context, Ancestor, "re-arranging");
-                  Re_Arrange (Ancestor, Context,
-                              Context.First_Terminal,
-                              Context.Previous_Terminal);
-                  Log (Context, Ancestor, "after re-arrangement");
-                  Log (Context, Ancestor);
-               end;
-            end if;
-
+            Check_Previous_Line_Length (Context);
          end if;
 
          Context.First_Terminal := Item;
@@ -457,6 +432,45 @@ package body Aquarius.Programs.Arrangements is
       return not Is_Off_Left (Point) and then
         Location = Program_Tree (Get_Left_Tree (Point));
    end Before_Point;
+
+   --------------------------------
+   -- Check_Previous_Line_Length --
+   --------------------------------
+
+   procedure Check_Previous_Line_Length
+     (Context : in out Arrangement_Context)
+   is
+   begin
+      Log (Context, Context.First_Terminal, "checking previous line");
+      Log (Context, Context.Previous_Terminal,
+           "ends in column"
+           & Positive_Count'Image
+             (Context.Previous_Terminal.End_Position.Column));
+      if Context.Previous_Terminal.End_Position.Column
+        > Context.Right_Margin
+      then
+         declare
+            Ancestor_Tree  : Aquarius.Trees.Tree;
+            Left_Ancestor  : Aquarius.Trees.Tree;
+            Right_Ancestor : Aquarius.Trees.Tree;
+            Ancestor       : Program_Tree;
+         begin
+            Aquarius.Trees.Common_Ancestor
+              (Left           => Context.First_Terminal,
+               Right          => Context.Previous_Terminal,
+               Ancestor       => Ancestor_Tree,
+               Left_Ancestor  => Left_Ancestor,
+               Right_Ancestor => Right_Ancestor);
+            Ancestor := Program_Tree (Ancestor_Tree);
+            Log (Context, Ancestor, "re-arranging");
+            Re_Arrange (Ancestor, Context,
+                        Context.First_Terminal,
+                        Context.Previous_Terminal);
+            Log (Context, Ancestor, "after re-arrangement");
+            Log (Context, Ancestor);
+         end;
+      end if;
+   end Check_Previous_Line_Length;
 
    ---------
    -- Log --
