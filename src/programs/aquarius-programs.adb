@@ -922,25 +922,25 @@ package body Aquarius.Programs is
    -- Location_Column --
    ---------------------
 
-   overriding
-   function Location_Column (Location : Program_Tree_Type)
-                            return Positive
-   is
-   begin
-      return Positive (Location.Start_Position.Column);
-   end Location_Column;
+--     overriding
+--     function Location_Column (Location : Program_Tree_Type)
+--                              return Positive
+--     is
+--     begin
+--        return Positive (Location.Start_Position.Column);
+--     end Location_Column;
 
    -------------------
    -- Location_Line --
    -------------------
 
-   overriding
-   function Location_Line (Location : Program_Tree_Type)
-                          return Positive
-   is
-   begin
-      return Positive (Location.Start_Position.Line);
-   end Location_Line;
+--     overriding
+--     function Location_Line (Location : Program_Tree_Type)
+--                            return Positive
+--     is
+--     begin
+--        return Positive (Location.Start_Position.Line);
+--     end Location_Line;
 
    --------------------
    -- Minimum_Indent --
