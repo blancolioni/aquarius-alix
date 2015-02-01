@@ -502,21 +502,11 @@ package body Aquarius.Plugins.EBNF.Analyse is
       Name         : constant String := Defined_Name.Text;
       Grammar      : constant Aquarius.Grammars.Aquarius_Grammar :=
         Aquarius.Trees.Properties.Get_Grammar (Tree);
---        Value_Definition : constant Program_Tree :=
---          Program_Tree (Tree.Breadth_First_Search ("value-definition"));
+      Child        : constant Aquarius.Trees.Tree :=
+                       Definition.Breadth_First_Search ("expression");
+      Value        : constant Aquarius.Trees.Tree := Child.First_Leaf;
    begin
-
-      if Definition /= null then
-         declare
-            Child : constant Aquarius.Trees.Tree :=
-              Definition.Breadth_First_Search ("expression");
-            Value : constant Aquarius.Trees.Tree := Child.First_Leaf;
-         begin
-            Grammar.Add_Value (Child, Name, Value.Text);
-         end;
-      else
-         Aquarius.Errors.Error (Tree, "no definition found");
-      end if;
+      Grammar.Add_Value (Child, Name, Value.Text);
    end After_Value_Definition;
 
    ----------------
