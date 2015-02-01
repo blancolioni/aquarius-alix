@@ -106,11 +106,11 @@ package Aquarius.Buffers is
 
    overriding
    function Location_Line (Location : Aquarius_Buffer_Record)
-                          return Positive;
+                          return Natural;
 
    overriding
    function Location_Column (Location : Aquarius_Buffer_Record)
-                            return Positive;
+                            return Natural;
    --  Attach_Message: add a buffer-level message
    overriding
    procedure Attach_Message (To    : in out Aquarius_Buffer_Record;
