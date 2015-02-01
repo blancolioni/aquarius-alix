@@ -4,7 +4,7 @@ with Ada.Strings.Fixed;
 with Aquarius.Formats;
 with Aquarius.Layout;
 with Aquarius.Messages;
-with Aquarius.Messages.Files;
+--  with Aquarius.Messages.Files;
 
 package body Aquarius.Programs.Arrangements is
 
@@ -129,12 +129,13 @@ package body Aquarius.Programs.Arrangements is
       Context.Right_Margin := Positive_Count (Line_Length);
       Arrange (Item, Context);
       Check_Previous_Line_Length (Context);
-      Aquarius.Messages.Files.Save_Messages
-        ("arrangement.log", Context.Logging);
+--        Aquarius.Messages.Files.Save_Messages
+--          ("arrangement.log", Context.Logging);
    exception
       when others =>
-         Aquarius.Messages.Files.Save_Messages
-           ("arrangement.log", Context.Logging);
+         null;
+--           Aquarius.Messages.Files.Save_Messages
+--             ("arrangement.log", Context.Logging);
    end Arrange;
 
    -------------
@@ -739,26 +740,27 @@ package body Aquarius.Programs.Arrangements is
            Terminal.Get_Inherited_Message_Level;
       begin
          if Msg_Level > No_Message then
-            Renderer.Set_Text (Render_Position,
+            Renderer.Set_Text (Terminal, Render_Position,
                                Level_Name (Msg_Level),
                                Terminal.Text);
          elsif not Aquarius.Syntax.Is_Empty (Terminal.Render_Class) then
-            Renderer.Set_Text (Render_Position,
+            Renderer.Set_Text (Terminal, Render_Position,
                                Terminal.Render_Class.Render_Class,
                                Terminal.Text);
          elsif Terminal.Syntax.Has_Token then
-            Renderer.Set_Text (Render_Position,
+            Renderer.Set_Text (Terminal, Render_Position,
                                Aquarius.Tokens.Get_Token_Class_Name
                                  (Terminal.Syntax.Frame,
                                   Terminal.Syntax.Token),
                                Terminal.Text);
          else
-            Renderer.Set_Text (Render_Position, "normal", Terminal.Text);
+            Renderer.Set_Text (Terminal, Render_Position,
+                               "normal", Terminal.Text);
          end if;
 
          if Before_Point (Terminal, Point) then
             Point_Position := Terminal.Layout_End_Position;
-            Renderer.Set_Text (Point_Position, "normal", Partial);
+            Renderer.Set_Text (Terminal, Point_Position, "normal", Partial);
             Point_Position.Column :=
               Point_Position.Column + Partial'Length;
          end if;
