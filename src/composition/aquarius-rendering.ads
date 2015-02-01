@@ -1,4 +1,5 @@
 with Aquarius.Layout;
+with Aquarius.Programs;
 with Aquarius.Styles;
 
 package Aquarius.Rendering is
@@ -14,6 +15,7 @@ package Aquarius.Rendering is
       Position : in     Aquarius.Layout.Position);
 
    procedure Set_Text (Renderer  : access Root_Aquarius_Renderer;
+                       Terminal  : in     Aquarius.Programs.Program_Tree;
                        Position  : in     Aquarius.Layout.Position;
                        Class     : in     String;
                        Text      : in     String)

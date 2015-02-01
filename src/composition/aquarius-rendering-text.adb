@@ -7,6 +7,7 @@ package body Aquarius.Rendering.Text is
 
    overriding
    procedure Set_Text (Renderer  : access Text_Renderer;
+                       Terminal  : Aquarius.Programs.Program_Tree;
                        Position  : in     Aquarius.Layout.Position;
                        Class     : in     String;
                        Text      : in     String);
@@ -26,10 +27,12 @@ package body Aquarius.Rendering.Text is
 
    overriding
    procedure Set_Text (Renderer  : access Text_Renderer;
+                       Terminal  : Aquarius.Programs.Program_Tree;
                        Position  : in     Aquarius.Layout.Position;
                        Class     : in     String;
                        Text      : in     String)
    is
+      pragma Unreferenced (Terminal);
       pragma Unreferenced (Class);
       use Ada.Text_IO;
       use type Aquarius.Layout.Positive_Count;

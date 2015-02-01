@@ -11,6 +11,7 @@ package body Aquarius.Rendering.Html is
 
    overriding
    procedure Set_Text (Renderer  : access Html_Renderer;
+                       Terminal  : Aquarius.Programs.Program_Tree;
                        Position  : in     Aquarius.Layout.Position;
                        Class     : in     String;
                        Text      : in     String);
@@ -61,10 +62,12 @@ package body Aquarius.Rendering.Html is
 
    overriding
    procedure Set_Text (Renderer  : access Html_Renderer;
+                       Terminal  : Aquarius.Programs.Program_Tree;
                        Position  : in     Aquarius.Layout.Position;
                        Class     : in     String;
                        Text      : in     String)
    is
+      pragma Unreferenced (Terminal);
       use Ada.Text_IO;
       use type Aquarius.Layout.Positive_Count;
       Font : constant Aquarius.Fonts.Aquarius_Font :=
