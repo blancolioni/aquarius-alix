@@ -214,13 +214,13 @@ package Aquarius.Programs is
    function Name (Item : Program_Tree_Type)
                  return String;
 
-   overriding
-   function Location_Line (Location : Program_Tree_Type)
-                          return Positive;
-
-   overriding
-   function Location_Column (Location : Program_Tree_Type)
-                            return Positive;
+--     overriding
+--     function Location_Line (Location : Program_Tree_Type)
+--                            return Positive;
+--
+--     overriding
+--     function Location_Column (Location : Program_Tree_Type)
+--                              return Positive;
 
    function Get_Token (Item : Program_Tree_Type'Class)
                       return Aquarius.Tokens.Token;
