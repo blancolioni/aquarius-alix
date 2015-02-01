@@ -74,11 +74,11 @@ package Aquarius.Messages is
       is abstract;
 
    function Location_Line (Location : Message_Location)
-                          return Positive
+                          return Natural
       is abstract;
 
    function Location_Column (Location : Message_Location)
-                            return Positive
+                            return Natural
       is abstract;
 
    --  Attach_Message: add the message to the location

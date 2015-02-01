@@ -175,7 +175,7 @@ package body Aquarius.Buffers is
 
    overriding
    function Location_Column (Location : Aquarius_Buffer_Record)
-                            return Positive
+                            return Natural
    is
    begin
       return Positive (Location.Point_Position.Column);
@@ -187,7 +187,7 @@ package body Aquarius.Buffers is
 
    overriding
    function Location_Line (Location : Aquarius_Buffer_Record)
-                          return Positive
+                          return Natural
    is
    begin
       return Positive (Location.Point_Position.Line);

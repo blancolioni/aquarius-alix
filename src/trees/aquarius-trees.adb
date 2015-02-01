@@ -872,7 +872,7 @@ package body Aquarius.Trees is
 
    overriding
    function Location_Column (Location : Root_Tree_Type)
-                            return Positive
+                            return Natural
    is
    begin
       return Positive (Aquarius.Source.Get_Column (Location.Get_Location));
@@ -884,7 +884,7 @@ package body Aquarius.Trees is
 
    overriding
    function Location_Line (Location : Root_Tree_Type)
-                          return Positive
+                          return Natural
    is
    begin
       return Positive (Aquarius.Source.Get_Line (Location.Get_Location));
