@@ -7,6 +7,7 @@ package body Aquarius.Rendering.Sections is
 
    overriding
    procedure Set_Text (Renderer  : access Section_Renderer;
+                       Terminal  : in     Aquarius.Programs.Program_Tree;
                        Position  : in     Aquarius.Layout.Position;
                        Class     : in     String;
                        Text      : in     String);
@@ -75,10 +76,12 @@ package body Aquarius.Rendering.Sections is
 
    overriding
    procedure Set_Text (Renderer  : access Section_Renderer;
+                       Terminal  : in     Aquarius.Programs.Program_Tree;
                        Position  : in     Aquarius.Layout.Position;
                        Class     : in     String;
                        Text      : in     String)
    is
+      pragma Unreferenced (Terminal);
    begin
       Renderer.Section.Put (Position, Text, Class);
    end Set_Text;
