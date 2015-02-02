@@ -19,6 +19,7 @@ format formal_argument_spec soft_new_line
 format actual_argument_list soft_new_line
 format default_value_expression soft_new_line
 format function_return_type soft_new_line
+format type_definition soft_new_line
 format procedure_declaration new_line_after
 format function_declaration new_line_after
 format 'generic' new_line_after
@@ -35,7 +36,7 @@ format 'then' closing space_after space_before
 format 'loop' closing space_after space_before
 format 'is' closing space_after space_before
 
-format ';' no_space_before new_line_after
+format ';' no_space_before no_space_after new_line_after
 format '.' no_space_before no_space_after
 format '(' space_before no_space_after
 format ')' no_space_before space_after
