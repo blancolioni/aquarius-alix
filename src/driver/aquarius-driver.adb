@@ -123,9 +123,6 @@ begin
             return;
          end if;
 
-         Ada.Text_IO.Put_Line ("Loading " &
-                                 Command_Line.Input_File);
-
          Input :=
            Aquarius.Loader.Load_From_File (Grammar, Command_Line.Input_File);
 
