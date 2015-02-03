@@ -1014,6 +1014,7 @@ package body Aquarius.Programs.Parser is
          Program.Start_Position :=
            (Positive_Count (Aquarius.Source.Get_Line (Tok_Pos)),
             Positive_Count (Aquarius.Source.Get_Column (Tok_Pos)));
+         Program.File_Start := Program.Start_Position;
          Program.End_Position := (Program.Start_Position.Line,
                                   Program.Start_Position.Column
                                   + Count (Tok_Text'Length));

@@ -36,6 +36,7 @@ package body Aquarius.Programs is
       Vertical_Gap         => 0,
       Syntax               => null,
       Fill_Text            => Aquarius.Tokens.To_Token_Text (""),
+      File_Start           => (1, 1),
       Start_Position       => (1, 1),
       End_Position         => (1, 1),
       Indent_Rule          => False,
@@ -389,7 +390,7 @@ package body Aquarius.Programs is
       is
       begin
          if Current.Is_Terminal then
-            if Current.Layout_Start_Position <= Location then
+            if Current.File_Start <= Location then
                Last_Terminal := Program_Tree (Current);
             else
                return;
