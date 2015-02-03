@@ -34,11 +34,13 @@ setting_name ::= identifier [ '(' setting_argument ')' ]
 
 setting_argument ::= string_literal
 
-value ::= simple_value | '(' list_value ')'
+value ::= simple_value | '(' list_value ')' | attribute_value
 
-simple_value ::= string_literal
+simple_value ::= string_literal | identifier
 
 list_value ::= < simple_value / ',' >
+
+attribute_value ::= 'project' ''' identifier
 
 type_declaration ::= 'type' identifier 'is' value
 
