@@ -378,6 +378,7 @@ private
          Vertical_Gap      : Aquarius.Layout.Count;
          Syntax            : Aquarius.Syntax.Syntax_Tree;
          Fill_Text         : Aquarius.Tokens.Token_Text;
+         File_Start        : Aquarius.Layout.Position;
          Start_Position    : Aquarius.Layout.Position;
          End_Position      : Aquarius.Layout.Position;
          Indent_Rule       : Boolean;
