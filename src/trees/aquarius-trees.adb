@@ -875,7 +875,7 @@ package body Aquarius.Trees is
                             return Natural
    is
    begin
-      return Positive (Aquarius.Source.Get_Column (Location.Get_Location));
+      return Natural (Aquarius.Source.Get_Column (Location.Get_Location));
    end Location_Column;
 
    -------------------
@@ -887,7 +887,7 @@ package body Aquarius.Trees is
                           return Natural
    is
    begin
-      return Positive (Aquarius.Source.Get_Line (Location.Get_Location));
+      return Natural (Aquarius.Source.Get_Line (Location.Get_Location));
    end Location_Line;
 
    -------------------
