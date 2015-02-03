@@ -61,7 +61,7 @@ list_of_context_clauses ::= { context_clause }
 
 top_level_subprogram_declaration ::= [ 'private' ] subprogram_declaration { pragma_spec }
 
-context_clause ::= with_clause | use_clause | pragma_spec
+context_clause ::= with_clause | use_clause | use_type_clause | pragma_spec
 
 with_clause ::= ['limited'] ['private'] 'with' < withed_unit_name : package_name / ',' > ';'
 
@@ -606,11 +606,9 @@ parenthesised_expression ::= '(' expression ')'
 conditional_expression ::= 'if' expression 'then' expression 'else' expression
 
 aggregate ::=
-    '(' object_reference 'with' selector '=>' expression ')'
-  | '(' object_reference 'with' 'null' 'record' ')'
+    '(' object_reference 'with' 'null' 'record' ')'
+  | '(' object_reference 'with' < selector_expression / ',' > ')'
   | '(' selector '=>' expression ')'
-  | '(' object_reference 'with' selector_expression ','
-                                < selector_expression / ',' > ')'
   | '(' selector_expression ',' < selector_expression / ',' > ')'
 
 selector_expression ::= selector '=>' expression
