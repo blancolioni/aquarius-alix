@@ -1,10 +1,11 @@
 --  with Ada.Characters.Handling;
+with Ada.Exceptions;
 with Ada.Strings.Fixed;
 
 with Aquarius.Formats;
 with Aquarius.Layout;
 with Aquarius.Messages;
---  with Aquarius.Messages.Files;
+with Aquarius.Messages.Files;
 
 package body Aquarius.Programs.Arrangements is
 
@@ -129,13 +130,15 @@ package body Aquarius.Programs.Arrangements is
       Context.Right_Margin := Positive_Count (Line_Length);
       Arrange (Item, Context);
       Check_Previous_Line_Length (Context);
---        Aquarius.Messages.Files.Save_Messages
---          ("arrangement.log", Context.Logging);
+      Aquarius.Messages.Files.Save_Messages
+        ("arrangement.log", Context.Logging);
    exception
-      when others =>
-         null;
---           Aquarius.Messages.Files.Save_Messages
---             ("arrangement.log", Context.Logging);
+      when E : others =>
+         Log (Context, Item,
+              "exception: "
+              & Ada.Exceptions.Exception_Message (E));
+         Aquarius.Messages.Files.Save_Messages
+           ("arrangement.log", Context.Logging);
    end Arrange;
 
    -------------
@@ -238,6 +241,14 @@ package body Aquarius.Programs.Arrangements is
          Context.Need_Space    := False;
          Context.First_On_Line := True;
          Context.Vertical_Gap  := 0;
+      end if;
+
+      if Enabled (Rules.New_Line_Before) then
+         Context.Need_New_Line := True;
+      end if;
+
+      if Item.Soft_New_Line then
+         Context.Need_Soft_New_Line := True;
       end if;
 
       if Context.Need_Soft_New_Line then
@@ -569,15 +580,32 @@ package body Aquarius.Programs.Arrangements is
 
       use Aquarius.Syntax;
 
-      function Is_Separator
+      function Separator_With_New_Line
+        (Item : Aquarius.Trees.Root_Tree_Type'Class)
+         return Boolean;
+
+      -----------------------------
+      -- Separator_With_New_Line --
+      -----------------------------
+
+      function Separator_With_New_Line
         (Item : Aquarius.Trees.Root_Tree_Type'Class)
          return Boolean
-      is (Program_Tree_Type (Item).Is_Separator);
+      is
+         Program : Program_Tree_Type'Class
+         renames Program_Tree_Type'Class (Item);
+      begin
+         return Program.Is_Separator
+           and then ((Enabled (Program.Rules.Space_After)
+                      and then not Negative (Program.Rules.Space_After))
+                     or else Enabled (Program.Rules.New_Line_After)
+                     or else Enabled (Program.Rules.Soft_New_Line_After));
+      end Separator_With_New_Line;
 
       Separator : constant Program_Tree :=
         Program_Tree
           (Item.Breadth_First_Search
-             (Is_Separator'Access));
+             (Separator_With_New_Line'Access));
 
       Got_Start  : Boolean    := False;
       Got_Finish : Boolean    := False;
@@ -587,12 +615,18 @@ package body Aquarius.Programs.Arrangements is
                            Context.Current_Indent + 2;
       Last_Column_Index : Positive_Count := Context.Current_Indent;
 
+      Remaining_Length  : Count :=
+                            Finish.End_Position.Column
+                              - Start.Start_Position.Column;
+
       Had_Soft_New_Line_After : Boolean := False;
 
       Closing : constant Boolean := Enabled (Finish.Rules.Closing);
 
       procedure Apply_Newlines
         (Program : Program_Tree);
+
+      pragma Style_Checks (Off);
 
       --------------------
       -- Apply_Newlines --
@@ -627,16 +661,9 @@ package body Aquarius.Programs.Arrangements is
                end if;
             elsif (Program.Has_Soft_New_Line_Rule_Before
                    or else Had_Soft_New_Line_After)
-              and then Count (Program.Text'Length) + Partial_Length
+              and then Count (Program.Text'Length) + Remaining_Length
                 > Context.Right_Margin
             then
---                 Log (Context, Program,
---                      "setting soft new line because remaining ="
---                      & Remaining_Length'Img
---                      & ", partial length ="
---                      & Partial_Length'Img
---                      & " and right margin ="
---                      & Context.Right_Margin'Img);
                Program.Set_Soft_New_Line;
                Partial_Length := New_Line_Indent;
             end if;
@@ -647,6 +674,9 @@ package body Aquarius.Programs.Arrangements is
                Partial_Length := Partial_Length
                  + Program.End_Position.Column - Last_Column_Index;
                Last_Column_Index := Program.End_Position.Column;
+               Remaining_Length :=
+                 Finish.End_Position.Column
+                   - Program.End_Position.Column;
             end if;
 
             if Program.Has_Soft_New_Line_Rule_After then
