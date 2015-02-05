@@ -25,8 +25,8 @@ format function_declaration new_line_after
 format 'generic' new_line_after
 format generic_formal_parameter_list indented_child
 format interface_inheritance soft_new_line
-format new_generic_package indented_child
-format generic_actual_part indented_child
+format new_generic_package soft_new_line_before
+format generic_actual_part soft_new_line_before
 format boolean_operator soft_new_line
 format relational_operator soft_new_line
 format binary_adding_operator soft_new_line
@@ -48,6 +48,7 @@ format 'with' soft_new_line_after space_after space_before
 format 'of' soft_new_line_before space_after space_before
 format ':' soft_new_line_after space_after space_before
 format 'return' soft_new_line_before space_after space_before
+format 'is' soft_new_line_before space_before space_after
 
 xref procedure_declaration defining_program_unit_name
 xref function_declaration defining_program_unit_name
