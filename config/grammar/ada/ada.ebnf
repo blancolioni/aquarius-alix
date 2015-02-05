@@ -55,7 +55,7 @@ xref function_declaration defining_program_unit_name
 xref package_spec defining_package_name
 xref type_declaration type_name
 
-compilation_unit ::= list_of_context_clauses
+compilation_unit ::= { context_clause }
 	             top_level_subprogram_declaration
 
 list_of_context_clauses ::= { context_clause }
