@@ -292,7 +292,9 @@ defining_identifier_list ::= < defining_identifier / ',' >
 
 defining_identifier ::= identifier
 
-type_indication ::= ['aliased'] ['constant'] (subtype_indication | access_definition | array_type_definition)
+type_indication ::= ['aliased'] ['constant'] direct_type_indication
+
+direct_type_indication ::= subtype_indication | access_definition | array_type_definition
 
 type_constraint ::= ( '(' expression [ '..' expression ] ')' )
                   | ( ''' ( identifier | 'range' | 'access' | 'digits' ))

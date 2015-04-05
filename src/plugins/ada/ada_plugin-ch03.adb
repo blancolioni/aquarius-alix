@@ -584,8 +584,11 @@ package body Ada_Plugin.Ch03 is
    procedure Type_Indication_After
      (Type_Indication : Program_Tree)
    is
+      Direct_Type     : constant Program_Tree :=
+                          Type_Indication.Program_Child
+                            ("direct_type_indication");
       Chosen_Type     : constant Program_Tree :=
-        Type_Indication.Chosen_Tree;
+        Direct_Type.Chosen_Tree;
       Type_Entry      : Aquarius.Entries.Table_Entry;
    begin
       if Chosen_Type.Has_Entry then
