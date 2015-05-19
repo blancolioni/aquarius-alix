@@ -584,8 +584,16 @@ package body Ada_Plugin.Ch03 is
    procedure Type_Indication_After
      (Type_Indication : Program_Tree)
    is
+      function Is_Choice
+        (Tree : Aquarius.Trees.Root_Tree_Type'Class)
+         return Boolean
+      is (Program_Tree_Type (Tree).Is_Choice);
+
+      Choice : constant Program_Tree :=
+                 Program_Tree (Type_Indication.Breadth_First_Search
+                               (Is_Choice'Access));
       Chosen_Type     : constant Program_Tree :=
-        Type_Indication.Chosen_Tree;
+        Choice.Chosen_Tree;
       Type_Entry      : Aquarius.Entries.Table_Entry;
    begin
       if Chosen_Type.Has_Entry then
