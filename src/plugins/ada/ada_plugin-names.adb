@@ -125,7 +125,9 @@ package body Ada_Plugin.Names is
       use Aquarius.Properties;
       Name_Node : constant Program_Tree := Get_Name_Node (Tree);
    begin
-      Name_Node.Set_Property (Plugin.Attribute_Property);
+      if not Name_Node.Has_Property (Plugin.Attribute_Property) then
+         Name_Node.Set_Property (Plugin.Attribute_Property);
+      end if;
    end Attribute_Reference_After;
 
    ----------------------
