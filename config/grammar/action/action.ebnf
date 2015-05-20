@@ -39,7 +39,7 @@ declare_statement ::= 'declare' declaration
 
 declaration ::= object_declaration
 
-object_declaration ::= identifier ':' [ 'constant' ] [ qualified_identifier ] [ ':=' expression ]
+object_declaration ::= identifier [ ':' [ 'constant' ] qualified_identifier ] [ ':=' expression ]
 
 if_statement ::= 'if' expression 'then' sequence_of_statements
                  { 'elsif' expression 'then' sequence_of_statements }
