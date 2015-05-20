@@ -323,6 +323,8 @@ package body Aquarius.VM is
          return V;
       elsif V.Class /= Val_Entry then
          return Error_Value ("non-entry value found for " & Name);
+      elsif V.Val_Value = null then
+         return Null_Value;
       elsif V.Val_Value.Class = Val_Primitive
         and then V.Val_Value.Arg_Count = 0
       then
