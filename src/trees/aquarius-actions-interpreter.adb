@@ -20,6 +20,9 @@ package body Aquarius.Actions.Interpreter is
 
    Trace : constant Boolean := False;
 
+   procedure Trace_Message
+     (Message : String);
+
    type Assignment_Target_Type is (No_Target, Property_Target,
                                    Environment_Target);
 
@@ -209,9 +212,7 @@ package body Aquarius.Actions.Interpreter is
       Op : constant VM_Value := Get_Value (Env, Operator);
    begin
       if Op = Null_Value then
-         Ada.Text_IO.Put_Line
-           (Ada.Text_IO.Standard_Error,
-            "unknown operator: " & Operator);
+         Trace_Message ("unknown operator: " & Operator);
          return Left;
       else
          return VM.Apply (Op, Env, (Left, Right));
@@ -296,12 +297,8 @@ package body Aquarius.Actions.Interpreter is
    is
    begin
       if Trace then
-         Ada.Text_IO.Put_Line
-           (Ada.Text_IO.Standard_Error,
-            "Evaluate: " & Action.Image);
-         Ada.Text_IO.Put_Line
-           (Ada.Text_IO.Standard_Error,
-            "Node: " & Node.Image);
+         Trace_Message ("Evaluate: " & Action.Image);
+         Trace_Message ("Node: " & Node.Image);
       end if;
 
       if Action.Name = "expression"
@@ -353,13 +350,14 @@ package body Aquarius.Actions.Interpreter is
                  (Env, Action.Program_Child ("expression"), Node);
             elsif Child.Name = "if_expression" then
                return Evaluate_If_Expression (Env, Child, Node);
+            elsif Child.Name = "null" then
+               return VM.Null_Value;
             else
                return VM.To_Value (Child);
             end if;
          end;
       else
-         Ada.Text_IO.Put_Line
-           ("cannot evaluate expression: " & Action.Name);
+         Error (Action, Node, "cannot evaluate expression: " & Action.Name);
          return VM.Null_Value;
       end if;
    end Evaluate;
@@ -500,7 +498,7 @@ package body Aquarius.Actions.Interpreter is
                      Current :=
                        VM.To_Value
                          (VM.To_Tree (Current).Breadth_First_Search
-                          (Subtree_Name));
+                          (Subtree_Name, Stop_At_Named => True));
                      if Trace then
                         Ada.Text_IO.Put_Line
                           (Ada.Text_IO.Standard_Error,
@@ -1405,6 +1403,7 @@ package body Aquarius.Actions.Interpreter is
       if VM.Has_Tree (Value)
         and then VM.To_Tree (Value).all in Program_Tree_Type'Class
         and then Program_Tree (VM.To_Tree (Value)).Is_Choice
+        and then Program_Tree (VM.To_Tree (Value)).Child_Count = 1
       then
          Choice := Program_Tree (VM.To_Tree (Value)).Chosen_Tree;
       end if;
@@ -1425,6 +1424,19 @@ package body Aquarius.Actions.Interpreter is
             end if;
          end;
       end loop;
+   exception
+      when others =>
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "exception raised in Interpret_Case_Options");
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "node: " & Node.Image);
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "value: " & Aquarius.VM.Show (Value));
+         raise;
+
    end Interpret_Case_Options;
 
    ----------------------------
@@ -1488,7 +1500,10 @@ package body Aquarius.Actions.Interpreter is
       Children : constant Array_Of_Program_Trees :=
                    Top.Direct_Children;
    begin
-      Interpret (Env, Action, Top);
+      if not Top.Internal_Tree then
+         Interpret (Env, Action, Top);
+      end if;
+
       for I in Children'Range loop
          Scan (Env, Action, Children (I));
       end loop;
@@ -1534,5 +1549,18 @@ package body Aquarius.Actions.Interpreter is
                         Value);
       end case;
    end Set;
+
+   -------------------
+   -- Trace_Message --
+   -------------------
+
+   procedure Trace_Message
+     (Message : String)
+   is
+   begin
+      Ada.Text_IO.Put_Line
+        (Ada.Text_IO.Standard_Error,
+         "interpreter: " & Message);
+   end Trace_Message;
 
 end Aquarius.Actions.Interpreter;
