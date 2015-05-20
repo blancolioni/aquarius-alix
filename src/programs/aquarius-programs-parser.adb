@@ -139,6 +139,7 @@ package body Aquarius.Programs.Parser is
          Comment.End_Position := (Comment.Start_Position.Line,
                                   Comment.Start_Position.Column
                                   + Count (Comment.Text'Length));
+         Comment.File_Start := Comment.Start_Position;
       end;
 
       Context.Comments.Append (Comment);
