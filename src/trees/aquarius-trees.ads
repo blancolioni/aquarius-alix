@@ -198,27 +198,30 @@ package Aquarius.Trees is
                   Leaf_Name : in     String)
                  return Tree;
 
-   --  Breadth_First_Search
-   --  Perform a bfs on the tree, stopping when the number
-   --  of times the Match function returns True is equal
-   --  to Match_Index.  Note that when a match is found, its
-   --  sub-tree is not searched.
-
    function Breadth_First_Search
      (Top         : Root_Tree_Type;
       Match       : not null access function (Item : Root_Tree_Type'Class)
       return Boolean;
-      Match_Index : Positive := 1)
+      Match_Index   : Positive := 1;
+      Stop_At_Named : Boolean := False)
      return Tree;
+   --  Breadth_First_Search
+   --  Perform a bfs on the tree, stopping when the number
+   --  of times the Match function returns True is equal
+   --  to Match_Index.  Note that when a match is found, its
+   --  sub-tree is not searched.  If Stop_At_Named is True, the
+   --  search will not continue past named sub-trees
 
+   function Breadth_First_Search
+     (Top           : Root_Tree_Type;
+      Child_Name    : String;
+      Match_Index   : Positive := 1;
+      Stop_At_Named : Boolean := False)
+      return Tree;
    --  Breadth_First_Search (2)
    --  Same as above, but specialised for finding subtrees with
-   --  the given name
-   function Breadth_First_Search
-     (Top         : Root_Tree_Type;
-      Child_Name  : String;
-      Match_Index : Positive := 1)
-     return Tree;
+   --  the given name.  If Stop_At_Named is True, the search will
+   --  not continue past named sub-trees.
 
    procedure Breadth_First_Scan
      (Top : Root_Tree_Type;
