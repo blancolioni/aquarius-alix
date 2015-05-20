@@ -73,6 +73,11 @@ package body Aquarius.VM.Library is
       Args : Aquarius.VM.Array_Of_Values)
       return Aquarius.VM.VM_Value;
 
+   function Eval_Method_Set_Contains
+     (Env  : Aquarius.VM.VM_Environment;
+      Args : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
+
    function Eval_Method_Last
      (Env  : Aquarius.VM.VM_Environment;
       Args : Aquarius.VM.Array_Of_Values)
@@ -244,6 +249,12 @@ package body Aquarius.VM.Library is
             Class_Name  => Class_Name,
             Method_Name => "include",
             Value       => To_Value (Eval_Method_Include'Access, 2));
+         String_Set_Class.Member_Names.Append ("contains");
+         Insert
+           (Env         => Env,
+            Class_Name  => Class_Name,
+            Method_Name => "contains",
+            Value       => To_Value (Eval_Method_Set_Contains'Access, 2));
       end;
 
       declare
@@ -658,6 +669,25 @@ package body Aquarius.VM.Library is
    begin
       return To_Value (Args (Args'First).Prop_Value.Name);
    end Eval_Method_Name;
+
+   ------------------------------
+   -- Eval_Method_Set_Contains --
+   ------------------------------
+
+   function Eval_Method_Set_Contains
+     (Env  : Aquarius.VM.VM_Environment;
+      Args : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value
+   is
+      pragma Unreferenced (Env);
+      use Aquarius.Properties.String_Sets;
+      Set : constant access String_Set_Property_Type'Class :=
+              String_Set_Property_Type'Class
+                (Args (Args'First).Prop_Value.all)'Access;
+      Value : constant String := To_String (Args (Args'First + 1));
+   begin
+      return To_Value (Set.Member (Value));
+   end Eval_Method_Set_Contains;
 
    ----------------
    -- Eval_Parse --
