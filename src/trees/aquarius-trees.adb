@@ -284,7 +284,8 @@ package body Aquarius.Trees is
       Match       : not null access
         function (Item : Root_Tree_Type'Class)
       return Boolean;
-      Match_Index : Positive := 1)
+      Match_Index : Positive := 1;
+      Stop_At_Named : Boolean := False)
      return Tree
    is
       Stack : Tree_Stack.List;
@@ -304,7 +305,9 @@ package body Aquarius.Trees is
                if Count = Match_Index then
                   return Item;
                end if;
-            else
+            elsif not Stop_At_Named
+              or else Item.Name = ""
+            then
                for I in 1 .. Item.Child_Count loop
                   Stack.Append (Item.Child (I));
                end loop;
@@ -321,7 +324,8 @@ package body Aquarius.Trees is
    function Breadth_First_Search
      (Top         : Root_Tree_Type;
       Child_Name  : String;
-      Match_Index : Positive := 1)
+      Match_Index   : Positive := 1;
+      Stop_At_Named : Boolean := False)
      return Tree
    is
       function Match (Item : Root_Tree_Type'Class) return Boolean;
@@ -336,7 +340,8 @@ package body Aquarius.Trees is
       end Match;
 
    begin
-      return Breadth_First_Search (Top, Match'Access, Match_Index);
+      return Breadth_First_Search
+        (Top, Match'Access, Match_Index, Stop_At_Named);
    end Breadth_First_Search;
 
    -----------
