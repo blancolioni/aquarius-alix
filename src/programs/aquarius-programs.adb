@@ -14,9 +14,6 @@ package body Aquarius.Programs is
 
    Free_List : Program_Tree_Vectors.Vector;
 
-   --  an internal tree is not mentioned directly in the EBNF
-   function Internal_Tree (Item : Program_Tree) return Boolean;
-
    Empty_Program_Node : constant Program_Tree_Type :=
      (Aquarius.Trees.Root_Tree_Type with
       Free                 => False,
@@ -114,8 +111,9 @@ package body Aquarius.Programs is
       pragma Assert (It.Child_Count = 1);
       It := It.Program_Child (1);
 
-      while Internal_Tree (It) loop
-         pragma Assert (It.Child_Count = 1);
+      while It.Internal_Tree
+        and then It.Child_Count = 1
+      loop
          It := It.Program_Child (1);
       end loop;
 
@@ -780,10 +778,10 @@ package body Aquarius.Programs is
    -- Internal_Tree --
    -------------------
 
-   function Internal_Tree (Item : Program_Tree) return Boolean is
+   function Internal_Tree (Item : Program_Tree_Type'Class) return Boolean is
    begin
-      return not Item.Syntax.Has_Token and then
-        Item.Syntax.Name = "";
+      return not Item.Syntax.Has_Token
+        and then Item.Syntax.Name = "";
    end Internal_Tree;
 
    ---------------
