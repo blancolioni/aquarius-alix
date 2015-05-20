@@ -1,3 +1,6 @@
+with Ada.Exceptions;
+with Ada.Text_IO;
+
 package body Aquarius.VM.Maps is
 
    --------------
@@ -43,6 +46,12 @@ package body Aquarius.VM.Maps is
       Property.List.Append (Value);
       Property.Map.Insert
         (Ada.Strings.Unbounded.To_Unbounded_String (Key), Property.List.Last);
+   exception
+      when E : Constraint_Error =>
+         Ada.Text_IO.Put_Line
+           ("Error inserting [" & Key & "]: "
+            & Ada.Exceptions.Exception_Message (E));
+         raise;
    end Insert;
 
    -------------
