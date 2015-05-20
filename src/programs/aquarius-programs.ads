@@ -109,6 +109,9 @@ package Aquarius.Programs is
    --  Return the first named child of the choice that
    --  was made.
 
+   function Internal_Tree (Item : Program_Tree_Type'Class) return Boolean;
+   --  an internal tree is not mentioned directly in the EBNF
+
    overriding
    function Has_Named_Property (Item : Program_Tree_Type;
                                 Name : String)
