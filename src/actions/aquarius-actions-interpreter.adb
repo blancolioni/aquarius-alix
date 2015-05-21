@@ -422,6 +422,11 @@ package body Aquarius.Actions.Interpreter is
       Qualifiers : constant Array_Of_Program_Trees :=
                      Action.Direct_Children ("name_qualifier");
    begin
+--        Trace_Message
+--          ("Evaluate_Object_Reference: action = " & Action.Image);
+--        Trace_Message
+--          ("Evaluate_Object_Reference: node = " & Node.Image);
+
       if Action.Name = "object_reference" then
          return Evaluate_Object_Reference
            (Env, Action.Chosen_Tree, Node);
@@ -478,9 +483,9 @@ package body Aquarius.Actions.Interpreter is
                end;
             elsif Choice.Name = "subtree_selector" then
                if Trace then
-                  Ada.Text_IO.Put_Line
-                    (Ada.Text_IO.Standard_Error,
-                     "subtree_selector: current = " & VM.To_String (Current));
+                  Trace_Message
+                    ("subtree_selector: current = "
+                     & VM.To_String (Current));
                end if;
 
                declare
@@ -489,9 +494,8 @@ package body Aquarius.Actions.Interpreter is
                                      ("identifier").Standard_Text;
                begin
                   if Trace then
-                     Ada.Text_IO.Put_Line
-                       (Ada.Text_IO.Standard_Error,
-                        "subtree_selector: subtree = " & Subtree_Name);
+                     Trace_Message
+                       ("subtree_selector: subtree = " & Subtree_Name);
                   end if;
 
                   if VM.Has_Tree (Current) then
@@ -1400,8 +1404,10 @@ package body Aquarius.Actions.Interpreter is
       Choice : Program_Tree;
       Value_Text : constant String := VM.To_String (Value);
    begin
+
       if VM.Has_Tree (Value)
         and then VM.To_Tree (Value).all in Program_Tree_Type'Class
+        and then Program_Tree (VM.To_Tree (Value)).Internal_Tree
         and then Program_Tree (VM.To_Tree (Value)).Is_Choice
         and then Program_Tree (VM.To_Tree (Value)).Child_Count = 1
       then
