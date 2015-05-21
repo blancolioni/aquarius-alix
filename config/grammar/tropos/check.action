@@ -1,0 +1,109 @@
+Top.Qualified_Name :=
+   /Top_Level_Tropos_Declaration/Package_Name.Image;
+Top.Dependents := Create_Set;
+Top.Types := Create_Map;
+declare Last_Identifier;
+declare Current_Qualified_Identifier;
+declare Current_Record;
+declare Current_Type_Declaration;
+
+for all loop
+  
+  case Tree is
+     when Context_Clause =>
+        Top.Dependents.Include (/Qualified_Identifier.Image);
+     when Type_Declaration =>
+        Put ("inserting: ");
+        Put (Tree/identifier);
+        New_Line;
+        if Tree/identifier then
+           Top.Types.Insert (Tree/identifier.Image, Tree);
+           Tree.Type_Name := Tree/Identifier.Image;
+        else
+           Put_Line ("No identifier child in type declaration: " & Tree.Image);
+        end if;
+        Current_Type_Declaration := Tree;
+        
+     when Type_Definition =>
+        Tree.Type_Name := Current_Type_Declaration.Type_Name;
+        
+     when Record_Type =>
+        Tree.Component_Map := Create_Map;
+        Current_record := Tree;
+        
+     when Record_Field =>
+        if Tree/identifier then
+           Tree.Ada_Name := Tree/identifier.Image;
+        else
+           Put_Line ("No identifier in record field: " & Tree.Image);
+        end if;
+        if Tree/string_literal then
+           Tree.Config_Name := Tree/string_literal.image;
+        else
+           Tree.Config_Name := Tree.Ada_Name;
+        end if;
+        if Tree/record_component_type/named_type then
+           Tree.Tree_Type := Tree/record_component_type/named_type;
+        else
+           Tree.Tree_Type := Tree/record_component_type/list_type;
+        end if;
+        if Tree/value then
+           Tree.Default_Value := Tree/value;
+        end if;
+        Tree.Record_Type := Current_Record;
+        Tree.Type_Declaration := Current_Type_Declaration;
+        
+     when Qualified_Identifier =>
+
+        Current_Qualified_Identifier := Tree;
+        Current_Qualified_Identifier.Qualifier := null;
+        Last_Identifier := null;
+        for Current_Qualified_Identifier loop
+           case Tree is
+              when Identifier =>
+                 Current_Qualified_Identifier.Name := Tree.Image;
+                 if Last_Identifier then
+                    if Current_Qualified_Identifier.Qualifier then
+                       Current_Qualified_Identifier.Qualifier :=
+                         Current_Qualified_Identifier.Qualifier & "." & Last_Identifier;
+                    else
+                       Current_Qualified_Identifier.Qualifier := Last_Identifier;
+                    end if;
+                 end if;
+                 Last_Identifier := Tree.Image;
+           end case;
+           
+        end loop;
+          
+  end case;
+
+end loop;
+
+for all loop
+   case Tree is
+      when Named_Type =>
+         if /Qualified_Identifier.Qualifier then
+            if Top.Dependents.Contains (/Qualified_Identifier.Qualifier) then
+               Tree.Type_Name := /Qualified_Identifier.Image;
+            elsif Top.Types.Contains (/Qualified_Identifier.Qualifier) then
+               Tree.Type_Name := "String";
+            else
+               Tree.Type_Name := "<unknown type>";
+            end if;
+         else
+            Tree.Type_Name := /Qualified_Identifier.Name;
+         end if;
+      when List_Type =>
+         if /Qualified_Identifier.Qualifier then
+            if Top.Dependents.Contains (/Qualified_Identifier.Qualifier) then
+               Tree.Type_Name := /Qualified_Identifier.Image;
+            elsif Top.Types.Contains (/Qualified_Identifier.Qualifier) then
+               Tree.Type_Name := "String";
+            else
+               Tree.Type_Name := "<unknown type>";
+            end if;
+         else
+            Tree.Type_Name := /Qualified_Identifier.Name;
+         end if;
+   end case;
+end loop;
