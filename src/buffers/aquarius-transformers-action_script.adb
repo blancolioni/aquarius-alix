@@ -21,6 +21,8 @@ package body Aquarius.Transformers.Action_Script is
      (Transformer : Action_Script_Transformer;
       Text        : String);
 
+   function Safe_Literal (Literal : String) return String;
+
    ---------------------
    -- Get_Transformer --
    ---------------------
@@ -68,7 +70,7 @@ package body Aquarius.Transformers.Action_Script is
       pragma Unreferenced (Transformer);
    begin
       Ada.Text_IO.Put_Line
-        ("Put (""" & Text & """);");
+        ("Put (""" & Safe_Literal (Text) & """);");
    end On_Text;
 
    ------------------
@@ -86,9 +88,28 @@ package body Aquarius.Transformers.Action_Script is
            ("New_Line;");
       else
          Ada.Text_IO.Put_Line
-           ("Put_Line (""" & Text & """);");
+           ("Put_Line (""" & Safe_Literal (Text) & """);");
       end if;
    end On_Text_Line;
+
+   ------------------
+   -- Safe_Literal --
+   ------------------
+
+   function Safe_Literal (Literal : String) return String is
+      Result : String (1 .. Literal'Length * 2);
+      Count  : Natural := 0;
+   begin
+      for Ch of Literal loop
+         if Ch = '"' then
+            Count := Count + 1;
+            Result (Count) := Ch;
+         end if;
+         Count := Count + 1;
+         Result (Count) := Ch;
+      end loop;
+      return Result (1 .. Count);
+   end Safe_Literal;
 
 begin
    Register ("actionscript",
