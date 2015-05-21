@@ -61,7 +61,7 @@ package body [Package_Name] is
 @         else
    function Num_[Tree.Ada_Name] (Item : [Tree.Type_Declaration.Type_Name]) return Natural is
    begin
-      return Item.Config.Child_Count ("[Tree.Config_Name]");
+      return Item.Config.Child ("[Tree.Config_Name]").Child_Count;
    end Num_[Tree.Ada_Name];
    
    function [Tree.Ada_Name] 
@@ -69,12 +69,15 @@ package body [Package_Name] is
       Index : Positive)
      return [Tree.Tree_Type.Type_Name] is
    begin
-      return Item.Config.Get ("[Tree.Config_Name]").Child (Index).Value;
+      return Item.Config.Child ("[Tree.Config_Name]").Get (Index);
    end [Tree.Ada_Name];
 @         end if;
 @      when File_Declaration =>
 
-   procedure Scan_[Tree/identifier];
+   procedure Scan_[Tree/identifier] is
+   begin
+      null;
+   end Scan_[Tree/identifier];
 @   end case;
 @end loop;
 
