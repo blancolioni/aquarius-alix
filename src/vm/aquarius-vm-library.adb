@@ -113,6 +113,11 @@ package body Aquarius.VM.Library is
       Args : Aquarius.VM.Array_Of_Values)
       return Aquarius.VM.VM_Value;
 
+   function Eval_Method_String_Value
+     (Env  : Aquarius.VM.VM_Environment;
+      Args : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
+
    -----------------------------
    -- Create_Standard_Library --
    -----------------------------
@@ -220,6 +225,12 @@ package body Aquarius.VM.Library is
             Class_Name  => Class_Name,
             Method_Name => "image",
             Value       => To_Value (Eval_Method_Image'Access, 1));
+         Program_Tree_Class.Member_Names.Append ("string_value");
+         Insert
+           (Env         => Env,
+            Class_Name  => Class_Name,
+            Method_Name => "string_value",
+            Value       => To_Value (Eval_Method_String_Value'Access, 1));
          if False then
             Program_Tree_Class.Member_Names.Append ("ada_name");
             Insert
@@ -521,7 +532,7 @@ package body Aquarius.VM.Library is
       use Aquarius.Programs;
       Program : constant Program_Tree :=
                   Program_Tree (Args (Args'First).Prop_Value);
-      Result : constant String := Program.Concatenate_Children;
+      Result  : constant String := Program.Concatenate_Children;
    begin
       return To_Value (Result);
    end Eval_Method_Image;
@@ -688,6 +699,40 @@ package body Aquarius.VM.Library is
    begin
       return To_Value (Set.Member (Value));
    end Eval_Method_Set_Contains;
+
+   ------------------------------
+   -- Eval_Method_String_Value --
+   ------------------------------
+
+   function Eval_Method_String_Value
+     (Env  : Aquarius.VM.VM_Environment;
+      Args : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value
+   is
+      pragma Unreferenced (Env);
+      use Aquarius.Programs;
+      Program : constant Program_Tree :=
+                      Program_Tree (Args (Args'First).Prop_Value);
+      Raw_Text    : constant String := Program.Text;
+      String_Text : String (Raw_Text'Range);
+      Count       : Natural := String_Text'First - 1;
+      Index       : Positive := Raw_Text'First + 1;
+   begin
+      --  Remove surrounding quotes, and convert two double quotes
+      --  into one.
+      while Index < Raw_Text'Last loop
+         if Index < Raw_Text'Last - 1
+           and then Raw_Text (Index) = '"'
+           and then Raw_Text (Index + 1) = '"'
+         then
+            Index := Index + 1;
+         end if;
+         Count := Count + 1;
+         String_Text (Count) := Raw_Text (Index);
+         Index := Index + 1;
+      end loop;
+      return To_Value (String_Text (String_Text'First .. Count));
+   end Eval_Method_String_Value;
 
    ----------------
    -- Eval_Parse --
