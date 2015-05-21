@@ -1,0 +1,71 @@
+top_level = compilation_unit
+case_sensitive = false
+
+identifier         ::= standard ada_identifier
+numeric_literal    ::= standard ada_numeric_literal
+character_literal  ::= standard ada_character_literal
+string_literal     ::= standard ada_string_literal
+delimiter          ::= delimiters "&()+,;|[]"
+symbol             ::= standard ada_symbol
+comment            ::= standard ada_comment
+
+format list_of_declarations indented_child
+format record_components indented_child
+
+format ';' no_space_before no_space_after new_line_after
+format '.' no_space_before no_space_after
+format '(' space_before no_space_after
+format ')' no_space_before space_after
+format '[' space_before no_space_after
+format ']' no_space_before space_after
+format ',' no_space_before space_after
+format ''' no_space_before no_space_after
+
+compilation_unit ::= { context_clause } top_level_tropos_declaration
+
+context_clause ::= 'with' qualified_identifier ';'
+
+top_level_tropos_declaration ::=
+   'package' package_name 'is'
+      list_of_declarations
+   'end' package_name;
+
+package_name ::= < identifier / '.' >
+
+qualified_identifier ::= < identifier / '.' >
+
+list_of_declarations ::= { declaration ';' }
+
+declaration ::= type_declaration | file_declaration
+
+type_declaration ::= 'type' identifier [ header ] 'is' type_definition
+
+header ::= '(' identifier ':' named_type ')'
+
+type_definition ::= named_type | list_type | record_type
+
+named_type ::= qualified_identifier 
+
+list_type ::= '[' qualified_identifier ']'
+
+record_type ::= 'record' record_components 'end' 'record'
+
+record_components ::= { record_component ';' }
+
+record_component ::= record_field | record_invariant
+
+record_field ::= identifier [ string_literal ] ':' record_component_type [ ':=' value ]
+
+record_component_type ::= named_type | list_type
+
+record_invariant ::= boolean_expression
+
+boolean_expression ::= boolean_value { boolean_operator boolean_value }
+
+boolean_operator ::= 'and' | 'or' | 'xor'
+
+boolean_value ::= [ 'not' ] value
+
+value ::= qualified_identifier | numeric_literal | character_literal | string_literal
+
+file_declaration ::= identifier '=' (named_type | list_type)

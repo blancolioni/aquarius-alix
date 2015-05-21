@@ -1,0 +1,98 @@
+declare Package_Name : constant String := Top.Qualified_Name;
+Set_Output (Ada_Specification_Name (Package_Name));
+Put ("private with Ada.Strings.Unbounded;");
+New_Line;
+New_Line;
+for Dependent of Top.Dependents loop
+Put ("with ");
+Put (Dependent);
+Put (";");
+New_Line;
+end loop;
+New_Line;
+Put ("package ");
+Put (Package_Name);
+Put (" is");
+New_Line;
+New_Line;
+Put ("   pragma Style_Checks (Off);   ");
+New_Line;
+New_Line;
+Put ("   procedure Read_Config;");
+New_Line;
+for all loop
+   case Tree is
+      when Type_Declaration =>
+New_Line;
+Put ("   type ");
+Put (Tree/identifier);
+Put (" is tagged private;  ");
+New_Line;
+New_Line;
+         if Tree/header then
+Put ("   function ");
+Put (Tree/header/identifier);
+Put (" (Item : ");
+Put (Tree/identifier);
+Put (") return ");
+Put (Tree/header/named_type.Type_Name);
+Put (";");
+New_Line;
+New_Line;
+         end if;
+      when Type_Definition =>
+         if Tree/Record_Type then
+            null;
+         elsif Tree/Named_Type then
+Put ("   function Value (Item : ");
+Put (Tree.Type_Name);
+Put (") return ");
+Put (Tree/Named_Type.Type_Name);
+Put (";");
+New_Line;
+         end if;
+      when Record_Field =>
+         if Tree/record_component_type/named_type then
+Put ("   function ");
+Put (Tree.Ada_Name);
+Put (" (Item : ");
+Put (Tree.Type_Declaration.Type_Name);
+Put (") return ");
+Put (Tree.Tree_Type.Type_Name);
+Put (";");
+New_Line;
+         else
+Put ("   function Num_");
+Put (Tree.Ada_Name);
+Put (" (Item : ");
+Put (Tree.Type_Declaration.Type_Name);
+Put (") return Natural;");
+New_Line;
+Put ("   function ");
+Put (Tree.Ada_Name);
+Put (" ");
+New_Line;
+Put ("     (Item  : ");
+Put (Tree.Type_Declaration.Type_Name);
+Put (";");
+New_Line;
+Put ("      Index : Positive)");
+New_Line;
+Put ("     return ");
+Put (Tree.Tree_Type.Type_Name);
+Put (";");
+New_Line;
+         end if;
+      when File_Declaration =>
+New_Line;
+Put ("   procedure Scan_");
+Put (Tree/identifier);
+Put (";");
+New_Line;
+   end case;
+end loop;
+New_Line;
+Put ("end ");
+Put (Package_Name);
+Put (";");
+New_Line;

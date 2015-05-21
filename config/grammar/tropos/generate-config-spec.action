@@ -1,0 +1,47 @@
+@!aquarius:actionscript
+@declare Package_Name : constant String := Top.Qualified_Name;
+@Set_Output (Ada_Specification_Name (Package_Name));
+private with Ada.Strings.Unbounded;
+
+@for Dependent of Top.Dependents loop
+with [Dependent];
+@end loop;
+
+package [Package_Name] is
+   
+   pragma Style_Checks (Off);   
+   
+   procedure Read_Config;
+@for all loop
+@   case Tree is
+@      when Type_Declaration =>
+
+   type [Tree/identifier] is tagged private;  
+
+@         if Tree/header then
+   function [Tree/header/identifier] (Item : [Tree/identifier]) return [Tree/header/named_type.Type_Name];
+   
+@         end if;
+@      when Type_Definition =>
+@         if Tree/Record_Type then
+@            null;
+@         elsif Tree/Named_Type then
+   function Value (Item : [Tree.Type_Name]) return [Tree/Named_Type.Type_Name];
+@         end if;
+@      when Record_Field =>
+@         if Tree/record_component_type/named_type then
+   function [Tree.Ada_Name] (Item : [Tree.Type_Declaration.Type_Name]) return [Tree.Tree_Type.Type_Name];
+@         else
+   function Num_[Tree.Ada_Name] (Item : [Tree.Type_Declaration.Type_Name]) return Natural;
+   function [Tree.Ada_Name] 
+     (Item  : [Tree.Type_Declaration.Type_Name];
+      Index : Positive)
+     return [Tree.Tree_Type.Type_Name];
+@         end if;
+@      when File_Declaration =>
+
+   procedure Scan_[Tree/identifier];
+@   end case;
+@end loop;
+
+end [Package_Name];
