@@ -7,22 +7,22 @@ package Aquarius.Lexers is
    --  Lexer: a machine that accepts a single character
    type Lexer is private;
 
-   --  Null_Lexer is a lexer that doesn't match anything
    function Null_Lexer return Lexer;
+   --  Null_Lexer is a lexer that doesn't match anything
 
    --  joining lexers
    function "&" (Left, Right : Lexer) return Lexer;
    function "or" (Left, Right : Lexer) return Lexer;
 
-   --  not is only for single rule lexers: it negates the rule.
    function "not" (Left : Lexer) return Lexer;
+   --  not is only for single rule lexers: it negates the rule.
 
+   function Repeat (Item : Lexer) return Lexer;
    --  Repetition (zero or more times)
    --  For zero or more, use Optional (Repeat (...))
-   function Repeat (Item : Lexer) return Lexer;
 
-   --  Optional
    function Optional (Item : Lexer) return Lexer;
+   --  Optional
 
    --  Scanning particular characters or sets of characters
    function Letter       return Lexer;
@@ -38,19 +38,20 @@ package Aquarius.Lexers is
 
    function Literal (Ch : Character) return Lexer;
 
+   function One_Of (S : String) return Lexer;
    --  Convenience function for a lexer that recognises
    --  exactly one of the characters in S
 
-   function One_Of (S : String) return Lexer;
-
+   function Symbol_Lexer (S : String) return Lexer;
    --  Symbol_Lexer creates a lexer that parses the longest
    --  sequence of characters that matches one of the given
    --  space-separated symbols
-   function Symbol_Lexer (S : String) return Lexer;
 
    function Run (Lex    : in     Lexer;
                  Text   : in     String)
                 return Natural;
+   --  Run Lex on text, and return the index of the final matching character.
+   --  Return zero if nothing matches.
 
    function Start (Lex : in Lexer)
                   return Ada.Strings.Maps.Character_Set;
