@@ -114,6 +114,11 @@ package body Aquarius.Actions.Interpreter is
       Arguments : Aquarius.VM.Array_Of_Values)
       return Aquarius.VM.VM_Value;
 
+   function Fn_To_Lower
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value;
+
    Got_Library : Boolean := False;
    Library     : Aquarius.VM.VM_Environment;
 
@@ -258,6 +263,7 @@ package body Aquarius.Actions.Interpreter is
       Make ("put", Fn_Put'Access, 1);
       Make ("set_output", Fn_Set_Output'Access, 1);
       Make ("to_file_name", Fn_To_File_Name'Access, 2);
+      Make ("to_lower", Fn_To_Lower'Access, 1);
 
    end Create_Library;
 
@@ -338,12 +344,27 @@ package body Aquarius.Actions.Interpreter is
                return VM.To_Value (Integer'Value (Child.Text));
             elsif Child.Name = "string_literal" then
                declare
-                  String_Text : constant String := Child.Text;
+                  Raw_Text : constant String := Child.Text;
+                  String_Text : String (Raw_Text'Range);
+                  Count       : Natural := String_Text'First - 1;
+                  Index       : Positive := Raw_Text'First + 1;
                begin
+                  --  Remove surrounding quotes, and convert two double quotes
+                  --  into one.
+                  while Index < Raw_Text'Last loop
+                     if Index < Raw_Text'Last - 1
+                       and then Raw_Text (Index) = '"'
+                       and then Raw_Text (Index + 1) = '"'
+                     then
+                        Index := Index + 1;
+                     end if;
+                     Count := Count + 1;
+                     String_Text (Count) := Raw_Text (Index);
+                     Index := Index + 1;
+                  end loop;
+
                   return VM.To_Value
-                    (String_Text
-                       (String_Text'First + 1 ..
-                          String_Text'Last - 1));
+                    (String_Text (String_Text'First .. Count));
                end;
             elsif Child.Name = "parenthesised_expression" then
                return Evaluate
@@ -901,6 +922,24 @@ package body Aquarius.Actions.Interpreter is
       end loop;
       return VM.To_Value (Result & "." & Extension);
    end Fn_To_File_Name;
+
+   -----------------
+   -- Fn_To_Lower --
+   -----------------
+
+   function Fn_To_Lower
+     (Env       : Aquarius.VM.VM_Environment;
+      Arguments : Aquarius.VM.Array_Of_Values)
+      return Aquarius.VM.VM_Value
+   is
+      pragma Unreferenced (Env);
+      use Ada.Characters.Handling;
+      Original_Text : constant String :=
+                        VM.To_String (Arguments (Arguments'First));
+      Result : constant String := To_Lower (Original_Text);
+   begin
+      return VM.To_Value (Result);
+   end Fn_To_Lower;
 
    ---------------------------
    -- Get_Assignment_Target --
