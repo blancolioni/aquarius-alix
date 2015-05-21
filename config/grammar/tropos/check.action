@@ -1,6 +1,8 @@
 Top.Qualified_Name :=
    /Top_Level_Tropos_Declaration/Package_Name.Image;
 Top.Dependents := Create_Set;
+Top.Config_Package_List := Create_Set;
+Top.Config_Package_Map := Create_Map;
 Top.Types := Create_Map;
 declare Last_Identifier;
 declare Current_Qualified_Identifier;
@@ -13,12 +15,10 @@ for all loop
      when Context_Clause =>
         Top.Dependents.Include (/Qualified_Identifier.Image);
      when Type_Declaration =>
-        Put ("inserting: ");
-        Put (Tree/identifier);
-        New_Line;
         if Tree/identifier then
            Top.Types.Insert (Tree/identifier.Image, Tree);
            Tree.Type_Name := Tree/Identifier.Image;
+           Tree.Internal_Type_Name := Tree.Type_Name;
         else
            Put_Line ("No identifier child in type declaration: " & Tree.Image);
         end if;
@@ -26,6 +26,7 @@ for all loop
         
      when Type_Definition =>
         Tree.Type_Name := Current_Type_Declaration.Type_Name;
+        Tree.Internal_Type_Name := Current_Type_Declaration.Type_Name;
         
      when Record_Type =>
         Tree.Component_Map := Create_Map;
@@ -38,9 +39,9 @@ for all loop
            Put_Line ("No identifier in record field: " & Tree.Image);
         end if;
         if Tree/string_literal then
-           Tree.Config_Name := Tree/string_literal.image;
+           Tree.Config_Name := Tree/string_literal.string_value;
         else
-           Tree.Config_Name := Tree.Ada_Name;
+           Tree.Config_Name := To_Lower (Tree.Ada_Name);
         end if;
         if Tree/record_component_type/named_type then
            Tree.Tree_Type := Tree/record_component_type/named_type;
@@ -82,28 +83,51 @@ end loop;
 for all loop
    case Tree is
       when Named_Type =>
+         Tree.Standard_Type := null;
+         Tree.Class_Type := null;
          if /Qualified_Identifier.Qualifier then
             if Top.Dependents.Contains (/Qualified_Identifier.Qualifier) then
                Tree.Type_Name := /Qualified_Identifier.Image;
+               Tree.Internal_Type_Name := Tree.Type_Name;
+               if Top.Config_Package_Map.Contains (/Qualified_Identifier.Image) then
+                  null;
+               else
+                  Top.Config_Package_List.Include (/Qualified_Identifier.Image);
+                  Top.Config_Package_Map.Insert (/Qualified_Identifier.Image, /Qualified_Identifier);
+               end if;
             elsif Top.Types.Contains (/Qualified_Identifier.Qualifier) then
                Tree.Type_Name := "String";
             else
                Tree.Type_Name := "<unknown type>";
             end if;
+         elsif Top.Types.Contains (/Qualified_Identifier.Name) then
+            Tree.Type_Name := /Qualified_Identifier.Name & "'Class";
+            Tree.Class_Type := Tree.Type_Name;
          else
             Tree.Type_Name := /Qualified_Identifier.Name;
+            Tree.Standard_Type := Tree.Type_Name;
          end if;
       when List_Type =>
          if /Qualified_Identifier.Qualifier then
             if Top.Dependents.Contains (/Qualified_Identifier.Qualifier) then
                Tree.Type_Name := /Qualified_Identifier.Image;
+               Tree.Internal_Type_Name := Tree.Type_Name;
+               if Top.Config_Package_Map.Contains (/Qualified_Identifier.Image) then
+                  null;
+               else
+                  Top.Config_Package_List.Include (/Qualified_Identifier.Image);
+                  Top.Config_Package_Map.Insert (/Qualified_Identifier.Image, /Qualified_Identifier);
+               end if;
             elsif Top.Types.Contains (/Qualified_Identifier.Qualifier) then
                Tree.Type_Name := "String";
             else
                Tree.Type_Name := "<unknown type>";
             end if;
+         elsif Top.Types.Contains (/Qualified_Identifier.Name) then
+            Tree.Type_Name := /Qualified_Identifier.Name & "'Class";
          else
             Tree.Type_Name := /Qualified_Identifier.Name;
+            Tree.Standard_Type := Tree.Type_Name;
          end if;
    end case;
 end loop;

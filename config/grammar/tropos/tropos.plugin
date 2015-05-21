@@ -8,5 +8,6 @@ plugin Tropos version 0.1 is
    group generate : code is
       after compilation_unit do
          external ("generate-config-spec");
+         external ("generate-config-body");
    end generate;
       
