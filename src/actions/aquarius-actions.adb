@@ -3,7 +3,23 @@ with Ada.Text_IO;
 
 package body Aquarius.Actions is
 
-   function New_Instance_List return Action_Instance_List;
+   Trace_Actions : constant Boolean := False;
+
+   type Built_In_Action_Execution is
+     new Action_Execution_Interface with
+      record
+         Node : Node_Action;
+         Parent : Parent_Action;
+      end record;
+
+   overriding procedure Execute
+     (Executor : Built_In_Action_Execution;
+      Item     : not null access Actionable'Class);
+
+   overriding procedure Execute
+     (Executor : Built_In_Action_Execution;
+      Parent   : not null access Actionable'Class;
+      Child    : not null access Actionable'Class);
 
    -----------------------
    -- Action_Group_Name --
@@ -45,6 +61,17 @@ package body Aquarius.Actions is
       return (After, Node_Relative, null);
    end After_Node;
 
+   ------------
+   -- Append --
+   ------------
+
+   procedure Append (List   : in out Action_Instance_List;
+                     Action : Action_Instance)
+   is
+   begin
+      List.List.Append (Action);
+   end Append;
+
    ------------------
    -- Before_Child --
    ------------------
@@ -65,6 +92,30 @@ package body Aquarius.Actions is
       return (Before, Node_Relative, null);
    end Before_Node;
 
+   -----------------------------
+   -- Create_Action_Execution --
+   -----------------------------
+
+   function Create_Action_Execution
+     (Action : Node_Action)
+      return Action_Execution_Interface'Class
+   is
+   begin
+      return Built_In_Action_Execution'(Node => Action, Parent => null);
+   end Create_Action_Execution;
+
+   -----------------------------
+   -- Create_Action_Execution --
+   -----------------------------
+
+   function Create_Action_Execution
+     (Action : Parent_Action)
+      return Action_Execution_Interface'Class
+   is
+   begin
+      return Built_In_Action_Execution'(Node => null, Parent => Action);
+   end Create_Action_Execution;
+
    -------------------------
    -- Create_Action_Group --
    -------------------------
@@ -77,7 +128,7 @@ package body Aquarius.Actions is
    is
    begin
       Group := new Action_Group_Record'
-        (Index         => List.Groups.Last_Index + 1,
+        ( --  Index         => List.Groups.Last_Index + 1,
          Group_Name    => Aquarius.Names.To_Aquarius_Name (Group_Name),
          Group_Trigger => Trigger);
       List.Groups.Append (Group);
@@ -92,6 +143,31 @@ package body Aquarius.Actions is
    begin
       return Result;
    end Empty_Action_Group_List;
+
+   -------------
+   -- Execute --
+   -------------
+
+   overriding procedure Execute
+     (Executor : Built_In_Action_Execution;
+      Item     : not null access Actionable'Class)
+   is
+   begin
+      Executor.Node (Item);
+   end Execute;
+
+   -------------
+   -- Execute --
+   -------------
+
+   overriding procedure Execute
+     (Executor : Built_In_Action_Execution;
+      Parent   : not null access Actionable'Class;
+      Child    : not null access Actionable'Class)
+   is
+   begin
+      Executor.Parent (Parent, Child);
+   end Execute;
 
    -------------
    -- Execute --
@@ -114,78 +190,52 @@ package body Aquarius.Actions is
       ----------
 
       procedure Exec (Parent_Actions : Boolean) is
-         use type Aquarius.Script.Aquarius_Script;
       begin
 
-         for I in 1 .. Instances.Last_Index loop
-
-            declare
-               Instance : Action_Instance renames Instances.Element (I);
-            begin
-               if Instance.Position = Position and then
-                 Instance.Group = Group
-               then
-                  if Parent_Actions and then
-                    Instance.Parent_Act /= null
-                  then
-                     declare
-                        Parent : constant access Actionable'Class :=
-                          Target.Parent_Actionable (Instance.Parent);
-                     begin
-                        if Parent /= null then
-                           Instance.Parent_Act (Parent, Target'Access);
+         for Instance of Instances.List loop
+            if Instance.Position = Position and then
+              Instance.Group = Group
+            then
+               if Parent_Actions and then Instance.Parent /= null then
+                  declare
+                     Parent : constant access Actionable'Class :=
+                                Target.Parent_Actionable (Instance.Parent);
+                  begin
+                     if Parent /= null then
+                        if Trace_Actions then
+                           Ada.Text_IO.Put_Line
+                             ("action: " & Parent.Name & "/"
+                              & Target.Name);
                         end if;
-                     end;
+                        Instance.Action.Execute (Parent, Target'Access);
+                     end if;
+                  end;
+               elsif not Parent_Actions and then Instance.Parent = null then
+                  if Trace_Actions then
+                     Ada.Text_IO.Put_Line
+                       ("action: " & Target.Name);
                   end if;
-                  if Parent_Actions and then
-                    Instance.Parent_Script /= null
-                  then
-                     declare
-                        Parent : constant access Actionable'Class :=
-                          Target.Parent_Actionable (Instance.Parent);
-                     begin
-                        if Parent /= null then
-                           Instance.Parent_Script.Execute
-                             (Target'Access, Parent);
-                        end if;
-                     end;
-                  end if;
-                  if not Parent_Actions and then
-                    Instance.Node_Act /= null
-                  then
-                     begin
-                        Instance.Node_Act (Target'Access);
-                     exception
-                        when E : others =>
-                           Ada.Text_IO.Put_Line
-                             (Ada.Text_IO.Standard_Error,
-                              "caught exception while running actions");
-                           Ada.Text_IO.Put_Line
-                             (Ada.Text_IO.Standard_Error,
-                              "  target: " & Target.Image);
-                           Ada.Text_IO.Put_Line
-                             (Ada.Text_IO.Standard_Error,
-                              "   exception message: " &
-                              Ada.Exceptions.Exception_Message (E));
-                           raise;
-                     end;
-
-                  end if;
-                  if not Parent_Actions and then
-                    Instance.Node_Script /= null
-                  then
-                     Instance.Node_Script.Execute (Target'Access, null);
-                  end if;
+                  Instance.Action.Execute (Target'Access);
                end if;
-            end;
+            end if;
          end loop;
+
+      exception
+         when E : others =>
+            Ada.Text_IO.Put_Line
+              (Ada.Text_IO.Standard_Error,
+               "caught exception while running actions");
+            Ada.Text_IO.Put_Line
+              (Ada.Text_IO.Standard_Error,
+               "  target: " & Target.Image);
+            Ada.Text_IO.Put_Line
+              (Ada.Text_IO.Standard_Error,
+               "   exception message: " &
+                 Ada.Exceptions.Exception_Message (E));
+            raise;
       end Exec;
 
    begin
-
-      if Instances = null then
-         return;
-      end if;
 
       --  if position is before, then parent actions
       --  have priority, otherwise node actions do
@@ -204,13 +254,13 @@ package body Aquarius.Actions is
    -- Get_Group --
    ---------------
 
-   function Get_Group (List  : Action_Group_List;
-                       Index : Positive)
-                      return Action_Group
-   is
-   begin
-      return List.Groups.Element (Index);
-   end Get_Group;
+--     function Get_Group (List  : Action_Group_List;
+--                         Index : Positive)
+--                        return Action_Group
+--     is
+--     begin
+--        return List.Groups.Element (Index);
+--     end Get_Group;
 
    ---------------
    -- Get_Group --
@@ -222,11 +272,12 @@ package body Aquarius.Actions is
    is
       use type Aquarius.Names.Aquarius_Name;
    begin
-      for I in 1 .. List.Groups.Last_Index loop
-         if List.Groups.Element (I).Group_Name = Group_Name then
-            return List.Groups.Element (I);
+      for Group of List.Groups loop
+         if Group.Group_Name = Group_Name then
+            return Group;
          end if;
       end loop;
+
       raise Constraint_Error with
         "expected to find a group called '" & Group_Name & "'";
    end Get_Group;
@@ -235,21 +286,39 @@ package body Aquarius.Actions is
    -- Get_Group_Count --
    ---------------------
 
-   function Get_Group_Count (List : Action_Group_List)
-                            return Natural
+--     function Get_Group_Count (List : Action_Group_List)
+--                              return Natural
+--     is
+--     begin
+--        return List.Groups.Last_Index;
+--     end Get_Group_Count;
+
+   -------------
+   -- Iterate --
+   -------------
+
+   procedure Iterate
+     (List    : Action_Group_List;
+      Trigger : Action_Execution_Trigger;
+      Process : not null access
+        procedure (Group : Action_Group))
    is
    begin
-      return List.Groups.Last_Index;
-   end Get_Group_Count;
+      for Group of List.Groups loop
+         if Group.Group_Trigger = Trigger then
+            Process (Group);
+         end if;
+      end loop;
+   end Iterate;
 
    -----------------------
    -- New_Instance_List --
    -----------------------
 
-   function New_Instance_List return Action_Instance_List is
-   begin
-      return new Action_Instance_Vector.Vector;
-   end New_Instance_List;
+--     function New_Instance_List return Action_Instance_List is
+--     begin
+--        return new Action_Instance_Vector.Vector;
+--     end New_Instance_List;
 
    ----------------
    -- Set_Action --
@@ -258,67 +327,16 @@ package body Aquarius.Actions is
    procedure Set_Action (Source   : not null access Action_Source'Class;
                          Group    : in     Action_Group;
                          Position : in     Rule_Position;
-                         Action   : in     Node_Action)
+                         Action   : in     Action_Execution_Interface'Class)
    is
-      use type Aquarius.Script.Aquarius_Script;
-      Instances : Action_Instance_List := Source.Get_Action_List;
+      Instance  : constant Action_Instance :=
+                    (Group    => Group,
+                     Parent   => null,
+                     Position => Position,
+                     Action   =>
+                        new Action_Execution_Interface'Class'(Action));
    begin
-      if Instances = null then
-         Instances := New_Instance_List;
-         Source.Set_Action_List (Instances);
-      end if;
-
-      for I in 1 .. Instances.Last_Index loop
-         declare
-            Instance : Action_Instance := Instances.Element (I);
-         begin
-            if Instance.Group = Group
-              and then Instance.Position = Position
-              and then Instance.Node_Act = null
-              and then Instance.Node_Script = null
-            then
-               Instance.Node_Act := Action;
-               Instances.Replace_Element (I, Instance);
-               return;
-            end if;
-         end;
-      end loop;
-      Instances.Append ((Group, null, Position, null, Action, null, null));
-   end Set_Action;
-
-   ----------------
-   -- Set_Action --
-   ----------------
-
-   procedure Set_Action (Source   : not null access Action_Source'Class;
-                         Group    : in     Action_Group;
-                         Position : in     Rule_Position;
-                         Action   : in     Aquarius.Script.Aquarius_Script)
-   is
-      use type Aquarius.Script.Aquarius_Script;
-      Instances : Action_Instance_List := Source.Get_Action_List;
-   begin
-      if Instances = null then
-         Instances := New_Instance_List;
-         Source.Set_Action_List (Instances);
-      end if;
-
-      for I in 1 .. Instances.Last_Index loop
-         declare
-            Instance : Action_Instance := Instances.Element (I);
-         begin
-            if Instance.Group = Group and then
-              Instance.Position = Position and then
-              Instance.Node_Act = null and then
-              Instance.Node_Script = null
-            then
-               Instance.Node_Script := Action;
-               Instances.Replace_Element (I, Instance);
-               return;
-            end if;
-         end;
-      end loop;
-      Instances.Append ((Group, null, Position, null, null, null, Action));
+      Source.Append_Action (Instance);
    end Set_Action;
 
    ----------------
@@ -329,84 +347,16 @@ package body Aquarius.Actions is
                          Child    : not null access Action_Source'Class;
                          Group    : in     Action_Group;
                          Position : in     Rule_Position;
-                         Action   : in     Parent_Action)
+                         Action   : in     Action_Execution_Interface'Class)
    is
-      use type Aquarius.Script.Aquarius_Script;
-      Instances : Action_Instance_List :=
-        Child.Get_Action_List;
+      Instance  : constant Action_Instance :=
+                    (Group       => Group,
+                     Position    => Position,
+                     Parent      => Source,
+                     Action      =>
+                        new Action_Execution_Interface'Class'(Action));
    begin
-      if Instances = null then
-         Instances := New_Instance_List;
-         Child.Set_Action_List (Instances);
-      end if;
-
-      for I in 1 .. Instances.Last_Index loop
-         declare
-            Instance : Action_Instance := Instances.Element (I);
-         begin
-            if Instance.Group = Group
-              and then Instance.Position = Position
-              and then Instance.Parent_Act = null
-              and then Instance.Parent_Script = null
-            then
-               Instance.Parent_Act := Action;
-               Instance.Parent     := Source;
-               Instances.Replace_Element (I, Instance);
-               return;
-            end if;
-         end;
-      end loop;
-      Instances.Append ((Group         => Group,
-                         Parent        => Source,
-                         Position      => Position,
-                         Parent_Act    => Action,
-                         Node_Act      => null,
-                         Parent_Script => null,
-                         Node_Script   => null));
-   end Set_Action;
-
-   ----------------
-   -- Set_Action --
-   ----------------
-
-   procedure Set_Action (Source   : not null access Action_Source'Class;
-                         Child    : not null access Action_Source'Class;
-                         Group    : in     Action_Group;
-                         Position : in     Rule_Position;
-                         Action   : in     Aquarius.Script.Aquarius_Script)
-   is
-      use type Aquarius.Script.Aquarius_Script;
-      Instances : Action_Instance_List :=
-        Child.Get_Action_List;
-   begin
-      if Instances = null then
-         Instances := New_Instance_List;
-         Child.Set_Action_List (Instances);
-      end if;
-
-      for I in 1 .. Instances.Last_Index loop
-         declare
-            Instance : Action_Instance := Instances.Element (I);
-         begin
-            if Instance.Group = Group
-              and then Instance.Position = Position
-              and then Instance.Parent_Act = null
-              and then Instance.Parent_Script = null
-            then
-               Instance.Parent_Script := Action;
-               Instance.Parent        := Source;
-               Instances.Replace_Element (I, Instance);
-               return;
-            end if;
-         end;
-      end loop;
-      Instances.Append ((Group         => Group,
-                         Parent        => Source,
-                         Position      => Position,
-                         Parent_Act    => null,
-                         Node_Act      => null,
-                         Parent_Script => Action,
-                         Node_Script   => null));
+      Child.Append_Action (Instance);
    end Set_Action;
 
    ----------
