@@ -1,13 +1,12 @@
 plugin Tropos version 0.1 is
 
    group run_check : semantic is
-      after compilation_unit do
-         external ("check");
+      check;
    end run_check;
    
    group generate : code is
-      after compilation_unit do
-         external ("generate-config-spec");
-         external ("generate-config-body");
+      generate_config_spec;
+      generate_config_body;
    end generate;
-      
+
+end Tropos;
