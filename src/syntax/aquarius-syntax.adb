@@ -139,6 +139,18 @@ package body Aquarius.Syntax is
    end Align_Parent;
 
    -------------------
+   -- Append_Action --
+   -------------------
+
+   overriding procedure Append_Action
+     (Source : in out Syntax_Tree_Record;
+      Action : Aquarius.Actions.Action_Instance)
+   is
+   begin
+      Aquarius.Actions.Append (Source.Node.Actions, Action);
+   end Append_Action;
+
+   -------------------
    -- Cached_Begins --
    -------------------
 
@@ -931,19 +943,6 @@ package body Aquarius.Syntax is
    begin
       return Item.Node.Separator;
    end Separator;
-
-   ---------------------
-   -- Set_Action_List --
-   ---------------------
-
-   overriding
-   procedure Set_Action_List
-     (Source : not null access Syntax_Tree_Record;
-      List   : Aquarius.Actions.Action_Instance_List)
-   is
-   begin
-      Source.Node.Actions := List;
-   end Set_Action_List;
 
    ----------------
    -- Set_Begins --
