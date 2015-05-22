@@ -1,7 +1,5 @@
 private with Aquarius.Names;
-private with Ada.Containers.Vectors;
-
-with Aquarius.Script;
+private with Ada.Containers.Doubly_Linked_Lists;
 
 package Aquarius.Actions is
 
@@ -72,6 +70,19 @@ package Aquarius.Actions is
    function Image (Item : Actionable) return String
       is abstract;
 
+   type Action_Execution_Interface is interface;
+
+   procedure Execute
+     (Executor : Action_Execution_Interface;
+      Item     : not null access Actionable'Class)
+   is abstract;
+
+   procedure Execute
+     (Executor : Action_Execution_Interface;
+      Parent   : not null access Actionable'Class;
+      Child    : not null access Actionable'Class)
+   is abstract;
+
    type Node_Action is access
      procedure (Item : not null access Actionable'Class);
 
@@ -79,18 +90,32 @@ package Aquarius.Actions is
      procedure (Parent : not null access Actionable'Class;
                 Child  : not null access Actionable'Class);
 
+   function Create_Action_Execution
+     (Action : Node_Action)
+      return Action_Execution_Interface'Class;
+
+   function Create_Action_Execution
+     (Action : Parent_Action)
+      return Action_Execution_Interface'Class;
+
    --  Action_Source: something that has actions
    type Action_Source is interface;
 
+   type Action_Instance is private;
+
    type Action_Instance_List is private;
+
+   procedure Append (List   : in out Action_Instance_List;
+                     Action : Action_Instance);
 
    function Get_Action_List (Source : not null access Action_Source)
                             return Action_Instance_List
       is abstract;
 
-   procedure Set_Action_List (Source : not null access Action_Source;
-                              List   : Action_Instance_List)
-      is abstract;
+   procedure Append_Action
+     (Source   : in out Action_Source;
+      Action   : Action_Instance)
+   is abstract;
 
    function Parent_Actionable (Child    : not null access Actionable;
                                Parent   : not null access Action_Source'Class)
@@ -114,24 +139,13 @@ package Aquarius.Actions is
    procedure Set_Action (Source   : not null access Action_Source'Class;
                          Group    : in     Action_Group;
                          Position : in     Rule_Position;
-                         Action   : in     Node_Action);
+                         Action   : in     Action_Execution_Interface'Class);
 
    procedure Set_Action (Source   : not null access Action_Source'Class;
                          Child    : not null access Action_Source'Class;
                          Group    : in     Action_Group;
                          Position : in     Rule_Position;
-                         Action   : in     Parent_Action);
-
-   procedure Set_Action (Source   : not null access Action_Source'Class;
-                         Group    : in     Action_Group;
-                         Position : in     Rule_Position;
-                         Action   : in     Aquarius.Script.Aquarius_Script);
-
-   procedure Set_Action (Source   : not null access Action_Source'Class;
-                         Child    : not null access Action_Source'Class;
-                         Group    : in     Action_Group;
-                         Position : in     Rule_Position;
-                         Action   : in     Aquarius.Script.Aquarius_Script);
+                         Action   : in     Action_Execution_Interface'Class);
 
    procedure Execute (Source   : in out Action_Source'Class;
                       Target   : in out Actionable'Class;
@@ -148,14 +162,20 @@ package Aquarius.Actions is
       Trigger    : in     Action_Execution_Trigger;
       Group      :    out Action_Group);
 
-   function Get_Group_Count (List : Action_Group_List)
-                            return Natural;
-   function Get_Group (List  : Action_Group_List;
-                       Index : Positive)
-                      return Action_Group;
+--     function Get_Group_Count (List : Action_Group_List)
+--                              return Natural;
+--     function Get_Group (List  : Action_Group_List;
+--                         Index : Positive)
+--                        return Action_Group;
    function Get_Group (List        : Action_Group_List;
                        Group_Name  : String)
                       return Action_Group;
+
+   procedure Iterate
+     (List    : Action_Group_List;
+      Trigger : Action_Execution_Trigger;
+      Process : not null access
+        procedure (Group : Action_Group));
 
    type Action_Context (<>) is private;
 
@@ -172,37 +192,36 @@ private
 
    type Action_Group_Record is
       record
-         Index         : Positive;
+         --  Index         : Positive;
          Group_Name    : Aquarius.Names.Aquarius_Name;
          Group_Trigger : Action_Execution_Trigger;
       end record;
 
    type Action_Group is access Action_Group_Record;
 
-   package Action_Group_Vector is
-      new Ada.Containers.Vectors (Positive, Action_Group);
+   package Action_Group_Lists is
+      new Ada.Containers.Doubly_Linked_Lists (Action_Group);
 
    type Action_Group_List is
       record
-         Groups : Action_Group_Vector.Vector;
+         Groups : Action_Group_Lists.List;
       end record;
 
    type Action_Instance is
       record
-         Group         : Action_Group;
-         Parent        : access Action_Source'Class;
-         Position      : Rule_Position;
-         Parent_Act    : Parent_Action;
-         Node_Act      : Node_Action;
-         Parent_Script : Aquarius.Script.Aquarius_Script;
-         Node_Script   : Aquarius.Script.Aquarius_Script;
-
+         Group    : Action_Group;
+         Position : Rule_Position;
+         Parent   : access Action_Source'Class;
+         Action   : access Action_Execution_Interface'Class;
       end record;
 
-   package Action_Instance_Vector is
-     new Ada.Containers.Vectors (Positive, Action_Instance);
+   package Action_Instance_Lists is
+     new Ada.Containers.Doubly_Linked_Lists (Action_Instance);
 
-   type Action_Instance_List is access Action_Instance_Vector.Vector;
+   type Action_Instance_List is
+      record
+         List : Action_Instance_Lists.List;
+      end record;
 
    type Action_Source_Access is access all Action_Source'Class;
 
