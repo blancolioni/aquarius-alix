@@ -5,7 +5,7 @@ identifier         ::= standard ada_identifier
 numeric_literal    ::= standard ada_numeric_literal
 character_literal  ::= standard ada_character_literal
 string_literal     ::= standard ada_string_literal
-delimiter          ::= delimiters "&()+,;|"
+delimiter          ::= delimiters "&()+,;|^"
 symbol             ::= standard ada_symbol
 comment            ::= standard ada_comment
 
@@ -27,13 +27,21 @@ compilation_unit ::= sequence_of_statements
 sequence_of_statements ::= { statement ';' }
 
 statement ::= for_loop_statement | case_statement | if_statement | assignment_statement
-            | procedure_call_statement | declare_statement | null_statement
+            | procedure_call_statement | declare_statement | null_statement | action_statement
 
 null_statement ::= 'null'
 
 assignment_statement ::= object_reference ':=' expression
 
 procedure_call_statement ::= object_reference
+
+action_statement ::= action_time action_context 'do' action_definition 'end'
+
+action_time ::= 'before' | 'after'
+
+action_context ::= < identifier / '/' >
+
+action_definition ::= sequence_of_statements
 
 declare_statement ::= 'declare' declaration
 
@@ -111,11 +119,12 @@ explicit_object_reference ::= identifier { name_qualifier }
 
 implicit_object_reference ::= < name_qualifier >
 
-tree_reference ::= '/' < identifier / '/' >
-
 name_qualifier ::= record_selector
                  | subtree_selector
+                 | ancestor_selector
                  | actual_argument_list
+
+ancestor_selector ::= '^' identifier
 
 subtree_selector ::= '/' identifier
 
