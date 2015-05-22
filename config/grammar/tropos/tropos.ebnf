@@ -28,9 +28,10 @@ context_clause ::= 'with' qualified_identifier ';'
 top_level_tropos_declaration ::=
    'package' package_name 'is'
       list_of_declarations
-   'end' package_name;
+   'end' matching_package_name;
 
 package_name ::= < identifier / '.' >
+matching_package_name ::= < identifier / '.' >
 
 qualified_identifier ::= < identifier / '.' >
 
