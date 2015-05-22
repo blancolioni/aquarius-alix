@@ -17,13 +17,13 @@ format 'is' new_line_after space_before
 format 'do' new_line_after space_before
 format ',' no_space_before space_after
 
-format list_of_expressions indent_child
-format list_of_actions indent_child
+format list_of_declarations indent_child
 
 source_file ::= plugin_declaration
 
 plugin_declaration ::= 'plugin' identifier 'version' version_spec 'is'
                           list_of_declarations
+                       'end' identifier ';'
 
 version_spec ::= < numeric_literal / '.' >
 
@@ -37,33 +37,6 @@ group_declaration ::= 'group' identifier ':' identifier 'is'
    list_of_actions
    'end' identifier ';'
 
-list_of_actions ::= { action }
+list_of_actions ::= { action_file_reference ';' }
 
-action ::= action_time action_context 'do' action_definition
-
-action_time ::= 'before' | 'after'
-
-action_context ::= < identifier / '.' >
-
-action_definition ::= list_of_expressions
-
-list_of_expressions ::= < expression ';' >
-
-expression ::= let_expression
-             | call_expression
-             | source_expression
-             | literal_expression
-
-let_expression ::= 'let' binding
-
-binding ::= identifier '=' expression
-
-call_expression ::= name [ '(' arguments ')' ]
-
-arguments ::= < expression / ',' >
-
-source_expression ::= '[' < expression / ',' > ']'
-
-literal_expression ::= numeric_literal | string_literal
-
-name ::= < identifier / '.' >
+action_file_reference ::= < identifier / '.' >
