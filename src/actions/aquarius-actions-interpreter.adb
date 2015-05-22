@@ -6,6 +6,7 @@ with Ada.Text_IO;
 with Aquarius.Grammars.Manager;
 with Aquarius.Properties;
 with Aquarius.Properties.String_Sets;
+with Aquarius.Syntax;
 
 with Aquarius.VM;
 with Aquarius.VM.Library;
@@ -53,6 +54,25 @@ package body Aquarius.Actions.Interpreter is
      (Writer : Aquarius_Writer)
       return String
    is (Ada.Strings.Unbounded.To_String (Writer.File_Name));
+
+   type Action_Interpreter is new Action_Execution_Interface with
+      record
+         Action : Aquarius.Programs.Program_Tree;
+      end record;
+
+   overriding procedure Execute
+     (Executor : Action_Interpreter;
+      Item     : not null access Actionable'Class);
+
+   overriding procedure Execute
+     (Executor : Action_Interpreter;
+      Parent   : not null access Actionable'Class;
+      Child    : not null access Actionable'Class);
+
+   procedure Execute_Action
+     (Action    : Aquarius.Programs.Program_Tree;
+      Parent    : Aquarius.Programs.Program_Tree;
+      Child     : Aquarius.Programs.Program_Tree);
 
    function Fn_Ada_Body_Name
      (Env       : Aquarius.VM.VM_Environment;
@@ -223,6 +243,91 @@ package body Aquarius.Actions.Interpreter is
          return VM.Apply (Op, Env, (Left, Right));
       end if;
    end Apply_Operator;
+
+   ------------------
+   -- Bind_Actions --
+   ------------------
+
+   procedure Bind_Actions
+     (Action    : Aquarius.Programs.Program_Tree;
+      Group     : Action_Group;
+      Grammar   : Aquarius.Grammars.Aquarius_Grammar)
+   is
+
+      procedure Bind (Statement : Program_Tree);
+
+      procedure Bind_Declaration (Declaration : Program_Tree);
+
+      ----------
+      -- Bind --
+      ----------
+
+      procedure Bind (Statement : Program_Tree) is
+         Action_Time : constant String :=
+                         Statement.Program_Child
+                           ("action_time").Chosen_Tree.Name;
+         Action_Context : constant Array_Of_Program_Trees :=
+                            Statement.Program_Child
+                              ("action_context").Direct_Children;
+         Action_Definition : constant Program_Tree :=
+                               Statement.Program_Child ("action_definition");
+         Action_Binding    : constant Action_Interpreter :=
+                               (Action =>
+                                 Action_Definition.Program_Child
+                                  ("sequence_of_statements"));
+         Parent_Name       : constant String :=
+                               Action_Context (Action_Context'First).Text;
+         Child_Name        : constant String :=
+                               (if Action_Context'Length > 1
+                                then Action_Context (Action_Context'First + 1)
+                                .Text
+                                else "");
+         Parent_Node       : constant Aquarius.Syntax.Syntax_Tree :=
+                               Grammar.Get_Definition (Parent_Name);
+         Child_Node        : constant Aquarius.Syntax.Syntax_Tree :=
+                               (if Child_Name = "" then null
+                                else Grammar.Get_Definition (Child_Name));
+      begin
+         if Child_Name = "" then
+            Parent_Node.Set_Action
+              (Group    => Group,
+               Position => Rule_Position'Value (Action_Time),
+               Action   => Action_Binding);
+         else
+            Parent_Node.Set_Action
+              (Child    => Child_Node,
+               Group    => Group,
+               Position => Rule_Position'Value (Action_Time),
+               Action   => Action_Binding);
+         end if;
+      end Bind;
+
+      ----------------------
+      -- Bind_Declaration --
+      ----------------------
+
+      procedure Bind_Declaration (Declaration : Program_Tree) is
+         pragma Unreferenced (Declaration);
+      begin
+         null;
+      end Bind_Declaration;
+
+   begin
+      if Action.Name = "action_statement" then
+         Bind (Action);
+      elsif Action.Name = "object_declaration" then
+         Bind_Declaration (Action);
+      else
+         declare
+            Children : constant Array_Of_Program_Trees :=
+                         Action.Direct_Children;
+         begin
+            for Child of Children loop
+               Bind_Actions (Child, Group, Grammar);
+            end loop;
+         end;
+      end if;
+   end Bind_Actions;
 
    --------------------
    -- Create_Library --
@@ -535,6 +640,54 @@ package body Aquarius.Actions.Interpreter is
                             VM.To_String (Current) & ": not a tree");
                   end if;
                end;
+            elsif Choice.Name = "ancestor_selector" then
+               if Trace then
+                  Trace_Message
+                    ("ancestor_selector: current = "
+                     & VM.To_String (Current));
+               end if;
+
+               declare
+                  Ancestor_Name : constant String :=
+                                   Choice.Program_Child
+                                     ("identifier").Standard_Text;
+               begin
+                  if Trace then
+                     Trace_Message
+                       ("ancestor_selector: ancestor = " & Ancestor_Name);
+                  end if;
+
+                  if VM.Has_Tree (Current) then
+                     declare
+                        It : Program_Tree :=
+                               Program_Tree (VM.To_Tree (Current));
+                     begin
+                        while It /= null
+                          and then It.Name /= Ancestor_Name
+                        loop
+                           It := It.Program_Parent;
+                        end loop;
+
+                        if It = null then
+                           raise Constraint_Error with
+                           VM.To_String (Current)
+                             & ": no such ancestor: " & Ancestor_Name;
+                        else
+                           Current := VM.To_Value (It);
+                        end if;
+                     end;
+
+                     if Trace then
+                        Ada.Text_IO.Put_Line
+                          (Ada.Text_IO.Standard_Error,
+                           "subtree_selector: new current = "
+                           & VM.To_String (Current));
+                     end if;
+                  else
+                     Error (Action, Node,
+                            VM.To_String (Current) & ": not a tree");
+                  end if;
+               end;
             else
                Error (Action, Node, "unimplemented: " & Choice.Name);
             end if;
@@ -630,6 +783,85 @@ package body Aquarius.Actions.Interpreter is
 --              end if;
 --        end case;
    end Evaluate_Record_Selector;
+
+   -------------
+   -- Execute --
+   -------------
+
+   overriding procedure Execute
+     (Executor : Action_Interpreter;
+      Item     : not null access Actionable'Class)
+   is
+   begin
+      Execute_Action (Executor.Action, Program_Tree (Item), null);
+   end Execute;
+
+   -------------
+   -- Execute --
+   -------------
+
+   overriding procedure Execute
+     (Executor : Action_Interpreter;
+      Parent   : not null access Actionable'Class;
+      Child    : not null access Actionable'Class)
+   is
+   begin
+      Execute_Action (Executor.Action,
+                      Program_Tree (Parent), Program_Tree (Child));
+   end Execute;
+
+   --------------------
+   -- Execute_Action --
+   --------------------
+
+   procedure Execute_Action
+     (Action    : Aquarius.Programs.Program_Tree;
+      Parent    : Aquarius.Programs.Program_Tree;
+      Child     : Aquarius.Programs.Program_Tree)
+   is
+   begin
+      if not Got_Library then
+         Library :=
+           VM.New_Environment ("library", VM.Library.Standard_Library);
+         Create_Library (Library);
+         Got_Library := True;
+      end if;
+
+      declare
+         use Aquarius.VM;
+         Env : VM_Environment :=
+                 New_Environment ("action", Library);
+      begin
+         Insert (Env, "top",
+                 To_Value (Parent.Program_Root));
+         Insert (Env, Parent.Name, To_Value (Parent));
+         Insert (Env, "tree", To_Value (Parent));
+         Insert (Env, "parent", To_Value (Parent));
+         if Child /= null then
+            Insert (Env, Child.Name, To_Value (Child));
+            Insert (Env, "child", To_Value (Child));
+         end if;
+
+         Interpret (Env, Action, Parent);
+
+         if Has_Value (Env, "__output") then
+            declare
+               Writer : constant access Aquarius_Writer :=
+                          Aquarius_Writer
+                            (To_Property
+                               (Get_Value (Env, "__output")).all)'Access;
+            begin
+               Ada.Text_IO.Set_Output (Ada.Text_IO.Standard_Output);
+               Ada.Text_IO.Close (Writer.File.all);
+            end;
+         end if;
+         VM.Release_Environment (Env);
+      exception
+         when others =>
+            VM.Release_Environment (Env);
+            raise;
+      end;
+   end Execute_Action;
 
    ----------------------
    -- Fn_Ada_Body_Name --
