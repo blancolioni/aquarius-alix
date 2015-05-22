@@ -133,7 +133,7 @@ package body Aquarius.Programs is
    begin
       if Items'Length > 0 then
          for I in Items'Range loop
-            Result := Result & Items (I).Text;
+            Result := Result &  Items (I).Concatenate_Children;
          end loop;
          return To_String (Result);
       else
@@ -1054,16 +1054,19 @@ package body Aquarius.Programs is
       S  : constant Aquarius.Syntax.Syntax_Tree :=
         Aquarius.Syntax.Syntax_Tree (Parent);
    begin
-      while It /= null and then It.Syntax /= S loop
-         It := Program_Tree (It.Parent);
-
-         --  if we reach a node with a name, give up
-         if It.Name /= "" and then It.Syntax /= S then
-            It := null;
-            exit;
-         end if;
+      while It /= null
+        and then It.Syntax /= S
+        and then It.Name = ""
+      loop
+         It := It.Program_Parent;
       end loop;
-      return It;
+
+      if It.Syntax = S then
+         return It;
+      else
+         return null;
+      end if;
+
    end Parent_Actionable;
 
    -------------------
@@ -1128,10 +1131,11 @@ package body Aquarius.Programs is
    -- Program_Root --
    ------------------
 
-   function Program_Root (Item : Program_Tree_Type'Class)
-                         return Program_Tree
+   function Program_Root
+     (Item : not null access Program_Tree_Type'Class)
+      return Program_Tree
    is
-      It : Program_Tree := Item.Program_Parent;
+      It : Program_Tree := Program_Tree (Item);
    begin
       while It.Program_Parent /= null loop
          It := It.Program_Parent;
@@ -1547,12 +1551,33 @@ package body Aquarius.Programs is
    -- Source --
    ------------
 
-   function Source (Item : not null access Program_Tree_Type'Class)
+   function Source (Item : Program_Tree_Type'Class)
                    return Aquarius.Source.Source_File
    is
    begin
       return Item.Source_File;
    end Source;
+
+   ----------------------
+   -- Source_Directory --
+   ----------------------
+
+   function Source_Directory
+     (Item : Program_Tree_Type'Class)
+      return String
+   is
+   begin
+      return Aquarius.Source.Containing_Directory (Item.Source);
+   end Source_Directory;
+
+   ----------------------
+   -- Source_File_Name --
+   ----------------------
+
+   function Source_File_Name (Item : Program_Tree_Type'Class) return String is
+   begin
+      return Aquarius.Source.Get_File_Name (Item.Source);
+   end Source_File_Name;
 
    -------------------
    -- Standard_Text --
