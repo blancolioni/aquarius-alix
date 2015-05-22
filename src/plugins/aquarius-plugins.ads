@@ -3,7 +3,6 @@ with Aquarius.Formats;
 with Aquarius.Grammars;
 with Aquarius.Programs;
 with Aquarius.Properties;
-with Aquarius.Script;
 
 with Aquarius.Entries;
 with Aquarius.Types;
@@ -86,21 +85,6 @@ package Aquarius.Plugins is
       Group       : in     Aquarius.Actions.Action_Group;
       Position    : in     Rule_Position;
       Action      : in     Aquarius.Actions.Parent_Action);
-
-   procedure Register_Script
-     (Plugin      : not null access Aquarius_Plugin_Type;
-      Syntax_Name : in     String;
-      Group       : in     Aquarius.Actions.Action_Group;
-      Position    : in     Rule_Position;
-      Action      : in     Aquarius.Script.Aquarius_Script);
-
-   procedure Register_Script
-     (Plugin      : not null access Aquarius_Plugin_Type;
-      Parent_Name : in     String;
-      Child_Name  : in     String;
-      Group       : in     Aquarius.Actions.Action_Group;
-      Position    : in     Rule_Position;
-      Action      : in     Aquarius.Script.Aquarius_Script);
 
    type Change_Handler is access
      procedure (Item   : not null access

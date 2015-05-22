@@ -245,7 +245,9 @@ package body Aquarius.Plugins is
       Defn : constant Aquarius.Syntax.Syntax_Tree :=
         Plugin.Grammar.Get_Definition (Syntax_Name);
    begin
-      Aquarius.Actions.Set_Action (Defn, Group, Position, Action);
+      Aquarius.Actions.Set_Action
+        (Defn, Group, Position,
+         Aquarius.Actions.Create_Action_Execution (Action));
    exception
       when Constraint_Error =>
          raise Constraint_Error with
@@ -272,7 +274,7 @@ package body Aquarius.Plugins is
          Child    => Plugin.Grammar.Get_Definition (Child_Name),
          Group    => Group,
          Position => Position,
-         Action   => Action);
+         Action   => Aquarius.Actions.Create_Action_Execution (Action));
    exception
       when Constraint_Error =>
          raise Constraint_Error with
@@ -348,56 +350,6 @@ package body Aquarius.Plugins is
       Plugin.Register_Rule (Syntax_Name,
                             Aquarius.Formats.Make_Format ((Rule_1, Rule_2)));
    end Register_Rule;
-
-   ---------------------
-   -- Register_Script --
-   ---------------------
-
-   procedure Register_Script
-     (Plugin      : not null access Aquarius_Plugin_Type;
-      Syntax_Name : in     String;
-      Group       : in     Aquarius.Actions.Action_Group;
-      Position    : in     Rule_Position;
-      Action      : in     Aquarius.Script.Aquarius_Script)
-   is
-      Defn : constant Aquarius.Syntax.Syntax_Tree :=
-        Plugin.Grammar.Get_Definition (Syntax_Name);
-   begin
-      Aquarius.Actions.Set_Action (Defn, Group, Position, Action);
-   exception
-      when Constraint_Error =>
-         raise Constraint_Error with
-           "register script: " & Plugin.Grammar.Name &
-           ": no such syntax rule: " &
-           Syntax_Name;
-   end Register_Script;
-
-   ---------------------
-   -- Register_Script --
-   ---------------------
-
-   procedure Register_Script
-     (Plugin      : not null access Aquarius_Plugin_Type;
-      Parent_Name : in     String;
-      Child_Name  : in     String;
-      Group       : in     Aquarius.Actions.Action_Group;
-      Position    : in     Rule_Position;
-      Action      : in     Aquarius.Script.Aquarius_Script)
-   is
-   begin
-      Aquarius.Actions.Set_Action
-        (Source   => Plugin.Grammar.Get_Definition (Parent_Name),
-         Child    => Plugin.Grammar.Get_Definition (Child_Name),
-         Group    => Group,
-         Position => Position,
-         Action   => Action);
-   exception
-      when Constraint_Error =>
-         raise Constraint_Error with
-           "register parent/child script: " & Plugin.Grammar.Name &
-           ": no such syntax rule: " &
-           Parent_Name;
-   end Register_Script;
 
    --------------------------
    -- To_Plugin_Group_Name --
