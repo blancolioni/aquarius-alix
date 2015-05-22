@@ -1,4 +1,3 @@
-with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with Aquarius.Errors;
@@ -6,8 +5,6 @@ with Aquarius.Formats;
 with Aquarius.Trees.Properties;
 
 package body  Aquarius.Grammars is
-
-   function To_Non_Terminal_Key (Name : String) return Non_Terminal_Key;
 
    ----------------------
    -- Add_Action_Group --
@@ -40,12 +37,11 @@ package body  Aquarius.Grammars is
       New_Syntax  : Aquarius.Syntax.Syntax_Tree;
       New_Class   : Token_Class;
       Class_Token : Token;
-      Local_Name  : constant Non_Terminal_Key := To_Non_Terminal_Key (Name);
    begin
-      if Grammar.Non_Terminals.Contains (Local_Name) then
+      if Grammar.Non_Terminals.Contains (Name) then
          Aquarius.Errors.Error
            (Declaration,
-            Grammar.Non_Terminals.Element (Local_Name).Declaration,
+            Grammar.Non_Terminals.Element (Name).Declaration,
             "redefinition of class terminal '" & Name & "'",
             "original definition of '" & Name & "'");
          return;
@@ -57,7 +53,7 @@ package body  Aquarius.Grammars is
         Aquarius.Syntax.New_Terminal (Grammar.Frame,
                                       Declaration, Class_Token);
 
-      Grammar.Non_Terminals.Insert (To_Non_Terminal_Key (Name), New_Syntax);
+      Grammar.Non_Terminals.Insert (Name, New_Syntax);
 
       if Line_Comment then
          Grammar.Comment := Class_Token;
@@ -84,14 +80,12 @@ package body  Aquarius.Grammars is
    is
       use Aquarius.Tokens, Aquarius.Syntax;
       Non_Terminal : Syntax_Tree;
-      Local_Name   : constant Non_Terminal_Key :=
-        To_Non_Terminal_Key (Name);
    begin
-      if not Grammar.Non_Terminals.Contains (Local_Name) then
+      if not Grammar.Non_Terminals.Contains (Name) then
          Non_Terminal := New_Sequence (Grammar.Frame, Declaration);
-         Grammar.Non_Terminals.Insert (Local_Name, Non_Terminal);
+         Grammar.Non_Terminals.Insert (Name, Non_Terminal);
       else
-         Non_Terminal := Grammar.Non_Terminals.Element (Local_Name);
+         Non_Terminal := Grammar.Non_Terminals.Element (Name);
          if Non_Terminal.Has_Token then
             Aquarius.Errors.Error
               (Declaration,
@@ -145,21 +139,19 @@ package body  Aquarius.Grammars is
       Definition    : in     Aquarius.Syntax.Syntax_Tree;
       Children      : in     Array_Of_Syntax_Trees)
    is
-      Local_Name : constant Non_Terminal_Key :=
-        To_Non_Terminal_Key (Name);
    begin
 
-      if Grammar.Non_Terminals.Contains (Local_Name) then
+      if Grammar.Non_Terminals.Contains (Name) then
          declare
             S : constant Aquarius.Syntax.Syntax_Tree :=
-              Grammar.Non_Terminals.Element (Local_Name);
+              Grammar.Non_Terminals.Element (Name);
          begin
             --  Definition.Set_Format (S.Get_Format);
             --  S.Set_Format (Aquarius.Formats.Default_Non_Terminal_Format);
             S.Add_Child (Definition);
          end;
       else
-         Grammar.Non_Terminals.Insert (Local_Name, Definition);
+         Grammar.Non_Terminals.Insert (Name, Definition);
          Definition.Set_Non_Terminal_Name (Name);
       end if;
       for I in Children'Range loop
@@ -279,10 +271,8 @@ package body  Aquarius.Grammars is
                             Name    : String)
                             return Aquarius.Syntax.Syntax_Tree
    is
-      Local_Name    : constant Non_Terminal_Key :=
-        To_Non_Terminal_Key (Name);
-      Terminal_Name : constant Non_Terminal_Key :=
-        To_Non_Terminal_Key ("'" & Name & "'");
+      Local_Name    : constant String := Name;
+      Terminal_Name : constant String := "'" & Name & "'";
    begin
       if Grammar.Non_Terminals.Contains (Local_Name) then
          return Grammar.Non_Terminals.Element (Local_Name);
@@ -333,6 +323,19 @@ package body  Aquarius.Grammars is
       end if;
       return Grammar.Top_Level_Syntax;
    end Get_Top_Level_Syntax;
+
+   -----------
+   -- Group --
+   -----------
+
+   function Group
+     (Grammar : Aquarius_Grammar_Record'Class;
+      Name    : String)
+      return Aquarius.Actions.Action_Group
+   is
+   begin
+      return Aquarius.Actions.Get_Group (Grammar.Actions, Name);
+   end Group;
 
    ----------------
    -- Has_Errors --
@@ -391,7 +394,7 @@ package body  Aquarius.Grammars is
    is
       Syntax : Aquarius.Syntax.Syntax_Tree;
       Result : Aquarius.Programs.Program_Tree;
-      Std_Name : constant String := To_Non_Terminal_Key (Name);
+      Std_Name : constant String := Name;
    begin
       if Grammar.Non_Terminals.Contains (Std_Name) then
          Syntax := Grammar.Non_Terminals.Element (Std_Name);
@@ -494,8 +497,7 @@ package body  Aquarius.Grammars is
       return Aquarius.Syntax.Syntax_Tree
    is
       pragma Unreferenced (Offset_Rule);  --  we haven't implemented it yet
-      Local_Name : constant Non_Terminal_Key :=
-        To_Non_Terminal_Key (Name);
+      Local_Name : constant String := Name;
       Result     : Aquarius.Syntax.Syntax_Tree;
    begin
       if Grammar.Non_Terminals.Contains (Local_Name) then
@@ -531,8 +533,7 @@ package body  Aquarius.Grammars is
       pragma Unreferenced (Offset_Rule);
       Tok    : Aquarius.Tokens.Token;
       Result : Aquarius.Syntax.Syntax_Tree;
-      Local_Name : constant Non_Terminal_Key :=
-        To_Non_Terminal_Key (Text);
+      Local_Name       : constant String := Text;
    begin
       if Aquarius.Tokens.Exists (Grammar.Frame, Text) then
          Tok := Aquarius.Tokens.Get_Token (Grammar.Frame, Text);
@@ -566,18 +567,20 @@ package body  Aquarius.Grammars is
       Trigger    : Aquarius.Actions.Action_Execution_Trigger;
       Stop_After : Aquarius.Programs.Program_Tree := null)
    is
-      use Aquarius.Actions;
+      procedure Run_Group_Actions (Group : Aquarius.Actions.Action_Group);
+
+      -----------------------
+      -- Run_Group_Actions --
+      -----------------------
+
+      procedure Run_Group_Actions (Group : Aquarius.Actions.Action_Group) is
+      begin
+         Start.Run_Actions (Group, Stop_After);
+      end Run_Group_Actions;
+
    begin
-      for I in 1 .. Get_Group_Count (Grammar.Actions) loop
-         declare
-            Group : constant Action_Group :=
-              Get_Group (Grammar.Actions, I);
-         begin
-            if Action_Group_Trigger (Group) = Trigger then
-               Start.Run_Actions (Group, Stop_After);
-            end if;
-         end;
-      end loop;
+      Aquarius.Actions.Iterate
+        (Grammar.Actions, Trigger, Run_Group_Actions'Access);
    end Run_Action_Trigger;
 
    ------------------------
@@ -590,33 +593,37 @@ package body  Aquarius.Grammars is
       Stop       : Aquarius.Programs.Program_Tree;
       Trigger    : Aquarius.Actions.Action_Execution_Trigger)
    is
-      use Aquarius.Actions;
+      procedure Run_Group_Actions (Group : Aquarius.Actions.Action_Group);
+
+      -----------------------
+      -- Run_Group_Actions --
+      -----------------------
+
+      procedure Run_Group_Actions (Group : Aquarius.Actions.Action_Group) is
+      begin
+         Start.Run_Actions (Stop, Group);
+      end Run_Group_Actions;
+
    begin
-      for I in 1 .. Get_Group_Count (Grammar.Actions) loop
-         declare
-            Group : constant Action_Group :=
-              Get_Group (Grammar.Actions, I);
-         begin
-            if Action_Group_Trigger (Group) = Trigger then
-               Start.Run_Actions (Stop, Group);
-            end if;
-         exception
-            when others =>
-               Ada.Text_IO.Put_Line
-                 (Ada.Text_IO.Standard_Error,
-                  "exception caught while running actions");
-               Ada.Text_IO.Put_Line
-                 (Ada.Text_IO.Standard_Error,
-                  "grammar: " & Grammar.Name);
-               Ada.Text_IO.Put_Line
-                 (Ada.Text_IO.Standard_Error,
-                  "start  : " & Start.Image);
-               Ada.Text_IO.Put_Line
-                 (Ada.Text_IO.Standard_Error,
-                  "stop   : " & Stop.Image);
-               raise;
-         end;
-      end loop;
+
+      Aquarius.Actions.Iterate
+        (Grammar.Actions, Trigger, Run_Group_Actions'Access);
+
+   exception
+      when others =>
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "exception caught while running actions");
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "grammar: " & Grammar.Name);
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "start  : " & Start.Image);
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "stop   : " & Stop.Image);
+         raise;
    end Run_Action_Trigger;
 
    -----------------
@@ -629,7 +636,7 @@ package body  Aquarius.Grammars is
       Start        : in Aquarius.Programs.Program_Tree)
    is
       Group : constant Aquarius.Actions.Action_Group :=
-        Aquarius.Actions.Get_Group (Grammar.Actions, Group_Name);
+                Aquarius.Actions.Get_Group (Grammar.Actions, Group_Name);
    begin
 
       Start.Run_Actions (Group);
@@ -644,32 +651,26 @@ package body  Aquarius.Grammars is
      (Tree     : in out Aquarius.Programs.Program_Tree_Type'Class;
       Position : in Rule_Position)
    is
-      use Aquarius.Actions;
+
       Grammar : constant Aquarius_Grammar :=
         Aquarius.Trees.Properties.Get_Grammar (Tree);
+
+      procedure Run_Group_Actions (Group : Aquarius.Actions.Action_Group);
+
+      -----------------------
+      -- Run_Group_Actions --
+      -----------------------
+
+      procedure Run_Group_Actions (Group : Aquarius.Actions.Action_Group) is
+      begin
+         Tree.Execute_Single_Action (Group, Position);
+      end Run_Group_Actions;
+
    begin
 
-      for I in 1 .. Get_Group_Count (Grammar.Actions) loop
-         declare
-            Group : constant Action_Group :=
-              Get_Group (Grammar.Actions, I);
-         begin
-            if Action_Group_Trigger (Group) = Parse_Trigger then
-               Tree.Execute_Single_Action (Group, Position);
-            end if;
-         end;
-      end loop;
+      Aquarius.Actions.Iterate
+        (Grammar.Actions, Aquarius.Actions.Parse_Trigger,
+         Run_Group_Actions'Access);
    end Run_Parse_Actions;
-
-   -------------------------
-   -- To_Non_Terminal_Key --
-   -------------------------
-
-   function To_Non_Terminal_Key (Name : String) return Non_Terminal_Key is
-      Result : Non_Terminal_Key;
-   begin
-      Ada.Strings.Fixed.Move (Name, Result, Drop => Ada.Strings.Right);
-      return Result;
-   end To_Non_Terminal_Key;
 
 end Aquarius.Grammars;
