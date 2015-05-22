@@ -67,8 +67,10 @@ package Aquarius.Programs is
    procedure Set_Symbol_Table (Tree  : in out Program_Tree_Type;
                                Table : Aquarius.Entries.Symbol_Table);
 
-   function Program_Root (Item : Program_Tree_Type'Class)
-                         return Program_Tree;
+   function Program_Root
+     (Item : not null access Program_Tree_Type'Class)
+      return Program_Tree;
+
    function Program_Parent (Item : Program_Tree_Type'Class)
                            return Program_Tree;
    function Program_Left (Item : Program_Tree_Type'Class)
@@ -156,8 +158,18 @@ package Aquarius.Programs is
    function Layout_Length (Item : Program_Tree_Type)
                           return Aquarius.Layout.Count;
 
-   function Source (Item : not null access Program_Tree_Type'Class)
+   function Source (Item : Program_Tree_Type'Class)
                    return Aquarius.Source.Source_File;
+
+   function Source_File_Name (Item : Program_Tree_Type'Class) return String;
+   --  return the name (only) of the source file from which this program
+   --  tree was read
+
+   function Source_Directory
+     (Item : Program_Tree_Type'Class)
+      return String;
+   --  return the full path to the directory in which the source file
+   --  for this program tree was found
 
    function Find_Node_At (Top      : not null access Program_Tree_Type'Class;
                           Location : in     Aquarius.Layout.Position)
