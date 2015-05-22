@@ -380,9 +380,9 @@ private
    function Get_Action_List (Source : not null access Syntax_Tree_Record)
                             return Aquarius.Actions.Action_Instance_List;
 
-   overriding
-   procedure Set_Action_List (Source : not null access Syntax_Tree_Record;
-                              List   : Aquarius.Actions.Action_Instance_List);
+   overriding procedure Append_Action
+     (Source : in out Syntax_Tree_Record;
+      Action : Aquarius.Actions.Action_Instance);
 
    -------------------------------
    --  Caching the Begins check --
