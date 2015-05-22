@@ -8,8 +8,9 @@ with Aquarius.Tokens;
 with Aquarius.Trees;
 with Aquarius.UI.Menus;
 
-private with Ada.Containers.Hashed_Maps;
-private with Ada.Strings.Hash;
+private with Ada.Containers.Indefinite_Hashed_Maps;
+private with Ada.Strings.Hash_Case_Insensitive;
+private with Ada.Strings.Equal_Case_Insensitive;
 
 package Aquarius.Grammars is
 
@@ -121,6 +122,11 @@ package Aquarius.Grammars is
       Trigger : in     Aquarius.Actions.Action_Execution_Trigger;
       Group   :    out Aquarius.Actions.Action_Group);
 
+   function Group
+     (Grammar : Aquarius_Grammar_Record'Class;
+      Name    : String)
+      return Aquarius.Actions.Action_Group;
+
    not overriding
    procedure Run_Actions
      (Grammar      : in Aquarius_Grammar_Record;
@@ -199,13 +205,11 @@ package Aquarius.Grammars is
 
 private
 
-   subtype Non_Terminal_Key is String (1 .. 32);
-
-   package Syntax_Map is new Ada.Containers.Hashed_Maps
-     (Key_Type        => Non_Terminal_Key,
+   package Syntax_Map is new Ada.Containers.Indefinite_Hashed_Maps
+     (Key_Type        => String,
       Element_Type    => Aquarius.Syntax.Syntax_Tree,
-      Hash            => Ada.Strings.Hash,
-      Equivalent_Keys => "=",
+      Hash            => Ada.Strings.Hash_Case_Insensitive,
+      Equivalent_Keys => Ada.Strings.Equal_Case_Insensitive,
       "="             => Aquarius.Syntax."=");
 
    type Aquarius_Grammar_Record is
