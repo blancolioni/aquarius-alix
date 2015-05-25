@@ -3,6 +3,9 @@ before Compilation_Unit do
   Top.Config_Package_List := Create_Set;
   Top.Config_Package_Map := Create_Map;
   Top.Types := Create_Map;
+  Top.Type_List := Create_Set;
+  Top.File_List := Create_Set;
+  Top.File_Map  := Create_Map;
 end;
 
 after Package_Name do
@@ -13,8 +16,19 @@ after Context_Clause/Qualified_identifier do
   Top.Dependents.Include (Qualified_Identifier.Image);
 end;
 
+after File_Declaration do
+  Top.File_List.Include (Tree/Identifier.Image);
+  if Tree/String_Literal then
+     Tree.File_Name := Tree/String_Literal.String_Value;
+  else
+     Tree.File_Name := To_Lower (Tree/Identifier.Image) & ".txt";
+  end if;
+  Top.File_Map.Insert (Tree/Identifier.Image, Tree);
+end;
+
 after Type_Declaration/identifier do
   Top.Types.Insert (identifier.Image, Type_Declaration);
+  Top.Type_List.Include (identifier.Image);
   Type_Declaration.Type_Name := Identifier.Image;
   Type_Declaration.Internal_Type_Name := Type_Declaration.Type_Name;
   Top.Current_Type_Declaration := Type_Declaration;
@@ -38,6 +52,10 @@ before Record_Type do
    Top.Current_Record := Record_Type;
 end;
 
+before Record_Field do
+   Tree.Default_Value := null;
+end;
+
 after Record_Field/Identifier do
    Record_Field.Ada_Name := Identifier.Image;
    Record_Field.Config_Name := To_Lower (Identifier.Image);
@@ -55,8 +73,8 @@ after Record_Component_Type/List_Type do
    Record_Component_Type.Tree_Type := List_Type;
 end;
 
-after Record_Component_Type/value do
-   Record_Component_Type.Default_Value := value;
+after Record_Field/value do
+   Record_Field.Default_Value := value;
 end;
 
 after Record_Field/Record_Component_Type do
@@ -103,11 +121,14 @@ after Named_Type/Qualified_Identifier do
         else
            Named_Type.Type_Name := "<unknown type>";
         end if;
+        Named_Type.Return_Type_Name := Named_Type.Type_Name;
      elsif Top.Types.Contains (Qualified_Identifier.Name) then
-        Named_Type.Type_Name := Qualified_Identifier.Name & "'Class";
+        Named_Type.Type_Name := Qualified_Identifier.Name;
+        Named_Type.Return_Type_Name := Qualified_Identifier.Name & "'Class";
         Named_Type.Class_Type := Named_Type.Type_Name;
      else
         Named_Type.Type_Name := Qualified_Identifier.Name;
+        Named_Type.Return_Type_Name := Named_Type.Type_Name;
         Named_Type.Standard_Type := Named_Type.Type_Name;
      end if;
 end;

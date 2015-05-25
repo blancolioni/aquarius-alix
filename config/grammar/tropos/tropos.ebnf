@@ -69,4 +69,4 @@ boolean_value ::= [ 'not' ] value
 
 value ::= qualified_identifier | numeric_literal | character_literal | string_literal
 
-file_declaration ::= identifier '=' (named_type | list_type)
+file_declaration ::= 'file' identifier [string_literal] 'is' named_type
