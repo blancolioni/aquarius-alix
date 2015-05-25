@@ -34,17 +34,19 @@ package [Top.Package_Name] is
 @         end if;
 @      when Record_Field =>
 @         if Tree/record_component_type/named_type then
-   function [Tree.Ada_Name] (Item : [Tree^Type_Declaration.Type_Name]) return [Tree.Tree_Type.Type_Name];
+   function [Tree.Ada_Name] (Item : [Tree^Type_Declaration.Type_Name]) return [Tree.Tree_Type.Return_Type_Name];
 @         else
    function Num_[Tree.Ada_Name] (Item : [Tree^Type_Declaration.Type_Name]) return Natural;
    function [Tree.Ada_Name] 
      (Item  : [Tree^Type_Declaration.Type_Name];
       Index : Positive)
-     return [Tree.Tree_Type.Type_Name];
+     return [Tree.Tree_Type.Return_Type_Name];
 @         end if;
 @      when File_Declaration =>
 
-   procedure Scan_[Tree/identifier];
+   procedure Scan_[Tree/identifier]
+     (Process : not null access
+        procedure (Item : [Tree/named_type.Type_Name]'Class));
 @   end case;
 @end loop;
 
