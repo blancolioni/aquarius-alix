@@ -24,7 +24,7 @@ package body Aquarius.Actions.Interpreter is
    procedure Trace_Message
      (Message : String);
 
-   type Assignment_Target_Type is (No_Target, Property_Target,
+   type Assignment_Target_Type is (No_Target, Property_Target, Object_Target,
                                    Environment_Target);
 
    type Assignment_Target
@@ -34,6 +34,9 @@ package body Aquarius.Actions.Interpreter is
          case Target_Type is
             when No_Target =>
                null;
+            when Object_Target =>
+               Object   : access Aquarius.VM.Object_Interface'Class;
+               Object_Prop : Ada.Strings.Unbounded.Unbounded_String;
             when Property_Target =>
                Tree     : Program_Tree;
                Property : Ada.Strings.Unbounded.Unbounded_String;
@@ -709,6 +712,12 @@ package body Aquarius.Actions.Interpreter is
       return Aquarius.VM.VM_Value
    is
    begin
+      if VM.Has_Object (Current)
+        and then VM.To_Object (Current).Contains (Selector)
+      then
+         return VM.To_Object (Current).Get (Selector);
+      end if;
+
       return VM.Evaluate
         (VM.Get_Method (Current, Selector),
          Env);
@@ -1192,9 +1201,11 @@ package body Aquarius.Actions.Interpreter is
                    (Action.Program_Child ("identifier").Standard_Text));
       else
          declare
+            use Ada.Strings.Unbounded;
+            use Aquarius.VM;
             Start : constant Program_Tree :=
                       Get_Object_Reference_Start (Env, Action, Node);
-            T     : Program_Tree := Start;
+            V     : VM_Value := To_Value (Start);
          begin
             for I in Qualifiers'Range loop
                declare
@@ -1208,24 +1219,60 @@ package body Aquarius.Actions.Interpreter is
                                           Identifier.Standard_Text;
                      begin
                         if I = Qualifiers'Last then
-                           return (Property_Target, T,
-                                   Ada.Strings.Unbounded.To_Unbounded_String
-                                     (Property_Name));
+                           if Has_Object (V) then
+                              return (Object_Target, To_Object (V),
+                                      To_Unbounded_String (Property_Name));
+                           elsif Has_Tree (V) then
+                              return (Property_Target,
+                                      Program_Tree (To_Tree (V)),
+                                      To_Unbounded_String (Property_Name));
+                           else
+                              raise Constraint_Error with
+                                "invalid target: " & Node.Concatenate_Children;
+                           end if;
                         else
-                           declare
-                              Child : constant Program_Tree :=
-                                        T.Program_Child (Property_Name);
-                           begin
-                              if Child /= null then
-                                 T := Child;
-                              else
-                                 Error (Q, T, "no such child");
+                           if Has_Object (V) then
+                              if not To_Object (V).Contains
+                                (Property_Name)
+                              then
+                                 Error (Action, Node,
+                                        "object has no method named '"
+                                        & Property_Name & "'");
                               end if;
-                           end;
+                              V := To_Object (V).Get (Property_Name);
+                           elsif Has_Tree (V) then
+                              V := To_Value (Program_Tree
+                                             (To_Tree (V)).Property
+                                             (Property_Name));
+                           else
+                              raise Constraint_Error with
+                                "invalid target: " & Node.Concatenate_Children;
+                           end if;
                         end if;
                      end;
+                  elsif Q.Name = "subtree_selector" then
+                     if Has_Tree (V) then
+                        declare
+                           Identifier    : constant Program_Tree :=
+                                             Q.Program_Child ("identifier");
+                           Property_Name : constant String :=
+                                             Identifier.Standard_Text;
+                           P : constant Program_Tree :=
+                                 Program_Tree (To_Tree (V));
+                           Child : constant Program_Tree :=
+                                     P.Program_Child (Property_Name);
+                        begin
+                           if Child /= null then
+                              V := To_Value (Child);
+                           else
+                              Error (Q, P, "no such child: " & Property_Name);
+                           end if;
+                        end;
+                     else
+                        Error (Q, Node, "not a tree: " & To_String (V));
+                     end if;
                   else
-                     Error (Q, T, "unimplemented: " & Q.Name);
+                     Error (Q, Node, "unimplemented: " & Q.Name);
                   end if;
                end;
             end loop;
@@ -1798,6 +1845,10 @@ package body Aquarius.Actions.Interpreter is
       case Target.Target_Type is
          when No_Target =>
             Ada.Text_IO.Put_Line ("assignment: no target");
+         when Object_Target =>
+            Target.Object.Set
+              (Ada.Strings.Unbounded.To_String (Target.Object_Prop),
+               Value);
          when Property_Target =>
             if Trace then
                Ada.Text_IO.Put_Line

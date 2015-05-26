@@ -334,6 +334,18 @@ package body Aquarius.VM is
       end if;
    end Get_Value;
 
+   ----------------
+   -- Has_Object --
+   ----------------
+
+   function Has_Object (Item : VM_Value) return Boolean is
+   begin
+      return Item /= null
+        and then Item.Class = Val_Property
+        and then Item.Prop_Value /= null
+        and then Item.Prop_Value.all in Object_Interface'Class;
+   end Has_Object;
+
    ------------------
    -- Has_Property --
    ------------------
@@ -639,6 +651,18 @@ package body Aquarius.VM is
               "cannot convert " & Show (Value) & " to an integer";
       end case;
    end To_Integer;
+
+   ---------------
+   -- To_Object --
+   ---------------
+
+   function To_Object (Item : VM_Value)
+                       return access Object_Interface'Class
+   is
+   begin
+      pragma Assert (Has_Object (Item));
+      return  Object_Interface'Class (Item.Prop_Value.all)'Access;
+   end To_Object;
 
    -----------------
    -- To_Property --
