@@ -5,11 +5,26 @@ private with Ada.Strings.Unbounded.Hash;
 package Aquarius.VM.Maps is
 
    type Map_Property_Type is
-     new Root_Aquarius_Object with private;
+     new Object_Interface with private;
 
    overriding function Name
      (Item : Map_Property_Type)
       return String;
+
+   overriding function Contains
+     (Map : Map_Property_Type;
+      Key : String)
+      return Boolean;
+
+   overriding function Get
+     (Map : Map_Property_Type;
+      Key : String)
+      return VM_Value;
+
+   overriding procedure Set
+     (Map   : in out Map_Property_Type;
+      Key   : in     String;
+      Value : in     VM_Value);
 
    procedure Insert
      (Property : in out Map_Property_Type'Class;
@@ -20,11 +35,6 @@ package Aquarius.VM.Maps is
      (Property : in out Map_Property_Type'Class;
       Key      : in     String;
       Value    : in     VM_Value);
-
-   function Contains
-     (Property : Map_Property_Type'Class;
-      Key      : String)
-      return Boolean;
 
    function Element
      (Property : Map_Property_Type'Class;
@@ -57,7 +67,7 @@ private
         "="             => VM_Value_Lists."=");
 
    type Map_Property_Type is
-     new Root_Aquarius_Object with
+     new Object_Interface with
       record
          Map  : VM_Value_Maps.Map;
          List : VM_Value_Lists.List;
