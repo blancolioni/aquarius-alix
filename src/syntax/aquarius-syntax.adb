@@ -517,8 +517,7 @@ package body Aquarius.Syntax is
    -- Image --
    -----------
 
-   overriding
-   function Image (Tree : Syntax_Tree_Record) return String is
+   overriding function Image (Tree : Syntax_Tree_Record) return String is
       use Aquarius.Trees;
 
       function Node_Class_Image (Class : Node_Class) return String;
@@ -582,7 +581,10 @@ package body Aquarius.Syntax is
       end Separator_Image;
 
       Prefix  : constant String :=
-        Tree.Name & " (" & Aquarius.Source.Show (Tree.Get_Location) & ")";
+                  (if Tree.Name /= ""
+                   then "'" & Tree.Name & "' "
+                   else "")
+                  & "(" & Aquarius.Source.Show (Tree.Get_Location) & ")";
       Postfix : constant String := Children_Image (Tree'Access);
    begin
       case Tree.Node.Class is
