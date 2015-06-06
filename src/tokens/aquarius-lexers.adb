@@ -112,6 +112,18 @@ package body Aquarius.Lexers is
                                 Is_Hexadecimal_Digit'Access));
    end Hex_Digit;
 
+   --------------
+   -- In_Range --
+   --------------
+
+   function In_Range (Low, High : Character) return Lexer is
+   begin
+      return new Lexer_Node'(Terminal,
+                             new Lexer_Rule'
+                               (Character_Range, False,
+                                Low, High));
+   end In_Range;
+
    ------------
    -- Letter --
    ------------
@@ -178,6 +190,28 @@ package body Aquarius.Lexers is
       return new Lexer_Node'(Optional, Item);
    end Optional;
 
+   --------------
+   -- Overlaps --
+   --------------
+
+   function Overlaps
+     (Lex_1, Lex_2 : Lexer)
+      return Boolean
+   is
+      use Ada.Strings.Maps;
+      Start_1 : constant Character_Sequence :=
+                  To_Sequence (Start (Lex_1));
+      Start_2 : constant Character_Set :=
+                  Start (Lex_2);
+   begin
+      for Ch of Start_1 loop
+         if Is_In (Ch, Start_2) then
+            return True;
+         end if;
+      end loop;
+      return False;
+   end Overlaps;
+
    ------------
    -- Repeat --
    ------------
@@ -203,6 +237,10 @@ package body Aquarius.Lexers is
                            Ch   : Character)
                           return Boolean;
 
+      ----------------
+      -- Match_Rule --
+      ----------------
+
       function Match_Rule (Rule : not null access Lexer_Rule;
                            Ch   : Character)
                           return Boolean
@@ -221,6 +259,8 @@ package body Aquarius.Lexers is
                end case;
             when Single_Character =>
                Result := Ch = Rule.Match;
+            when Character_Range =>
+               Result := Ch in Rule.Lo .. Rule.Hi;
             when Or_Rule =>
                Result := Match_Rule (Rule.Left, Ch) or else
                  Match_Rule (Rule.Right, Ch);
@@ -315,6 +355,75 @@ package body Aquarius.Lexers is
 
       return Scan (Lex, Text'First);
    end Run;
+
+   ----------
+   -- Show --
+   ----------
+
+   function Show (Lex : Lexer) return String is
+
+      function Show_Rule (Rule : access Lexer_Rule) return String;
+
+      function Show_Node (Node : access Lexer_Node) return String;
+
+      ---------------
+      -- Show_Node --
+      ---------------
+
+      function Show_Node (Node : access Lexer_Node) return String is
+      begin
+         if Node = null then
+            return "";
+         end if;
+
+         case Node.Node_Type is
+            when Terminal =>
+               return (if Node.Rule.Negate then "~" else "")
+                 & Show_Rule (Node.Rule);
+            when Sequence =>
+               return Show_Node (Node.First) & Show_Node (Node.Rest);
+            when Repeat =>
+               return "<" & Show_Node (Node.Child) & ">";
+            when Optional =>
+               if Node.Child.Node_Type = Repeat then
+                  return "{" & Show_Node (Node.Child.Child) & "}";
+               else
+                  return "[" & Show_Node (Node.Child) & "]";
+               end if;
+            when Choice =>
+               return "(" & Show_Node (Node.Left)
+                 & "|" & Show_Node (Node.Right) & ")";
+         end case;
+      end Show_Node;
+
+      ---------------
+      -- Show_Rule --
+      ---------------
+
+      function Show_Rule (Rule : access Lexer_Rule) return String is
+      begin
+         case Rule.Rule_Type is
+            when Built_In =>
+               return "#fn";
+            when Condition =>
+               case Rule.State is
+                  when End_Of_Line =>
+                     return "\n";
+                  when End_Of_File =>
+                     return "\eof";
+               end case;
+            when Single_Character =>
+               return (1 => Rule.Match);
+            when Character_Range =>
+               return Rule.Lo & "-" & Rule.Hi;
+            when Or_Rule =>
+               return Show_Rule (Rule.Left) & "|" & Show_Rule (Rule.Right);
+         end case;
+      end Show_Rule;
+
+   begin
+      return Show_Node (Lex);
+   end Show;
 
    -----------
    -- Start --

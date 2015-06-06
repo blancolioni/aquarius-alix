@@ -37,6 +37,7 @@ package Aquarius.Lexers is
    function End_Of_Line  return Lexer;
 
    function Literal (Ch : Character) return Lexer;
+   function In_Range (Low, High : Character) return Lexer;
 
    function One_Of (S : String) return Lexer;
    --  Convenience function for a lexer that recognises
@@ -56,11 +57,21 @@ package Aquarius.Lexers is
    function Start (Lex : in Lexer)
                   return Ada.Strings.Maps.Character_Set;
 
+   function Overlaps
+     (Lex_1, Lex_2 : Lexer)
+      return Boolean;
+   --  Return True if the two lexers overlap each other
+   --  (i.e. there exists at least one string which matches both)
+   --  (to be honest: check if the start character sets overlap)
+
+   function Show (Lex : Lexer) return String;
+
 private
 
    type Lexer_Type is (Terminal, Sequence, Repeat, Optional, Choice);
 
-   type Lexer_Rule_Type is (Built_In, Condition, Single_Character,
+   type Lexer_Rule_Type is (Built_In, Condition,
+                            Single_Character, Character_Range,
                             Or_Rule);
 
    type Lexer_State is (End_Of_Line, End_Of_File);
@@ -76,6 +87,8 @@ private
                State : Lexer_State;
             when Single_Character =>
                Match : Character;
+            when Character_Range =>
+               Lo, Hi : Character;
             when Or_Rule =>
                Left, Right : access Lexer_Rule;
          end case;
