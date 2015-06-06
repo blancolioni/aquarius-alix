@@ -153,8 +153,21 @@ package body Aquarius.Tokens is
          Reserved      => False,
          Text          => To_Token_Text (Name),
          Standard_Text => To_Standard_Token_Text (Name,
-                                                  Frame.Case_Sensitive));
+           Frame.Case_Sensitive));
    begin
+      for Item of Frame.Class_Vector loop
+         if Aquarius.Lexers.Overlaps
+           (Item.Lex, Lex)
+         then
+            raise Token_Error
+              with "Token classes "
+              & To_String (Item.Name)
+              & " and "
+              & Name
+              & " have overlapping lexers";
+         end if;
+      end loop;
+
       Frame.Class_Vector.Append (Class_Info);
       Frame.Token_Vector.Append (Tok_Info);
       Class := Class_Info.Id;
