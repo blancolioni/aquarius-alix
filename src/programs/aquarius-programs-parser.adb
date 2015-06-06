@@ -6,6 +6,8 @@ with Aquarius.Syntax.Checks;
 
 with Aquarius.Trees.Properties;
 
+with Aquarius.Trace;
+
 package body Aquarius.Programs.Parser is
 
    Free_Ambiguity_List : List_Of_Ambiguities.List;
@@ -1063,9 +1065,18 @@ package body Aquarius.Programs.Parser is
       A  : Ambiguity;
       Count : Natural := 0;
    begin
+
+      Aquarius.Trace.Trace_Put_Line
+        (Aquarius.Trace.Parsing,
+         "Parse: " & Tok_Text);
+
       while Has_Element (It) loop
          if Element (It).Active then
             if Token_OK (Item, Element (It).Location) then
+               Aquarius.Trace.Trace_Put_Line
+                 (Aquarius.Trace.Parsing,
+                  "  into: "
+                  & Aquarius.Trees.Cursors.Image (Element (It).Location));
                Count := Count + 1;
                Parse_Token (Item, Tok_Text, It, Context);
                Previous (It);
@@ -1092,6 +1103,13 @@ package body Aquarius.Programs.Parser is
       --  end loop;
 
       Update_Ambiguities (Context);
+
+      for A of Context.Ambiguities loop
+         Aquarius.Trace.Trace_Put_Line
+           (Aquarius.Trace.Parsing,
+            "  keeping: "
+            & Aquarius.Trees.Cursors.Image (A.Location));
+      end loop;
 
    end Parse_Token;
 
