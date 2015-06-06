@@ -1,11 +1,11 @@
 top_level ::= config_list
 case_sensitive = false
 
-identifier ::= standard ada_identifier
-integer    ::= standard ada_numeric_literal
-string     ::= standard ada_string_literal
+identifier ::= regex "\l[\w_]*"
+integer    ::= regex "\d+"
+string     ::= regex "\x22[^\x22]*\x22"
 delimiter  ::= delimiters "{};=:"
-comment    ::= standard ada_comment
+comment    ::= regex "--[.]*"
 
 config_list ::= { config_item }
 
