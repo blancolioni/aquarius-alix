@@ -7,6 +7,10 @@ with Aquarius.Lexers;
 package Aquarius.Tokens is
 
    Scan_Error : exception;
+   --  something went wrong while scanning
+
+   Token_Error : exception;
+   --  something went wrong while defining tokens
 
    --  Token_Text: stores dynamically created but thereafter
    --  constant Strings which have no trailing spaces.
