@@ -741,6 +741,22 @@ package body Aquarius.Programs is
 
       function Prefix return String;
       function Postfix return String;
+      function Parent_Text return String;
+
+      -----------------
+      -- Parent_Text --
+      -----------------
+
+      function Parent_Text return String is
+         T : Program_Tree := Item.Program_Parent;
+      begin
+         while T /= null
+           and then T.Syntax.Name = ""
+         loop
+            T := T.Program_Parent;
+         end loop;
+         return (if T = null then "" else T.Syntax.Name & "/");
+      end Parent_Text;
 
       -------------
       -- Postfix --
@@ -770,7 +786,7 @@ package body Aquarius.Programs is
            Aquarius.Tokens.To_String (Item.Fill_Text) &
            ">";
       else
-         return Prefix & " " & Text (Item) & " " & Postfix;
+         return Prefix & " " & Parent_Text & Text (Item) & " " & Postfix;
       end if;
    end Image;
 
