@@ -199,15 +199,6 @@ package body Aquarius.Grammars.Manager is
 
       Aquarius.Plugins.Manager.Load (Result);
 
---        declare
---           Arrangement : Aquarius.Programs.Arrangements.Program_Arrangement;
---           Renderer    : Aquarius.Rendering.Aquarius_Renderer;
---        begin
---           Aquarius.Programs.Arrangements.Arrange (Arrangement, EBNF);
---           Renderer := Aquarius.Rendering.Manager.Load_Renderer ("text");
---           Aquarius.Programs.Arrangements.Render (Arrangement, Renderer);
---        end;
-
       return Result;
 
    end Load_Grammar_From_File;
