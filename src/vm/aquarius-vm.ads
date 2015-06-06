@@ -55,6 +55,27 @@ package Aquarius.VM is
    function Has_Tree (Item : VM_Value) return Boolean;
    function To_Tree (Item : VM_Value) return Aquarius.Trees.Tree;
 
+   type Object_Interface is interface and Root_Aquarius_Object;
+
+   function Contains (Object : Object_Interface;
+                      Name   : String)
+                      return Boolean
+                      is abstract;
+
+   function Get (Object : Object_Interface;
+                 Name   : String)
+                 return VM_Value
+                 is abstract;
+
+   procedure Set (Object : in out Object_Interface;
+                  Name   : String;
+                  Value  : VM_Value)
+   is abstract;
+
+   function Has_Object (Item : VM_Value) return Boolean;
+   function To_Object (Item : VM_Value)
+                       return access Object_Interface'Class;
+
    type Evaluator is access function (Env  : VM_Environment;
                                       Args : Array_Of_Values) return VM_Value;
 
