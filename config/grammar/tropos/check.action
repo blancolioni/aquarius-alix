@@ -151,11 +151,14 @@ after List_Type/Qualified_Identifier do
         else
            Tree.Type_Name := "<unknown type>";
         end if;
+        Tree.Return_Type_Name := Tree.Type_Name;
      elsif Top.Types.Contains (Qualified_Identifier.Name) then
-        Tree.Type_Name := Qualified_Identifier.Name & "'Class";
+        Tree.Type_Name := Qualified_Identifier.Name;
         Tree.Class_Type := Tree.Type_Name;
+        Tree.Return_Type_Name := Tree.Type_Name & "'Class";
      else
         Tree.Type_Name := Qualified_Identifier.Name;
+        Tree.Return_Type_Name := Tree.Type_Name;
         Tree.Standard_Type := Tree.Type_Name;
      end if;
 end;

@@ -7,13 +7,13 @@ package body Aquarius.VM.Maps is
    -- Contains --
    --------------
 
-   function Contains
-     (Property : Map_Property_Type'Class;
-      Key      : String)
+   overriding function Contains
+     (Map : Map_Property_Type;
+      Key : String)
       return Boolean
    is
    begin
-      return Property.Map.Contains
+      return Map.Map.Contains
         (Ada.Strings.Unbounded.To_Unbounded_String (Key));
    end Contains;
 
@@ -32,6 +32,23 @@ package body Aquarius.VM.Maps is
    begin
       return VM_Value_Lists.Element (Position);
    end Element;
+
+   ---------
+   -- Get --
+   ---------
+
+   overriding function Get
+     (Map : Map_Property_Type;
+      Key : String)
+      return VM_Value
+   is
+   begin
+      if Map_Property_Type'Class (Map).Contains (Key) then
+         return Map_Property_Type'Class (Map).Element (Key);
+      else
+         return Null_Value;
+      end if;
+   end Get;
 
    ------------
    -- Insert --
@@ -115,5 +132,22 @@ package body Aquarius.VM.Maps is
    begin
       Property.List.Replace_Element (Position, Value);
    end Replace;
+
+   ---------
+   -- Set --
+   ---------
+
+   overriding procedure Set
+     (Map   : in out Map_Property_Type;
+      Key   : in     String;
+      Value : in     VM_Value)
+   is
+   begin
+      if Map_Property_Type'Class (Map).Contains (Key) then
+         Map_Property_Type'Class (Map).Replace (Key, Value);
+      else
+         Map_Property_Type'Class (Map).Insert (Key, Value);
+      end if;
+   end Set;
 
 end Aquarius.VM.Maps;
