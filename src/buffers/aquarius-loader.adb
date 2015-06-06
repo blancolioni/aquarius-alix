@@ -1,9 +1,11 @@
 with System.Assertions;
 
+with Ada.Characters.Handling;
 with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
+with Aquarius.Errors;
 with Aquarius.Names;
 with Aquarius.Programs.Parser;
 with Aquarius.Projects;
@@ -12,7 +14,6 @@ with Aquarius.Source.File_System;
 with Aquarius.Syntax;
 with Aquarius.Tokens;
 with Aquarius.Transformers;
-with Aquarius.Trees.Cursors;
 with Aquarius.Trees.Properties;
 
 with Aquarius.Interaction.Console;
@@ -99,6 +100,7 @@ package body Aquarius.Loader is
             Line              : String (1 .. 1000);
             Line_Last         : Natural;
             Next, First       : Natural;
+            Old_First         : Natural;
             Class             : Aquarius.Tokens.Token_Class;
             Tok               : Aquarius.Tokens.Token;
             Tok_Pos           : Aquarius.Source.Source_Position;
@@ -125,7 +127,18 @@ package body Aquarius.Loader is
             Next    := Line'First;
             First   := Line'First;
             while First <= Line_Last loop
+               Old_First := First;
                Have_Error := False;
+
+               --  don't try to parse remaining spaces on the line
+               while First <= Line_Last
+                 and then Ada.Characters.Handling.Is_Space
+                   (Line (First))
+               loop
+                  First := First + 1;
+               end loop;
+
+               exit when First > Line_Last;
 
                Aquarius.Tokens.Scan (Grammar.Frame, Line (1 .. Line_Last),
                                      False, Complete, Have_Class,
@@ -141,27 +154,20 @@ package body Aquarius.Loader is
                      Parse_Token (Tok, Tok_Pos,
                                   Line (First .. Next), Context);
                   else
-                     if False then
-                        Ada.Text_IO.Put_Line (Aquarius.Source.Show (Tok_Pos) &
-                                                ": syntax error at " &
-                                                Line (First .. Next));
-                     end if;
-                     declare
-                        use Aquarius.Trees.Cursors;
-                        It : Cursor := Get_Cursor (Context);
-                     begin
-                        while not Is_At_Root (It) loop
-                           if False then
-                              Ada.Text_IO.Put_Line
-                                (Aquarius.Trees.Cursors.Image (It));
-                           end if;
-                           Move_To_Left_Of_Parent (It);
-                        end loop;
-                        return Result;
-                     end;
+                     Ada.Text_IO.Put_Line (Aquarius.Source.Show (Tok_Pos) &
+                                             ": syntax error at " &
+                                             Line (First .. Next));
+                     Have_Error := True;
+                     return Result;
                   end if;
                else
                   Have_Error := True;
+                  Aquarius.Errors.Error
+                    (null, null,
+                     "unable to determine class of token '"
+                     & Line (Old_First .. Line_Last)
+                     & "'");
+
                   --  Next is set to zero by the token scanner
                   --  if we don't get a class back.
                   Next := First;
