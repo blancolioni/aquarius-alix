@@ -96,12 +96,19 @@ package body Aquarius.Grammars.EBNF is
                         New_Choice (Grammar.Frame, Internal),
                         (Grammar.Reference_Name (Internal, "standard-body"),
                          Grammar.Reference_Name (Internal, "delimiter-body"),
+                         Grammar.Reference_Name
+                           (Internal, "regular-expression-body"),
                          Grammar.Reference_Name (Internal, "syntax-body")));
 
       Add_Non_Terminal (Grammar, "standard-body",
                         New_Sequence (Grammar.Frame, Internal),
                         (Grammar.Reference_Terminal (Internal, "standard"),
                          Grammar.Reference_Name (Internal, "identifier")));
+
+      Add_Non_Terminal (Grammar, "regular-expression-body",
+                        New_Sequence (Grammar.Frame, Internal),
+                        (Grammar.Reference_Terminal (Internal, "regex"),
+                         Grammar.Reference_Name (Internal, "string")));
 
       Add_Non_Terminal (Grammar, "delimiter-body",
                         New_Sequence (Grammar.Frame, Internal),
@@ -235,7 +242,7 @@ package body Aquarius.Grammars.EBNF is
       Internal : constant Aquarius.Trees.Tree :=
         Aquarius.Trees.Internal_Declaration;
       Line_Comment : constant Lexer :=
-        Standard_Lexer ("ada_comment");
+                         Standard_Lexer ("ada_comment");
    begin
       Grammar.Add_Class_Terminal (Internal, "identifier", Identifier_Lex);
       Grammar.Add_Class_Terminal (Internal, "string",     String_Lex);
@@ -245,7 +252,6 @@ package body Aquarius.Grammars.EBNF is
       Grammar.Add_Class_Terminal (Internal, "comment",    Line_Comment);
       Grammar.Add_Class_Terminal (Internal, "delimiter",
                           One_Of ("{}[]<>/|()"));
-
    end Create_Terminals;
 
 end Aquarius.Grammars.EBNF;

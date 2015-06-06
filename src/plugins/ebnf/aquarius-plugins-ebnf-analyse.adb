@@ -1,7 +1,10 @@
+with Ada.Exceptions;
+
 with Aquarius.Errors;
 with Aquarius.Grammars;
 with Aquarius.Grammars.Builtin;
 with Aquarius.Lexers;
+with Aquarius.Lexers.Parser;
 with Aquarius.Programs;                 use Aquarius.Programs;
 with Aquarius.Syntax;
 with Aquarius.Tokens;
@@ -289,7 +292,14 @@ package body Aquarius.Plugins.EBNF.Analyse is
       Standard_Definition : constant Program_Tree :=
         Program_Tree (Tree.Breadth_First_Search ("standard-body"));
       Delimiter_Definition : constant Program_Tree :=
-        Program_Tree (Tree.Breadth_First_Search ("delimiter-body"));
+                               Program_Tree
+                                 (Tree.Breadth_First_Search
+                                    ("delimiter-body"));
+      Regexp_Definition : constant Program_Tree :=
+                               Program_Tree
+                                 (Tree.Breadth_First_Search
+                                    ("regular-expression-body"));
+
    begin
 
       if Syntax_Definition /= null then
@@ -331,7 +341,32 @@ package body Aquarius.Plugins.EBNF.Analyse is
             Grammar.Add_Class_Terminal (Tree, Name,
                                         One_Of (Text), True);
          end;
+      elsif Regexp_Definition /= null then
+         declare
+            use Aquarius.Lexers;
+            Text : constant String :=
+                     Regexp_Definition.Leaf ("string").Text;
+            Regexp : constant String :=
+                       Text (Text'First + 1 .. Text'Last - 1);
+            Lex    : constant Lexer :=
+                       Aquarius.Lexers.Parser.Parse_Lexer (Regexp);
+         begin
+            if Lex = Null_Lexer then
+               Aquarius.Errors.Error (Standard_Definition,
+                                      "invalid regular expression: "
+                                      & Text);
+            else
+               Grammar.Add_Class_Terminal (Tree, Name, Lex, False,
+                                           Name = "comment");
+            end if;
+         end;
       end if;
+
+   exception
+      when E : Aquarius.Tokens.Token_Error =>
+         Aquarius.Errors.Error
+           (Tree, null,
+            Ada.Exceptions.Exception_Message (E));
    end After_Rule_Definition;
 
    ---------------------
