@@ -238,7 +238,7 @@ package body Aquarius.Grammars.EBNF is
       Integer_Lex    : constant Lexer :=
         Standard_Lexer ("ada_numeric_literal");
       Symbol_Lex     : constant Lexer :=
-        Standard_Lexer ("symbol_sequence");
+                         Repeat (One_Of (":="));
       Internal : constant Aquarius.Trees.Tree :=
         Aquarius.Trees.Internal_Declaration;
       Line_Comment : constant Lexer :=
