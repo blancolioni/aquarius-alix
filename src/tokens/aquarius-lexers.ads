@@ -7,6 +7,11 @@ package Aquarius.Lexers is
    --  Lexer: a machine that accepts a single character
    type Lexer is private;
 
+   function Matches_New_Line
+     (Lex : Lexer)
+      return Boolean;
+   --  Return True if Lex can consume the end of line condition
+
    function Null_Lexer return Lexer;
    --  Null_Lexer is a lexer that doesn't match anything
 
@@ -51,7 +56,8 @@ package Aquarius.Lexers is
    function Run (Lex    : in     Lexer;
                  Text   : in     String)
                 return Natural;
-   --  Run Lex on text, and return the index of the final matching character.
+   --  Run Lex on text, and return an index one greater than that
+   --  of the final matching character.
    --  Return zero if nothing matches.
 
    function Start (Lex : in Lexer)

@@ -109,6 +109,11 @@ package Aquarius.Grammars is
    not overriding
    procedure Check_Grammar (Grammar : in out Aquarius_Grammar_Record);
 
+   procedure Add_Action_Group
+     (Grammar : in out Aquarius_Grammar_Record;
+      Name    : in     String;
+      Trigger : in     Aquarius.Actions.Action_Execution_Trigger;
+      Group   :    out Aquarius.Actions.Action_Group);
    --  Add_Action_Group: add an action group to the grammar.  If more
    --  than one action group has the same trigger, (see
    --  Aquarius.Actions spec for details on triggers) they are always
@@ -116,11 +121,12 @@ package Aquarius.Grammars is
    --  action group always runs in isolation and to completion on the
    --  entire tree before the next one the in trigger set starts.
 
-   procedure Add_Action_Group
-     (Grammar : in out Aquarius_Grammar_Record;
-      Name    : in     String;
-      Trigger : in     Aquarius.Actions.Action_Execution_Trigger;
-      Group   :    out Aquarius.Actions.Action_Group);
+   function Significant_End_Of_Line
+     (Grammar : Aquarius_Grammar_Record)
+      return Boolean;
+   --  Return True if end of line is syntactically significant.
+   --  This is detected automatically if the grammar has a rule which
+   --  matches the end of line.
 
    function Group
      (Grammar : Aquarius_Grammar_Record'Class;
@@ -222,6 +228,7 @@ private
          Top_Level_Syntax   : Aquarius.Syntax.Syntax_Tree;
          Actions            : Aquarius.Actions.Action_Group_List;
          Case_Sensitive     : Boolean;
+         Match_EOL          : Boolean := False;
          Non_Terminals      : Syntax_Map.Map;
          Terminals          : Syntax_Map.Map;
          Comment            : Aquarius.Tokens.Token;

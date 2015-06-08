@@ -1,3 +1,4 @@
+with Ada.Characters.Latin_1;
 with Ada.Directories;
 with Ada.Strings.Fixed;
 
@@ -130,9 +131,11 @@ package body Aquarius.Source is
    -- Get_Line --
    --------------
 
-   procedure Get_Line (Position : in     Source_Position;
-                       Line     :    out String;
-                       Last     :    out Natural)
+   procedure Get_Line
+     (Position    : in     Source_Position;
+      Include_EOL : in Boolean;
+      Line        :    out String;
+      Last        :    out Natural)
    is
    begin
       if Position.End_Of_File then
@@ -144,6 +147,11 @@ package body Aquarius.Source is
               Line'First + Position.File.Current_Line_Length - 1) :=
         Position.File.Current_Line (1 .. Position.File.Current_Line_Length);
       Last := Position.File.Current_Line_Length;
+      if Include_EOL then
+         Last := Last + 1;
+         Line (Line'First + Last - 1) :=
+           Ada.Characters.Latin_1.LF;
+      end if;
    end Get_Line;
 
    -----------------------
