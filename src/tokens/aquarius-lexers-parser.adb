@@ -104,8 +104,11 @@ package body Aquarius.Lexers.Parser is
                return not Digit;
             when 'l' =>
                return Letter;
+            when 'n' =>
+               return new Lexer_Node'
+                 (Terminal, new Lexer_Rule'(Condition, False, End_Of_Line));
             when 'w' =>
-               return Alphanumeric;
+               return Alphanumeric or Literal ('_');
             when 'x' =>
                if Index + 1 > Text'Last then
                   raise Scan_Error;
