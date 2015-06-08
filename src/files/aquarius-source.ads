@@ -39,10 +39,14 @@ package Aquarius.Source is
 
    function Get_Character (Position : Source_Position) return Character;
    procedure Skip_Character (Position : in out Source_Position);
+
    procedure Skip_Line (Position : in out Source_Position);
-   procedure Get_Line (Position : in     Source_Position;
-                       Line     :    out String;
-                       Last     :    out Natural);
+
+   procedure Get_Line
+     (Position : in     Source_Position;
+      Include_EOL : in Boolean;
+      Line        :    out String;
+      Last        :    out Natural);
 
    function End_Of_Line (Position : Source_Position) return Boolean;
    function End_Of_File (Position : Source_Position) return Boolean;

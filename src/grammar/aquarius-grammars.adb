@@ -46,6 +46,11 @@ package body  Aquarius.Grammars is
             "original definition of '" & Name & "'");
          return;
       end if;
+
+      if Aquarius.Lexers.Matches_New_Line (Lex) then
+         Grammar.Match_EOL := True;
+      end if;
+
       Create_Token_Class (Grammar.Frame, Name, Delimiter, Lex, New_Class);
       Class_Token := Get_Class_Token (Grammar.Frame, New_Class);
 
@@ -437,6 +442,7 @@ package body  Aquarius.Grammars is
          Terminals          => Syntax_Map.Empty_Map,
          Actions            => Aquarius.Actions.Empty_Action_Group_List,
          Case_Sensitive     => False,
+         Match_EOL          => False,
          Comment            => Aquarius.Tokens.Null_Token,
          Comment_Syntax     => null,
          Error_Token        => Aquarius.Tokens.Null_Token,
@@ -672,5 +678,17 @@ package body  Aquarius.Grammars is
         (Grammar.Actions, Aquarius.Actions.Parse_Trigger,
          Run_Group_Actions'Access);
    end Run_Parse_Actions;
+
+   -----------------------------
+   -- Significant_End_Of_Line --
+   -----------------------------
+
+   function Significant_End_Of_Line
+     (Grammar : Aquarius_Grammar_Record)
+      return Boolean
+   is
+   begin
+      return Grammar.Match_EOL;
+   end Significant_End_Of_Line;
 
 end Aquarius.Grammars;

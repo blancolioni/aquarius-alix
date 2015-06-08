@@ -1,6 +1,7 @@
 with System.Assertions;
 
 with Ada.Characters.Handling;
+with Ada.Characters.Latin_1;
 with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
@@ -108,9 +109,16 @@ package body Aquarius.Loader is
             Have_Class        : Boolean;
             Have_Error        : Boolean;
             Vertical_Space    : Natural := 0;
+            LF : constant Character :=
+                   Ada.Characters.Latin_1.LF;
          begin
             loop
-               Aquarius.Source.Get_Line (Source_Pos, Line, Line_Last);
+               Aquarius.Source.Get_Line
+                 (Position    => Source_Pos,
+                  Include_EOL => Grammar.Significant_End_Of_Line,
+                  Line        => Line,
+                  Last        => Line_Last);
+
                exit when Line_Last > 0 or else
                  Aquarius.Source.End_Of_File (Source_Pos);
                Aquarius.Source.Skip_Line (Source_Pos);
@@ -134,6 +142,9 @@ package body Aquarius.Loader is
                while First <= Line_Last
                  and then Ada.Characters.Handling.Is_Space
                    (Line (First))
+                   and then (not Grammar.Significant_End_Of_Line
+                             or else Line (First) /= LF)
+
                loop
                   First := First + 1;
                end loop;
@@ -164,7 +175,8 @@ package body Aquarius.Loader is
                   Have_Error := True;
                   Aquarius.Errors.Error
                     (null, null,
-                     "unable to determine class of token '"
+                     Aquarius.Source.Show (Source_Pos)
+                     & "unable to determine class of token '"
                      & Line (Old_First .. Line_Last)
                      & "'");
 

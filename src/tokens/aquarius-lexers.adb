@@ -159,6 +159,20 @@ package body Aquarius.Lexers is
                                              Is_Lower'Access));
    end Lowercase;
 
+   ----------------------
+   -- Matches_New_Line --
+   ----------------------
+
+   function Matches_New_Line
+     (Lex : Lexer)
+      return Boolean
+   is
+      Test : constant Natural :=
+               Run (Lex, (1 => Ada.Characters.Latin_1.LF));
+   begin
+      return Test > 1;
+   end Matches_New_Line;
+
    ----------------
    -- Null_Lexer --
    ----------------
@@ -310,14 +324,18 @@ package body Aquarius.Lexers is
                   Last : Natural := Index;
                   Next : Natural := Scan (Current.Child, Index);
                begin
-                  while Next > Last loop
-                     Last := Next;
-                     Next := Scan (Current.Child, Next);
-                  end loop;
-                  if Next > 0 then
-                     return Next;
+                  if Next > Last then
+                     while Next > Last loop
+                        Last := Next;
+                        Next := Scan (Current.Child, Next);
+                     end loop;
+                     if Next > 0 then
+                        return Next;
+                     else
+                        return Last;
+                     end if;
                   else
-                     return Last;
+                     return 0;
                   end if;
                end;
             when Optional =>
