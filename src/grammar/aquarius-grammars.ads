@@ -1,3 +1,7 @@
+private with Ada.Containers.Indefinite_Hashed_Maps;
+private with Ada.Strings.Hash_Case_Insensitive;
+private with Ada.Strings.Equal_Case_Insensitive;
+
 with Aquarius.Actions;
 with Aquarius.Lexers;
 with Aquarius.Programs;
@@ -7,10 +11,6 @@ with Aquarius.Syntax;
 with Aquarius.Tokens;
 with Aquarius.Trees;
 with Aquarius.UI.Menus;
-
-private with Ada.Containers.Indefinite_Hashed_Maps;
-private with Ada.Strings.Hash_Case_Insensitive;
-private with Ada.Strings.Equal_Case_Insensitive;
 
 package Aquarius.Grammars is
 

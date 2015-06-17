@@ -1,15 +1,42 @@
 with Ada.Directories;
 with Ada.Text_IO;
 
-with Aquarius.Actions.Interpreter;
+--  with Aquarius.Actions.Interpreter;
+with Aquarius.Config_Paths;
 with Aquarius.Grammars.Manager;
 with Aquarius.Loader;
 with Aquarius.Names;
 with Aquarius.Plugins.Dynamic;
+with Aquarius.Syntax;
+
+with Aquarius.Actions.Scanner;
+with Aquarius.Actions.Pdp_11;
+
+with Aqua.Images;
 
 package body Aquarius.Plugins.Script_Plugin.Bindings is
 
    use Aquarius.Programs;
+
+   type Aqua_Action_Executor is
+     new Aquarius.Actions.Action_Execution_Interface with
+      record
+         Plugin : Dynamic.Dynamic_Plugin;
+         Start  : Aqua.Address;
+      end record;
+
+   overriding procedure Execute
+     (Executor : Aqua_Action_Executor;
+      Item     : not null access Aquarius.Actions.Actionable'Class);
+
+   overriding procedure Execute
+     (Executor : Aqua_Action_Executor;
+      Parent   : not null access Aquarius.Actions.Actionable'Class;
+      Child    : not null access Aquarius.Actions.Actionable'Class);
+
+   procedure Process_Compiled_Plugin
+     (Plugin : Aquarius.Plugins.Dynamic.Dynamic_Plugin_Type'Class;
+      Path   : String);
 
    ---------------------------------
    -- After_Action_File_Reference --
@@ -34,11 +61,62 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Group          : constant Aquarius.Actions.Action_Group :=
                          Get_Plugin (Item).Grammar.Group (Group_Name);
    begin
-      Aquarius.Actions.Interpreter.Bind_Actions
-        (Action  => Action_Program,
-         Group   => Group,
-         Grammar => Get_Plugin (Item).Grammar);
+
+      declare
+         Processor : Aquarius.Actions.Pdp_11.Pdp_Scanner;
+      begin
+         Aquarius.Actions.Scanner.Scan_Actions
+           (Processor, Action_Program, Group);
+         Process_Compiled_Plugin
+           (Dynamic.Dynamic_Plugin (Get_Plugin (Item)).all,
+            Processor.Output_Path);
+      end;
+
    end After_Action_File_Reference;
+
+   -------------
+   -- Execute --
+   -------------
+
+   overriding procedure Execute
+     (Executor : Aqua_Action_Executor;
+      Item     : not null access Aquarius.Actions.Actionable'Class)
+   is
+      Tree    : constant Program_Tree := Program_Tree (Item);
+      Top_Arg     : constant Aqua.Word :=
+                      Executor.Plugin.Executor.To_Word (Tree.Program_Root);
+      Tree_Arg  : constant Aqua.Word :=
+                      Executor.Plugin.Executor.To_Word (Tree);
+   begin
+      Executor.Plugin.Executor.Execute
+        (Executor.Start, (Top_Arg, Tree_Arg));
+   end Execute;
+
+   -------------
+   -- Execute --
+   -------------
+
+   overriding procedure Execute
+     (Executor : Aqua_Action_Executor;
+      Parent   : not null access Aquarius.Actions.Actionable'Class;
+      Child    : not null access Aquarius.Actions.Actionable'Class)
+   is
+      Parent_Tree : constant Program_Tree := Program_Tree (Parent);
+      Child_Tree  : constant Program_Tree := Program_Tree (Child);
+      Top_Arg     : constant Aqua.Word :=
+                      Executor.Plugin.Executor.To_Word
+                        (Parent_Tree.Program_Root);
+      Parent_Arg  : constant Aqua.Word :=
+                      Executor.Plugin.Executor.To_Word
+                        (Parent_Tree);
+      Child_Arg   : constant Aqua.Word :=
+                      Executor.Plugin.Executor.To_Word
+                        (Child_Tree);
+   begin
+      Executor.Plugin.Executor.Execute
+        (Executor.Start,
+         (Top_Arg, Parent_Arg, Child_Arg));
+   end Execute;
 
    -----------------------------
    -- Group_Declaration_After --
@@ -109,6 +187,79 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                            Aquarius.Names.Name_Value (Ids (1).Text));
    end Group_Declaration_Before_List_Of_Actions;
 
+   ---------------------------------------------------
+   -- Plugin_Declaration_After_List_Of_Declarations --
+   ---------------------------------------------------
+
+   procedure Plugin_Declaration_After_List_Of_Declarations
+     (Parent : Aquarius.Programs.Program_Tree;
+      Child  : Aquarius.Programs.Program_Tree)
+   is
+      pragma Unreferenced (Child);
+      Plugin : constant Dynamic.Dynamic_Plugin :=
+                 Dynamic.Dynamic_Plugin
+                   (Get_Plugin (Parent));
+      Image : constant Aqua.Images.Image_Type := Plugin.Image;
+      Grammar  : constant Aquarius.Grammars.Aquarius_Grammar :=
+                   Plugin.Grammar;
+
+      procedure Bind_To_Grammar
+        (Group_Name  : String;
+         Before      : Boolean;
+         Parent_Name : String;
+         Child_Name  : String;
+         Start       : Aqua.Address);
+
+      ---------------------
+      -- Bind_To_Grammar --
+      ---------------------
+
+      procedure Bind_To_Grammar
+        (Group_Name  : String;
+         Before      : Boolean;
+         Parent_Name : String;
+         Child_Name  : String;
+         Start       : Aqua.Address)
+      is
+         Executor : Aqua_Action_Executor :=
+                      (Plugin => Plugin,
+                       Start  => Start);
+         pragma Assert (Plugin.Have_Action_Group (Group_Name));
+
+         Group    : constant Aquarius.Actions.Action_Group :=
+                      Plugin.Get_Action_Group (Group_Name);
+         Position : constant Rule_Position :=
+                      (if Before then Aquarius.Before else Aquarius.After);
+         Parent_Node       : constant Aquarius.Syntax.Syntax_Tree :=
+                               Grammar.Get_Definition (Parent_Name);
+         Child_Node        : constant Aquarius.Syntax.Syntax_Tree :=
+                               (if Child_Name = "" then null
+                                else Grammar.Get_Definition
+                                  (Child_Name));
+      begin
+         if Child_Name = "" then
+            Parent_Node.Set_Action
+              (Group    => Group,
+               Position => Position,
+               Action   => Executor);
+         else
+            Parent_Node.Set_Action
+              (Child      => Child_Node,
+               Group      => Group,
+               Position   => Position,
+               Action     => Executor);
+         end if;
+      end Bind_To_Grammar;
+
+   begin
+      Process_Compiled_Plugin
+        (Plugin.all,
+         Aquarius.Config_Paths.Config_Path & "/aqua/text_io.m11");
+
+      Image.Link;
+      Image.Bind (Bind_To_Grammar'Access);
+   end Plugin_Declaration_After_List_Of_Declarations;
+
    ----------------------------------------------------
    -- Plugin_Declaration_Before_List_Of_Declarations --
    ----------------------------------------------------
@@ -128,6 +279,29 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
    begin
       Parent.Program_Root.Set_Property (Plugin.Property_Plugin, New_Plugin);
    end Plugin_Declaration_Before_List_Of_Declarations;
+
+   -----------------------------
+   -- Process_Compiled_Plugin --
+   -----------------------------
+
+   procedure Process_Compiled_Plugin
+     (Plugin : Aquarius.Plugins.Dynamic.Dynamic_Plugin_Type'Class;
+      Path   : String)
+   is
+      Output_Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
+                         Aquarius.Grammars.Manager.Get_Grammar_For_File
+                           (Path);
+      Output_Program : constant Aquarius.Programs.Program_Tree :=
+                         Aquarius.Loader.Load_From_File
+                           (Grammar => Output_Grammar,
+                            Path    => Path);
+   begin
+      Output_Grammar.Run_Action_Trigger
+        (Output_Program, Aquarius.Actions.Semantic_Trigger);
+
+      Plugin.Image.Load
+        (Ada.Directories.Simple_Name (Path) & ".o11");
+   end Process_Compiled_Plugin;
 
    --------------------------------
    -- Property_Declaration_After --

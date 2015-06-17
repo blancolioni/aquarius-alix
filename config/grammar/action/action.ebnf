@@ -1,13 +1,12 @@
 top_level = compilation_unit
 case_sensitive = false
 
-identifier         ::= standard ada_identifier
-numeric_literal    ::= standard ada_numeric_literal
-character_literal  ::= standard ada_character_literal
+identifier         ::= regex "\l[\w]*"
+numeric_literal    ::= regex "[0-9]+"
 string_literal     ::= standard ada_string_literal
-delimiter          ::= delimiters "&()+,;|^"
-symbol             ::= standard ada_symbol
-comment            ::= standard ada_comment
+delimiter          ::= delimiters "&()+,;|^."
+symbol             ::= regex "[:=></]+"
+comment            ::= regex "--[.]*"
 
 format sequence_of_statements indented_child
 format actual_argument_list soft_new_line
@@ -28,14 +27,19 @@ sequence_of_statements ::= { statement ';' }
 
 statement ::= for_loop_statement | case_statement | if_statement | assignment_statement
             | procedure_call_statement | declare_statement | null_statement | action_statement
-
+            | new_statement
+            
 null_statement ::= 'null'
+
+new_statement ::= 'new' object_reference
 
 assignment_statement ::= object_reference ':=' expression
 
 procedure_call_statement ::= object_reference
 
-action_statement ::= action_time action_context 'do' action_definition 'end'
+action_statement ::= action_header 'do' action_definition 'end'
+
+action_header ::= action_time < action_context / 'or' >
 
 action_time ::= 'before' | 'after'
 
@@ -56,7 +60,7 @@ if_statement ::= 'if' expression 'then' sequence_of_statements
 
 case_statement ::= 'case' expression 'is' < case_option > 'end' 'case'
 
-case_option ::= 'when' identifier '=>' sequence_of_statements
+case_option ::= 'when' expression '=>' sequence_of_statements
 
 for_loop_statement ::=
    for_all_loop
@@ -87,15 +91,21 @@ simple_expression ::=
 
 term ::= factor { multiplying_operator factor }
 
-factor ::= primary
-       | unary_primary_operator primary
+factor ::= [ unary_primary_operator ] primary
 
 primary ::= numeric_literal | string_literal : string
           | object_reference
           | 'null' | parenthesised_expression
-	      | if_expression | character_literal
+	      | if_expression
+          | aggregate
 
 parenthesised_expression ::= '(' expression ')'
+
+aggregate ::= '(' aggregate_element_list ')'
+
+aggregate_element_list ::= < aggregate_element / ',' >
+
+aggregate_element ::= identifier '=>' expression
 
 if_expression ::= 
   '(' 'if' expression 'then' expression { 'elsif' expression 'then' expression } 'else' expression ')'
@@ -113,23 +123,10 @@ unary_primary_operator ::= 'abs' | 'not'
 
 multiplying_operator ::= '*' | '/' | 'mod' | 'rem'
 
-object_reference ::= explicit_object_reference | implicit_object_reference
+object_reference ::= < name_qualifier / object_operator >
+                   
+name_qualifier ::= identifier [ actual_argument_list ]
 
-explicit_object_reference ::= identifier { name_qualifier }
+object_operator ::= '.' | '/' | '^'
 
-implicit_object_reference ::= < name_qualifier >
-
-name_qualifier ::= record_selector
-                 | subtree_selector
-                 | ancestor_selector
-                 | actual_argument_list
-
-ancestor_selector ::= '^' identifier
-
-subtree_selector ::= '/' identifier
-
-record_selector ::= '.' identifier
-
-actual_argument_list ::= '(' < actual_argument / ','> ')'
-
-actual_argument ::= expression
+actual_argument_list ::= '(' < expression / ','> ')'

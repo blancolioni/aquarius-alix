@@ -1,4 +1,3 @@
-private with Aquarius.Names;
 private with Ada.Containers.Doubly_Linked_Lists;
 
 package Aquarius.Actions is
@@ -190,12 +189,7 @@ private
          Child    : access Action_Source'Class;
       end record;
 
-   type Action_Group_Record is
-      record
-         --  Index         : Positive;
-         Group_Name    : Aquarius.Names.Aquarius_Name;
-         Group_Trigger : Action_Execution_Trigger;
-      end record;
+   type Action_Group_Record;
 
    type Action_Group is access Action_Group_Record;
 

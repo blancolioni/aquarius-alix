@@ -1,4 +1,5 @@
 with Aquarius.Plugins.Script_Plugin.Generated;
+with Aqua.Primitives.Init;
 
 package body Aquarius.Plugins.Script_Plugin is
 
@@ -95,6 +96,8 @@ package body Aquarius.Plugins.Script_Plugin is
 
       Aquarius.Plugins.Script_Plugin.Generated.Bind_Actions
         (Plugin.all, Grammar);
+
+      Aqua.Primitives.Init.Create_Primitives;
 
       Global_Script_Plugin := Script_Plugin_Access (Plugin);
    end Load;

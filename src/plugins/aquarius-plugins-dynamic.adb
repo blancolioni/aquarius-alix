@@ -1,6 +1,32 @@
 with Aquarius.Grammars.Manager;
 
+with Aqua.CPU;
+
 package body Aquarius.Plugins.Dynamic is
+
+   --------------
+   -- Executor --
+   --------------
+
+   function Executor
+     (Plugin : Dynamic_Plugin_Type'Class)
+      return access Aqua.Execution.Execution_Interface'Class
+   is
+   begin
+      return Plugin.Executor;
+   end Executor;
+
+   -----------
+   -- Image --
+   -----------
+
+   function Image
+     (Plugin : Dynamic_Plugin_Type'Class)
+      return Aqua.Images.Image_Type
+   is
+   begin
+      return Plugin.Image;
+   end Image;
 
    ----------
    -- Load --
@@ -41,6 +67,8 @@ package body Aquarius.Plugins.Dynamic is
    begin
       Result.Name    := Ada.Strings.Unbounded.To_Unbounded_String (Name);
       Result.Version := Ada.Strings.Unbounded.To_Unbounded_String (Version);
+      Result.Image   := Aqua.Images.New_Image;
+      Result.Executor := new Aqua.CPU.Aqua_CPU_Type (Result.Image);
       Aquarius_Plugin_Type'Class (Result).Load (Grammar);
       return new Dynamic_Plugin_Type'(Result);
    end New_Dynamic_Plugin;

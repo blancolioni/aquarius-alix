@@ -4,7 +4,6 @@ with Ada.Tags;
 with Ada.Unchecked_Deallocation;
 
 with Aquarius.Names;
-with Aquarius.Programs;
 
 package body Aquarius.VM is
 
@@ -204,39 +203,43 @@ package body Aquarius.VM is
                Result := Item;
             end if;
          when Val_Method_Call =>
-            if Has_Tree (Item.Val_Object)
-              and then
-                Aquarius.Programs.Program_Tree
-                  (To_Tree (Item.Val_Object)).Has_Property
-                (To_String (Item.Val_Method))
-            then
-               Result := To_Value
-                 (Aquarius.Programs.Program_Tree
-                    (To_Tree (Item.Val_Object)).Property
-                  (To_String (Item.Val_Method)));
-            else
-               declare
-                  Class     : constant String := Class_Name (Item.Val_Object);
-                  Lib_Name  : constant String :=
-                                Class & "__" & To_String (Item.Val_Method);
-                  Lib_Value : constant VM_Value :=
-                                Get_Value (Env, Lib_Name);
-               begin
-                  if Lib_Value /= null then
-                     if Lib_Value.Arg_Count = 1 then
-                        Result := Lib_Value.Fn (Env, (1 => Item.Val_Object));
-                     else
-                        Result := Item;
-                     end if;
-                  else
-                     raise Constraint_Error with
-                       "object " & To_String (Item.Val_Object)
-                       & " has no method named '"
-                       & To_String (Item.Val_Method)
-                       & "'";
-                  end if;
-               end;
-            end if;
+            null;
+--              if Has_Tree (Item.Val_Object)
+--                and then
+--                  Aquarius.Programs.Program_Tree
+--                    (To_Tree (Item.Val_Object)).Has_Property
+--                  (To_String (Item.Val_Method))
+--              then
+--                 Result := To_Value
+--                   (Aquarius.Programs.Program_Tree
+--                      (To_Tree (Item.Val_Object)).Property
+--                    (To_String (Item.Val_Method)));
+--              else
+--                 declare
+--                    Class     : constant String :=
+            --  Class_Name (Item.Val_Object);
+--                    Lib_Name  : constant String :=
+--                                  Class & "__"
+              --  & To_String (Item.Val_Method);
+--                    Lib_Value : constant VM_Value :=
+--                                  Get_Value (Env, Lib_Name);
+--                 begin
+--                    if Lib_Value /= null then
+--                       if Lib_Value.Arg_Count = 1 then
+--                          Result :=
+            --  Lib_Value.Fn (Env, (1 => Item.Val_Object));
+--                       else
+--                          Result := Item;
+--                       end if;
+--                    else
+--                       raise Constraint_Error with
+--                         "object " & To_String (Item.Val_Object)
+--                         & " has no method named '"
+--                         & To_String (Item.Val_Method)
+--                         & "'";
+--                    end if;
+--                 end;
+--              end if;
          when Val_Class =>
             Result := Item;
       end case;

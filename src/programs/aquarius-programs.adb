@@ -7,7 +7,13 @@ with Ada.Text_IO;
 with Aquarius.Properties;
 with Aquarius.Trees.Properties;
 
+with Aqua.Execution;
+with Aqua.Primitives;
+with Aqua.Words;
+
 package body Aquarius.Programs is
+
+   Trace_Aqua : constant Boolean := False;
 
    package Program_Tree_Vectors is
       new Ada.Containers.Vectors (Positive, Program_Tree);
@@ -40,11 +46,20 @@ package body Aquarius.Programs is
       Offset_Rule          => Aquarius.Source.No_Source_Position,
       Render_Class         => null,
       Fragment             => Tagatha.Fragments.Empty_Fragment,
-      Object_Props         => Aquarius_Object_Maps.Empty_Map);
+      Aqua_Object          => null);
 
    --  After a node is changed, update any entry it references
    procedure Update_Entry
      (Item    : in out Program_Tree_Type'Class);
+
+   Have_Aqua_Primitives : Boolean := False;
+
+   procedure Check_Aqua_Primitives;
+
+   function Aqua_Tree_Child
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
 
    -----------------------
    -- Actionable_Source --
@@ -92,6 +107,64 @@ package body Aquarius.Programs is
    begin
       Tagatha.Fragments.Append (Tree.Fragment, Fragment);
    end Append_Fragment;
+
+   ---------------------
+   -- Aqua_Tree_Child --
+   ---------------------
+
+   function Aqua_Tree_Child
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      Tree : constant Program_Tree :=
+                 Program_Tree
+                 (Context.To_External_Object (Arguments (1)));
+      Name   : constant String :=
+                 Context.To_String (Arguments (2));
+      Sub_Tree : constant Program_Tree :=
+                   Tree.Program_Child (Name);
+   begin
+      if Trace_Aqua then
+         Ada.Text_IO.Put_Line ("aqua_tree_child: parent = "
+                               & Tree.Image);
+         Ada.Text_IO.Put_Line ("aqua_tree_child: child name = "
+                               & Name);
+      end if;
+
+      if Sub_Tree /= null then
+         if Trace_Aqua then
+            Ada.Text_IO.Put_Line ("aqua_tree_child: result = "
+                                  & Sub_Tree.Image);
+         end if;
+         return Context.To_Word (Sub_Tree);
+      else
+         if Trace_Aqua then
+            Ada.Text_IO.Put_Line ("aqua_tree_child: no result");
+         end if;
+         return 0;
+      end if;
+
+   end Aqua_Tree_Child;
+
+   ---------------------------
+   -- Check_Aqua_Primitives --
+   ---------------------------
+
+   procedure Check_Aqua_Primitives is
+   begin
+      if Have_Aqua_Primitives then
+         return;
+      end if;
+
+      Aqua.Primitives.New_Primitive
+        (Name           => "tree__tree_child",
+         Argument_Count => 2,
+         Handler        => Aqua_Tree_Child'Access);
+
+      Have_Aqua_Primitives := True;
+
+   end Check_Aqua_Primitives;
 
    -----------------
    -- Chosen_Tree --
@@ -559,6 +632,45 @@ package body Aquarius.Programs is
       return Item.Msg_Level;
    end Get_Inherited_Message_Level;
 
+   ------------------
+   -- Get_Property --
+   ------------------
+
+   overriding function Get_Property
+     (Program  : in out Program_Tree_Type;
+      Name     : in String)
+      return Aqua.Word
+   is
+   begin
+
+      Check_Aqua_Primitives;
+
+      if Program.Aqua_Object = null then
+         Program.Aqua_Object := new Aqua.Objects.Root_Object_Type;
+      end if;
+
+      if Program.Aqua_Object.Has_Property (Name) then
+         return Program.Aqua_Object.Get_Property (Name);
+      else
+         declare
+            use Aqua;
+            Object_Primitive_Name : constant String :=
+                                      "tree__" & Name;
+            Object_Primitive      : constant Subroutine_Reference :=
+                                      Aqua.Primitives.Get_Primitive
+                                        (Object_Primitive_Name);
+            Result : Word;
+         begin
+            if Object_Primitive /= 0 then
+               Result := Aqua.Words.To_Subroutine_Word (Object_Primitive);
+            else
+               Result := 0;
+            end if;
+            return Result;
+         end;
+      end if;
+   end Get_Property;
+
    ---------------
    -- Get_Token --
    ---------------
@@ -647,13 +759,14 @@ package body Aquarius.Programs is
    -- Has_Property --
    ------------------
 
-   function Has_Property
-     (Item : Program_Tree_Type;
-      Name : String)
+   overriding function Has_Property
+     (Program : Program_Tree_Type;
+      Name    : String)
       return Boolean
    is
    begin
-      return Item.Object_Props.Contains (Name);
+      return Program.Aqua_Object /= null
+        and then Program.Aqua_Object.Has_Property (Name);
    end Has_Property;
 
    ----------------------------------
@@ -1159,19 +1272,6 @@ package body Aquarius.Programs is
       return It;
    end Program_Root;
 
-   --------------
-   -- Property --
-   --------------
-
-   function Property
-     (Item : Program_Tree_Type;
-      Name : String)
-      return access Root_Aquarius_Object'Class
-   is
-   begin
-      return Item.Object_Props.Element (Name);
-   end Property;
-
    ------------------
    -- Render_Class --
    ------------------
@@ -1462,17 +1562,17 @@ package body Aquarius.Programs is
    -- Set_Property --
    ------------------
 
-   procedure Set_Property
-     (Item : in out Program_Tree_Type;
-      Name : String;
-      Value : access Root_Aquarius_Object'Class)
+   overriding procedure Set_Property
+     (Program  : in out Program_Tree_Type;
+      Name     : in     String;
+      Value    : in     Aqua.Word)
    is
    begin
-      if Item.Object_Props.Contains (Name) then
-         Item.Object_Props.Replace (Name, Aquarius_Object_Access (Value));
-      else
-         Item.Object_Props.Insert (Name, Aquarius_Object_Access (Value));
+      Check_Aqua_Primitives;
+      if Program.Aqua_Object = null then
+         Program.Aqua_Object := new Aqua.Objects.Root_Object_Type;
       end if;
+      Program.Aqua_Object.Set_Property (Name, Value);
    end Set_Property;
 
    ----------------------------
