@@ -156,10 +156,8 @@ package body Aquarius.Projects is
                G : constant Aquarius.Grammars.Aquarius_Grammar :=
                  Aquarius.Grammars.Manager.Get_Grammar_For_File (Path);
             begin
-               if not Aquarius.Names.Contains (Project.Grammar_Names,
-                                               G.Name)
-               then
-                  Aquarius.Names.Append (Project.Grammar_Names, G.Name);
+               if not Project.Grammar_Names.Contains (G.Name) then
+                  Project.Grammar_Names.Insert (G.Name);
 --                    Project.Add_Search_Path
 --                      (Ada.Directories.Compose
 --                         (Aquarius.Configuration.Get_Library_Path, G.Name));
@@ -359,10 +357,8 @@ package body Aquarius.Projects is
             G : constant Aquarius.Grammars.Aquarius_Grammar :=
               Aquarius.Grammars.Manager.Get_Grammar_For_File (Path);
          begin
-            if not Aquarius.Names.Contains (Project.Grammar_Names,
-                                            G.Name)
-            then
-               Aquarius.Names.Append (Project.Grammar_Names, G.Name);
+            if not Project.Grammar_Names.Contains (G.Name) then
+               Project.Grammar_Names.Insert (G.Name);
                Project.Add_Search_Path
                  (Ada.Directories.Compose
                     (Aquarius.Configuration.Get_Library_Path, G.Name));

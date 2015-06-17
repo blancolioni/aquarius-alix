@@ -48,7 +48,6 @@ package body Aquarius.References is
       Program       : Aquarius.Programs.Program_Tree)
    is
       use Sorted_List_Of_References;
-      It : Cursor := List.Sorted_List.First;
       U_Name : constant Unbounded_String :=
                  To_Unbounded_String (Name);
       U_Std  : constant Unbounded_String :=
@@ -56,16 +55,7 @@ package body Aquarius.References is
       U_Key  : constant Unbounded_String :=
                  To_Unbounded_String (Key);
    begin
-      while Has_Element (It) loop
-         if Element (It).Standard_Name > Standard_Name then
-            List.Sorted_List.Insert (It, (U_Name, U_Std, U_Key, Program));
-            return;
-         end if;
-         Next (It);
-      end loop;
-
-      List.Sorted_List.Append ((U_Name, U_Std, U_Key, Program));
-
+      List.Defined_Names.Insert (U_Std, (U_Name, U_Std, U_Key, Program));
    end Add_Specification;
 
    -----------------------
@@ -77,7 +67,7 @@ package body Aquarius.References is
       File : String)
    is
       use Sorted_List_Of_References;
-      It : Cursor := List.Sorted_List.First;
+      It : Cursor := List.Defined_Names.First;
    begin
       while Has_Element (It) loop
          declare
@@ -87,7 +77,7 @@ package body Aquarius.References is
             File_Name  : constant String := Program.Location_Name;
          begin
             if File_Name = File then
-               List.Sorted_List.Delete (It);
+               List.Defined_Names.Delete (It);
             end if;
             It := Next_It;
          end;
@@ -107,7 +97,7 @@ package body Aquarius.References is
       Result : Array_Of_Locations (1 .. Max);
       Count  : Natural := 0;
    begin
-      for It in List.Sorted_List.Iterate loop
+      for It in List.Defined_Names.Iterate loop
          declare
             use Sorted_List_Of_References;
          begin
@@ -139,7 +129,7 @@ package body Aquarius.References is
       Result : Array_Of_Locations (1 .. Max);
       Count  : Natural := 0;
    begin
-      for It in List.Sorted_List.Iterate loop
+      for It in List.Defined_Names.Iterate loop
          if Element (It).Standard_Name = Name then
             Count := Count + 1;
             Result (Count) := Reference_Cursor (It);

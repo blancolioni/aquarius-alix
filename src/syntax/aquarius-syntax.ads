@@ -5,6 +5,8 @@ with Aquarius.Names;
 with Aquarius.Tokens;
 with Aquarius.Trees;
 
+private with Aquarius.Names.Sets;
+
 package Aquarius.Syntax is
 
    pragma Elaborate_Body;
@@ -366,12 +368,12 @@ private
          Indent           : Aquarius.Layout.Count := 0;
          Vertical_Gap     : Aquarius.Layout.Count := 0;
          Render_Class     : Aquarius.Names.Aquarius_Name;
+         When_Properties  : Aquarius.Names.Sets.Name_Set;
          Has_Indent_Rule  : Boolean               := False;
          Has_Plugin_Mark  : Boolean               := False;
          Has_Render_Class : Boolean               := False;
          Referenced_Flag  : Boolean               := False;
          Pristine         : Boolean               := True;
-         When_Properties  : Aquarius.Names.Name_List;
       end record;
 
    Empty_Tree : constant Syntax_Tree := null;
