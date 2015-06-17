@@ -1,0 +1,46 @@
+property_get = 18
+io_set_output = 24
+io_put_string = 25
+io_put_char = 26
+cpu_report_state = 27
+string_substitute = 32
+join_strings = 21
+
+.export put_line put new_line set_output report_state ada_specification_name
+
+ada_specification_name:
+   mov 2(sp), -(sp)
+   mov ".", -(sp)
+   mov "-", -(sp)
+   trap string_substitute
+   mov "to_lower", -(sp)
+   trap property_get
+   mov ".ads", -(sp)
+   trap join_strings
+   mov (sp)+, r0
+   rts pc
+   
+report_state:
+   trap cpu_report_state
+   rts pc
+   
+put:
+   mov 2(sp), -(sp)
+   trap io_put_string
+   rts pc
+   
+put_line:
+   mov 2(sp), -(sp)
+   trap io_put_string
+   jsr pc, new_line
+   rts pc
+
+new_line:
+   mov #10, -(sp)
+   trap io_put_char
+   rts pc
+   
+set_output:
+   mov 2(sp), -(sp)
+   trap io_set_output
+   rts pc
