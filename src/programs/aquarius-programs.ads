@@ -14,6 +14,8 @@ with Aquarius.Types;
 
 with Aquarius.Trees;
 
+with Aqua.Objects;
+
 with Tagatha.Fragments;
 
 package Aquarius.Programs is
@@ -23,6 +25,8 @@ package Aquarius.Programs is
      and Aquarius.Actions.Actionable
      and Aquarius.Entries.Entry_Property_Interface
      and Aquarius.Types.Type_Property_Interface
+     and Aqua.External_Object_Interface
+     and Aqua.Objects.Object_Interface
      with private;
 
    type Program_Tree is access all Program_Tree_Type'Class;
@@ -119,20 +123,20 @@ package Aquarius.Programs is
                                 Name : String)
                                return Boolean;
 
-   function Has_Property
-     (Item : Program_Tree_Type;
-      Name : String)
-      return Boolean;
-
-   function Property
-     (Item : Program_Tree_Type;
-      Name : String)
-      return access Root_Aquarius_Object'Class;
-
-   procedure Set_Property
-     (Item : in out Program_Tree_Type;
-      Name : String;
-      Value : access Root_Aquarius_Object'Class);
+--     function Has_Property
+--       (Item : Program_Tree_Type;
+--        Name : String)
+--        return Boolean;
+--
+--     function Property
+--       (Item : Program_Tree_Type;
+--        Name : String)
+--        return access Root_Aquarius_Object'Class;
+--
+--     procedure Set_Property
+--       (Item : in out Program_Tree_Type;
+--        Name : String;
+--        Value : access Root_Aquarius_Object'Class);
 
    overriding
    function Text (Item : Program_Tree_Type) return String;
@@ -369,11 +373,16 @@ private
         Hash            => Ada.Strings.Fixed.Hash,
         Equivalent_Keys => "=");
 
+   type Aqua_Object_Access is
+     access all Aqua.Objects.Root_Object_Type'Class;
+
    type Program_Tree_Type is
      new Aquarius.Trees.Root_Tree_Type
      and Aquarius.Actions.Actionable
      and Aquarius.Entries.Entry_Property_Interface
      and Aquarius.Types.Type_Property_Interface
+     and Aqua.External_Object_Interface
+     and Aqua.Objects.Object_Interface
    with
       record
          Free              : Boolean;
@@ -400,7 +409,7 @@ private
          Offset_Rule       : Aquarius.Source.Source_Position;
          Render_Class      : Aquarius.Syntax.Syntax_Tree;
          Fragment          : Tagatha.Fragments.Tagatha_Fragment;
-         Object_Props      : Aquarius_Object_Maps.Map;
+         Aqua_Object       : Aqua_Object_Access;
       end record;
 
    procedure Free (Item : in out Program_Tree);
@@ -443,5 +452,25 @@ private
    procedure Set_Type
      (Program  : in out Program_Tree_Type;
       Property : not null access Types.Root_Aquarius_Type'Class);
+
+   overriding procedure Set_Property
+     (Program  : in out Program_Tree_Type;
+      Name     : in     String;
+      Value    : in     Aqua.Word);
+
+   overriding function Get_Property
+     (Program  : in out Program_Tree_Type;
+      Name     : in String)
+      return Aqua.Word;
+
+   overriding function Has_Property
+     (Program  : in Program_Tree_Type;
+      Name     : in String)
+      return Boolean;
+
+   overriding function Show
+     (Program : Program_Tree_Type)
+      return String
+   is (Program.Concatenate_Children);
 
 end Aquarius.Programs;

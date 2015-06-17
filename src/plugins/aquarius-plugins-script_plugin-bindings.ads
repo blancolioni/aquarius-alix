@@ -6,6 +6,10 @@ package Aquarius.Plugins.Script_Plugin.Bindings is
      (Parent : Aquarius.Programs.Program_Tree;
       Child  : Aquarius.Programs.Program_Tree);
 
+   procedure Plugin_Declaration_After_List_Of_Declarations
+     (Parent : Aquarius.Programs.Program_Tree;
+      Child  : Aquarius.Programs.Program_Tree);
+
    procedure Property_Declaration_After
      (Item : Aquarius.Programs.Program_Tree);
 

@@ -1,9 +1,18 @@
 with Ada.Exceptions;
 with Ada.Text_IO;
 
+with Aquarius.Names;
+
 package body Aquarius.Actions is
 
    Trace_Actions : constant Boolean := False;
+
+   type Action_Group_Record is
+      record
+         --  Index         : Positive;
+         Group_Name    : Aquarius.Names.Aquarius_Name;
+         Group_Trigger : Action_Execution_Trigger;
+      end record;
 
    type Built_In_Action_Execution is
      new Action_Execution_Interface with

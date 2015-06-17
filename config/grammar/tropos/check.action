@@ -1,11 +1,15 @@
 before Compilation_Unit do
-  Top.Dependents := Create_Set;
-  Top.Config_Package_List := Create_Set;
-  Top.Config_Package_Map := Create_Map;
-  Top.Types := Create_Map;
-  Top.Type_List := Create_Set;
-  Top.File_List := Create_Set;
-  Top.File_Map  := Create_Map;
+  new Top.Dependents;
+  new Top.Config_Package_List;
+  new Top.Config_Package_Map;
+  new Top.Types;
+  new Top.Type_List;
+  new Top.File_List;
+  new Top.File_Map;
+end;
+
+after Compilation_Unit do
+   Report_State;
 end;
 
 after Package_Name do
@@ -21,7 +25,7 @@ after File_Declaration do
   if Tree/String_Literal then
      Tree.File_Name := Tree/String_Literal.String_Value;
   else
-     Tree.File_Name := To_Lower (Tree/Identifier.Image) & ".txt";
+     Tree.File_Name := Tree/Identifier.Image.To_Lower & ".txt";
   end if;
   Top.File_Map.Insert (Tree/Identifier.Image, Tree);
 end;
@@ -29,8 +33,7 @@ end;
 after Type_Declaration/identifier do
   Top.Types.Insert (identifier.Image, Type_Declaration);
   Top.Type_List.Include (identifier.Image);
-  Type_Declaration.Type_Name := Identifier.Image;
-  Type_Declaration.Internal_Type_Name := Type_Declaration.Type_Name;
+  Type_Declaration.Type_Name := (id => Identifier.Image);
   Top.Current_Type_Declaration := Type_Declaration;
 end;
 
@@ -40,7 +43,6 @@ end;
 
 before Type_Definition do
    Type_Definition.Type_Name := Top.Current_Type_Declaration.Type_Name;
-   Type_Definition.Internal_Type_Name := Top.Current_Type_Declaration.Internal_Type_Name;
 end;
 
 before Type_Definition/Record_Type do
@@ -48,7 +50,7 @@ before Type_Definition/Record_Type do
 end;
 
 before Record_Type do
-   Record_Type.Component_Map := Create_Map;
+   new Record_Type.Component_Map;
    Top.Current_Record := Record_Type;
 end;
 
@@ -58,7 +60,7 @@ end;
 
 after Record_Field/Identifier do
    Record_Field.Ada_Name := Identifier.Image;
-   Record_Field.Config_Name := To_Lower (Identifier.Image);
+   Record_Field.Config_Name := Identifier.Image.To_Lower;
 end;
 
 after Record_Field/String_Literal do
@@ -87,7 +89,11 @@ before Qualified_Identifier do
 end;
 
 after Qualified_Identifier do
-   null;
+--   if Tree.Qualifier then
+--      Put_Line (Tree.Qualifier & "." & Tree.Name);
+--   else
+--      Put_line (Tree.Name);
+--   end if;
 end;
 
 after Qualified_Identifier/identifier do
@@ -103,62 +109,35 @@ after Qualified_Identifier/identifier do
    Qualified_Identifier.Last_Identifier := identifier;
 end;
 
-after Named_Type/Qualified_Identifier do
-   Named_Type.Standard_Type := null;
-   Named_Type.Class_Type := null;
-     if Qualified_Identifier.Qualifier then
-        if Top.Dependents.Contains (Qualified_Identifier.Qualifier) then
-           Named_Type.Type_Name := Qualified_Identifier.Image;
-           Named_Type.Internal_Type_Name := Named_Type.Type_Name;
-           if Top.Config_Package_Map.Contains (Qualified_Identifier.Image) then
-              null;
-           else
-              Top.Config_Package_List.Include (Qualified_Identifier.Image);
-              Top.Config_Package_Map.Insert (Qualified_Identifier.Image, Qualified_Identifier);
-           end if;
-        elsif Top.Types.Contains (Qualified_Identifier.Qualifier) then
-           Named_Type.Type_Name := "String";
-        else
-           Named_Type.Type_Name := "<unknown type>";
-        end if;
-        Named_Type.Return_Type_Name := Named_Type.Type_Name;
-     elsif Top.Types.Contains (Qualified_Identifier.Name) then
-        Named_Type.Type_Name := Qualified_Identifier.Name;
-        Named_Type.Return_Type_Name := Qualified_Identifier.Name & "'Class";
-        Named_Type.Class_Type := Named_Type.Type_Name;
-     else
-        Named_Type.Type_Name := Qualified_Identifier.Name;
-        Named_Type.Return_Type_Name := Named_Type.Type_Name;
-        Named_Type.Standard_Type := Named_Type.Type_Name;
-     end if;
-end;
+after Named_Type/Qualified_Identifier
+   or List_Type/Qualified_Identifier
+do
+   if Qualified_Identifier.Qualifier then
+      if Top.Dependents.Contains (Qualified_Identifier.Qualifier) then
+         Tree.Type_Name := (id => Qualified_Identifier.Image);
+         if Top.Config_Package_Map.Contains (Qualified_Identifier.Image) then
+            null;
+         else
+            Top.Config_Package_List.Include (Qualified_Identifier.Image);
+            Top.Config_Package_Map.Insert (Qualified_Identifier.Image, Qualified_Identifier);
+         end if;
+      elsif Top.Types.Contains (Qualified_Identifier.Qualifier) then
+         Tree.Type_Name := (id => "String");
+      else
+         Tree.Type_Name := (id => "<unknown type>");
+      end if;
+   elsif Top.Types.Contains (Qualified_Identifier.Name) then
+      Tree.Type_Name := (id => Qualified_Identifier.Name, rt => Qualified_Identifier.Name & "'Class");
+   else
+      Tree.Type_Name := (id => Qualified_Identifier.Name);
+   end if;
 
-after List_Type/Qualified_Identifier do
-   Tree.Standard_Type := null;
-   Tree.Class_Type := null;
-     if Qualified_Identifier.Qualifier then
-        if Top.Dependents.Contains (Qualified_Identifier.Qualifier) then
-           Tree.Type_Name := Qualified_Identifier.Image;
-           Tree.Internal_Type_Name := Tree.Type_Name;
-           if Top.Config_Package_Map.Contains (Qualified_Identifier.Image) then
-              null;
-           else
-              Top.Config_Package_List.Include (Qualified_Identifier.Image);
-              Top.Config_Package_Map.Insert (Qualified_Identifier.Image, Qualified_Identifier);
-           end if;
-        elsif Top.Types.Contains (Qualified_Identifier.Qualifier) then
-           Tree.Type_Name := "String";
-        else
-           Tree.Type_Name := "<unknown type>";
-        end if;
-        Tree.Return_Type_Name := Tree.Type_Name;
-     elsif Top.Types.Contains (Qualified_Identifier.Name) then
-        Tree.Type_Name := Qualified_Identifier.Name;
-        Tree.Class_Type := Tree.Type_Name;
-        Tree.Return_Type_Name := Tree.Type_Name & "'Class";
-     else
-        Tree.Type_Name := Qualified_Identifier.Name;
-        Tree.Return_Type_Name := Tree.Type_Name;
-        Tree.Standard_Type := Tree.Type_Name;
-     end if;
+   if not Tree.Type_Name.internal then
+      Tree.Type_Name.internal := Tree.Type_Name.id;
+   end if;
+   
+   if not Tree.Type_Name.rt then
+      Tree.Type_Name.rt := Tree.Type_Name.id;
+   end if;
+   
 end;

@@ -4,9 +4,9 @@ plugin Tropos version 0.1 is
       check;
    end run_check;
    
-   group generate : code is
-      generate_config_spec;
-      generate_config_body;
-   end generate;
+  group generate : code is
+     generate_config_spec;
+--     generate_config_body;
+  end generate;
 
 end Tropos;
