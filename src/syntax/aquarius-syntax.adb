@@ -17,13 +17,15 @@ package body Aquarius.Syntax is
    type Syntax_Tree_Node_Record is
       record
          Class             : Node_Class;
-         Non_Terminal_Name : Aquarius.Names.Aquarius_Name;
+         Non_Terminal_Name : Aquarius.Names.Aquarius_Name :=
+                               Aquarius.Names.Null_Aquarius_Name;
          Declaration       : Aquarius.Trees.Tree;
          Has_Token         : Boolean := False;
          Token             : Aquarius.Tokens.Token;
          Frame             : Aquarius.Tokens.Token_Frame;
          Formats           : Named_Format_Vector.Vector;
-         Format_Option     : Aquarius.Names.Aquarius_Name;
+         Format_Option     : Aquarius.Names.Aquarius_Name :=
+                               Aquarius.Names.Null_Aquarius_Name;
          Simple_Format     : Aquarius.Formats.Aquarius_Format;
          Special_Format    : Special_Format_Function;
          Vertical_Align    : Syntax_Tree;
@@ -93,7 +95,7 @@ package body Aquarius.Syntax is
       Property_Name : in     String)
    is
    begin
-      Aquarius.Names.Append (Item.When_Properties, Property_Name);
+      Item.When_Properties.Insert (Property_Name);
       Item.Pristine := False;
    end Add_Precondition_Property;
 
@@ -173,19 +175,14 @@ package body Aquarius.Syntax is
       Test_Tree  : not null access Aquarius.Trees.Root_Tree_Type'Class)
      return Boolean
    is
-   begin
-      if Aquarius.Names.Count (For_Syntax.When_Properties) = 0 then
-         return True;
-      end if;
+      use Aquarius.Names;
 
-      for I in 1 .. Aquarius.Names.Count (For_Syntax.When_Properties) loop
-         if Test_Tree.Has_Named_Property
-           (Aquarius.Names.Element (For_Syntax.When_Properties, I))
-         then
-            return True;
-         end if;
-      end loop;
-      return False;
+      function Test (Name : Aquarius_Name) return Boolean
+      is (Test_Tree.Has_Named_Property (Name));
+
+   begin
+      return For_Syntax.When_Properties.Is_Empty
+        or else For_Syntax.When_Properties.Any (Test'Access);
    end Check_Precondition;
 
    --------------------------

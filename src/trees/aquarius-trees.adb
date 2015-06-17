@@ -699,6 +699,17 @@ package body Aquarius.Trees is
       return False;
    end Has_Named_Property;
 
+   function Has_Named_Property
+     (Item : Root_Tree_Type;
+      Name : Aquarius.Names.Aquarius_Name)
+      return Boolean
+   is
+      pragma Unreferenced (Item);
+      pragma Unreferenced (Name);
+   begin
+      return False;
+   end Has_Named_Property;
+
    ------------------
    -- Has_Property --
    ------------------

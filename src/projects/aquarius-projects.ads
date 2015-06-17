@@ -5,6 +5,7 @@ private with Ada.Strings.Unbounded;
 with Aquarius.Buffers;
 with Aquarius.Entries;
 with Aquarius.Names;
+with Aquarius.Names.Sets;
 with Aquarius.Programs;
 with Aquarius.References;
 with Aquarius.Source.File_System;
@@ -222,7 +223,7 @@ private
          Main_Buffer     : Aquarius.Buffers.Aquarius_Buffer;
          Buffers         : Loaded_Buffer_Vector.Vector;
          Views           : View_Vector.Vector;
-         Grammar_Names   : Aquarius.Names.Name_List;
+         Grammar_Names   : Aquarius.Names.Sets.Name_Set;
          Project_UI      : Aquarius.UI.Aquarius_UI;
          Entries         : Project_Entries_Vector.Vector;
          References      : Aquarius.References.Reference_List;

@@ -1,6 +1,7 @@
 private with Ada.Containers.Vectors;
 
 with Aquarius.Messages;
+with Aquarius.Names;
 with Aquarius.Properties;
 with Aquarius.Source;
 
@@ -115,6 +116,10 @@ package Aquarius.Trees is
 
    function Has_Named_Property (Item : Root_Tree_Type;
                                 Name : String)
+                               return Boolean;
+
+   function Has_Named_Property (Item : Root_Tree_Type;
+                                Name : Aquarius.Names.Aquarius_Name)
                                return Boolean;
 
    function Show_Set_Properties (Item : not null access Root_Tree_Type'Class)
