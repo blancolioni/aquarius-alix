@@ -1,4 +1,5 @@
 with Ada.Containers.Doubly_Linked_Lists;
+with Ada.Strings.Fixed.Equal_Case_Insensitive;
 with Ada.Text_IO;
 
 with Aquarius.Library;
@@ -336,7 +337,8 @@ package body Aquarius.Trees is
 
       function Match (Item : Root_Tree_Type'Class) return Boolean is
       begin
-         return Item.Name = Child_Name;
+         return Ada.Strings.Fixed.Equal_Case_Insensitive
+           (Item.Name, Child_Name);
       end Match;
 
    begin

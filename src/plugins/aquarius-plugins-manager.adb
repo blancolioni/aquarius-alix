@@ -6,6 +6,7 @@ with Aquarius.Library;
 
 with Aquarius.Plugins.EBNF;
 with Aquarius.Plugins.Klein;
+with Aquarius.Plugins.Macro_11;
 with Aquarius.Plugins.Plugin;
 with Aquarius.Plugins.Script_Plugin;
 
@@ -29,13 +30,14 @@ package body Aquarius.Plugins.Manager is
 
    Loaded_Plugins : Plugin_Map.Map;
 
-   Local_EBNF_Plugin    : Aquarius_Plugin;
-   Local_Klein_Plugin   : Aquarius_Plugin;
-   Local_Ada_Plugin     : Aquarius_Plugin;
-   Local_Project_Plugin : Aquarius_Plugin;
-   Local_Haskell_Plugin : Aquarius_Plugin;
-   Local_Plugin_Plugin  : Aquarius_Plugin;
-   Local_Script_Plugin  : Aquarius_Plugin;
+   Local_EBNF_Plugin     : Aquarius_Plugin;
+   Local_Klein_Plugin    : Aquarius_Plugin;
+   Local_Ada_Plugin      : Aquarius_Plugin;
+   Local_Project_Plugin  : Aquarius_Plugin;
+   Local_Haskell_Plugin  : Aquarius_Plugin;
+   Local_Macro_11_Plugin : Aquarius_Plugin;
+   Local_Plugin_Plugin   : Aquarius_Plugin;
+   Local_Script_Plugin   : Aquarius_Plugin;
 
    function To_Plugin_Map_Name
      (Name : String)
@@ -62,6 +64,8 @@ package body Aquarius.Plugins.Manager is
          return Local_Ada_Plugin;
       elsif Name = "haskell" then
          return Local_Haskell_Plugin;
+      elsif Name = "macro11" then
+         return Local_Macro_11_Plugin;
       elsif Name = "script" then
          return Local_Script_Plugin;
       else
@@ -122,6 +126,11 @@ package body Aquarius.Plugins.Manager is
             Local_Script_Plugin := new Script_Plugin.Script_Plugin_Type;
          end if;
          Plugin := Local_Script_Plugin;
+      elsif Name = "macro11" then
+         if Local_Macro_11_Plugin = null then
+            Local_Macro_11_Plugin := new Macro_11.Macro_11_Plugin;
+         end if;
+         Plugin := Local_Macro_11_Plugin;
       elsif Name = "haskell" then
          if Local_Haskell_Plugin = null then
             Local_Haskell_Plugin := new Haskell.Haskell_Plugin_Type;

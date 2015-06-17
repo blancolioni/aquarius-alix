@@ -36,6 +36,10 @@ package Aquarius.Plugins is
                                Name   : in     String)
                               return Aquarius.Types.Aquarius_Type;
 
+   function Grammar
+     (Plugin : Aquarius_Plugin_Type'Class)
+      return Aquarius.Grammars.Aquarius_Grammar;
+
    procedure Create_Action_Group
      (Plugin     : in out Aquarius_Plugin_Type;
       Group_Name : in     String;

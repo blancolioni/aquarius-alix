@@ -5,7 +5,6 @@ with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with Aquarius.Errors;
-with Aquarius.Names;
 with Aquarius.Programs.Parser;
 with Aquarius.Projects;
 with Aquarius.Source;
@@ -75,20 +74,21 @@ package body Aquarius.Loader is
       Aquarius.Trees.Properties.Set_Project
         (Result.all,
          Aquarius.Projects.Aquarius_Project (Project));
-      declare
-         Full_Path : constant String :=
-                       Ada.Directories.Full_Name
-                         (Path);
-      begin
-         Result.Set_Property
-           ("full_name",
-            Aquarius.Names.Name_Value (Full_Path));
-         Result.Set_Property
-           ("containing_directory",
-            Aquarius.Names.Name_Value
-              (Ada.Directories.Containing_Directory
-                 (Full_Path)));
-      end;
+
+--        declare
+--           Full_Path : constant String :=
+--                         Ada.Directories.Full_Name
+--                           (Path);
+--        begin
+--           Result.Set_Property
+--             ("full_name",
+--              Aquarius.Names.Name_Value (Full_Path));
+--           Result.Set_Property
+--             ("containing_directory",
+--              Aquarius.Names.Name_Value
+--                (Ada.Directories.Containing_Directory
+--                   (Full_Path)));
+--        end;
 
       Initialise_Parse_Context (Context, Grammar, Result,
                                 Interactive => False);
@@ -174,7 +174,7 @@ package body Aquarius.Loader is
                   Aquarius.Errors.Error
                     (null, null,
                      Aquarius.Source.Show (Source_Pos)
-                     & "unable to determine class of token '"
+                     & ": unable to determine class of token '"
                      & Line (Old_First .. Line_Last)
                      & "'");
 
