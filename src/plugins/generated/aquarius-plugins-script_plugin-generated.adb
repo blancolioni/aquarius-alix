@@ -6,6 +6,8 @@ package body Aquarius.Plugins.Script_Plugin.Generated is
       pragma Style_Checks (Off);
       procedure Actionable_plugin_declaration_Before_list_of_declarations (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
                                                                            Child_Actionable : not null access Aquarius.Actions.Actionable'Class);
+      procedure Actionable_Plugin_Declaration_After_List_Of_Declarations (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
+                                                                           Child_Actionable : not null access Aquarius.Actions.Actionable'Class);
       procedure Actionable_property_declaration_After
         (Target_Actionable : not null access Aquarius.Actions.Actionable'Class);
       procedure Actionable_group_declaration_Before_list_of_actions (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
@@ -26,6 +28,13 @@ package body Aquarius.Plugins.Script_Plugin.Generated is
            (Target_Actionable), Aquarius.Programs.Program_Tree
            (Child_Actionable));
       end Actionable_plugin_declaration_Before_list_of_declarations;
+      procedure Actionable_Plugin_Declaration_after_List_Of_Declarations (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
+                                                                           Child_Actionable : not null access Aquarius.Actions.Actionable'Class) is
+      begin
+         Aquarius.Plugins.Script_Plugin.Bindings.Plugin_Declaration_After_List_Of_Declarations (Aquarius.Programs.Program_Tree
+           (Target_Actionable), Aquarius.Programs.Program_Tree
+           (Child_Actionable));
+      end Actionable_Plugin_Declaration_After_List_Of_Declarations;
       procedure Actionable_property_declaration_After
         (Target_Actionable : not null access Aquarius.Actions.Actionable'Class) is
       begin
@@ -75,6 +84,10 @@ package body Aquarius.Plugins.Script_Plugin.Generated is
                               "list_of_declarations", Parser,
                               Aquarius.Before,
                               Bindings.Actionable_plugin_declaration_Before_list_of_declarations'access);
+      Plugin.Register_Action ("plugin_declaration",
+                              "list_of_declarations", Parser,
+                              Aquarius.After,
+                              Bindings.Actionable_Plugin_Declaration_After_List_Of_Declarations'Access);
       Plugin.Register_Action ("property_declaration", Parser,
                               Aquarius.After,
                               Bindings.Actionable_property_declaration_After'access);

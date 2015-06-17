@@ -2,10 +2,10 @@ top_level = compilation_unit
 case_sensitive = false
 
 identifier         ::= standard ada_identifier
-numeric_literal    ::= standard ada_numeric_literal
+numeric_literal    ::= regex "[0-9]+"
 character_literal  ::= standard ada_character_literal
 string_literal     ::= standard ada_string_literal
-delimiter          ::= delimiters "&()+,;|[]"
+delimiter          ::= delimiters "&()+,|[];"
 symbol             ::= standard ada_symbol
 comment            ::= standard ada_comment
 
@@ -28,7 +28,7 @@ context_clause ::= 'with' qualified_identifier ';'
 top_level_tropos_declaration ::=
    'package' package_name 'is'
       list_of_declarations
-   'end' matching_package_name;
+   'end' matching_package_name ';'
 
 package_name ::= < identifier / '.' >
 matching_package_name ::= < identifier / '.' >

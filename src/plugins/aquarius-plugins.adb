@@ -133,6 +133,18 @@ package body Aquarius.Plugins is
       return null;
    end Get_Standard_Type;
 
+   -------------
+   -- Grammar --
+   -------------
+
+   function Grammar
+     (Plugin : Aquarius_Plugin_Type'Class)
+      return Aquarius.Grammars.Aquarius_Grammar
+   is
+   begin
+      return Plugin.Grammar;
+   end Grammar;
+
    -----------------------
    -- Have_Action_Group --
    -----------------------
