@@ -1,5 +1,3 @@
-with System.Assertions;
-
 with Ada.Characters.Handling;
 with Ada.Characters.Latin_1;
 with Ada.Directories;
@@ -204,15 +202,6 @@ package body Aquarius.Loader is
       Finish_Parse (Context);
 
       return Result;
-
-   exception
-      when System.Assertions.Assert_Failure =>
-
-         if Result /= null then
-            Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error,
-                                  "assert failure");
-         end if;
-         raise;
 
    end Load;
 
