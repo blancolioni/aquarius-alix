@@ -33,9 +33,9 @@ package body Aquarius.Interaction.Console is
    overriding
    function Name
      (Item  : Console_Interactor_Type)
-     return String
+      return String
    is
-     pragma Unreferenced (Item);
+      pragma Unreferenced (Item);
    begin
       return "Console interactor";
    end Name;

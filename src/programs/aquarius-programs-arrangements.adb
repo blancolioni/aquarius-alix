@@ -377,9 +377,9 @@ package body Aquarius.Programs.Arrangements is
       end if;
 
       if Item.Separator_New_Line then
-           --  or else
-        --  (Enabled (Rules.New_Line_After) and then Item.Is_Separator)
-      --  then
+         --  or else
+         --  (Enabled (Rules.New_Line_After) and then Item.Is_Separator)
+         --  then
          Context.Current_Line := Context.Current_Line + 1;
          declare
             Align_With : constant Program_Tree :=

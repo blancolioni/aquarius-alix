@@ -82,7 +82,7 @@ package body Ada_Plugin.Ch10 is
         (Reference.Property (Plugin.Last_Identifier_Property));
       Procedure_Entry : Aquarius.Entries.Table_Entry;
       Parent_Entry  : Aquarius.Entries.Table_Entry;
-      pragma Warnings (Off, Parent_Entry);
+      pragma Unreferenced (Parent_Entry);
       Compilation_Unit : constant Program_Tree :=
         Program_Tree (Procedure_Spec.Property
                         (Plugin.Compilation_Unit_Property));

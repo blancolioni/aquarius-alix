@@ -305,7 +305,7 @@ package body Aquarius.Projects is
      (Item : Root_Project_Tree)
      return Boolean
    is
-     pragma Unreferenced (Item);
+      pragma Unreferenced (Item);
    begin
       return True;
    end Keep_Siblings;

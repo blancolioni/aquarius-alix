@@ -118,7 +118,7 @@ package body Aquarius.Source is
       return From.Get_Full_Path;
    end Get_Full_Path;
 
-  --------------
+   --------------
    -- Get_Line --
    --------------
 
