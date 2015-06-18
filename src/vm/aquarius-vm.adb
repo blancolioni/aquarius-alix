@@ -220,7 +220,7 @@ package body Aquarius.VM is
             --  Class_Name (Item.Val_Object);
 --                    Lib_Name  : constant String :=
 --                                  Class & "__"
-              --  & To_String (Item.Val_Method);
+--  & To_String (Item.Val_Method);
 --                    Lib_Value : constant VM_Value :=
 --                                  Get_Value (Env, Lib_Name);
 --                 begin

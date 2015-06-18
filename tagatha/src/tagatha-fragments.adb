@@ -281,8 +281,8 @@ package body Tagatha.Fragments is
                return Tagatha_Condition'Image (R.Condition);
             when Branch_Fragment =>
                declare
-                 Label : constant String := "L" &
-                   Integer'Image (-R.Branch_Target);
+                  Label : constant String := "L" &
+                            Integer'Image (-R.Branch_Target);
                begin
                   if R.Branch_Condition then
                      return "beq " & Label;

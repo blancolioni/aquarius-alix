@@ -222,10 +222,10 @@ package Aquarius.Syntax is
                        return Syntax_Tree;
 
    --     procedure Add_Table_Property
-     --  (Tree : not null access Syntax_Tree_Record);
---     function Has_Table_Property
---       (Tree : not null access Syntax_Tree_Record)
---       return Boolean;
+   --  (Tree : not null access Syntax_Tree_Record);
+   --     function Has_Table_Property
+   --       (Tree : not null access Syntax_Tree_Record)
+   --       return Boolean;
 
    --  Align all instances of Item under Top vertically
    procedure Vertical_Align (Item : in out Syntax_Tree_Record;
