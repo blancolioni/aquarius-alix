@@ -11,6 +11,11 @@ package body Aqua.Primitives.Init is
       Arguments : Array_Of_Words)
       return Word;
 
+   function Handle_Get
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word;
+
    function Handle_Image
      (Context : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Array_Of_Words)
@@ -21,7 +26,7 @@ package body Aqua.Primitives.Init is
       Arguments : Array_Of_Words)
       return Word;
 
-   function Handle_Insert
+   function Handle_Set
      (Context : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Array_Of_Words)
       return Word;
@@ -42,9 +47,10 @@ package body Aqua.Primitives.Init is
       end if;
 
       New_Primitive ("object__contains", 2, Handle_Contains'Access);
+      New_Primitive ("object__get", 2, Handle_Get'Access);
       New_Primitive ("object__image", 1, Handle_Image'Access);
       New_Primitive ("object__include", 2, Handle_Include'Access);
-      New_Primitive ("object__insert", 3, Handle_Insert'Access);
+      New_Primitive ("object__set", 3, Handle_Set'Access);
       New_Primitive ("string__to_lower", 1, Handle_To_Lower'Access);
 
       Created_Primitives := True;
@@ -72,6 +78,28 @@ package body Aqua.Primitives.Init is
          return To_Integer_Word (0);
       end if;
    end Handle_Contains;
+
+   ----------------
+   -- Handle_Get --
+   ----------------
+
+   function Handle_Get
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word
+   is
+      Object : constant access Aqua.Objects.Object_Interface'Class :=
+                 Aqua.Objects.Object_Interface'Class
+                   (Context.To_External_Object (Arguments (1)).all)'Access;
+      Name   : constant String :=
+                 Context.To_String (Arguments (2));
+   begin
+      if not Object.Has_Property (Name) then
+         return 0;
+      else
+         return Object.Get_Property (Name);
+      end if;
+   end Handle_Get;
 
    ------------------
    -- Handle_Image --
@@ -108,11 +136,11 @@ package body Aqua.Primitives.Init is
       return Arguments (1);
    end Handle_Include;
 
-   -------------------
-   -- Handle_Insert --
-   -------------------
+   ----------------
+   -- Handle_Set --
+   ----------------
 
-   function Handle_Insert
+   function Handle_Set
      (Context : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Array_Of_Words)
       return Word
@@ -126,7 +154,7 @@ package body Aqua.Primitives.Init is
    begin
       Object.Set_Property (Name, Value);
       return Arguments (1);
-   end Handle_Insert;
+   end Handle_Set;
 
    ---------------------
    -- Handle_To_Lower --
