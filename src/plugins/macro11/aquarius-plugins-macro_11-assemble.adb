@@ -14,7 +14,7 @@ package body Aquarius.Plugins.Macro_11.Assemble is
          Assembly : Aqua.Assembler.Assembly;
       end record;
 
-   function Name (Item : Root_Assembly_Object) return String
+   overriding function Name (Item : Root_Assembly_Object) return String
    is (Ada.Strings.Unbounded.To_String (Item.Path));
 
    type Assembly_Object is access all Root_Assembly_Object'Class;
