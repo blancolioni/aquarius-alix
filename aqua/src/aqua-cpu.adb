@@ -438,16 +438,26 @@ package body Aqua.CPU is
                   begin
                      Value := Aqua.Primitives.Call_Primitive (CPU, Prim);
                   end;
-               elsif not Is_External_Reference (Target)
-                 or else CPU.To_External_Object (Target).all not in
-                 Aqua.Objects.Object_Interface'Class
-               then
+               elsif not Is_External_Reference (Target) then
                   raise Constraint_Error
                     with "property "
                     & CPU.Show (Name)
                     & " defined only on objects; found "
                     & CPU.Show (Target);
                else
+                  declare
+                     Ext : constant access External_Object_Interface'Class :=
+                             CPU.To_External_Object (Target);
+                  begin
+                     if Ext.all not in Aqua.Objects.Object_Interface'Class then
+                        raise Constraint_Error
+                          with "property "
+                          & CPU.Show (Name)
+                          & " defined only on objects; found "
+                          & CPU.Show (Target);
+                     end if;
+                  end;
+
                   declare
                      use Aqua.Objects;
                      Target_Object : constant access Object_Interface'Class :=
@@ -499,14 +509,32 @@ package body Aqua.CPU is
                end if;
 
                pragma Assert (Is_String_Reference (Name));
-               pragma Assert
-                 (Is_External_Reference (Target)
-                  and then CPU.To_External_Object (Target).all
-                  in Aqua.Objects.Object_Interface'Class);
+               pragma Assert (Is_External_Reference (Target));
 
-               Aqua.Objects.Object_Interface'Class
-                 (CPU.To_External_Object (Target).all).Set_Property
-                   (CPU.Image.To_String (Name), Value);
+               declare
+                  Ext : constant access External_Object_Interface'Class :=
+                          CPU.To_External_Object (Target);
+               begin
+                  if Ext.all not in Aqua.Objects.Object_Interface'Class then
+                     raise Constraint_Error
+                       with "property "
+                       & CPU.Show (Name)
+                       & " defined only on objects; found "
+                       & CPU.Show (Target);
+                  end if;
+               end;
+
+               declare
+                  use Aqua.Objects;
+                  Target_Object : constant access Object_Interface'Class :=
+                                    Object_Interface'Class
+                                      (CPU.To_External_Object
+                                         (Target).all)'Access;
+                  Property_Name : constant String :=
+                                    CPU.Image.To_String (Name);
+               begin
+                  Target_Object.Set_Property (Property_Name, Value);
+               end;
             end;
 
          when Aqua.Traps.IO_Put_String =>
