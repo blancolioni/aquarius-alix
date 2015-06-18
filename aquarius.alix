@@ -46,8 +46,17 @@ source_dir = src/version
 source_dir = src/vm
 source_dir = src/watchers
 source_dir = aqua/src
+source_dir = komnenos/src
+source_dir = komnenos/src/config
+source_dir = komnenos/src/driver
+source_dir = komnenos/src/entities
+source_dir = komnenos/src/fragments
+source_dir = komnenos/src/ui
+source_dir = komnenos/src/ui/gtk
 source_dir = tagatha/src
 depend = { project = gtkada external = yes }
+depend = { project = tropos version = any }
+depend = { project = wlib version = any }
 main_unit = aquarius-driver
 exec_name = aquarius
 config_dir = config

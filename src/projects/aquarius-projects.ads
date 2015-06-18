@@ -12,11 +12,14 @@ with Aquarius.Source.File_System;
 with Aquarius.Trees;
 with Aquarius.UI;
 
+with Komnenos.Entities;
+
 package Aquarius.Projects is
 
    type Aquarius_Project_Type is
      new Root_Aquarius_Object
      and Aquarius.Programs.Root_Program_Tree_Store
+     and Komnenos.Entities.Program_Store_Interface
    with private;
 
    overriding
@@ -27,10 +30,10 @@ package Aquarius.Projects is
      (Project : not null access Aquarius_Project_Type'Class;
       Path    : in     String);
 
-   overriding
-   function Get_Program (Project   : not null access Aquarius_Project_Type;
-                         File_Name : String)
-                        return Aquarius.Programs.Program_Tree;
+   overriding function Get_Program
+     (Project   : in out Aquarius_Project_Type;
+      File_Name : String)
+      return Aquarius.Programs.Program_Tree;
 
    function Get_Buffer
      (Project     : not null access Aquarius_Project_Type'Class;
@@ -214,6 +217,7 @@ private
    type Aquarius_Project_Type is
      new Root_Aquarius_Object
      and Aquarius.Programs.Root_Program_Tree_Store
+     and Komnenos.Entities.Program_Store_Interface
    with
       record
          Name            : Aquarius.Names.Aquarius_Name;
