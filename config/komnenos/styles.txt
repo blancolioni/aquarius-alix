@@ -1,0 +1,38 @@
+default = {
+   font_name = "Tahoma"
+   font_size = 12
+}
+
+default_fixed = {
+   base = default
+   font_name = "Courier New"
+}
+
+source = {
+   base = default_fixed
+}
+
+reserved_identifier = {
+   base = source
+   bold = yes
+}
+
+comment = {
+   base = source
+   italic = yes
+   foreground = blue
+}
+
+entity_reference_hover = {
+   base = source
+   underline = yes
+   foreground = blue
+   cursor = hand
+}
+
+entity_reference_select = {
+   base = source
+   underline = yes
+   foreground = red
+   cursor = hand
+}

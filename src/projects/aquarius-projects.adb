@@ -237,10 +237,10 @@ package body Aquarius.Projects is
    -- Get_Program --
    -----------------
 
-   overriding
-   function Get_Program (Project   : not null access Aquarius_Project_Type;
-                         File_Name : String)
-                        return Aquarius.Programs.Program_Tree
+   overriding function Get_Program
+     (Project   : in out Aquarius_Project_Type;
+      File_Name : String)
+      return Aquarius.Programs.Program_Tree
    is
       use type Aquarius.Buffers.Aquarius_Buffer;
       Buffer : constant Aquarius.Buffers.Aquarius_Buffer :=

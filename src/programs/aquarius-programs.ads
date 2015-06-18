@@ -264,6 +264,17 @@ package Aquarius.Programs is
      (Item : Program_Tree_Type)
      return Boolean;
 
+   function Is_Declaration
+     (Item : Program_Tree_Type)
+      return Boolean;
+
+   procedure Set_Declaration
+     (Item : in out Program_Tree_Type);
+
+   function Declaration_Parent
+     (Item : not null access Program_Tree_Type'Class)
+      return Program_Tree;
+
    function Scan_Terminal
      (Start : not null access Program_Tree_Type'Class;
       Count : Integer)
@@ -355,7 +366,7 @@ package Aquarius.Programs is
 
    type Root_Program_Tree_Store is interface;
 
-   function Get_Program (From      : not null access Root_Program_Tree_Store;
+   function Get_Program (From      : in out Root_Program_Tree_Store;
                          File_Name : in String)
                          return Program_Tree
                          is abstract;
@@ -397,6 +408,7 @@ private
          NL                : Boolean;
          Overflow_Checked  : Boolean;
          Have_Symbol_Table : Boolean;
+         Is_Declaration    : Boolean;
          Source_File       : Aquarius.Source.Source_File;
          Msg_Level         : Aquarius.Messages.Message_Level;
          Vertical_Gap      : Aquarius.Layout.Count;
