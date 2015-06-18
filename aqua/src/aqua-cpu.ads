@@ -33,8 +33,7 @@ package Aqua.CPU is
    overriding function To_String
      (CPU   : in out Aqua_CPU_Type;
       Value : Word)
-      return String
-     with Pre => Is_String_Reference (Value);
+      return String;
 
    overriding function To_String_Word
      (CPU  : in out Aqua_CPU_Type;
