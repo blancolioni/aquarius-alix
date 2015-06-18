@@ -34,6 +34,7 @@ package body Aquarius.Programs is
       NL                   => False,
       Overflow_Checked     => False,
       Have_Symbol_Table    => False,
+      Is_Declaration       => False,
       Source_File          => Aquarius.Source.No_Source_File,
       Msg_Level            => Aquarius.Messages.No_Message,
       Vertical_Gap         => 0,
@@ -291,6 +292,22 @@ package body Aquarius.Programs is
 --     begin
 --        Dump (Item);
 --     end Debug_Dump_Program;
+
+   ------------------------
+   -- Declaration_Parent --
+   ------------------------
+
+   function Declaration_Parent
+     (Item : not null access Program_Tree_Type'Class)
+      return Program_Tree
+   is
+      It : Program_Tree := Program_Tree (Item);
+   begin
+      while It /= null and then not It.Is_Declaration loop
+         It := It.Program_Parent;
+      end loop;
+      return It;
+   end Declaration_Parent;
 
    ---------------------
    -- Direct_Children --
@@ -932,6 +949,18 @@ package body Aquarius.Programs is
       return Item.Comment;
    end Is_Comment;
 
+   --------------------
+   -- Is_Declaration --
+   --------------------
+
+   function Is_Declaration
+     (Item : Program_Tree_Type)
+      return Boolean
+   is
+   begin
+      return Item.Is_Declaration;
+   end Is_Declaration;
+
    ---------------
    -- Is_Filled --
    ---------------
@@ -1487,6 +1516,17 @@ package body Aquarius.Programs is
    begin
       return Item.Separator_NL;
    end Separator_New_Line;
+
+   ---------------------
+   -- Set_Declaration --
+   ---------------------
+
+   procedure Set_Declaration
+     (Item : in out Program_Tree_Type)
+   is
+   begin
+      Item.Is_Declaration := True;
+   end Set_Declaration;
 
    ---------------
    -- Set_Entry --

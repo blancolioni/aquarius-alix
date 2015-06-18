@@ -3,6 +3,7 @@ with Ada.Text_IO;
 
 with Aquarius.Actions;
 with Aquarius.Command_Line;
+with Aquarius.Config_Paths;
 with Aquarius.Configuration;
 with Aquarius.Grammars.Manager;
 with Aquarius.Library;
@@ -15,6 +16,10 @@ with Aquarius.Target.Manager;
 with Aquarius.Trees.Cursors;
 
 with Aquarius.Version;
+
+with Komnenos.Configure;
+with Komnenos.Logging;
+with Komnenos.UI;
 
 procedure Aquarius.Driver is
 
@@ -216,7 +221,19 @@ begin
 
    else
 
-      Show_Usage_Text;
+      Komnenos.Logging.Start_Logging;
+      Komnenos.Configure.Read_Configuration
+        (Aquarius.Config_Paths.Config_Path
+         & "/komnenos");
+
+      declare
+         Default_UI   : constant Komnenos.UI.Komnenos_UI :=
+                          Komnenos.UI.Create_UI
+                            (Aquarius.Config_Paths.Config_Path
+                             & "/komnenos");
+      begin
+         Default_UI.Start;
+      end;
 
    end if;
 
