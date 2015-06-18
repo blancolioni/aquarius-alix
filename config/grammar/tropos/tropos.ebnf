@@ -5,7 +5,7 @@ identifier         ::= standard ada_identifier
 numeric_literal    ::= regex "[0-9]+"
 character_literal  ::= standard ada_character_literal
 string_literal     ::= standard ada_string_literal
-delimiter          ::= delimiters "&()+,|[];"
+delimiter          ::= delimiters "&()+,|[];{}"
 symbol             ::= standard ada_symbol
 comment            ::= standard ada_comment
 
@@ -16,6 +16,8 @@ format ';' no_space_before no_space_after new_line_after
 format '.' no_space_before no_space_after
 format '(' space_before no_space_after
 format ')' no_space_before space_after
+format '{' space_before no_space_after
+format '}' no_space_before space_after
 format '[' space_before no_space_after
 format ']' no_space_before space_after
 format ',' no_space_before space_after
@@ -43,11 +45,13 @@ type_declaration ::= 'type' identifier [ header ] 'is' type_definition
 
 header ::= '(' identifier ':' named_type ')'
 
-type_definition ::= named_type | list_type | record_type
+type_definition ::= named_type | list_type | record_type | inline_record_type
 
 named_type ::= qualified_identifier 
 
 list_type ::= '[' qualified_identifier ']'
+
+inline_record_type ::= '{' < identifier / ',' > ':' record_component_type [ ':=' value ] '}'
 
 record_type ::= 'record' record_components 'end' 'record'
 
@@ -57,7 +61,7 @@ record_component ::= record_field | record_invariant
 
 record_field ::= identifier [ string_literal ] ':' record_component_type [ ':=' value ]
 
-record_component_type ::= named_type | list_type
+record_component_type ::= named_type | list_type | inline_record_type
 
 record_invariant ::= boolean_expression
 
