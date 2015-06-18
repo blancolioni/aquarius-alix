@@ -35,6 +35,14 @@ package body Aqua.CPU is
      (CPU     : in out Aqua_CPU_Type'Class;
       Operand : Aqua.Architecture.Operand_Type);
 
+   procedure Handle_Dec
+     (CPU     : in out Aqua_CPU_Type'Class;
+      Operand : Aqua.Architecture.Operand_Type);
+
+   procedure Handle_Inc
+     (CPU     : in out Aqua_CPU_Type'Class;
+      Operand : Aqua.Architecture.Operand_Type);
+
    procedure Handle_Tst
      (CPU     : in out Aqua_CPU_Type'Class;
       Operand : Aqua.Architecture.Operand_Type);
@@ -46,7 +54,9 @@ package body Aqua.CPU is
    Single_Operand : constant array (Word range 8 .. 23)
      of Single_Operand_Handler :=
        (8  => Handle_Clr'Access,
-        15     => Handle_Tst'Access,
+        10 => Handle_Inc'Access,
+        11 => Handle_Dec'Access,
+        15 => Handle_Tst'Access,
         others => null);
 
    procedure Handle
@@ -263,6 +273,60 @@ package body Aqua.CPU is
    end Handle_Clr;
 
    ----------------
+   -- Handle_Dec --
+   ----------------
+
+   procedure Handle_Dec
+     (CPU     : in out Aqua_CPU_Type'Class;
+      Operand : Aqua.Architecture.Operand_Type)
+   is
+      function Update (W : Word) return Word;
+
+      ------------
+      -- Update --
+      ------------
+
+      function Update (W : Word) return Word is
+         X : Word := W;
+      begin
+         Aqua.Arithmetic.Dec (X, 1);
+         Set_NZ (CPU, X);
+         return X;
+      end Update;
+
+   begin
+      Aqua.Architecture.Update (Operand, CPU.R, CPU.Image.all,
+                                Update'Access);
+   end Handle_Dec;
+
+   ----------------
+   -- Handle_Inc --
+   ----------------
+
+   procedure Handle_Inc
+     (CPU     : in out Aqua_CPU_Type'Class;
+      Operand : Aqua.Architecture.Operand_Type)
+   is
+      function Update (W : Word) return Word;
+
+      ------------
+      -- Update --
+      ------------
+
+      function Update (W : Word) return Word is
+         X : Word := W;
+      begin
+         Aqua.Arithmetic.Inc (X, 1);
+         Set_NZ (CPU, X);
+         return X;
+      end Update;
+
+   begin
+      Aqua.Architecture.Update (Operand, CPU.R, CPU.Image.all,
+                                Update'Access);
+   end Handle_Inc;
+
+   ----------------
    -- Handle_Jsr --
    ----------------
 
@@ -342,8 +406,10 @@ package body Aqua.CPU is
             declare
                Right_Word : constant Word := CPU.Pop;
                Left_Word  : constant Word := CPU.Pop;
-               pragma Assert (Is_String_Reference (Right_Word));
-               pragma Assert (Is_String_Reference (Left_Word));
+               pragma Assert (Right_Word = 0
+                              or else Is_String_Reference (Right_Word));
+               pragma Assert (Left_Word = 0
+                                or else Is_String_Reference (Left_Word));
                Result     : constant String :=
                               CPU.To_String (Left_Word)
                             & CPU.To_String (Right_Word);
@@ -617,14 +683,19 @@ package body Aqua.CPU is
       use Ada.Calendar;
       use Ada.Text_IO;
    begin
-      Put_Line ("Memory: used ="
-                & Address'Image
-                  (CPU.Image.Heap_High
-                   - CPU.Image.Heap_Low)
-                & " free="
-                & Address'Image
-                  (Address'Last - CPU.Image.Heap_High));
+      Put_Line
+        ("Memory:"
+         & " reserved ="
+         & Address'Image (CPU.Image.Code_Low)
+         & " code ="
+         & Address'Image (CPU.Image.Code_High - CPU.Image.Code_Low)
+         & " heap ="
+         & Address'Image
+           (CPU.Image.Heap_High - CPU.Image.Code_High)
+         & " free ="
+         & Address'Image (Address'Last - CPU.Image.Heap_High + 1));
 
+      Put_Line ("Objects:" & Natural'Image (CPU.Ext.Last_Index + 1));
       Put_Line ("Strings:" & Natural'Image (CPU.Str.Last_Index + 1));
       Put_Line ("CPU time:"
                 & Natural'Image (Natural (CPU.Exec_Time * 1000.0))
@@ -693,7 +764,9 @@ package body Aqua.CPU is
       return String
    is
    begin
-      if CPU.Image.Have_String (Value) then
+      if Value = 0 then
+         return "";
+      elsif CPU.Image.Have_String (Value) then
          return CPU.Image.To_String (Value);
       else
          return CPU.Str (Natural (Get_String_Reference (Value))
