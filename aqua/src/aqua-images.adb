@@ -33,6 +33,30 @@ package body Aqua.Images is
       end loop;
    end Bind;
 
+   ---------------
+   -- Code_High --
+   ---------------
+
+   function Code_High
+     (Image : Root_Image_Type'Class)
+      return Address
+   is
+   begin
+      return Image.Code_High;
+   end Code_High;
+
+   --------------
+   -- Code_Low --
+   --------------
+
+   function Code_Low
+     (Image : Root_Image_Type'Class)
+      return Address
+   is
+   begin
+      return Image.Code_Low;
+   end Code_Low;
+
    --------------
    -- Get_Byte --
    --------------
@@ -351,6 +375,7 @@ package body Aqua.Images is
 
       Image.High := Image.High
         + (Get_Address (High) - Get_Address (Low) + 2);
+      Image.Code_High := Image.High;
 
    end Load;
 

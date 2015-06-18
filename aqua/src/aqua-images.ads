@@ -49,6 +49,14 @@ package Aqua.Images is
      (Image : Root_Image_Type'Class)
       return Address;
 
+   function Code_Low
+     (Image : Root_Image_Type'Class)
+      return Address;
+
+   function Code_High
+     (Image : Root_Image_Type'Class)
+      return Address;
+
    function Have_String
      (Image : Root_Image_Type'Class;
       Value : Word)
@@ -124,6 +132,8 @@ private
          Memory        : Aqua.Memory.Memory_Type;
          Low           : Address := 16#1000#;
          High          : Address := 16#1000#;
+         Code_Low      : Address := 16#1000#;
+         Code_High     : Address := 16#1000#;
       end record;
 
 end Aqua.Images;
