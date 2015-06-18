@@ -48,7 +48,6 @@ source_dir = src/watchers
 source_dir = aqua/src
 source_dir = komnenos/src
 source_dir = komnenos/src/config
-source_dir = komnenos/src/driver
 source_dir = komnenos/src/entities
 source_dir = komnenos/src/fragments
 source_dir = komnenos/src/ui
