@@ -221,7 +221,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
          Child_Name  : String;
          Start       : Aqua.Address)
       is
-         Executor : Aqua_Action_Executor :=
+         Executor : constant Aqua_Action_Executor :=
                       (Plugin => Plugin,
                        Start  => Start);
          pragma Assert (Plugin.Have_Action_Group (Group_Name));
