@@ -448,10 +448,17 @@ package body Aqua.CPU is
                     & " defined only on objects; found "
                     & CPU.Show (Target);
                else
-                  Value :=
-                    Aqua.Objects.Object_Interface'Class
-                      (CPU.To_External_Object (Target).all).Get_Property
-                        (CPU.Image.To_String (Name));
+                  declare
+                     use Aqua.Objects;
+                     Target_Object : constant access Object_Interface'Class :=
+                                       Object_Interface'Class
+                                         (CPU.To_External_Object
+                                            (Target).all)'Access;
+                     Property_Name : constant String :=
+                                       CPU.Image.To_String (Name);
+                  begin
+                     Value := Target_Object.Get_Property (Property_Name);
+                  end;
 
                   if Aqua.Words.Is_Subroutine_Reference (Value) then
                      CPU.Push (Target);
