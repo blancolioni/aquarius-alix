@@ -27,11 +27,11 @@ after File_Declaration do
   else
      Tree.File_Name := Tree/Identifier.Image.To_Lower & ".txt";
   end if;
-  Top.File_Map.Insert (Tree/Identifier.Image, Tree);
+  Top.File_Map.Set (Tree/Identifier.Image, Tree);
 end;
 
 after Type_Declaration/identifier do
-  Top.Types.Insert (identifier.Image, Type_Declaration);
+  Top.Types.Set (identifier.Image, Type_Declaration);
   Top.Type_List.Include (identifier.Image);
   Type_Declaration.Type_Name := (id => Identifier.Image);
   Top.Current_Type_Declaration := Type_Declaration;
@@ -119,7 +119,7 @@ do
             null;
          else
             Top.Config_Package_List.Include (Qualified_Identifier.Image);
-            Top.Config_Package_Map.Insert (Qualified_Identifier.Image, Qualified_Identifier);
+            Top.Config_Package_Map.Set (Qualified_Identifier.Image, Qualified_Identifier);
          end if;
       elsif Top.Types.Contains (Qualified_Identifier.Qualifier) then
          Tree.Type_Name := (id => "String");
