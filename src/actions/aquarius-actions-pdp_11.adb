@@ -360,12 +360,11 @@ package body Aquarius.Actions.Pdp_11 is
       if Name = "&" then
          Put_Line (Processor.File, "    trap join_strings");
       elsif Name = "not" then
+         Put_Line (Processor.File, "    clr r0");
          Put_Line (Processor.File, "    tst (sp)+");
-         Put_Line (Processor.File, "    beq +1");
-         Put_Line (Processor.File, "    clr -(sp)");
-         Put_Line (Processor.File, "    beq +2");
-         Put_Line (Processor.File, "1:  mov #1, -(sp)");
-         Put_Line (Processor.File, "2:");
+         Put_Line (Processor.File, "    bne +1");
+         Put_Line (Processor.File, "    inc r0");
+         Put_Line (Processor.File, "1:  mov r0, -(sp)");
       else
          raise Constraint_Error with
            "unimplemented: " & Name;
