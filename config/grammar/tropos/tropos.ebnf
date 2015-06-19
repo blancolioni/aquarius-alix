@@ -1,7 +1,7 @@
 top_level = compilation_unit
 case_sensitive = false
 
-identifier         ::= standard ada_identifier
+identifier         ::= regex "\l\w*"
 numeric_literal    ::= regex "[0-9]+"
 character_literal  ::= standard ada_character_literal
 string_literal     ::= standard ada_string_literal
