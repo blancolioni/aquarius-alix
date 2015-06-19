@@ -206,15 +206,6 @@ package body Aquarius.Command_Line is
       return Get_Argument ("r", "render");
    end Renderer;
 
-   -----------
-   -- Style --
-   -----------
-
-   function Style  return String is
-   begin
-      return Get_Argument ("s", "style");
-   end Style;
-
    ------------
    -- Target --
    ------------
@@ -223,6 +214,15 @@ package body Aquarius.Command_Line is
    begin
       return Get_Argument ("t", "target");
    end Target;
+
+   -----------
+   -- Theme --
+   -----------
+
+   function Theme  return String is
+   begin
+      return Get_Argument ("T", "theme");
+   end Theme;
 
    -------------
    -- Version --

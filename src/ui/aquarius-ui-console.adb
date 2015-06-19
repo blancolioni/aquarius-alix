@@ -18,13 +18,6 @@ package body Aquarius.UI.Console is
    overriding
    procedure Start (With_UI : in out Console_UI_Type) is null;
 
-   overriding
-   procedure Show_Section (On      : in out Console_UI_Type;
-                           Section : Aquarius.Sections.Aquarius_Section;
-                           Hint_X  : Integer;
-                           Hint_Y  : Integer)
-   is null;
-
    ----------------
    -- Console_UI --
    ----------------
