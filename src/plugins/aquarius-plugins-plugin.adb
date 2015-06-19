@@ -8,7 +8,7 @@ with Aquarius.Names;
 with Aquarius.Programs.Arrangements;
 with Aquarius.Rendering.Manager;
 with Aquarius.Source;
-with Aquarius.Styles;
+with Aquarius.Themes;
 with Aquarius.Tokens;
 with Aquarius.Trees.Cursors;
 
@@ -922,15 +922,13 @@ package body Aquarius.Plugins.Plugin is
       use Ada.Text_IO;
 
       Renderer    : Aquarius.Rendering.Aquarius_Renderer;
-      Style       : Aquarius.Styles.Aquarius_Style;
       File        : File_Type;
 
    begin
 
       Aquarius.Programs.Arrangements.Arrange (P);
       Renderer := Aquarius.Rendering.Manager.Load_Renderer ("text");
-      Style := Aquarius.Styles.Default_Style;
-      Renderer.Set_Style (Style);
+      Renderer.Set_Theme (Aquarius.Themes.Active_Theme);
 
       Ada.Text_IO.Put_Line ("Writing to: " & Path);
 

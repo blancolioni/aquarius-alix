@@ -8,7 +8,7 @@ package Aquarius.Command_Line is
    function Action       return String;
    function Grammar      return String;
    function Renderer     return String;
-   function Style        return String;
+   function Theme        return String;
    function Target       return String;
    function Input_File   return String;
    function Output_File  return String;

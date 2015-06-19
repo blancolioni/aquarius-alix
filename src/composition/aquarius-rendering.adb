@@ -25,14 +25,14 @@ package body Aquarius.Rendering is
    end Set_Current_Position;
 
    ---------------
-   -- Set_Style --
+   -- Set_Theme --
    ---------------
 
-   procedure Set_Style (Renderer : access Root_Aquarius_Renderer;
-                        Style    : in     Aquarius.Styles.Aquarius_Style)
+   procedure Set_Theme (Renderer : access Root_Aquarius_Renderer;
+                        Theme    : in     Aquarius.Themes.Aquarius_Theme)
    is
    begin
-      Renderer.Style := Style;
-   end Set_Style;
+      Renderer.Theme := Theme;
+   end Set_Theme;
 
 end Aquarius.Rendering;

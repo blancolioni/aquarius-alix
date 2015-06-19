@@ -13,7 +13,7 @@ Options:
   -P prj, --project=prj        Load project from file prj
   -o path, --output=path:      Write rendered file to path
   -r name, --render=name:      Use renderer 'name' to format output
-  -s name, --style=name:       Apply style 'name' to output
+  -T name, --theme=name:       Apply theme 'name' to output
   -t arch, --target=arch:      Use arch as the target (default is found by
                                running the command 'arch')
 Grammars: Ada, Gnat project, EBNF, aquarius-config, Klein, Plugin, Script

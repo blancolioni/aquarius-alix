@@ -1,6 +1,6 @@
 with Aquarius.Layout;
 with Aquarius.Programs;
-with Aquarius.Styles;
+with Aquarius.Themes;
 
 package Aquarius.Rendering is
 
@@ -21,8 +21,8 @@ package Aquarius.Rendering is
                        Text      : in     String)
       is abstract;
 
-   procedure Set_Style (Renderer : access Root_Aquarius_Renderer;
-                        Style    : in     Aquarius.Styles.Aquarius_Style);
+   procedure Set_Theme (Renderer : access Root_Aquarius_Renderer;
+                        Theme    : in     Aquarius.Themes.Aquarius_Theme);
 
    procedure Begin_Render (Renderer : access Root_Aquarius_Renderer)
      is null;
@@ -40,7 +40,7 @@ private
    type Root_Aquarius_Renderer is abstract tagged
       record
          Pos     : Aquarius.Layout.Position          := (1, 1);
-         Style   : Aquarius.Styles.Aquarius_Style    := null;
+         Theme   : Aquarius.Themes.Aquarius_Theme    := null;
       end record;
 
 end Aquarius.Rendering;

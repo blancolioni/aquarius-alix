@@ -1,6 +1,5 @@
 with Aquarius.Interaction;
 limited with Aquarius.Projects;
-with Aquarius.Sections.Layout;
 
 package Aquarius.UI is
 
@@ -16,12 +15,6 @@ package Aquarius.UI is
 
    procedure Init (With_UI : not null access Root_UI_Type) is abstract;
    procedure Start (With_UI : in out Root_UI_Type) is abstract;
-
-   procedure Show_Section (On      : in out Root_UI_Type;
-                           Section : Aquarius.Sections.Aquarius_Section;
-                           Hint_X  : Integer;
-                           Hint_Y  : Integer)
-   is abstract;
 
    procedure Update_Message_View (With_UI : Root_UI_Type) is null;
 
@@ -41,7 +34,6 @@ private
    type Root_UI_Type is abstract new Root_Aquarius_Object with
       record
          Project : access Aquarius.Projects.Aquarius_Project_Type'Class;
-         Layout  : Aquarius.Sections.Layout.Section_Layout;
       end record;
 
 end Aquarius.UI;

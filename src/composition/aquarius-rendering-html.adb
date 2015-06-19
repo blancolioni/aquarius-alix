@@ -71,7 +71,7 @@ package body Aquarius.Rendering.Html is
       use Ada.Text_IO;
       use type Aquarius.Layout.Positive_Count;
       Font : constant Aquarius.Fonts.Aquarius_Font :=
-        Renderer.Style.Font (Class);
+        Renderer.Theme.Style (Class).Font;
       Render_Pos : constant Aquarius.Layout.Position :=
         Renderer.Current_Position;
    begin
