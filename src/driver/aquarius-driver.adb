@@ -238,29 +238,35 @@ begin
 
          Komnenos.Entities.Aqua_Entities.Create_Aqua_Object (UI);
 
-         if Command_Line.Extra_Arguments /= "" then
+         if Command_Line.Session_File /= "" then
             Komnenos.UI.Sessions.Load_Session
-              (UI, Command_Line.Extra_Arguments);
+              (UI, Command_Line.Session_File);
          elsif Ada.Directories.Exists (".aquarius-session") then
             Komnenos.UI.Sessions.Load_Session (UI, ".aquarius-session");
          end if;
 
-         if Command_Line.Input_File /= "" then
+         if Command_Line.Input_File /= ""
+           or else Command_Line.Extra_Arguments /= ""
+         then
             declare
                use Komnenos.Entities.Source.Aquarius_Source;
+               Path : constant String :=
+                        (if Command_Line.Input_File /= ""
+                         then Command_Line.Input_File
+                         else Command_Line.Extra_Arguments);
                Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
                            Aquarius.Grammars.Manager.Get_Grammar_For_File
-                             (Command_Line.Input_File);
+                             (Path);
                Input : constant Aquarius.Programs.Program_Tree :=
                          Aquarius.Loader.Load_From_File
-                             (Grammar, Command_Line.Input_File);
+                             (Grammar, Path);
                Entity  : constant Komnenos.Entities.Entity_Reference :=
                            Create_Aquarius_Source_Entity
                              (Table            => UI,
                               Name             =>
                                 Ada.Directories.Simple_Name
-                                  (Command_Line.Input_File),
-                              File_Name        => Command_Line.Input_File,
+                                  (Path),
+                              File_Name        => Path,
                               Class            => "declaration",
                               Line             => 1,
                               Column           => 1,
