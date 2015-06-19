@@ -5,15 +5,26 @@ package body Aquarius.Fonts is
    -----------------
 
    function Create_Font
-     (Foreground : Aquarius.Colours.Aquarius_Colour;
+     (Name       : String;
+      Size       : Natural;
+      Foreground : Aquarius.Colours.Aquarius_Colour;
       Bold       : Boolean         := False;
       Italic     : Boolean         := False;
       Underlined : Boolean         := False)
       return Aquarius_Font
    is
    begin
-      return (Foreground, Aquarius.Colours.White,
-              Bold, Italic, Underlined, True, False);
+      return Aquarius_Font'
+        (Name            => Aquarius.Names.To_Aquarius_Name (Name),
+         Size            => Size,
+         Foreground      => Foreground,
+         Background      => Aquarius.Colours.White,
+         Bold            => Bold,
+         Italic          => Italic,
+         Underlined      => Underlined,
+         Strike_Through  => False,
+         Have_Foreground => True,
+         Have_Background => False);
    end Create_Font;
 
    -----------------
@@ -21,15 +32,25 @@ package body Aquarius.Fonts is
    -----------------
 
    function Create_Font
-     (Bold       : Boolean         := False;
+     (Name       : String;
+      Size       : Natural;
+      Bold       : Boolean         := False;
       Italic     : Boolean         := False;
       Underlined : Boolean         := False)
       return Aquarius_Font
    is
    begin
-      return (Aquarius.Colours.Black,
-              Aquarius.Colours.White,
-              Bold, Italic, Underlined, False, False);
+      return Aquarius_Font'
+        (Name            => Aquarius.Names.To_Aquarius_Name (Name),
+         Size            => Size,
+         Foreground      => Aquarius.Colours.Black,
+         Background      => Aquarius.Colours.White,
+         Bold            => Bold,
+         Italic          => Italic,
+         Underlined      => Underlined,
+         Strike_Through  => False,
+         Have_Foreground => False,
+         Have_Background => False);
    end Create_Font;
 
    --------------------
@@ -100,6 +121,15 @@ package body Aquarius.Fonts is
       return Font.Italic;
    end Is_Italic;
 
+   -----------------------
+   -- Is_Strike_Through --
+   -----------------------
+
+   function Is_Strike_Through (Font : Aquarius_Font) return Boolean is
+   begin
+      return Font.Strike_Through;
+   end Is_Strike_Through;
+
    -------------------
    -- Is_Underlined --
    -------------------
@@ -108,6 +138,15 @@ package body Aquarius.Fonts is
    begin
       return Font.Underlined;
    end Is_Underlined;
+
+   ----------
+   -- Name --
+   ----------
+
+   function Name (Font : Aquarius_Font) return String is
+   begin
+      return Aquarius.Names.To_String (Font.Name);
+   end Name;
 
    --------------------
    -- Set_Background --
@@ -167,5 +206,14 @@ package body Aquarius.Fonts is
    begin
       Font.Underlined := Value;
    end Set_Underlined;
+
+   ----------
+   -- Size --
+   ----------
+
+   function Size (Font : Aquarius_Font) return Natural is
+   begin
+      return Font.Size;
+   end Size;
 
 end Aquarius.Fonts;

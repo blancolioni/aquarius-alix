@@ -3,8 +3,10 @@ private with Ada.Containers.Vectors;
 private with Ada.Finalization;
 private with Ada.Strings.Unbounded;
 
+with Aquarius.Styles;
+with Aquarius.Themes;
+
 with Komnenos.Entities;
-with Komnenos.Styles;
 
 package Komnenos.Fragments is
 
@@ -57,20 +59,18 @@ package Komnenos.Fragments is
 
    procedure Set_Default_Style
      (Fragment : in out Root_Fragment_Type'Class;
-      Style    : in Komnenos.Styles.Komnenos_Style);
+      Style    : in Aquarius.Styles.Aquarius_Style);
 
    procedure Put
      (Fragment : in out Root_Fragment_Type;
       Text     : in     String;
-      Styles   : in     Komnenos.Styles.Style_Collection :=
-        (others => Komnenos.Styles.Null_Style);
+      Style    : in     Aquarius.Styles.Aquarius_Style;
       Link     : in     Komnenos.Entities.Entity_Reference := null);
 
    procedure Put_Line
      (Fragment : in out Root_Fragment_Type;
       Text     : in     String;
-      Styles   : in     Komnenos.Styles.Style_Collection :=
-        (others => Komnenos.Styles.Null_Style);
+      Style    : in     Aquarius.Styles.Aquarius_Style;
       Link     : in     Komnenos.Entities.Entity_Reference := null);
 
    procedure New_Line (Fragment : in out Root_Fragment_Type);
@@ -106,23 +106,23 @@ package Komnenos.Fragments is
 
    procedure Get_Style
      (Fragment : Root_Fragment_Type;
-      State    : Komnenos.Styles.Element_State;
+      State    : Aquarius.Themes.Element_State;
       Offset   : Positive;
-      Style    : out Komnenos.Styles.Komnenos_Style;
+      Style    : out Aquarius.Styles.Aquarius_Style;
       Start    : out Natural;
       Finish   : out Natural);
 
    function Get_Style
      (Fragment : Root_Fragment_Type;
-      State    : Komnenos.Styles.Element_State;
+      State    : Aquarius.Themes.Element_State;
       Offset   : Positive)
-      return Komnenos.Styles.Komnenos_Style;
+      return Aquarius.Styles.Aquarius_Style;
 
    procedure Iterate
      (Fragment : Root_Fragment_Type;
       Put      : not null access
         procedure (Text  : String;
-                   Style : Komnenos.Styles.Komnenos_Style;
+                   Style : Aquarius.Styles.Aquarius_Style;
                    Link  : Komnenos.Entities.Entity_Reference);
       New_Line : not null access procedure);
 
@@ -130,10 +130,13 @@ package Komnenos.Fragments is
 
 private
 
+   type Style_Collection is
+     array (Aquarius.Themes.Element_State) of Aquarius.Styles.Aquarius_Style;
+
    type Style_Info is
       record
          Length    : Natural;
-         Styles    : Komnenos.Styles.Style_Collection;
+         Styles    : Style_Collection;
          Reference : Komnenos.Entities.Entity_Reference;
       end record;
 
@@ -156,7 +159,7 @@ private
      new Ada.Finalization.Controlled
      and Komnenos.Entities.Entity_Visual with
       record
-         Default_Style     : Komnenos.Styles.Komnenos_Style;
+         Default_Style     : Aquarius.Styles.Aquarius_Style;
          Layout_Rec        : Layout_Rectangle;
          Path              : Ada.Strings.Unbounded.Unbounded_String;
          Title             : Ada.Strings.Unbounded.Unbounded_String;
