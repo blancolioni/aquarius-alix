@@ -31,7 +31,7 @@ package body Aquarius.Grammars.Builtin is
       Identifier_Start  : constant Lexer := Letter;
       Identifier_Extend : constant Lexer := Digit or Literal ('_');
       Numeral        : constant Lexer :=
-        Digit & Repeat (Literal ('_') or Digit);
+        Digit & Optional (Repeat (Literal ('_') or Digit));
       Exponent       : constant Lexer :=
         (Literal ('E') or Literal ('e')) &
         Optional (Literal ('+') or Literal ('-')) & Numeral;
@@ -39,7 +39,7 @@ package body Aquarius.Grammars.Builtin is
         Numeral & Optional (Literal ('.') & Numeral) & Optional (Exponent);
       Extended_Digit : constant Lexer := Hex_Digit;
       Based_Numeral  : constant Lexer :=
-        Extended_Digit & Repeat (Literal ('_') or Extended_Digit);
+        Extended_Digit & Optional (Repeat (Literal ('_') or Extended_Digit));
       Based_Literal  : constant Lexer :=
         Numeral & Literal ('#') & Based_Numeral &
         Optional (Literal ('.') & Based_Numeral) &
@@ -53,14 +53,14 @@ package body Aquarius.Grammars.Builtin is
 
       Ada_Identifiers :=
         Identifier_Start &
-        Repeat (Identifier_Start or Identifier_Extend);
+        Optional (Repeat (Identifier_Start or Identifier_Extend));
       Ada_Numeric_Literals :=
         Based_Literal or Decimal_Literal;
 
       Ada_Character_Literals :=
         Literal (''') & Graphic & Literal (''');
       Ada_String_Literals :=
-        Literal ('"') & Repeat (String_Element) & Literal ('"');
+        Literal ('"') & Optional (Repeat (String_Element)) & Literal ('"');
       Ada_Comments :=
         Literal ('-') & Literal ('-') & Repeat (Any);
       Ada_Symbols :=
