@@ -1,4 +1,4 @@
---  with Tropos;
+with Aquarius.UI;
 
 with Komnenos.Entities;
 with Komnenos.Fragments;
@@ -9,9 +9,8 @@ package Komnenos.UI is
    type Root_Komnenos_UI is
      abstract new Komnenos.Entities.Entity_Table_Interface
      and Komnenos.Session_Objects.Session_Object_Interface
+     and Aquarius.UI.Root_UI_Type
    with private;
-
-   procedure Start (UI : in out Root_Komnenos_UI) is abstract;
 
    procedure Place_Fragment
      (UI       : in out Root_Komnenos_UI;
@@ -94,7 +93,8 @@ private
 
    type Root_Komnenos_UI is
      abstract new Komnenos.Entities.Entity_Table_Interface
-     and Komnenos.Session_Objects.Session_Object_Interface with
+     and Komnenos.Session_Objects.Session_Object_Interface
+     and Aquarius.UI.Root_UI_Type with
       record
          View_Left   : Integer;
          View_Top    : Integer;

@@ -135,6 +135,9 @@ package body Komnenos.UI.Gtk_UI is
 
    type Gtk_UI_Access is access all Root_Gtk_UI'Class;
 
+   overriding function Name (UI : Root_Gtk_UI) return String
+   is ("Komnenos UI");
+
    overriding procedure Start (UI : in out Root_Gtk_UI);
 
    overriding procedure Place_Fragment
