@@ -206,6 +206,15 @@ package body Aquarius.Command_Line is
       return Get_Argument ("r", "render");
    end Renderer;
 
+   ------------------
+   -- Session_File --
+   ------------------
+
+   function Session_File  return String is
+   begin
+      return Get_Argument ("S", "session");
+   end Session_File;
+
    ------------
    -- Target --
    ------------
