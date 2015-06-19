@@ -3,17 +3,13 @@ limited with Aquarius.Projects;
 
 package Aquarius.UI is
 
-   type Root_UI_Type is abstract new Root_Aquarius_Object with private;
-
-   overriding
-   function Name (Item : Root_UI_Type) return String;
+   type Root_UI_Type is interface and Root_Aquarius_Object;
 
    procedure Show_Interactor
      (Item : Root_UI_Type;
       Interactor : not null access Aquarius.Interaction.Interactor'Class)
    is null;
 
-   procedure Init (With_UI : not null access Root_UI_Type) is abstract;
    procedure Start (With_UI : in out Root_UI_Type) is abstract;
 
    procedure Update_Message_View (With_UI : Root_UI_Type) is null;
@@ -21,19 +17,9 @@ package Aquarius.UI is
    procedure Show_Project
      (User_Interface : in out Root_UI_Type;
       Project        : not null access
-        Aquarius.Projects.Aquarius_Project_Type'Class);
-
-   function Current_Project
-     (UI : Root_UI_Type'Class)
-      return access Aquarius.Projects.Aquarius_Project_Type'Class;
+        Aquarius.Projects.Aquarius_Project_Type'Class)
+   is null;
 
    type Aquarius_UI is access all Root_UI_Type'Class;
-
-private
-
-   type Root_UI_Type is abstract new Root_Aquarius_Object with
-      record
-         Project : access Aquarius.Projects.Aquarius_Project_Type'Class;
-      end record;
 
 end Aquarius.UI;
