@@ -1,10 +1,14 @@
+--  with Tropos;
+
 with Komnenos.Entities;
 with Komnenos.Fragments;
+with Komnenos.Session_Objects;
 
 package Komnenos.UI is
 
    type Root_Komnenos_UI is
      abstract new Komnenos.Entities.Entity_Table_Interface
+     and Komnenos.Session_Objects.Session_Object_Interface
    with private;
 
    procedure Start (UI : in out Root_Komnenos_UI) is abstract;
@@ -89,7 +93,8 @@ package Komnenos.UI is
 private
 
    type Root_Komnenos_UI is
-     abstract new Komnenos.Entities.Entity_Table_Interface with
+     abstract new Komnenos.Entities.Entity_Table_Interface
+     and Komnenos.Session_Objects.Session_Object_Interface with
       record
          View_Left   : Integer;
          View_Top    : Integer;
