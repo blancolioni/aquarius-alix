@@ -35,6 +35,7 @@ after Type_Declaration/identifier do
   Top.Type_List.Include (identifier.Image);
   Type_Declaration.Type_Name := (id => Identifier.Image);
   Top.Current_Type_Declaration := Type_Declaration;
+  Komnenos.Define (parent, child);
 end;
 
 before Type_Declaration/Type_Definition do
