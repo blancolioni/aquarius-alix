@@ -43,13 +43,13 @@ package body Aquarius.Actions.Pdp_11 is
       Processor.Action_Child  := Child /= "";
 
       if not Processor.Frame_Table.Contains (Parent) then
-         Processor.Frame_Table.Insert (Parent, (Local, 6));
+         Processor.Frame_Table.Insert (Parent, (Local, 8));
       end if;
 
       if Processor.Action_Child
         and then not Processor.Frame_Table.Contains (Child)
       then
-         Processor.Frame_Table.Insert (Child, (Local, 8));
+         Processor.Frame_Table.Insert (Child, (Local, 10));
       end if;
    end Action_Header;
 
@@ -447,11 +447,12 @@ package body Aquarius.Actions.Pdp_11 is
      (Processor : in out Pdp_Scanner)
    is
    begin
-      Processor.Frame_Table.Insert ("top", (Local, 4));
-      Processor.Frame_Table.Insert ("tree", (Local, 6));
+      Processor.Frame_Table.Insert ("komnenos", (Local, 4));
+      Processor.Frame_Table.Insert ("top", (Local, 6));
+      Processor.Frame_Table.Insert ("tree", (Local, 8));
       if Processor.Action_Child then
-         Processor.Frame_Table.Insert ("parent", (Local, 6));
-         Processor.Frame_Table.Insert ("child", (Local, 8));
+         Processor.Frame_Table.Insert ("parent", (Local, 8));
+         Processor.Frame_Table.Insert ("child", (Local, 10));
       end if;
 
       Put_Line (Processor.File,

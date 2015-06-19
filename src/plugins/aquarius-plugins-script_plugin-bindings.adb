@@ -14,6 +14,8 @@ with Aquarius.Actions.Pdp_11;
 
 with Aqua.Images;
 
+with Komnenos.Entities.Aqua_Entities;
+
 package body Aquarius.Plugins.Script_Plugin.Bindings is
 
    use Aquarius.Programs;
@@ -83,13 +85,17 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Item     : not null access Aquarius.Actions.Actionable'Class)
    is
       Tree    : constant Program_Tree := Program_Tree (Item);
+      Komnenos_Arg : constant Aqua.Word :=
+                       Executor.Plugin.Executor.To_Word
+                         (Komnenos.Entities.Aqua_Entities.Get_Aqua_Object);
       Top_Arg     : constant Aqua.Word :=
                       Executor.Plugin.Executor.To_Word (Tree.Program_Root);
       Tree_Arg  : constant Aqua.Word :=
                       Executor.Plugin.Executor.To_Word (Tree);
    begin
       Executor.Plugin.Executor.Execute
-        (Executor.Start, (Top_Arg, Tree_Arg));
+        (Executor.Start,
+         (Komnenos_Arg, Top_Arg, Tree_Arg));
    end Execute;
 
    -------------
@@ -103,6 +109,9 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
    is
       Parent_Tree : constant Program_Tree := Program_Tree (Parent);
       Child_Tree  : constant Program_Tree := Program_Tree (Child);
+      Komnenos_Arg : constant Aqua.Word :=
+                       Executor.Plugin.Executor.To_Word
+                         (Komnenos.Entities.Aqua_Entities.Get_Aqua_Object);
       Top_Arg     : constant Aqua.Word :=
                       Executor.Plugin.Executor.To_Word
                         (Parent_Tree.Program_Root);
@@ -115,7 +124,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
    begin
       Executor.Plugin.Executor.Execute
         (Executor.Start,
-         (Top_Arg, Parent_Arg, Child_Arg));
+         (Komnenos_Arg, Top_Arg, Parent_Arg, Child_Arg));
    end Execute;
 
    -----------------------------

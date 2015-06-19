@@ -23,6 +23,7 @@ with Komnenos.UI;
 with Komnenos.UI.Sessions;
 
 with Komnenos.Entities.Source.Aquarius_Source;
+with Komnenos.Entities.Aqua_Entities;
 
 procedure Aquarius.Driver is
 
@@ -233,6 +234,8 @@ begin
                      & "/komnenos");
       begin
 
+         Komnenos.Entities.Aqua_Entities.Create_Aqua_Object (UI);
+
          if Command_Line.Extra_Arguments /= "" then
             Komnenos.UI.Sessions.Load_Session
               (UI, Command_Line.Extra_Arguments);
@@ -263,10 +266,15 @@ begin
                               Compilation_Unit => Input,
                               Entity_Spec      => Input,
                               Entity_Body      => null);
+               pragma Unreferenced (Entity);
             begin
-               UI.Add_Entity
-                 (Ada.Directories.Simple_Name (Command_Line.Input_File),
-                  Entity);
+               Grammar.Run_Action_Trigger
+                 (Input,
+                  Aquarius.Actions.Semantic_Trigger);
+
+--                 UI.Add_Entity
+--                   (Ada.Directories.Simple_Name (Command_Line.Input_File),
+--                    Entity);
             end;
          end if;
 
