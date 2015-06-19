@@ -22,6 +22,8 @@ with Komnenos.Logging;
 with Komnenos.UI;
 with Komnenos.UI.Sessions;
 
+with Komnenos.Entities.Source.Aquarius_Source;
+
 procedure Aquarius.Driver is
 
    procedure Show_Usage_Text;
@@ -236,6 +238,36 @@ begin
               (UI, Command_Line.Extra_Arguments);
          elsif Ada.Directories.Exists (".aquarius-session") then
             Komnenos.UI.Sessions.Load_Session (UI, ".aquarius-session");
+         end if;
+
+         if Command_Line.Input_File /= "" then
+            declare
+               use Komnenos.Entities.Source.Aquarius_Source;
+               Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
+                           Aquarius.Grammars.Manager.Get_Grammar_For_File
+                             (Command_Line.Input_File);
+               Input : constant Aquarius.Programs.Program_Tree :=
+                         Aquarius.Loader.Load_From_File
+                             (Grammar, Command_Line.Input_File);
+               Entity  : constant Komnenos.Entities.Entity_Reference :=
+                           Create_Aquarius_Source_Entity
+                             (Table            => UI,
+                              Name             =>
+                                Ada.Directories.Simple_Name
+                                  (Command_Line.Input_File),
+                              File_Name        => Command_Line.Input_File,
+                              Class            => "declaration",
+                              Line             => 1,
+                              Column           => 1,
+                              Top_Level        => True,
+                              Compilation_Unit => Input,
+                              Entity_Spec      => Input,
+                              Entity_Body      => null);
+            begin
+               UI.Add_Entity
+                 (Ada.Directories.Simple_Name (Command_Line.Input_File),
+                  Entity);
+            end;
          end if;
 
          UI.Start;
