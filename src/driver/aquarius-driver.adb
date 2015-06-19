@@ -1,4 +1,4 @@
---  with Ada.Directories;
+with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Text_IO;
 
@@ -20,7 +20,7 @@ with Aquarius.Version;
 
 with Komnenos.Logging;
 with Komnenos.UI;
---  with Komnenos.UI.Sessions;
+with Komnenos.UI.Sessions;
 
 procedure Aquarius.Driver is
 
@@ -231,14 +231,17 @@ begin
                      & "/komnenos");
       begin
 
---           if Command_Line.Extra_Arguments /= "" then
---              Komnenos.UI.Sessions.Load_Session
---                (UI, Command_Line.Extra_Arguments);
---           elsif Ada.Directories.Exists (".aquarius-session") then
---              Komnenos.UI.Sessions.Load_Session (UI, ".aquarius-session");
---           end if;
+         if Command_Line.Extra_Arguments /= "" then
+            Komnenos.UI.Sessions.Load_Session
+              (UI, Command_Line.Extra_Arguments);
+         elsif Ada.Directories.Exists (".aquarius-session") then
+            Komnenos.UI.Sessions.Load_Session (UI, ".aquarius-session");
+         end if;
 
          UI.Start;
+
+         Komnenos.UI.Sessions.Save_Session (UI, ".aquarius-session");
+
       end;
 
    end if;

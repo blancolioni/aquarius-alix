@@ -3,6 +3,8 @@ with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Numerics;
 --  with Ada.Text_IO;
 
+with Tropos;
+
 with Aquarius.Colours;
 with Aquarius.Fonts;
 with Aquarius.Styles;
@@ -66,7 +68,7 @@ package body Komnenos.UI.Gtk_UI is
    type Root_Gtk_Layout is
      new Komnenos.Layouts.Root_Layout_Type with
       record
-         UI : access Root_Gtk_UI;
+         UI : access Root_Gtk_UI'Class;
       end record;
 
    overriding procedure Item_Moved
@@ -76,6 +78,14 @@ package body Komnenos.UI.Gtk_UI is
    overriding procedure Item_Placed
      (Layout : in out Root_Gtk_Layout;
       Item   : Komnenos.Fragments.Fragment_Type);
+
+   overriding procedure To_Config
+     (Layout : Root_Gtk_Layout;
+      Config : in out Tropos.Configuration);
+
+   overriding procedure From_Config
+     (Layout : in out Root_Gtk_Layout;
+      Config : Tropos.Configuration);
 
    type Layout_Widget_Record is
       record
@@ -111,7 +121,7 @@ package body Komnenos.UI.Gtk_UI is
          Entity_Tree     : Gtk.Tree_View.Gtk_Tree_View;
          Entity_Filter   : Gtk.GEntry.Gtk_Entry;
          Navigation      : Gtk.Drawing_Area.Gtk_Drawing_Area;
-         Layout          : Root_Gtk_Layout;
+         Layout          : access Root_Gtk_Layout'Class;
          Widgets         : Layout_Widget_Lists.List;
          Connectors      : Connector_Lists.List;
          Active          : Komnenos.Fragments.Fragment_Type := null;
@@ -137,6 +147,14 @@ package body Komnenos.UI.Gtk_UI is
      (UI : Root_Gtk_UI)
       return Komnenos.Fragments.Fragment_Type
    is (UI.Active);
+
+   overriding procedure To_Config
+     (UI     : Root_Gtk_UI;
+      Config : in out Tropos.Configuration);
+
+   overriding procedure From_Config
+     (UI : in out Root_Gtk_UI;
+      Config : Tropos.Configuration);
 
    procedure Create_Fragment_Widget
      (Fragment : Komnenos.Fragments.Fragment_Type;
@@ -372,6 +390,7 @@ package body Komnenos.UI.Gtk_UI is
       Update_Fragment_Positions (UI);
 
       UI.Navigation.Queue_Draw;
+
       return True;
    end Click_Navigation_Handler;
 
@@ -534,6 +553,7 @@ package body Komnenos.UI.Gtk_UI is
       Result.View_Width := 400;
       Result.View_Height := 400;
 
+      Result.Layout := new Root_Gtk_Layout;
       Result.Layout.UI := Result;
 
       Gtk.Main.Init;
@@ -1126,6 +1146,30 @@ package body Komnenos.UI.Gtk_UI is
       return True;
    end Fragment_Title_Motion_Handler;
 
+   -----------------
+   -- From_Config --
+   -----------------
+
+   overriding procedure From_Config
+     (Layout : in out Root_Gtk_Layout;
+      Config : Tropos.Configuration)
+   is
+   begin
+      null;
+   end From_Config;
+
+   -----------------
+   -- From_Config --
+   -----------------
+
+   overriding procedure From_Config
+     (UI : in out Root_Gtk_UI;
+      Config : Tropos.Configuration)
+   is
+   begin
+      null;
+   end From_Config;
+
    -------------------
    -- Get_Tag_Entry --
    -------------------
@@ -1478,6 +1522,7 @@ package body Komnenos.UI.Gtk_UI is
       Entity_Lists.Create (UI.Entity_Tree, UI.Entity_Filter);
 
       UI.Top_Level.Show_All;
+
       Gtk.Main.Main;
    end Start;
 
@@ -1599,6 +1644,34 @@ package body Komnenos.UI.Gtk_UI is
 
       return False;
    end Text_View_Motion_Handler;
+
+   ---------------
+   -- To_Config --
+   ---------------
+
+   overriding procedure To_Config
+     (Layout : Root_Gtk_Layout;
+      Config : in out Tropos.Configuration)
+   is
+      pragma Unreferenced (Layout);
+      pragma Unreferenced (Config);
+   begin
+      null;
+   end To_Config;
+
+   ---------------
+   -- To_Config --
+   ---------------
+
+   overriding procedure To_Config
+     (UI     : Root_Gtk_UI;
+      Config : in out Tropos.Configuration)
+   is
+      pragma Unreferenced (UI);
+      pragma Unreferenced (Config);
+   begin
+      null;
+   end To_Config;
 
    -------------
    -- To_RGBA --

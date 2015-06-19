@@ -1,12 +1,15 @@
 private with Ada.Containers.Doubly_Linked_Lists;
 
 with Komnenos.Fragments;
+with Komnenos.Session_Objects;
 
 package Komnenos.Layouts is
 
    Margin : constant := 32;
 
-   type Root_Layout_Type is abstract tagged private;
+   type Root_Layout_Type is
+     abstract new Komnenos.Session_Objects.Session_Object_Interface
+   with private;
 
    procedure Item_Moved
      (Layout : in out Root_Layout_Type;
@@ -48,7 +51,8 @@ private
        (Komnenos.Fragments.Fragment_Type,
         Komnenos.Fragments."=");
 
-   type Root_Layout_Type is abstract tagged
+   type Root_Layout_Type is
+   abstract new Komnenos.Session_Objects.Session_Object_Interface with
       record
          Items : Fragment_Lists.List;
       end record;
