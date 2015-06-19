@@ -104,6 +104,8 @@ begin
          return;
       end if;
 
+      Komnenos.Entities.Aqua_Entities.Create_Aqua_Object (null);
+
       declare
          use type Aquarius.Grammars.Aquarius_Grammar;
          use type Aquarius.Programs.Program_Tree;
@@ -292,8 +294,5 @@ exception
         ("exception: " & Ada.Exceptions.Exception_Name (E));
       Ada.Text_IO.Put_Line
         (Ada.Exceptions.Exception_Message (E));
-      Ada.Text_IO.Put ("Press return to exit");
-      Ada.Text_IO.Flush;
-      Ada.Text_IO.Skip_Line;
 
 end Aquarius.Driver;

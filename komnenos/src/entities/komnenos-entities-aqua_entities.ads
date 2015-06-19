@@ -35,7 +35,7 @@ package Komnenos.Entities.Aqua_Entities is
    type Komnenos_Aqua_Object is access all Root_Aqua_Object'Class;
 
    procedure Create_Aqua_Object
-     (Table : not null access Entity_Table_Interface'Class);
+     (Table : access Entity_Table_Interface'Class);
 
    function Get_Aqua_Object
      return Komnenos_Aqua_Object;
