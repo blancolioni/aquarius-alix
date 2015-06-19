@@ -163,10 +163,15 @@ package body Aquarius.Projects is
 --                         (Aquarius.Configuration.Get_Library_Path, G.Name));
                end if;
             end;
-            Buffer :=
-              Aquarius.Buffers.New_Buffer_From_File
-                (Project.Project_UI,
-                 Path, Project);
+            declare
+               P : constant Aquarius_Project := Aquarius_Project (Project);
+               UI : constant Aquarius.UI.Aquarius_UI :=
+                      P.Project_UI;
+            begin
+               Buffer :=
+                 Aquarius.Buffers.New_Buffer_From_File
+                   (UI, Path, P);
+            end;
             Project.Buffers.Append (Buffer);
             Buffer.Load (Synchronous);
             Project.Load_References (Buffer.Program);
@@ -238,7 +243,7 @@ package body Aquarius.Projects is
    -----------------
 
    overriding function Get_Program
-     (Project   : in out Aquarius_Project_Type;
+     (Project   : not null access Aquarius_Project_Type;
       File_Name : String)
       return Aquarius.Programs.Program_Tree
    is
@@ -515,11 +520,11 @@ package body Aquarius.Projects is
    -----------------------
 
    function New_Empty_Project
+     (UI : Aquarius.UI.Aquarius_UI)
      return Aquarius_Project
    is
    begin
-      return New_Project ("Default", ".",
-                          Aquarius.UI.Console.Console_UI);
+      return New_Project ("Default", ".", UI);
    end New_Empty_Project;
 
    -----------------
