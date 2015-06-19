@@ -56,9 +56,9 @@ package body Aquarius.Plugins.Manager is
          return Local_EBNF_Plugin;
       elsif Name = "plugin" then
          return Local_Plugin_Plugin;
-      elsif Name = "klein" then
+      elsif False and then Name = "klein" then
          return Local_Klein_Plugin;
-      elsif Name = "ada" then
+      elsif False and then Name = "ada" then
          return Local_Ada_Plugin;
       elsif Name = "project" then
          return Local_Ada_Plugin;
@@ -106,12 +106,12 @@ package body Aquarius.Plugins.Manager is
             Local_Plugin_Plugin := new Aquarius.Plugins.Plugin.Plugin_Plugin;
          end if;
          Plugin := Local_Plugin_Plugin;
-      elsif Name = "klein" then
+      elsif False and then Name = "klein" then
          if Local_Klein_Plugin = null then
             Local_Klein_Plugin := new Aquarius.Plugins.Klein.Klein_Plugin;
          end if;
          Plugin := Local_Klein_Plugin;
-      elsif Name = "ada" then
+      elsif False and then Name = "ada" then
          if Local_Ada_Plugin = null then
             Local_Ada_Plugin := new Ada_Plugin.Ada_Plugin_Type;
          end if;
