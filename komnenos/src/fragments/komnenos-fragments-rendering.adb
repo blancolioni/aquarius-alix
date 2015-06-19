@@ -1,5 +1,3 @@
-with Ada.Text_IO;
-
 with Aquarius.Layout;
 with Aquarius.Programs;
 
@@ -92,10 +90,10 @@ package body Komnenos.Fragments.Rendering is
                        Class     : in     String;
                        Text      : in     String)
    is
-      use Komnenos.Styles;
-      Styles : Style_Collection :=
-                 (Normal => Find_Style (Class),
-                  others => Null_Style);
+      use Aquarius.Styles;
+      Style : constant Aquarius_Style :=
+                Aquarius.Themes.Active_Theme.Style
+                  (Class, Aquarius.Themes.Normal);
       use type Aquarius.Layout.Positive_Count;
       Render_Pos : Aquarius.Layout.Position :=
                      Renderer.Current_Position;
@@ -116,7 +114,7 @@ package body Komnenos.Fragments.Rendering is
                          (others => ' ');
       begin
          if Space_Count > 0 then
-            Renderer.Fragment.Put (Spaces);
+            Renderer.Fragment.Put (Spaces, Style);
          end if;
       end;
 
@@ -133,15 +131,15 @@ package body Komnenos.Fragments.Rendering is
          begin
             if References'Length > 0 then
                Reference := References (References'First);
-               Styles (Hover) := Find_Style ("entity_reference_hover");
-               Ada.Text_IO.Put_Line
-                 (Terminal.Show_Location & " references "
-                    & Reference.Display_Text);
+--                 Styles (Hover) := Find_Style ("entity_reference_hover");
+--                 Ada.Text_IO.Put_Line
+--                   (Terminal.Show_Location & " references "
+--                      & Reference.Display_Text);
             end if;
          end;
       end if;
 
-      Renderer.Fragment.Put (Text, Styles, Reference);
+      Renderer.Fragment.Put (Text, Style, Reference);
       Renderer.Set_Current_Position ((Position.Line,
                                       Position.Column +
                                         Aquarius.Layout.Count (Text'Length)));

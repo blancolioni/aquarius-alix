@@ -1,3 +1,4 @@
+--  with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Text_IO;
 
@@ -11,15 +12,15 @@ with Aquarius.Loader;
 with Aquarius.Messages.Console;
 with Aquarius.Programs.Arrangements;
 with Aquarius.Rendering.Manager;
-with Aquarius.Styles;
 with Aquarius.Target.Manager;
+with Aquarius.Themes;
 with Aquarius.Trees.Cursors;
 
 with Aquarius.Version;
 
-with Komnenos.Configure;
 with Komnenos.Logging;
 with Komnenos.UI;
+--  with Komnenos.UI.Sessions;
 
 procedure Aquarius.Driver is
 
@@ -106,7 +107,7 @@ begin
          Grammar     : Aquarius.Grammars.Aquarius_Grammar;
          Input       : Aquarius.Programs.Program_Tree;
          Renderer    : Aquarius.Rendering.Aquarius_Renderer;
-         Style       : Aquarius.Styles.Aquarius_Style;
+         Theme       : Aquarius.Themes.Aquarius_Theme;
       begin
          if Command_Line.Grammar = "" then
             Grammar :=
@@ -180,13 +181,13 @@ begin
               (Command_Line.Renderer);
          end if;
 
-         if Command_Line.Style = "" then
-            Style := Aquarius.Styles.Default_Style;
+         if Command_Line.Theme = "" then
+            Theme := Aquarius.Themes.Active_Theme;
          else
-            Style := Aquarius.Styles.Load_Style (Command_Line.Style);
+            Theme := Aquarius.Themes.Load_Theme (Command_Line.Theme);
          end if;
 
-         Renderer.Set_Style (Style);
+         Renderer.Set_Theme (Theme);
 
          declare
             use Ada.Text_IO;
@@ -222,17 +223,22 @@ begin
    else
 
       Komnenos.Logging.Start_Logging;
-      Komnenos.Configure.Read_Configuration
-        (Aquarius.Config_Paths.Config_Path
-         & "/komnenos");
 
       declare
-         Default_UI   : constant Komnenos.UI.Komnenos_UI :=
-                          Komnenos.UI.Create_UI
-                            (Aquarius.Config_Paths.Config_Path
-                             & "/komnenos");
+         UI   : constant Komnenos.UI.Komnenos_UI :=
+                  Komnenos.UI.Create_UI
+                    (Aquarius.Config_Paths.Config_Path
+                     & "/komnenos");
       begin
-         Default_UI.Start;
+
+--           if Command_Line.Extra_Arguments /= "" then
+--              Komnenos.UI.Sessions.Load_Session
+--                (UI, Command_Line.Extra_Arguments);
+--           elsif Ada.Directories.Exists (".aquarius-session") then
+--              Komnenos.UI.Sessions.Load_Session (UI, ".aquarius-session");
+--           end if;
+
+         UI.Start;
       end;
 
    end if;

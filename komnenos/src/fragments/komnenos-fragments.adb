@@ -131,11 +131,11 @@ package body Komnenos.Fragments is
 
    function Get_Style
      (Fragment : Root_Fragment_Type;
-      State    : Komnenos.Styles.Element_State;
+      State    : Aquarius.Themes.Element_State;
       Offset   : Positive)
-      return Komnenos.Styles.Komnenos_Style
+      return Aquarius.Styles.Aquarius_Style
    is
-      Style : Komnenos.Styles.Komnenos_Style;
+      Style : Aquarius.Styles.Aquarius_Style;
       Start, Finish : Natural;
    begin
       Root_Fragment_Type'Class (Fragment).Get_Style
@@ -149,14 +149,14 @@ package body Komnenos.Fragments is
 
    procedure Get_Style
      (Fragment : Root_Fragment_Type;
-      State    : Komnenos.Styles.Element_State;
+      State    : Aquarius.Themes.Element_State;
       Offset   : Positive;
-      Style    : out Komnenos.Styles.Komnenos_Style;
+      Style    : out Aquarius.Styles.Aquarius_Style;
       Start    : out Natural;
       Finish   : out Natural)
    is
       use Ada.Strings.Unbounded;
-      use Komnenos.Styles;
+      use Aquarius.Styles;
       Line       : Positive := 1;
       Line_Start : Positive := 1;
       Last_Line  : constant Natural :=
@@ -175,6 +175,7 @@ package body Komnenos.Fragments is
 
       if Line <= Last_Line then
          declare
+            use Aquarius.Themes;
             Line_Offset  : Natural := 0;
             Style_Offset : constant Natural := Offset - Line_Start;
          begin
@@ -196,7 +197,7 @@ package body Komnenos.Fragments is
          end;
       end if;
 
-      Style := Komnenos.Styles.Null_Style;
+      Style := Aquarius.Styles.Null_Style;
       Start := 0;
       Finish := 0;
 
@@ -253,7 +254,7 @@ package body Komnenos.Fragments is
    begin
       Fragment.Layout_Rec := (0, 0, 600, 400);
       Fragment.Lines.Append (new Line_Info);
-      Fragment.Default_Style := Komnenos.Styles.Default_Style;
+      Fragment.Default_Style := Aquarius.Themes.Active_Theme.Default_Style;
    end Initialize;
 
    -------------
@@ -264,7 +265,7 @@ package body Komnenos.Fragments is
      (Fragment : Root_Fragment_Type;
       Put      : not null access
         procedure (Text : String;
-                   Style : Komnenos.Styles.Komnenos_Style;
+                   Style : Aquarius.Styles.Aquarius_Style;
                    Link  : Komnenos.Entities.Entity_Reference);
       New_Line : not null access procedure)
    is
@@ -276,11 +277,11 @@ package body Komnenos.Fragments is
          begin
             for Style of Line.Styles loop
                declare
-                  use Komnenos.Styles;
+                  use Aquarius.Styles;
                   use Komnenos.Entities;
-                  Normal_Style : constant Komnenos.Styles.Komnenos_Style :=
-                                   Style.Styles (Komnenos.Styles.Normal);
-                  This_Style : constant Komnenos.Styles.Komnenos_Style :=
+                  Normal_Style : constant Aquarius.Styles.Aquarius_Style :=
+                                   Style.Styles (Aquarius.Themes.Normal);
+                  This_Style : constant Aquarius.Styles.Aquarius_Style :=
                                  (if Normal_Style = Null_Style
                                   then Fragment.Default_Style
                                   else Normal_Style);
@@ -333,15 +334,15 @@ package body Komnenos.Fragments is
    procedure Put
      (Fragment : in out Root_Fragment_Type;
       Text     : in     String;
-      Styles   : in     Komnenos.Styles.Style_Collection :=
-        (others => Komnenos.Styles.Null_Style);
+      Style    : in     Aquarius.Styles.Aquarius_Style;
       Link     : in     Komnenos.Entities.Entity_Reference := null)
    is
-      use type Komnenos.Styles.Komnenos_Style;
+      use type Aquarius.Styles.Aquarius_Style;
       Line : constant Line_Info_Access := Fragment.Lines.Last_Element;
    begin
       Line.Styles.Append
-        ((Text'Length, Styles, Link));
+        ((Text'Length, (Aquarius.Themes.Normal => Style, others => null),
+         Link));
       Ada.Strings.Unbounded.Append (Line.Text, Text);
    end Put;
 
@@ -352,12 +353,11 @@ package body Komnenos.Fragments is
    procedure Put_Line
      (Fragment : in out Root_Fragment_Type;
       Text     : in     String;
-      Styles   : in     Komnenos.Styles.Style_Collection :=
-        (others => Komnenos.Styles.Null_Style);
+      Style    : in     Aquarius.Styles.Aquarius_Style;
       Link     : in     Komnenos.Entities.Entity_Reference := null)
    is
    begin
-      Root_Fragment_Type'Class (Fragment).Put (Text, Styles, Link);
+      Root_Fragment_Type'Class (Fragment).Put (Text, Style, Link);
       Root_Fragment_Type'Class (Fragment).New_Line;
    end Put_Line;
 
@@ -379,7 +379,7 @@ package body Komnenos.Fragments is
 
    procedure Set_Default_Style
      (Fragment : in out Root_Fragment_Type'Class;
-      Style    : in Komnenos.Styles.Komnenos_Style)
+      Style    : in Aquarius.Styles.Aquarius_Style)
    is
    begin
       Fragment.Default_Style := Style;

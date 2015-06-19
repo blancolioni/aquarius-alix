@@ -15,7 +15,8 @@ package body Komnenos.Fragments.Notes is
       Result.Foreground_Colour := new String'("black");
       Result.Border_Colour     := new String'("lightblue");
       if Initial_Text /= "" then
-         Result.Put_Line (Initial_Text);
+         Result.Put_Line (Initial_Text,
+                          Aquarius.Themes.Active_Theme.Default_Style);
       end if;
       Result.Set_Position (100, 100);
       return Result;

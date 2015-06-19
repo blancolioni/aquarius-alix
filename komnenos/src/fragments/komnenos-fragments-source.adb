@@ -11,7 +11,7 @@ package body Komnenos.Fragments.Source is
    is
       Result : constant Fragment_Type := new Root_Fragment_Type;
    begin
-      Result.Default_Style := Komnenos.Styles.Find_Style ("source");
+      Result.Default_Style := Aquarius.Themes.Active_Theme.Default_Style;
       Result.Editable := True;
       Result.Background_Colour := new String'("seashell");
       Result.Foreground_Colour := new String'("black");

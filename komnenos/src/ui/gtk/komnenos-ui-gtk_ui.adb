@@ -3,9 +3,13 @@ with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Numerics;
 --  with Ada.Text_IO;
 
+with Aquarius.Colours;
+with Aquarius.Fonts;
+with Aquarius.Styles;
+with Aquarius.Themes;
+
 with Komnenos.Connectors;
 with Komnenos.Layouts;
-with Komnenos.Styles;
 
 with Komnenos.UI.Gtk_UI.Entity_Lists;
 
@@ -113,7 +117,7 @@ package body Komnenos.UI.Gtk_UI is
          Active          : Komnenos.Fragments.Fragment_Type := null;
          Hover_Start     : Natural := 0;
          Hover_Finish    : Natural := 0;
-         Hover_Style     : Komnenos.Styles.Komnenos_Style;
+         Hover_Style     : Aquarius.Styles.Aquarius_Style;
          Dragging        : Layout_Widget_Access := null;
          Vertical_Scale  : Float := 3.0;  --  three main views fit vertically
                                           --  into the navigator
@@ -174,7 +178,7 @@ package body Komnenos.UI.Gtk_UI is
 
    function Get_Tag_Entry
      (Buffer : Gtk.Text_Buffer.Gtk_Text_Buffer;
-      Style  : Komnenos.Styles.Komnenos_Style)
+      Style  : Aquarius.Styles.Aquarius_Style)
       return Gtk.Text_Tag.Gtk_Text_Tag;
    --  return a text tag corresponding to the given Style.  Create a new
    --  text tag if necessary.
@@ -274,7 +278,7 @@ package body Komnenos.UI.Gtk_UI is
      (UI        : Gtk_UI_Access;
       Text_View : not null access Gtk.Text_View.Gtk_Text_View_Record'Class;
       Iter      : Gtk.Text_Iter.Gtk_Text_Iter;
-      State     : Komnenos.Styles.Element_State);
+      State     : Aquarius.Themes.Element_State);
 
    procedure Follow_If_Link
      (UI        : Gtk_UI_Access;
@@ -285,7 +289,7 @@ package body Komnenos.UI.Gtk_UI is
      (View : not null access Gtk.Text_View.Gtk_Text_View_Record'Class;
       Start_Offset  : Positive;
       Finish_Offset : Positive;
-      Style         : Komnenos.Styles.Komnenos_Style;
+      Style         : Aquarius.Styles.Aquarius_Style;
       Remove        : Boolean);
 
    procedure Paint_Line_Background
@@ -309,10 +313,10 @@ package body Komnenos.UI.Gtk_UI is
      (View : not null access Gtk.Text_View.Gtk_Text_View_Record'Class;
       Start_Offset  : Positive;
       Finish_Offset : Positive;
-      Style         : Komnenos.Styles.Komnenos_Style;
+      Style         : Aquarius.Styles.Aquarius_Style;
       Remove        : Boolean)
    is
-      use Komnenos.Styles;
+      use Aquarius.Styles;
       Buffer     : constant Gtk.Text_Buffer.Gtk_Text_Buffer :=
                      View.Get_Buffer;
       Tag        : constant Gtk.Text_Tag.Gtk_Text_Tag :=
@@ -1128,34 +1132,35 @@ package body Komnenos.UI.Gtk_UI is
 
    function Get_Tag_Entry
      (Buffer : Gtk.Text_Buffer.Gtk_Text_Buffer;
-      Style  : Komnenos.Styles.Komnenos_Style)
+      Style  : Aquarius.Styles.Aquarius_Style)
       return Gtk.Text_Tag.Gtk_Text_Tag
    is
       use Gtk.Text_Tag, Gtk.Text_Tag_Table;
       Tag_Table : constant Gtk.Text_Tag_Table.Gtk_Text_Tag_Table :=
         Buffer.Get_Tag_Table;
       Result    : Gtk_Text_Tag;
-      Name : constant String := Komnenos.Styles.Name (Style);
+      Name : constant String := Aquarius.Styles.Name (Style);
    begin
       Result := Tag_Table.Lookup (Name);
       if Result = null then
          Result := Buffer.Create_Tag (Name);
          declare
-            use Pango.Font, Komnenos.Styles;
+            use Pango.Font, Aquarius.Fonts;
+            Font : constant Aquarius_Font := Style.Font;
             Desc : constant Pango_Font_Description :=
                      To_Font_Description
-                       (Font_Name (Style),
-                        Size => Glib.Gint (Font_Size (Style)));
+                       (Aquarius.Fonts.Name (Font),
+                        Size => Glib.Gint (Size (Font)));
          begin
-            if Bold (Style) then
+            if Is_Bold (Font) then
                Set_Weight (Desc, Pango.Enums.Pango_Weight_Bold);
             end if;
-            if Italic (Style) then
+            if Is_Italic (Font) then
                Set_Style (Desc, Pango.Enums.Pango_Style_Italic);
             end if;
             Set_Property (Result, Font_Desc_Property, Desc);
 
-            if Underlined (Style) then
+            if Is_Underlined (Font) then
                declare
                   Value     : Glib.Values.GValue;
                begin
@@ -1169,16 +1174,40 @@ package body Komnenos.UI.Gtk_UI is
                end;
             end if;
 
-            if Foreground_Colour (Style) /= "" then
-               Gdk.Color.Set_Property
-                 (Result, Foreground_Gdk_Property,
-                  Gdk.Color.Parse (Foreground_Colour (Style)));
+            if Has_Foreground (Font) then
+               declare
+                  use Glib;
+                  use Aquarius.Colours;
+                  Colour : constant Aquarius_Colour :=
+                             Get_Foreground (Font);
+                  Foreground : Gdk.Color.Gdk_Color;
+               begin
+                  Gdk.Color.Set_Rgb
+                    (Color => Foreground,
+                     Red   => Guint16 (Red (Colour)) * 256,
+                     Green => Guint16 (Green (Colour)) * 256,
+                     Blue  => Guint16 (Blue (Colour)) * 256);
+                  Gdk.Color.Set_Property
+                    (Result, Foreground_Gdk_Property, Foreground);
+               end;
             end if;
 
-            if Background_Colour (Style) /= "" then
-               Gdk.Color.Set_Property
-                 (Result, Background_Gdk_Property,
-                  Gdk.Color.Parse (Background_Colour (Style)));
+            if Has_Background (Font) then
+               declare
+                  use Glib;
+                  use Aquarius.Colours;
+                  Colour : constant Aquarius_Colour :=
+                             Get_Foreground (Font);
+                  Background : Gdk.Color.Gdk_Color;
+               begin
+                  Gdk.Color.Set_Rgb
+                    (Color => Background,
+                     Red   => Guint16 (Red (Colour)) * 256,
+                     Green => Guint16 (Green (Colour)) * 256,
+                     Blue  => Guint16 (Blue (Colour)) * 256);
+                  Gdk.Color.Set_Property
+                    (Result, Background_Gdk_Property, Background);
+               end;
             end if;
 
          end;
@@ -1337,7 +1366,7 @@ package body Komnenos.UI.Gtk_UI is
       procedure New_Line;
       procedure Put
         (Text  : String;
-         Style : Komnenos.Styles.Komnenos_Style;
+         Style : Aquarius.Styles.Aquarius_Style;
          Link  : Komnenos.Entities.Entity_Reference);
 
       --------------
@@ -1355,7 +1384,7 @@ package body Komnenos.UI.Gtk_UI is
 
       procedure Put
         (Text  : String;
-         Style : Komnenos.Styles.Komnenos_Style;
+         Style : Aquarius.Styles.Aquarius_Style;
          Link  : Komnenos.Entities.Entity_Reference)
       is
          pragma Unreferenced (Link);
@@ -1380,16 +1409,16 @@ package body Komnenos.UI.Gtk_UI is
      (UI        : Gtk_UI_Access;
       Text_View : not null access Gtk.Text_View.Gtk_Text_View_Record'Class;
       Iter      : Gtk.Text_Iter.Gtk_Text_Iter;
-      State     : Komnenos.Styles.Element_State)
+      State     : Aquarius.Themes.Element_State)
    is
-      use Komnenos.Styles;
+      use Aquarius.Styles;
 
       Fragment : constant Komnenos.Fragments.Fragment_Type :=
                    Find_Fragment_By_Display
                      (Display => Text_View,
                       UI      => UI);
-      Style         : Komnenos_Style;
-      Current_Style : Komnenos_Style;
+      Style         : Aquarius_Style;
+      Current_Style : Aquarius_Style;
       Offset        : constant Positive :=
                         Natural (Gtk.Text_Iter.Get_Offset (Iter)) + 1;
       Start_Offset  : Positive;
@@ -1422,7 +1451,8 @@ package body Komnenos.UI.Gtk_UI is
          UI.Hover_Finish := 0;
       end if;
 
-      Current_Style := Fragment.Get_Style (Normal, Offset);
+      Current_Style :=
+        Fragment.Get_Style (Aquarius.Themes.Normal, Offset);
 
       if Current_Style = Style then
          return;
@@ -1565,7 +1595,7 @@ package body Komnenos.UI.Gtk_UI is
          X, Y);
       Text_View.Get_Iter_At_Location (Iter, X, Y);
 
-      Set_Text_State (UI, Text_View, Iter, Komnenos.Styles.Hover);
+      Set_Text_State (UI, Text_View, Iter, Aquarius.Themes.Hover);
 
       return False;
    end Text_View_Motion_Handler;

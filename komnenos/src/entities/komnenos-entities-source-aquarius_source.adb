@@ -2,7 +2,7 @@ with Ada.Text_IO;
 
 with Aquarius.Programs.Arrangements;
 with Aquarius.Rendering;
-with Aquarius.Styles;
+with Aquarius.Themes;
 with Aquarius.Trees.Cursors;
 
 with Komnenos.Fragments.Rendering;
@@ -170,7 +170,8 @@ package body Komnenos.Entities.Source.Aquarius_Source is
         (Program,
          Line_Length => Fragment.Width / 10);
 
-      Renderer.Set_Style (Aquarius.Styles.Default_Style);
+      Renderer.Set_Theme (Aquarius.Themes.Active_Theme);
+
       Aquarius.Programs.Arrangements.Render
         (Program   => Program,
          Renderer  => Renderer,
