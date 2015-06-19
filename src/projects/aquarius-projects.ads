@@ -31,7 +31,7 @@ package Aquarius.Projects is
       Path    : in     String);
 
    overriding function Get_Program
-     (Project   : in out Aquarius_Project_Type;
+     (Project   : not null access Aquarius_Project_Type;
       File_Name : String)
       return Aquarius.Programs.Program_Tree;
 
@@ -87,6 +87,7 @@ package Aquarius.Projects is
      return Aquarius_Project;
 
    function New_Empty_Project
+     (UI : Aquarius.UI.Aquarius_UI)
      return Aquarius_Project;
 
    function New_Default_Project
