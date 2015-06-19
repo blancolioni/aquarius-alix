@@ -241,6 +241,8 @@ package body Aquarius.Loader is
       Path       : in     String)
      return Aquarius.Programs.Program_Tree
    is
+      UI : constant Aquarius.UI.Aquarius_UI :=
+             Aquarius.UI.Console.Console_UI;
    begin
       --  check first line of the file for special instructions
       declare
@@ -276,9 +278,9 @@ package body Aquarius.Loader is
                                        Destination_Path => Destination_Path);
                   return Load_From_File
                     (Grammar    => Grammar,
-                     Project    => Projects.New_Empty_Project,
+                     Project    => Projects.New_Empty_Project (UI),
                      Interactor => Interaction.Console.Console_Interactor,
-                     UI         => Aquarius.UI.Console.Console_UI,
+                     UI         => UI,
                      Path       => Destination_Path);
                end;
             end if;
@@ -286,9 +288,9 @@ package body Aquarius.Loader is
       end;
       return Load_From_File
         (Grammar    => Grammar,
-         Project    => Projects.New_Empty_Project,
+         Project    => Projects.New_Empty_Project (UI),
          Interactor => Interaction.Console.Console_Interactor,
-         UI         => Aquarius.UI.Console.Console_UI,
+         UI         => UI,
          Path       => Path);
    end Load_From_File;
 
