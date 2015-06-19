@@ -28,6 +28,7 @@ after File_Declaration do
      Tree.File_Name := Tree/Identifier.Image.To_Lower & ".txt";
   end if;
   Top.File_Map.Set (Tree/Identifier.Image, Tree);
+  Komnenos.Define (tree, tree/identifier, "declaration");
 end;
 
 after Type_Declaration/identifier do
@@ -35,7 +36,7 @@ after Type_Declaration/identifier do
   Top.Type_List.Include (identifier.Image);
   Type_Declaration.Type_Name := (id => Identifier.Image);
   Top.Current_Type_Declaration := Type_Declaration;
-  Komnenos.Define (parent, child);
+  Komnenos.Define (parent, child, "declaration");
 end;
 
 before Type_Declaration/Type_Definition do
