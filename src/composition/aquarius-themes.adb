@@ -106,7 +106,7 @@ package body Aquarius.Themes is
             declare
                use Aquarius.Styles;
 
-               Child       : constant Cursor  := Get_Child (Theme, I);
+               Child       : constant Cursor  := Get_Child (Classes, I);
                Class       : constant String  := Get_Name (Child);
                Font_Name   : constant String :=
                                Get_Value (Child, "font_name",
