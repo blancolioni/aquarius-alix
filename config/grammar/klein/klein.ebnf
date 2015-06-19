@@ -9,6 +9,12 @@ delimiter          ::= delimiters "&()+,;|"
 symbol             ::= standard ada_symbol
 comment            ::= standard ada_comment
 
+format ';' no_space_before new_line_after
+
+format list_of_declarations indented_child
+format list_of_definitions indented_child
+format sequence_of_statements indented_child
+
 program_unit ::= { context_clause } subprogram ';'
 
 context_clause ::= 'with' package_reference ';'

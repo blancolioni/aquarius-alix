@@ -1,0 +1,7 @@
+plugin Klein version 0.1 is
+
+   group run_check : semantic is
+      check;
+   end run_check;
+   
+end Klein;
