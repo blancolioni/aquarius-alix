@@ -366,7 +366,7 @@ package Aquarius.Programs is
 
    type Root_Program_Tree_Store is interface;
 
-   function Get_Program (From      : in out Root_Program_Tree_Store;
+   function Get_Program (From      : not null access Root_Program_Tree_Store;
                          File_Name : in String)
                          return Program_Tree
                          is abstract;
