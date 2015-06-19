@@ -59,7 +59,7 @@ package Komnenos.Entities is
    type Program_Store_Interface is interface;
 
    function Get_Program
-     (Store  : in out Program_Store_Interface;
+     (Store  : not null access Program_Store_Interface;
       Name   : String)
       return Aquarius.Programs.Program_Tree
       is abstract;
