@@ -13,9 +13,6 @@ package body Aquarius.UI.Console is
       is null;
 
    overriding
-   procedure Init (With_UI : not null access Console_UI_Type) is null;
-
-   overriding
    procedure Start (With_UI : in out Console_UI_Type) is null;
 
    ----------------
