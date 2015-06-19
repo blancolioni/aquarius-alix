@@ -1,0 +1,15 @@
+before Program_Unit do
+   null;
+end;
+
+after Program_Unit do
+   Report_State;
+end;
+
+after Procedure_Definition/identifier do
+   Parent.Procedure_Name := identifier.image;
+end;
+
+after procedure_declaration/procedure_definition do
+   Komnenos.Define (parent, child/identifier, "declaration");
+end;
