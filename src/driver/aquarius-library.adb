@@ -1,4 +1,5 @@
 with Aquarius.Configuration;
+with Aquarius.File_System_Stores;
 
 package body Aquarius.Library is
 
@@ -29,6 +30,7 @@ package body Aquarius.Library is
       Aquarius.Configuration.Load_Configuration;
       Local_Options (Plugins_Enabled) := Enable_Plugins;
       Local_Options (Show_Paths_In_Messages_Enabled) := Show_Paths_In_Messages;
+      Aquarius.File_System_Stores.Register;
    end Initialise;
 
    ---------------------

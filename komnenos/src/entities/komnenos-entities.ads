@@ -7,6 +7,8 @@ private with Ada.Strings.Fixed.Equal_Case_Insensitive;
 private with Ada.Strings.Fixed.Hash_Case_Insensitive;
 private with Ada.Strings.Unbounded;
 
+with Komnenos.Session_Objects;
+
 with Aquarius.Programs;
 
 package Komnenos.Entities is
@@ -56,13 +58,18 @@ package Komnenos.Entities is
       Offset : Natural)
    is abstract;
 
-   type Program_Store_Interface is interface;
+   type Program_Store_Interface is interface
+     and Komnenos.Session_Objects.Session_Object_Interface;
 
    function Get_Program
      (Store  : not null access Program_Store_Interface;
       Name   : String)
       return Aquarius.Programs.Program_Tree
       is abstract;
+
+   procedure Load
+     (Store : not null access Program_Store_Interface)
+   is abstract;
 
    function Program_Store
      (Table : Entity_Table_Interface)
