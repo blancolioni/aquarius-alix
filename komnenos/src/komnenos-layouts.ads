@@ -11,6 +11,9 @@ package Komnenos.Layouts is
      abstract new Komnenos.Session_Objects.Session_Object_Interface
    with private;
 
+   overriding function Config_Name (Layout : Root_Layout_Type) return String
+   is ("layout");
+
    procedure Item_Moved
      (Layout : in out Root_Layout_Type;
       Item   : Komnenos.Fragments.Fragment_Type)

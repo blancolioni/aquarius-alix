@@ -2,6 +2,8 @@ private with Ada.Containers.Indefinite_Vectors;
 private with Ada.Containers.Vectors;
 private with Ada.Strings.Unbounded;
 
+private with Tropos;
+
 with Aquarius.Buffers;
 with Aquarius.Entries;
 with Aquarius.Names;
@@ -34,6 +36,9 @@ package Aquarius.Projects is
      (Project   : not null access Aquarius_Project_Type;
       File_Name : String)
       return Aquarius.Programs.Program_Tree;
+
+   overriding procedure Load
+     (Project : not null access Aquarius_Project_Type);
 
    function Get_Buffer
      (Project     : not null access Aquarius_Project_Type'Class;
@@ -235,5 +240,20 @@ private
          Pending_Actions : String_Vectors.Vector;
          Dependencies    : Project_Vectors.Vector;
       end record;
+
+   overriding function Config_Name
+     (Project : Aquarius_Project_Type)
+      return String
+   is ("aquarius_project");
+
+   overriding procedure To_Config
+     (Item : Aquarius_Project_Type;
+      Config : in out Tropos.Configuration)
+   is null;
+
+   overriding procedure From_Config
+     (Item : in out Aquarius_Project_Type;
+      Config : Tropos.Configuration)
+   is null;
 
 end Aquarius.Projects;

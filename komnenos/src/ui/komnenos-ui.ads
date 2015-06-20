@@ -12,6 +12,9 @@ package Komnenos.UI is
      and Aquarius.UI.Root_UI_Type
    with private;
 
+   overriding function Config_Name (UI : Root_Komnenos_UI) return String
+   is ("ui");
+
    procedure Place_Fragment
      (UI       : in out Root_Komnenos_UI;
       Parent   : access Komnenos.Entities.Entity_Visual'Class;

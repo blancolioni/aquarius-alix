@@ -326,6 +326,20 @@ package body Aquarius.Projects is
       return Ada.Strings.Unbounded.To_String (Item.Label);
    end Label;
 
+   ----------
+   -- Load --
+   ----------
+
+   overriding procedure Load
+     (Project : not null access Aquarius_Project_Type)
+   is
+      Buffer : constant Aquarius.Buffers.Aquarius_Buffer :=
+                 Project.Get_Main_Buffer;
+      pragma Unreferenced (Buffer);
+   begin
+      null;
+   end Load;
+
    ---------------------
    -- Load_Dependency --
    ---------------------
