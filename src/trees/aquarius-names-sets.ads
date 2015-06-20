@@ -27,6 +27,10 @@ package Aquarius.Names.Sets is
                    function (Name : Aquarius_Name) return Boolean)
                  return Boolean;
 
+   procedure Scan
+     (Set : Name_Set;
+      Process : not null access procedure (Name : Aquarius_Name));
+
 private
 
    package Name_Sets is
