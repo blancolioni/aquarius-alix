@@ -87,4 +87,18 @@ package body Aquarius.Names.Sets is
       return Name_Sets.Set (Set).Is_Empty;
    end Is_Empty;
 
+   ----------
+   -- Scan --
+   ----------
+
+   procedure Scan
+     (Set : Name_Set;
+      Process : not null access procedure (Name : Aquarius_Name))
+   is
+   begin
+      for Name of Set loop
+         Process (Name);
+      end loop;
+   end Scan;
+
 end Aquarius.Names.Sets;
