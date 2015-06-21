@@ -1,6 +1,8 @@
 with Aquarius.Configuration;
 with Aquarius.File_System_Stores;
 
+with Komnenos.Fragments;
+
 package body Aquarius.Library is
 
    type Option_Type is (Plugins_Enabled, Show_Paths_In_Messages_Enabled);
@@ -31,6 +33,7 @@ package body Aquarius.Library is
       Local_Options (Plugins_Enabled) := Enable_Plugins;
       Local_Options (Show_Paths_In_Messages_Enabled) := Show_Paths_In_Messages;
       Aquarius.File_System_Stores.Register;
+      Komnenos.Fragments.Register;
    end Initialise;
 
    ---------------------

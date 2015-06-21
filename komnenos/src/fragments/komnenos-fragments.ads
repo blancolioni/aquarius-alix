@@ -3,10 +3,13 @@ private with Ada.Containers.Vectors;
 private with Ada.Finalization;
 private with Ada.Strings.Unbounded;
 
+with Tropos;
+
 with Aquarius.Styles;
 with Aquarius.Themes;
 
 with Komnenos.Entities;
+with Komnenos.Session_Objects;
 
 package Komnenos.Fragments is
 
@@ -16,9 +19,21 @@ package Komnenos.Fragments is
          Width, Height : Positive;
       end record;
 
+   function To_Config (Rectangle : Layout_Rectangle)
+                       return Tropos.Configuration;
+
+   function From_Config (Config : Tropos.Configuration)
+                         return Layout_Rectangle;
+
    type Root_Fragment_Type is
      new Komnenos.Entities.Entity_Visual
+     and Komnenos.Session_Objects.Session_Object_Interface
    with private;
+
+   overriding function Config_Name
+     (Fragment : Root_Fragment_Type)
+      return String
+   is ("fragment");
 
    function File_Name
      (Fragment : Root_Fragment_Type'Class)
@@ -60,6 +75,13 @@ package Komnenos.Fragments is
    procedure Set_Default_Style
      (Fragment : in out Root_Fragment_Type'Class;
       Style    : in Aquarius.Styles.Aquarius_Style);
+
+   procedure Set_Entity_Key
+     (Fragment : in out Root_Fragment_Type'Class;
+      Key      : String);
+
+   function Entity_Key (Fragment : Root_Fragment_Type'Class)
+                        return String;
 
    procedure Put
      (Fragment : in out Root_Fragment_Type;
@@ -128,6 +150,8 @@ package Komnenos.Fragments is
 
    type Fragment_Type is access all Root_Fragment_Type'Class;
 
+   procedure Register;
+
 private
 
    type Style_Collection is
@@ -157,12 +181,14 @@ private
 
    type Root_Fragment_Type is
      new Ada.Finalization.Controlled
-     and Komnenos.Entities.Entity_Visual with
+     and Komnenos.Entities.Entity_Visual
+     and Komnenos.Session_Objects.Session_Object_Interface with
       record
          Default_Style     : Aquarius.Styles.Aquarius_Style;
          Layout_Rec        : Layout_Rectangle;
          Path              : Ada.Strings.Unbounded.Unbounded_String;
          Title             : Ada.Strings.Unbounded.Unbounded_String;
+         Key               : Ada.Strings.Unbounded.Unbounded_String;
          Editable          : Boolean;
          Background_Colour : access String;
          Foreground_Colour : access String;
@@ -173,5 +199,13 @@ private
    overriding procedure Initialize (Fragment : in out Root_Fragment_Type);
    overriding procedure Finalize (Fragment : in out Root_Fragment_Type);
    overriding procedure Adjust (Fragment : in out Root_Fragment_Type);
+
+   overriding procedure To_Config
+     (Fragment : Root_Fragment_Type;
+      Config   : in out Tropos.Configuration);
+
+   overriding procedure From_Config
+     (Fragment : not null access Root_Fragment_Type;
+      Config   : Tropos.Configuration);
 
 end Komnenos.Fragments;

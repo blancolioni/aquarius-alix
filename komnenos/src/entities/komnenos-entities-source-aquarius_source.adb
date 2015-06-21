@@ -29,6 +29,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
      (Entity : Root_Aquarius_Source_Entity;
       Table  : access Entity_Table_Interface'Class;
       Parent : access Entity_Visual'Class;
+      Visual : access Entity_Visual'Class;
       Offset : Natural);
 
    function Get_Key (File_Name : String;
@@ -144,14 +145,17 @@ package body Komnenos.Entities.Source.Aquarius_Source is
      (Entity : Root_Aquarius_Source_Entity;
       Table  : access Entity_Table_Interface'Class;
       Parent : access Entity_Visual'Class;
+      Visual : access Entity_Visual'Class;
       Offset : Natural)
    is
       use Ada.Strings.Unbounded;
       use type Aquarius.Programs.Program_Tree;
       Fragment : constant Komnenos.Fragments.Fragment_Type :=
-                   Komnenos.Fragments.Source.New_Source_Fragment
-                     (Title => To_String (Entity.Description),
-                      Path  => To_String (Entity.File_Name));
+                   (if Visual = null
+                    then Komnenos.Fragments.Source.New_Source_Fragment
+                      (Title => To_String (Entity.Description),
+                       Path  => To_String (Entity.File_Name))
+                    else Komnenos.Fragments.Fragment_Type (Visual));
       Renderer : constant Aquarius.Rendering.Aquarius_Renderer :=
                    Komnenos.Fragments.Rendering.New_Fragment_Renderer
                      (Fragment, Table);
@@ -161,6 +165,8 @@ package body Komnenos.Entities.Source.Aquarius_Source is
                     else Entity.Entity_Spec);
    begin
       Ada.Text_IO.Put_Line (Program.Image);
+
+      Fragment.Set_Entity_Key (Key (Entity));
 
       if False then
          Log_Tree (Program);
@@ -178,8 +184,11 @@ package body Komnenos.Entities.Source.Aquarius_Source is
          Point     => Aquarius.Trees.Cursors.Left_Of_Tree (Entity.Entity_Spec),
          Partial   => "");
 
-      Komnenos.UI.Current_UI.Place_Fragment
-        (Parent, Offset, Fragment);
+      if Visual = null then
+         Komnenos.UI.Current_UI.Place_Fragment
+           (Parent, Offset, Fragment);
+      end if;
+
    end Select_Entity;
 
    ---------------------

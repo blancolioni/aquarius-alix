@@ -8,6 +8,9 @@ package body Komnenos.Fragments is
       Offset   : Positive)
       return Style_Info;
 
+   function New_Fragment
+     return access Komnenos.Session_Objects.Session_Object_Interface'Class;
+
    ------------
    -- Adjust --
    ------------
@@ -72,6 +75,17 @@ package body Komnenos.Fragments is
       return Fragment.Editable;
    end Editable;
 
+   ----------------
+   -- Entity_Key --
+   ----------------
+
+   function Entity_Key (Fragment : Root_Fragment_Type'Class)
+                        return String
+   is
+   begin
+      return Ada.Strings.Unbounded.To_String (Fragment.Key);
+   end Entity_Key;
+
    ---------------
    -- File_Name --
    ---------------
@@ -111,6 +125,49 @@ package body Komnenos.Fragments is
          return Fragment.Foreground_Colour.all;
       end if;
    end Foreground_Colour;
+
+   -----------------
+   -- From_Config --
+   -----------------
+
+   overriding procedure From_Config
+     (Fragment : not null access Root_Fragment_Type;
+      Config   : Tropos.Configuration)
+   is
+   begin
+      Fragment.Default_Style :=
+        Aquarius.Themes.Active_Theme.Style (Config.Get ("default_style"));
+      Fragment.Layout_Rec := From_Config (Config.Child ("rectangle"));
+      Fragment.Path :=
+        Ada.Strings.Unbounded.To_Unbounded_String
+          (String'(Config.Get ("path")));
+      Fragment.Title :=
+        Ada.Strings.Unbounded.To_Unbounded_String
+          (String'(Config.Get ("title")));
+      Fragment.Key :=
+        Ada.Strings.Unbounded.To_Unbounded_String
+          (String'(Config.Get ("key")));
+      Fragment.Editable := Config.Get ("editable");
+      Fragment.Background_Colour :=
+        new String'(Config.Get ("background"));
+      Fragment.Foreground_Colour :=
+        new String'(Config.Get ("foreground"));
+      Fragment.Border_Colour :=
+        new String'(Config.Get ("border"));
+   end From_Config;
+
+   -----------------
+   -- From_Config --
+   -----------------
+
+   function From_Config (Config : Tropos.Configuration)
+                         return Layout_Rectangle
+   is
+   begin
+      return (X => Config.Get ("x"), Y => Config.Get ("y"),
+              Width => Config.Get ("width"),
+              Height => Config.Get ("height"));
+   end From_Config;
 
    --------------
    -- Get_Link --
@@ -306,6 +363,18 @@ package body Komnenos.Fragments is
       end loop;
    end Iterate;
 
+   ------------------
+   -- New_Fragment --
+   ------------------
+
+   function New_Fragment
+     return access Komnenos.Session_Objects.Session_Object_Interface'Class
+   is
+      Result :  constant Fragment_Type := new Root_Fragment_Type;
+   begin
+      return Result;
+   end New_Fragment;
+
    --------------
    -- New_Line --
    --------------
@@ -373,6 +442,16 @@ package body Komnenos.Fragments is
       return Fragment.Layout_Rec;
    end Rectangle;
 
+   --------------
+   -- Register --
+   --------------
+
+   procedure Register is
+   begin
+      Komnenos.Session_Objects.Register_Session_Object
+        ("fragment", New_Fragment'Access);
+   end Register;
+
    -----------------------
    -- Set_Default_Style --
    -----------------------
@@ -384,6 +463,18 @@ package body Komnenos.Fragments is
    begin
       Fragment.Default_Style := Style;
    end Set_Default_Style;
+
+   --------------------
+   -- Set_Entity_Key --
+   --------------------
+
+   procedure Set_Entity_Key
+     (Fragment : in out Root_Fragment_Type'Class;
+      Key      : String)
+   is
+   begin
+      Fragment.Key := Ada.Strings.Unbounded.To_Unbounded_String (Key);
+   end Set_Entity_Key;
 
    ------------------
    -- Set_Position --
@@ -441,5 +532,41 @@ package body Komnenos.Fragments is
    begin
       return Ada.Strings.Unbounded.To_String (Fragment.Title);
    end Title;
+
+   ---------------
+   -- To_Config --
+   ---------------
+
+   overriding procedure To_Config
+     (Fragment : Root_Fragment_Type;
+      Config   : in out Tropos.Configuration)
+   is
+   begin
+      Config.Add ("default_style", Fragment.Default_Style.Name);
+      Config.Add (To_Config (Fragment.Layout_Rec));
+      Config.Add ("path", Ada.Strings.Unbounded.To_String (Fragment.Path));
+      Config.Add ("title", Ada.Strings.Unbounded.To_String (Fragment.Title));
+      Config.Add ("editable", (if Fragment.Editable then "yes" else "no"));
+      Config.Add ("background", Fragment.Background_Colour.all);
+      Config.Add ("foreground", Fragment.Foreground_Colour.all);
+      Config.Add ("border", Fragment.Border_Colour.all);
+      Config.Add ("key", Fragment.Entity_Key);
+   end To_Config;
+
+   ---------------
+   -- To_Config --
+   ---------------
+
+   function To_Config (Rectangle : Layout_Rectangle)
+                       return Tropos.Configuration
+   is
+      Config : Tropos.Configuration := Tropos.New_Config ("rectangle");
+   begin
+      Config.Add ("x", Rectangle.X);
+      Config.Add ("y", Rectangle.Y);
+      Config.Add ("width", Rectangle.Width);
+      Config.Add ("height", Rectangle.Height);
+      return Config;
+   end To_Config;
 
 end Komnenos.Fragments;

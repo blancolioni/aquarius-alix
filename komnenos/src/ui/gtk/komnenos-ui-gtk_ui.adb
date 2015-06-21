@@ -79,14 +79,6 @@ package body Komnenos.UI.Gtk_UI is
      (Layout : in out Root_Gtk_Layout;
       Item   : Komnenos.Fragments.Fragment_Type);
 
-   overriding procedure To_Config
-     (Layout : Root_Gtk_Layout;
-      Config : in out Tropos.Configuration);
-
-   overriding procedure From_Config
-     (Layout : in out Root_Gtk_Layout;
-      Config : Tropos.Configuration);
-
    type Layout_Widget_Record is
       record
          Widget       : Gtk.Widget.Gtk_Widget;
@@ -156,7 +148,7 @@ package body Komnenos.UI.Gtk_UI is
       Config : in out Tropos.Configuration);
 
    overriding procedure From_Config
-     (UI : in out Root_Gtk_UI;
+     (UI : not null access Root_Gtk_UI;
       Config : Tropos.Configuration);
 
    procedure Create_Fragment_Widget
@@ -1052,7 +1044,7 @@ package body Komnenos.UI.Gtk_UI is
          begin
             Text_View.Get_Iter_Location (Iter, Location);
             Entity.Select_Entity
-              (UI, Find_Fragment_By_Display (Text_View, UI),
+              (UI, Find_Fragment_By_Display (Text_View, UI), null,
                Natural (Location.Y) + Natural (Location.Height) / 2);
          end;
       end if;
@@ -1154,23 +1146,41 @@ package body Komnenos.UI.Gtk_UI is
    -----------------
 
    overriding procedure From_Config
-     (Layout : in out Root_Gtk_Layout;
+     (UI : not null access Root_Gtk_UI;
       Config : Tropos.Configuration)
    is
-   begin
-      null;
-   end From_Config;
+      procedure Attach_Entity
+        (Fragment : Komnenos.Fragments.Fragment_Type);
 
-   -----------------
-   -- From_Config --
-   -----------------
+      -------------------
+      -- Attach_Entity --
+      -------------------
 
-   overriding procedure From_Config
-     (UI : in out Root_Gtk_UI;
-      Config : Tropos.Configuration)
-   is
+      procedure Attach_Entity
+        (Fragment : Komnenos.Fragments.Fragment_Type)
+      is
+         use type Komnenos.Entities.Entity_Reference;
+         Entity : constant Komnenos.Entities.Entity_Reference :=
+                    (if UI.Entities.Exists (Fragment.Entity_Key)
+                     then UI.Entities.Get (Fragment.Entity_Key)
+                     else null);
+      begin
+         if Entity /= null then
+            Entity.Select_Entity
+              (Table  => UI,
+               Parent => null,
+               Visual => Fragment,
+               Offset => 0);
+            UI.Layout.Item_Placed (Fragment);
+         end if;
+      end Attach_Entity;
+
    begin
-      null;
+      Root_Komnenos_UI (UI.all).From_Config (Config);
+      if Config.Contains ("layout") then
+         UI.Layout.From_Config (Config.Child ("layout"));
+      end if;
+      UI.Layout.Scan (Attach_Entity'Access);
    end From_Config;
 
    -------------------
@@ -1653,27 +1663,15 @@ package body Komnenos.UI.Gtk_UI is
    ---------------
 
    overriding procedure To_Config
-     (Layout : Root_Gtk_Layout;
-      Config : in out Tropos.Configuration)
-   is
-      pragma Unreferenced (Layout);
-      pragma Unreferenced (Config);
-   begin
-      null;
-   end To_Config;
-
-   ---------------
-   -- To_Config --
-   ---------------
-
-   overriding procedure To_Config
      (UI     : Root_Gtk_UI;
       Config : in out Tropos.Configuration)
    is
-      pragma Unreferenced (UI);
-      pragma Unreferenced (Config);
+      Layout_Config : Tropos.Configuration :=
+                        Tropos.New_Config ("layout");
    begin
-      null;
+      Root_Komnenos_UI (UI).To_Config (Config);
+      UI.Layout.To_Config (Layout_Config);
+      Config.Add (Layout_Config);
    end To_Config;
 
    -------------
