@@ -38,7 +38,7 @@ package Aquarius.File_System_Stores is
       Config : in out Tropos.Configuration);
 
    overriding procedure From_Config
-     (Item : in out Root_File_System_Store;
+     (Item : not null access Root_File_System_Store;
       Config : Tropos.Configuration);
 
    type File_System_Store is access all Root_File_System_Store'Class;

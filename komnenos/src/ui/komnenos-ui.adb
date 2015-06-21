@@ -84,6 +84,21 @@ package body Komnenos.UI is
       return UI.Entities.Exists (Key);
    end Exists;
 
+   -----------------
+   -- From_Config --
+   -----------------
+
+   overriding procedure From_Config
+     (UI : not null access Root_Komnenos_UI;
+      Config : Tropos.Configuration)
+   is
+   begin
+      UI.View_Left   := Config.Get ("view_left");
+      UI.View_Top    := Config.Get ("view_top");
+      UI.View_Width  := Config.Get ("view_width");
+      UI.View_Height := Config.Get ("view_height");
+   end From_Config;
+
    ---------
    -- Get --
    ---------
@@ -172,5 +187,20 @@ package body Komnenos.UI is
    begin
       UI.Entities.Sort;
    end Sort;
+
+   ---------------
+   -- To_Config --
+   ---------------
+
+   overriding procedure To_Config
+     (UI     : Root_Komnenos_UI;
+      Config : in out Tropos.Configuration)
+   is
+   begin
+      Config.Add ("view_left", UI.View_Left);
+      Config.Add ("view_top", UI.View_Top);
+      Config.Add ("view_width", UI.View_Width);
+      Config.Add ("view_height", UI.View_Height);
+   end To_Config;
 
 end Komnenos.UI;

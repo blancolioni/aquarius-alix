@@ -14,12 +14,6 @@ package body Komnenos.UI.Sessions is
       Session_Config : constant Tropos.Configuration :=
                          Tropos.Reader.Read_Config (Path);
    begin
-      --  UI.From_Config (Session_Config);
-      UI.View_Left := Session_Config.Get ("view_left");
-      UI.View_Top := Session_Config.Get ("view_top");
-      UI.View_Width := Session_Config.Get ("view_width");
-      UI.View_Height := Session_Config.Get ("view_height");
-
       if Session_Config.Contains ("program_stores") then
          for Config of Session_Config.Child ("program_stores") loop
             declare
@@ -35,6 +29,10 @@ package body Komnenos.UI.Sessions is
          end loop;
       end if;
 
+      if Session_Config.Contains ("ui") then
+         UI.From_Config (Session_Config.Child ("ui"));
+      end if;
+
    end Load_Session;
 
    ------------------
@@ -47,11 +45,6 @@ package body Komnenos.UI.Sessions is
    is
       Config : Tropos.Configuration; -- := UI.To_Config;
    begin
-      --  UI.To_Config (Config);
-      Config.Add ("view_left", UI.View_Left);
-      Config.Add ("view_top", UI.View_Top);
-      Config.Add ("view_width", UI.View_Width);
-      Config.Add ("view_height", UI.View_Height);
       declare
          Program_Stores : Tropos.Configuration :=
                             Tropos.New_Config ("program_stores");
@@ -61,6 +54,14 @@ package body Komnenos.UI.Sessions is
          UI.Program_Store.To_Config (Store);
          Program_Stores.Add (Store);
          Config.Add (Program_Stores);
+      end;
+
+      declare
+         UI_Config : Tropos.Configuration :=
+                       Tropos.New_Config ("ui");
+      begin
+         UI.To_Config (UI_Config);
+         Config.Add (UI_Config);
       end;
 
       Tropos.Writer.Write_Config (Config, Path);

@@ -17,7 +17,7 @@ package Komnenos.Session_Objects is
        Config.Config_Name = Session_Object_Interface'Class (Item).Config_Name;
 
    procedure From_Config
-     (Item : in out Session_Object_Interface;
+     (Item : not null access Session_Object_Interface;
       Config : Tropos.Configuration)
    is abstract;
 

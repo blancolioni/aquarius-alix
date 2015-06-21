@@ -35,6 +35,10 @@ package Komnenos.Entities is
      (Item : Root_Entity_Reference)
       return String;
 
+   function Key
+     (Item : Root_Entity_Reference)
+      return String;
+
    function Top_Level
      (Item : Root_Entity_Reference)
       return Boolean
@@ -55,6 +59,7 @@ package Komnenos.Entities is
      (Entity : Root_Entity_Reference;
       Table  : access Entity_Table_Interface'Class;
       Parent : access Entity_Visual'Class;
+      Visual : access Entity_Visual'Class;
       Offset : Natural)
    is abstract;
 
@@ -271,6 +276,7 @@ private
          Class        : Ada.Strings.Unbounded.Unbounded_String;
          Display_Text : Ada.Strings.Unbounded.Unbounded_String;
          Description  : Ada.Strings.Unbounded.Unbounded_String;
+         Key          : Ada.Strings.Unbounded.Unbounded_String;
          References   : File_Location_Vectors.Vector;
       end record;
 

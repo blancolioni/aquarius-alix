@@ -252,7 +252,7 @@ private
    is null;
 
    overriding procedure From_Config
-     (Item : in out Aquarius_Project_Type;
+     (Item : not null access Aquarius_Project_Type;
       Config : Tropos.Configuration)
    is null;
 

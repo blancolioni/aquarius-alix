@@ -19,7 +19,7 @@ package body Aquarius.File_System_Stores is
    -----------------
 
    overriding procedure From_Config
-     (Item : in out Root_File_System_Store;
+     (Item : not null access Root_File_System_Store;
       Config : Tropos.Configuration)
    is
    begin

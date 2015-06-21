@@ -1,3 +1,5 @@
+with Tropos;
+
 with Aquarius.UI;
 
 with Komnenos.Entities;
@@ -14,6 +16,14 @@ package Komnenos.UI is
 
    overriding function Config_Name (UI : Root_Komnenos_UI) return String
    is ("ui");
+
+   overriding procedure To_Config
+     (UI     : Root_Komnenos_UI;
+      Config : in out Tropos.Configuration);
+
+   overriding procedure From_Config
+     (UI : not null access Root_Komnenos_UI;
+      Config : Tropos.Configuration);
 
    procedure Place_Fragment
      (UI       : in out Root_Komnenos_UI;
@@ -75,6 +85,13 @@ package Komnenos.UI is
       Process        : not null access
         procedure (Item : Komnenos.Entities.Entity_Reference);
       Top_Level_Only : Boolean := True);
+
+--     function Find_Entity
+--       (UI     : Root_Komnenos_UI;
+--        Source : String;
+--        Line   : Natural;
+--        Column : Natural)
+--        return Komnenos.Entities.Entity_Reference;
 
    overriding function Program_Store
      (UI             : Root_Komnenos_UI)

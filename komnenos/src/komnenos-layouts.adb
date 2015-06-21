@@ -76,6 +76,32 @@ package body Komnenos.Layouts is
       end if;
    end Clear_Space;
 
+   -----------------
+   -- From_Config --
+   -----------------
+
+   overriding procedure From_Config
+     (Layout : not null access Root_Layout_Type;
+      Config : Tropos.Configuration)
+   is
+   begin
+      for Child_Config of Config loop
+         declare
+            subtype Base is
+              Komnenos.Session_Objects.Session_Object_Interface'Class;
+            Session_Fragment : constant access Base :=
+                                 Komnenos.Session_Objects.Read_Config
+                                   (Child_Config);
+            Fragment         : constant Komnenos.Fragments.Fragment_Type :=
+                                 Komnenos.Fragments.Fragment_Type
+                                   (Session_Fragment);
+         begin
+            Layout.Items.Append (Fragment);
+            Root_Layout_Type'Class (Layout.all).Item_Placed (Fragment);
+         end;
+      end loop;
+   end From_Config;
+
    ---------------
    -- Move_Item --
    ---------------
@@ -159,5 +185,40 @@ package body Komnenos.Layouts is
       Layout.Item_Placed (Fragment);
 
    end Place_Item;
+
+   ----------
+   -- Scan --
+   ----------
+
+   procedure Scan
+     (Layout  : Root_Layout_Type'Class;
+      Process : not null access
+        procedure (Fragment : Komnenos.Fragments.Fragment_Type))
+   is
+   begin
+      for Fragment of Layout.Items loop
+         Process (Fragment);
+      end loop;
+   end Scan;
+
+   ---------------
+   -- To_Config --
+   ---------------
+
+   overriding procedure To_Config
+     (Layout : Root_Layout_Type;
+      Config : in out Tropos.Configuration)
+   is
+   begin
+      for Fragment of Layout.Items loop
+         declare
+            Fragment_Config : Tropos.Configuration :=
+                                Tropos.New_Config (Fragment.Config_Name);
+         begin
+            Fragment.To_Config (Fragment_Config);
+            Config.Add (Fragment_Config);
+         end;
+      end loop;
+   end To_Config;
 
 end Komnenos.Layouts;

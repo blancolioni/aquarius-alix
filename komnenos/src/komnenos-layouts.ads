@@ -1,5 +1,7 @@
 private with Ada.Containers.Doubly_Linked_Lists;
 
+with Tropos;
+
 with Komnenos.Fragments;
 with Komnenos.Session_Objects;
 
@@ -13,6 +15,14 @@ package Komnenos.Layouts is
 
    overriding function Config_Name (Layout : Root_Layout_Type) return String
    is ("layout");
+
+   overriding procedure To_Config
+     (Layout : Root_Layout_Type;
+      Config : in out Tropos.Configuration);
+
+   overriding procedure From_Config
+     (Layout : not null access Root_Layout_Type;
+      Config : Tropos.Configuration);
 
    procedure Item_Moved
      (Layout : in out Root_Layout_Type;
@@ -44,6 +54,11 @@ package Komnenos.Layouts is
       Fragment  : Komnenos.Fragments.Fragment_Type);
    --  Update the position of Fragment.  Move other fragments around to
    --  accommodate it
+
+   procedure Scan
+     (Layout  : Root_Layout_Type'Class;
+      Process : not null access
+        procedure (Fragment : Komnenos.Fragments.Fragment_Type));
 
    type Layout_Type is access all Root_Layout_Type'Class;
 

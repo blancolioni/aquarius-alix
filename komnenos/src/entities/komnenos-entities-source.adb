@@ -59,20 +59,23 @@ package body Komnenos.Entities.Source is
      (Entity : Root_Source_Entity_Reference;
       Table  : access Entity_Table_Interface'Class;
       Parent : access Entity_Visual'Class;
+      Visual : access Entity_Visual'Class;
       Offset : Natural)
    is
       pragma Unreferenced (Table);
       use Ada.Strings.Unbounded;
       Note : constant Komnenos.Fragments.Fragment_Type :=
-               Komnenos.Fragments.Notes.New_Note_Fragment
-                 (To_String (Entity.Name)
-                  & " " & Class (Entity)
-                  & " defined in "
-                  & To_String (Entity.File_Name)
-                  & " line"
-                  & Natural'Image (Entity.Line)
-                  & " column"
-                  & Natural'Image (Entity.Column));
+               (if Visual = null
+                then Komnenos.Fragments.Notes.New_Note_Fragment
+                  (To_String (Entity.Name)
+                   & " " & Class (Entity)
+                   & " defined in "
+                   & To_String (Entity.File_Name)
+                   & " line"
+                   & Natural'Image (Entity.Line)
+                   & " column"
+                   & Natural'Image (Entity.Column))
+                else Komnenos.Fragments.Fragment_Type (Visual));
    begin
       Komnenos.UI.Current_UI.Place_Fragment
         (Parent, Offset, Note);

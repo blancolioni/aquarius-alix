@@ -37,6 +37,7 @@ private
      (Entity : Root_Source_Entity_Reference;
       Table  : access Entity_Table_Interface'Class;
       Parent : access Entity_Visual'Class;
+      Visual : access Entity_Visual'Class;
       Offset : Natural);
 
 end Komnenos.Entities.Source;

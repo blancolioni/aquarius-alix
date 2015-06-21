@@ -68,6 +68,7 @@ package body Komnenos.Entities is
       Item  : Entity_Reference)
    is
    begin
+      Item.Key := Ada.Strings.Unbounded.To_Unbounded_String (Key);
       Table.Table.Append (Item);
       Table.Map.Insert (Key, Item);
    end Add_Entity;
@@ -323,6 +324,18 @@ package body Komnenos.Entities is
          end loop;
       end if;
    end Iterate;
+
+   ---------
+   -- Key --
+   ---------
+
+   function Key
+     (Item : Root_Entity_Reference)
+      return String
+   is
+   begin
+      return Ada.Strings.Unbounded.To_String (Item.Key);
+   end Key;
 
    ------------------------
    -- Location_File_Name --

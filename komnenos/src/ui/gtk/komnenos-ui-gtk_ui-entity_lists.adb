@@ -165,7 +165,7 @@ package body Komnenos.UI.Gtk_UI.Entity_Lists is
                  Find_Entity_Containing (Current_UI, Location);
    begin
       if Entity /= null then
-         Entity.Select_Entity (Current_UI, null, 0);
+         Entity.Select_Entity (Current_UI, null, null, 0);
       end if;
    end On_Context_Menu_Item_Selected;
 
@@ -192,7 +192,7 @@ package body Komnenos.UI.Gtk_UI.Entity_Lists is
                  Get_Selected_Entity
                    (Gtk.Tree_View.Gtk_Tree_View (Tree_View));
    begin
-      Entity.Select_Entity (Current_UI, null, 0);
+      Entity.Select_Entity (Current_UI, null, null, 0);
    end On_Row_Activated;
 
    -------------------------------
