@@ -1,0 +1,217 @@
+top_level = program
+case_sensitive = false
+
+identifier         ::= ![A-Za-z_$][A-Za-z_0-9$]*!
+numericLiteral     ::= standard ada_numeric_literal
+stringLiteral      ::= !(\x22[^\x22]*\x22)|('[^']*')!
+delimiter          ::= delimiters "(),.:;{}[]"
+symbol             ::= ![\x21%^&*<>|?+/=-]+!
+comment            ::= !//[.]*!
+
+format ';' no_space_before no_space_after new_line_after
+format '.' no_space_before no_space_after
+format '(' no_space_before no_space_after
+format ')' no_space_before space_after
+format ',' no_space_before space_after
+format '{' space_before new_line_after
+format '}' new_line_before new_line_after
+
+format statementList indented_child
+format functionBody indented_child
+program ::= sourceElements
+
+literal ::= 
+	nullLiteral
+	| booleanLiteral
+	| numericLiteral
+	| stringLiteral
+	
+nullLiteral ::=
+	'null'
+
+booleanLiteral ::=
+	'true'
+	| 'false'
+
+primaryExpression ::=
+	'this'
+	| identifier
+	| literal
+	| arrayLiteral
+	| objectLiteral
+	| '(' expression ')'
+
+arrayLiteral ::= '[' elementList ']'
+
+elementList ::= { arrayElement / ',' }
+
+arrayElement ::= [ assignmentExpression ]
+
+objectLiteral ::= '{' { propertyNameAndValue / ',' } '}'
+
+propertyNameAndValue ::= 
+   propertyName ':' assignmentExpression
+
+propertyName ::=
+	identifier
+	| stringLiteral
+	| numericLiteral
+
+memberExpression ::= memberExpressionHead { memberExpressionTail }
+
+memberExpressionHead ::= 
+		primaryExpression 
+        | functionExpression
+		| newExpression
+
+memberExpressionTail ::= '[' expression ']'
+                       | '.' identifier
+
+newExpression ::= 'new' memberExpression arguments
+                
+callExpression ::= memberExpressionHead { callExpressionTail }
+
+callExpressionTail ::= arguments | '[' expression ']' | '.' identifier
+
+arguments ::= '(' { assignmentExpression / ',' } ')'
+
+leftHandSideExpression ::= callExpression
+
+postfixExpression ::= leftHandSideExpression [ autoOp ]
+
+autoOp ::= '++' | '--'
+
+unaryExpression ::=
+	postfixExpression
+	| 'delete' unaryExpression
+	| 'void' unaryExpression
+	| 'typeof' unaryExpression
+	| autoOp unaryExpression
+	| '+' unaryExpression
+	| '-' unaryExpression
+	| '~' unaryExpression
+	| '!' unaryExpression
+
+multiplicativeExpression ::=
+    < unaryExpression / multiplicativeOp >
+
+multiplicativeOp ::= '*' | '/' | '%'    
+
+additiveExpression ::=
+   < multiplicativeExpression / additiveOp >
+   
+additiveOp ::= '+' | '-'
+
+shiftExpression ::= < additiveExpression / shiftOp >
+
+shiftOp ::= '<<' | '>>' | '>>>'
+
+relationalExpression ::= 
+   < shiftExpression / relationOp >
+   
+relationOp ::= '<' | '>' | '<=' | '>=' | 'instanceof' | 'in'
+
+equalityExpression ::= < relationalExpression / equalityOperator >
+
+equalityOperator ::= '==' | '!=' | '===' | '!=='
+
+bitwiseAndExpression ::= < equalityExpression / '&' >
+bitwiseXorExpression ::= < bitwiseAndExpression / '^' >
+bitwiseOrExpression ::= < bitwiseXorExpression / '|' >
+
+logicalAndExpression ::= < bitwiseOrExpression / '&&' >
+logicalOrExpression ::= < logicalAndExpression / '||' >
+
+conditionalExpression ::= logicalOrExpression [ '?' assignmentExpression ':' assignmentExpression ]
+
+assignmentExpression ::= 
+     leftHandSideExpression assignmentOperator assignmentExpression
+   | conditionalExpression
+
+assignmentOperator ::= '=' | '*=' | '/=' | '%=' | '+=' | '-=' | '<<=' | '>>=' | '&=' | '|='
+
+expression ::= < assignmentExpression / ',' >
+
+statement ::= 
+	block
+	| variableStatement
+	| expressionStatement
+	| ifStatement
+	| iterationStatement
+	| continueStatement
+	| breakStatement
+	| returnStatement
+	| withStatement
+	| labelledStatement
+	| switchStatement
+	| throwStatement
+	| tryStatement
+
+block ::= '{' statementList '}'
+
+statementList ::= < statement >
+
+variableStatement ::= 
+	'var' variableDeclarationList [ ';' ]
+
+variableDeclarationList ::= < variableDeclaration / ',' >
+
+variableDeclaration ::= 
+	identifier [ initialiser ]
+
+initialiser ::= '=' assignmentExpression
+
+expressionStatement ::= expression [ ';' ]
+
+ifStatement ::= 'if' '(' expression ')' statement [ 'else' statement ]
+
+iterationStatement ::= doStatement | whileStatement | forStatement
+
+doStatement ::= 'do' statement 'while' '(' expression ')' [ ';' ]
+
+whileStatement ::= 'while' '(' expression ')' statement
+
+forStatement ::= 'for' '(' forLoop ')' statement
+
+forLoop ::= [ expression ] [ ';' ] [ expression ] [ ';' ] [ expression ]
+          | 'var' variableDeclarationList [ ';' ] [ expression ] [ ';' ] [ expression ]
+          | leftHandSideExpression 'in' expression
+          | 'var' variableDeclaration 'in' expression
+
+continueStatement ::= 'continue' [ identifier ] [ ';' ]
+
+breakStatement ::= 'break' [ identifier ] [ ';' ]
+
+returnStatement ::= 'return' [ expression ] [ ';' ]
+
+withStatement ::= 'with' '(' expression ')' statement
+
+switchStatement ::= 'switch' '(' expression ')' caseBlock
+
+caseBlock ::= 
+      '{' { caseClause } '}'
+      
+caseClause ::= 'case' expression ':' [ statementList ]
+             | 'default' ':' [ statementList ]
+             
+labelledStatement ::= identifier ':' statement
+
+throwStatement ::= 'throw' expression [ ';' ]
+
+tryStatement ::= 'try' block [ catch ] [ finally ]
+
+catch ::= 'catch' '(' identifier ')' block
+
+finally ::= 'finally' block
+
+functionDeclaration ::= 'function' identifier '(' formalParameterList ')' '{' functionBody '}'
+
+functionExpression ::= 'function' '(' formalParameterList ')' '{' functionBody '}'
+
+formalParameterList ::= { identifier / ',' }
+
+functionBody ::= sourceElements
+
+sourceElements ::= { sourceElement }
+
+sourceElement ::= statement | functionDeclaration
