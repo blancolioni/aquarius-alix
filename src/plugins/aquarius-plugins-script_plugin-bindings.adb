@@ -1,5 +1,6 @@
 with Ada.Calendar;
 with Ada.Directories;
+with Ada.Exceptions;
 with Ada.Text_IO;
 
 --  with Aquarius.Actions.Interpreter;
@@ -8,6 +9,7 @@ with Aquarius.Grammars.Manager;
 with Aquarius.Loader;
 with Aquarius.Names;
 with Aquarius.Plugins.Dynamic;
+with Aquarius.Source;
 with Aquarius.Syntax;
 
 with Aquarius.Actions.Scanner;
@@ -115,6 +117,16 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Executor.Plugin.Executor.Execute
         (Executor.Start,
          (Komnenos_Arg, Top_Arg, Tree_Arg));
+   exception
+      when E : others =>
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            Aquarius.Source.Show (Tree.Get_Location)
+            & "caught exception while executing action for "
+            & Tree.Name);
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            Ada.Exceptions.Exception_Message (E));
    end Execute;
 
    -------------
@@ -144,6 +156,15 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Executor.Plugin.Executor.Execute
         (Executor.Start,
          (Komnenos_Arg, Top_Arg, Parent_Arg, Child_Arg));
+   exception
+      when E : others =>
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            Aquarius.Source.Show (Child_Tree.Get_Location)
+            & ": "
+            & Parent_Tree.Name & "/" & Child_Tree.Name
+            & ": "
+            & Ada.Exceptions.Exception_Message (E));
    end Execute;
 
    -----------------------------
