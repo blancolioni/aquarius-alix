@@ -148,7 +148,14 @@ package body Aquarius.Lexers.Parser is
          while Index <= Text'Last
            and then Text (Index) /= ')'
          loop
-            Result := Result & Parse_Atomic (Index);
+            if Index < Text'Last
+              and then Text (Index) = '|'
+            then
+               Index := Index + 1;
+               Result := Result or Parse_Atomic (Index);
+            else
+               Result := Result & Parse_Atomic (Index);
+            end if;
          end loop;
          return Result;
       end Scan;
