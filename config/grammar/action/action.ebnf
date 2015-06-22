@@ -1,12 +1,12 @@
 top_level = compilation_unit
 case_sensitive = false
 
-identifier         ::= regex "\l[\w]*"
-numeric_literal    ::= regex "[0-9]+"
+identifier         ::= !\l[\w]*
+numeric_literal    ::= ![0-9]+!
 string_literal     ::= standard ada_string_literal
-delimiter          ::= delimiters "&()+,;|^."
-symbol             ::= regex "[:=></]+"
-comment            ::= regex "--[.]*"
+delimiter          ::= !&()+,;|^.!
+symbol             ::= ![:=></]+!
+comment            ::= !--[.]*!
 
 format sequence_of_statements indented_child
 format actual_argument_list soft_new_line
