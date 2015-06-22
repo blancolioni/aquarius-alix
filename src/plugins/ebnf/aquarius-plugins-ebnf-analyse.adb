@@ -345,7 +345,7 @@ package body Aquarius.Plugins.EBNF.Analyse is
          declare
             use Aquarius.Lexers;
             Text : constant String :=
-                     Regexp_Definition.Leaf ("string").Text;
+                     Regexp_Definition.Leaf ("regex").Text;
             Regexp : constant String :=
                        Text (Text'First + 1 .. Text'Last - 1);
             Lex    : constant Lexer :=

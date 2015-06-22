@@ -1,8 +1,8 @@
 top_level = compilation_unit
 case_sensitive = false
 
-identifier         ::= regex "\l\w*"
-numeric_literal    ::= regex "[0-9]+"
+identifier         ::= !\l\w*!
+numeric_literal    ::= ![0-9]+!
 character_literal  ::= standard ada_character_literal
 string_literal     ::= standard ada_string_literal
 delimiter          ::= delimiters "&()+,|[];{}"

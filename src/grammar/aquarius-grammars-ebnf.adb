@@ -107,8 +107,7 @@ package body Aquarius.Grammars.EBNF is
 
       Add_Non_Terminal (Grammar, "regular-expression-body",
                         New_Sequence (Grammar.Frame, Internal),
-                        (Grammar.Reference_Terminal (Internal, "regex"),
-                         Grammar.Reference_Name (Internal, "string")));
+                        (Grammar.Reference_Terminal (Internal, "regex")));
 
       Add_Non_Terminal (Grammar, "delimiter-body",
                         New_Sequence (Grammar.Frame, Internal),
@@ -239,6 +238,11 @@ package body Aquarius.Grammars.EBNF is
         Standard_Lexer ("ada_numeric_literal");
       Symbol_Lex     : constant Lexer :=
                          Repeat (One_Of (":="));
+      Regex          : constant Lexer :=
+                         Literal ('!')
+                         & Repeat (not Literal ('!'))
+                         & Literal ('!');
+
       Internal : constant Aquarius.Trees.Tree :=
         Aquarius.Trees.Internal_Declaration;
       Line_Comment : constant Lexer :=
@@ -250,8 +254,9 @@ package body Aquarius.Grammars.EBNF is
       Grammar.Add_Class_Terminal (Internal, "integer",    Integer_Lex);
       Grammar.Add_Class_Terminal (Internal, "symbol",     Symbol_Lex);
       Grammar.Add_Class_Terminal (Internal, "comment",    Line_Comment);
+      Grammar.Add_Class_Terminal (Internal, "regex",      Regex);
       Grammar.Add_Class_Terminal (Internal, "delimiter",
-                          One_Of ("{}[]<>/|()"));
+                          One_Of ("{}[]<>|()/"));
    end Create_Terminals;
 
 end Aquarius.Grammars.EBNF;
