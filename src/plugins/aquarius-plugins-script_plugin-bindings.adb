@@ -1,3 +1,4 @@
+with Ada.Calendar;
 with Ada.Directories;
 with Ada.Text_IO;
 
@@ -37,8 +38,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Child    : not null access Aquarius.Actions.Actionable'Class);
 
    procedure Process_Compiled_Plugin
-     (Plugin : Aquarius.Plugins.Dynamic.Dynamic_Plugin_Type'Class;
-      Path   : String);
+     (Path   : String);
 
    ---------------------------------
    -- After_Action_File_Reference --
@@ -47,11 +47,17 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
    procedure After_Action_File_Reference
      (Item : Aquarius.Programs.Program_Tree)
    is
+      use type Ada.Calendar.Time;
       Path : constant String :=
                Ada.Directories.Compose
                  (Containing_Directory => Item.Source_Directory,
                   Name                 => Item.Concatenate_Children,
                   Extension            => "action");
+      Output_Path : constant String :=
+                      Item.Concatenate_Children
+                      & ".action.m11";
+      Object_Path : constant String :=
+                      Output_Path & ".o11";
       Action_Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
                          Aquarius.Grammars.Manager.Get_Grammar_For_File (Path);
       Action_Program : constant Aquarius.Programs.Program_Tree :=
@@ -64,15 +70,28 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                          Get_Plugin (Item).Grammar.Group (Group_Name);
    begin
 
-      declare
-         Processor : Aquarius.Actions.Pdp_11.Pdp_Scanner;
-      begin
-         Aquarius.Actions.Scanner.Scan_Actions
-           (Processor, Action_Program, Group);
+      if not Ada.Directories.Exists (Output_Path)
+        or else Ada.Directories.Modification_Time (Output_Path) <
+        Ada.Directories.Modification_Time (Path)
+      then
+         declare
+            Processor : Aquarius.Actions.Pdp_11.Pdp_Scanner;
+         begin
+            Aquarius.Actions.Scanner.Scan_Actions
+              (Processor, Action_Program, Group);
+         end;
+      end if;
+
+      if not Ada.Directories.Exists (Object_Path)
+        or else Ada.Directories.Modification_Time (Object_Path) <
+        Ada.Directories.Modification_Time (Output_Path)
+      then
          Process_Compiled_Plugin
-           (Dynamic.Dynamic_Plugin (Get_Plugin (Item)).all,
-            Processor.Output_Path);
-      end;
+           (Output_Path);
+      end if;
+
+      Dynamic.Dynamic_Plugin (Get_Plugin (Item)).Image.Load
+        (Ada.Directories.Simple_Name (Path) & ".m11.o11");
 
    end After_Action_File_Reference;
 
@@ -260,10 +279,24 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
          end if;
       end Bind_To_Grammar;
 
+      Library_Assembly_Path : constant String :=
+                                Aquarius.Config_Paths.Config_Path
+                                & "/aqua/text_io.m11";
+      Library_Assembly_Object : constant String :=
+                                  "text_io.m11.o11";
+      use Ada.Directories, Ada.Calendar;
    begin
-      Process_Compiled_Plugin
-        (Plugin.all,
-         Aquarius.Config_Paths.Config_Path & "/aqua/text_io.m11");
+      if Exists (Library_Assembly_Object)
+        and then Modification_Time (Library_Assembly_Object)
+        > Modification_Time (Library_Assembly_Path)
+      then
+         null;
+      else
+         Process_Compiled_Plugin
+           (Library_Assembly_Path);
+      end if;
+
+      Image.Load (Library_Assembly_Object);
 
       Image.Link;
       Image.Bind (Bind_To_Grammar'Access);
@@ -294,8 +327,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
    -----------------------------
 
    procedure Process_Compiled_Plugin
-     (Plugin : Aquarius.Plugins.Dynamic.Dynamic_Plugin_Type'Class;
-      Path   : String)
+     (Path   : String)
    is
       Output_Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
                          Aquarius.Grammars.Manager.Get_Grammar_For_File
@@ -307,9 +339,6 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
    begin
       Output_Grammar.Run_Action_Trigger
         (Output_Program, Aquarius.Actions.Semantic_Trigger);
-
-      Plugin.Image.Load
-        (Ada.Directories.Simple_Name (Path) & ".o11");
    end Process_Compiled_Plugin;
 
    --------------------------------
