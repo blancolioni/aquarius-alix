@@ -6,6 +6,7 @@ with Aquarius.Entries;
 with Aquarius.Formats;
 with Aquarius.Layout;
 with Aquarius.Messages;
+with Aquarius.Names;
 with Aquarius.Source;
 with Aquarius.Syntax;
 with Aquarius.Tokens;
@@ -74,6 +75,10 @@ package Aquarius.Programs is
    function Program_Root
      (Item : not null access Program_Tree_Type'Class)
       return Program_Tree;
+
+   function Program_Root_Node
+     (Item : Program_Tree_Type'Class)
+      return Program_Tree_Type'Class;
 
    function Program_Parent (Item : Program_Tree_Type'Class)
                            return Program_Tree;
@@ -410,6 +415,7 @@ private
          Have_Symbol_Table : Boolean;
          Is_Declaration    : Boolean;
          Source_File       : Aquarius.Source.Source_File;
+         Source_File_Name  : Aquarius.Names.Aquarius_Name;
          Msg_Level         : Aquarius.Messages.Message_Level;
          Vertical_Gap      : Aquarius.Layout.Count;
          Syntax            : Aquarius.Syntax.Syntax_Tree;
