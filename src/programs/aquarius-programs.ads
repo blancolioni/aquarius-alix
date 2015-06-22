@@ -378,6 +378,10 @@ package Aquarius.Programs is
 
    type Program_Tree_Store is access all Root_Program_Tree_Store'Class;
 
+   procedure Get_Allocation_Info
+     (Allocated_Tree_Count : out Natural;
+      Free_Tree_Count      : out Natural);
+
 private
 
    type Aquarius_Object_Access is access all Root_Aquarius_Object'Class;

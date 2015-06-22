@@ -10,6 +10,7 @@ with Aquarius.Grammars.Manager;
 with Aquarius.Library;
 with Aquarius.Loader;
 with Aquarius.Messages.Console;
+with Aquarius.Names;
 with Aquarius.Programs.Arrangements;
 with Aquarius.Rendering.Manager;
 with Aquarius.Target.Manager;
@@ -28,6 +29,23 @@ with Komnenos.Entities.Aqua_Entities;
 procedure Aquarius.Driver is
 
    procedure Show_Usage_Text;
+
+   procedure Show_Allocations;
+
+   ----------------------
+   -- Show_Allocations --
+   ----------------------
+
+   procedure Show_Allocations is
+      Allocated, Freed : Natural;
+   begin
+      Aquarius.Programs.Get_Allocation_Info (Allocated, Freed);
+      Ada.Text_IO.Put_Line
+        ("alloc: names ="
+         & Natural'Image (Aquarius.Names.Allocated_Name_Count)
+         & "; active trees =" & Natural'Image (Allocated)
+         & "; free trees =" & Natural'Image (Freed));
+   end Show_Allocations;
 
    ---------------------
    -- Show_Usage_Text --
@@ -104,6 +122,8 @@ begin
          Ada.Text_IO.Put_Line ("no input file specified");
          return;
       end if;
+
+      Show_Allocations;
 
       Komnenos.Entities.Aqua_Entities.Create_Aqua_Object (null);
 
@@ -217,6 +237,8 @@ begin
             end if;
          end;
 
+         Show_Allocations;
+
       exception
          when others =>
             if Input /= null then
@@ -229,6 +251,8 @@ begin
    else
 
       Komnenos.Logging.Start_Logging;
+
+      Show_Allocations;
 
       declare
          UI   : constant Komnenos.UI.Komnenos_UI :=
@@ -287,7 +311,11 @@ begin
             end;
          end if;
 
+         Show_Allocations;
+
          UI.Start;
+
+         Show_Allocations;
 
          Komnenos.UI.Sessions.Save_Session (UI, ".aquarius-session");
 

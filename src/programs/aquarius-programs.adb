@@ -16,6 +16,8 @@ package body Aquarius.Programs is
 
    Trace_Aqua : constant Boolean := False;
 
+   Num_Allocated_Trees : Natural := 0;
+
    package Program_Tree_Vectors is
       new Ada.Containers.Vectors (Positive, Program_Tree);
 
@@ -613,7 +615,21 @@ package body Aquarius.Programs is
       Free_List.Append (Item);
       Item.Free := True;
       Item := null;
+      Num_Allocated_Trees := Num_Allocated_Trees - 1;
    end Free;
+
+   -------------------------
+   -- Get_Allocation_Info --
+   -------------------------
+
+   procedure Get_Allocation_Info
+     (Allocated_Tree_Count : out Natural;
+      Free_Tree_Count      : out Natural)
+   is
+   begin
+      Allocated_Tree_Count := Num_Allocated_Trees;
+      Free_Tree_Count      := Natural (Free_List.Length);
+   end Get_Allocation_Info;
 
    ---------------
    -- Get_Entry --
@@ -1191,6 +1207,7 @@ package body Aquarius.Programs is
          Free_List.Delete (Free_List.Last_Index);
       else
          Result := new Program_Tree_Type;
+         Num_Allocated_Trees := Num_Allocated_Trees + 1;
       end if;
       Program_Tree_Type (Result.all) := Empty_Program_Node;
       Initialise_Tree (Result.all, Aquarius.Source.No_Source_Position);
