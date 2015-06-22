@@ -508,8 +508,20 @@ package body Aqua.CPU is
                      & CPU.Show (Value));
                end if;
 
-               pragma Assert (Is_String_Reference (Name));
-               pragma Assert (Is_External_Reference (Target));
+               if not Is_String_Reference (Name) then
+                  raise Constraint_Error
+                    with "set: expected a string for property name, but found "
+                    & CPU.Show (Name);
+               end if;
+
+               if not Is_External_Reference (Target) then
+                  raise Constraint_Error
+                    with "set: expected an object but found "
+                    & CPU.Show (Target);
+               end if;
+
+--                 pragma Assert (Is_String_Reference (Name));
+--                 pragma Assert (Is_External_Reference (Target));
 
                declare
                   Ext : constant access External_Object_Interface'Class :=
@@ -845,6 +857,18 @@ package body Aqua.CPU is
       return Word
    is
    begin
+
+      for I in 1 .. CPU.Ext.Last_Index loop
+         if External_Object_Access (Item) = CPU.Ext (I) then
+            return Word (I) or External_Mask_Value;
+         end if;
+      end loop;
+
+      if CPU.Ext.Last_Index >= Positive (External_Reference'Last) then
+         raise Storage_Error
+           with "no free objects";
+      end if;
+
       CPU.Ext.Append (External_Object_Access (Item));
       return Word (CPU.Ext.Last_Index) or External_Mask_Value;
    end To_Word;
