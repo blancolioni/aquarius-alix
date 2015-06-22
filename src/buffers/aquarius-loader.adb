@@ -166,6 +166,22 @@ package body Aquarius.Loader is
                      Ada.Text_IO.Put_Line (Aquarius.Source.Show (Tok_Pos) &
                                              ": syntax error at " &
                                              Line (First .. Next));
+
+                     declare
+                        use Aquarius.Tokens;
+                        All_Terminals : constant Array_Of_Tokens :=
+                                          Terminals (Grammar.Frame);
+                     begin
+                        Ada.Text_IO.Put ("Expected");
+                        for T of All_Terminals loop
+                           if Token_OK (T, Tok_Pos, Context) then
+                              Ada.Text_IO.Put
+                                (" " & Get_Name (Grammar.Frame, T));
+                           end if;
+                        end loop;
+                        Ada.Text_IO.New_Line;
+                     end;
+
                      Have_Error := True;
                      return Result;
                   end if;
