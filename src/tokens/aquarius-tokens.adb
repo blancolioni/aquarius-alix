@@ -487,6 +487,19 @@ package body Aquarius.Tokens is
       Frame.Case_Sensitive := Value;
    end Set_Case_Sensitive;
 
+   ---------------
+   -- Terminals --
+   ---------------
+
+   function Terminals (Frame : Token_Frame) return Array_Of_Tokens is
+      Result : Array_Of_Tokens (1 .. Natural (Frame.Token_Vector.Last_Index));
+   begin
+      for I in Result'Range loop
+         Result (I) := Token (I);
+      end loop;
+      return Result;
+   end Terminals;
+
    ----------------------------
    -- To_Standard_Token_Text --
    ----------------------------

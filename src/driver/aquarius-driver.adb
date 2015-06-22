@@ -80,7 +80,8 @@ procedure Aquarius.Driver is
 begin
 
    Aquarius.Library.Initialise
-     (Enable_Plugins => Aquarius.Command_Line.Enable_Plugins);
+     (Enable_Plugins => Aquarius.Command_Line.Enable_Plugins,
+      Show_Paths_In_Messages => True);
 
    if Command_Line.Version then
 
