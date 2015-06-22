@@ -1,5 +1,6 @@
 with Ada.Directories;
 with Ada.Exceptions;
+with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with Aquarius.Actions;
@@ -72,6 +73,7 @@ package body Aquarius.File_System_Stores is
         (Path : String)
       is
          use Ada.Directories;
+         use Ada.Strings.Fixed;
          Search           : Search_Type;
          Next             : Directory_Entry_Type;
       begin
@@ -90,6 +92,10 @@ package body Aquarius.File_System_Stores is
                File_Name : constant String := Full_Name (Next);
             begin
                if File_Name (File_Name'Last) = '.' then
+                  null;
+               elsif Head (Base_Name (File_Name), 1) = "_"
+                 or else Head (Base_Name (File_Name), 1) = "."
+               then
                   null;
                elsif Kind (Next) = Ordinary_File then
                   if Store.Extensions.Contains
