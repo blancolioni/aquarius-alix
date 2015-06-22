@@ -45,16 +45,19 @@ package body Komnenos.UI.Sessions is
    is
       Config : Tropos.Configuration; -- := UI.To_Config;
    begin
-      declare
-         Program_Stores : Tropos.Configuration :=
-                            Tropos.New_Config ("program_stores");
-         Store          : Tropos.Configuration :=
-                            Tropos.New_Config (UI.Program_Store.Config_Name);
-      begin
-         UI.Program_Store.To_Config (Store);
-         Program_Stores.Add (Store);
-         Config.Add (Program_Stores);
-      end;
+      if UI.Program_Store /= null then
+         declare
+            Program_Stores : Tropos.Configuration :=
+                               Tropos.New_Config ("program_stores");
+            Store          : Tropos.Configuration :=
+                               Tropos.New_Config
+                                 (UI.Program_Store.Config_Name);
+         begin
+            UI.Program_Store.To_Config (Store);
+            Program_Stores.Add (Store);
+            Config.Add (Program_Stores);
+         end;
+      end if;
 
       declare
          UI_Config : Tropos.Configuration :=
