@@ -80,21 +80,27 @@ subprogram_specification ::=
     procedure_specification
   | function_specification
 
-procedure_declaration ::=
-   procedure_specification [ subprogram_body ] ';'
+procedure_declaration ::= procedure_spec | procedure_body
 
-function_declaration ::=
-   function_specification [ subprogram_body ] ';'
+procedure_spec ::= procedure_specification ';'
+
+procedure_body ::= procedure_specification subprogram_body ';'
+
+function_declaration ::= function_spec | function_body
+
+function_spec ::= function_specification ';'
+
+function_body ::= function_specification subprogram_body ';'
 
 procedure_specification ::=
    [ overriding_indication ]
-   'procedure' defining_program_unit_name
+   'procedure' defining_qualified_reference
             [ formal_argument_spec ]
        [ 'with' list_of_aspects ]
 
 function_specification ::=
    [ overriding_indication ]
-   'function' (defining_program_unit_name | string_literal)
+   'function' (defining_qualified_reference | string_literal)
          [ formal_argument_spec ]
          'return' type_indication
        [ 'with' list_of_aspects ]
@@ -123,7 +129,7 @@ mode ::= 'in'
 
 package_declaration ::= package_spec | package_body
 
-package_spec ::= 'package' defining_package_name
+package_spec ::= 'package' defining_qualified_reference
                   ('is' package_spec_declaration |
                    'renames' qualified_reference ) ';'
 
@@ -137,8 +143,8 @@ matching_name ::= < identifier / '.' > | operator_symbol
 private_part ::=   'private' list_of_declarations
 
 generic_instantiation ::=
-     'package' defining_program_unit_name 'is' new_generic_package ';'
-   | 'procedure' defining_program_unit_name 'is'
+     'package' defining_qualified_reference 'is' new_generic_package ';'
+   | 'procedure' defining_qualified_reference 'is'
        'new' generic_procedure_name [generic_actual_part] ';'
    | 'function' defining_designator 'is'
        'new' generic_function_name [generic_actual_part] ';'
@@ -157,7 +163,7 @@ defining_operator_symbol ::= operator_symbol
 
 operator_symbol ::= string_literal
 
-package_body ::= 'package' 'body' package_name 'is'
+package_body ::= 'package' 'body' defining_qualified_reference 'is'
                      list_of_declarations
                      [ 'begin' handled_sequence_of_statements ]
                      'end' [ package_name ] ';'

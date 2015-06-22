@@ -1,0 +1,44 @@
+before Compilation_Unit do
+   Put_Line ("Ada: defining subprogram names");
+end;
+
+after Compilation_Unit do
+   Report_State;
+end;
+
+after procedure_body/procedure_specification 
+   or function_body/function_specification
+do
+   put_line ("defining body: " & child.name);
+   Komnenos.Define (parent, child.name, "declaration");
+end;
+
+after procedure_specification/defining_qualified_reference 
+   or function_specification/defining_qualified_reference
+do
+   parent.name := child.name;
+end;
+
+after package_spec/defining_qualified_reference do
+   put_line ("defining package spec: " & defining_qualified_reference.image);
+   Komnenos.Define (parent, child.name, "declaration");
+end;
+
+before defining_qualified_reference do
+   tree.Qualifier := null;
+   tree.Last_Identifier := null;
+end;
+
+after defining_qualified_reference/identifier do
+   parent.Name := identifier.Image;
+   if parent.Last_Identifier then
+      if parent.Qualifier then
+         parent.Qualifier :=
+           parent.Qualifier & "." & parent.Last_Identifier.Image;
+      else
+         parent.Qualifier := parent.Last_Identifier.Image;
+      end if;      
+   end if;
+   parent.Last_Identifier := identifier;
+end;
+
