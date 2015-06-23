@@ -59,6 +59,18 @@ package body Aquarius.Loader is
         Aquarius.Source.Get_Start (File);
       Context    : Parse_Context;
       Recovering : Boolean := False;
+      Line_Comment : constant String :=
+                       (if Grammar.Have_Line_Comment
+                        then Grammar.Line_Comment
+                        else "");
+      Block_Comment_Start : constant String :=
+                              (if Grammar.Have_Block_Comment
+                               then Grammar.Block_Comment_Start
+                               else "");
+      Block_Comment_End : constant String :=
+                              (if Grammar.Have_Block_Comment
+                               then Grammar.Block_Comment_End
+                               else "");
    begin
 
       if Show_Full_Path then
@@ -118,22 +130,76 @@ package body Aquarius.Loader is
 
             Next    := Line'First;
             First   := Line'First;
+
+            << Restart_Space_Scan >>
+
             while First <= Line_Last loop
                Old_First := First;
                Have_Error := False;
 
                --  don't try to parse remaining spaces on the line
                while First <= Line_Last
-                 and then Ada.Characters.Handling.Is_Space
-                   (Line (First))
-                   and then (not Grammar.Significant_End_Of_Line
-                             or else Line (First) /= LF)
-
+                 and then
+                   (Ada.Characters.Handling.Is_Space (Line (First))
+                    and then (not Grammar.Significant_End_Of_Line
+                              or else Line (First) /= LF))
                loop
                   First := First + 1;
                end loop;
 
                exit when First > Line_Last;
+
+               --  explicit check for line comment
+               if Grammar.Have_Line_Comment then
+                  if Line (First .. First + Line_Comment'Length - 1)
+                    = Line_Comment
+                  then
+                     --  FIXME: save the text!
+                     exit;
+                  end if;
+               end if;
+
+               --  explicit check for block comment
+               if Grammar.Have_Block_Comment
+                 and then Line
+                   (First .. First + Block_Comment_Start'Length - 1)
+                 = Block_Comment_Start
+               then
+                  First := First + Block_Comment_Start'Length;
+
+                  declare
+                     Found : Boolean := False;
+                  begin
+
+                     while not Found loop
+
+                        declare
+                           Index : constant Natural :=
+                                     Ada.Strings.Fixed.Index
+                                       (Line (First .. Line_Last),
+                                        Block_Comment_End);
+                        begin
+                           if Index > 0 then
+                              First := Index + Block_Comment_End'Length;
+                              Found := True;
+                              exit;
+                           end if;
+
+                           Aquarius.Source.Skip_Line (Source_Pos);
+                           Aquarius.Source.Get_Line
+                             (Position    => Source_Pos,
+                              Include_EOL =>
+                                Grammar.Significant_End_Of_Line,
+                              Line        => Line,
+                              Last        => Line_Last);
+                           First := Line'First;
+                        end;
+                     end loop;
+
+                     goto Restart_Space_Scan;
+
+                  end;
+               end if;
 
                Aquarius.Tokens.Scan (Grammar.Frame, Line (1 .. Line_Last),
                                      False, Complete, Have_Class,
@@ -141,11 +207,7 @@ package body Aquarius.Loader is
                if Have_Class then
                   Tok_Pos := Aquarius.Source.Get_Column_Position
                     (Source_Pos, Aquarius.Source.Column_Number (First));
-                  if Tok = Grammar.Comment_Token then
-                     Add_Comment
-                       (Context, Tok_Pos,
-                        Grammar.Make_Comment_Tree (Line (First .. Next)));
-                  elsif Token_OK (Tok, Tok_Pos, Context) then
+                  if Token_OK (Tok, Tok_Pos, Context) then
                      Recovering := False;
                      Parse_Token (Tok, Tok_Pos,
                                   Line (First .. Next), Context);

@@ -325,8 +325,7 @@ package body Aquarius.Plugins.EBNF.Analyse is
                Aquarius.Errors.Error (Standard_Definition,
                                       "unrecognised standard lexer");
             else
-               Grammar.Add_Class_Terminal (Tree, Name, Lex, False,
-                                           Name = "comment");
+               Grammar.Add_Class_Terminal (Tree, Name, Lex, False);
             end if;
          end;
       elsif Delimiter_Definition /= null then
@@ -356,8 +355,7 @@ package body Aquarius.Plugins.EBNF.Analyse is
                                       "invalid regular expression: "
                                       & Text);
             else
-               Grammar.Add_Class_Terminal (Tree, Name, Lex, False,
-                                           Name = "comment");
+               Grammar.Add_Class_Terminal (Tree, Name, Lex, False);
             end if;
          end;
       end if;
@@ -540,8 +538,18 @@ package body Aquarius.Plugins.EBNF.Analyse is
       Child        : constant Aquarius.Trees.Tree :=
                        Definition.Breadth_First_Search ("expression");
       Value        : constant Aquarius.Trees.Tree := Child.First_Leaf;
+      Value_Text   : constant String := Value.Text;
    begin
-      Grammar.Add_Value (Child, Name, Value.Text);
+      if Value_Text (Value_Text'First) = '"'
+        and then Value_Text (Value_Text'Last) = '"'
+        and then Value_Text'Length >= 2
+      then
+         Grammar.Add_Value (Child, Name,
+                            Value_Text (Value_Text'First + 1
+                              .. Value_Text'Last - 1));
+      else
+         Grammar.Add_Value (Child, Name, Value_Text);
+      end if;
    end After_Value_Definition;
 
    ----------------
