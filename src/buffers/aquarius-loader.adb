@@ -58,6 +58,7 @@ package body Aquarius.Loader is
       Source_Pos : Aquarius.Source.Source_Position :=
         Aquarius.Source.Get_Start (File);
       Context    : Parse_Context;
+      Recovering : Boolean := False;
    begin
 
       if Show_Full_Path then
@@ -74,21 +75,6 @@ package body Aquarius.Loader is
       Aquarius.Trees.Properties.Set_Project
         (Result.all,
          Aquarius.Projects.Aquarius_Project (Project));
-
---        declare
---           Full_Path : constant String :=
---                         Ada.Directories.Full_Name
---                           (Path);
---        begin
---           Result.Set_Property
---             ("full_name",
---              Aquarius.Names.Name_Value (Full_Path));
---           Result.Set_Property
---             ("containing_directory",
---              Aquarius.Names.Name_Value
---                (Ada.Directories.Containing_Directory
---                   (Full_Path)));
---        end;
 
       Initialise_Parse_Context (Context, Grammar, Result,
                                 Interactive => False);
@@ -160,35 +146,38 @@ package body Aquarius.Loader is
                        (Context, Tok_Pos,
                         Grammar.Make_Comment_Tree (Line (First .. Next)));
                   elsif Token_OK (Tok, Tok_Pos, Context) then
+                     Recovering := False;
                      Parse_Token (Tok, Tok_Pos,
                                   Line (First .. Next), Context);
                   else
-                     Ada.Text_IO.Put
-                       (Ada.Text_IO.Standard_Error,
-                        Aquarius.Source.Show (Tok_Pos) &
-                          ": syntax error at " &
-                          Line (First .. Next));
+                     if not Recovering then
+                        Ada.Text_IO.Put
+                          (Ada.Text_IO.Standard_Error,
+                           Aquarius.Source.Show (Tok_Pos) &
+                             ": syntax error at " &
+                             Line (First .. Next));
 
-                     declare
-                        use Aquarius.Tokens;
-                        All_Terminals : constant Array_Of_Tokens :=
-                                          Terminals (Grammar.Frame);
-                     begin
-                        Ada.Text_IO.Put (Ada.Text_IO.Standard_Error,
-                                         " (expected");
-                        for T of All_Terminals loop
-                           if Token_OK (T, Tok_Pos, Context) then
-                              Ada.Text_IO.Put
-                                (Ada.Text_IO.Standard_Error,
-                                 " " & Get_Name (Grammar.Frame, T));
-                           end if;
-                        end loop;
-                        Ada.Text_IO.Put_Line
-                          (Ada.Text_IO.Standard_Error, ")");
-                     end;
+                        declare
+                           use Aquarius.Tokens;
+                           All_Terminals : constant Array_Of_Tokens :=
+                                             Terminals (Grammar.Frame);
+                        begin
+                           Ada.Text_IO.Put (Ada.Text_IO.Standard_Error,
+                                            " (expected");
+                           for T of All_Terminals loop
+                              if Token_OK (T, Tok_Pos, Context) then
+                                 Ada.Text_IO.Put
+                                   (Ada.Text_IO.Standard_Error,
+                                    " " & Get_Name (Grammar.Frame, T));
+                              end if;
+                           end loop;
+                           Ada.Text_IO.Put_Line
+                             (Ada.Text_IO.Standard_Error, ")");
+                        end;
 
-                     Have_Error := True;
-                     return Result;
+                        Have_Error := True;
+                        Recovering := True;
+                     end if;
                   end if;
                else
                   Have_Error := True;
