@@ -1,5 +1,9 @@
+with Komnenos.Entities.Source.Aquarius_Source;
+with Komnenos.Entities.Maps;
+
 with Aquarius.Grammars.Builtin;
 with Aquarius.Syntax;
+with Aquarius.Trees;
 
 package body Aquarius.Grammars.EBNF is
 
@@ -258,5 +262,86 @@ package body Aquarius.Grammars.EBNF is
       Grammar.Add_Class_Terminal (Internal, "delimiter",
                           One_Of ("{}[]<>|()/"));
    end Create_Terminals;
+
+   ---------------------
+   -- Cross_Reference --
+   ---------------------
+
+   procedure Cross_Reference
+     (UI  : Komnenos.UI.Komnenos_UI;
+      Top : Aquarius.Programs.Program_Tree)
+   is
+      Map : Komnenos.Entities.Maps.Map;
+      Path : constant String :=
+               Top.Source_Directory
+               & "/" & Top.Source_File_Name;
+
+      procedure Add_Reference
+        (Tree : Aquarius.Trees.Tree);
+
+      procedure Add_Cross_Reference
+        (Tree : Aquarius.Trees.Tree);
+
+      -------------------------
+      -- Add_Cross_Reference --
+      -------------------------
+
+      procedure Add_Cross_Reference
+        (Tree : Aquarius.Trees.Tree)
+      is
+      begin
+         if Tree.Name = "identifier"
+           and then Map.Contains (Tree.Text)
+         then
+            UI.Add_Cross_Reference
+              (Item      => Map (Tree.Text),
+               File_Name => Path,
+               Line      => Tree.Location_Line,
+               Column    => Tree.Location_Column,
+               Ref_Type  => "reference");
+         end if;
+      end Add_Cross_Reference;
+
+      -------------------
+      -- Add_Reference --
+      -------------------
+
+      procedure Add_Reference
+        (Tree : Aquarius.Trees.Tree)
+      is
+      begin
+         if Tree.Name = "rule-definition" then
+            declare
+               use Aquarius.Programs;
+               use Komnenos.Entities.Source.Aquarius_Source;
+               Definition : constant Program_Tree :=
+                              Program_Tree (Tree);
+               Defined_Name : constant Program_Tree :=
+                                Definition.Program_Child ("identifier");
+               Name         : constant String := Defined_Name.Text;
+               Entity  : constant Komnenos.Entities.Entity_Reference :=
+                           Create_Aquarius_Source_Entity
+                             (Table            => UI,
+                              Name             => Name,
+                              File_Name        => Path,
+                              Class            => "declaration",
+                              Line             => Defined_Name.Location_Line,
+                              Column           => Defined_Name.Location_Column,
+                              Top_Level        => True,
+                              Compilation_Unit => Definition.Program_Root,
+                              Entity_Spec      => Definition,
+                              Entity_Body      => null);
+            begin
+               Map.Insert (Name, Entity);
+            end;
+         end if;
+      end Add_Reference;
+
+   begin
+      Top.Breadth_First_Scan
+        (Add_Reference'Access);
+      Top.Breadth_First_Scan
+        (Add_Cross_Reference'Access);
+   end Cross_Reference;
 
 end Aquarius.Grammars.EBNF;

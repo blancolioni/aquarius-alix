@@ -28,6 +28,9 @@ package Aquarius.Names is
    function Name_Value (Name : String)
                        return access Aquarius_Name_Value'Class;
 
+   function Allocated_Name_Count
+     return Natural;
+
 private
 
    type Aquarius_Name is new Natural;
