@@ -1,5 +1,6 @@
 with Ada.Characters.Latin_1;
 with Ada.Directories;
+with Ada.Strings.UTF_Encoding;
 
 package body Aquarius.Source.File_System is
 
@@ -162,9 +163,25 @@ package body Aquarius.Source.File_System is
             File.Current_Line (Length) := Ch;
          end if;
       end loop;
+
+      --  check for BOM
+      declare
+         use Ada.Text_IO, Ada.Strings.UTF_Encoding;
+      begin
+         if Line (File.File) = 1
+           and then Length >= 3
+           and then File.Current_Line (1 .. 3) = BOM_8
+         then
+            File.Current_Line (1 .. Length - 3) :=
+              File.Current_Line (4 .. Length);
+            Length := Length - 3;
+         end if;
+      end;
+
       if not Ada.Text_IO.End_Of_File (File.File) then
          Ada.Text_IO.Skip_Line (File.File);
       end if;
+
       File.Current_Line_Length := Length;
    end Next_Line;
 
