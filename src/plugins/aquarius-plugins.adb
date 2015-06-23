@@ -201,17 +201,18 @@ package body Aquarius.Plugins is
       Set_Property (Plugin.VM_Env, Internal_Name, "description",
                     To_Value (Description));
 
-      declare
-         Cmd : constant Aquarius.UI.Menus.Menu_Command :=
-           new Plugin_Menu_Command'(Aquarius.UI.Menus.Root_Menu_Command with
-                                       Plugin    => Aquarius_Plugin (Plugin),
-                                       Command   => Definition);
-      begin
-         Aquarius.UI.Menus.Add_Submenu
-           (Plugin.Grammar.Get_Menu,
-            Aquarius.UI.Menus.New_Menu
-              (External_Name, Cmd));
-      end;
+--        declare
+--           Cmd : constant Aquarius.UI.Menus.Menu_Command :=
+--                   new Plugin_Menu_Command'
+--                     (Aquarius.UI.Menus.Root_Menu_Command with
+--                      Plugin    => Aquarius_Plugin (Plugin),
+--                      Command   => Definition);
+--        begin
+--           Aquarius.UI.Menus.Add_Submenu
+--             (Plugin.Grammar.Get_Menu,
+--              Aquarius.UI.Menus.New_Menu
+--                (External_Name, Cmd));
+--        end;
    end New_Command;
 
    --------------------
