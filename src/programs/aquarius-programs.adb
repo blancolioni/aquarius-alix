@@ -1,5 +1,6 @@
 with Ada.Characters.Handling;
 with Ada.Containers.Vectors;
+with Ada.Directories;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
@@ -14,6 +15,8 @@ with Aqua.Words;
 package body Aquarius.Programs is
 
    Trace_Aqua : constant Boolean := False;
+
+   Num_Allocated_Trees : Natural := 0;
 
    package Program_Tree_Vectors is
       new Ada.Containers.Vectors (Positive, Program_Tree);
@@ -36,6 +39,7 @@ package body Aquarius.Programs is
       Have_Symbol_Table    => False,
       Is_Declaration       => False,
       Source_File          => Aquarius.Source.No_Source_File,
+      Source_File_Name     => Aquarius.Names.Null_Aquarius_Name,
       Msg_Level            => Aquarius.Messages.No_Message,
       Vertical_Gap         => 0,
       Syntax               => null,
@@ -611,7 +615,21 @@ package body Aquarius.Programs is
       Free_List.Append (Item);
       Item.Free := True;
       Item := null;
+      Num_Allocated_Trees := Num_Allocated_Trees - 1;
    end Free;
+
+   -------------------------
+   -- Get_Allocation_Info --
+   -------------------------
+
+   procedure Get_Allocation_Info
+     (Allocated_Tree_Count : out Natural;
+      Free_Tree_Count      : out Natural)
+   is
+   begin
+      Allocated_Tree_Count := Num_Allocated_Trees;
+      Free_Tree_Count      := Natural (Free_List.Length);
+   end Get_Allocation_Info;
 
    ---------------
    -- Get_Entry --
@@ -1167,6 +1185,9 @@ package body Aquarius.Programs is
       Result : constant Program_Tree := New_Program_Tree (Syntax);
    begin
       Result.Source_File := Source;
+      Result.Source_File_Name :=
+        Aquarius.Names.To_Aquarius_Name
+          (Aquarius.Source.Get_Full_Path (Source));
       return Result;
    end New_Program;
 
@@ -1186,6 +1207,7 @@ package body Aquarius.Programs is
          Free_List.Delete (Free_List.Last_Index);
       else
          Result := new Program_Tree_Type;
+         Num_Allocated_Trees := Num_Allocated_Trees + 1;
       end if;
       Program_Tree_Type (Result.all) := Empty_Program_Node;
       Initialise_Tree (Result.all, Aquarius.Source.No_Source_Position);
@@ -1300,6 +1322,22 @@ package body Aquarius.Programs is
       end loop;
       return It;
    end Program_Root;
+
+   -----------------------
+   -- Program_Root_Node --
+   -----------------------
+
+   function Program_Root_Node
+     (Item : Program_Tree_Type'Class)
+      return Program_Tree_Type'Class
+   is
+   begin
+      if Item.Program_Parent = null then
+         return Item;
+      else
+         return Item.Program_Parent.Program_Root.all;
+      end if;
+   end Program_Root_Node;
 
    ------------------
    -- Render_Class --
@@ -1723,7 +1761,8 @@ package body Aquarius.Programs is
       return String
    is
    begin
-      return Aquarius.Source.Containing_Directory (Item.Source);
+      return Ada.Directories.Containing_Directory
+        (Aquarius.Names.To_String (Item.Program_Root_Node.Source_File_Name));
    end Source_Directory;
 
    ----------------------
@@ -1732,7 +1771,8 @@ package body Aquarius.Programs is
 
    function Source_File_Name (Item : Program_Tree_Type'Class) return String is
    begin
-      return Aquarius.Source.Get_File_Name (Item.Source);
+      return Ada.Directories.Simple_Name
+        (Aquarius.Names.To_String (Item.Program_Root_Node.Source_File_Name));
    end Source_File_Name;
 
    -------------------

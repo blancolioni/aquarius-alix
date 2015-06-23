@@ -1,10 +1,10 @@
 top_level = compilation_unit
 case_sensitive = false
 
-identifier         ::= !\l[\w]*
+identifier         ::= !\l[\w]*!
 numeric_literal    ::= ![0-9]+!
 string_literal     ::= standard ada_string_literal
-delimiter          ::= !&()+,;|^.!
+delimiter          ::= delimiters "&()+,;|^."
 symbol             ::= ![:=></]+!
 comment            ::= !--[.]*!
 

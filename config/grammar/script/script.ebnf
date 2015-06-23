@@ -2,7 +2,7 @@ top_level = source_file
 case_sensitive = false
 
 identifier         ::= standard ada_identifier
-numeric_literal    ::= regex "[0-9]+"
+numeric_literal    ::= ![0-9]+!
 character_literal  ::= standard ada_character_literal
 string_literal     ::= standard ada_string_literal
 delimiter          ::= delimiters "&()+,;|"

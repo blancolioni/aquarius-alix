@@ -16,6 +16,7 @@ package body Aquarius.Names is
 
    protected Aquarius_Name_Container is
       function To_String (Name : Aquarius_Name) return String;
+      function Get_Allocated_Name_Count return Natural;
       procedure Get_Aquarius_Name (Text : String;
                                    Name : out Aquarius_Name);
    private
@@ -48,11 +49,31 @@ package body Aquarius.Names is
       return To_String (Left) = Right;
    end "=";
 
+   --------------------------
+   -- Allocated_Name_Count --
+   --------------------------
+
+   function Allocated_Name_Count
+     return Natural
+   is
+   begin
+      return Aquarius_Name_Container.Get_Allocated_Name_Count;
+   end Allocated_Name_Count;
+
    -----------------------------
    -- Aquarius_Name_Container --
    -----------------------------
 
    protected body Aquarius_Name_Container is
+
+      ------------------------------
+      -- Get_Allocated_Name_Count --
+      ------------------------------
+
+      function Get_Allocated_Name_Count return Natural is
+      begin
+         return Natural (Vector.Length);
+      end Get_Allocated_Name_Count;
 
       -----------------------
       -- Get_Aquarius_Name --

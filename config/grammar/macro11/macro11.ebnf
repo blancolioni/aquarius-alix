@@ -1,11 +1,11 @@
 top_level ::= source_file
 
-end_of_line ::= regex "\n"
-identifier  ::= regex "\l\w*"
-integer     ::= regex "\d+"
-string      ::= regex "\x22[^\x22]*\x22"
-delimiter   ::= delimiters ".:$#()+-@=,"
-comment     ::= regex ";[.]*"
+end_of_line ::= !\n!
+identifier  ::= !\l\w*!
+integer     ::= !\d+!
+string      ::= !\x22[^\x22]*\x22!
+delimiter   ::= delimiters ".:$#()+-@=,!"
+comment     ::= !;[.]*!
 
 format '(' space_before no_space_after
 format ')' no_space_before space_after

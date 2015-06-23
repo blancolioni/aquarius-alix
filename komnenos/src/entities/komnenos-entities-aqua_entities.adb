@@ -100,15 +100,27 @@ package body Komnenos.Entities.Aqua_Entities is
          Parent_Ext  : constant access Aqua.External_Object_Interface'Class :=
                          Context.To_External_Object (Arguments (2));
          Parent      : constant Program_Tree := Program_Tree (Parent_Ext);
-         Child   : constant access Program_Tree_Type'Class :=
-                     Program_Tree_Type'Class
-                       (Context.To_External_Object (Arguments (3)).all)'Access;
+         Child_Arg   : constant Aqua.Word := Arguments (3);
+         Is_Tree     : constant Boolean :=
+                         Aqua.Is_External_Reference (Child_Arg);
+         Child_Ext   : constant access Aqua.External_Object_Interface'Class :=
+                         (if Is_Tree
+                          then Context.To_External_Object (Arguments (3))
+                          else null);
+         Child_Tree  : constant Program_Tree :=
+                         (if Is_Tree
+                          then Program_Tree_Type'Class (Child_Ext.all)'Access
+                          else null);
+         Child       : constant String :=
+                         (if Is_Tree
+                          then Child_Tree.Text
+                          else Context.To_String (Child_Arg));
          Class   : constant String :=
                      Context.To_String (Arguments (4));
          Entity  : constant Komnenos.Entities.Entity_Reference :=
                      Create_Aquarius_Source_Entity
                        (Table            => Aqua_Object.Table,
-                        Name             => Child.Text,
+                        Name             => Child,
                         File_Name        => Parent.Source_File_Name,
                         Class            => Class,
                         Line             => Parent.Location_Line,

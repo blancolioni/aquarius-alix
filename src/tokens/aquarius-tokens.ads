@@ -44,6 +44,11 @@ package Aquarius.Tokens is
    --  to a unique frame.
    type Token_Frame is private;
 
+   type Array_Of_Tokens is array (Positive range <>) of Token;
+
+   function Terminals (Frame : Token_Frame) return Array_Of_Tokens;
+   --  return an array containing all terminal tokens of this frame
+
    --  Token_Set: a set of tokens
    type Token_Set is private;
 
