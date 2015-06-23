@@ -1,12 +1,15 @@
 top_level = program
 case_sensitive = false
 
-identifier         ::= ![A-Za-z_$][A-Za-z_0-9$]*!
-numericLiteral     ::= standard ada_numeric_literal
-stringLiteral      ::= !(\x22[^\x22]*\x22)|('[^']*')!
-delimiter          ::= delimiters "(),.:;{}[]"
-symbol             ::= ![\x21%^&*<>|?+/=-]+!
-comment            ::= !//[.]*!
+identifier          ::= ![A-Za-z_$][A-Za-z_0-9$]*!
+numericLiteral      ::= standard ada_numeric_literal
+stringLiteral       ::= !(\x22[^\x22]*\x22)|('[^']*')!
+delimiter           ::= delimiters "(),.:;{}[]"
+symbol              ::= ![\x21%^&*<>|?+/=~-]+!
+
+line_comment  = "//"
+block_comment_start = "/*"
+block_comment_end   = "*/"
 
 format ';' no_space_before no_space_after new_line_after
 format '.' no_space_before no_space_after
