@@ -4,13 +4,13 @@ private with Ada.Strings.Equal_Case_Insensitive;
 
 with Aquarius.Actions;
 with Aquarius.Lexers;
+with Aquarius.Names;
 with Aquarius.Programs;
 with Aquarius.Properties;
 with Aquarius.Source;
 with Aquarius.Syntax;
 with Aquarius.Tokens;
 with Aquarius.Trees;
-with Aquarius.UI.Menus;
 
 package Aquarius.Grammars is
 
@@ -33,12 +33,28 @@ package Aquarius.Grammars is
 
    not overriding
    procedure Add_Class_Terminal
-     (Grammar      : in out Aquarius_Grammar_Record;
-      Declaration  : in     Aquarius.Trees.Tree;
-      Name         : in     String;
-      Lex          : in     Aquarius.Lexers.Lexer;
-      Delimiter    : in     Boolean                   := False;
-      Line_Comment : in     Boolean                   := False);
+     (Grammar             : in out Aquarius_Grammar_Record;
+      Declaration         : in     Aquarius.Trees.Tree;
+      Name                : in     String;
+      Lex                 : in     Aquarius.Lexers.Lexer;
+      Delimiter           : in     Boolean                   := False);
+
+   procedure Line_Comment
+     (Grammar : in out Aquarius_Grammar_Record;
+      Text    : in     String)
+     with Pre => not Grammar.Have_Line_Comment,
+     Post => Grammar.Have_Line_Comment;
+
+   procedure Block_Comment_Start
+     (Grammar : in out Aquarius_Grammar_Record;
+      Text    : in     String)
+     with Pre => not Grammar.Have_Block_Comment,
+     Post => Grammar.Have_Block_Comment;
+
+   procedure Block_Comment_End
+     (Grammar : in out Aquarius_Grammar_Record;
+      Text    : in     String)
+     with Pre => Grammar.Have_Block_Comment;
 
    not overriding
    procedure Add_Value (Grammar     : in out Aquarius_Grammar_Record;
@@ -176,21 +192,34 @@ package Aquarius.Grammars is
    function Has_Errors (Grammar : in Aquarius_Grammar_Record)
                        return Boolean;
 
-   not overriding
-   function Comment_Token (Grammar : in Aquarius_Grammar_Record)
-                          return Aquarius.Tokens.Token;
+   function Have_Line_Comment
+     (Grammar : in Aquarius_Grammar_Record)
+      return Boolean;
+
+   function Line_Comment
+     (Grammar : in Aquarius_Grammar_Record)
+      return String
+     with Pre => Grammar.Have_Line_Comment;
+
+   function Have_Block_Comment
+     (Grammar : in Aquarius_Grammar_Record)
+      return Boolean;
+
+   function Block_Comment_Start
+     (Grammar : in Aquarius_Grammar_Record)
+      return String
+     with Pre => Grammar.Have_Block_Comment;
+
+   function Block_Comment_End
+     (Grammar : in Aquarius_Grammar_Record)
+      return String
+     with Pre => Grammar.Have_Block_Comment;
 
    not overriding
    function Make_Program_Tree
      (Grammar : not null access Aquarius_Grammar_Record;
       Name    : String)
       return Aquarius.Programs.Program_Tree;
-
-   not overriding
-   function Make_Comment_Tree
-     (Grammar : Aquarius_Grammar_Record;
-      Comment : String)
-     return Aquarius.Programs.Program_Tree;
 
    not overriding
    function Make_Error_Tree
@@ -206,9 +235,6 @@ package Aquarius.Grammars is
       Has_Value : Boolean)
       return Aquarius.Properties.Property_Type;
 
-   function Get_Menu (Grammar : Aquarius_Grammar_Record'Class)
-                      return Aquarius.UI.Menus.Aquarius_Menu;
-
 private
 
    package Syntax_Map is new Ada.Containers.Indefinite_Hashed_Maps
@@ -222,22 +248,25 @@ private
      new Root_Aquarius_Object and
      Aquarius.Properties.Property_Pool with
       record
-         Grammar_Name       : Aquarius.Tokens.Token_Text;
-         Frame              : Aquarius.Tokens.Token_Frame;
-         Definition         : Aquarius.Programs.Program_Tree;
-         Top_Level_Syntax   : Aquarius.Syntax.Syntax_Tree;
-         Actions            : Aquarius.Actions.Action_Group_List;
-         Case_Sensitive     : Boolean;
-         Match_EOL          : Boolean := False;
-         Non_Terminals      : Syntax_Map.Map;
-         Terminals          : Syntax_Map.Map;
-         Comment            : Aquarius.Tokens.Token;
-         Comment_Syntax     : Aquarius.Syntax.Syntax_Tree;
-         Error_Token        : Aquarius.Tokens.Token;
-         Error_Syntax       : Aquarius.Syntax.Syntax_Tree;
-         Error              : Boolean;
-         Properties         : Aquarius.Properties.Property_Type_List;
-         Menu               : Aquarius.UI.Menus.Aquarius_Menu;
+         Grammar_Name        : Aquarius.Tokens.Token_Text;
+         Frame               : Aquarius.Tokens.Token_Frame;
+         Definition          : Aquarius.Programs.Program_Tree;
+         Top_Level_Syntax    : Aquarius.Syntax.Syntax_Tree;
+         Actions             : Aquarius.Actions.Action_Group_List;
+         Case_Sensitive      : Boolean;
+         Match_EOL           : Boolean := False;
+         Non_Terminals       : Syntax_Map.Map;
+         Terminals           : Syntax_Map.Map;
+         Line_Comment        : Aquarius.Names.Aquarius_Name :=
+                                 Aquarius.Names.Null_Aquarius_Name;
+         Block_Comment_Start : Aquarius.Names.Aquarius_Name :=
+                                 Aquarius.Names.Null_Aquarius_Name;
+         Block_Comment_End   : Aquarius.Names.Aquarius_Name :=
+                                 Aquarius.Names.Null_Aquarius_Name;
+         Error_Token         : Aquarius.Tokens.Token;
+         Error_Syntax        : Aquarius.Syntax.Syntax_Tree;
+         Error               : Boolean;
+         Properties          : Aquarius.Properties.Property_Type_List;
       end record;
 
    overriding

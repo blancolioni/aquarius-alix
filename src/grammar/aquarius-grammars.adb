@@ -1,7 +1,6 @@
 with Ada.Text_IO;
 
 with Aquarius.Errors;
-with Aquarius.Formats;
 with Aquarius.Trees.Properties;
 
 package body  Aquarius.Grammars is
@@ -30,8 +29,7 @@ package body  Aquarius.Grammars is
       Declaration  : in     Aquarius.Trees.Tree;
       Name         : in     String;
       Lex          : in     Aquarius.Lexers.Lexer;
-      Delimiter    : in     Boolean                   := False;
-      Line_Comment : in     Boolean                   := False)
+      Delimiter           : in     Boolean           := False)
    is
       use Aquarius.Tokens;
       New_Syntax  : Aquarius.Syntax.Syntax_Tree;
@@ -59,17 +57,6 @@ package body  Aquarius.Grammars is
                                       Declaration, Class_Token);
 
       Grammar.Non_Terminals.Insert (Name, New_Syntax);
-
-      if Line_Comment then
-         Grammar.Comment := Class_Token;
-         Grammar.Comment_Syntax :=
-           Aquarius.Syntax.New_Terminal (Grammar.Frame,
-                                         Declaration,
-                                         Grammar.Comment);
-         Grammar.Comment_Syntax.Set_Format
-           (Aquarius.Formats.Make_Format
-              (Aquarius.Formats.New_Line (After)));
-      end if;
 
    end Add_Class_Terminal;
 
@@ -208,8 +195,68 @@ package body  Aquarius.Grammars is
                  (Declaration,
                   "case_sensitive expects a Boolean value");
          end;
+      elsif Name = "line_comment" then
+         Aquarius.Errors.Warning (Declaration,
+                                  "setting line comment to " & Value);
+         Line_Comment (Grammar, Value);
+      elsif Name = "block_comment_start" then
+         Block_Comment_Start (Grammar, Value);
+      elsif Name = "block_comment_end" then
+         Block_Comment_End (Grammar, Value);
+      else
+         Aquarius.Errors.Warning
+           (Declaration,
+            "unknown setting: " & Name);
       end if;
    end Add_Value;
+
+   -----------------------
+   -- Block_Comment_End --
+   -----------------------
+
+   function Block_Comment_End
+     (Grammar : in Aquarius_Grammar_Record)
+      return String
+   is
+   begin
+      return Aquarius.Names.To_String (Grammar.Block_Comment_End);
+   end Block_Comment_End;
+
+   -----------------------
+   -- Block_Comment_End --
+   -----------------------
+
+   procedure Block_Comment_End
+     (Grammar : in out Aquarius_Grammar_Record;
+      Text    : in     String)
+   is
+   begin
+      Grammar.Block_Comment_End := Aquarius.Names.To_Aquarius_Name (Text);
+   end Block_Comment_End;
+
+   -------------------------
+   -- Block_Comment_Start --
+   -------------------------
+
+   procedure Block_Comment_Start
+     (Grammar : in out Aquarius_Grammar_Record;
+      Text    : in     String)
+   is
+   begin
+      Grammar.Block_Comment_Start := Aquarius.Names.To_Aquarius_Name (Text);
+   end Block_Comment_Start;
+
+   -------------------------
+   -- Block_Comment_Start --
+   -------------------------
+
+   function Block_Comment_Start
+     (Grammar : in Aquarius_Grammar_Record)
+      return String
+   is
+   begin
+      return Aquarius.Names.To_String (Grammar.Block_Comment_Start);
+   end Block_Comment_Start;
 
    -------------------
    -- Check_Grammar --
@@ -246,17 +293,6 @@ package body  Aquarius.Grammars is
 
    end Check_Grammar;
 
-   -------------------
-   -- Comment_Token --
-   -------------------
-
-   function Comment_Token (Grammar : in Aquarius_Grammar_Record)
-                           return Aquarius.Tokens.Token
-   is
-   begin
-      return Grammar.Comment;
-   end Comment_Token;
-
    -----------
    -- Frame --
    -----------
@@ -289,17 +325,6 @@ package body  Aquarius.Grammars is
          return null;
       end if;
    end Get_Definition;
-
-   --------------
-   -- Get_Menu --
-   --------------
-
-   function Get_Menu (Grammar : Aquarius_Grammar_Record'Class)
-                      return Aquarius.UI.Menus.Aquarius_Menu
-   is
-   begin
-      return Grammar.Menu;
-   end Get_Menu;
 
    ------------------------
    -- Get_Property_Types --
@@ -353,21 +378,55 @@ package body  Aquarius.Grammars is
       return Grammar.Error;
    end Has_Errors;
 
+   ------------------------
+   -- Have_Block_Comment --
+   ------------------------
+
+   function Have_Block_Comment
+     (Grammar : in Aquarius_Grammar_Record)
+      return Boolean
+   is
+      use Aquarius.Names;
+   begin
+      return Grammar.Block_Comment_Start /= Null_Aquarius_Name;
+   end Have_Block_Comment;
+
    -----------------------
-   -- Make_Comment_Tree --
+   -- Have_Line_Comment --
    -----------------------
 
-   function Make_Comment_Tree
-     (Grammar : Aquarius_Grammar_Record;
-      Comment : String)
-      return Aquarius.Programs.Program_Tree
+   function Have_Line_Comment
+     (Grammar : in Aquarius_Grammar_Record)
+      return Boolean
    is
-      Result : constant Aquarius.Programs.Program_Tree :=
-        Aquarius.Programs.New_Program_Tree (Grammar.Comment_Syntax);
+      use Aquarius.Names;
    begin
-      Result.Fill (Comment);
-      return Result;
-   end Make_Comment_Tree;
+      return Grammar.Line_Comment /= Null_Aquarius_Name;
+   end Have_Line_Comment;
+
+   ------------------
+   -- Line_Comment --
+   ------------------
+
+   procedure Line_Comment
+     (Grammar : in out Aquarius_Grammar_Record;
+      Text    : in     String)
+   is
+   begin
+      Grammar.Line_Comment := Aquarius.Names.To_Aquarius_Name (Text);
+   end Line_Comment;
+
+   ------------------
+   -- Line_Comment --
+   ------------------
+
+   function Line_Comment
+     (Grammar : in Aquarius_Grammar_Record)
+      return String
+   is
+   begin
+      return Aquarius.Names.To_String (Grammar.Line_Comment);
+   end Line_Comment;
 
    ---------------------
    -- Make_Error_Tree --
@@ -431,25 +490,27 @@ package body  Aquarius.Grammars is
    function New_Grammar (Name   : in String)
                         return Aquarius_Grammar
    is
+      use Aquarius.Tokens;
+      use Aquarius.Actions;
 
       Grammar : constant Aquarius_Grammar :=
-        new Aquarius_Grammar_Record'
-        (Grammar_Name       => Aquarius.Tokens.To_Token_Text (Name),
-         Frame              => Aquarius.Tokens.New_Frame (False),
-         Definition         => null,
-         Top_Level_Syntax   => null,
-         Non_Terminals      => Syntax_Map.Empty_Map,
-         Terminals          => Syntax_Map.Empty_Map,
-         Actions            => Aquarius.Actions.Empty_Action_Group_List,
-         Case_Sensitive     => False,
-         Match_EOL          => False,
-         Comment            => Aquarius.Tokens.Null_Token,
-         Comment_Syntax     => null,
-         Error_Token        => Aquarius.Tokens.Null_Token,
-         Error_Syntax       => null,
-         Error              => False,
-         Properties         => Aquarius.Properties.Empty_Pool,
-         Menu               => Aquarius.UI.Menus.New_Menu (Name));
+                  new Aquarius_Grammar_Record'
+                    (Grammar_Name        => To_Token_Text (Name),
+                     Frame               => New_Frame (False),
+                     Definition          => null,
+                     Top_Level_Syntax    => null,
+                     Non_Terminals       => Syntax_Map.Empty_Map,
+                     Terminals           => Syntax_Map.Empty_Map,
+                     Actions             => Empty_Action_Group_List,
+                     Case_Sensitive      => False,
+                     Match_EOL           => False,
+                     Line_Comment        => Aquarius.Names.Null_Aquarius_Name,
+                     Block_Comment_Start => Aquarius.Names.Null_Aquarius_Name,
+                     Block_Comment_End   => Aquarius.Names.Null_Aquarius_Name,
+                     Error_Token         => Aquarius.Tokens.Null_Token,
+                     Error_Syntax        => null,
+                     Error               => False,
+                     Properties          => Aquarius.Properties.Empty_Pool);
 
    begin
 

@@ -789,11 +789,7 @@ package body Aquarius.Programs.Parser is
             Aquarius.Source.Set_Position
               (Tok_Pos, 1,
                Aquarius.Source.Column_Number (First));
-            if Tok = Grammar.Comment_Token then
-               Add_Comment
-                 (Context, Tok_Pos,
-                  Grammar.Make_Comment_Tree (Line (First .. Next)));
-            elsif Token_OK (Tok, Tok_Pos, Context) then
+            if Token_OK (Tok, Tok_Pos, Context) then
                Parse_Token (Tok, Tok_Pos,
                             Line (First .. Next), Context);
             else
