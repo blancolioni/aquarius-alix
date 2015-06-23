@@ -1,6 +1,7 @@
 with Ada.Characters.Handling;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps.Constants;
+with Ada.Text_IO;
 
 package body Aquarius.Tokens is
 
@@ -207,6 +208,10 @@ package body Aquarius.Tokens is
       Unique         : Boolean      := False;
       Possible_Count : Natural      := 0;
       Best_Match     : Natural      := 0;
+      Classes        : array (Token_Class
+                              range 0 .. Frame.Class_Vector.Last_Index)
+        of Boolean := (others => False);
+
    begin
       Possible_Count := 0;
       for I in 1 .. Frame.Class_Vector.Last_Index loop
@@ -224,12 +229,32 @@ package body Aquarius.Tokens is
                   Possible_Count := 1;
                   Best_Match := Length;
                   Possible := I;
+                  Classes := (others => False);
                elsif Length = Best_Match then
+                  Possible_Count := Possible_Count + 1;
                   Unique := False;
                end if;
+               Classes (I) := True;
             end if;
          end;
       end loop;
+      if Possible_Count = 0 then
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "no class found for text: " & Text);
+      elsif not Unique then
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "multiple matching classes found for text: " & Text);
+         for Class in Classes'Range loop
+            if Classes (Class) then
+               Ada.Text_IO.Put_Line
+                 (Ada.Text_IO.Standard_Error,
+                  "   matching class: " & Get_Name (Frame, Class));
+            end if;
+         end loop;
+      end if;
+
       if Unique then
          return Possible;
       else
