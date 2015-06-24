@@ -82,6 +82,7 @@ private
    type Root_Object_Iterator is
      new Aqua.Iterators.Aqua_Iterator_Interface with
       record
+         Current  : Word;
          Position : Object_Maps.Cursor;
       end record;
 
@@ -107,6 +108,6 @@ private
    overriding function Current
      (It : Root_Object_Iterator)
       return Word
-   is (Object_Maps.Element (It.Position));
+   is (It.Current);
 
 end Aqua.Objects;
