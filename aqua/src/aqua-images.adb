@@ -377,6 +377,8 @@ package body Aqua.Images is
         + (Get_Address (High) - Get_Address (Low) + 2);
       Image.Code_High := Image.High;
 
+      Close (File);
+
    end Load;
 
    ---------------
