@@ -7,7 +7,8 @@ character_literal  ::= standard ada_character_literal
 string_literal     ::= standard ada_string_literal
 delimiter          ::= delimiters "&()+,;|"
 symbol             ::= standard ada_symbol
-comment            ::= standard ada_comment
+
+line_comment       = "--"
 
 format ';' no_space_before new_line_after
 

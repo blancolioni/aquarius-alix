@@ -1,4 +1,4 @@
-top_level = source_file
+top_level ::= source_file
 case_sensitive = false
 
 identifier         ::= standard ada_identifier
