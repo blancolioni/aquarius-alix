@@ -1,5 +1,6 @@
 private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Strings.Fixed.Hash;
+private with Aqua.Iterators;
 
 with Aquarius.Actions;
 with Aquarius.Entries;
@@ -419,6 +420,7 @@ private
          Overflow_Checked  : Boolean;
          Have_Symbol_Table : Boolean;
          Is_Declaration    : Boolean;
+         Self              : Program_Tree;
          Source_File       : Aquarius.Source.Source_File;
          Source_File_Name  : Aquarius.Names.Aquarius_Name;
          Msg_Level         : Aquarius.Messages.Message_Level;
@@ -489,5 +491,40 @@ private
      (Program : Program_Tree_Type)
       return String
    is (Program.Concatenate_Children);
+
+   overriding function Start
+     (Program : Program_Tree_Type)
+      return Aqua.Iterators.Aqua_Iterator_Interface'Class;
+
+   type Root_Program_Tree_Iterator is
+     new Aqua.Iterators.Aqua_Iterator_Interface with
+      record
+         Current    : Program_Tree;
+         Going_Down : Boolean       := True;
+      end record;
+
+   overriding function Name
+     (It : Root_Program_Tree_Iterator)
+      return String
+   is ("[program-tree-iterator]");
+
+   overriding function Text
+     (It : Root_Program_Tree_Iterator)
+      return String
+   is ("[program-tree-iterator]");
+
+   overriding function Show
+     (It : Root_Program_Tree_Iterator)
+      return String
+   is ("[program-tree-iterator]");
+
+   overriding procedure Next
+     (It       : in out Root_Program_Tree_Iterator;
+      Finished :    out Boolean);
+
+   overriding function Current
+     (It : Root_Program_Tree_Iterator)
+      return Aqua.Word
+   is (0);
 
 end Aquarius.Programs;
