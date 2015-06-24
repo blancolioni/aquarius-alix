@@ -1,11 +1,11 @@
-top_level = compilation_unit
+top_level ::= compilation_unit
 case_sensitive = false
 
 identifier         ::= !\l[\w]*!
 numeric_literal    ::= ![0-9]+!
 string_literal     ::= standard ada_string_literal
-delimiter          ::= delimiters "&()+,;|^."
-symbol             ::= ![:=></]+!
+delimiter          ::= delimiters "(),;"
+symbol             ::= ![:=><&^\.\*/+-]+!
 comment            ::= !--[.]*!
 
 format sequence_of_statements indented_child
@@ -16,7 +16,6 @@ format '.' no_space_before no_space_after
 format '(' space_before no_space_after
 format ')' no_space_before space_after
 format ',' no_space_before space_after
-format ''' no_space_before no_space_after
 format ':=' space_before space_after soft_new_line
 
 format 'is' new_line_after
@@ -28,7 +27,7 @@ sequence_of_statements ::= { statement ';' }
 statement ::= for_loop_statement | case_statement | if_statement | assignment_statement
             | procedure_call_statement | declare_statement | null_statement | action_statement
             | new_statement
-            
+
 null_statement ::= 'null'
 
 new_statement ::= 'new' object_reference
@@ -62,20 +61,11 @@ case_statement ::= 'case' expression 'is' < case_option > 'end' 'case'
 
 case_option ::= 'when' expression '=>' sequence_of_statements
 
-for_loop_statement ::=
-   for_all_loop
- | for_tree_loop
- | iterator_loop
+for_loop_statement ::= iterator_loop
 
-for_all_loop ::=
-   'for' 'all' loop_statement
-
-for_tree_loop ::=
-   'for' object_reference loop_statement
-   
 iterator_loop ::=
-   'for' identifier 'of' object_reference loop_statement
-   
+   'for' object_reference loop_statement
+
 loop_statement ::= 'loop' sequence_of_statements 'end' 'loop'
 
 qualified_identifier ::= < identifier / '.' >
@@ -107,9 +97,9 @@ aggregate_element_list ::= < aggregate_element / ',' >
 
 aggregate_element ::= identifier '=>' expression
 
-if_expression ::= 
+if_expression ::=
   '(' 'if' expression 'then' expression { 'elsif' expression 'then' expression } 'else' expression ')'
-  
+
 boolean_operator ::=
 	'and' | 'and' 'then' | 'or' | 'or' 'else' | 'xor'
 
@@ -124,7 +114,7 @@ unary_primary_operator ::= 'abs' | 'not'
 multiplying_operator ::= '*' | '/' | 'mod' | 'rem'
 
 object_reference ::= < name_qualifier / object_operator >
-                   
+
 name_qualifier ::= identifier [ actual_argument_list ]
 
 object_operator ::= '.' | '/' | '^'
