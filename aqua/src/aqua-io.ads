@@ -2,13 +2,20 @@ private with Ada.Sequential_IO;
 
 package Aqua.IO is
 
+   procedure Set_IO_Path
+     (Path : String);
+   --  Aqua will only read or write files contained in the directory
+   --  specified by Path
+
+   function Current_IO_Path return String;
+
    type File_Type is limited private;
 
    procedure Create (File : in out File_Type;
-                     Path : String);
+                     Name : String);
 
    procedure Open (File : in out File_Type;
-                   Path : String);
+                   Name : String);
 
    procedure Close (File : in out File_Type);
 
