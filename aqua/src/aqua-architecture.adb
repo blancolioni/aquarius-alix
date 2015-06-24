@@ -33,7 +33,19 @@ package body Aqua.Architecture is
                A : constant Word :=
                      Memory.Get_Word (Get_Address (R (7)));
             begin
-               Result := Result + Get_Address (A);
+               if Is_Integer (A) then
+                  declare
+                     I : constant Aqua_Integer := Get_Integer (A);
+                  begin
+                     if I < 0 then
+                        Result := Result - Address (abs I);
+                     else
+                        Result := Result + Address (I);
+                     end if;
+                  end;
+               else
+                  Result := Result + Get_Address (A);
+               end if;
             end;
             R (7) := R (7) + 2;
       end case;
