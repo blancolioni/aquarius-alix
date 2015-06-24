@@ -1,4 +1,7 @@
+with Aquarius.Paths;
 with Aquarius.Plugins.Script_Plugin.Generated;
+
+with Aqua.IO;
 with Aqua.Primitives.Init;
 
 package body Aquarius.Plugins.Script_Plugin is
@@ -97,6 +100,7 @@ package body Aquarius.Plugins.Script_Plugin is
       Aquarius.Plugins.Script_Plugin.Generated.Bind_Actions
         (Plugin.all, Grammar);
 
+      Aqua.IO.Set_IO_Path (Aquarius.Paths.Scratch_Path);
       Aqua.Primitives.Init.Create_Primitives;
 
       Global_Script_Plugin := Script_Plugin_Access (Plugin);

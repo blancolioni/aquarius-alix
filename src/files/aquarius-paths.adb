@@ -1,7 +1,13 @@
+with Ada.Calendar;
+with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
 
+with Aquarius.Config_Paths;
+
 package body Aquarius.Paths is
+
+   Always_Newer : constant Boolean := False;
 
    Unix_Paths : constant Boolean := False;
    Separator  : constant Character := '\';
@@ -11,6 +17,23 @@ package body Aquarius.Paths is
    Standardise_Path : constant Ada.Strings.Maps.Character_Mapping :=
                         Ada.Strings.Maps.To_Mapping
                           ("\", (1 => Standard_Separator));
+
+   --------------
+   -- Is_Newer --
+   --------------
+
+   function Is_Newer
+     (File_1, File_2 : String)
+      return Boolean
+   is
+      use type Ada.Calendar.Time;
+   begin
+      return Always_Newer
+        or else not Ada.Directories.Exists (File_2)
+        or else (Ada.Directories.Exists (File_1)
+                 and then Ada.Directories.Modification_Time (File_1)
+                 > Ada.Directories.Modification_Time (File_2));
+   end Is_Newer;
 
    ----------------
    -- Join_Paths --
@@ -43,6 +66,29 @@ package body Aquarius.Paths is
       end loop;
       return Result;
    end Join_Paths;
+
+   ------------------
+   -- Scratch_File --
+   ------------------
+
+   function Scratch_File (Name : String;
+                          Extension : String := "")
+                          return String
+   is
+   begin
+      return Ada.Directories.Compose
+        (Scratch_Path, Name, Extension);
+   end Scratch_File;
+
+   ------------------
+   -- Scratch_Path --
+   ------------------
+
+   function Scratch_Path return String is
+   begin
+      return Ada.Directories.Compose
+        (Aquarius.Config_Paths.Config_Path, "scratch");
+   end Scratch_Path;
 
    ----------------------
    -- To_Aquarius_Path --
