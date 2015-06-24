@@ -1,3 +1,4 @@
+with Ada.Directories;
 with Ada.Strings.Unbounded;
 
 with Aqua.Assembler.Instructions;
@@ -317,15 +318,18 @@ package body Aquarius.Plugins.Macro_11.Assemble is
      (Target : not null access Aquarius.Actions.Actionable'Class)
    is
       use Aquarius.Programs;
-      Source_File : constant Program_Tree := Program_Tree (Target);
+      Source_File    : constant Program_Tree := Program_Tree (Target);
+      Source_Name    : constant String :=
+                         Source_File.Source_File_Name;
       Assembly       : constant Aqua.Assembler.Assembly :=
                          Assembly_Object
                            (Source_File.Property
                               (Global_Plugin.Assembly)).Assembly;
+      Output_File    : constant String :=
+                         Ada.Directories.Base_Name (Source_Name) & ".o11";
    begin
       --  Assembly.Write_Listing;
-      Assembly.Write_Image
-        (Source_File.Source_File_Name & ".o11");
+      Assembly.Write_Image (Output_File);
    end After_Source_File;
 
    ----------------
@@ -433,6 +437,16 @@ package body Aquarius.Plugins.Macro_11.Assemble is
                   end if;
                elsif Operand.Name = "integer" then
                   Value := Word'Value (Operand.Text);
+               elsif Operand.Name = "negative_integer" then
+                  declare
+                     Node : constant Program_Tree :=
+                              Operand.Program_Child ("integer");
+                  begin
+                     Value :=
+                       To_Integer_Word
+                         (-Aqua_Integer'Value
+                            (Node.Text));
+                  end;
                else
                   raise Constraint_Error
                     with "invalid operand: " & Operand.Name;
@@ -479,6 +493,15 @@ package body Aquarius.Plugins.Macro_11.Assemble is
       elsif Op.Name = "integer" then
          Assembly.Append
            (Aqua.Word'Value (Op.Text));
+      elsif Op.Name = "negative_integer" then
+         declare
+            use Aqua;
+            X : constant Aqua_Integer :=
+                  -Aqua_Integer'Value (Op.Program_Child ("integer").Text);
+         begin
+            Assembly.Append
+              (Aqua.To_Integer_Word (X));
+         end;
       else
          raise Constraint_Error
            with "invalid operand: " & Op.Name;

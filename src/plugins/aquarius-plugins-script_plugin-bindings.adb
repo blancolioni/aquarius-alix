@@ -8,6 +8,7 @@ with Aquarius.Config_Paths;
 with Aquarius.Grammars.Manager;
 with Aquarius.Loader;
 with Aquarius.Names;
+with Aquarius.Paths;
 with Aquarius.Plugins.Dynamic;
 with Aquarius.Source;
 with Aquarius.Syntax;
@@ -40,7 +41,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Child    : not null access Aquarius.Actions.Actionable'Class);
 
    procedure Process_Compiled_Plugin
-     (Path   : String);
+     (Assembly_Name : String);
 
    ---------------------------------
    -- After_Action_File_Reference --
@@ -50,32 +51,32 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
      (Item : Aquarius.Programs.Program_Tree)
    is
       use type Ada.Calendar.Time;
-      Path : constant String :=
-               Ada.Directories.Compose
-                 (Containing_Directory => Item.Source_Directory,
-                  Name                 => Item.Concatenate_Children,
-                  Extension            => "action");
-      Output_Path : constant String :=
-                      Item.Concatenate_Children
-                      & ".action.m11";
+      Base_Name   : constant String := Item.Concatenate_Children;
+      Action_Path : constant String :=
+                      Ada.Directories.Compose
+                        (Containing_Directory => Item.Source_Directory,
+                         Name                 => Base_Name,
+                         Extension            => "action");
+      Assembly_Path : constant String :=
+                        Aquarius.Paths.Scratch_File
+                          (Base_Name, "m11");
       Object_Path : constant String :=
-                      Output_Path & ".o11";
+                      Aquarius.Paths.Scratch_File
+                        (Base_Name, "o11");
       Action_Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
-                         Aquarius.Grammars.Manager.Get_Grammar_For_File (Path);
+                         Aquarius.Grammars.Manager.Get_Grammar_For_File
+                           (Action_Path);
       Action_Program : constant Aquarius.Programs.Program_Tree :=
                          Aquarius.Loader.Load_From_File
                            (Grammar => Action_Grammar,
-                            Path    => Path);
+                            Path    => Action_Path);
       Group_Name     : constant String :=
                          Item.Property (Plugin.Property_Group_Name).Name;
       Group          : constant Aquarius.Actions.Action_Group :=
                          Get_Plugin (Item).Grammar.Group (Group_Name);
    begin
 
-      if not Ada.Directories.Exists (Output_Path)
-        or else Ada.Directories.Modification_Time (Output_Path) <
-        Ada.Directories.Modification_Time (Path)
-      then
+      if Aquarius.Paths.Is_Newer (Action_Path, Assembly_Path) then
          declare
             Processor : Aquarius.Actions.Pdp_11.Pdp_Scanner;
          begin
@@ -84,16 +85,12 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
          end;
       end if;
 
-      if not Ada.Directories.Exists (Object_Path)
-        or else Ada.Directories.Modification_Time (Object_Path) <
-        Ada.Directories.Modification_Time (Output_Path)
-      then
-         Process_Compiled_Plugin
-           (Output_Path);
+      if Aquarius.Paths.Is_Newer (Assembly_Path, Object_Path) then
+         Process_Compiled_Plugin (Base_Name);
       end if;
 
       Dynamic.Dynamic_Plugin (Get_Plugin (Item)).Image.Load
-        (Ada.Directories.Simple_Name (Path) & ".m11.o11");
+        (Base_Name & ".o11");
 
    end After_Action_File_Reference;
 
@@ -303,21 +300,23 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Library_Assembly_Path : constant String :=
                                 Aquarius.Config_Paths.Config_Path
                                 & "/aqua/text_io.m11";
+      Library_Assembly_Scratch : constant String :=
+                                   Aquarius.Paths.Scratch_File
+                                     ("text_io", "m11");
       Library_Assembly_Object : constant String :=
-                                  "text_io.m11.o11";
+                                  Aquarius.Paths.Scratch_File
+                                    ("text_io", "o11");
       use Ada.Directories, Ada.Calendar;
    begin
-      if Exists (Library_Assembly_Object)
-        and then Modification_Time (Library_Assembly_Object)
-        > Modification_Time (Library_Assembly_Path)
+      if Aquarius.Paths.Is_Newer
+        (Library_Assembly_Path, Library_Assembly_Object)
       then
-         null;
-      else
-         Process_Compiled_Plugin
-           (Library_Assembly_Path);
+         Ada.Directories.Copy_File
+           (Library_Assembly_Path, Library_Assembly_Scratch);
+         Process_Compiled_Plugin ("text_io");
       end if;
 
-      Image.Load (Library_Assembly_Object);
+      Image.Load ("text_io.o11");
 
       Image.Link;
       Image.Bind (Bind_To_Grammar'Access);
@@ -348,8 +347,10 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
    -----------------------------
 
    procedure Process_Compiled_Plugin
-     (Path   : String)
+     (Assembly_Name : String)
    is
+      Path : constant String :=
+               Aquarius.Paths.Scratch_File (Assembly_Name, "m11");
       Output_Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
                          Aquarius.Grammars.Manager.Get_Grammar_For_File
                            (Path);
