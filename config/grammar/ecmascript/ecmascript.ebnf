@@ -1,4 +1,4 @@
-top_level = program
+top_level ::= program
 case_sensitive = false
 
 identifier          ::= ![A-Za-z_$][A-Za-z_0-9$]*!
@@ -152,7 +152,7 @@ statement ::=
 
 block ::= '{' statementList '}'
 
-statementList ::= < statement >
+statementList ::= { statement }
 
 variableStatement ::= 
 	'var' variableDeclarationList [ ';' ]
