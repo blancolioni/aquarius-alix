@@ -196,8 +196,6 @@ package body  Aquarius.Grammars is
                   "case_sensitive expects a Boolean value");
          end;
       elsif Name = "line_comment" then
-         Aquarius.Errors.Warning (Declaration,
-                                  "setting line comment to " & Value);
          Line_Comment (Grammar, Value);
       elsif Name = "block_comment_start" then
          Block_Comment_Start (Grammar, Value);
