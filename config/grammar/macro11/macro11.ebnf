@@ -87,7 +87,9 @@ absolute ::= '@' '#' expression
 
 expression ::= < operand / operator >
 
-operand ::= identifier | integer | string
+operand ::= identifier | integer | string | negative_integer
+
+negative_integer ::= '-' integer
 
 operator ::= '+' | '-'
 
