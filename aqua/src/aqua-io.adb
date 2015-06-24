@@ -1,4 +1,9 @@
+with Ada.Directories;
+with Ada.Strings.Unbounded;
+
 package body Aqua.IO is
+
+   Local_IO_Path : Ada.Strings.Unbounded.Unbounded_String;
 
    -----------
    -- Close --
@@ -15,11 +20,27 @@ package body Aqua.IO is
 
    procedure Create
      (File : in out File_Type;
-      Path : String)
+      Name : String)
    is
+      use Ada.Strings.Unbounded;
    begin
-      Byte_IO.Create (File.F, Byte_IO.Out_File, Path);
+      if Local_IO_Path = Null_Unbounded_String then
+         raise Constraint_Error
+           with "Aqua: scratch path not set";
+      end if;
+      Byte_IO.Create (File.F, Byte_IO.Out_File,
+                      Ada.Directories.Compose
+                        (To_String (Local_IO_Path), Name));
    end Create;
+
+   ---------------------
+   -- Current_IO_Path --
+   ---------------------
+
+   function Current_IO_Path return String is
+   begin
+      return Ada.Strings.Unbounded.To_String (Local_IO_Path);
+   end Current_IO_Path;
 
    ---------------
    -- Hex_Image --
@@ -90,10 +111,17 @@ package body Aqua.IO is
 
    procedure Open
      (File : in out File_Type;
-      Path : String)
+      Name : String)
    is
+      use Ada.Strings.Unbounded;
    begin
-      Byte_IO.Open (File.F, Byte_IO.In_File, Path);
+      if Local_IO_Path = Null_Unbounded_String then
+         raise Constraint_Error
+           with "Aqua: scratch path not set";
+      end if;
+      Byte_IO.Open (File.F, Byte_IO.In_File,
+                    Ada.Directories.Compose
+                      (To_String (Local_IO_Path), Name));
    end Open;
 
    ------------------
@@ -160,6 +188,17 @@ package body Aqua.IO is
       Read_Byte (File, X);
       Value := Value + Word (X) * 256;
    end Read_Word;
+
+   -----------------
+   -- Set_IO_Path --
+   -----------------
+
+   procedure Set_IO_Path
+     (Path : String)
+   is
+   begin
+      Local_IO_Path := Ada.Strings.Unbounded.To_Unbounded_String (Path);
+   end Set_IO_Path;
 
    -------------------
    -- Write_Address --

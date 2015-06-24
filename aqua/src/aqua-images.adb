@@ -172,7 +172,7 @@ package body Aqua.Images is
 
    procedure Load
      (Image : in out Root_Image_Type'Class;
-      Path  : in     String)
+      Name  : in     String)
    is
       use Aqua.IO;
       File : File_Type;
@@ -182,9 +182,9 @@ package body Aqua.Images is
       External_Count : Word;
       String_Count   : Word;
    begin
-      Ada.Text_IO.Put_Line ("image: loading " & Path);
+      Ada.Text_IO.Put_Line ("image: loading " & Name);
 
-      Open (File, Path);
+      Open (File, Name);
 
       Read_Word (File, Binding_Count);
       Read_Word (File, Low);
@@ -193,7 +193,7 @@ package body Aqua.Images is
       Read_Word (File, String_Count);
 
       Ada.Text_IO.Put_Line
-        (Path
+        (Name
          & ": bindings:" & Word'Image (Binding_Count)
          & "; externals:" & Word'Image (External_Count)
          & "; strings:" & Word'Image (String_Count)

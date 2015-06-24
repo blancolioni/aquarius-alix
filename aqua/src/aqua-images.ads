@@ -23,7 +23,7 @@ package Aqua.Images is
 
    procedure Load
      (Image : in out Root_Image_Type'Class;
-      Path  : in     String);
+      Name  : in     String);
 
    procedure Link
      (Image : in out Root_Image_Type'Class);
