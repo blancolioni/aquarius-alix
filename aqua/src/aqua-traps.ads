@@ -11,6 +11,8 @@ package Aqua.Traps is
    IO_Put_String        : constant := 25;
    IO_Put_Char          : constant := 26;
    Report_State         : constant := 27;
+   Iterator_Start       : constant := 28;
+   Iterator_Next        : constant := 29;
 
    String_Substitute    : constant := 32;
 

@@ -2,10 +2,13 @@ private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Strings.Equal_Case_Insensitive;
 private with Ada.Strings.Hash_Case_Insensitive;
 
+with Aqua.Iterators;
+
 package Aqua.Objects is
 
-   type Object_Interface is
-   interface and External_Object_Interface;
+   type Object_Interface is interface
+     and External_Object_Interface
+     and Aqua.Iterators.Aqua_Container_Interface;
 
    procedure Set_Property
      (Object : in out Object_Interface;
@@ -71,5 +74,39 @@ private
    overriding function Show
      (Object : Root_Object_Type)
       return String;
+
+   overriding function Start
+     (Object : Root_Object_Type)
+      return Aqua.Iterators.Aqua_Iterator_Interface'Class;
+
+   type Root_Object_Iterator is
+     new Aqua.Iterators.Aqua_Iterator_Interface with
+      record
+         Position : Object_Maps.Cursor;
+      end record;
+
+   overriding function Name
+     (It : Root_Object_Iterator)
+      return String
+   is ("[object-iterator]");
+
+   overriding function Text
+     (It : Root_Object_Iterator)
+      return String
+   is ("[object-iterator]");
+
+   overriding function Show
+     (It : Root_Object_Iterator)
+      return String
+   is ("[object-iterator]");
+
+   overriding procedure Next
+     (It       : in out Root_Object_Iterator;
+      Finished :    out Boolean);
+
+   overriding function Current
+     (It : Root_Object_Iterator)
+      return Word
+   is (Object_Maps.Element (It.Position));
 
 end Aqua.Objects;

@@ -4,6 +4,7 @@ with Ada.Text_IO;
 
 with Aqua.Arithmetic;
 with Aqua.IO;
+with Aqua.Iterators;
 with Aqua.Objects;
 with Aqua.Primitives;
 with Aqua.Traps;
@@ -547,6 +548,75 @@ package body Aqua.CPU is
                begin
                   Target_Object.Set_Property (Property_Name, Value);
                end;
+            end;
+
+         when Aqua.Traps.Iterator_Start =>
+            declare
+               use Aqua.Iterators;
+               Container_Word : constant Word := CPU.Pop;
+               Container_Ext  : access External_Object_Interface'Class;
+               Container      : access Aqua_Container_Interface'Class;
+            begin
+               if not Is_External_Reference (Container_Word) then
+                  raise Constraint_Error
+                    with "iterator_start: expected an object but found "
+                    & CPU.Show (Container_Word);
+               end if;
+
+               Container_Ext := CPU.To_External_Object (Container_Word);
+
+               if Container_Ext.all not in Aqua_Container_Interface'Class then
+                  raise Constraint_Error
+                    with "iterator_start: cannot iterate over "
+                    & Container_Ext.Name;
+               end if;
+
+               Container :=
+                 Aqua_Container_Interface'Class (Container_Ext.all)'Access;
+
+               Ada.Text_IO.Put_Line ("iterating: " & Container.Show);
+
+               declare
+                  It : constant External_Object_Access :=
+                         new Aqua_Iterator_Interface'Class'
+                           (Container.Start);
+               begin
+                  CPU.Push (CPU.To_Word (It));
+                  CPU.Push (0);
+               end;
+            end;
+
+         when Aqua.Traps.Iterator_Next =>
+            declare
+               use Aqua.Iterators;
+               Old_Value     : constant Word := CPU.Pop;
+               pragma Unreferenced (Old_Value);
+               Iterator_Word : constant Word := CPU.Pop;
+               Iterator_Ext  : access External_Object_Interface'Class;
+               Iterator      : access Aqua_Iterator_Interface'Class;
+            begin
+               if not Is_External_Reference (Iterator_Word) then
+                  raise Constraint_Error
+                    with "iterator_next: expected an object but found "
+                    & CPU.Show (Iterator_Word);
+               end if;
+
+               Iterator_Ext := CPU.To_External_Object (Iterator_Word);
+
+               if Iterator_Ext.all not in Aqua_Iterator_Interface'Class then
+                  raise Constraint_Error
+                    with "iterator_next: cannot iterate over "
+                    & Iterator_Ext.Name;
+               end if;
+
+               Iterator :=
+                 Aqua_Iterator_Interface'Class (Iterator_Ext.all)'Access;
+
+               Iterator.Next (CPU.Z);
+               if not CPU.Z then
+                  CPU.Push (Iterator_Word);
+                  CPU.Push (Iterator.Current);
+               end if;
             end;
 
          when Aqua.Traps.IO_Put_String =>
