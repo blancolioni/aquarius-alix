@@ -105,6 +105,8 @@ package body Aquarius.Actions.Pdp_11 is
                              Processor.Object_Start;
             Object_Partial : constant Aqua.String_Vectors.Vector :=
                                Processor.Object_Partial;
+            Object_Context : constant Scanner.Object_Reference_Context :=
+                               Processor.Context;
          begin
             for Arg of reverse Arguments loop
                Scanner.Scan_Expression (Processor, Arg);
@@ -112,7 +114,7 @@ package body Aquarius.Actions.Pdp_11 is
 
             Processor.Object_Start := Object_Start;
             Processor.Object_Partial := Object_Partial;
-
+            Processor.Context := Object_Context;
          end;
 
          if Symbol_Tables.Has_Element (Processor.Object_Start) then
@@ -137,9 +139,14 @@ package body Aquarius.Actions.Pdp_11 is
          Put_Line (Processor.File,
                    "    mov """ & Identifier & """, -(sp)");
          case Processor.Context is
-            when Evaluation | Call =>
+            when Evaluation =>
                Put_Line (Processor.File,
                          "    trap property_get");
+            when Call =>
+               Put_Line (Processor.File,
+                         "    trap property_get");
+               Put_Line (Processor.File,
+                         "    tst (sp)+");
             when Allocation =>
                Put_Line (Processor.File,
                          "    trap allocate");
@@ -560,6 +567,10 @@ package body Aquarius.Actions.Pdp_11 is
                   Scanner.Scan_Expression (Processor, Arg);
                end loop;
                Put_Line (Processor.File, "    jsr pc, " & Identifier);
+               for I in Arguments'Range loop
+                  Put_Line (Processor.File,
+                            "    tst (sp)+");
+               end loop;
          end case;
       else
          if Arguments'Length = 0 then
