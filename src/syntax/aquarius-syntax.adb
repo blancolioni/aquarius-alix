@@ -697,28 +697,6 @@ package body Aquarius.Syntax is
       return Item.Node.Super_Class;
    end Is_Superclass;
 
-   -----------------
-   -- Keep_Parent --
-   -----------------
-
-   overriding
-   function Keep_Parent (Item : Syntax_Tree_Record) return Boolean is
-      pragma Unreferenced (Item);
-   begin
-      return False;
-   end Keep_Parent;
-
-   -------------------
-   -- Keep_Siblings --
-   -------------------
-
-   overriding
-   function Keep_Siblings (Item : Syntax_Tree_Record) return Boolean is
-      pragma Unreferenced (Item);
-   begin
-      return False;
-   end Keep_Siblings;
-
    ----------
    -- Name --
    ----------
@@ -838,11 +816,13 @@ package body Aquarius.Syntax is
       then
          Aquarius.Trees.Initialise_Tree
            (Aquarius.Trees.Root_Tree_Type (Result.all),
-            Declaration.Get_Location);
+            Declaration.Get_Location,
+            Keep_Parent => False, Keep_Siblings => False);
       else
          Aquarius.Trees.Initialise_Tree
            (Aquarius.Trees.Root_Tree_Type (Result.all),
-            Aquarius.Source.No_Source_Position);
+            Aquarius.Source.No_Source_Position,
+            Keep_Parent => False, Keep_Siblings => False);
       end if;
       Result.Node := new Syntax_Tree_Node_Record;
       Result.Node.Class         := Class;
@@ -1085,23 +1065,23 @@ package body Aquarius.Syntax is
    -- Syntax_Child --
    ------------------
 
-   function Syntax_Child
-     (Item  : not null access Syntax_Tree_Record;
-      Index : in     Positive)
-     return Syntax_Tree
-   is
-      Syn_Child : constant Syntax_Tree := Syntax_Tree (Item.Child (Index));
-   begin
---        while Syn_Child.Syntax_Class = Non_Terminal and
---          not Syn_Child.Node.Optional and
---          not Syn_Child.Node.Repeatable and
---          Syn_Child.Child_Count = 1 and
---          Syn_Child.Pristine
---        loop
---           Syn_Child := Syntax_Tree (Syn_Child.Child (1));
---        end loop;
-      return Syn_Child;
-   end Syntax_Child;
+--     function Syntax_Child
+--       (Item  : not null access Syntax_Tree_Record;
+--        Index : in     Positive)
+--       return Syntax_Tree
+--     is
+--        Syn_Child : constant Syntax_Tree := Syntax_Tree (Item.Child (Index));
+--     begin
+--  --        while Syn_Child.Syntax_Class = Non_Terminal and
+--  --          not Syn_Child.Node.Optional and
+--  --          not Syn_Child.Node.Repeatable and
+--  --          Syn_Child.Child_Count = 1 and
+--  --          Syn_Child.Pristine
+--  --        loop
+--  --           Syn_Child := Syntax_Tree (Syn_Child.Child (1));
+--  --        end loop;
+--        return Syn_Child;
+--     end Syntax_Child;
 
    ------------------
    -- Syntax_Class --

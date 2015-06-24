@@ -89,7 +89,8 @@ package Aquarius.Programs is
 
    function Program_Child (Item  : Program_Tree_Type;
                            Index : Positive)
-                          return Program_Tree;
+                           return Program_Tree
+   is (Program_Tree (Item.Child (Index)));
 
    function Program_Child (Item  : Program_Tree_Type;
                            Name  : in     String;
@@ -435,12 +436,6 @@ private
       end record;
 
    procedure Free (Item : in out Program_Tree);
-
-   overriding
-   function Keep_Parent (Item : Program_Tree_Type) return Boolean;
-
-   overriding
-   function Keep_Siblings (Item : Program_Tree_Type) return Boolean;
 
    --  override of Add_Child so that properties get copied from
    --  parent to child.

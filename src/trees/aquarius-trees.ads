@@ -32,9 +32,14 @@ package Aquarius.Trees is
                        return Boolean;
 
    procedure Initialise_Tree
-     (Item      : in out Root_Tree_Type;
-      Location  : in     Aquarius.Source.Source_Position;
-      Temporary : in     Boolean := False);
+     (Item          : in out Root_Tree_Type;
+      Location      : in     Aquarius.Source.Source_Position;
+      Keep_Parent   : in Boolean;
+      Keep_Siblings : in Boolean;
+      Temporary     : in     Boolean := False);
+   --  Keep_Siblings: true if left/right siblings of tree nodes
+   --  should be remembered by the node (or only maintained by the parent)
+   --  Keep_Parent: as Keep_Siblings, but for the parent of a tree node
 
    --  with Post => Aquarius.Source.Show (Item.Get_Location) =
    --    Aquarius.Source.Show (Location);
@@ -90,9 +95,9 @@ package Aquarius.Trees is
      (Item : Root_Tree_Type)
       return Aquarius.Source.Source_Position;
 
-   procedure
-   Set_Location (Item : in out Root_Tree_Type;
-                 Loc  : in     Aquarius.Source.Source_Position);
+   procedure Set_Location
+     (Item : in out Root_Tree_Type;
+      Loc  : in     Aquarius.Source.Source_Position);
 
    procedure Set_Property
      (Item  : in out Root_Tree_Type;
@@ -134,15 +139,6 @@ package Aquarius.Trees is
    function All_Properties (Top   : not null access Root_Tree_Type;
                             Prop  : in     Aquarius.Properties.Property_Type)
                            return Array_Of_Objects;
-
-   --  Keep_Siblings: true if left/right siblings of tree nodes
-   --  should be remembered by the node (or only maintained by the parent)
-   function Keep_Siblings (Item : Root_Tree_Type) return Boolean
-                           is abstract;
-
-   --  Keep_Parent: as Keep_Siblings, but for the parent of a tree node
-   function Keep_Parent (Item : Root_Tree_Type) return Boolean
-                         is abstract;
 
    function Is_Null (T : Tree) return Boolean;
 
@@ -324,11 +320,17 @@ private
          Identity            : Positive;
          Location            : Aquarius.Source.Source_Position;
          Temporary           : Boolean;
+         Keep_Parent         : Boolean := False;
+         Keep_Siblings       : Boolean := False;
          Messages            : Aquarius.Messages.Message_List;
          Properties          : Aquarius.Properties.Property_List;
          Left, Right, Parent : Tree;
          Foster_Parent       : Tree;
          Children            : Tree_Vectors.Vector;
       end record;
+
+   pragma Inline (Left_Sibling);
+   pragma Inline (Right_Sibling);
+   pragma Inline (Parent);
 
 end Aquarius.Trees;
