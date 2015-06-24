@@ -53,7 +53,7 @@ private
          Group           : Action_Group;
          Global_Table    : Symbol_Tables.Map;
          Frame_Table     : Symbol_Tables.Map;
-         Frame_Offset    : Integer;
+         Frame_Offset    : Integer := 0;
          Action_Parent   : Boolean;
          Action_Child    : Boolean;
          Context         : Scanner.Object_Reference_Context;
