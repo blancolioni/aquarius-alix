@@ -61,8 +61,13 @@ package body Aqua.Objects is
       Finished :    out Boolean)
    is
    begin
-      Object_Maps.Next (It.Position);
-      Finished := not Object_Maps.Has_Element (It.Position);
+      if Object_Maps.Has_Element (It.Position) then
+         It.Current := Object_Maps.Element (It.Position);
+         Object_Maps.Next (It.Position);
+         Finished := False;
+      else
+         Finished := True;
+      end if;
    end Next;
 
    ------------------
@@ -121,6 +126,7 @@ package body Aqua.Objects is
    begin
       return Result : Root_Object_Iterator do
          Result.Position := Object.Map.First;
+         Result.Current  := 0;
       end return;
    end Start;
 
