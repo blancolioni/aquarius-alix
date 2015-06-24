@@ -11,5 +11,19 @@ after Procedure_Definition/identifier do
 end;
 
 after procedure_declaration/procedure_definition do
-   Komnenos.Define (parent, child/identifier, "declaration");
+   Komnenos.Define (parent, child/identifier, "procedure-declaration");
+end;
+
+before defining_identifier_list do
+   new tree.defined_names;
+end;
+
+after defining_identifier_list/identifier do
+   parent.defined_names.set (identifier.image, identifier);
+end;
+
+after variable_declaration/defining_identifier_list do
+   for child.defined_names loop
+      Komnenos.Define (variable_declaration, current, "variable-declaration");
+   end loop;
 end;
