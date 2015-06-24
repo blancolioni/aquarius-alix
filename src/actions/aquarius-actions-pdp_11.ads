@@ -53,7 +53,7 @@ private
          Group           : Action_Group;
          Global_Table    : Symbol_Tables.Map;
          Frame_Table     : Symbol_Tables.Map;
-         Frame_Offset    : Natural;
+         Frame_Offset    : Integer;
          Action_Parent   : Boolean;
          Action_Child    : Boolean;
          Context         : Scanner.Object_Reference_Context;
@@ -152,5 +152,10 @@ private
      (Processor : in out Pdp_Scanner;
       Expressions : Aquarius.Programs.Array_Of_Program_Trees;
       Statements  : Aquarius.Programs.Array_Of_Program_Trees);
+
+   overriding procedure Iterator_Statement
+     (Processor : in out Pdp_Scanner;
+      Identifier  : String;
+      Statements  : Aquarius.Programs.Program_Tree);
 
 end Aquarius.Actions.Pdp_11;

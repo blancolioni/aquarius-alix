@@ -1,3 +1,7 @@
+with Ada.Directories;
+
+with Aquarius.Paths;
+
 with Aqua.Traps;
 
 package body Aquarius.Actions.Pdp_11 is
@@ -294,6 +298,34 @@ package body Aquarius.Actions.Pdp_11 is
       return "L" & N;
    end Image;
 
+   ------------------------
+   -- Iterator_Statement --
+   ------------------------
+
+   overriding procedure Iterator_Statement
+     (Processor : in out Pdp_Scanner;
+      Identifier  : String;
+      Statements  : Aquarius.Programs.Program_Tree)
+   is
+      Id : constant String :=
+             (if Identifier = "" then "current" else Identifier);
+      Loop_Label : constant Label_Type := Next_Label (Processor);
+      Exit_Label : constant Label_Type := Next_Label (Processor);
+   begin
+      Processor.Frame_Offset := Processor.Frame_Offset - 4;
+      Processor.Frame_Table.Insert
+        (Id, (Local, Processor.Frame_Offset));
+      Put_Line (Processor.File, "    trap iterator_start");
+      Put_Line (Processor.File, Image (Loop_Label) & ":");
+      Put_Line (Processor.File, "    trap iterator_next");
+      Put_Line (Processor.File, "    beq " & Image (Exit_Label));
+      Scanner.Scan_Action (Processor, Statements);
+      Put_Line (Processor.File, "    jmp " & Image (Loop_Label));
+      Put_Line (Processor.File, Image (Exit_Label) & ":");
+      Processor.Frame_Offset := Processor.Frame_Offset + 4;
+      Processor.Frame_Table.Delete (Id);
+   end Iterator_Statement;
+
    ------------------
    -- Literal_Null --
    ------------------
@@ -380,7 +412,9 @@ package body Aquarius.Actions.Pdp_11 is
       return String
    is
    begin
-      return Scanner.Top.Source_File_Name & ".m11";
+      return Aquarius.Paths.Scratch_File
+        (Name      => Ada.Directories.Base_Name (Scanner.Top.Source_File_Name),
+         Extension => "m11");
    end Output_Path;
 
    ----------------
@@ -570,6 +604,12 @@ package body Aquarius.Actions.Pdp_11 is
       Put_Line (Processor.File,
                 "cpu_report_state ="
                 & Natural'Image (Report_State));
+      Put_Line (Processor.File,
+                "iterator_start ="
+                & Natural'Image (Iterator_Start));
+      Put_Line (Processor.File,
+                "iterator_next ="
+                & Natural'Image (Iterator_Next));
 
       New_Line (Processor.File);
 

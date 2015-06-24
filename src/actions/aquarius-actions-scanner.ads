@@ -141,4 +141,10 @@ package Aquarius.Actions.Scanner is
       Statements  : Aquarius.Programs.Array_Of_Program_Trees)
    is abstract;
 
+   procedure Iterator_Statement
+     (Processor   : in out Action_Processor_Interface;
+      Identifier  : String;
+      Statements  : Aquarius.Programs.Program_Tree)
+   is abstract;
+
 end Aquarius.Actions.Scanner;
