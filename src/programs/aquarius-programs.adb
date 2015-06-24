@@ -38,6 +38,7 @@ package body Aquarius.Programs is
       Overflow_Checked     => False,
       Have_Symbol_Table    => False,
       Is_Declaration       => False,
+      Self                 => null,
       Source_File          => Aquarius.Source.No_Source_File,
       Source_File_Name     => Aquarius.Names.Null_Aquarius_Name,
       Msg_Level            => Aquarius.Messages.No_Message,
@@ -1195,8 +1196,36 @@ package body Aquarius.Programs is
       if Syntax.Has_Render_Class then
          Result.Render_Class := Syntax;
       end if;
+      Result.Self := Result;
       return Result;
    end New_Program_Tree;
+
+   ----------
+   -- Next --
+   ----------
+
+   overriding procedure Next
+     (It       : in out Root_Program_Tree_Iterator;
+      Finished :    out Boolean)
+   is
+   begin
+      Finished := False;
+      if It.Current.Has_Children then
+         It.Current := It.Current.Program_Child (1);
+      else
+         while It.Current.Program_Right = null
+           and then It.Current.Program_Parent /= null
+         loop
+            It.Current := It.Current.Program_Parent;
+         end loop;
+
+         if It.Current.Program_Right /= null then
+            It.Current := It.Current.Program_Right;
+         else
+            Finished := True;
+         end if;
+      end if;
+   end Next;
 
    -----------------------
    -- Parent_Actionable --
@@ -1763,6 +1792,20 @@ package body Aquarius.Programs is
    begin
       return Ada.Characters.Handling.To_Lower (Item.Text);
    end Standard_Text;
+
+   -----------
+   -- Start --
+   -----------
+
+   overriding function Start
+     (Program : Program_Tree_Type)
+      return Aqua.Iterators.Aqua_Iterator_Interface'Class
+   is
+   begin
+      return Result : Root_Program_Tree_Iterator do
+         Result.Current := Program.Self;
+      end return;
+   end Start;
 
    ------------------
    -- Symbol_Table --
