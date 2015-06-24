@@ -52,6 +52,19 @@ package body Aqua.Objects is
           (Name => "object__" & Name) /= 0;
    end Has_Property;
 
+   ----------
+   -- Next --
+   ----------
+
+   overriding procedure Next
+     (It       : in out Root_Object_Iterator;
+      Finished :    out Boolean)
+   is
+   begin
+      Object_Maps.Next (It.Position);
+      Finished := not Object_Maps.Has_Element (It.Position);
+   end Next;
+
    ------------------
    -- Set_Property --
    ------------------
@@ -96,5 +109,19 @@ package body Aqua.Objects is
          return To_String (Result) & ")";
       end if;
    end Show;
+
+   -----------
+   -- Start --
+   -----------
+
+   overriding function Start
+     (Object : Root_Object_Type)
+      return Aqua.Iterators.Aqua_Iterator_Interface'Class
+   is
+   begin
+      return Result : Root_Object_Iterator do
+         Result.Position := Object.Map.First;
+      end return;
+   end Start;
 
 end Aqua.Objects;
