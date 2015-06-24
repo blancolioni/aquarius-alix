@@ -344,14 +344,20 @@ package body Aqua.Assembler is
          if Info.Defined then
             if Relative then
                pragma Assert (Is_Address (Info.Value));
-               A.Set_Word (A.PC,
-                           To_Address_Word
-                             (Get_Address (Info.Value) - A.PC));
+               declare
+                  Target : constant Address := Get_Address (Info.Value);
+                  Addr   : constant Address := A.PC;
+                  Offset : constant Address := Target - Addr;
+                  Index  : constant Word := To_Address_Word (Offset);
+               begin
+                  return Index;
+               end;
             else
-               A.Set_Word (A.PC, Info.Value);
+               return Info.Value;
             end if;
+         else
+            return 0;
          end if;
-         return Info.Value;
       end;
    end Reference_Label;
 
