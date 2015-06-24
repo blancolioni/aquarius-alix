@@ -42,7 +42,9 @@ package body Aquarius.Actions.Scanner is
 
       Write_Position (Processor, Action);
 
-      if Action.Name = "compilation_unit" then
+      if Action.Name = "top_level" then
+         Scan (Processor, Action.Program_Child ("compilation_unit"));
+      elsif Action.Name = "compilation_unit" then
          Scan (Processor,
                Action.Program_Child ("sequence_of_statements"));
       elsif Action.Name = "sequence_of_statements" then
@@ -74,7 +76,28 @@ package body Aquarius.Actions.Scanner is
                                 Action.Program_Child ("object_reference"),
                                 Call);
       elsif Action.Name = "for_loop_statement" then
-         Scan (Processor, Action.Chosen_Tree);
+         Scan (Processor, Action.Program_Child ("iterator_loop"));
+      elsif Action.Name = "iterator_loop" then
+         declare
+--              Identifier : constant Program_Tree :=
+--                             Action.Program_Child ("identifier");
+            Identifier_Name : constant String := "";
+--                                  (if Identifier /= null
+--                                   then Identifier.Text
+--                                   else "");
+            Object          : constant Program_Tree :=
+                                Action.Program_Child ("object_reference");
+            Loop_Statement  : constant Program_Tree :=
+                                Action.Program_Child ("loop_statement");
+            Statements      : constant Program_Tree :=
+                                Loop_Statement.Program_Child
+                                  ("sequence_of_statements");
+         begin
+            Scan_Object_Reference (Processor, Object, Evaluation);
+            Processor.Iterator_Statement
+              (Identifier => Identifier_Name,
+               Statements => Statements);
+         end;
       elsif Action.Name = "if_statement" then
          declare
             Children : constant Aquarius.Programs.Array_Of_Program_Trees :=
