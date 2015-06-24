@@ -1069,10 +1069,10 @@ package body Aquarius.Programs.Parser is
       while Has_Element (It) loop
          if Element (It).Active then
             if Token_OK (Item, Element (It).Location) then
-               Aquarius.Trace.Trace_Put_Line
-                 (Aquarius.Trace.Parsing,
-                  "  into: "
-                  & Aquarius.Trees.Cursors.Image (Element (It).Location));
+--                 Aquarius.Trace.Trace_Put_Line
+--                   (Aquarius.Trace.Parsing,
+--                    "  into: "
+--                    & Aquarius.Trees.Cursors.Image (Element (It).Location));
                Count := Count + 1;
                Parse_Token (Item, Tok_Text, It, Context);
                Previous (It);
@@ -1100,12 +1100,12 @@ package body Aquarius.Programs.Parser is
 
       Update_Ambiguities (Context);
 
-      for A of Context.Ambiguities loop
-         Aquarius.Trace.Trace_Put_Line
-           (Aquarius.Trace.Parsing,
-            "  keeping: "
-            & Aquarius.Trees.Cursors.Image (A.Location));
-      end loop;
+--        for A of Context.Ambiguities loop
+--           Aquarius.Trace.Trace_Put_Line
+--             (Aquarius.Trace.Parsing,
+--              "  keeping: "
+--              & Aquarius.Trees.Cursors.Image (A.Location));
+--        end loop;
 
    end Parse_Token;
 

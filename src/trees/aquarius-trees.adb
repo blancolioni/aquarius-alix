@@ -22,16 +22,6 @@ package body Aquarius.Trees is
    function Image (Item : Internal_Declaration_Tree_Type)
                  return String;
 
-   overriding
-   function Keep_Siblings
-     (Item : Internal_Declaration_Tree_Type)
-     return Boolean;
-
-   overriding
-   function Keep_Parent
-     (Item : Internal_Declaration_Tree_Type)
-     return Boolean;
-
    Local_Internal_Declaration : Tree := null;
 
    ---------
@@ -77,8 +67,8 @@ package body Aquarius.Trees is
       New_Sibling : not null access Root_Tree_Type'Class)
    is
    begin
-      if not Tree (To_Tree).Keep_Siblings or else
-        not Tree (To_Tree).Keep_Parent
+      if not To_Tree.Keep_Siblings or else
+        not To_Tree.Keep_Parent
       then
          raise Tree_Error with
            "cannot add sibling to tree node if " &
@@ -128,8 +118,8 @@ package body Aquarius.Trees is
       New_Sibling : not null access Root_Tree_Type'Class)
    is
    begin
-      if not Tree (To_Tree).Keep_Siblings or else
-        not Tree (To_Tree).Keep_Parent
+      if not To_Tree.Keep_Siblings or else
+        not To_Tree.Keep_Parent
       then
          raise Tree_Error with
            "cannot add sibling to tree node if " &
@@ -420,7 +410,7 @@ package body Aquarius.Trees is
       Ancestors : Tree_Vectors.Vector;
       It : Tree;
    begin
-      if not Tree (Left).Keep_Parent then
+      if not Left.Keep_Parent then
          raise Constraint_Error with
            "Common_Ancestor called on tree that does not keep parents";
       end if;
@@ -762,6 +752,8 @@ package body Aquarius.Trees is
    procedure Initialise_Tree
      (Item      : in out Root_Tree_Type;
       Location  : in     Aquarius.Source.Source_Position;
+      Keep_Parent   : in Boolean;
+      Keep_Siblings : in Boolean;
       Temporary : in     Boolean := False)
    is
    begin
@@ -769,6 +761,8 @@ package body Aquarius.Trees is
       Item.Identity  := Current_Node_Id;
       Item.Location  := Location;
       Item.Temporary := Temporary;
+      Item.Keep_Parent := Keep_Parent;
+      Item.Keep_Siblings := Keep_Siblings;
       Aquarius.Messages.Create_Message_List (Item.Messages, True);
    end Initialise_Tree;
 
@@ -792,34 +786,6 @@ package body Aquarius.Trees is
    begin
       return T = null;
    end Is_Null;
-
-   -----------------
-   -- Keep_Parent --
-   -----------------
-
-   overriding
-   function Keep_Parent
-     (Item : Internal_Declaration_Tree_Type)
-     return Boolean
-   is
-      pragma Unreferenced (Item);
-   begin
-      return False;
-   end Keep_Parent;
-
-   -------------------
-   -- Keep_Siblings --
-   -------------------
-
-   overriding
-   function Keep_Siblings
-     (Item : Internal_Declaration_Tree_Type)
-     return Boolean
-   is
-      pragma Unreferenced (Item);
-   begin
-      return False;
-   end Keep_Siblings;
 
    ----------------
    -- Last_Child --
@@ -876,11 +842,7 @@ package body Aquarius.Trees is
 
    function Left_Sibling (Item : Root_Tree_Type) return Tree is
    begin
-      if not Root_Tree_Type'Class (Item).Keep_Siblings then
-         raise Constraint_Error with
-           "Left_Sibling called on tree with Keep_Siblings False: " &
-           Root_Tree_Type'Class (Item).Image;
-      end if;
+      pragma Assert (Item.Keep_Siblings);
       return Item.Left;
    end Left_Sibling;
 
@@ -962,10 +924,7 @@ package body Aquarius.Trees is
 
    function Parent (Item : Root_Tree_Type) return Tree is
    begin
-      if not Root_Tree_Type'Class (Item).Keep_Parent then
-         raise Constraint_Error with
-           "Parent called on tree with Keep_Parent False";
-      end if;
+      pragma Assert (Item.Keep_Parent);
       return Item.Parent;
    end Parent;
 
@@ -1084,11 +1043,7 @@ package body Aquarius.Trees is
 
    function Right_Sibling (Item : Root_Tree_Type) return Tree is
    begin
-      if not Root_Tree_Type'Class (Item).Keep_Siblings then
-         raise Constraint_Error with
-           "Right_Sibling called on tree with Keep_Siblings False: " &
-           Root_Tree_Type'Class (Item).Image;
-      end if;
+      pragma Assert (Item.Keep_Siblings);
       return Item.Right;
    end Right_Sibling;
 

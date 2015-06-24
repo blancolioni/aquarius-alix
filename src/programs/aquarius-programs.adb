@@ -1007,28 +1007,6 @@ package body Aquarius.Programs is
       return Item.Syntax.Syntax_Class = Terminal;
    end Is_Terminal;
 
-   -----------------
-   -- Keep_Parent --
-   -----------------
-
-   overriding
-   function Keep_Parent (Item : Program_Tree_Type) return Boolean is
-      pragma Unreferenced (Item);
-   begin
-      return True;
-   end Keep_Parent;
-
-   -------------------
-   -- Keep_Siblings --
-   -------------------
-
-   overriding
-   function Keep_Siblings (Item : Program_Tree_Type) return Boolean is
-      pragma Unreferenced (Item);
-   begin
-      return True;
-   end Keep_Siblings;
-
    -----------------------
    -- Layout_End_Column --
    -----------------------
@@ -1210,7 +1188,8 @@ package body Aquarius.Programs is
          Num_Allocated_Trees := Num_Allocated_Trees + 1;
       end if;
       Program_Tree_Type (Result.all) := Empty_Program_Node;
-      Initialise_Tree (Result.all, Aquarius.Source.No_Source_Position);
+      Initialise_Tree (Result.all, Aquarius.Source.No_Source_Position,
+                       Keep_Parent => True, Keep_Siblings => True);
       Result.Syntax         := Syntax;
       Result.Indent_Rule    := Syntax.Has_Indent_Rule;
       if Syntax.Has_Render_Class then
@@ -1253,13 +1232,13 @@ package body Aquarius.Programs is
    -- Program_Child --
    -------------------
 
-   function Program_Child (Item  : Program_Tree_Type;
-                           Index : Positive)
-                          return Program_Tree
-   is
-   begin
-      return Program_Tree (Item.Child (Index));
-   end Program_Child;
+--     function Program_Child (Item  : Program_Tree_Type;
+--                             Index : Positive)
+--                            return Program_Tree
+--     is
+--     begin
+--        return Program_Tree (Item.Child (Index));
+--     end Program_Child;
 
    -------------------
    -- Program_Child --

@@ -288,33 +288,6 @@ package body Aquarius.Projects is
       return Ada.Strings.Unbounded.To_String (Tree.Label);
    end Image;
 
-   -----------------
-   -- Keep_Parent --
-   -----------------
-
-   overriding
-   function Keep_Parent
-     (Item : Root_Project_Tree)
-     return Boolean is
-      pragma Unreferenced (Item);
-   begin
-      return True;
-   end Keep_Parent;
-
-   -------------------
-   -- Keep_Siblings --
-   -------------------
-
-   overriding
-   function Keep_Siblings
-     (Item : Root_Project_Tree)
-     return Boolean
-   is
-      pragma Unreferenced (Item);
-   begin
-      return True;
-   end Keep_Siblings;
-
    -----------
    -- Label --
    -----------

@@ -189,16 +189,6 @@ private
    overriding
    function Image (Tree : Root_Project_Tree) return String;
 
-   overriding
-   function Keep_Siblings
-     (Item : Root_Project_Tree)
-     return Boolean;
-
-   overriding
-   function Keep_Parent
-     (Item : Root_Project_Tree)
-     return Boolean;
-
    package Loaded_Buffer_Vector is
       new Ada.Containers.Vectors (Positive,
                                   Aquarius.Buffers.Aquarius_Buffer,

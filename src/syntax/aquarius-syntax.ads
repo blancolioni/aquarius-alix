@@ -36,7 +36,8 @@ package Aquarius.Syntax is
    function Syntax_Child
      (Item  : not null access Syntax_Tree_Record;
       Index : in     Positive)
-     return Syntax_Tree;
+      return Syntax_Tree
+   is (Syntax_Tree (Item.Child (Index)));
 
    overriding
      function Has_Named_Property
@@ -409,14 +410,6 @@ private
                          Tok    : in Aquarius.Tokens.Token;
                          Begins : in Boolean);
 
-   overriding
-   function Keep_Parent
-     (Item : Syntax_Tree_Record)
-     return Boolean;
-
-   overriding
-   function Keep_Siblings
-     (Item : Syntax_Tree_Record)
-     return Boolean;
+   pragma Inline (Syntax_Class);
 
 end Aquarius.Syntax;
