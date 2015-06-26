@@ -48,4 +48,8 @@ package Aqua.Execution is
       Value   : Word)
    is abstract;
 
+   procedure Report
+     (Context : Execution_Interface)
+   is abstract;
+
 end Aqua.Execution;
