@@ -91,6 +91,7 @@ package body Aquarius.Programs is
    is
       Program_Child : constant Program_Tree := Program_Tree (New_Child);
    begin
+      pragma Assert (not Item.Free);
       Aquarius.Trees.Root_Tree_Type (Item.all).Add_Child (New_Child);
       Program_Child.Indent_Rule :=
         Program_Child.Indent_Rule or else Item.Indent_Rule;
@@ -111,6 +112,7 @@ package body Aquarius.Programs is
       Fragment : in Tagatha.Fragments.Tagatha_Fragment)
    is
    begin
+      pragma Assert (not Tree.Free);
       Tagatha.Fragments.Append (Tree.Fragment, Fragment);
    end Append_Fragment;
 
@@ -182,6 +184,7 @@ package body Aquarius.Programs is
       use Aquarius.Syntax;
       It : Program_Tree := Program_Tree (Item);
    begin
+      pragma Assert (not Item.Free);
       while It.Syntax.Syntax_Class /= Choice loop
          pragma Assert (It.Child_Count = 1);
          It := It.Program_Child (1);
@@ -382,6 +385,7 @@ package body Aquarius.Programs is
       use Aquarius.Syntax;
       Syn : constant Syntax_Tree := Item.Syntax;
    begin
+      pragma Assert (not Item.Free);
       case Syn.Syntax_Class is
          when Terminal =>
             --  no expansion necessary
@@ -1121,6 +1125,7 @@ package body Aquarius.Programs is
                  return String
    is
    begin
+      pragma Assert (not Item.Free);
       return Item.Syntax.Name;
    end Name;
 
@@ -1181,12 +1186,12 @@ package body Aquarius.Programs is
    begin
       pragma Assert (Aquarius.Syntax."/=" (Syntax, null));
 
+         Num_Allocated_Trees := Num_Allocated_Trees + 1;
       if Free_List.Last_Index > 0 then
          Result := Free_List.Last_Element;
          Free_List.Delete (Free_List.Last_Index);
       else
          Result := new Program_Tree_Type;
-         Num_Allocated_Trees := Num_Allocated_Trees + 1;
       end if;
       Program_Tree_Type (Result.all) := Empty_Program_Node;
       Initialise_Tree (Result.all, Aquarius.Source.No_Source_Position,
@@ -1864,6 +1869,7 @@ package body Aquarius.Programs is
    function Text (Item : Program_Tree_Type) return String is
       use Aquarius.Syntax;
    begin
+      pragma Assert (not Item.Free);
       if Item.Error_Node then
          return Aquarius.Tokens.To_String (Item.Fill_Text);
       elsif Item.Syntax.Has_Token then
