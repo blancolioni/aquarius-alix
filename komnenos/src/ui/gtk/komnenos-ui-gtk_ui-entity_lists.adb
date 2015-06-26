@@ -328,6 +328,7 @@ package body Komnenos.UI.Gtk_UI.Entity_Lists is
 
    begin
       Entity_Model.Clear;
+      Current_UI.Sort;
       Current_UI.Iterate (Filter, Show'Access);
    end Show_Entities;
 
