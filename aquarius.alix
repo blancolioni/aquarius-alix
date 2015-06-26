@@ -21,6 +21,7 @@ source_dir = src/messages
 source_dir = src/plugins
 source_dir = src/plugins/ada
 source_dir = src/plugins/ada/generated
+source_dir = src/plugins/dynamic
 source_dir = src/plugins/ebnf
 source_dir = src/plugins/generated
 source_dir = src/plugins/haskell

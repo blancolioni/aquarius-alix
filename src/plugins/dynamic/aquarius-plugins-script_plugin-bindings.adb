@@ -4,9 +4,9 @@ with Ada.Exceptions;
 with Ada.Text_IO;
 
 --  with Aquarius.Actions.Interpreter;
-with Aquarius.Config_Paths;
 with Aquarius.Grammars.Manager;
 with Aquarius.Loader;
+with Aquarius.Messages.Console;
 with Aquarius.Names;
 with Aquarius.Paths;
 with Aquarius.Plugins.Dynamic;
@@ -15,6 +15,7 @@ with Aquarius.Syntax;
 
 with Aquarius.Actions.Scanner;
 with Aquarius.Actions.Pdp_11;
+--  with Aquarius.Actions.Tagatha_Actions;
 
 with Aqua.Images;
 
@@ -78,10 +79,22 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
 
       if Aquarius.Paths.Is_Newer (Action_Path, Assembly_Path) then
          declare
+            use Aquarius.Messages;
             Processor : Aquarius.Actions.Pdp_11.Pdp_Scanner;
+--            Tagatha_Proc : Aquarius.Actions.Tagatha_Actions.Tagatha_Scanner;
          begin
             Aquarius.Actions.Scanner.Scan_Actions
               (Processor, Action_Program, Group);
+--              Aquarius.Actions.Scanner.Scan_Actions
+--                (Tagatha_Proc, Action_Program, Group);
+            if Aquarius.Messages.Console.Check_Messages (Action_Program.all)
+              >= Warning
+            then
+               Ada.Text_IO.Put_Line
+                 (Ada.Text_IO.Standard_Error,
+                  "errors detected");
+               return;
+            end if;
          end;
       end if;
 
@@ -297,27 +310,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
          end if;
       end Bind_To_Grammar;
 
-      Library_Assembly_Path : constant String :=
-                                Aquarius.Config_Paths.Config_Path
-                                & "/aqua/text_io.m11";
-      Library_Assembly_Scratch : constant String :=
-                                   Aquarius.Paths.Scratch_File
-                                     ("text_io", "m11");
-      Library_Assembly_Object : constant String :=
-                                  Aquarius.Paths.Scratch_File
-                                    ("text_io", "o11");
-      use Ada.Directories, Ada.Calendar;
    begin
-      if Aquarius.Paths.Is_Newer
-        (Library_Assembly_Path, Library_Assembly_Object)
-      then
-         Ada.Directories.Copy_File
-           (Library_Assembly_Path, Library_Assembly_Scratch);
-         Process_Compiled_Plugin ("text_io");
-      end if;
-
-      Image.Load ("text_io.o11");
-
       Image.Link;
       Image.Bind (Bind_To_Grammar'Access);
    end Plugin_Declaration_After_List_Of_Declarations;
@@ -349,6 +342,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
    procedure Process_Compiled_Plugin
      (Assembly_Name : String)
    is
+      use type Aquarius.Messages.Message_Level;
       Path : constant String :=
                Aquarius.Paths.Scratch_File (Assembly_Name, "m11");
       Output_Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
@@ -359,8 +353,23 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                            (Grammar => Output_Grammar,
                             Path    => Path);
    begin
-      Output_Grammar.Run_Action_Trigger
-        (Output_Program, Aquarius.Actions.Semantic_Trigger);
+      if Aquarius.Messages.Console.Check_Messages (Output_Program.all)
+        >= Aquarius.Messages.Error
+      then
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "errors detected; canceling plugin");
+      else
+         Output_Grammar.Run_Action_Trigger
+           (Output_Program, Aquarius.Actions.Semantic_Trigger);
+         if Aquarius.Messages.Console.Check_Messages (Output_Program.all)
+           >= Aquarius.Messages.Error
+         then
+            Ada.Text_IO.Put_Line
+              (Ada.Text_IO.Standard_Error,
+               "errors detected; canceling plugin");
+         end if;
+      end if;
    end Process_Compiled_Plugin;
 
    --------------------------------
