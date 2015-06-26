@@ -1080,6 +1080,7 @@ package body Aquarius.Programs.Parser is
                T := It;
                Previous (It);
                A := Element (T);
+               Free (A.Top);
                Free (A);
                Delete (Context.Ambiguities, T);
             end if;
@@ -1852,6 +1853,7 @@ package body Aquarius.Programs.Parser is
                      Tmp : constant Cursor := Previous (It);
                      A   : Ambiguity := Element (It);
                   begin
+                     Free (A.Top);
                      Free (A);
                      Delete (Context.Ambiguities, It);
                      It := Tmp;
