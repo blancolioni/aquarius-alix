@@ -97,6 +97,7 @@ package body Komnenos.Entities.Aqua_Entities is
       end if;
 
       declare
+         use type Aqua.Word;
          Parent_Ext  : constant access Aqua.External_Object_Interface'Class :=
                          Context.To_External_Object (Arguments (2));
          Parent      : constant Program_Tree := Program_Tree (Parent_Ext);
@@ -116,7 +117,10 @@ package body Komnenos.Entities.Aqua_Entities is
                           then Child_Tree.Text
                           else Context.To_String (Child_Arg));
          Class   : constant String :=
-                     Context.To_String (Arguments (4));
+                         Context.To_String (Arguments (4));
+         Top_Level   : constant Boolean :=
+                         Arguments'Length < 5
+                           or else Arguments (5) /= 0;
          Entity  : constant Komnenos.Entities.Entity_Reference :=
                      Create_Aquarius_Source_Entity
                        (Table            => Aqua_Object.Table,
@@ -125,7 +129,7 @@ package body Komnenos.Entities.Aqua_Entities is
                         Class            => Class,
                         Line             => Parent.Location_Line,
                         Column           => Parent.Location_Column,
-                        Top_Level        => True,
+                        Top_Level        => Top_Level,
                         Compilation_Unit => Parent.Program_Root,
                         Entity_Spec      => Parent,
                         Entity_Body      => null);

@@ -24,6 +24,6 @@ end;
 
 after variable_declaration/defining_identifier_list do
    for child.defined_names loop
-      Komnenos.Define (variable_declaration, current, "variable-declaration");
+      Komnenos.Define (variable_declaration, current, "variable-declaration", 0);
    end loop;
 end;
