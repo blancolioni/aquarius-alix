@@ -1,6 +1,3 @@
-private with Ada.Containers.Indefinite_Hashed_Maps;
-private with Ada.Strings.Fixed.Hash_Case_Insensitive;
-private with Ada.Strings.Fixed.Equal_Case_Insensitive;
 private with Ada.Strings.Unbounded;
 
 private with Ada.Text_IO;
@@ -22,52 +19,23 @@ package Aquarius.Actions.Pdp_11 is
 
 private
 
-   type Storage_Type is (Local, External, Subroutine);
-
-   type Table_Entry (Storage : Storage_Type) is
-      record
-         case Storage is
-            when Local =>
-               Frame_Offset : Integer;
-            when External | Subroutine =>
-               External_Name : Ada.Strings.Unbounded.Unbounded_String;
-         end case;
-      end record;
-
-   package Symbol_Tables is
-     new Ada.Containers.Indefinite_Hashed_Maps
-       (Key_Type        => String,
-        Element_Type    => Table_Entry,
-        Hash            => Ada.Strings.Fixed.Hash_Case_Insensitive,
-        Equivalent_Keys => Ada.Strings.Fixed.Equal_Case_Insensitive);
-
    type Label_Type is new Natural;
-
-   type Partial_Object_Array is array (1 .. 10) of Symbol_Tables.Cursor;
 
    type Pdp_Scanner is
    limited new Aquarius.Actions.Scanner.Action_Processor_Interface with
       record
-         Top             : Aquarius.Programs.Program_Tree;
          File            : Ada.Text_IO.File_Type;
-         Group           : Action_Group;
-         Global_Table    : Symbol_Tables.Map;
-         Frame_Table     : Symbol_Tables.Map;
          Frame_Offset    : Integer := 0;
          Action_Parent   : Boolean;
          Action_Child    : Boolean;
-         Context         : Scanner.Object_Reference_Context;
          Next_Label      : Label_Type := 0;
-         Last_Line       : Integer := -1;
-         Last_Col        : Integer := -1;
-         Object_Start    : Symbol_Tables.Cursor;
+         Object_Start    : Ada.Strings.Unbounded.Unbounded_String;
          Object_Partial  : Aqua.String_Vectors.Vector;
       end record;
 
    overriding procedure Start_Process
-     (Processor : in out Pdp_Scanner;
-      Top       : Aquarius.Programs.Program_Tree;
-      Group     : Action_Group);
+     (Processor  : in out Pdp_Scanner;
+      Group_Name : String);
 
    overriding procedure End_Process
      (Processor : in out Pdp_Scanner);
@@ -100,35 +68,42 @@ private
    overriding procedure End_Aggregate
      (Processor : in out Pdp_Scanner);
 
-   overriding procedure Start_Object_Reference
+   overriding procedure Push_Frame_Entry
      (Processor  : in out Pdp_Scanner;
-      Context    : Scanner.Object_Reference_Context;
-      Identifier : String;
-      Arguments  : Aquarius.Programs.Array_Of_Program_Trees;
-      Last       : Boolean);
+      Offset     : Integer);
 
-   overriding procedure Component_Selector
+   overriding procedure Push_External_Entry
      (Processor  : in out Pdp_Scanner;
-      Identifier : String;
-      Arguments  : Aquarius.Programs.Array_Of_Program_Trees;
-      Last       : Boolean);
+      Name       : String);
 
-   overriding procedure Subtree_Selector
+   overriding procedure Push_String_Literal
      (Processor  : in out Pdp_Scanner;
-      Identifier : String;
-      Last       : Boolean);
+      Literal    : String);
 
-   overriding procedure Ancestor_Selector
+   overriding procedure Pop_Frame_Entry
      (Processor  : in out Pdp_Scanner;
-      Identifier : String;
-      Last       : Boolean);
+      Offset     : Integer);
+
+   overriding procedure Pop_External_Entry
+     (Processor  : in out Pdp_Scanner;
+      Name       : String);
+
+   overriding procedure Get_Property
+     (Processor : in out Pdp_Scanner;
+      Argument_Count : Natural);
+
+   overriding procedure Set_Property
+     (Processor : in out Pdp_Scanner);
+
+   overriding procedure Clear_Result
+     (Processor : in out Pdp_Scanner);
 
    overriding procedure Source_File
      (Processor : in out Pdp_Scanner;
       Directory_Name : in String;
       File_Name      : in String);
 
-   overriding procedure Current_Source_Location
+   overriding procedure Put_Source_Location
      (Processor : in out Pdp_Scanner;
       Line           : in Natural;
       Column         : in Natural);
