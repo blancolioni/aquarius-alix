@@ -1,4 +1,4 @@
-top_level = compilation_unit
+top_level ::= compilation_unit
 case_sensitive = false
 
 identifier         ::= standard ada_identifier

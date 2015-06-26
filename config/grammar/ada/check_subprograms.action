@@ -1,15 +1,15 @@
 before Compilation_Unit do
-   Put_Line ("Ada: defining subprogram names");
+   IO.Put_Line ("Ada: defining subprogram names");
 end;
 
 after Compilation_Unit do
-   Report_State;
+   Aqua.Report_State;
 end;
 
 after procedure_body/procedure_specification 
    or function_body/function_specification
 do
-   put_line ("defining body: " & child.name);
+   IO.put_line ("defining body: " & child.name);
    Komnenos.Define (parent, child.name, "declaration");
 end;
 
@@ -20,7 +20,7 @@ do
 end;
 
 after package_spec/defining_qualified_reference do
-   put_line ("defining package spec: " & defining_qualified_reference.image);
+   IO.put_line ("defining package spec: " & defining_qualified_reference.image);
    Komnenos.Define (parent, child.name, "declaration");
 end;
 
