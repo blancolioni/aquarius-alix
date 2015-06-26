@@ -1,28 +1,10 @@
 with Ada.Characters.Handling;
 
 with Aqua.Objects;
-with Aqua.Words;
 
 package body Aqua.Primitives.Init is
 
    Created_Primitives : Boolean := False;
-
-   Local_Object_Class : Primitive_Object_Access;
-
-   type String_Access is access all String;
-
-   type Method_Record is
-      record
-         Name : String_Access;
-         Impl : Subroutine_Reference;
-      end record;
-
-   type Array_Of_Methods is
-     array (Positive range <>) of Method_Record;
-
-   procedure New_Class
-     (Name : String;
-      Methods : Array_Of_Methods);
 
    function Handle_Contains
      (Context : in out Aqua.Execution.Execution_Interface'Class;
@@ -44,17 +26,7 @@ package body Aqua.Primitives.Init is
       Arguments : Array_Of_Words)
       return Word;
 
-   function Handle_Report_State
-     (Context : in out Aqua.Execution.Execution_Interface'Class;
-      Arguments : Array_Of_Words)
-      return Word;
-
    function Handle_Set
-     (Context : in out Aqua.Execution.Execution_Interface'Class;
-      Arguments : Array_Of_Words)
-      return Word;
-
-   function Handle_Object_New
      (Context : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Array_Of_Words)
       return Word;
@@ -74,31 +46,12 @@ package body Aqua.Primitives.Init is
          return;
       end if;
 
-      New_Primitive_Function ("object__contains", 2, Handle_Contains'Access);
-      New_Primitive_Function ("object__get", 2, Handle_Get'Access);
-      New_Primitive_Function ("object__image", 1, Handle_Image'Access);
-      New_Primitive_Function ("object__include", 2, Handle_Include'Access);
-      New_Primitive_Function ("object__set", 3, Handle_Set'Access);
-      New_Primitive_Function ("object__new", 0, Handle_Object_New'Access);
-      New_Primitive_Function ("string__to_lower", 1, Handle_To_Lower'Access);
-      New_Primitive_Function ("aqua__report_state", 0,
-                              Handle_Report_State'Access);
-
-      declare
-         Object_Class : Aqua.Objects.Root_Object_Type;
-      begin
-         Object_Class.Set_Property
-           ("new",
-            Aqua.Words.To_Subroutine_Word
-              (Get_Primitive ("object__new")));
-
-         Local_Object_Class :=
-           new Aqua.Objects.Root_Object_Type'(Object_Class);
-         New_Primitive_Object ("map", Local_Object_Class);
-      end;
-
-      New_Class ("aqua", (1 => (new String'("report_state"),
-                                Get_Primitive ("aqua__report_state"))));
+      New_Primitive ("object__contains", 2, Handle_Contains'Access);
+      New_Primitive ("object__get", 2, Handle_Get'Access);
+      New_Primitive ("object__image", 1, Handle_Image'Access);
+      New_Primitive ("object__include", 2, Handle_Include'Access);
+      New_Primitive ("object__set", 3, Handle_Set'Access);
+      New_Primitive ("string__to_lower", 1, Handle_To_Lower'Access);
 
       Created_Primitives := True;
 
@@ -183,37 +136,6 @@ package body Aqua.Primitives.Init is
       return Arguments (1);
    end Handle_Include;
 
-   -----------------------
-   -- Handle_Object_New --
-   -----------------------
-
-   function Handle_Object_New
-     (Context : in out Aqua.Execution.Execution_Interface'Class;
-      Arguments : Array_Of_Words)
-      return Word
-   is
-      pragma Unreferenced (Arguments);
-      Item : constant Primitive_Object_Access :=
-               new Aqua.Objects.Root_Object_Type;
-   begin
-      return Context.To_Word (Item);
-   end Handle_Object_New;
-
-   -------------------------
-   -- Handle_Report_State --
-   -------------------------
-
-   function Handle_Report_State
-     (Context : in out Aqua.Execution.Execution_Interface'Class;
-      Arguments : Array_Of_Words)
-      return Word
-   is
-      pragma Unreferenced (Arguments);
-   begin
-      Context.Report;
-      return 0;
-   end Handle_Report_State;
-
    ----------------
    -- Handle_Set --
    ----------------
@@ -248,28 +170,5 @@ package body Aqua.Primitives.Init is
    begin
       return Context.To_String_Word (T);
    end Handle_To_Lower;
-
-   ---------------
-   -- New_Class --
-   ---------------
-
-   procedure New_Class
-     (Name : String;
-      Methods : Array_Of_Methods)
-   is
-      Class : Aqua.Objects.Root_Object_Type;
-   begin
-      for Method of Methods loop
-         Class.Set_Property (Method.Name.all,
-                             Aqua.Words.To_Subroutine_Word (Method.Impl));
-      end loop;
-
-      declare
-         Class_Access : constant Primitive_Object_Access :=
-                          new Aqua.Objects.Root_Object_Type'(Class);
-      begin
-         New_Primitive_Object (Name, Class_Access);
-      end;
-   end New_Class;
 
 end Aqua.Primitives.Init;
