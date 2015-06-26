@@ -3,7 +3,7 @@ before Program_Unit do
 end;
 
 after Program_Unit do
-   Report_State;
+   Aqua.Report_State;
 end;
 
 after Procedure_Definition/identifier do
@@ -15,7 +15,7 @@ after procedure_declaration/procedure_definition do
 end;
 
 before defining_identifier_list do
-   new tree.defined_names;
+   tree.defined_names := new Map;
 end;
 
 after defining_identifier_list/identifier do
