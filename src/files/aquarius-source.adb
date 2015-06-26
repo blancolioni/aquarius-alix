@@ -238,7 +238,7 @@ package body Aquarius.Source is
             if Position = No_Source_Position then
                return "no source position";
             else
-               return Position.File.Get_File_Name & ":" &
+               return Position.File.Get_Full_Path & ":" &
                  Line_Image & ":" &
                  Col_Image;
             end if;
