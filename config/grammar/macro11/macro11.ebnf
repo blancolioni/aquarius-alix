@@ -60,7 +60,7 @@ single_operand_instruction ::=
                  | 'inc' | 'incb' | 'dec' | 'decb' | 'neg' | 'negb'
                  | 'adc' | 'adcb' | 'sbc' | 'sbcb' | 'tst' | 'tstb'
 
-double_operand_instruction ::= 'mov' | 'movb' | 'cmp' | 'cmpb' | 'add' | 'sub'
+double_operand_instruction ::= 'mov' | 'movb' | 'cmp' | 'cmpb'
 
 branch_instruction ::= 
           'br' | 'bne' | 'beq' | 'bge' | 'blt' | 'bgt' | 'ble'
