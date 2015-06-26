@@ -26,11 +26,8 @@ sequence_of_statements ::= { statement ';' }
 
 statement ::= for_loop_statement | case_statement | if_statement | assignment_statement
             | procedure_call_statement | declare_statement | null_statement | action_statement
-            | new_statement
 
 null_statement ::= 'null'
-
-new_statement ::= 'new' object_reference
 
 assignment_statement ::= object_reference ':=' expression
 
@@ -88,8 +85,11 @@ primary ::= numeric_literal | string_literal : string
           | 'null' | parenthesised_expression
 	      | if_expression
           | aggregate
-
+          | new_expression
+          
 parenthesised_expression ::= '(' expression ')'
+
+new_expression ::= 'new' object_reference
 
 aggregate ::= '(' aggregate_element_list ')'
 
