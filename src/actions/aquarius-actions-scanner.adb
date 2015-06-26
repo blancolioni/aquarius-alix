@@ -1,3 +1,6 @@
+with Ada.Directories;
+
+with Aquarius.Errors;
 with Aquarius.Source;
 
 package body Aquarius.Actions.Scanner is
@@ -22,13 +25,106 @@ package body Aquarius.Actions.Scanner is
       Definition : Aquarius.Programs.Program_Tree);
 
    procedure Scan_Object_Reference
-     (Processor : in out Action_Processor_Interface'Class;
-      Reference : in Aquarius.Programs.Program_Tree;
-      Context   : in Object_Reference_Context);
+     (Processor   : in out Action_Processor_Interface'Class;
+      Reference   : in Aquarius.Programs.Program_Tree;
+      Destination : Boolean := False);
 
    procedure Write_Position
      (Processor  : in out Action_Processor_Interface'Class;
       Action     : Aquarius.Programs.Program_Tree);
+
+   ---------------------
+   -- Add_Frame_Entry --
+   ---------------------
+
+   procedure Add_Frame_Entry
+     (Processor : in out Action_Processor_Interface'Class;
+      Name      : String;
+      Offset    : Integer)
+   is
+   begin
+      Processor.Frame_Table.Insert (Name, Frame_Entry (Offset));
+   end Add_Frame_Entry;
+
+   ----------------------
+   -- Add_Global_Entry --
+   ----------------------
+
+   procedure Add_Global_Entry
+     (Processor : in out Action_Processor_Interface'Class;
+      Name      : String)
+   is
+   begin
+      Processor.External_Table.Insert (Name, Name);
+   end Add_Global_Entry;
+
+   -----------------------------
+   -- Current_Source_Location --
+   -----------------------------
+
+   procedure Current_Source_Location
+     (Processor      : in out Action_Processor_Interface'Class;
+      Line           : in Natural;
+      Column         : in Natural)
+   is
+   begin
+      if Line /= Processor.Last_Line
+        or else Column /= Processor.Last_Col
+      then
+         Processor.Put_Source_Location (Line, Column);
+         Processor.Last_Line := Line;
+         Processor.Last_Col := Column;
+      end if;
+   end Current_Source_Location;
+
+   ------------------------
+   -- Delete_Frame_Entry --
+   ------------------------
+
+   procedure Delete_Frame_Entry
+     (Processor : in out Action_Processor_Interface'Class;
+      Name      : String)
+   is
+   begin
+      Processor.Frame_Table.Delete (Name);
+   end Delete_Frame_Entry;
+
+   --------------------
+   -- Frame_Contains --
+   --------------------
+
+   function Frame_Contains
+     (Processor : Action_Processor_Interface'Class;
+      Name      : String)
+      return Boolean
+   is
+   begin
+      return Processor.Frame_Table.Contains (Name);
+   end Frame_Contains;
+
+   ---------------------------------
+   -- Global_Environment_Contains --
+   ---------------------------------
+
+   function Global_Environment_Contains
+     (Processor : Action_Processor_Interface'Class;
+      Name      : String)
+      return Boolean
+   is
+   begin
+      return Processor.External_Table.Contains (Name);
+   end Global_Environment_Contains;
+
+   -----------
+   -- Group --
+   -----------
+
+   function Group (Processor : Action_Processor_Interface'Class)
+                   return Action_Group
+   is
+   begin
+      return Processor.Group;
+   end Group;
 
    ----------
    -- Scan --
@@ -67,14 +163,10 @@ package body Aquarius.Actions.Scanner is
             Action.Program_Child ("action_definition"));
       elsif Action.Name = "null_statement" then
          null;
-      elsif Action.Name = "new_statement" then
-         Scan_Object_Reference (Processor,
-                                Action.Program_Child ("object_reference"),
-                                Allocation);
       elsif Action.Name = "procedure_call_statement" then
          Scan_Object_Reference (Processor,
-                                Action.Program_Child ("object_reference"),
-                                Call);
+                                Action.Program_Child ("object_reference"));
+         Processor.Clear_Result;
       elsif Action.Name = "for_loop_statement" then
          Scan (Processor, Action.Program_Child ("iterator_loop"));
       elsif Action.Name = "iterator_loop" then
@@ -93,7 +185,7 @@ package body Aquarius.Actions.Scanner is
                                 Loop_Statement.Program_Child
                                   ("sequence_of_statements");
          begin
-            Scan_Object_Reference (Processor, Object, Evaluation);
+            Scan_Object_Reference (Processor, Object);
             Processor.Iterator_Statement
               (Identifier => Identifier_Name,
                Statements => Statements);
@@ -125,12 +217,11 @@ package body Aquarius.Actions.Scanner is
 
          end;
       elsif Action.Name = "assignment_statement" then
+         Scan_Expression (Processor,  Action.Program_Child ("expression"));
          Scan_Object_Reference
            (Processor,
             Action.Program_Child ("object_reference"),
-            Assignment_Target);
-         Scan_Expression (Processor,  Action.Program_Child ("expression"));
-         Processor.Assign;
+            Destination => True);
       end if;
    end Scan;
 
@@ -186,6 +277,7 @@ package body Aquarius.Actions.Scanner is
       Processor.Start_Action_Body;
       Scan_Sequence (Processor, Action_Binding.Direct_Children);
       Processor.End_Action_Body;
+      Processor.Frame_Table.Clear;
 
    end Scan_Action_Binding;
 
@@ -199,7 +291,10 @@ package body Aquarius.Actions.Scanner is
       Group     : Action_Group)
    is
    begin
-      Processor.Start_Process (Top, Group);
+      Processor.Top := Top;
+      Processor.Group := Group;
+
+      Processor.Start_Process (Action_Group_Name (Group));
       Processor.Source_File
         (Top.Source_Directory,
          Top.Source_File_Name);
@@ -276,7 +371,7 @@ package body Aquarius.Actions.Scanner is
             Child : constant Program_Tree := Expression.Chosen_Tree;
          begin
             if Child.Name = "object_reference" then
-               Scan_Object_Reference (Processor, Child, Evaluation);
+               Scan_Object_Reference (Processor, Child);
             elsif Child.Name = "numeric_literal" then
                Processor.Literal_Number (Integer'Value (Child.Text));
             elsif Child.Name = "string_literal" then
@@ -314,6 +409,11 @@ package body Aquarius.Actions.Scanner is
                   Child.Program_Child
                     ("aggregate_element_list").Direct_Children
                       ("aggregate_element"));
+            elsif Child.Name = "new_expression" then
+               Scan_Object_Reference
+                 (Processor, Child.Program_Child ("object_reference"));
+               Processor.Push_String_Literal ("new");
+               Processor.Get_Property (0);
             else
                raise Constraint_Error with
                  "cannot process expression primary: " & Child.Name;
@@ -331,9 +431,9 @@ package body Aquarius.Actions.Scanner is
    ---------------------------
 
    procedure Scan_Object_Reference
-     (Processor : in out Action_Processor_Interface'Class;
-      Reference : in Aquarius.Programs.Program_Tree;
-      Context   : in Object_Reference_Context)
+     (Processor   : in out Action_Processor_Interface'Class;
+      Reference   : in Aquarius.Programs.Program_Tree;
+      Destination : Boolean := False)
    is
       Qs : constant Array_Of_Program_Trees :=
              Reference.Direct_Children ("name_qualifier");
@@ -342,37 +442,84 @@ package body Aquarius.Actions.Scanner is
       No_Arguments : Array_Of_Program_Trees (1 .. 0);
       Q            : Program_Tree := Qs (Qs'First);
       Id           : Program_Tree := Q.Program_Child ("identifier");
-      Args         : Program_Tree := Q.Program_Child ("actual_argument_list");
+      Start_Name   : constant String := Id.Text;
+      Arg_Tree     : Program_Tree := Q.Program_Child ("actual_argument_list");
+      Arguments    : constant Array_Of_Program_Trees :=
+                       (if Arg_Tree = null then No_Arguments
+                        else Arg_Tree.Direct_Children ("expression"));
+      pragma Unreferenced (Arguments);
    begin
-      Processor.Start_Object_Reference
-        (Context    => Context,
-         Identifier => Id.Text,
-         Arguments  => (if Args /= null
-                        then Args.Direct_Children ("expression")
-                        else No_Arguments),
-         Last       => Qs'Length = 1);
+
+      if Processor.Frame_Table.Contains (Start_Name) then
+         declare
+            Start_Entry : constant Frame_Entry :=
+                            Processor.Frame_Table.Element (Start_Name);
+         begin
+            if Destination and then Qs'Length = 1 then
+               Processor.Pop_Frame_Entry (Integer (Start_Entry));
+            else
+               Processor.Push_Frame_Entry (Integer (Start_Entry));
+            end if;
+         end;
+      elsif Processor.External_Table.Contains (Start_Name) then
+         if Destination and then Qs'Length = 1 then
+            Processor.Pop_External_Entry
+              (Processor.External_Table.Element (Start_Name));
+         else
+            Processor.Push_External_Entry
+              (Processor.External_Table.Element (Start_Name));
+         end if;
+      else
+         Aquarius.Errors.Error
+           (Reference,
+            "undefined: " & Start_Name);
+      end if;
 
       for I in Qs'First + 1 .. Qs'Last loop
          Q := Qs (I);
          Id := Q.Program_Child ("identifier");
-         Args := Q.Program_Child ("actual_argument_list");
+         Arg_Tree := Q.Program_Child ("actual_argument_list");
 
          declare
             Component : constant String := Id.Text;
             Last      : constant Boolean := I = Qs'Last;
             Op        : constant String := Ops (I - 1).Chosen_Tree.Text;
+            Arguments : constant Array_Of_Program_Trees :=
+                          (if Arg_Tree = null then No_Arguments
+                           else Arg_Tree.Direct_Children ("expression"));
          begin
             if Op = "." then
-               Processor.Component_Selector
-                 (Identifier => Id.Text,
-                  Arguments  => (if Args /= null
-                                 then Args.Direct_Children ("expression")
-                                 else No_Arguments),
-                  Last       => I = Qs'Last);
+
+               if Last and then Destination then
+                  if Arguments'Length > 0 then
+                     raise Constraint_Error
+                       with "invalid target for assignment";
+                  end if;
+                  Processor.Push_String_Literal (Component);
+                  Processor.Set_Property;
+               else
+                  for Arg of reverse Arguments loop
+                     Processor.Scan_Expression (Arg);
+                  end loop;
+                  Processor.Push_String_Literal (Component);
+                  Processor.Get_Property (Arguments'Length);
+               end if;
             elsif Op = "/" then
-               Processor.Subtree_Selector (Component, Last);
+               if Last and then Destination then
+                  raise Constraint_Error
+                    with "invalid target for assignment";
+               end if;
+               Processor.Push_String_Literal (Component);
+               Processor.Push_String_Literal ("tree_child");
+               Processor.Get_Property (1);
             elsif Op = "^" then
-               Processor.Ancestor_Selector (Component, Last);
+               if Last and then Destination then
+                  raise Constraint_Error
+                    with "invalid target for assignment";
+               end if;
+               Processor.Push_String_Literal (Component);
+               Processor.Push_String_Literal ("tree_ancestor");
+               Processor.Get_Property (1);
             else
                raise Constraint_Error with
                  "cannot process qualifier: " & Op;
@@ -396,6 +543,43 @@ package body Aquarius.Actions.Scanner is
          Scan (Processor, Item);
       end loop;
    end Scan_Sequence;
+
+   ----------------------
+   -- Source_Base_Name --
+   ----------------------
+
+   function Source_Base_Name
+     (Processor : Action_Processor_Interface'Class)
+      return String
+   is
+   begin
+      return Ada.Directories.Base_Name
+        (Processor.Top.Source_File_Name);
+   end Source_Base_Name;
+
+   -----------------
+   -- Source_Path --
+   -----------------
+
+   function Source_Path
+     (Processor : Action_Processor_Interface'Class)
+      return String
+   is
+   begin
+      return Aquarius.Source.Get_Full_Path (Processor.Top.Source);
+   end Source_Path;
+
+   ------------------------
+   -- Source_Simple_Name --
+   ------------------------
+
+   function Source_Simple_Name
+     (Processor : Action_Processor_Interface'Class)
+      return String
+   is
+   begin
+      return Processor.Top.Source_File_Name;
+   end Source_Simple_Name;
 
    --------------------
    -- Write_Position --

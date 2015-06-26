@@ -1,4 +1,4 @@
-with Ada.Directories;
+with Ada.Strings.Fixed;
 
 with Aquarius.Paths;
 
@@ -11,11 +11,6 @@ package body Aquarius.Actions.Pdp_11 is
    procedure External_Procedure
      (Processor : in out Pdp_Scanner'Class;
       Name      : String);
-
-   procedure Push_Entry
-     (Processor : in out Pdp_Scanner'Class;
-      Item      : Table_Entry;
-      Arguments : Aquarius.Programs.Array_Of_Program_Trees);
 
    function Next_Label
      (Processor : in out Pdp_Scanner'Class)
@@ -46,33 +41,17 @@ package body Aquarius.Actions.Pdp_11 is
       Processor.Action_Parent := True;
       Processor.Action_Child  := Child /= "";
 
-      if not Processor.Frame_Table.Contains (Parent) then
-         Processor.Frame_Table.Insert (Parent, (Local, 8));
+      if not Processor.Frame_Contains (Parent) then
+         Processor.Add_Frame_Entry (Parent, 8);
       end if;
 
       if Processor.Action_Child
-        and then not Processor.Frame_Table.Contains (Child)
+        and then not Processor.Frame_Contains (Child)
       then
-         Processor.Frame_Table.Insert (Child, (Local, 10));
+         Processor.Add_Frame_Entry (Child, 10);
       end if;
+
    end Action_Header;
-
-   -----------------------
-   -- Ancestor_Selector --
-   -----------------------
-
-   overriding procedure Ancestor_Selector
-     (Processor  : in out Pdp_Scanner;
-      Identifier : String;
-      Last       : Boolean)
-   is
-      pragma Unreferenced (Last);
-   begin
-      Put_Line (Processor.File,
-                "    mov """ & Identifier & """, -(sp)");
-      Put_Line (Processor.File,
-                "    trap tree_ancestor");
-   end Ancestor_Selector;
 
    ------------
    -- Assign --
@@ -86,106 +65,16 @@ package body Aquarius.Actions.Pdp_11 is
                 "    trap property_set");
    end Assign;
 
-   ------------------------
-   -- Component_Selector --
-   ------------------------
+   ------------------
+   -- Clear_Result --
+   ------------------
 
-   overriding procedure Component_Selector
-     (Processor  : in out Pdp_Scanner;
-      Identifier : String;
-      Arguments  : Aquarius.Programs.Array_Of_Program_Trees;
-      Last       : Boolean)
-   is
-      use Scanner;
-   begin
-
-      if Last or else Arguments'Length > 0 then
-         declare
-            Object_Start : constant Symbol_Tables.Cursor :=
-                             Processor.Object_Start;
-            Object_Partial : constant Aqua.String_Vectors.Vector :=
-                               Processor.Object_Partial;
-            Object_Context : constant Scanner.Object_Reference_Context :=
-                               Processor.Context;
-         begin
-            for Arg of reverse Arguments loop
-               Scanner.Scan_Expression (Processor, Arg);
-            end loop;
-
-            Processor.Object_Start := Object_Start;
-            Processor.Object_Partial := Object_Partial;
-            Processor.Context := Object_Context;
-         end;
-
-         if Symbol_Tables.Has_Element (Processor.Object_Start) then
-            Push_Entry
-              (Processor, Symbol_Tables.Element (Processor.Object_Start),
-               Arguments (1 .. 0));
-         end if;
-
-         for Component of Processor.Object_Partial loop
-            Put_Line (Processor.File,
-                      "    mov """ & Component & """, -(sp)");
-            Put_Line (Processor.File,
-                      "    trap property_get");
-         end loop;
-
-         Processor.Object_Partial.Clear;
-         Processor.Object_Start := Symbol_Tables.No_Element;
-
-      end if;
-
-      if Last then
-         Put_Line (Processor.File,
-                   "    mov """ & Identifier & """, -(sp)");
-         case Processor.Context is
-            when Evaluation =>
-               Put_Line (Processor.File,
-                         "    trap property_get");
-            when Call =>
-               Put_Line (Processor.File,
-                         "    trap property_get");
-               Put_Line (Processor.File,
-                         "    tst (sp)+");
-            when Allocation =>
-               Put_Line (Processor.File,
-                         "    trap allocate");
-               Put_Line (Processor.File,
-                         "    trap property_set");
-            when Assignment_Target =>
-               null;
-         end case;
-      elsif Arguments'Length = 0 then
-         Processor.Object_Partial.Append (Identifier);
-      else
-         Put_Line (Processor.File,
-                   "    mov """ & Identifier & """, -(sp)");
-         Put_Line (Processor.File,
-                   "    trap property_get");
-      end if;
-   end Component_Selector;
-
-   -----------------------------
-   -- Current_Source_Location --
-   -----------------------------
-
-   overriding procedure Current_Source_Location
-     (Processor : in out Pdp_Scanner;
-      Line           : in Natural;
-      Column         : in Natural)
+   overriding procedure Clear_Result
+     (Processor : in out Pdp_Scanner)
    is
    begin
-      if Line /= Processor.Last_Line
-        and then Column /= Processor.Last_Col
-      then
-         Put_Line (Processor.File,
-                   ".source_position "
-                   & Natural'Image (Line)
-                   & Natural'Image (Column));
-         Processor.Last_Line := Line;
-         Processor.Last_Col := Column;
-      end if;
-   end Current_Source_Location;
+      Put_Line (Processor.File, "    tst (sp)+");
+   end Clear_Result;
 
    ---------------------
    -- End_Action_Body --
@@ -201,7 +90,6 @@ package body Aquarius.Actions.Pdp_11 is
                 "    mov (sp)+, fp");
       Put_Line (Processor.File,
                 "    rts pc");
-      Processor.Frame_Table.Clear;
    end End_Action_Body;
 
    -------------------
@@ -251,10 +139,25 @@ package body Aquarius.Actions.Pdp_11 is
       Put_Line
         (Processor.File,
          ".extern " & Name);
-      Processor.Global_Table.Insert
-        (Name,
-         (Subroutine, Ada.Strings.Unbounded.To_Unbounded_String (Name)));
+      Processor.Add_Global_Entry (Name);
    end External_Procedure;
+
+   ------------------
+   -- Get_Property --
+   ------------------
+
+   overriding procedure Get_Property
+     (Processor : in out Pdp_Scanner;
+      Argument_Count : Natural)
+   is
+   begin
+      Put_Line
+        (Processor.File,
+         "    mov #" & Natural'Image (Argument_Count) & ", -(sp)");
+      Put_Line
+        (Processor.File,
+         "    trap property_get");
+   end Get_Property;
 
    ------------------
    -- If_Statement --
@@ -320,8 +223,7 @@ package body Aquarius.Actions.Pdp_11 is
       Exit_Label : constant Label_Type := Next_Label (Processor);
    begin
       Processor.Frame_Offset := Processor.Frame_Offset - 4;
-      Processor.Frame_Table.Insert
-        (Id, (Local, Processor.Frame_Offset));
+      Processor.Add_Frame_Entry (Id, Processor.Frame_Offset);
       Put_Line (Processor.File, "    trap iterator_start");
       Put_Line (Processor.File, Image (Loop_Label) & ":");
       Put_Line (Processor.File, "    trap iterator_next");
@@ -329,8 +231,8 @@ package body Aquarius.Actions.Pdp_11 is
       Scanner.Scan_Action (Processor, Statements);
       Put_Line (Processor.File, "    jmp " & Image (Loop_Label));
       Put_Line (Processor.File, Image (Exit_Label) & ":");
+      Processor.Delete_Frame_Entry (Id);
       Processor.Frame_Offset := Processor.Frame_Offset + 4;
-      Processor.Frame_Table.Delete (Id);
    end Iterator_Statement;
 
    ------------------
@@ -420,47 +322,109 @@ package body Aquarius.Actions.Pdp_11 is
    is
    begin
       return Aquarius.Paths.Scratch_File
-        (Name      => Ada.Directories.Base_Name (Scanner.Top.Source_File_Name),
+        (Name      => Scanner.Source_Base_Name,
          Extension => "m11");
    end Output_Path;
 
-   ----------------
-   -- Push_Entry --
-   ----------------
+   ------------------------
+   -- Pop_External_Entry --
+   ------------------------
 
-   procedure Push_Entry
-     (Processor : in out Pdp_Scanner'Class;
-      Item      : Table_Entry;
-      Arguments : Aquarius.Programs.Array_Of_Program_Trees)
+   overriding procedure Pop_External_Entry
+     (Processor  : in out Pdp_Scanner;
+      Name       : String)
    is
    begin
-      for Arg of reverse Arguments loop
-         Scanner.Scan_Expression (Processor, Arg);
-      end loop;
-      case Item.Storage is
-         when Local =>
-            Put_Line
-              (Processor.File,
-               "    mov "
-               & Integer'Image (Item.Frame_Offset)
-               & "(fp), -(sp)");
-         when External =>
-            Put_Line
-              (Processor.File,
-               "    mov #"
-               & Ada.Strings.Unbounded.To_String (Item.External_Name)
-               & ", -(sp)");
-         when Subroutine =>
-            Put_Line
-              (Processor.File,
-               "    jsr pc, "
-               & Ada.Strings.Unbounded.To_String (Item.External_Name));
-            Put_Line
-              (Processor.File,
-               "    mov r0, -(sp)");
-      end case;
+      Put_Line
+        (Processor.File,
+         "    mov (sp)+, "
+           & Name);
+   end Pop_External_Entry;
 
-   end Push_Entry;
+   overriding procedure Pop_Frame_Entry
+     (Processor  : in out Pdp_Scanner;
+      Offset     : Integer)
+   is
+   begin
+      Put_Line
+        (Processor.File,
+         "    mov (sp)+, "
+         & Integer'Image (Offset)
+         & "(fp)");
+   end Pop_Frame_Entry;
+
+   -------------------------
+   -- Push_External_Entry --
+   -------------------------
+
+   overriding procedure Push_External_Entry
+     (Processor  : in out Pdp_Scanner;
+      Name       : String)
+   is
+   begin
+      Put_Line
+        (Processor.File,
+         "    mov #" & Name & ", -(sp)");
+   end Push_External_Entry;
+
+   ----------------------
+   -- Push_Frame_Entry --
+   ----------------------
+
+   overriding procedure Push_Frame_Entry
+     (Processor  : in out Pdp_Scanner;
+      Offset     : Integer)
+   is
+   begin
+      Put_Line
+        (Processor.File,
+         "    mov "
+         & Integer'Image (Offset)
+         & "(fp), -(sp)");
+   end Push_Frame_Entry;
+
+   -------------------------
+   -- Push_String_Literal --
+   -------------------------
+
+   overriding procedure Push_String_Literal
+     (Processor  : in out Pdp_Scanner;
+      Literal    : String)
+   is
+   begin
+      Put_Line
+        (Processor.File,
+         "    mov """ & Literal & """, -(sp)");
+   end Push_String_Literal;
+
+   -------------------------
+   -- Put_Source_Location --
+   -------------------------
+
+   overriding procedure Put_Source_Location
+     (Processor : in out Pdp_Scanner;
+      Line           : in Natural;
+      Column         : in Natural)
+   is
+   begin
+      Put_Line (Processor.File,
+                ".source_position "
+                & Natural'Image (Line)
+                & Natural'Image (Column));
+   end Put_Source_Location;
+
+   ------------------
+   -- Set_Property --
+   ------------------
+
+   overriding procedure Set_Property
+     (Processor : in out Pdp_Scanner)
+   is
+   begin
+      Put_Line
+        (Processor.File,
+         "    trap property_set");
+   end Set_Property;
 
    ----------------------
    -- Source_Reference --
@@ -488,12 +452,13 @@ package body Aquarius.Actions.Pdp_11 is
      (Processor : in out Pdp_Scanner)
    is
    begin
-      Processor.Frame_Table.Insert ("komnenos", (Local, 4));
-      Processor.Frame_Table.Insert ("top", (Local, 6));
-      Processor.Frame_Table.Insert ("tree", (Local, 8));
+      Processor.Add_Frame_Entry ("komnenos", 4);
+      Processor.Add_Frame_Entry ("top", 6);
+      Processor.Add_Frame_Entry ("tree", 8);
+
       if Processor.Action_Child then
-         Processor.Frame_Table.Insert ("parent", (Local, 8));
-         Processor.Frame_Table.Insert ("child", (Local, 10));
+         Processor.Add_Frame_Entry ("parent", 8);
+         Processor.Add_Frame_Entry ("child", 10);
       end if;
 
       Put_Line (Processor.File,
@@ -529,72 +494,16 @@ package body Aquarius.Actions.Pdp_11 is
                 "    mov """ & Name & """, -(sp)");
    end Start_Aggregate_Element;
 
-   ----------------------------
-   -- Start_Object_Reference --
-   ----------------------------
-
-   overriding procedure Start_Object_Reference
-     (Processor  : in out Pdp_Scanner;
-      Context    : Scanner.Object_Reference_Context;
-      Identifier : String;
-      Arguments  : Aquarius.Programs.Array_Of_Program_Trees;
-      Last       : Boolean)
-   is
-      use Scanner;
-      use Symbol_Tables;
-      Position : Cursor := Processor.Frame_Table.Find (Identifier);
-   begin
-      if not Has_Element (Position) then
-         Position := Processor.Global_Table.Find (Identifier);
-         if not Has_Element (Position) then
-            raise Constraint_Error with
-              "undefined: " & Identifier;
-         end if;
-      end if;
-
-      Processor.Context := Context;
-
-      if Last then
-         case Context is
-            when Assignment_Target =>
-               null;
-            when Evaluation =>
-               Push_Entry (Processor, Element (Position), Arguments);
-            when Allocation =>
-               null;
-            when Call =>
-               for Arg of reverse Arguments loop
-                  Scanner.Scan_Expression (Processor, Arg);
-               end loop;
-               Put_Line (Processor.File, "    jsr pc, " & Identifier);
-               for I in Arguments'Range loop
-                  Put_Line (Processor.File,
-                            "    tst (sp)+");
-               end loop;
-         end case;
-      else
-         if Arguments'Length = 0 then
-            Processor.Object_Partial.Clear;
-            Processor.Object_Start := Position;
-         else
-            Push_Entry (Processor, Element (Position), Arguments);
-         end if;
-      end if;
-   end Start_Object_Reference;
-
    -------------------
    -- Start_Process --
    -------------------
 
    overriding procedure Start_Process
-     (Processor : in out Pdp_Scanner;
-      Top       : Aquarius.Programs.Program_Tree;
-      Group     : Action_Group)
+     (Processor  : in out Pdp_Scanner;
+      Group_Name : String)
    is
       use Aqua.Traps;
    begin
-      Processor.Top := Top;
-      Processor.Group := Group;
       Create (Processor.File, Out_File, Processor.Output_Path);
 
       Put_Line (Processor.File,
@@ -624,56 +533,25 @@ package body Aquarius.Actions.Pdp_11 is
 
       New_Line (Processor.File);
 
-      External_Procedure (Processor, "set_output");
-      External_Procedure (Processor, "put");
-      External_Procedure (Processor, "put_line");
-      External_Procedure (Processor, "new_line");
-      External_Procedure (Processor, "report_state");
-      External_Procedure (Processor, "ada_specification_name");
+      Put_Line (Processor.File,
+                "map ="
+                & Natural'Image (16#4001#));
+
+      Put_Line (Processor.File,
+                "aqua ="
+                & Natural'Image (16#4002#));
+
+      External_Procedure (Processor, "map");
+      External_Procedure (Processor, "io");
+      External_Procedure (Processor, "aqua");
+      External_Procedure (Processor, "ada");
+      External_Procedure (Processor, "komnenos");
 
       New_Line (Processor.File);
 
       Put_Line (Processor.File,
-                ".action_group_name " & Action_Group_Name (Group));
+                ".action_group_name " & Group_Name);
 
    end Start_Process;
-
-   ----------------------
-   -- Subtree_Selector --
-   ----------------------
-
-   overriding procedure Subtree_Selector
-     (Processor  : in out Pdp_Scanner;
-      Identifier : String;
-      Last       : Boolean)
-   is
-      pragma Unreferenced (Last);
-      No_Arguments : Aquarius.Programs.Array_Of_Program_Trees (1 .. 0);
-   begin
-      Put_Line (Processor.File,
-                "    mov """ & Identifier & """, -(sp)");
-
-      if Symbol_Tables.Has_Element (Processor.Object_Start) then
-         Push_Entry
-           (Processor, Symbol_Tables.Element (Processor.Object_Start),
-            No_Arguments);
-      end if;
-
-      for Component of Processor.Object_Partial loop
-         Put_Line (Processor.File,
-                   "    mov """ & Component & """, -(sp)");
-         Put_Line (Processor.File,
-                   "    trap property_get");
-      end loop;
-
-      Processor.Object_Partial.Clear;
-      Processor.Object_Start := Symbol_Tables.No_Element;
-
-      Put_Line (Processor.File,
-                "    mov ""tree_child"", -(sp)");
-      Put_Line (Processor.File,
-                "    trap property_get");
-
-   end Subtree_Selector;
 
 end Aquarius.Actions.Pdp_11;

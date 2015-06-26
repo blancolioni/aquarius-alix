@@ -1,8 +1,12 @@
+private with Ada.Containers.Indefinite_Hashed_Maps;
+private with Ada.Strings.Fixed.Hash_Case_Insensitive;
+private with Ada.Strings.Fixed.Equal_Case_Insensitive;
+
 with Aquarius.Programs;
 
 package Aquarius.Actions.Scanner is
 
-   type Action_Processor_Interface is limited interface;
+   type Action_Processor_Interface is abstract tagged limited private;
 
    procedure Scan_Actions
      (Processor : in out Action_Processor_Interface'Class;
@@ -17,10 +21,73 @@ package Aquarius.Actions.Scanner is
      (Processor : in out Action_Processor_Interface'Class;
       Action    : in Aquarius.Programs.Program_Tree);
 
+   function Group (Processor : Action_Processor_Interface'Class)
+                   return Action_Group;
+
+   function Frame_Contains
+     (Processor : Action_Processor_Interface'Class;
+      Name      : String)
+      return Boolean;
+
+   function Global_Environment_Contains
+     (Processor : Action_Processor_Interface'Class;
+      Name      : String)
+      return Boolean;
+
+   procedure Add_Frame_Entry
+     (Processor : in out Action_Processor_Interface'Class;
+      Name      : String;
+      Offset    : Integer);
+
+   procedure Add_Global_Entry
+     (Processor : in out Action_Processor_Interface'Class;
+      Name      : String);
+
+   procedure Delete_Frame_Entry
+     (Processor : in out Action_Processor_Interface'Class;
+      Name      : String);
+
+   procedure Push_Frame_Entry
+     (Processor : in out Action_Processor_Interface;
+      Offset    : Integer)
+   is abstract;
+
+   procedure Push_External_Entry
+     (Processor : in out Action_Processor_Interface;
+      Name      : String)
+   is abstract;
+
+   procedure Pop_Frame_Entry
+     (Processor : in out Action_Processor_Interface;
+      Offset    : Integer)
+   is abstract;
+
+   procedure Pop_External_Entry
+     (Processor : in out Action_Processor_Interface;
+      Name      : String)
+   is abstract;
+
+   procedure Push_String_Literal
+     (Processor : in out Action_Processor_Interface;
+      Literal   : String)
+   is abstract;
+
+   procedure Clear_Result
+     (Processor : in out Action_Processor_Interface)
+   is abstract;
+
+   procedure Get_Property
+     (Processor      : in out Action_Processor_Interface;
+      Argument_Count : Natural)
+   is abstract;
+
+   procedure Set_Property
+     (Processor      : in out Action_Processor_Interface)
+   is abstract;
+
    procedure Start_Process
      (Processor : in out Action_Processor_Interface;
-      Top       : Aquarius.Programs.Program_Tree;
-      Group     : Action_Group)
+      Group_Name : String)
    is abstract;
 
    procedure End_Process
@@ -33,7 +100,24 @@ package Aquarius.Actions.Scanner is
       File_Name      : in String)
    is null;
 
+   function Source_Path
+     (Processor : Action_Processor_Interface'Class)
+      return String;
+
+   function Source_Simple_Name
+     (Processor : Action_Processor_Interface'Class)
+      return String;
+
+   function Source_Base_Name
+     (Processor : Action_Processor_Interface'Class)
+      return String;
+
    procedure Current_Source_Location
+     (Processor      : in out Action_Processor_Interface'Class;
+      Line           : in Natural;
+      Column         : in Natural);
+
+   procedure Put_Source_Location
      (Processor      : in out Action_Processor_Interface;
       Line           : in Natural;
       Column         : in Natural)
@@ -86,36 +170,6 @@ package Aquarius.Actions.Scanner is
      (Processor : in out Action_Processor_Interface)
    is abstract;
 
-   type Object_Reference_Context is (Assignment_Target,
-                                     Evaluation, Allocation, Call);
-
-   procedure Start_Object_Reference
-     (Processor  : in out Action_Processor_Interface;
-      Context    : Object_Reference_Context;
-      Identifier : String;
-      Arguments  : Aquarius.Programs.Array_Of_Program_Trees;
-      Last       : Boolean)
-   is abstract;
-
-   procedure Component_Selector
-     (Processor  : in out Action_Processor_Interface;
-      Identifier : String;
-      Arguments  : Aquarius.Programs.Array_Of_Program_Trees;
-      Last       : Boolean)
-   is abstract;
-
-   procedure Subtree_Selector
-     (Processor  : in out Action_Processor_Interface;
-      Identifier : String;
-      Last       : Boolean)
-   is abstract;
-
-   procedure Ancestor_Selector
-     (Processor  : in out Action_Processor_Interface;
-      Identifier : String;
-      Last       : Boolean)
-   is abstract;
-
    procedure Operator
      (Processor : in out Action_Processor_Interface;
       Name      : String)
@@ -146,5 +200,33 @@ package Aquarius.Actions.Scanner is
       Identifier  : String;
       Statements  : Aquarius.Programs.Program_Tree)
    is abstract;
+
+private
+
+   type Frame_Entry is new Integer;
+
+   package Frame_Tables is
+     new Ada.Containers.Indefinite_Hashed_Maps
+       (Key_Type        => String,
+        Element_Type    => Frame_Entry,
+        Hash            => Ada.Strings.Fixed.Hash_Case_Insensitive,
+        Equivalent_Keys => Ada.Strings.Fixed.Equal_Case_Insensitive);
+
+   package External_Tables is
+     new Ada.Containers.Indefinite_Hashed_Maps
+       (Key_Type        => String,
+        Element_Type    => String,
+        Hash            => Ada.Strings.Fixed.Hash_Case_Insensitive,
+        Equivalent_Keys => Ada.Strings.Fixed.Equal_Case_Insensitive);
+
+   type Action_Processor_Interface is abstract tagged limited
+      record
+         Top             : Aquarius.Programs.Program_Tree;
+         Group           : Action_Group;
+         Frame_Table     : Frame_Tables.Map;
+         External_Table  : External_Tables.Map;
+         Last_Line       : Integer := -1;
+         Last_Col        : Integer := -1;
+      end record;
 
 end Aquarius.Actions.Scanner;
