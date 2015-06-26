@@ -34,7 +34,7 @@ package body Komnenos.Entities.Aqua_Entities is
 
    procedure Create_Aqua_Primitives is
    begin
-      Aqua.Primitives.New_Primitive
+      Aqua.Primitives.New_Primitive_Function
         (Name           => "komnenos__define",
          Argument_Count => 4,
          Handler        => Handle_Define'Access);

@@ -163,7 +163,7 @@ package body Aquarius.Programs is
          return;
       end if;
 
-      Aqua.Primitives.New_Primitive
+      Aqua.Primitives.New_Primitive_Function
         (Name           => "tree__tree_child",
          Argument_Count => 2,
          Handler        => Aqua_Tree_Child'Access);
