@@ -1,13 +1,18 @@
 with Ada.Characters.Handling;
+with Ada.Text_IO;
 
 with Aqua.Objects;
 with Aqua.Words;
+
+with Aquarius.Paths;
 
 package body Aqua.Primitives.Init is
 
    Created_Primitives : Boolean := False;
 
    Local_Object_Class : Primitive_Object_Access;
+
+   Current_Output : Ada.Text_IO.File_Type;
 
    type String_Access is access all String;
 
@@ -64,6 +69,26 @@ package body Aqua.Primitives.Init is
       Arguments : Array_Of_Words)
       return Word;
 
+   function Handle_Put
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word;
+
+   function Handle_Put_Line
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word;
+
+   function Handle_New_Line
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word;
+
+   function Handle_Set_Output
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word;
+
    -----------------------
    -- Create_Primitives --
    -----------------------
@@ -80,9 +105,20 @@ package body Aqua.Primitives.Init is
       New_Primitive_Function ("object__include", 2, Handle_Include'Access);
       New_Primitive_Function ("object__set", 3, Handle_Set'Access);
       New_Primitive_Function ("object__new", 0, Handle_Object_New'Access);
+
       New_Primitive_Function ("string__to_lower", 1, Handle_To_Lower'Access);
+
       New_Primitive_Function ("aqua__report_state", 0,
                               Handle_Report_State'Access);
+
+      New_Primitive_Function ("io__put", 1,
+                              Handle_Put'Access);
+      New_Primitive_Function ("io__put_line", 1,
+                              Handle_Put_Line'Access);
+      New_Primitive_Function ("io__new_line", 0,
+                              Handle_New_Line'Access);
+      New_Primitive_Function ("io__set_output", 1,
+                              Handle_Set_Output'Access);
 
       declare
          Object_Class : Aqua.Objects.Root_Object_Type;
@@ -99,6 +135,13 @@ package body Aqua.Primitives.Init is
 
       New_Class ("aqua", (1 => (new String'("report_state"),
                                 Get_Primitive ("aqua__report_state"))));
+
+      New_Class ("io",
+                 ((new String'("put"), Get_Primitive ("io__put")),
+                  (new String'("new_line"), Get_Primitive ("io__new_line")),
+                  (new String'("put_line"), Get_Primitive ("io__put_line")),
+                  (new String'("set_output"),
+                   Get_Primitive ("io__set_output"))));
 
       Created_Primitives := True;
 
@@ -183,6 +226,22 @@ package body Aqua.Primitives.Init is
       return Arguments (1);
    end Handle_Include;
 
+   ---------------------
+   -- Handle_New_Line --
+   ---------------------
+
+   function Handle_New_Line
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word
+   is
+      pragma Unreferenced (Context);
+      pragma Unreferenced (Arguments);
+   begin
+      Ada.Text_IO.New_Line;
+      return 1;
+   end Handle_New_Line;
+
    -----------------------
    -- Handle_Object_New --
    -----------------------
@@ -198,6 +257,34 @@ package body Aqua.Primitives.Init is
    begin
       return Context.To_Word (Item);
    end Handle_Object_New;
+
+   ----------------
+   -- Handle_Put --
+   ----------------
+
+   function Handle_Put
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word
+   is
+   begin
+      Ada.Text_IO.Put (Context.To_String (Arguments (2)));
+      return 1;
+   end Handle_Put;
+
+   ---------------------
+   -- Handle_Put_Line --
+   ---------------------
+
+   function Handle_Put_Line
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word
+   is
+   begin
+      Ada.Text_IO.Put_Line (Context.To_String (Arguments (2)));
+      return 1;
+   end Handle_Put_Line;
 
    -------------------------
    -- Handle_Report_State --
@@ -233,6 +320,39 @@ package body Aqua.Primitives.Init is
       Object.Set_Property (Name, Value);
       return Arguments (1);
    end Handle_Set;
+
+   -----------------------
+   -- Handle_Set_Output --
+   -----------------------
+
+   function Handle_Set_Output
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word
+   is
+      Name : constant String := Context.To_String (Arguments (2));
+   begin
+      if Name = "" then
+         Ada.Text_IO.Set_Output (Ada.Text_IO.Standard_Output);
+         if Ada.Text_IO.Is_Open (Current_Output) then
+            Ada.Text_IO.Close (Current_Output);
+         end if;
+         return 1;
+      else
+         begin
+            if Ada.Text_IO.Is_Open (Current_Output) then
+               Ada.Text_IO.Close (Current_Output);
+            end if;
+            Ada.Text_IO.Create (Current_Output, Ada.Text_IO.Out_File,
+                                Aquarius.Paths.Scratch_File (Name));
+            Ada.Text_IO.Set_Output (Current_Output);
+            return 1;
+         exception
+            when others =>
+               return 0;
+         end;
+      end if;
+   end Handle_Set_Output;
 
    ---------------------
    -- Handle_To_Lower --
