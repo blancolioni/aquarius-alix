@@ -3,6 +3,8 @@ private with Ada.Containers.Vectors;
 private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Strings.Fixed.Hash;
 
+with Ada.Finalization;
+
 private with Aqua.Architecture;
 private with Aqua.String_Vectors;
 
@@ -12,7 +14,14 @@ with Aqua.Images;
 package Aqua.CPU is
 
    type Aqua_CPU_Type (Image : access Aqua.Images.Root_Image_Type'Class) is
-   limited new Aqua.Execution.Execution_Interface with private;
+   limited new Ada.Finalization.Limited_Controlled
+     and Aqua.Execution.Execution_Interface with private;
+
+   overriding procedure Initialize
+     (CPU : in out Aqua_CPU_Type);
+
+   overriding procedure Finalize
+     (CPU : in out Aqua_CPU_Type);
 
    overriding procedure Execute
      (CPU       : in out Aqua_CPU_Type;
@@ -50,7 +59,7 @@ package Aqua.CPU is
       Value : Word)
       return String;
 
-   procedure Report
+   overriding procedure Report
      (CPU : Aqua_CPU_Type);
 
 private
@@ -69,7 +78,8 @@ private
         Equivalent_Keys => "=");
 
    type Aqua_CPU_Type (Image : access Aqua.Images.Root_Image_Type'Class) is
-   limited new Aqua.Execution.Execution_Interface with
+   limited new Ada.Finalization.Limited_Controlled
+     and Aqua.Execution.Execution_Interface with
       record
 --         Image      : Aqua.Images.Image_Type;
          R          : Aqua.Architecture.Registers;

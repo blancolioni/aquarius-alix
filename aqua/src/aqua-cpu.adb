@@ -151,6 +151,17 @@ package body Aqua.CPU is
 
    end Execute;
 
+   --------------
+   -- Finalize --
+   --------------
+
+   overriding procedure Finalize
+     (CPU : in out Aqua_CPU_Type)
+   is
+   begin
+      null;
+   end Finalize;
+
    ------------
    -- Handle --
    ------------
@@ -420,10 +431,19 @@ package body Aqua.CPU is
             end;
          when Aqua.Traps.Property_Get =>
             declare
-               Name   : constant Word := CPU.Pop;
-               Target : constant Word := CPU.Pop;
-               Value  : Word;
+               Argument_Count : constant Natural :=
+                                  Natural (Get_Integer (CPU.Pop));
+               Arguments : Array_Of_Words (1 .. Argument_Count);
+               Name           : constant Word := CPU.Pop;
+               Target         : Word;
+               Value          : Word;
             begin
+               for I in Arguments'Range loop
+                  Arguments (I) := CPU.Pop;
+               end loop;
+
+               Target := CPU.Pop;
+
                if not Is_String_Reference (Name) then
                   raise Constraint_Error
                     with "property name must be a string: "
@@ -431,13 +451,14 @@ package body Aqua.CPU is
                end if;
 
                if Is_String_Reference (Target) then
-                  CPU.Push (Target);
                   declare
                      Prim : constant Subroutine_Reference :=
                               Aqua.Primitives.Get_Primitive
                                 ("string__" & CPU.Image.To_String (Name));
                   begin
-                     Value := Aqua.Primitives.Call_Primitive (CPU, Prim);
+                     Value :=
+                       Aqua.Primitives.Call_Primitive
+                         (CPU, Prim, Target & Arguments);
                   end;
                elsif not Is_External_Reference (Target) then
                   raise Constraint_Error
@@ -472,10 +493,10 @@ package body Aqua.CPU is
                   end;
 
                   if Aqua.Words.Is_Subroutine_Reference (Value) then
-                     CPU.Push (Target);
                      Value :=
                        Aqua.Primitives.Call_Primitive
-                         (CPU, Aqua.Words.Get_Subroutine_Reference (Value));
+                         (CPU, Aqua.Words.Get_Subroutine_Reference (Value),
+                          Target & Arguments);
                   end if;
 
                end if;
@@ -495,9 +516,9 @@ package body Aqua.CPU is
 
          when Aqua.Traps.Property_Set =>
             declare
-               Value : constant Word := CPU.Pop;
                Name  : constant Word := CPU.Pop;
                Target : constant Word := CPU.Pop;
+               Value : constant Word := CPU.Pop;
             begin
                if Trace_Properties then
                   Ada.Text_IO.Put_Line
@@ -574,7 +595,9 @@ package body Aqua.CPU is
                Container :=
                  Aqua_Container_Interface'Class (Container_Ext.all)'Access;
 
-               Ada.Text_IO.Put_Line ("iterating: " & Container.Show);
+               if False then
+                  Ada.Text_IO.Put_Line ("iterating: " & Container.Show);
+               end if;
 
                declare
                   It : constant External_Object_Access :=
@@ -736,6 +759,17 @@ package body Aqua.CPU is
       Set_NZ (CPU, X);
    end Handle_Tst;
 
+   ----------------
+   -- Initialize --
+   ----------------
+
+   overriding procedure Initialize
+     (CPU : in out Aqua_CPU_Type)
+   is
+   begin
+      Aqua.Primitives.Load_Primitive_Objects (CPU);
+   end Initialize;
+
    ----------
    -- Name --
    ----------
@@ -794,7 +828,7 @@ package body Aqua.CPU is
    -- Report --
    ------------
 
-   procedure Report
+   overriding procedure Report
      (CPU : Aqua_CPU_Type)
    is
       use Ada.Calendar;
