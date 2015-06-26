@@ -34,7 +34,8 @@ package body Komnenos.Entities.Source.Aquarius_Source is
 
    function Get_Key (File_Name : String;
                      Line      : Natural;
-                     Column    : Natural)
+                     Column    : Natural;
+                     Name      : String)
                      return String;
 
    procedure Log_Tree (Tree : Aquarius.Programs.Program_Tree);
@@ -56,7 +57,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
       Entity_Body      : Aquarius.Programs.Program_Tree)
       return Entity_Reference
    is
-      Key : constant String := Get_Key (File_Name, Line, Column);
+      Key : constant String := Get_Key (File_Name, Line, Column, Name);
    begin
       if not Table.Exists (Key) then
          declare
@@ -96,12 +97,14 @@ package body Komnenos.Entities.Source.Aquarius_Source is
 
    function Get_Key (File_Name : String;
                      Line      : Natural;
-                     Column    : Natural)
+                     Column    : Natural;
+                     Name      : String)
                      return String
    is
    begin
       return File_Name & Integer'Image (-Line)
-        & Integer'Image (-Column);
+        & Integer'Image (-Column)
+        & "-" & Name;
    end Get_Key;
 
    --------------
