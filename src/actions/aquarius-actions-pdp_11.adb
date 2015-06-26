@@ -541,6 +541,10 @@ package body Aquarius.Actions.Pdp_11 is
                 "aqua ="
                 & Natural'Image (16#4002#));
 
+      Put_Line (Processor.File,
+                "io ="
+                & Natural'Image (16#4003#));
+
       External_Procedure (Processor, "map");
       External_Procedure (Processor, "io");
       External_Procedure (Processor, "aqua");
