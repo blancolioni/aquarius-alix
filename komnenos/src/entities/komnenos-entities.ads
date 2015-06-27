@@ -11,13 +11,16 @@ with Komnenos.Session_Objects;
 
 with Aquarius.Programs;
 
+with Aqua;
+
 package Komnenos.Entities is
 
    type Entity_Visual is interface;
 
    type Entity_Visual_Access is access all Entity_Visual'Class;
 
-   type Root_Entity_Reference is abstract tagged private;
+   type Root_Entity_Reference is
+     abstract new Aqua.External_Object_Interface with private;
 
    function Identifier
      (Item : Root_Entity_Reference'Class)
@@ -270,7 +273,8 @@ private
      new Ada.Containers.Vectors
        (Positive, Entity_Reference);
 
-   type Root_Entity_Reference is abstract tagged
+   type Root_Entity_Reference is
+     abstract new Aqua.External_Object_Interface with
       record
          Identifier   : Ada.Strings.Unbounded.Unbounded_String;
          Class        : Ada.Strings.Unbounded.Unbounded_String;
@@ -279,6 +283,15 @@ private
          Key          : Ada.Strings.Unbounded.Unbounded_String;
          References   : File_Location_Vectors.Vector;
       end record;
+
+   overriding function Name
+     (Item : Root_Entity_Reference) return String;
+
+   overriding function Text
+     (Item : Root_Entity_Reference) return String;
+
+   overriding function Show
+     (Item : Root_Entity_Reference) return String;
 
    package Entity_Maps is
      new Ada.Containers.Indefinite_Hashed_Maps
