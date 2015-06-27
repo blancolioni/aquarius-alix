@@ -140,7 +140,7 @@ package body Komnenos.Entities is
             Count  : Natural := 0;
          begin
             for Element of List loop
-               if Enabled = "" then
+               if Enabled = "all" then
                   Count := Count + 1;
                   Result (Count) := Element.Entity;
                end if;
@@ -362,6 +362,17 @@ package body Komnenos.Entities is
       return Ada.Strings.Unbounded.To_String (Location.Ref_Type);
    end Location_Reference_Type;
 
+   ----------
+   -- Name --
+   ----------
+
+   overriding function Name
+     (Item : Root_Entity_Reference) return String
+   is
+   begin
+      return Ada.Strings.Unbounded.To_String (Item.Identifier);
+   end Name;
+
    ----------------
    -- References --
    ----------------
@@ -394,6 +405,17 @@ package body Komnenos.Entities is
    end Set_Program_Store;
 
    ----------
+   -- Show --
+   ----------
+
+   overriding function Show
+     (Item : Root_Entity_Reference) return String
+   is
+   begin
+      return Ada.Strings.Unbounded.To_String (Item.Description);
+   end Show;
+
+   ----------
    -- Sort --
    ----------
 
@@ -403,6 +425,17 @@ package body Komnenos.Entities is
    begin
       Entity_Sorting.Sort (Table.Table);
    end Sort;
+
+   ----------
+   -- Text --
+   ----------
+
+   overriding function Text
+     (Item : Root_Entity_Reference) return String
+   is
+   begin
+      return Ada.Strings.Unbounded.To_String (Item.Display_Text);
+   end Text;
 
    ---------------
    -- To_String --
