@@ -14,6 +14,10 @@ after procedure_declaration/procedure_definition do
    Komnenos.Define (parent, child/identifier, "procedure-declaration");
 end;
 
+before block do
+   block.table := new Map;
+end;
+
 before defining_identifier_list do
    tree.defined_names := new Map;
 end;
@@ -24,6 +28,15 @@ end;
 
 after variable_declaration/defining_identifier_list do
    for child.defined_names loop
-      Komnenos.Define (variable_declaration, current, "variable-declaration", 0);
+      parent^block.table.set 
+        (current.image, 
+         Komnenos.Define (variable_declaration, current, "variable-declaration", 0));
    end loop;
+end;
+
+after direct_name/identifier do
+   if parent^block.table.get (identifier.text) then
+      Komnenos.Cross_Reference (identifier,
+                                parent^block.table.get (identifier.text));
+   end if;
 end;
