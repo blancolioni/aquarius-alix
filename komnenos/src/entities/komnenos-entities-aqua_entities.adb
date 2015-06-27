@@ -15,6 +15,11 @@ package body Komnenos.Entities.Aqua_Entities is
       Arguments : Aqua.Array_Of_Words)
       return Aqua.Word;
 
+   function Handle_Cross_Reference
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
    ------------------------
    -- Create_Aqua_Object --
    ------------------------
@@ -38,6 +43,10 @@ package body Komnenos.Entities.Aqua_Entities is
         (Name           => "komnenos__define",
          Argument_Count => 4,
          Handler        => Handle_Define'Access);
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "komnenos__cross_reference",
+         Argument_Count => 3,
+         Handler        => Handle_Cross_Reference'Access);
    end Create_Aqua_Primitives;
 
    ---------------------
@@ -75,6 +84,44 @@ package body Komnenos.Entities.Aqua_Entities is
       end if;
       return Result;
    end Get_Property;
+
+   function Handle_Cross_Reference
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      use Aquarius.Programs;
+      use Komnenos.Entities.Source.Aquarius_Source;
+      Aqua_Object : constant Komnenos_Aqua_Object :=
+                      Komnenos_Aqua_Object
+                        (Context.To_External_Object (Arguments (1)));
+   begin
+
+      if Aqua_Object.Table = null then
+         return 0;
+      end if;
+
+      declare
+         use type Aqua.Word;
+         Source_Ext  : constant access Aqua.External_Object_Interface'Class :=
+                         Context.To_External_Object (Arguments (2));
+         Source      : constant Program_Tree := Program_Tree (Source_Ext);
+         Ref_Ext     : constant access Aqua.External_Object_Interface'Class :=
+                         Context.To_External_Object (Arguments (3));
+         Ref         : constant Entity_Reference :=
+                         Entity_Reference (Ref_Ext);
+      begin
+         Add_Cross_Reference
+           (Table     => Aqua_Object.Table.all,
+            Item      => Ref,
+            File_Name => Source.Source_File_Name,
+            Line      => Source.Location_Line,
+            Column    => Source.Location_Column,
+            Ref_Type  => "reference");
+      end;
+
+      return 1;
+   end Handle_Cross_Reference;
 
    -------------------
    -- Handle_Define --
@@ -133,12 +180,9 @@ package body Komnenos.Entities.Aqua_Entities is
                         Compilation_Unit => Parent.Program_Root,
                         Entity_Spec      => Parent,
                         Entity_Body      => null);
-         pragma Unreferenced (Entity);
       begin
-         null;
+         return Context.To_Word (Entity);
       end;
-
-      return 1;
    end Handle_Define;
 
 end Komnenos.Entities.Aqua_Entities;
