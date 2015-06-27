@@ -1,6 +1,7 @@
 with Ada.Characters.Handling;
 with Ada.Containers.Vectors;
 with Ada.Directories;
+with Ada.Strings.Fixed.Equal_Case_Insensitive;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
@@ -62,7 +63,17 @@ package body Aquarius.Programs is
 
    procedure Check_Aqua_Primitives;
 
+   function Aqua_Tree_Ancestor
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
    function Aqua_Tree_Child
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
+   function Aqua_Tree_Text
      (Context : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Aqua.Array_Of_Words)
       return Aqua.Word;
@@ -116,6 +127,52 @@ package body Aquarius.Programs is
       Tagatha.Fragments.Append (Tree.Fragment, Fragment);
    end Append_Fragment;
 
+   ------------------------
+   -- Aqua_Tree_Ancestor --
+   ------------------------
+
+   function Aqua_Tree_Ancestor
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      Tree : constant Program_Tree :=
+                 Program_Tree
+                 (Context.To_External_Object (Arguments (1)));
+      Name   : constant String :=
+                 Context.To_String (Arguments (2));
+      It     : Program_Tree := Tree.Program_Parent;
+   begin
+
+      if Trace_Aqua then
+         Ada.Text_IO.Put_Line ("aqua_tree_ancestor: child = "
+                               & Tree.Image);
+         Ada.Text_IO.Put_Line ("aqua_tree_ancestor: parent name = "
+                               & Name);
+      end if;
+
+      while It /= null
+        and then not Ada.Strings.Fixed.Equal_Case_Insensitive
+          (It.Name, Name)
+      loop
+         It := It.Program_Parent;
+      end loop;
+
+      if It = null then
+         if Trace_Aqua then
+            Ada.Text_IO.Put_Line ("aqua_tree_ancestor: no result");
+         end if;
+         return 0;
+      else
+         if Trace_Aqua then
+            Ada.Text_IO.Put_Line ("aqua_tree_ancestor: result = "
+                                  & It.Image);
+         end if;
+         return Context.To_Word (It);
+      end if;
+
+   end Aqua_Tree_Ancestor;
+
    ---------------------
    -- Aqua_Tree_Child --
    ---------------------
@@ -155,6 +212,22 @@ package body Aquarius.Programs is
 
    end Aqua_Tree_Child;
 
+   --------------------
+   -- Aqua_Tree_Text --
+   --------------------
+
+   function Aqua_Tree_Text
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      Tree : constant Program_Tree :=
+                 Program_Tree
+                 (Context.To_External_Object (Arguments (1)));
+   begin
+      return Context.To_String_Word (Tree.Text);
+   end Aqua_Tree_Text;
+
    ---------------------------
    -- Check_Aqua_Primitives --
    ---------------------------
@@ -169,6 +242,16 @@ package body Aquarius.Programs is
         (Name           => "tree__tree_child",
          Argument_Count => 2,
          Handler        => Aqua_Tree_Child'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__tree_ancestor",
+         Argument_Count => 2,
+         Handler        => Aqua_Tree_Ancestor'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__text",
+         Argument_Count => 1,
+         Handler        => Aqua_Tree_Text'Access);
 
       Have_Aqua_Primitives := True;
 
