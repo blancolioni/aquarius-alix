@@ -1,10 +1,10 @@
 with Ada.Characters.Handling;
+with Ada.Directories;
 with Ada.Text_IO;
 
+with Aqua.IO;
 with Aqua.Objects;
 with Aqua.Words;
-
-with Aquarius.Paths;
 
 package body Aqua.Primitives.Init is
 
@@ -344,7 +344,8 @@ package body Aqua.Primitives.Init is
                Ada.Text_IO.Close (Current_Output);
             end if;
             Ada.Text_IO.Create (Current_Output, Ada.Text_IO.Out_File,
-                                Aquarius.Paths.Scratch_File (Name));
+                                Ada.Directories.Compose
+                                  (Aqua.IO.Current_IO_Path, Name));
             Ada.Text_IO.Set_Output (Current_Output);
             return 1;
          exception
