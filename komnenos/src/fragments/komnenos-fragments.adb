@@ -309,7 +309,7 @@ package body Komnenos.Fragments is
 
    overriding procedure Initialize (Fragment : in out Root_Fragment_Type) is
    begin
-      Fragment.Layout_Rec := (0, 0, 600, 400);
+      Fragment.Layout_Rec := (0, 0, 350, 400);
       Fragment.Lines.Append (new Line_Info);
       Fragment.Default_Style := Aquarius.Themes.Active_Theme.Default_Style;
    end Initialize;
