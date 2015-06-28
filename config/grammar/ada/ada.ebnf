@@ -1,4 +1,6 @@
-top_level ::= compilation_unit
+compilation_unit ::= { context_clause }
+	             top_level_subprogram_declaration
+
 case_sensitive = false
 
 identifier         ::= standard ada_identifier
@@ -55,9 +57,6 @@ xref procedure_declaration defining_program_unit_name
 xref function_declaration defining_program_unit_name
 xref package_spec defining_package_name
 xref type_declaration type_name
-
-compilation_unit ::= { context_clause }
-	             top_level_subprogram_declaration
 
 list_of_context_clauses ::= { context_clause }
 
@@ -246,7 +245,7 @@ block ::=
    list_of_declarations
    'begin'
 	handled_sequence_of_statements
-   'end' block_name
+   'end' [ block_name ]
 
 list_of_declarations ::= { declaration }
 
