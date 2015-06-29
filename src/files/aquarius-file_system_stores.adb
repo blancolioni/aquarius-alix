@@ -6,6 +6,7 @@ with Ada.Text_IO;
 with Aquarius.Actions;
 with Aquarius.Grammars.Manager;
 with Aquarius.Loader;
+with Aquarius.Trees.Properties;
 
 package body Aquarius.File_System_Stores is
 
@@ -28,6 +29,14 @@ package body Aquarius.File_System_Stores is
       Item.Base_Path :=
         Aquarius.Names.To_Aquarius_Name (Config.Get ("base_path"));
       Ada.Text_IO.Put_Line ("  base path: " & Config.Get ("base_path"));
+      if Config.Contains ("folders") then
+         Ada.Text_IO.Put_Line ("Folders:");
+         for Folder_Config of Config.Child ("folders") loop
+            Ada.Text_IO.Put ("  " & Folder_Config.Value);
+            Item.Folders.Append (Folder_Config.Config_Name);
+         end loop;
+      end if;
+
       Ada.Text_IO.Put ("  extensions:");
       for Ext_Config of Config.Child ("extensions") loop
          Item.Extensions.Insert (Ext_Config.Config_Name);
@@ -62,15 +71,17 @@ package body Aquarius.File_System_Stores is
      (Store : not null access Root_File_System_Store)
    is
 
-      procedure Recurse
-        (Path : String);
+      procedure Scan_Folder
+        (Path    : String;
+         Recurse : Boolean);
 
       -------------
       -- Recurse --
       -------------
 
-      procedure Recurse
-        (Path : String)
+      procedure Scan_Folder
+        (Path    : String;
+         Recurse : Boolean)
       is
          use Ada.Directories;
          use Ada.Strings.Fixed;
@@ -126,16 +137,43 @@ package body Aquarius.File_System_Stores is
                      end;
                   end if;
                else
-                  Recurse (File_Name);
+                  if Recurse then
+                     Scan_Folder (File_Name, Recurse);
+                  end if;
                end if;
             end;
          end loop;
 
          End_Search (Search);
-      end Recurse;
+      end Scan_Folder;
 
    begin
-      Recurse (Aquarius.Names.To_String (Store.Base_Path));
+      if Store.Folders.Is_Empty then
+         Scan_Folder (Aquarius.Names.To_String (Store.Base_Path), True);
+      else
+         for Folder of Store.Folders loop
+            declare
+               Full_Path : constant String :=
+                             Aquarius.Names.To_String (Store.Base_Path)
+                             & "/"
+                             & Folder;
+            begin
+               Scan_Folder (Full_Path, False);
+            end;
+         end loop;
+      end if;
+
+      for Program of Store.Loaded_Programs loop
+         declare
+            Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
+                        Aquarius.Trees.Properties.Get_Grammar
+                          (Program);
+         begin
+            Grammar.Run_Action_Trigger
+              (Program, Aquarius.Actions.Project_Trigger);
+         end;
+      end loop;
+
    end Load;
 
    ------------------
@@ -203,6 +241,17 @@ package body Aquarius.File_System_Stores is
    begin
       Config.Add ("base_path",
                   Aquarius.Names.To_String (Item.Base_Path));
+      if not Item.Folders.Is_Empty then
+         declare
+            Folders : Tropos.Configuration := Tropos.New_Config ("folders");
+         begin
+            for Folder of Item.Folders loop
+               Folders.Add ("folder", Folder);
+            end loop;
+            Config.Add (Folders);
+         end;
+      end if;
+
       Item.Extensions.Scan (Add_Extension'Access);
       Config.Add (Ext_Config);
    end To_Config;
