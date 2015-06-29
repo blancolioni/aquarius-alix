@@ -66,6 +66,12 @@ package Komnenos.UI is
       Key : String)
       return Komnenos.Entities.Entity_Reference;
 
+   overriding function Find
+     (UI         : Root_Komnenos_UI;
+      Name       : String;
+      Class_Name : String)
+      return Komnenos.Entities.Entity_Reference;
+
    overriding function Location_File_Name
      (UI       : Root_Komnenos_UI;
       Location : Komnenos.Entities.File_Location)

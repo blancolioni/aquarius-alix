@@ -84,6 +84,20 @@ package body Komnenos.UI is
       return UI.Entities.Exists (Key);
    end Exists;
 
+   ----------
+   -- Find --
+   ----------
+
+   overriding function Find
+     (UI         : Root_Komnenos_UI;
+      Name       : String;
+      Class_Name : String)
+      return Komnenos.Entities.Entity_Reference
+   is
+   begin
+      return UI.Entities.Find (Name, Class_Name);
+   end Find;
+
    -----------------
    -- From_Config --
    -----------------
