@@ -1,4 +1,5 @@
 private with Ada.Containers.Indefinite_Hashed_Maps;
+private with Ada.Containers.Indefinite_Vectors;
 private with Ada.Strings.Fixed.Hash_Case_Insensitive;
 private with Ada.Strings.Fixed.Equal_Case_Insensitive;
 
@@ -41,6 +42,18 @@ package Aquarius.File_System_Stores is
      (Item : not null access Root_File_System_Store;
       Config : Tropos.Configuration);
 
+--     procedure Create
+--       (Item      : in out Root_File_System_Store'Class;
+--        Base_Path : String);
+--
+--     procedure Add_Extension
+--       (Item : in out Root_File_System_Store'Class;
+--        Extension : String);
+--
+--     procedure Add_Folder
+--       (Item        : in out Root_File_System_Store'Class;
+--        Folder_Path : String);
+--
    type File_System_Store is access all Root_File_System_Store'Class;
 
    procedure Register;
@@ -55,12 +68,17 @@ private
         Equivalent_Keys => Ada.Strings.Fixed.Equal_Case_Insensitive,
         "="             => Aquarius.Programs."=");
 
+   package String_Vectors is
+     new Ada.Containers.Indefinite_Vectors
+       (Positive, String);
+
    type Root_File_System_Store is
      new Komnenos.Entities.Program_Store_Interface
      and Komnenos.Session_Objects.Session_Object_Interface
      and Aquarius.Programs.Root_Program_Tree_Store with
       record
          Base_Path       : Aquarius.Names.Aquarius_Name;
+         Folders         : String_Vectors.Vector;
          Extensions      : Aquarius.Names.Sets.Name_Set;
          Loaded_Programs : Program_Maps.Map;
       end record;
