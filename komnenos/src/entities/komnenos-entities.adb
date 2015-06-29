@@ -67,10 +67,21 @@ package body Komnenos.Entities is
       Key   : String;
       Item  : Entity_Reference)
    is
+      Name : constant String := Item.Name;
    begin
       Item.Key := Ada.Strings.Unbounded.To_Unbounded_String (Key);
       Table.Table.Append (Item);
       Table.Map.Insert (Key, Item);
+      if Table.Name_Map.Contains (Name) then
+         Table.Name_Map (Name).Append (Item);
+      else
+         declare
+            List : List_Of_Entities.List;
+         begin
+            List.Append (Item);
+            Table.Name_Map.Insert (Name, List);
+         end;
+      end if;
    end Add_Entity;
 
    -----------
@@ -216,6 +227,29 @@ package body Komnenos.Entities is
    begin
       return Location.Line;
    end File_Line;
+
+   ----------
+   -- Find --
+   ----------
+
+   overriding function Find
+     (Table      : Entity_Table;
+      Name       : String;
+      Class_Name : String)
+      return Entity_Reference
+   is
+   begin
+      if Table.Name_Map.Contains (Name) then
+         for Item of Table.Name_Map (Name) loop
+            if Class_Name = ""
+              or else Class (Item.all) = Class_Name
+            then
+               return Item;
+            end if;
+         end loop;
+      end if;
+      return null;
+   end Find;
 
    ---------
    -- Get --
