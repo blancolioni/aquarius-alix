@@ -6,7 +6,7 @@ package Aqua is
    type Bit_Index is range 0 .. 15;
 
    type Address is mod 2 ** 15;
-   type External_Reference is mod 2 ** 12;
+   type External_Reference is mod 2 ** 14;
    type Aqua_Integer is range -2 ** 13 .. 2 ** 13 - 1;
    type String_Reference is mod 2 ** 12;
    type Subroutine_Reference is mod 2 ** 12;
@@ -16,11 +16,11 @@ package Aqua is
    Address_Mask_Bits     : constant := 16#8000#;
    Address_Mask_Value    : constant := 16#8000#;
 
-   External_Mask_Bits    : constant := 2#1111_0000_0000_0000#;
+   External_Mask_Bits    : constant := 2#1100_0000_0000_0000#;
    External_Mask_Value   : constant := 2#0100_0000_0000_0000#;
 
    String_Mask_Bits      : constant := 2#1111_0000_0000_0000#;
-   String_Mask_Value     : constant := 2#0110_0000_0000_0000#;
+   String_Mask_Value     : constant := 2#1110_0000_0000_0000#;
 
    Integer_Mask_Bits     : constant := 2#1100_0000_0000_0000#;
    Integer_Mask_Value    : constant := 2#0000_0000_0000_0000#;
