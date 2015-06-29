@@ -20,6 +20,11 @@ package body Komnenos.Entities.Aqua_Entities is
       Arguments : Aqua.Array_Of_Words)
       return Aqua.Word;
 
+   function Handle_Get_Entity
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
    ------------------------
    -- Create_Aqua_Object --
    ------------------------
@@ -47,6 +52,10 @@ package body Komnenos.Entities.Aqua_Entities is
         (Name           => "komnenos__cross_reference",
          Argument_Count => 3,
          Handler        => Handle_Cross_Reference'Access);
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "komnenos__get_entity",
+         Argument_Count => 3,
+         Handler        => Handle_Get_Entity'Access);
    end Create_Aqua_Primitives;
 
    ---------------------
@@ -84,6 +93,10 @@ package body Komnenos.Entities.Aqua_Entities is
       end if;
       return Result;
    end Get_Property;
+
+   ----------------------------
+   -- Handle_Cross_Reference --
+   ----------------------------
 
    function Handle_Cross_Reference
      (Context   : in out Aqua.Execution.Execution_Interface'Class;
@@ -184,5 +197,41 @@ package body Komnenos.Entities.Aqua_Entities is
          return Context.To_Word (Entity);
       end;
    end Handle_Define;
+
+   function Handle_Get_Entity
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      use Aquarius.Programs;
+      use Komnenos.Entities.Source.Aquarius_Source;
+      Aqua_Object : constant Komnenos_Aqua_Object :=
+                      Komnenos_Aqua_Object
+                        (Context.To_External_Object (Arguments (1)));
+      Entity_Name : constant String :=
+                      Context.To_String (Arguments (2));
+      Class_Name  : constant String :=
+                      (if Arguments'Length >= 3
+                       then Context.To_String (Arguments (3))
+                       else "");
+   begin
+
+      if Aqua_Object.Table = null then
+         return 0;
+      end if;
+
+      declare
+         Entity : constant Entity_Reference :=
+                    Aqua_Object.Table.Find
+                      (Entity_Name, Class_Name);
+      begin
+         if Entity = null then
+            return 0;
+         else
+            return Context.To_Word (Entity);
+         end if;
+      end;
+
+   end Handle_Get_Entity;
 
 end Komnenos.Entities.Aqua_Entities;
