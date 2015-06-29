@@ -6,4 +6,6 @@ package Aquarius.Plugins.Manager is
 
    function Get_Plugin (Name : String) return Aquarius_Plugin;
 
+   procedure Loaded_Plugin_Report;
+
 end Aquarius.Plugins.Manager;

@@ -18,6 +18,9 @@ package Aquarius.Plugins.Dynamic is
    procedure Load (Plugin  : not null access Dynamic_Plugin_Type;
                    Grammar : Aquarius.Grammars.Aquarius_Grammar);
 
+   overriding procedure Report_State
+     (Plugin : Dynamic_Plugin_Type);
+
    function New_Dynamic_Plugin
      (Name    : String;
       Version : String)

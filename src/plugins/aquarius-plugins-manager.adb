@@ -170,6 +170,17 @@ package body Aquarius.Plugins.Manager is
       Plugin.Load (From_Grammar);
    end Load;
 
+   --------------------------
+   -- Loaded_Plugin_Report --
+   --------------------------
+
+   procedure Loaded_Plugin_Report is
+   begin
+      for Plugin of Loaded_Plugins loop
+         Plugin.Report_State;
+      end loop;
+   end Loaded_Plugin_Report;
+
    ------------------------
    -- To_Plugin_Map_Name --
    ------------------------

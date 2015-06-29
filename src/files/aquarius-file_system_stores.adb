@@ -6,6 +6,7 @@ with Ada.Text_IO;
 with Aquarius.Actions;
 with Aquarius.Grammars.Manager;
 with Aquarius.Loader;
+with Aquarius.Plugins.Manager;
 with Aquarius.Trees.Properties;
 
 package body Aquarius.File_System_Stores is
@@ -173,6 +174,8 @@ package body Aquarius.File_System_Stores is
               (Program, Aquarius.Actions.Project_Trigger);
          end;
       end loop;
+
+      Aquarius.Plugins.Manager.Loaded_Plugin_Report;
 
    end Load;
 

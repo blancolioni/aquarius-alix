@@ -73,6 +73,17 @@ package body Aquarius.Plugins.Dynamic is
       return new Dynamic_Plugin_Type'(Result);
    end New_Dynamic_Plugin;
 
+   ------------------
+   -- Report_State --
+   ------------------
+
+   overriding procedure Report_State
+     (Plugin : Dynamic_Plugin_Type)
+   is
+   begin
+      Plugin.Executor.Report;
+   end Report_State;
+
    -------------
    -- Version --
    -------------

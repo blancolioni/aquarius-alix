@@ -28,6 +28,10 @@ package Aquarius.Plugins is
    procedure Load (Plugin  : not null access Aquarius_Plugin_Type;
                    Grammar : in     Aquarius.Grammars.Aquarius_Grammar);
 
+   procedure Report_State
+     (Plugin : Aquarius_Plugin_Type)
+   is null;
+
    function Get_Standard_Entry (Plugin : access Aquarius_Plugin_Type;
                                 Name   : in     String)
                                return Aquarius.Entries.Table_Entry;
