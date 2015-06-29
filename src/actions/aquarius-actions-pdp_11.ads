@@ -74,7 +74,8 @@ private
 
    overriding procedure Push_External_Entry
      (Processor  : in out Pdp_Scanner;
-      Name       : String);
+      Name       : String;
+      Immediate  : Boolean);
 
    overriding procedure Push_String_Literal
      (Processor  : in out Pdp_Scanner;

@@ -10,7 +10,8 @@ package body Aquarius.Actions.Pdp_11 is
 
    procedure External_Procedure
      (Processor : in out Pdp_Scanner'Class;
-      Name      : String);
+      Name      : String;
+      Immediate : Boolean);
 
    function Next_Label
      (Processor : in out Pdp_Scanner'Class)
@@ -84,6 +85,7 @@ package body Aquarius.Actions.Pdp_11 is
      (Processor : in out Pdp_Scanner)
    is
    begin
+      Processor.Delete_Frame;
       Put_Line (Processor.File,
                 "    mov fp, sp");
       Put_Line (Processor.File,
@@ -133,13 +135,14 @@ package body Aquarius.Actions.Pdp_11 is
 
    procedure External_Procedure
      (Processor : in out Pdp_Scanner'Class;
-      Name      : String)
+      Name      : String;
+      Immediate : Boolean)
    is
    begin
       Put_Line
         (Processor.File,
          ".extern " & Name);
-      Processor.Add_Global_Entry (Name);
+      Processor.Add_Global_Entry (Name, Immediate);
    end External_Procedure;
 
    ------------------
@@ -359,12 +362,15 @@ package body Aquarius.Actions.Pdp_11 is
 
    overriding procedure Push_External_Entry
      (Processor  : in out Pdp_Scanner;
-      Name       : String)
+      Name       : String;
+      Immediate  : Boolean)
    is
    begin
       Put_Line
         (Processor.File,
-         "    mov #" & Name & ", -(sp)");
+         "    mov "
+         & (if Immediate then "#" else "")
+         & Name & ", -(sp)");
    end Push_External_Entry;
 
    ----------------------
@@ -545,11 +551,16 @@ package body Aquarius.Actions.Pdp_11 is
                 "io ="
                 & Natural'Image (16#4003#));
 
-      External_Procedure (Processor, "map");
-      External_Procedure (Processor, "io");
-      External_Procedure (Processor, "aqua");
-      External_Procedure (Processor, "ada");
-      External_Procedure (Processor, "komnenos");
+      Put_Line (Processor.File,
+                "project ="
+                & Natural'Image (16#0100#));
+
+      External_Procedure (Processor, "map", Immediate => True);
+      External_Procedure (Processor, "io", Immediate => True);
+      External_Procedure (Processor, "aqua", Immediate => True);
+      External_Procedure (Processor, "ada", Immediate => True);
+      External_Procedure (Processor, "komnenos", Immediate => True);
+      External_Procedure (Processor, "project", Immediate => False);
 
       New_Line (Processor.File);
 
