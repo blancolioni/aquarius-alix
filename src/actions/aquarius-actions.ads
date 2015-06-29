@@ -19,6 +19,10 @@ package Aquarius.Actions is
    --  being checked.  This normally happens after the parse is
    --  finished, or when new nodes are added.
 
+   --  Project_Trigger: execute action after a related set of trees
+   --  has been loaded.  Used to perform actions across compilation
+   --  units, e.g. cross referencing can be performed here.
+
    --  Code_Trigger: the action is executed in order to generate
    --  code for the tree.
 
@@ -45,6 +49,7 @@ package Aquarius.Actions is
      (Parse_Trigger,
       Changed_Trigger,
       Semantic_Trigger,
+      Project_Trigger,
       Code_Trigger,
       Manual_Trigger);
 
