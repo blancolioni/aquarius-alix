@@ -1,0 +1,41 @@
+before Compilation_Unit do
+   --  IO.Put_Line ("Ada: loading cross references");
+end;
+
+after Compilation_Unit do
+   --  Aqua.Report_State;
+end;
+
+before withed_unit_name do
+   tree.withed_package := 0;
+end;
+
+after withed_unit_name/identifier do
+   if parent.withed_package then
+      parent.withed_package := parent.withed_package & "." & identifier.text;
+   else
+      parent.withed_package := identifier.text;
+   end if;
+   
+   child.entity := Komnenos.Get_Entity (tree.withed_package, "package-declaration");
+   
+   if child.entity then
+     parent.Entity := child.entity;
+   
+     Komnenos.Cross_Reference 
+        (child, child.entity);
+   end if;
+end;
+
+after defining_qualified_reference/identifier do
+   if child.last then
+      null;
+   else
+      child.entity := Komnenos.Get_Entity (child.full_name, "package-declaration");
+      if child.entity then
+         Komnenos.Cross_Reference
+           (child, child.entity);
+      end if;
+   end if;
+end;
+
