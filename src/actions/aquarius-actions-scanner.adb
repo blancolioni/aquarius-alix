@@ -90,7 +90,6 @@ package body Aquarius.Actions.Scanner is
      (Processor : in out Action_Processor_Interface'Class)
    is
    begin
-      Ada.Text_IO.Put_Line ("frame: clearing");
       Processor.Frame_Table.Clear;
    end Delete_Frame;
 
