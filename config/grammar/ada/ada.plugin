@@ -4,4 +4,8 @@ plugin Ada version 0.1 is
       check_subprograms;
    end run_check;
    
+   group cross_reference : project is
+       cross_reference;
+   end cross_reference;
+   
 end Ada;
