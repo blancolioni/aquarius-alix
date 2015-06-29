@@ -113,6 +113,13 @@ package Komnenos.Entities is
       Item         : Entity_Reference)
    is abstract;
 
+   function Find
+     (Table      : Entity_Table_Interface;
+      Name       : String;
+      Class_Name : String)
+      return Entity_Reference
+      is abstract;
+
    procedure Add_Cross_Reference
      (Table        : in out Entity_Table_Interface;
       Item         : Entity_Reference;
@@ -208,6 +215,12 @@ package Komnenos.Entities is
       Key   : String)
       return Entity_Reference;
 
+   overriding function Find
+     (Table      : Entity_Table;
+      Name       : String;
+      Class_Name : String)
+      return Entity_Reference;
+
    overriding procedure Add_Cross_Reference
      (Table        : in out Entity_Table;
       Item         : Entity_Reference;
@@ -300,6 +313,17 @@ private
         Hash            => Ada.Strings.Fixed.Hash_Case_Insensitive,
         Equivalent_Keys => Ada.Strings.Fixed.Equal_Case_Insensitive);
 
+   package List_Of_Entities is
+     new Ada.Containers.Doubly_Linked_Lists (Entity_Reference);
+
+   package Entity_Name_Maps is
+     new Ada.Containers.Indefinite_Hashed_Maps
+       (Key_Type        => String,
+        Element_Type    => List_Of_Entities.List,
+        Hash            => Ada.Strings.Fixed.Hash_Case_Insensitive,
+        Equivalent_Keys => Ada.Strings.Fixed.Equal_Case_Insensitive,
+        "="             => List_Of_Entities."=");
+
    type Cross_Reference_Record is
       record
          Entity   : Entity_Reference;
@@ -323,6 +347,7 @@ private
          File_Vector : File_Name_Vectors.Vector;
          Table       : Entity_Vectors.Vector;
          Map         : Entity_Maps.Map;
+         Name_Map    : Entity_Name_Maps.Map;
          X_Ref       : Cross_Reference_Maps.Map;
          Store       : access Program_Store_Interface'Class;
       end record;
