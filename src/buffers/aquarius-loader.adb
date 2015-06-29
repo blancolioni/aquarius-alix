@@ -23,6 +23,9 @@ pragma Unreferenced (Aquarius.Transformers.Action_Script);
 
 package body Aquarius.Loader is
 
+   Trace_Files : constant Boolean := False;
+   --  if True, report each loaded file to standard_output
+
    Show_Full_Path : constant Boolean := True;
    --  If true, the full path of each file is displayed while loading it
 
@@ -73,12 +76,14 @@ package body Aquarius.Loader is
                                else "");
    begin
 
-      if Show_Full_Path then
-         Ada.Text_IO.Put_Line ("Loading: " &
-                               Path);
-      else
-         Ada.Text_IO.Put_Line ("Loading: " &
-                               Ada.Directories.Simple_Name (Path));
+      if Trace_Files then
+         if Show_Full_Path then
+            Ada.Text_IO.Put_Line ("Loading: " &
+                                    Path);
+         else
+            Ada.Text_IO.Put_Line ("Loading: " &
+                                    Ada.Directories.Simple_Name (Path));
+         end if;
       end if;
 
       Aquarius.Trees.Properties.Set_Grammar (Result.all, Grammar);
