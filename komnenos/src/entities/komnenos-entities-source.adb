@@ -22,7 +22,7 @@ package body Komnenos.Entities.Source is
       Column_Text : constant String := Trim (Natural'Image (Column), Both);
    begin
       Root_Entity_Reference (Item).Create
-        (Identifier   => File_Name & "|" & Name,
+        (Identifier   => Name,
          Class_Name   => Class,
          Display_Text => Name,
          Description  => File_Name & ":" & Line_Text & ":" & Column_Text);
