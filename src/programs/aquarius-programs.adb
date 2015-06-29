@@ -78,6 +78,16 @@ package body Aquarius.Programs is
       Arguments : Aqua.Array_Of_Words)
       return Aqua.Word;
 
+   function Aqua_Tree_Right_Sibling
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
+   function Aqua_Tree_Left_Sibling
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
    -----------------------
    -- Actionable_Source --
    -----------------------
@@ -212,6 +222,48 @@ package body Aquarius.Programs is
 
    end Aqua_Tree_Child;
 
+   ----------------------------
+   -- Aqua_Tree_Left_Sibling --
+   ----------------------------
+
+   function Aqua_Tree_Left_Sibling
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      Tree : constant Program_Tree :=
+                 Program_Tree
+                 (Context.To_External_Object (Arguments (1)));
+   begin
+      if Tree.Program_Left /= null then
+         return Context.To_Word
+           (Tree.Program_Left);
+      else
+         return 0;
+      end if;
+   end Aqua_Tree_Left_Sibling;
+
+   -----------------------------
+   -- Aqua_Tree_Right_Sibling --
+   -----------------------------
+
+   function Aqua_Tree_Right_Sibling
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      Tree : constant Program_Tree :=
+                 Program_Tree
+                 (Context.To_External_Object (Arguments (1)));
+   begin
+      if Tree.Program_Right /= null then
+         return Context.To_Word
+           (Tree.Program_Right);
+      else
+         return 0;
+      end if;
+   end Aqua_Tree_Right_Sibling;
+
    --------------------
    -- Aqua_Tree_Text --
    --------------------
@@ -252,6 +304,16 @@ package body Aquarius.Programs is
         (Name           => "tree__text",
          Argument_Count => 1,
          Handler        => Aqua_Tree_Text'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__left_sibling",
+         Argument_Count => 1,
+         Handler        => Aqua_Tree_Left_Sibling'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__right_sibling",
+         Argument_Count => 1,
+         Handler        => Aqua_Tree_Right_Sibling'Access);
 
       Have_Aqua_Primitives := True;
 
