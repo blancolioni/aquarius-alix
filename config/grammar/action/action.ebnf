@@ -6,7 +6,8 @@ numeric_literal    ::= ![0-9]+!
 string_literal     ::= standard ada_string_literal
 delimiter          ::= delimiters "(),;"
 symbol             ::= ![:=><&^\.\*/+-]+!
-comment            ::= !--[.]*!
+
+line_comment = "--"
 
 format sequence_of_statements indented_child
 format actual_argument_list soft_new_line
