@@ -1,4 +1,5 @@
 with Ada.Directories;
+with Ada.Text_IO;
 
 with Aquarius.Errors;
 with Aquarius.Source;
@@ -52,10 +53,14 @@ package body Aquarius.Actions.Scanner is
 
    procedure Add_Global_Entry
      (Processor : in out Action_Processor_Interface'Class;
-      Name      : String)
+      Name      : String;
+      Immediate : Boolean)
    is
    begin
-      Processor.External_Table.Insert (Name, Name);
+      Processor.External_Table.Insert
+        (Name,
+         (Is_Immediate => Immediate,
+          External_Name => Ada.Strings.Unbounded.To_Unbounded_String (Name)));
    end Add_Global_Entry;
 
    -----------------------------
@@ -77,6 +82,18 @@ package body Aquarius.Actions.Scanner is
       end if;
    end Current_Source_Location;
 
+   ------------------
+   -- Delete_Frame --
+   ------------------
+
+   procedure Delete_Frame
+     (Processor : in out Action_Processor_Interface'Class)
+   is
+   begin
+      Ada.Text_IO.Put_Line ("frame: clearing");
+      Processor.Frame_Table.Clear;
+   end Delete_Frame;
+
    ------------------------
    -- Delete_Frame_Entry --
    ------------------------
@@ -86,6 +103,7 @@ package body Aquarius.Actions.Scanner is
       Name      : String)
    is
    begin
+      Ada.Text_IO.Put_Line ("frame: deleting " & Name);
       Processor.Frame_Table.Delete (Name);
    end Delete_Frame_Entry;
 
@@ -462,13 +480,20 @@ package body Aquarius.Actions.Scanner is
             end if;
          end;
       elsif Processor.External_Table.Contains (Start_Name) then
-         if Destination and then Qs'Length = 1 then
-            Processor.Pop_External_Entry
-              (Processor.External_Table.Element (Start_Name));
-         else
-            Processor.Push_External_Entry
-              (Processor.External_Table.Element (Start_Name));
-         end if;
+         declare
+            Ext : constant External_Entry :=
+                    Processor.External_Table.Element (Start_Name);
+         begin
+            if Destination and then Qs'Length = 1 then
+               pragma Assert (not Ext.Is_Immediate);
+               Processor.Pop_External_Entry
+                 (Ada.Strings.Unbounded.To_String (Ext.External_Name));
+            else
+               Processor.Push_External_Entry
+                 (Ada.Strings.Unbounded.To_String (Ext.External_Name),
+                  Immediate => Ext.Is_Immediate);
+            end if;
+         end;
       else
          Aquarius.Errors.Error
            (Reference,

@@ -1,6 +1,7 @@
 private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Strings.Fixed.Hash_Case_Insensitive;
 private with Ada.Strings.Fixed.Equal_Case_Insensitive;
+private with Ada.Strings.Unbounded;
 
 with Aquarius.Programs;
 
@@ -41,11 +42,15 @@ package Aquarius.Actions.Scanner is
 
    procedure Add_Global_Entry
      (Processor : in out Action_Processor_Interface'Class;
-      Name      : String);
+      Name      : String;
+      Immediate : Boolean);
 
    procedure Delete_Frame_Entry
      (Processor : in out Action_Processor_Interface'Class;
       Name      : String);
+
+   procedure Delete_Frame
+     (Processor : in out Action_Processor_Interface'Class);
 
    procedure Push_Frame_Entry
      (Processor : in out Action_Processor_Interface;
@@ -54,7 +59,8 @@ package Aquarius.Actions.Scanner is
 
    procedure Push_External_Entry
      (Processor : in out Action_Processor_Interface;
-      Name      : String)
+      Name      : String;
+      Immediate : Boolean)
    is abstract;
 
    procedure Pop_Frame_Entry
@@ -212,10 +218,16 @@ private
         Hash            => Ada.Strings.Fixed.Hash_Case_Insensitive,
         Equivalent_Keys => Ada.Strings.Fixed.Equal_Case_Insensitive);
 
+   type External_Entry is
+      record
+         Is_Immediate  : Boolean;
+         External_Name : Ada.Strings.Unbounded.Unbounded_String;
+      end record;
+
    package External_Tables is
      new Ada.Containers.Indefinite_Hashed_Maps
        (Key_Type        => String,
-        Element_Type    => String,
+        Element_Type    => External_Entry,
         Hash            => Ada.Strings.Fixed.Hash_Case_Insensitive,
         Equivalent_Keys => Ada.Strings.Fixed.Equal_Case_Insensitive);
 
