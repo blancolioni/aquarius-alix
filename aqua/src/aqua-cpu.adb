@@ -832,6 +832,7 @@ package body Aqua.CPU is
      (CPU : Aqua_CPU_Type)
    is
       use Ada.Calendar;
+      use Ada.Strings, Ada.Strings.Fixed;
       use Ada.Text_IO;
    begin
       Put_Line
@@ -846,8 +847,17 @@ package body Aqua.CPU is
          & " free ="
          & Address'Image (Address'Last - CPU.Image.Heap_High + 1));
 
-      Put_Line ("Objects:" & Natural'Image (CPU.Ext.Last_Index + 1));
-      Put_Line ("Strings:" & Natural'Image (CPU.Str.Last_Index + 1));
+      Put_Line ("Objects:" & Natural'Image (CPU.Ext.Last_Index + 1)
+                & "/"
+                & Trim
+                  (External_Reference'Image (External_Reference'Last),
+                   Left));
+      Put_Line ("Strings:"
+                & Natural'Image (CPU.Str.Last_Index + 1)
+                & "/"
+                & Trim
+                  (String_Reference'Image (String_Reference'Last),
+                   Left));
       Put_Line ("CPU time:"
                 & Natural'Image (Natural (CPU.Exec_Time * 1000.0))
                 & "ms");
