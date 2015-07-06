@@ -324,6 +324,18 @@ package body  Aquarius.Grammars is
       end if;
    end Get_Definition;
 
+   -------------------
+   -- Get_EBNF_Tree --
+   -------------------
+
+   function Get_EBNF_Tree
+     (Grammar : Aquarius_Grammar_Record'Class)
+      return Aquarius.Programs.Program_Tree
+   is
+   begin
+      return Grammar.Definition;
+   end Get_EBNF_Tree;
+
    ------------------------
    -- Get_Property_Types --
    ------------------------
@@ -485,7 +497,8 @@ package body  Aquarius.Grammars is
    -- New_Grammar --
    -----------------
 
-   function New_Grammar (Name   : in String)
+   function New_Grammar (Name : String;
+                         EBNF : Aquarius.Programs.Program_Tree)
                         return Aquarius_Grammar
    is
       use Aquarius.Tokens;
@@ -495,7 +508,7 @@ package body  Aquarius.Grammars is
                   new Aquarius_Grammar_Record'
                     (Grammar_Name        => To_Token_Text (Name),
                      Frame               => New_Frame (False),
-                     Definition          => null,
+                     Definition          => EBNF,
                      Top_Level_Syntax    => null,
                      Non_Terminals       => Syntax_Map.Empty_Map,
                      Terminals           => Syntax_Map.Empty_Map,

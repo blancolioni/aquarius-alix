@@ -24,8 +24,9 @@ package Aquarius.Grammars is
    type Aquarius_Grammar is access all Aquarius_Grammar_Record'Class;
 
    not overriding
-   function New_Grammar (Name : String)
-                        return Aquarius_Grammar;
+   function New_Grammar (Name : String;
+                         EBNF : Aquarius.Programs.Program_Tree)
+                         return Aquarius_Grammar;
 
    overriding
    function Name (Grammar : Aquarius_Grammar_Record)
@@ -234,6 +235,10 @@ package Aquarius.Grammars is
       Inherited : Boolean;
       Has_Value : Boolean)
       return Aquarius.Properties.Property_Type;
+
+   function Get_EBNF_Tree
+     (Grammar : Aquarius_Grammar_Record'Class)
+      return Aquarius.Programs.Program_Tree;
 
 private
 

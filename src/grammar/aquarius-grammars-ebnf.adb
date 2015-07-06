@@ -21,7 +21,7 @@ package body Aquarius.Grammars.EBNF is
       use Aquarius.Syntax;
       Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
         Aquarius.Grammars.New_Grammar
-        (Name   => "ebnf");
+        (Name   => "ebnf", EBNF => null);
       Internal : constant Aquarius.Trees.Tree :=
         Aquarius.Trees.Internal_Declaration;
    begin
