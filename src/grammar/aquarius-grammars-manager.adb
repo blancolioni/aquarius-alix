@@ -167,10 +167,10 @@ package body Aquarius.Grammars.Manager is
 
       --  Turn off tracing while loading a grammar
 
-      Result := New_Grammar (Name);
-      Loaded_Grammars.Append (Result);
-
       EBNF   := Aquarius.Loader.Load_From_File (EBNF_Grammar, Path);
+
+      Result := New_Grammar (Name, EBNF);
+      Loaded_Grammars.Append (Result);
 
       Aquarius.Trees.Properties.Set_Grammar (EBNF.all, Result);
       EBNF_Grammar.Run_Actions ("analyse", EBNF);
