@@ -1,5 +1,8 @@
 with Ada.Text_IO;
 
+with Aquarius.Grammars;
+with Aquarius.Trees.Properties;
+
 with Aquarius.Programs.Arrangements;
 with Aquarius.Rendering;
 with Aquarius.Themes;
@@ -177,7 +180,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
 
       Aquarius.Programs.Arrangements.Arrange
         (Program,
-         Line_Length => Fragment.Width / 10);
+         Line_Length => Fragment.Width / 8);
 
       Renderer.Set_Theme (Aquarius.Themes.Active_Theme);
 
@@ -205,5 +208,34 @@ package body Komnenos.Entities.Source.Aquarius_Source is
    begin
       Root_Aquarius_Source_Entity (Entity.all).Entity_Body := Entity_Body;
    end Set_Entity_Body;
+
+   -------------------
+   -- Syntax_Entity --
+   -------------------
+
+   function Syntax_Entity
+     (Table  : not null access Entity_Table_Interface'Class;
+      Entity : Entity_Reference)
+      return Entity_Reference
+   is
+      Program : constant Aquarius.Programs.Program_Tree :=
+                  Root_Aquarius_Source_Entity (Entity.all).Compilation_Unit;
+      Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
+                  Aquarius.Trees.Properties.Get_Grammar (Program);
+      Syntax  : constant Aquarius.Programs.Program_Tree :=
+                  Grammar.Get_EBNF_Tree;
+   begin
+      return Create_Aquarius_Source_Entity
+        (Table            => Table,
+         Name             => Grammar.Name,
+         File_Name        => Syntax.Source_File_Name,
+         Class            => "syntax",
+         Line             => 1,
+         Column           => 1,
+         Top_Level        => False,
+         Compilation_Unit => Syntax,
+         Entity_Spec      => Syntax,
+         Entity_Body      => null);
+   end Syntax_Entity;
 
 end Komnenos.Entities.Source.Aquarius_Source;
