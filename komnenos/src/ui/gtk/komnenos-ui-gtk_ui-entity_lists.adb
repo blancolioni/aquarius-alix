@@ -37,10 +37,15 @@ package body Komnenos.UI.Gtk_UI.Entity_Lists is
    package Tree_Callback is
      new Gtk.Handlers.Callback (Gtk.Tree_View.Gtk_Tree_View_Record);
 
-   package Context_Menu_Callback is
+   package Context_Menu_Reference_Callback is
      new Gtk.Handlers.User_Callback
        (Widget_Type => Gtk.Menu_Item.Gtk_Menu_Item_Record,
         User_Type   => Komnenos.Entities.File_Location);
+
+   package Context_Menu_Entity_Callback is
+     new Gtk.Handlers.User_Callback
+       (Widget_Type => Gtk.Menu_Item.Gtk_Menu_Item_Record,
+        User_Type   => Komnenos.Entities.Entity_Reference);
 
    procedure On_Filter_Changed
      (W : access Gtk.Widget.Gtk_Widget_Record'Class;
@@ -58,13 +63,18 @@ package body Komnenos.UI.Gtk_UI.Entity_Lists is
      (Widget : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class;
       Location : Komnenos.Entities.File_Location);
 
+   procedure On_Show_Syntax
+     (Widget : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class;
+      Entity : Komnenos.Entities.Entity_Reference);
+
    function Get_Selected_Entity
      (Tree_View : Gtk.Tree_View.Gtk_Tree_View)
       return Komnenos.Entities.Entity_Reference;
 
    procedure Show_Context_Menu
-     (Tree_View : Gtk.Tree_View.Gtk_Tree_View;
-      Event     : Gdk.Event.Gdk_Event_Button;
+     (Tree_View  : Gtk.Tree_View.Gtk_Tree_View;
+      Event      : Gdk.Event.Gdk_Event_Button;
+      Target     : Komnenos.Entities.Entity_Reference;
       References : Komnenos.Entities.File_Location_Array);
 
    procedure Show_Entities
@@ -195,6 +205,25 @@ package body Komnenos.UI.Gtk_UI.Entity_Lists is
       Entity.Select_Entity (Current_UI, null, null, 0);
    end On_Row_Activated;
 
+   --------------------
+   -- On_Show_Syntax --
+   --------------------
+
+   procedure On_Show_Syntax
+     (Widget : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class;
+      Entity : Komnenos.Entities.Entity_Reference)
+   is
+      pragma Unreferenced (Widget);
+      use type Komnenos.Entities.Entity_Reference;
+      Syntax_Entity : constant Komnenos.Entities.Entity_Reference :=
+                        Komnenos.Entities.Source.Aquarius_Source.Syntax_Entity
+                          (Current_UI, Entity);
+   begin
+      if Syntax_Entity /= null then
+         Syntax_Entity.Select_Entity (Current_UI, null, null, 0);
+      end if;
+   end On_Show_Syntax;
+
    -------------------------------
    -- On_Tree_View_Button_Press --
    -------------------------------
@@ -249,7 +278,7 @@ package body Komnenos.UI.Gtk_UI.Entity_Lists is
                            Current_UI.References (Entity);
 
          begin
-            Show_Context_Menu (Tree_View, Event, References);
+            Show_Context_Menu (Tree_View, Event,  Entity, References);
          end;
 
          return True;
@@ -263,8 +292,9 @@ package body Komnenos.UI.Gtk_UI.Entity_Lists is
    -----------------------
 
    procedure Show_Context_Menu
-     (Tree_View : Gtk.Tree_View.Gtk_Tree_View;
-      Event     : Gdk.Event.Gdk_Event_Button;
+     (Tree_View  : Gtk.Tree_View.Gtk_Tree_View;
+      Event      : Gdk.Event.Gdk_Event_Button;
+      Target     : Komnenos.Entities.Entity_Reference;
       References : Komnenos.Entities.File_Location_Array)
    is
       pragma Unreferenced (Tree_View);
@@ -277,14 +307,27 @@ package body Komnenos.UI.Gtk_UI.Entity_Lists is
          begin
             Gtk.Menu_Item.Gtk_New_With_Label
               (Menu_Item, Current_UI.To_String (References (I)));
-            Context_Menu_Callback.Connect
+            Context_Menu_Reference_Callback.Connect
               (Menu_Item, Gtk.Menu_Item.Signal_Activate,
-               Context_Menu_Callback.To_Marshaller
+               Context_Menu_Reference_Callback.To_Marshaller
                  (On_Context_Menu_Item_Selected'Access),
                References (I));
             Popup_Menu.Append (Menu_Item);
          end;
       end loop;
+
+      declare
+         Menu_Item : Gtk.Menu_Item.Gtk_Menu_Item;
+      begin
+         Gtk.Menu_Item.Gtk_New_With_Label
+           (Menu_Item, "Show Syntax");
+         Context_Menu_Entity_Callback.Connect
+           (Menu_Item, Gtk.Menu_Item.Signal_Activate,
+            Context_Menu_Entity_Callback.To_Marshaller
+              (On_Show_Syntax'Access),
+            Target);
+         Popup_Menu.Append (Menu_Item);
+      end;
 
       Popup_Menu.Show_All;
       Popup_Menu.Popup
