@@ -35,6 +35,7 @@ format relational_operator soft_new_line
 format binary_adding_operator soft_new_line
 format multiplying_operator soft_new_line
 format formal_argument_spec soft_new_line_before
+format subprogram_body new_line_before
 
 format 'then' closing space_after space_before
 format 'loop' closing space_after space_before
@@ -49,7 +50,7 @@ format ''' no_space_before no_space_after
 format '=>' soft_new_line_after
 format 'with' soft_new_line_after space_after space_before
 format 'of' soft_new_line_before space_after space_before
-format ':' soft_new_line_after space_after space_before
+format ':' space_after space_before
 format 'return' soft_new_line_before space_after space_before
 format 'is' soft_new_line_before space_before space_after
 
@@ -302,9 +303,11 @@ type_indication ::= ['aliased'] ['constant'] direct_type_indication
 
 direct_type_indication ::= subtype_indication | access_definition | array_type_definition
 
-type_constraint ::= ( '(' expression [ '..' expression ] ')' )
+type_constraint ::= ( '(' < implicitly_typed_range_constraint / ',' > ')' )
                   | ( ''' ( identifier | 'range' | 'access' | 'digits' ))
                   | ('range' bounded_range)
+
+implicitly_typed_range_constraint ::= simple_expression [ '..' simple_expression ]
 
 type_definition ::= derived_type_definition | record_type_definition |
                     array_type_definition | private_type_definition |
@@ -379,7 +382,9 @@ array_bound ::= explicitly_typed_array_bound
 
 explicitly_typed_array_bound ::=
 	type_name [ 'range' ( bounded_range | '<>' ) ]
-      | type_name ''' 'range'
+      | type_name ''' 'range' [ dimension_index ]
+      
+dimension_index ::= '(' constant_expression ')'
 
 handled_sequence_of_statements ::=
     sequence_of_statements
