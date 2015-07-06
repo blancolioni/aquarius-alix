@@ -19,6 +19,11 @@ package Komnenos.Entities.Source.Aquarius_Source is
      (Entity : Entity_Reference;
       Entity_Body : Aquarius.Programs.Program_Tree);
 
+   function Syntax_Entity
+     (Table  : not null access Entity_Table_Interface'Class;
+      Entity : Entity_Reference)
+      return Entity_Reference;
+
    function Find_Entity_Containing
      (Table     : not null access Entity_Table_Interface'Class;
       Location  : File_Location)
