@@ -18,17 +18,7 @@ package body Aquarius.Lexers is
 
    function "not" (Left : Lexer) return Lexer is
    begin
-      if Left.Node_Type = Terminal then
-         declare
-            New_Rule : Lexer_Rule := Left.Rule.all;
-         begin
-            New_Rule.Negate := not New_Rule.Negate;
-            return new Lexer_Node'(Terminal, new Lexer_Rule'(New_Rule));
-         end;
-      else
-         raise Constraint_Error with
-           "not can only be used on terminals";
-      end if;
+      return new Lexer_Node'(Negate, Left);
    end "not";
 
    ----------
@@ -361,6 +351,20 @@ package body Aquarius.Lexers is
                      return Right_Choice;
                   end if;
                end;
+            when Negate =>
+               if Index > Text'Last then
+                  return 0;
+               end if;
+               declare
+                  Tmp_Index : constant Natural :=
+                                Scan (Current.Negated, Index);
+               begin
+                  if Tmp_Index > 0 then
+                     return 0;
+                  else
+                     return Index + 1;
+                  end if;
+               end;
          end case;
 
          return 0;
@@ -410,7 +414,9 @@ package body Aquarius.Lexers is
                end if;
             when Choice =>
                return "(" & Show_Node (Node.Left)
-                 & "|" & Show_Node (Node.Right) & ")";
+                 & " or " & Show_Node (Node.Right) & ")";
+            when Negate =>
+               return "not (" & Show_Node (Node.Negated) & ")";
          end case;
       end Show_Node;
 
