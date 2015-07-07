@@ -1,0 +1,248 @@
+top_level ::= source_file
+
+end_of_line ::= !\n!
+identifier  ::= ![\l_][\w\.]*!
+number      ::= !\d+(\.\d*)?!
+string      ::= !'([^'\\]|(\\[.]))*'!
+delimiter   ::= delimiters "()&,<>-"
+symbol      ::= ![=\*/\+\:]!
+
+line_comment = """"
+continuation = "-"
+
+format '(' space_before no_space_after
+format ')' no_space_before space_after
+format '&' no_space_after
+
+source_file ::= { [ source_element ] end_of_line }
+
+source_element ::= statement | program_text | long_description
+
+definition ::= 'define' escapeable_identifier object_definition [ definition_database ]
+
+escapeable_identifier ::= identifier
+                        | '&' object_reference
+
+object_definition ::= dimension_definition
+                    | variable_definition
+                    | formula_definition
+                    | relation_definition
+                    | valueset_definition
+                    | program_definition
+                    
+definition_database ::= 'database' escapeable_identifier
+
+dimension_definition ::= 'dimension' type
+
+variable_definition ::= [ 'variable' ] type [ dimension_list ] [ storage_class ]
+
+storage_class ::= 'temp' | 'temporary'
+
+formula_definition ::= 'formula' type [ dimension_list ]
+
+relation_definition ::= 'relation' type [ dimension_list ]
+
+valueset_definition ::= 'valueset' type [ dimension_list ] [ storage_class ]
+
+dimension_list ::= '<' < escapeable_identifier > '>'
+
+program_definition ::= 'program' [ type ]
+                     | 'prg' [ type ]
+                     
+long_description ::= 'ld' { any }
+
+any ::= identifier | string | ':' | 'sort' | 'hierarchy' | 'temporary' | 'file' | 'eif'
+
+program_text ::= 'program' end_of_line arguments variables statements 'end'
+               | 'program' identifier
+               
+arguments ::= { [ argument ] end_of_line }
+variables ::= { [ variable ] end_of_line }
+statements ::= { [ statement ] end_of_line }
+
+argument ::= argument_header identifier type
+
+argument_header ::= 'arg' | 'argument'
+
+variable ::= variable_header identifier type
+
+variable_header ::= 'vrb' | 'variable'
+
+statement ::= label_statement
+            | call_statement
+            | assignment_statement
+            | definition
+            | delete_statement
+            | do_statement
+            | while_statement
+            | for_statement
+            | if_statement
+            | switch_statement
+            | else_statement
+            | goto_statement
+            | return_statement
+            | limit_statement
+            | rollup_statement
+            | maintain_statement
+            | sort_statement
+            | trap_statement
+            | push_statement
+            | pop_statement
+            | temp_status_statement
+            | context_statement
+            | show_statement
+            | describe_statement
+            | database_statement
+            | update_statement
+            | consider_statement
+            | compile_statement
+            | export_command
+            | import_command
+            | program_text
+            
+delete_statement ::= 'delete' escapeable_identifier
+
+label_statement ::= identifier ':'
+                  | 'case' expression ':'
+
+call_statement ::= 'call' object_reference
+                 | escapeable_identifier { expression }
+
+assignment_statement ::= object_reference '=' expression
+
+do_statement ::= 'do' end_of_line statements 'doend'
+
+while_statement ::= 'while' expression end_of_line statement            
+
+for_statement ::= 'for' object_reference end_of_line statement
+
+if_statement ::= 'if' expression end_of_line 'then' statement
+
+switch_statement ::= 'switch' expression end_of_line statement
+
+else_statement ::= 'else' statement
+                 
+goto_statement ::= 'goto' identifier
+
+return_statement ::= 'return' [ expression ]
+
+sort_statement ::= 'sort' escapeable_identifier escapeable_identifier [ expression ]
+
+maintain_statement ::= maintain escapeable_identifier maintain_operation (expression | value_list | time_arguments) [ dimension_position ]
+
+maintain ::= 'maintain' | 'mnt'
+
+maintain_operation ::= 'add' | 'delete' | 'merge' | 'move'
+
+time_arguments ::= number 'periods' ('first' | 'last')
+
+limit_statement ::= limit object_reference limit_type [ selection ] [ 'ifnone' expression ]
+
+limit ::= 'limit' | 'lmt' 
+
+limit_type ::= insert | 'to' | 'add' | 'remove' | 'keep' | 'complement' | 'sort' | '&' identifier
+
+insert ::= 'insert' dimension_position
+
+dimension_position ::= 'first' | 'last' | 'before' primary | 'after' primary
+
+selection ::= value_list | expression [ [ 'to' ] expression] | relation_selection | 'first' expression | 'last' expression 
+            | escapeable_identifier < escapeable_identifier >
+
+relation_selection ::= relationship [ 'using' escapeable_identifier { escapeable_identifier } ]
+
+relationship ::= 'ancestors' | 'descendants' | 'parents' | 'children' | 'hierarchy'
+
+value_list ::= 'all' | list_of_values
+
+list_of_values ::= primary < [ ',' ] primary >
+
+rollup_statement ::= 'rollup' escapeable_identifier [ 'over' embedded_total_dimension ] [ 'using' parent_relation ] [ 'zerofill' ]
+
+embedded_total_dimension ::= escapeable_identifier
+
+parent_relation ::= escapeable_identifier
+
+trap_statement ::= 'trap' 'off'
+                 | 'trap' 'on' identifier [ print_control ]
+                 
+print_control ::= 'print' | 'noprint'
+
+push_statement ::= 'push' escapeable_identifier { [ ',' ] escapeable_identifier }
+
+pop_statement ::= 'pop' escapeable_identifier { [ ',' ] escapeable_identifier }
+
+temp_status_statement ::= 'tempstat' escapeable_identifier { [ ',' ] escapeable_identifier } end_of_line statement
+
+context_statement ::= 'context' escapeable_identifier context_keyword { escapeable_identifier }
+
+context_keyword ::= 'create' | 'save' | 'apply' | 'discard' | 'drop' | 'restore'
+
+show_statement ::= 'show' expression
+                 | 'shw' expression
+                 
+describe_statement ::= 'describe' escapeable_identifier
+                     | 'dsc' escapeable_identifier
+                     
+consider_statement ::= 'consider' escapeable_identifier
+
+compile_statement ::= 'compile' escapeable_identifier
+
+export_command ::= 'export' export_item 'to' 'eif' 'file' expression [ rewrite ]
+
+export_item ::= 'all' | identifier
+
+rewrite ::= 'rewrite' | 'norewrite'
+
+import_command ::= 'import' import_item 'from' 'eif' 'file' expression [ 'update' ]
+
+import_item ::= 'all' | identifier
+
+update_statement ::= 'update' [ escapeable_identifier ]
+
+database_statement ::= database database_operation escapeable_identifier
+
+database ::= 'dtb' | 'database'
+
+database_operation ::= 'attach' | 'detach' | 'delete' | 'create' [ 'attach' ]
+
+expression ::= if_expression | boolean_expression
+
+if_expression ::= 'if' expression 'then' expression 'else' expression
+
+boolean_expression ::= boolean { bool_op boolean }
+
+bool_op ::= 'and' | 'or'
+
+boolean ::= [ 'not' ] multiplier { compare multiplier }
+
+compare ::= 'eq' | 'ne' | 'gt' | 'lt' | 'ge' | 'le'
+
+multiplier ::= adder { multiply adder }
+
+multiply ::= '*' | '/'
+
+adder ::= [ add ] primary { add primary }
+
+add ::= '+' | '-'
+
+primary ::= object_reference | obj_expression | limit_expression | convert_expression | database_expression | context_expression
+          | string | number | '(' expression ')'
+
+object_reference ::= [ '&' ] identifier [ object_arguments ]
+
+object_arguments ::= '(' expression { [ ',' ] expression } ')'
+
+obj_expression ::= 'obj' '(' obj_key { primary } ')'
+
+obj_key ::= escapeable_identifier | 'database' | 'ld'
+
+limit_expression ::= 'limit' '(' object_reference limit_type selection ')'
+
+convert_expression ::= 'convert' '(' expression [ ',' ] type ')'
+
+database_expression ::= 'database' '(' expression ')'
+
+context_expression ::= 'context' [ '(' escapeable_identifier [ ('update' | escapeable_identifier) ] ')' ]
+
+type ::= 'integer' | 'shortinteger' | 'text' | escapeable_identifier
