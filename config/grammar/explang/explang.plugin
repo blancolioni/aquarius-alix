@@ -1,0 +1,7 @@
+plugin Explang version 0.1 is
+
+   group run_check : semantic is
+      explang_check;
+   end run_check;
+   
+end Explang;
