@@ -1,0 +1,21 @@
+after source_file do
+   aqua.report_state;
+end;
+
+after escapeable_identifier/identifier do
+   parent.name := identifier.text;
+end;
+
+after definition/escapeable_identifier do
+   parent.name := child.name;
+   top.current_object := child.name;
+end;
+
+before definition/object_definition do
+   child.name := parent.name;
+end;
+
+before program_text do
+   Komnenos.Define (tree, top.current_object, "program");
+end;
+

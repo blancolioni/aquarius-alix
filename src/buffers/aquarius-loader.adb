@@ -38,6 +38,51 @@ package body Aquarius.Loader is
      return Aquarius.Programs.Program_Tree;
    --  A support function to protect us from Name_Error
 
+   procedure Get_Line
+     (Line           : out String;
+      Line_Last      : out Natural;
+      Position       : in out Aquarius.Source.Source_Position;
+      Grammar        : Aquarius.Grammars.Aquarius_Grammar;
+      Vertical_Space : out Natural);
+
+   --------------
+   -- Get_Line --
+   --------------
+
+   procedure Get_Line
+     (Line           : out String;
+      Line_Last      : out Natural;
+      Position       : in out Aquarius.Source.Source_Position;
+      Grammar        : Aquarius.Grammars.Aquarius_Grammar;
+      Vertical_Space : out Natural)
+   is
+      Line_First : Natural := 1;
+   begin
+      Vertical_Space := 0;
+      loop
+         Aquarius.Source.Get_Line
+           (Position    => Position,
+            Include_EOL => Grammar.Significant_End_Of_Line,
+            Line        => Line,
+            Last        => Line_Last);
+
+         exit when Line_Last > 0 or else
+           Aquarius.Source.End_Of_File (Position);
+         Aquarius.Source.Skip_Line (Position);
+         Vertical_Space := Vertical_Space + 1;
+      end loop;
+
+      loop
+         Line_First := Grammar.Line_Continues (Line (Line_First .. Line_Last));
+         exit when Line_First = 0;
+         Aquarius.Source.Skip_Line (Position);
+         Aquarius.Source.Get_Line
+           (Position, Grammar.Significant_End_Of_Line,
+            Line (Line_First .. Line'Last), Line_Last);
+      end loop;
+
+   end Get_Line;
+
    ----------
    -- Load --
    ----------
@@ -113,18 +158,8 @@ package body Aquarius.Loader is
             LF : constant Character :=
                    Ada.Characters.Latin_1.LF;
          begin
-            loop
-               Aquarius.Source.Get_Line
-                 (Position    => Source_Pos,
-                  Include_EOL => Grammar.Significant_End_Of_Line,
-                  Line        => Line,
-                  Last        => Line_Last);
 
-               exit when Line_Last > 0 or else
-                 Aquarius.Source.End_Of_File (Source_Pos);
-               Aquarius.Source.Skip_Line (Source_Pos);
-               Vertical_Space := Vertical_Space + 1;
-            end loop;
+            Get_Line (Line, Line_Last, Source_Pos, Grammar, Vertical_Space);
 
             exit when Aquarius.Source.End_Of_File (Source_Pos);
 
@@ -160,12 +195,21 @@ package body Aquarius.Loader is
                     = Line_Comment
                   then
                      --  FIXME: save the text!
-                     exit;
+
+                     --  If end of line is significant, we have to treat
+                     --  line comments as end of line; otherwise we simply
+                     --  exit this loop which will take us to the next line.
+                     if Grammar.Significant_End_Of_Line then
+                        First := Line_Last;
+                     else
+                        exit;
+                     end if;
                   end if;
                end if;
 
                --  explicit check for block comment
                if Grammar.Have_Block_Comment
+                 and then First + Block_Comment_Start'Length - 1 <= Line_Last
                  and then Line
                    (First .. First + Block_Comment_Start'Length - 1)
                  = Block_Comment_Start
@@ -173,7 +217,7 @@ package body Aquarius.Loader is
                   First := First + Block_Comment_Start'Length;
 
                   declare
-                     Found : Boolean := False;
+                     Found        : Boolean := False;
                   begin
 
                      while not Found loop
@@ -218,6 +262,9 @@ package body Aquarius.Loader is
                                   Line (First .. Next), Context);
                   else
                      if not Recovering then
+--                          Ada.Text_IO.Put_Line
+--                            (Ada.Text_IO.Standard_Error,
+--                             Line (1 .. Line_Last));
                         Ada.Text_IO.Put
                           (Ada.Text_IO.Standard_Error,
                            Aquarius.Source.Show (Tok_Pos) &
@@ -248,6 +295,9 @@ package body Aquarius.Loader is
                   end if;
                else
                   Have_Error := True;
+--                    Ada.Text_IO.Put_Line
+--                      (Ada.Text_IO.Standard_Error,
+--                       Line (1 .. Line_Last));
                   Aquarius.Errors.Error
                     (null, null,
                      Aquarius.Source.Show (Source_Pos)

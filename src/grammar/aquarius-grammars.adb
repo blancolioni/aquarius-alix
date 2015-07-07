@@ -1,3 +1,4 @@
+with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with Aquarius.Errors;
@@ -57,6 +58,9 @@ package body  Aquarius.Grammars is
                                       Declaration, Class_Token);
 
       Grammar.Non_Terminals.Insert (Name, New_Syntax);
+
+--        Ada.Text_IO.Put_Line
+--          (Name & " = " & Aquarius.Lexers.Show (Lex));
 
    end Add_Class_Terminal;
 
@@ -201,6 +205,13 @@ package body  Aquarius.Grammars is
          Block_Comment_Start (Grammar, Value);
       elsif Name = "block_comment_end" then
          Block_Comment_End (Grammar, Value);
+      elsif Name = "continuation" then
+         if Value'Length /= 1 then
+            Aquarius.Errors.Error
+              (Declaration,
+               "continuation must be a single character");
+         end if;
+         Grammar.Continuation := Value (Value'First);
       else
          Aquarius.Errors.Warning
            (Declaration,
@@ -438,6 +449,46 @@ package body  Aquarius.Grammars is
       return Aquarius.Names.To_String (Grammar.Line_Comment);
    end Line_Comment;
 
+   --------------------
+   -- Line_Continues --
+   --------------------
+
+   function Line_Continues
+     (Grammar : Aquarius_Grammar_Record;
+      Line    : String)
+      return Natural
+   is
+   begin
+      if not Grammar.Match_EOL
+        or else Grammar.Continuation = Character'Val (0)
+        or else Line'Length <= 1
+        or else (Grammar.Have_Line_Comment
+                 and then Ada.Strings.Fixed.Index
+                   (Line, Line_Comment (Grammar)) > 0)
+      then
+         return 0;
+      end if;
+
+      declare
+         Index : Positive := Line'Last;
+      begin
+         while Index > Line'First
+           and then (Line (Index) = ' '
+                     or else Line (Index) = Character'Val (10))
+         loop
+            Index := Index - 1;
+         end loop;
+
+         if Index >= Line'First
+           and then Line (Index) = Grammar.Continuation
+         then
+            return Index;
+         else
+            return 0;
+         end if;
+      end;
+   end Line_Continues;
+
    ---------------------
    -- Make_Error_Tree --
    ---------------------
@@ -515,6 +566,7 @@ package body  Aquarius.Grammars is
                      Actions             => Empty_Action_Group_List,
                      Case_Sensitive      => False,
                      Match_EOL           => False,
+                     Continuation        => Character'Val (0),
                      Line_Comment        => Aquarius.Names.Null_Aquarius_Name,
                      Block_Comment_Start => Aquarius.Names.Null_Aquarius_Name,
                      Block_Comment_End   => Aquarius.Names.Null_Aquarius_Name,
