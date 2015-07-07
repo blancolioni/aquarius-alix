@@ -144,6 +144,16 @@ package Aquarius.Grammars is
    --  This is detected automatically if the grammar has a rule which
    --  matches the end of line.
 
+   function Line_Continues
+     (Grammar : Aquarius_Grammar_Record;
+      Line    : String)
+      return Natural;
+   --  Return 0 if Significant_End_Of_Line returns false,
+   --  or if the grammar does not define a continuation character.
+   --  Otherwise, return the index at which the following line should
+   --  start (i.e. the following line should replace the contents of
+   --  Line beginning at the index returned)
+
    function Group
      (Grammar : Aquarius_Grammar_Record'Class;
       Name    : String)
@@ -255,6 +265,7 @@ private
          Actions             : Aquarius.Actions.Action_Group_List;
          Case_Sensitive      : Boolean;
          Match_EOL           : Boolean := False;
+         Continuation        : Character := Character'Val (0);
          Non_Terminals       : Syntax_Map.Map;
          Terminals           : Syntax_Map.Map;
          Line_Comment        : Aquarius.Names.Aquarius_Name :=
