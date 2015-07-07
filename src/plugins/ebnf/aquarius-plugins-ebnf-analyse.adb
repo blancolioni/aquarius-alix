@@ -34,6 +34,10 @@ package body Aquarius.Plugins.EBNF.Analyse is
       Value : Aquarius.Syntax.Syntax_Tree)
      renames Aquarius.Trees.Properties.Set_Syntax;
 
+   function String_To_Value
+     (Raw_String : String)
+      return String;
+
    --------------------------------------
    -- After_Cross_Reference_Definition --
    --------------------------------------
@@ -545,8 +549,7 @@ package body Aquarius.Plugins.EBNF.Analyse is
         and then Value_Text'Length >= 2
       then
          Grammar.Add_Value (Child, Name,
-                            Value_Text (Value_Text'First + 1
-                              .. Value_Text'Last - 1));
+                            String_To_Value (Value_Text));
       else
          Grammar.Add_Value (Child, Name, Value_Text);
       end if;
@@ -644,5 +647,41 @@ package body Aquarius.Plugins.EBNF.Analyse is
    begin
       Set_Syntax (To, Get_Syntax (From));
    end Copy_Syntax;
+
+   ---------------------
+   -- String_To_Value --
+   ---------------------
+
+   function String_To_Value
+     (Raw_String : String)
+      return String
+   is
+      Result : String (Raw_String'Range);
+      Index  : Positive := Raw_String'First;
+      Last   : Natural  := Raw_String'Last;
+      Target : Positive := Result'First;
+   begin
+      if Raw_String (Raw_String'First) = '"'
+        and then Raw_String (Raw_String'Last) = '"'
+        and then Raw_String'Length /= 1
+      then
+         Index := Index + 1;
+         Last := Last - 1;
+      end if;
+
+      while Index <= Last loop
+         if Raw_String (Index) = '"'
+           and then Index < Last
+           and then Raw_String (Index + 1) = '"'
+         then
+            Index := Index + 1;
+         end if;
+         Result (Target) := Raw_String (Index);
+         Target := Target + 1;
+         Index := Index + 1;
+      end loop;
+
+      return Result (Result'First .. Target - 1);
+   end String_To_Value;
 
 end Aquarius.Plugins.EBNF.Analyse;

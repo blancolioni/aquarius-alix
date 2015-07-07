@@ -74,7 +74,7 @@ package Aquarius.Lexers is
 
 private
 
-   type Lexer_Type is (Terminal, Sequence, Repeat, Optional, Choice);
+   type Lexer_Type is (Terminal, Sequence, Repeat, Optional, Choice, Negate);
 
    type Lexer_Rule_Type is (Built_In, Condition,
                             Single_Character, Character_Range,
@@ -112,6 +112,8 @@ private
                Child       : access Lexer_Node;
             when Choice =>
                Left, Right : access Lexer_Node;
+            when Negate =>
+               Negated     : access Lexer_Node;
          end case;
       end record;
 
