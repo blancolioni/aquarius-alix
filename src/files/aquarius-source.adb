@@ -146,11 +146,10 @@ package body Aquarius.Source is
       Line (Line'First ..
               Line'First + Position.File.Current_Line_Length - 1) :=
         Position.File.Current_Line (1 .. Position.File.Current_Line_Length);
-      Last := Position.File.Current_Line_Length;
+      Last := Position.File.Current_Line_Length + Line'First - 1;
       if Include_EOL then
          Last := Last + 1;
-         Line (Line'First + Last - 1) :=
-           Ada.Characters.Latin_1.LF;
+         Line (Last) := Ada.Characters.Latin_1.LF;
       end if;
    end Get_Line;
 
