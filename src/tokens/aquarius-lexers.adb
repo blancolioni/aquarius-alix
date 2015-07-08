@@ -378,6 +378,19 @@ package body Aquarius.Lexers is
       return Scan (Lex, Text'First);
    end Run;
 
+   --------------
+   -- Sequence --
+   --------------
+
+   function Sequence (S : String) return Lexer is
+   begin
+      if S'Length = 1 then
+         return Literal (S (S'First));
+      else
+         return Literal (S (S'First)) & Sequence (S (S'First + 1 .. S'Last));
+      end if;
+   end Sequence;
+
    ----------
    -- Show --
    ----------

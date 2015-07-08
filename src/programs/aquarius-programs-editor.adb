@@ -334,7 +334,8 @@ package body Aquarius.Programs.Editor is
                   Class      => Class,
                   Tok        => Tok,
                   First      => First,
-                  Last       => Last);
+                  Last       => Last,
+                  Token_OK   => null);
                if Last = Text'Last then
                   --  we can join the previous token
                   Ada.Text_IO.Put_Line
@@ -398,7 +399,7 @@ package body Aquarius.Programs.Editor is
         (Editor.Root.Syntax.Frame,
          Editor.Input.Buffer (1 .. Editor.Input.Length),
          False, Complete, Have_Class,
-         Class, Tok, First, Next);
+         Class, Tok, First, Next, null);
       if (Force and then Next > 0) or else
         (Have_Class and then Complete and then Next < Editor.Input.Length)
       then

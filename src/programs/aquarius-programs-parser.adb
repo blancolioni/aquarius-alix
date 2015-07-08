@@ -784,7 +784,7 @@ package body Aquarius.Programs.Parser is
 
          Aquarius.Tokens.Scan (Grammar.Frame, Line (Line'First .. Line'Last),
                                False, Complete, Have_Class,
-                               Class, Tok, First, Next);
+                               Class, Tok, First, Next, null);
          if Have_Class then
             Aquarius.Source.Set_Position
               (Tok_Pos, 1,

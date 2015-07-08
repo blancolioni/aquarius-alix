@@ -252,7 +252,7 @@ package body Aquarius.Loader is
 
                Aquarius.Tokens.Scan (Grammar.Frame, Line (1 .. Line_Last),
                                      False, Complete, Have_Class,
-                                     Class, Tok, First, Next);
+                                     Class, Tok, First, Next, null);
                if Have_Class then
                   Tok_Pos := Aquarius.Source.Get_Column_Position
                     (Source_Pos, Aquarius.Source.Column_Number (First));
