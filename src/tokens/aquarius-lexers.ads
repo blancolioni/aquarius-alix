@@ -48,6 +48,10 @@ package Aquarius.Lexers is
    --  Convenience function for a lexer that recognises
    --  exactly one of the characters in S
 
+   function Sequence (S : String) return Lexer;
+   --  Convenience function for a lexer that recognises
+   --  a sequence of characters given by S
+
    function Symbol_Lexer (S : String) return Lexer;
    --  Symbol_Lexer creates a lexer that parses the longest
    --  sequence of characters that matches one of the given

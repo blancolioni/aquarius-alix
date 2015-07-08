@@ -21,10 +21,21 @@ package body Aquarius.Tokens is
                                  Text   : in     String;
                                  Result :    out Token);
 
-   --  Find the class which matches the text
-   function Find_Class (Frame : Token_Frame;
-                        Text  : String)
-                       return Token_Class;
+   function Find_Class
+     (Frame          : Token_Frame;
+      Text           : String;
+      Report_Missing : Boolean := True;
+      Full_Text      : Boolean := False)
+      return Token_Class;
+   --  Find the class which matches the text.  If Report_Missing is True,
+   --  then failing to find a class will cause a complaint to be written
+   --  to Standard_Error.  If Full_Text is True, only a class which matches
+   --  every character in the text will be considered
+
+   function Find_Class_By_Name
+     (Frame : Token_Frame;
+      Name  : String)
+      return Token_Class;
 
    ----------
    -- "<=" --
@@ -94,15 +105,39 @@ package body Aquarius.Tokens is
       Text      : in     String;
       Tok       :    out Token)
    is
-      Class : constant Token_Class := Find_Class (Frame, Text);
-      Tok_Info : constant Token_Info :=
-        (Id            => Frame.Token_Vector.Last_Index + 1,
-         Class         => Class,
-         Reserved      => True,
-         Text          => To_Token_Text (Text),
-         Standard_Text => To_Standard_Token_Text (Text,
-                                                  Frame.Case_Sensitive));
+      Class    : Token_Class := Find_Class (Frame, Text,
+                                            Report_Missing => False,
+                                            Full_Text      => True);
+      Tok_Info : Token_Info :=
+                   (Id            => Frame.Token_Vector.Last_Index + 1,
+                    Class         => Class,
+                    Reserved      => True,
+                    Text          => To_Token_Text (Text),
+                    Standard_Text =>
+                      To_Standard_Token_Text
+                        (Text,
+                         Frame.Case_Sensitive));
    begin
+      if Class = Null_Token_Class then
+         declare
+            use Aquarius.Lexers;
+            Lex : constant Lexer := Sequence (Text);
+         begin
+            Class := Find_Class_By_Name (Frame, "$symbol");
+            if Class = Null_Token_Class then
+               Create_Token_Class
+                 (Frame     => Frame,
+                  Name      => "$symbol",
+                  Delimiter => False,
+                  Lex       => Lex,
+                  Class     => Class);
+            else
+               Frame.Class_Vector (Class).Lex :=
+                 Frame.Class_Vector (Class).Lex or Lex;
+            end if;
+            Tok_Info.Class := Class;
+         end;
+      end if;
       Frame.Token_Vector.Append (Tok_Info);
       Tok := Tok_Info.Id;
    end Create_Reserved_Token;
@@ -199,9 +234,12 @@ package body Aquarius.Tokens is
    -- Find_Class --
    ----------------
 
-   function Find_Class (Frame : Token_Frame;
-                        Text  : String)
-                       return Token_Class
+   function Find_Class
+     (Frame          : Token_Frame;
+      Text           : String;
+      Report_Missing : Boolean := True;
+      Full_Text      : Boolean := False)
+      return Token_Class
    is
       use type Aquarius.Lexers.Lexer;
       Possible       : Token_Class;
@@ -223,7 +261,9 @@ package body Aquarius.Tokens is
               Aquarius.Lexers.Run (Class.Lex, Text);
          begin
 
-            if Length > Text'First then
+            if Length > Text'Last
+              or else (not Full_Text and then Length > Text'First)
+            then
                if Possible_Count = 0 or else Length > Best_Match then
                   Unique := True;
                   Possible_Count := 1;
@@ -239,9 +279,11 @@ package body Aquarius.Tokens is
          end;
       end loop;
       if Possible_Count = 0 then
-         Ada.Text_IO.Put_Line
-           (Ada.Text_IO.Standard_Error,
-            "no class found for text: " & Text);
+         if Report_Missing then
+            Ada.Text_IO.Put_Line
+              (Ada.Text_IO.Standard_Error,
+               "no class found for text: " & Text);
+         end if;
       elsif not Unique then
          Ada.Text_IO.Put_Line
            (Ada.Text_IO.Standard_Error,
@@ -253,6 +295,8 @@ package body Aquarius.Tokens is
                   "   matching class: " & Get_Name (Frame, Class));
             end if;
          end loop;
+         raise Constraint_Error with
+           "multiple matching classes found for text: " & Text;
       end if;
 
       if Unique then
@@ -261,6 +305,26 @@ package body Aquarius.Tokens is
          return Null_Token_Class;
       end if;
    end Find_Class;
+
+   ------------------------
+   -- Find_Class_By_Name --
+   ------------------------
+
+   function Find_Class_By_Name
+     (Frame : Token_Frame;
+      Name  : String)
+      return Token_Class
+   is
+   begin
+      for Result in
+        Real_Token_Class'First .. Frame.Class_Vector.Last_Index
+      loop
+         if Frame.Class_Vector (Result).Name = Name then
+            return Result;
+         end if;
+      end loop;
+      return Null_Token_Class;
+   end Find_Class_By_Name;
 
    ---------------
    -- Get_Class --
@@ -450,8 +514,11 @@ package body Aquarius.Tokens is
                    Class      :    out Token_Class;
                    Tok        :    out Token;
                    First      : in out Positive;
-                   Last       :    out Natural)
+                   Last       :    out Natural;
+                   Token_OK   : access
+                     function (Tok : Token) return Boolean)
    is
+      pragma Unreferenced (Token_OK);
    begin
       while First <= Text'Last and then Text (First) = ' ' loop
          First := First + 1;

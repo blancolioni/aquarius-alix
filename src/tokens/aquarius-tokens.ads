@@ -177,7 +177,9 @@ package Aquarius.Tokens is
                    Class      :    out Token_Class;
                    Tok        :    out Token;
                    First      : in out Positive;
-                   Last       :    out Natural);
+                   Last       :    out Natural;
+                   Token_OK   : access
+                     function (Tok : Token) return Boolean);
    --  Scan: scan from the beginning of Text, looking for the first
    --  token.  If a complete token is found, Complete is set to True
    --  and the class, token and the first and last index of the token
@@ -189,6 +191,8 @@ package Aquarius.Tokens is
    --  contain a full line, for example if it is being entered
    --  interactively.  If Partial is False, then the end of text
    --  will be treated as a delimiter.
+   --  If Token_OK is not null, it will be called when there are
+   --  multiple token matches to attempt disambiguation.
 
 private
 
