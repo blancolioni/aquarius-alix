@@ -2,8 +2,8 @@ top_level ::= program
 case_sensitive = false
 
 identifier               ::= ![A-Za-z_$][A-Za-z_0-9$]*!
-numericLiteral           ::= standard ada_numeric_literal
-stringLiteral            ::= !(\x22[^\x22]*\x22)|('[^']*')!
+numericLiteral           ::= !([0-9]+(\.[0-9]*)?)|(0x[0-9A-Fa-f]+)!
+stringLiteral            ::= !(\x22([^\x22]|(\\[.]))*\x22)|('([^']|(\\[.]))*')!
 delimiter                ::= delimiters "(),.:;{}[]"
 regularExpressionLiteral ::= !/[^/]+/[g]?!
 
