@@ -5,7 +5,6 @@ identifier               ::= ![A-Za-z_$][A-Za-z_0-9$]*!
 numericLiteral           ::= standard ada_numeric_literal
 stringLiteral            ::= !(\x22[^\x22]*\x22)|('[^']*')!
 delimiter                ::= delimiters "(),.:;{}[]"
-symbol                   ::= ![\x21%^&*<>|?+/=~-]+!
 regularExpressionLiteral ::= !/[^/]+/[g]?!
 
 line_comment  = "//"
