@@ -4,8 +4,7 @@ case_sensitive = false
 identifier               ::= ![A-Za-z_$][A-Za-z_0-9$]*!
 numericLiteral           ::= !([0-9]+(\.[0-9]*)?)|(0x[0-9A-Fa-f]+)!
 stringLiteral            ::= !(\x22([^\x22]|(\\[.]))*\x22)|('([^']|(\\[.]))*')!
-delimiter                ::= delimiters "(),.:;{}[]"
-regularExpressionLiteral ::= !/[^/]+/[g]?!
+regularExpressionLiteral ::= !/([^/]|(\\/))+/[gi]*!
 
 line_comment  = "//"
 block_comment_start = "/*"
@@ -17,10 +16,13 @@ format '(' no_space_before no_space_after
 format ')' no_space_before space_after
 format ',' no_space_before space_after
 format '{' space_before new_line_after
-format '}' new_line_before new_line_after
+format '}' new_line_before
+format ':' no_space_before space_after
 
 format statementList indented_child
 format functionBody indented_child
+format propertyNameAndValue indented_child
+
 program ::= sourceElements
 
 literal ::= 
@@ -128,9 +130,7 @@ logicalOrExpression ::= < logicalAndExpression / '||' >
 
 conditionalExpression ::= logicalOrExpression [ '?' assignmentExpression ':' assignmentExpression ]
 
-assignmentExpression ::= 
-     leftHandSideExpression assignmentOperator assignmentExpression
-   | conditionalExpression
+assignmentExpression ::= conditionalExpression { assignmentOperator conditionalExpression }
 
 assignmentOperator ::= '=' | '*=' | '/=' | '%=' | '+=' | '-=' | '<<=' | '>>=' | '&=' | '|='
 
@@ -153,10 +153,10 @@ statement ::=
 
 block ::= '{' statementList '}'
 
-statementList ::= { statement }
+statementList ::= { statement [ ';' ] }
 
 variableStatement ::= 
-	'var' variableDeclarationList [ ';' ]
+	'var' variableDeclarationList
 
 variableDeclarationList ::= < variableDeclaration / ',' >
 
@@ -165,28 +165,28 @@ variableDeclaration ::=
 
 initialiser ::= '=' assignmentExpression
 
-expressionStatement ::= expression [ ';' ]
+expressionStatement ::= expression
 
-ifStatement ::= 'if' '(' expression ')' statement [ 'else' statement ]
+ifStatement ::= 'if' '(' expression ')' statement [ ';' ] [ 'else' statement  [ ';' ] ]
 
 iterationStatement ::= doStatement | whileStatement | forStatement
 
-doStatement ::= 'do' statement 'while' '(' expression ')' [ ';' ]
+doStatement ::= 'do' statement 'while' '(' expression ')'
 
 whileStatement ::= 'while' '(' expression ')' statement
 
 forStatement ::= 'for' '(' forLoop ')' statement
 
-forLoop ::= [ expression ] [ ';' ] [ expression ] [ ';' ] [ expression ]
-          | 'var' variableDeclarationList [ ';' ] [ expression ] [ ';' ] [ expression ]
+forLoop ::= [ expression ] ';' [ expression ] ';' [ expression ]
+          | 'var' variableDeclarationList ';'[ expression ] ';' [ expression ]
           | leftHandSideExpression 'in' expression
           | 'var' variableDeclaration 'in' expression
 
-continueStatement ::= 'continue' [ identifier ] [ ';' ]
+continueStatement ::= 'continue' [ identifier ]
 
-breakStatement ::= 'break' [ identifier ] [ ';' ]
+breakStatement ::= 'break' [ identifier ]
 
-returnStatement ::= 'return' [ expression ] [ ';' ]
+returnStatement ::= 'return' [ expression ]
 
 withStatement ::= 'with' '(' expression ')' statement
 
@@ -200,7 +200,7 @@ caseClause ::= 'case' expression ':' [ statementList ]
              
 labelledStatement ::= identifier ':' statement
 
-throwStatement ::= 'throw' expression [ ';' ]
+throwStatement ::= 'throw' expression
 
 tryStatement ::= 'try' block [ catch ] [ finally ]
 
@@ -216,6 +216,6 @@ formalParameterList ::= { identifier / ',' }
 
 functionBody ::= sourceElements
 
-sourceElements ::= { sourceElement }
+sourceElements ::= { sourceElement [ ';' ] }
 
 sourceElement ::= statement | functionDeclaration
