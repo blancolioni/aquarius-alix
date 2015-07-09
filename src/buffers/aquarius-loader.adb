@@ -120,6 +120,11 @@ package body Aquarius.Loader is
                                then Grammar.Block_Comment_End
                                else "");
 
+      Tok_Pos           : Aquarius.Source.Source_Position;
+
+      function Token_OK (Tok : Aquarius.Tokens.Token) return Boolean
+      is (Token_OK (Tok, Tok_Pos, Context));
+
    begin
 
       if Trace_Files then
@@ -145,17 +150,17 @@ package body Aquarius.Loader is
       while not Aquarius.Source.End_Of_File (Source_Pos) loop
          declare
             use type Aquarius.Tokens.Token;
-            Line              : String (1 .. 1000);
-            Line_Last         : Natural;
-            Next, First       : Natural;
-            Old_First         : Natural;
-            Class             : Aquarius.Tokens.Token_Class;
-            Tok               : Aquarius.Tokens.Token;
-            Tok_Pos           : Aquarius.Source.Source_Position;
-            Complete          : Boolean;
-            Have_Class        : Boolean;
-            Have_Error        : Boolean;
-            Vertical_Space    : Natural := 0;
+            Line           : String (1 .. 1000);
+            Line_Last      : Natural;
+            Next, First    : Natural;
+            Old_First      : Natural;
+            Class          : Aquarius.Tokens.Token_Class;
+            Tok            : Aquarius.Tokens.Token;
+            Complete       : Boolean;
+            Unique         : Boolean;
+            Have_Class     : Boolean;
+            Have_Error     : Boolean;
+            Vertical_Space : Natural := 0;
             LF : constant Character :=
                    Ada.Characters.Latin_1.LF;
          begin
@@ -252,8 +257,8 @@ package body Aquarius.Loader is
                end if;
 
                Aquarius.Tokens.Scan (Grammar.Frame, Line (1 .. Line_Last),
-                                     False, Complete, Have_Class,
-                                     Class, Tok, First, Next, null);
+                                     False, Complete, Have_Class, Unique,
+                                     Class, Tok, First, Next, Token_OK'Access);
                if Have_Class then
                   Tok_Pos := Aquarius.Source.Get_Column_Position
                     (Source_Pos, Aquarius.Source.Column_Number (First));
