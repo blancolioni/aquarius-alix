@@ -23,10 +23,10 @@ pragma Unreferenced (Aquarius.Transformers.Action_Script);
 
 package body Aquarius.Loader is
 
-   Trace_Files : constant Boolean := False;
+   Trace_Files : constant Boolean := True;
    --  if True, report each loaded file to standard_output
 
-   Show_Full_Path : constant Boolean := True;
+   Show_Full_Path : constant Boolean := False;
    --  If true, the full path of each file is displayed while loading it
 
    function Load
@@ -119,6 +119,7 @@ package body Aquarius.Loader is
                               (if Grammar.Have_Block_Comment
                                then Grammar.Block_Comment_End
                                else "");
+
    begin
 
       if Trace_Files then
