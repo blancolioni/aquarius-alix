@@ -1,5 +1,3 @@
---  with Ada.Text_IO;
-
 with Aquarius.Errors;
 with Aquarius.Properties;
 with Aquarius.Syntax.Checks;
@@ -11,6 +9,10 @@ with Aquarius.Trace;
 package body Aquarius.Programs.Parser is
 
    Free_Ambiguity_List : List_Of_Ambiguities.List;
+
+   Ambiguity_Counters : Aquarius.Counters.Counter_Source;
+
+   Enable_Trace : constant Boolean := False;
 
    type Parseable_Type is (Parseable_Token, Parseable_Tree);
 
@@ -107,6 +109,10 @@ package body Aquarius.Programs.Parser is
       Child   : in     Program_Tree)
       return Ambiguity
    with Pre => Child /= null;
+
+   function Show_Ambiguity
+     (Item : Ambiguity)
+      return String;
 
    procedure Parse_String (Context : in out Parse_Context;
                            Line    : in     String);
@@ -450,17 +456,6 @@ package body Aquarius.Programs.Parser is
       use List_Of_Ambiguities;
       A : Ambiguity;
    begin
-      if Child = null then
-         raise Constraint_Error with "new ambiguity: child is null";
-      end if;
-
---        Ada.Text_IO.Put_Line
---          ("New_Ambiguity: Child = " & Child.Image);
---
---        if Parent /= null then
---           Ada.Text_IO.Put_Line
---             ("New_Ambiguity: Parent = " & Parent.Image);
---        end if;
 
       if Free_Ambiguity_List.Is_Empty then
          A := new Ambiguity_Record;
@@ -469,6 +464,7 @@ package body Aquarius.Programs.Parser is
          Free_Ambiguity_List.Delete_First;
       end if;
       A.all := (Active     => True,
+                Identity   => Ambiguity_Counters.Next,
                 Parent     => Parent,
                 Top        => Child,
                 Right      => null,
@@ -494,8 +490,12 @@ package body Aquarius.Programs.Parser is
       This_A      : constant Ambiguity :=
         List_Of_Ambiguities.Element (Current);
    begin
---        Ada.Text_IO.Put_Line
---          ("Parse_Ambiguous_Token: [" & Tok_Text & "]");
+      if Enable_Trace then
+         Aquarius.Trace.Trace_Put_Line
+           (Aquarius.Trace.Parsing,
+            "Parse_Ambiguous_Token: [" & Tok_Text & "]");
+      end if;
+
 --        if Right /= null then
 --           Ada.Text_IO.Put_Line ("   right: " & Right.Image);
 --        end if;
@@ -507,8 +507,13 @@ package body Aquarius.Programs.Parser is
             A     : constant Ambiguity :=
               New_Ambiguity (Current, Parent, Child);
          begin
---              Ada.Text_IO.Put_Line ("  option" & I'Img &
---                                    ": " & Child.Image);
+            if Enable_Trace then
+               Aquarius.Trace.Trace_Put_Line
+                 (Aquarius.Trace.Parsing,
+                  "  option" & I'Img &
+                    ": " & Child.Image);
+            end if;
+
             Child.Set_Foster_Parent (Parent);
             Child.Expand_All;
             A.Location :=
@@ -594,6 +599,14 @@ package body Aquarius.Programs.Parser is
                          Current, Context);
          end;
       else
+
+         if Enable_Trace then
+            Aquarius.Trace.Trace_Put_Line
+              (Aquarius.Trace.Parsing,
+               "Choice has" & Natural'Image (Match_Count) & " matches: "
+               & Choice.Path_Image);
+         end if;
+
          This_A.Active := False;
          for I in 1 .. Syn.Child_Count loop
             if Match (I) then
@@ -700,12 +713,17 @@ package body Aquarius.Programs.Parser is
             A : Ambiguity;
          begin
 
---              Ada.Text_IO.Put_Line
---                ("Ambiguous optional node at [" & Tok_Text & "]");
---              Ada.Text_IO.Put_Line
---                ("    parent node is [" & Parent.Image & "]");
---              Ada.Text_IO.Put_Line
---                ("    optional node is [" & With_Optional.Image & "]");
+            if Enable_Trace then
+               Aquarius.Trace.Trace_Put_Line
+                 (Aquarius.Trace.Parsing,
+                  "Ambiguous optional node at [" & Tok_Text & "]");
+               Aquarius.Trace.Trace_Put_Line
+                 (Aquarius.Trace.Parsing,
+                  "    parent node is [" & Parent.Image & "]");
+               Aquarius.Trace.Trace_Put_Line
+                 (Aquarius.Trace.Parsing,
+                  "    optional node is [" & With_Optional.Image & "]");
+            end if;
 
             A := New_Ambiguity (Current, Parent, With_Optional);
             A.Location :=
@@ -1062,21 +1080,31 @@ package body Aquarius.Programs.Parser is
       Count : Natural := 0;
    begin
 
-      Aquarius.Trace.Trace_Put_Line
-        (Aquarius.Trace.Parsing,
-         "Parse: " & Tok_Text);
+      if Enable_Trace then
+         Aquarius.Trace.Trace_Put_Line
+           (Aquarius.Trace.Parsing,
+            "Parse: " & Tok_Text);
+      end if;
 
       while Has_Element (It) loop
          if Element (It).Active then
             if Token_OK (Item, Element (It).Location) then
---                 Aquarius.Trace.Trace_Put_Line
---                   (Aquarius.Trace.Parsing,
---                    "  into: "
---                    & Aquarius.Trees.Cursors.Image (Element (It).Location));
+               if Enable_Trace then
+                  Aquarius.Trace.Trace_Put_Line
+                    (Aquarius.Trace.Parsing,
+                     "  into: " & Show_Ambiguity (Element (It)));
+               end if;
+
                Count := Count + 1;
                Parse_Token (Item, Tok_Text, It, Context);
                Previous (It);
             else
+               if Enable_Trace then
+                  Aquarius.Trace.Trace_Put_Line
+                    (Aquarius.Trace.Parsing,
+                     "  [deleting: " & Show_Ambiguity (Element (It)));
+               end if;
+
                T := It;
                Previous (It);
                A := Element (T);
@@ -1085,6 +1113,12 @@ package body Aquarius.Programs.Parser is
                Delete (Context.Ambiguities, T);
             end if;
          else
+            if Enable_Trace then
+               Aquarius.Trace.Trace_Put_Line
+                 (Aquarius.Trace.Parsing,
+                  "  [skip inactive: " & Show_Ambiguity (Element (It)));
+            end if;
+
             Previous (It);
          end if;
       end loop;
@@ -1101,12 +1135,35 @@ package body Aquarius.Programs.Parser is
 
       Update_Ambiguities (Context);
 
---        for A of Context.Ambiguities loop
---           Aquarius.Trace.Trace_Put_Line
---             (Aquarius.Trace.Parsing,
---              "  keeping: "
---              & Aquarius.Trees.Cursors.Image (A.Location));
---        end loop;
+      if Enable_Trace then
+         for A of Context.Ambiguities loop
+            Aquarius.Trace.Trace_Put_Line
+              (Aquarius.Trace.Parsing,
+               "  keeping: " & Show_Ambiguity (A));
+         end loop;
+      end if;
+
+      if Enable_Trace then
+         declare
+            Active_Count : Natural := 0;
+         begin
+            for A of Context.Ambiguities loop
+               if A.Active then
+                  Active_Count := Active_Count + 1;
+               end if;
+            end loop;
+
+            Aquarius.Trace.Trace_Put_Line
+              (Aquarius.Trace.Parsing,
+               "active ambiguity count at "
+               & "'" & Tok_Text & "' "
+               & Aquarius.Source.Show (Item.Position)
+               & ":"
+               & Natural'Image (Active_Count)
+               & " of"
+               & Natural'Image (Natural (Context.Ambiguities.Length)));
+         end;
+      end if;
 
    end Parse_Token;
 
@@ -1551,6 +1608,26 @@ package body Aquarius.Programs.Parser is
    begin
       Context.Vertical_Space := Space;
    end Set_Vertical_Space;
+
+   --------------------
+   -- Show_Ambiguity --
+   --------------------
+
+   function Show_Ambiguity
+     (Item : Ambiguity)
+      return String
+   is
+      Result : constant String :=
+                 Aquarius.Counters.Show (Item.Identity)
+                 & " "
+                 & (if not Item.Active then "[inactive] " else "")
+                 & "["
+                 & (if Item.Parent = null then "" else Item.Parent.Path_Image)
+                 & "] "
+                 & Aquarius.Trees.Cursors.Image (Item.Location);
+   begin
+      return Result;
+   end Show_Ambiguity;
 
    ---------------
    -- Token_OK --

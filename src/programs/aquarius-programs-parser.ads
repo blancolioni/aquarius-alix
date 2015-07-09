@@ -1,3 +1,5 @@
+private with Aquarius.Counters;
+
 with Aquarius.Grammars;
 with Aquarius.Source;
 with Aquarius.Tokens;
@@ -91,6 +93,7 @@ private
    type Ambiguity_Record is
       record
          Active     : Boolean;
+         Identity   : Aquarius.Counters.Counter_Type;
          Parent     : Program_Tree;
          Right      : Program_Tree;
          Top        : Program_Tree;
