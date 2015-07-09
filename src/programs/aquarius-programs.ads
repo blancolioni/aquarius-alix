@@ -240,6 +240,8 @@ package Aquarius.Programs is
    function Name (Item : Program_Tree_Type)
                  return String;
 
+   function Path_Image (Item : Program_Tree_Type) return String;
+
 --     overriding
 --     function Location_Line (Location : Program_Tree_Type)
 --                            return Positive;
