@@ -2,6 +2,8 @@ with Ada.Characters.Latin_1;
 with Ada.Directories;
 with Ada.Strings.Fixed;
 
+with Aquarius.Library;
+
 package body Aquarius.Source is
 
    ---------
@@ -233,11 +235,15 @@ package body Aquarius.Source is
             Col_Image  : constant String :=
               Ada.Strings.Fixed.Trim (Column_Number'Image (Position.Column),
                                       Ada.Strings.Left);
+            File_Image : constant String :=
+                           (if Aquarius.Library.Show_Paths_In_Messages
+                            then Position.File.Get_Full_Path
+                            else Position.File.Get_File_Name);
          begin
             if Position = No_Source_Position then
                return "no source position";
             else
-               return Position.File.Get_Full_Path & ":" &
+               return File_Image & ":" &
                  Line_Image & ":" &
                  Col_Image;
             end if;
