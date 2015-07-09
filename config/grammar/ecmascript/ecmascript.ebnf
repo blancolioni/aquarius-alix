@@ -73,7 +73,7 @@ memberExpressionHead ::=
 memberExpressionTail ::= '[' expression ']'
                        | '.' identifier
 
-newExpression ::= 'new' memberExpression arguments
+newExpression ::= 'new' memberExpression [ arguments ]
                 
 callExpression ::= memberExpressionHead { callExpressionTail }
 
