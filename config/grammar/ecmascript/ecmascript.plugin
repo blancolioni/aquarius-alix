@@ -1,0 +1,7 @@
+plugin Ecmascript version 0.1 is
+
+   group run_check : semantic is
+      ecmascript_check;
+   end run_check;
+   
+end Ecmascript;

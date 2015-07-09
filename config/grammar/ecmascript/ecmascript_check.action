@@ -1,0 +1,53 @@
+before Program do
+   null;
+end;
+
+before program/sourceElements do
+   child.top_level := 1;
+end;
+
+before sourceElements/sourceElement do
+   child.top_level := parent.top_level;
+end;
+
+before sourceElement/statement
+    or sourceElement/functionDeclaration
+    or statement/expressionStatement
+    or expressionStatement/expression
+    or expression/assignmentExpression
+do
+   child.top_level := parent.top_level;
+end;
+
+before assignmentExpression/conditionalExpression do
+   if parent.target then
+      null;
+   else
+      parent.target := child;
+      child.top_level := parent.top_level;
+      child.assignment_target := 1;
+   end if;
+end;
+
+before variableDeclaration do
+   tree.top_level := tree^statement.top_level;
+end;
+
+after variableDeclaration/identifier do
+   if parent.top_level then
+      io.put_line ("top level: " & identifier.text);
+      Komnenos.Define(parent, identifier, "variable-declaration");
+   end if;
+end;
+
+before variableDeclaration/initialiser do
+   child.top_level := parent.top_level;
+end;
+   
+after Program do
+   Aqua.Report_State;
+end;
+
+after functionDeclaration/identifier do
+   Komnenos.Define (parent, identifier, "function-declaration");   
+end;
