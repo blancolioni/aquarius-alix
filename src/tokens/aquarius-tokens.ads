@@ -174,6 +174,7 @@ package Aquarius.Tokens is
                    Partial    : in     Boolean;
                    Complete   :    out Boolean;
                    Have_Class :    out Boolean;
+                   Unique     :    out Boolean;
                    Class      :    out Token_Class;
                    Tok        :    out Token;
                    First      : in out Positive;

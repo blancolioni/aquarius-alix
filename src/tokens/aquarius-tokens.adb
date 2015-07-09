@@ -32,6 +32,15 @@ package body Aquarius.Tokens is
    --  to Standard_Error.  If Full_Text is True, only a class which matches
    --  every character in the text will be considered
 
+   type Array_Of_Token_Classes is array (Positive range <>) of Token_Class;
+
+   function Find_Classes
+     (Frame          : Token_Frame;
+      Text           : String)
+      return Array_Of_Token_Classes;
+   --  Find all token classes which match Text, starting at Text'First,
+   --  and matching any positive number of characters.
+
    function Find_Class_By_Name
      (Frame : Token_Frame;
       Name  : String)
@@ -326,6 +335,35 @@ package body Aquarius.Tokens is
       return Null_Token_Class;
    end Find_Class_By_Name;
 
+   ------------------
+   -- Find_Classes --
+   ------------------
+
+   function Find_Classes
+     (Frame          : Token_Frame;
+      Text           : String)
+      return Array_Of_Token_Classes
+   is
+      Max    : constant Natural := Natural (Frame.Class_Vector.Length);
+      Count  : Natural := 0;
+      Result : Array_Of_Token_Classes (1 .. Max);
+   begin
+      for I in 1 .. Frame.Class_Vector.Last_Index loop
+         declare
+            Class  : Token_Class_Info renames Frame.Class_Vector (I);
+            Length : constant Natural :=
+                       Aquarius.Lexers.Run (Class.Lex, Text);
+         begin
+            if Length > 0 then
+               Count := Count + 1;
+               Result (Count) := I;
+            end if;
+         end;
+      end loop;
+
+      return Result (1 .. Count);
+   end Find_Classes;
+
    ---------------
    -- Get_Class --
    ---------------
@@ -511,6 +549,7 @@ package body Aquarius.Tokens is
                    Partial    : in     Boolean;
                    Complete   :    out Boolean;
                    Have_Class :    out Boolean;
+                   Unique     :    out Boolean;
                    Class      :    out Token_Class;
                    Tok        :    out Token;
                    First      : in out Positive;
@@ -518,8 +557,11 @@ package body Aquarius.Tokens is
                    Token_OK   : access
                      function (Tok : Token) return Boolean)
    is
-      pragma Unreferenced (Token_OK);
    begin
+      Unique := True;
+      Tok := Null_Token;
+      Class := Null_Token_Class;
+
       while First <= Text'Last and then Text (First) = ' ' loop
          First := First + 1;
       end loop;
@@ -531,40 +573,62 @@ package body Aquarius.Tokens is
          return;
       end if;
 
-      Class := Find_Class (Frame, Text (First .. Text'Last));
-      if Class = Null_Token_Class then
-         Have_Class := False;
-         Complete   := True;
-      else
-         Have_Class := True;
-         declare
-            Class_Info : Token_Class_Info renames
-              Frame.Class_Vector.Element (Class);
-         begin
-            if Class_Info.Delimiter then
-               Get_Reserved_Token (Frame, Class,
-                                   Text (First .. First),
-                                   Tok);
-               Complete := True;
-               Last := First;
-            else
-               Last := Aquarius.Lexers.Run (Class_Info.Lex,
-                                            Text (First .. Text'Last)) - 1;
-               if Last >= First and then
-                 (Last < Text'Last or else
-                    (Last >= Text'Last and then not Partial))
-               then
-                  Complete := True;
-                  if Last > Text'Last then
-                     Last := Text'Last;
+      declare
+         Classes : constant Array_Of_Token_Classes :=
+                     Find_Classes (Frame, Text (First .. Text'Last));
+      begin
+
+         if Classes'Length = 0 then
+            Have_Class := False;
+            Complete   := True;
+         else
+            for Test_Class of Classes loop
+               declare
+                  Class_Info : Token_Class_Info renames
+                                 Frame.Class_Vector.Element (Test_Class);
+                  Temp_Last  : Natural;
+               begin
+                  Temp_Last :=
+                    Aquarius.Lexers.Run
+                      (Class_Info.Lex,
+                       Text (First .. Text'Last)) - 1;
+
+                  if Temp_Last >= First and then
+                    (Temp_Last < Text'Last or else
+                       (Temp_Last >= Text'Last and then not Partial))
+                  then
+                     if Have_Class then
+                        Have_Class := Token_OK = null or else Token_OK (Tok);
+                     end if;
+
+                     if Temp_Last > Text'Last then
+                        Temp_Last := Text'Last;
+                     end if;
+
+                     declare
+                        Test_Tok : Token;
+                     begin
+                        Get_Reserved_Token (Frame, Test_Class,
+                                            Text (First .. Temp_Last),
+                                            Test_Tok);
+
+                        if Have_Class then
+                           if Token_OK = null or else Token_OK (Test_Tok) then
+                              Unique := False;
+                           end if;
+                        else
+                           Class := Test_Class;
+                           Tok   := Test_Tok;
+                           Last  := Temp_Last;
+                        end if;
+                     end;
+                     Have_Class := True;
+
                   end if;
-                  Get_Reserved_Token (Frame, Class,
-                                      Text (First .. Last),
-                                      Tok);
-               end if;
-            end if;
-         end;
-      end if;
+               end;
+            end loop;
+         end if;
+      end;
 
    end Scan;
 
