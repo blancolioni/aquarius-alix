@@ -15,6 +15,7 @@ with Aquarius.Programs.Arrangements;
 with Aquarius.Rendering.Manager;
 with Aquarius.Target.Manager;
 with Aquarius.Themes;
+with Aquarius.Trace;
 with Aquarius.Trees.Cursors;
 
 with Aquarius.Version;
@@ -123,8 +124,6 @@ begin
          return;
       end if;
 
-      Show_Allocations;
-
       Komnenos.Entities.Aqua_Entities.Create_Aqua_Object (null);
 
       declare
@@ -148,6 +147,11 @@ begin
             Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error,
                                   "grammar file contains errors; exiting");
             return;
+         end if;
+
+         if Command_Line.Enable_Debug /= "" then
+            Aquarius.Trace.Enable (Command_Line.Enable_Debug);
+            Aquarius.Trace.Start_Trace;
          end if;
 
          Input :=
@@ -236,6 +240,10 @@ begin
                Set_Output (Standard_Output);
             end if;
          end;
+
+         if Command_Line.Enable_Debug /= "" then
+            Aquarius.Trace.End_Trace;
+         end if;
 
          Show_Allocations;
 
