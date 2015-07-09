@@ -1419,6 +1419,22 @@ package body Aquarius.Programs is
 --        return Program_Tree (Item.Child (Index));
 --     end Program_Child;
 
+   ----------------
+   -- Path_Image --
+   ----------------
+
+   function Path_Image (Item : Program_Tree_Type) return String is
+   begin
+      if Item.Program_Parent = null then
+         return Item.Name;
+      elsif Item.Name /= "" then
+         return Item.Program_Parent.Path_Image
+           & "/" & Item.Name;
+      else
+         return Item.Program_Parent.Path_Image;
+      end if;
+   end Path_Image;
+
    -------------------
    -- Program_Child --
    -------------------
