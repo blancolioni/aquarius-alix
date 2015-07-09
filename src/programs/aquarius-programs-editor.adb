@@ -320,6 +320,7 @@ package body Aquarius.Programs.Editor is
                         Editor.Left_Terminal.Text & Ch;
                Complete : Boolean;
                Have_Class : Boolean;
+               Unique     : Boolean;
                Class      : Aquarius.Tokens.Token_Class;
                Tok        : Aquarius.Tokens.Token;
                First      : Positive := 1;
@@ -331,6 +332,7 @@ package body Aquarius.Programs.Editor is
                   Partial    => False,
                   Complete   => Complete,
                   Have_Class => Have_Class,
+                  Unique     => Unique,
                   Class      => Class,
                   Tok        => Tok,
                   First      => First,
@@ -392,13 +394,14 @@ package body Aquarius.Programs.Editor is
    is
       Complete    : Boolean;
       Have_Class  : Boolean;
+      Unique      : Boolean;
       Class       : Aquarius.Tokens.Token_Class;
       First, Next : Natural := 1;
    begin
       Aquarius.Tokens.Scan
         (Editor.Root.Syntax.Frame,
          Editor.Input.Buffer (1 .. Editor.Input.Length),
-         False, Complete, Have_Class,
+         False, Complete, Have_Class, Unique,
          Class, Tok, First, Next, null);
       if (Force and then Next > 0) or else
         (Have_Class and then Complete and then Next < Editor.Input.Length)

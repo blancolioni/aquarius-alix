@@ -792,6 +792,7 @@ package body Aquarius.Programs.Parser is
       Tok               : Aquarius.Tokens.Token;
       Tok_Pos           : Aquarius.Source.Source_Position;
       Complete          : Boolean;
+      Unique            : Boolean;
       Have_Class        : Boolean;
       Have_Error        : Boolean;
       Grammar           : constant Aquarius.Grammars.Aquarius_Grammar :=
@@ -801,7 +802,7 @@ package body Aquarius.Programs.Parser is
          Have_Error := False;
 
          Aquarius.Tokens.Scan (Grammar.Frame, Line (Line'First .. Line'Last),
-                               False, Complete, Have_Class,
+                               False, Complete, Have_Class, Unique,
                                Class, Tok, First, Next, null);
          if Have_Class then
             Aquarius.Source.Set_Position
