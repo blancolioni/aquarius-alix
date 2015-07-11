@@ -4,6 +4,7 @@ with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
+with Aquarius.Config_Paths;
 with Aquarius.Errors;
 with Aquarius.Programs.Parser;
 with Aquarius.Projects;
@@ -402,9 +403,9 @@ package body Aquarius.Loader is
                                        (Line (Line'First + 11 .. Line'Last),
                                         Both));
                   Destination_Path : constant String :=
-                                       Compose
-                                         (Containing_Directory (Path),
-                                          "_" & Simple_Name (Path));
+                                       Aquarius.Config_Paths.Config_Path
+                                       & "/scratch/"
+                                       & Simple_Name (Path);
                begin
                   Execute_Transformer (Transformer      => Transformer,
                                        Source_Path      => Path,
