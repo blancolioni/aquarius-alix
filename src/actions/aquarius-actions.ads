@@ -175,6 +175,10 @@ package Aquarius.Actions is
                        Group_Name  : String)
                       return Action_Group;
 
+   function Have_Group (List        : Action_Group_List;
+                        Group_Name  : String)
+                        return Boolean;
+
    procedure Iterate
      (List    : Action_Group_List;
       Trigger : Action_Execution_Trigger;

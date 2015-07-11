@@ -59,9 +59,6 @@ package body  Aquarius.Grammars is
 
       Grammar.Non_Terminals.Insert (Name, New_Syntax);
 
---        Ada.Text_IO.Put_Line
---          (Name & " = " & Aquarius.Lexers.Show (Lex));
-
    end Add_Class_Terminal;
 
    ----------------------
@@ -765,12 +762,31 @@ package body  Aquarius.Grammars is
       Group_Name   : in String;
       Start        : in Aquarius.Programs.Program_Tree)
    is
-      Group : constant Aquarius.Actions.Action_Group :=
-                Aquarius.Actions.Get_Group (Grammar.Actions, Group_Name);
    begin
 
-      Start.Run_Actions (Group);
-
+      if Aquarius.Actions.Have_Group
+        (Grammar.Actions, Group_Name)
+      then
+         declare
+            Group : constant Aquarius.Actions.Action_Group :=
+                      Aquarius.Actions.Get_Group (Grammar.Actions, Group_Name);
+         begin
+            Start.Run_Actions (Group);
+         end;
+      else
+         declare
+            use Aquarius.Actions;
+            Trigger : Action_Execution_Trigger;
+         begin
+            Trigger :=
+              Action_Execution_Trigger'Value (Group_Name & "_Trigger");
+            Grammar.Run_Action_Trigger (Start, Trigger);
+         exception
+            when Constraint_Error =>
+               raise Constraint_Error with
+               Group_Name & " is neither an action group nor a trigger";
+         end;
+      end if;
    end Run_Actions;
 
    -----------------------

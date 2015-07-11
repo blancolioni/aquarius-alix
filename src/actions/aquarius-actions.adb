@@ -291,16 +291,25 @@ package body Aquarius.Actions is
         "expected to find a group called '" & Group_Name & "'";
    end Get_Group;
 
-   ---------------------
-   -- Get_Group_Count --
-   ---------------------
+   ----------------
+   -- Have_Group --
+   ----------------
 
---     function Get_Group_Count (List : Action_Group_List)
---                              return Natural
---     is
---     begin
---        return List.Groups.Last_Index;
---     end Get_Group_Count;
+   function Have_Group
+     (List        : Action_Group_List;
+      Group_Name  : String)
+      return Boolean
+   is
+      use type Aquarius.Names.Aquarius_Name;
+   begin
+      for Group of List.Groups loop
+         if Group.Group_Name = Group_Name then
+            return True;
+         end if;
+      end loop;
+
+      return False;
+   end Have_Group;
 
    -------------
    -- Iterate --
