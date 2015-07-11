@@ -43,7 +43,7 @@ package body Aquarius.Transformers.Action_Script is
    is
       pragma Unreferenced (Transformer);
    begin
-      Ada.Text_IO.Put_Line ("Put (" & Line & ");");
+      Ada.Text_IO.Put_Line ("IO.Put (" & Line & ");");
    end On_Script_Inline;
 
    --------------------
@@ -70,7 +70,7 @@ package body Aquarius.Transformers.Action_Script is
       pragma Unreferenced (Transformer);
    begin
       Ada.Text_IO.Put_Line
-        ("Put (""" & Safe_Literal (Text) & """);");
+        ("IO.Put (""" & Safe_Literal (Text) & """);");
    end On_Text;
 
    ------------------
@@ -85,10 +85,10 @@ package body Aquarius.Transformers.Action_Script is
    begin
       if Text = "" then
          Ada.Text_IO.Put_Line
-           ("New_Line;");
+           ("IO.New_Line;");
       else
          Ada.Text_IO.Put_Line
-           ("Put_Line (""" & Safe_Literal (Text) & """);");
+           ("IO.Put_Line (""" & Safe_Literal (Text) & """);");
       end if;
    end On_Text_Line;
 
