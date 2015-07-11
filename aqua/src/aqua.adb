@@ -6,7 +6,7 @@ package body Aqua is
 
    function Get_Address (Value : Word) return Address is
    begin
-      return Address (Value and 16#7FFF#);
+      return Address (Value and not Address_Mask_Bits);
    end Get_Address;
 
    --------------
@@ -35,7 +35,7 @@ package body Aqua is
       return External_Reference
    is
    begin
-      return External_Reference (Value and 16#0FFF#);
+      return External_Reference (Value and not External_Mask_Bits);
    end Get_External_Reference;
 
    -----------------
@@ -44,12 +44,12 @@ package body Aqua is
 
    function Get_Integer (Value : Word) return Aqua_Integer is
    begin
-      if (Value and 16#2000#) = 0 then
+      if (Value and 16#0800#) = 0 then
          return Aqua_Integer (Value);
-      elsif Value = 16#2000# then
+      elsif Value = 16#0800# then
          return Aqua_Integer'First;
       else
-         return -Aqua_Integer (16#4000# - Value);
+         return -Aqua_Integer (16#1000# - Value);
       end if;
    end Get_Integer;
 
@@ -62,7 +62,7 @@ package body Aqua is
       return String_Reference
    is
    begin
-      return String_Reference (Value and 16#0FFF#);
+      return String_Reference (Value and not String_Mask_Bits);
    end Get_String_Reference;
 
    --------------
@@ -106,15 +106,6 @@ package body Aqua is
       return (Value and Integer_Mask_Bits) = Integer_Mask_Value;
    end Is_Integer;
 
-   -------------------------
-   -- Is_String_Reference --
-   -------------------------
-
-   function Is_String_Reference (Value : Word) return Boolean is
-   begin
-      return (Value and String_Mask_Bits) = String_Mask_Value;
-   end Is_String_Reference;
-
    --------------
    -- Set_Word --
    --------------
@@ -135,7 +126,7 @@ package body Aqua is
 
    function To_Address_Word (Addr : Address) return Word is
    begin
-      return Word (Addr) + 16#8000#;
+      return Word (Addr) + Address_Mask_Value;
    end To_Address_Word;
 
    ----------------------
@@ -159,7 +150,7 @@ package body Aqua is
       if Value >= 0 then
          return Word (Value);
       else
-         return Word'Last - Word (abs Value) + 1;
+         return 16#1000# - Word (abs Value);
       end if;
    end To_Integer_Word;
 

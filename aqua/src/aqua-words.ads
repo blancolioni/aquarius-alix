@@ -1,7 +1,7 @@
 package Aqua.Words is
 
    Subroutine_Mask : constant := 2#1111_0000_0000_0000#;
-   Subroutine_Tag  : constant := 2#1111_0000_0000_0000#;
+   Subroutine_Tag  : constant := 2#0010_0000_0000_0000#;
 
    function Is_Subroutine_Reference
      (Value : Word)
