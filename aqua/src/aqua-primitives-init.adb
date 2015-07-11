@@ -3,7 +3,7 @@ with Ada.Directories;
 with Ada.Text_IO;
 
 with Aqua.IO;
-with Aqua.Objects;
+with Aqua.Objects.Arrays;
 with Aqua.Words;
 
 package body Aqua.Primitives.Init is
@@ -64,6 +64,16 @@ package body Aqua.Primitives.Init is
       Arguments : Array_Of_Words)
       return Word;
 
+   function Handle_Array_New
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word;
+
+   function Handle_Array_Append
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word;
+
    function Handle_To_Lower
      (Context : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Array_Of_Words)
@@ -106,6 +116,10 @@ package body Aqua.Primitives.Init is
       New_Primitive_Function ("object__set", 3, Handle_Set'Access);
       New_Primitive_Function ("object__new", 0, Handle_Object_New'Access);
 
+      New_Primitive_Function ("array__new", 0, Handle_Array_New'Access);
+      New_Primitive_Function ("array__image", 0, Handle_Image'Access);
+      New_Primitive_Function ("array__append", 0, Handle_Array_Append'Access);
+
       New_Primitive_Function ("string__to_lower", 1, Handle_To_Lower'Access);
 
       New_Primitive_Function ("aqua__report_state", 0,
@@ -133,6 +147,10 @@ package body Aqua.Primitives.Init is
          New_Primitive_Object ("map", Local_Object_Class);
       end;
 
+      New_Class ("array",
+                 ((new String'("new"), Get_Primitive ("array__new")),
+                  (new String'("append"), Get_Primitive ("array__append"))));
+
       New_Class ("aqua", (1 => (new String'("report_state"),
                                 Get_Primitive ("aqua__report_state"))));
 
@@ -146,6 +164,40 @@ package body Aqua.Primitives.Init is
       Created_Primitives := True;
 
    end Create_Primitives;
+
+   -------------------------
+   -- Handle_Array_Append --
+   -------------------------
+
+   function Handle_Array_Append
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word
+   is
+      Arr : constant access Aqua.Objects.Arrays.Root_Array_Type'Class :=
+                 Aqua.Objects.Arrays.Root_Array_Type'Class
+                   (Context.To_External_Object (Arguments (1)).all)'Access;
+      Value  : constant Word := Arguments (2);
+   begin
+      Arr.Append (Value);
+      return Arguments (1);
+   end Handle_Array_Append;
+
+   ----------------------
+   -- Handle_Array_New --
+   ----------------------
+
+   function Handle_Array_New
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word
+   is
+      pragma Unreferenced (Arguments);
+      Item : constant Primitive_Object_Access :=
+               new Aqua.Objects.Arrays.Root_Array_Type;
+   begin
+      return Context.To_Word (Item);
+   end Handle_Array_New;
 
    ---------------------
    -- Handle_Contains --
