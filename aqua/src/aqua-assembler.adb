@@ -191,7 +191,7 @@ package body Aqua.Assembler is
                                  then Dest - (Addr + 2)
                                  else 512 - (Addr + 2 - Dest));
                   begin
-                     pragma Assert (Offset < 512);
+                     pragma Assert (Offset < 256);
                      pragma Assert (Offset mod 2 = 0);
                      A.Set_Word (Addr,
                                  (Code and 16#FF00#)
@@ -316,6 +316,16 @@ package body Aqua.Assembler is
       declare
          Info : Label_Info := A.Labels (Name);
       begin
+         if Info.Defined then
+            if Address'Max (A.PC, Get_Address (Info.Value))
+              - Address'Min (A.PC, Get_Address (Info.Value))
+              > 254
+            then
+               raise Constraint_Error with
+                 Aqua.IO.Hex_Image (A.PC) & ": branch too far";
+            end if;
+         end if;
+
          Info.References.Append ((A.PC, Relative => False, Branch => True));
          A.Labels (Name) := Info;
          return Info.Value;
