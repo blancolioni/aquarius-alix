@@ -63,7 +63,8 @@ private
       Name      : in     String);
 
    overriding procedure End_Aggregate_Element
-     (Processor : in out Pdp_Scanner);
+     (Processor : in out Pdp_Scanner;
+      Name      : in     String);
 
    overriding procedure End_Aggregate
      (Processor : in out Pdp_Scanner);

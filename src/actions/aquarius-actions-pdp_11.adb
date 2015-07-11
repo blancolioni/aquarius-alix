@@ -111,9 +111,14 @@ package body Aquarius.Actions.Pdp_11 is
    ---------------------------
 
    overriding procedure End_Aggregate_Element
-     (Processor : in out Pdp_Scanner)
+     (Processor : in out Pdp_Scanner;
+      Name      : in     String)
    is
    begin
+      Put_Line (Processor.File,
+                "    mov 2(sp), -(sp)");
+      Put_Line (Processor.File,
+                "    mov """ & Name & """, -(sp)");
       Put_Line (Processor.File,
                 "    trap property_set");
    end End_Aggregate_Element;
@@ -230,7 +235,9 @@ package body Aquarius.Actions.Pdp_11 is
       Put_Line (Processor.File, "    trap iterator_start");
       Put_Line (Processor.File, Image (Loop_Label) & ":");
       Put_Line (Processor.File, "    trap iterator_next");
-      Put_Line (Processor.File, "    beq " & Image (Exit_Label));
+      Put_Line (Processor.File, "    bne +1");
+      Put_Line (Processor.File, "    jmp " & Image (Exit_Label));
+      Put_Line (Processor.File, "1:");
       Scanner.Scan_Action (Processor, Statements);
       Put_Line (Processor.File, "    jmp " & Image (Loop_Label));
       Put_Line (Processor.File, Image (Exit_Label) & ":");
@@ -303,6 +310,13 @@ package body Aquarius.Actions.Pdp_11 is
    begin
       if Name = "&" then
          Put_Line (Processor.File, "    trap join_strings");
+      elsif Name = "=" then
+         Put_Line (Processor.File, "    clr r0");
+         Put_Line (Processor.File, "    mov (sp)+, r1");
+         Put_Line (Processor.File, "    cmp r1, (sp)+");
+         Put_Line (Processor.File, "    bne +1");
+         Put_Line (Processor.File, "    inc r0");
+         Put_Line (Processor.File, "1:  mov r0, -(sp)");
       elsif Name = "not" then
          Put_Line (Processor.File, "    clr r0");
          Put_Line (Processor.File, "    tst (sp)+");
@@ -493,11 +507,10 @@ package body Aquarius.Actions.Pdp_11 is
      (Processor : in out Pdp_Scanner;
       Name      : in     String)
    is
+      pragma Unreferenced (Processor);
+      pragma Unreferenced (Name);
    begin
-      Put_Line (Processor.File,
-                "    mov (sp), -(sp)");
-      Put_Line (Processor.File,
-                "    mov """ & Name & """, -(sp)");
+      null;
    end Start_Aggregate_Element;
 
    -------------------
@@ -544,18 +557,23 @@ package body Aquarius.Actions.Pdp_11 is
                 & Natural'Image (16#4001#));
 
       Put_Line (Processor.File,
-                "aqua ="
+                "array ="
                 & Natural'Image (16#4002#));
 
       Put_Line (Processor.File,
-                "io ="
+                "aqua ="
                 & Natural'Image (16#4003#));
+
+      Put_Line (Processor.File,
+                "io ="
+                & Natural'Image (16#4004#));
 
       Put_Line (Processor.File,
                 "project ="
                 & Natural'Image (16#0100#));
 
       External_Procedure (Processor, "map", Immediate => True);
+      External_Procedure (Processor, "array", Immediate => True);
       External_Procedure (Processor, "io", Immediate => True);
       External_Procedure (Processor, "aqua", Immediate => True);
       External_Procedure (Processor, "ada", Immediate => True);
