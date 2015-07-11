@@ -1,5 +1,4 @@
 with Ada.Directories;
-with Ada.Text_IO;
 
 with Aquarius.Errors;
 with Aquarius.Source;
@@ -102,7 +101,6 @@ package body Aquarius.Actions.Scanner is
       Name      : String)
    is
    begin
-      Ada.Text_IO.Put_Line ("frame: deleting " & Name);
       Processor.Frame_Table.Delete (Name);
    end Delete_Frame_Entry;
 
@@ -188,12 +186,10 @@ package body Aquarius.Actions.Scanner is
          Scan (Processor, Action.Program_Child ("iterator_loop"));
       elsif Action.Name = "iterator_loop" then
          declare
---              Identifier : constant Program_Tree :=
---                             Action.Program_Child ("identifier");
-            Identifier_Name : constant String := "";
---                                  (if Identifier /= null
---                                   then Identifier.Text
---                                   else "");
+            Identifier      : constant Program_Tree :=
+                                Action.Program_Child ("identifier");
+            Identifier_Name : constant String :=
+                                Identifier.Text;
             Object          : constant Program_Tree :=
                                 Action.Program_Child ("object_reference");
             Loop_Statement  : constant Program_Tree :=
@@ -331,10 +327,14 @@ package body Aquarius.Actions.Scanner is
    begin
       Processor.Start_Aggregate;
       for E of Elements loop
-         Processor.Start_Aggregate_Element
-           (E.Program_Child ("identifier").Text);
-         Scan_Expression (Processor, E.Program_Child ("expression"));
-         Processor.End_Aggregate_Element;
+         declare
+            Name : constant String :=
+                     E.Program_Child ("identifier").Text;
+         begin
+            Processor.Start_Aggregate_Element (Name);
+            Scan_Expression (Processor, E.Program_Child ("expression"));
+            Processor.End_Aggregate_Element (Name);
+         end;
       end loop;
       Processor.End_Aggregate;
    end Scan_Aggregate;
