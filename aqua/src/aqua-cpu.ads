@@ -100,4 +100,7 @@ private
      (CPU : in out Aqua_CPU_Type;
       Value : Word);
 
+   procedure Show_Stack
+     (CPU : in out Aqua_CPU_Type);
+
 end Aqua.CPU;

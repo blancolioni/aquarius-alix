@@ -3,17 +3,17 @@ with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with Aqua.Arithmetic;
+with Aqua.CPU.Traps;
 with Aqua.IO;
-with Aqua.Iterators;
 with Aqua.Objects;
 with Aqua.Primitives;
 with Aqua.Traps;
-with Aqua.Words;
 
 package body Aqua.CPU is
 
    Trace_Properties : constant Boolean := False;
    Trace_Code       : constant Boolean := False;
+   Trace_Stack      : constant Boolean := False;
 
    Current_Output : Ada.Text_IO.File_Type;
 
@@ -29,6 +29,10 @@ package body Aqua.CPU is
                 Operand : Aqua.Architecture.Operand_Type);
 
    procedure Handle_Mov
+     (CPU      : in out Aqua_CPU_Type'Class;
+      Src, Dst : Aqua.Architecture.Operand_Type);
+
+   procedure Handle_Cmp
      (CPU      : in out Aqua_CPU_Type'Class;
       Src, Dst : Aqua.Architecture.Operand_Type);
 
@@ -50,7 +54,9 @@ package body Aqua.CPU is
 
    Double_Operand : constant array (Word range 1 .. 6)
      of Double_Operand_Handler :=
-       (Handle_Mov'Access, others => null);
+       (1      => Handle_Mov'Access,
+        2      => Handle_Cmp'Access,
+        others => null);
 
    Single_Operand : constant array (Word range 8 .. 23)
      of Single_Operand_Handler :=
@@ -285,6 +291,43 @@ package body Aqua.CPU is
    end Handle_Clr;
 
    ----------------
+   -- Handle_Cmp --
+   ----------------
+
+   procedure Handle_Cmp
+     (CPU      : in out Aqua_CPU_Type'Class;
+      Src, Dst : Aqua.Architecture.Operand_Type)
+   is
+      X, Y : Word;
+   begin
+      Aqua.Architecture.Read
+        (Src, CPU.R, CPU.Image.all, X);
+      Aqua.Architecture.Read
+        (Dst, CPU.R, CPU.Image.all, Y);
+
+      if Is_Integer (X) and then Is_Integer (Y) then
+         Set_NZ (CPU, X - Y);
+      elsif Is_String_Reference (X) and then Is_String_Reference (Y) then
+         --  unfortunately, if one of the operands is a string defined
+         --  in a source file, while the other is a generated string,
+         --  they will end up with different string references, so
+         --  we have to use a string compare as a backup
+         CPU.N := False;
+         CPU.Z := X = Y or else CPU.Show (X) = CPU.Show (Y);
+      else
+         CPU.N := False;
+         CPU.Z := X = Y;
+      end if;
+
+      if Trace_Code then
+         Ada.Text_IO.Put_Line
+           ("cmp: " & CPU.Show (X) & "/" & Aqua.IO.Hex_Image (X)
+            & " = " & CPU.Show (Y) & "/" & Aqua.IO.Hex_Image (Y)
+            & " -> " & Boolean'Image (CPU.Z));
+      end if;
+   end Handle_Cmp;
+
+   ----------------
    -- Handle_Dec --
    ----------------
 
@@ -402,6 +445,11 @@ package body Aqua.CPU is
       Index : Natural)
    is
    begin
+
+      if Trace_Code then
+         Ada.Text_IO.Put_Line ("trap" & Natural'Image (Index));
+      end if;
+
       case Index is
          when Aqua.Traps.Allocate =>
             declare
@@ -430,217 +478,17 @@ package body Aqua.CPU is
                  (CPU.To_String_Word (Result));
             end;
          when Aqua.Traps.Property_Get =>
-            declare
-               Argument_Count : constant Natural :=
-                                  Natural (Get_Integer (CPU.Pop));
-               Arguments : Array_Of_Words (1 .. Argument_Count);
-               Name           : constant Word := CPU.Pop;
-               Target         : Word;
-               Value          : Word;
-            begin
-               for I in Arguments'Range loop
-                  Arguments (I) := CPU.Pop;
-               end loop;
 
-               Target := CPU.Pop;
-
-               if not Is_String_Reference (Name) then
-                  raise Constraint_Error
-                    with "property name must be a string: "
-                    & CPU.Show (Name);
-               end if;
-
-               if Is_String_Reference (Target) then
-                  declare
-                     Prim : constant Subroutine_Reference :=
-                              Aqua.Primitives.Get_Primitive
-                                ("string__" & CPU.Image.To_String (Name));
-                  begin
-                     Value :=
-                       Aqua.Primitives.Call_Primitive
-                         (CPU, Prim, Target & Arguments);
-                  end;
-               elsif not Is_External_Reference (Target) then
-                  raise Constraint_Error
-                    with "property "
-                    & CPU.Show (Name)
-                    & " defined only on objects; found "
-                    & CPU.Show (Target);
-               else
-                  declare
-                     Ext : constant access External_Object_Interface'Class :=
-                             CPU.To_External_Object (Target);
-                  begin
-                     if Ext.all not in Aqua.Objects.Object_Interface'Class then
-                        raise Constraint_Error
-                          with "property "
-                          & CPU.Show (Name)
-                          & " defined only on objects; found "
-                          & CPU.Show (Target);
-                     end if;
-                  end;
-
-                  declare
-                     use Aqua.Objects;
-                     Target_Object : constant access Object_Interface'Class :=
-                                       Object_Interface'Class
-                                         (CPU.To_External_Object
-                                            (Target).all)'Access;
-                     Property_Name : constant String :=
-                                       CPU.Image.To_String (Name);
-                  begin
-                     Value := Target_Object.Get_Property (Property_Name);
-                  end;
-
-                  if Aqua.Words.Is_Subroutine_Reference (Value) then
-                     Value :=
-                       Aqua.Primitives.Call_Primitive
-                         (CPU, Aqua.Words.Get_Subroutine_Reference (Value),
-                          Target & Arguments);
-                  end if;
-
-               end if;
-
-               if Trace_Properties then
-                  Ada.Text_IO.Put_Line
-                    ("get: "
-                     & CPU.Name (Target)
-                     & "."
-                     & CPU.Show (Name)
-                     & " -> "
-                     & CPU.Show (Value));
-               end if;
-
-               CPU.Push (Value);
-            end;
+            Aqua.CPU.Traps.Handle_Get_Property (CPU);
 
          when Aqua.Traps.Property_Set =>
-            declare
-               Name  : constant Word := CPU.Pop;
-               Target : constant Word := CPU.Pop;
-               Value : constant Word := CPU.Pop;
-            begin
-               if Trace_Properties then
-                  Ada.Text_IO.Put_Line
-                    ("set: "
-                     & CPU.Name (Target)
-                     & "."
-                     & CPU.Show (Name)
-                     & " <- "
-                     & CPU.Show (Value));
-               end if;
-
-               if not Is_String_Reference (Name) then
-                  raise Constraint_Error
-                    with "set: expected a string for property name, but found "
-                    & CPU.Show (Name);
-               end if;
-
-               if not Is_External_Reference (Target) then
-                  raise Constraint_Error
-                    with "set: expected an object but found "
-                    & CPU.Show (Target);
-               end if;
-
---                 pragma Assert (Is_String_Reference (Name));
---                 pragma Assert (Is_External_Reference (Target));
-
-               declare
-                  Ext : constant access External_Object_Interface'Class :=
-                          CPU.To_External_Object (Target);
-               begin
-                  if Ext.all not in Aqua.Objects.Object_Interface'Class then
-                     raise Constraint_Error
-                       with "property "
-                       & CPU.Show (Name)
-                       & " defined only on objects; found "
-                       & CPU.Show (Target);
-                  end if;
-               end;
-
-               declare
-                  use Aqua.Objects;
-                  Target_Object : constant access Object_Interface'Class :=
-                                    Object_Interface'Class
-                                      (CPU.To_External_Object
-                                         (Target).all)'Access;
-                  Property_Name : constant String :=
-                                    CPU.Image.To_String (Name);
-               begin
-                  Target_Object.Set_Property (Property_Name, Value);
-               end;
-            end;
+            Aqua.CPU.Traps.Handle_Set_Property (CPU);
 
          when Aqua.Traps.Iterator_Start =>
-            declare
-               use Aqua.Iterators;
-               Container_Word : constant Word := CPU.Pop;
-               Container_Ext  : access External_Object_Interface'Class;
-               Container      : access Aqua_Container_Interface'Class;
-            begin
-               if not Is_External_Reference (Container_Word) then
-                  raise Constraint_Error
-                    with "iterator_start: expected an object but found "
-                    & CPU.Show (Container_Word);
-               end if;
-
-               Container_Ext := CPU.To_External_Object (Container_Word);
-
-               if Container_Ext.all not in Aqua_Container_Interface'Class then
-                  raise Constraint_Error
-                    with "iterator_start: cannot iterate over "
-                    & Container_Ext.Name;
-               end if;
-
-               Container :=
-                 Aqua_Container_Interface'Class (Container_Ext.all)'Access;
-
-               if False then
-                  Ada.Text_IO.Put_Line ("iterating: " & Container.Show);
-               end if;
-
-               declare
-                  It : constant External_Object_Access :=
-                         new Aqua_Iterator_Interface'Class'
-                           (Container.Start);
-               begin
-                  CPU.Push (CPU.To_Word (It));
-                  CPU.Push (0);
-               end;
-            end;
+            Aqua.CPU.Traps.Handle_Iterator_Start (CPU);
 
          when Aqua.Traps.Iterator_Next =>
-            declare
-               use Aqua.Iterators;
-               Old_Value     : constant Word := CPU.Pop;
-               pragma Unreferenced (Old_Value);
-               Iterator_Word : constant Word := CPU.Pop;
-               Iterator_Ext  : access External_Object_Interface'Class;
-               Iterator      : access Aqua_Iterator_Interface'Class;
-            begin
-               if not Is_External_Reference (Iterator_Word) then
-                  raise Constraint_Error
-                    with "iterator_next: expected an object but found "
-                    & CPU.Show (Iterator_Word);
-               end if;
-
-               Iterator_Ext := CPU.To_External_Object (Iterator_Word);
-
-               if Iterator_Ext.all not in Aqua_Iterator_Interface'Class then
-                  raise Constraint_Error
-                    with "iterator_next: cannot iterate over "
-                    & Iterator_Ext.Name;
-               end if;
-
-               Iterator :=
-                 Aqua_Iterator_Interface'Class (Iterator_Ext.all)'Access;
-
-               Iterator.Next (CPU.Z);
-               if not CPU.Z then
-                  CPU.Push (Iterator_Word);
-                  CPU.Push (Iterator.Current);
-               end if;
-            end;
+            Aqua.CPU.Traps.Handle_Iterator_Next (CPU);
 
          when Aqua.Traps.IO_Put_String =>
             declare
@@ -801,14 +649,24 @@ package body Aqua.CPU is
      (CPU : in out Aqua_CPU_Type)
       return Word
    is
+      X : constant Word :=
+            CPU.Image.Get_Word
+              (Get_Address (CPU.R (6)));
    begin
-      return X : constant Word :=
-        CPU.Image.Get_Word
-          (Get_Address (CPU.R (6)))
-      do
-         Aqua.Arithmetic.Inc
-           (CPU.R (6), 2);
-      end return;
+      if Trace_Stack or else Trace_Code then
+         Ada.Text_IO.Put_Line
+           ("pop("
+            & Aqua.IO.Hex_Image
+              (Get_Address (CPU.R (6)))
+            & ")->"
+            & Aqua.IO.Hex_Image (X));
+      end if;
+
+      Aqua.Arithmetic.Inc
+        (CPU.R (6), 2);
+
+      return X;
+
    end Pop;
 
    ----------
@@ -822,6 +680,15 @@ package body Aqua.CPU is
    begin
       Aqua.Arithmetic.Dec (CPU.R (6), 2);
       CPU.Image.Set_Word (Get_Address (CPU.R (6)), Value);
+      if Trace_Stack or else Trace_Code then
+         Ada.Text_IO.Put_Line
+           ("push("
+            & Aqua.IO.Hex_Image
+              (Get_Address (CPU.R (6)))
+            & ","
+            & Aqua.IO.Hex_Image (Value)
+            & ")");
+      end if;
    end Push;
 
    ------------
@@ -890,7 +757,7 @@ package body Aqua.CPU is
    is
    begin
       if Is_Address (Value) then
-         return Aqua.IO.Hex_Image (Get_Address (Value));
+         return "@" & Aqua.IO.Hex_Image (Get_Address (Value));
       elsif Is_Integer (Value) then
          return "#" & Aqua_Integer'Image (Get_Integer (Value));
       elsif Is_External_Reference (Value) then
@@ -901,6 +768,26 @@ package body Aqua.CPU is
          return Aqua.IO.Hex_Image (Value);
       end if;
    end Show;
+
+   ----------------
+   -- Show_Stack --
+   ----------------
+
+   procedure Show_Stack
+     (CPU : in out Aqua_CPU_Type)
+   is
+   begin
+      Ada.Text_IO.Put_Line ("---- stack dump");
+      for A in Get_Address (CPU.R (6)) .. Address'Last - 1 loop
+         if A mod 2 = 0 then
+            Ada.Text_IO.Put_Line
+              (Aqua.IO.Hex_Image (A)
+               & ": "
+               & CPU.Show (CPU.Image.Get_Word (A)));
+         end if;
+      end loop;
+      Ada.Text_IO.Put_Line ("---------------");
+   end Show_Stack;
 
    ------------------------
    -- To_External_Object --
