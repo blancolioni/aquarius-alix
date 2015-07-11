@@ -1,0 +1,15 @@
+plugin Binary version 0.1 is
+
+   group run_check : semantic is
+      binary_check;
+   end run_check;
+   
+   group generate_spec : code is
+      binary_generate_spec;
+   end generate;
+   
+   group generate_body : code is
+      binary_generate_body;
+   end generate;
+   
+end Binary;

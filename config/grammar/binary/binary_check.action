@@ -1,0 +1,98 @@
+before top_level do
+   top.files := new Array;
+end;
+
+after top_level do
+   aqua.report_state;
+end;
+
+after expression/primary_expression do
+   parent.value := child.image;
+end;
+
+after file_declaration/file_name do
+   tree.file_name := file_name.image;
+   tree.entries := new Array;
+   top.files.append ((name => child.image, entries => tree.entries));
+end;
+
+after file_entry/file_entry_name do
+   parent.entry := new Map;
+   parent.layout := new Array;
+   parent^file_declaration.entries.append
+     ((name => child.image, declaration => parent));
+end;
+
+after file_entry/location do
+   parent.entry.location := location/expression.value;
+end;
+
+after array_size/expression do
+   parent.array_size := expression.value;
+end;
+
+after record_type/array_size do 
+   parent.array_size := child.array_size;
+end;
+
+after file_entry/record_type do
+   if child.array_size then
+      parent.entry.array_size := child.array_size;
+   end if;
+end;
+
+before component_type do
+   tree.component_size := "4";
+end;
+
+after named_type/identifier do
+   parent.type := identifier.text;
+   parent.component_size := "4";
+end;
+
+after named_type/numeric_literal do
+   named_type.component_size := numeric_literal.text;
+end;
+
+after component_type/named_type do
+   parent.type := named_type.type;
+   parent.component_size := named_type.component_size;
+end;
+
+after component_type/access_Type do
+   parent.type := access_type/identifier.image;
+   parent.access_type := 1;
+end;
+
+after record_component/component_name do
+   parent.component_name := child.image;
+end;
+
+after record_component/component_type do
+   parent.component_type := child.type;
+   parent.component_access := child.access_type;
+   parent.component_size := child.component_size;
+end;
+
+after record_component/array_size do
+   parent.array_size := child.array_size;
+end;
+
+after record_component do
+   --  io.put_line (record_component/component_name.image);
+   tree.component :=
+      (name   => tree.component_name,
+       type   => tree.component_type,
+       access => tree.component_access,
+       array_size => tree.array_size,
+       size => tree.component_size);
+   if tree.component.type.to_lower = "word" then
+      tree.component.type_name := "WL.Binary_IO.Word_" & tree.component.size;
+   elsif tree.component.type.to_lower = "string" then
+      tree.component.type_name := "String (1 .. " & tree.component.size & ")";
+   else
+      io.put_line ("warning: unknown type: " & tree.component.type);
+   end if;  
+   tree^file_entry.layout.append (tree.component);
+   tree^file_entry.entry.set (tree.component.name, tree.component);
+end;
