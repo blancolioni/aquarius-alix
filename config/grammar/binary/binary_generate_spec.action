@@ -1,0 +1,46 @@
+@!aquarius:actionscript
+@before file_declaration do
+@IO.set_output (tree.file_name.to_lower & ".ads");
+private with Ada.Containers.Vectors;
+private with WL.Binary_IO;
+
+package [tree.file_name] is
+
+   type File_Type is private;
+   
+   procedure Load 
+     (File : in out File_Type;
+      Path : String);
+@end;
+@after file_declaration do
+
+private
+
+@   for file_entry in tree.entries loop
+   type [file_entry.name]_Type is
+      record
+@      for component in file_entry.declaration.layout loop
+         [component.name] : [component.type_name];
+@      end loop;
+      end record;
+
+@   if file_entry.declaration.entry.array_size then
+   package [file_entry.name]_Vectors is
+     new Ada.Containers.Vectors (Positive, [file_entry.name]_Type);
+     
+@   end if;
+@   end loop;
+   type File_Type is
+      record
+@   for file_entry in tree.entries loop
+@      if file_entry.declaration.entry.array_size then
+         [file_entry.name]_Vector : [file_entry.name]_Vectors.Vector;
+@      else
+         [file_entry.name]        : [file_entry.name]_Type;
+@      end if;
+@   end loop;
+      end record;
+   
+end [tree.file_name];
+@IO.set_output (0);
+@end;
