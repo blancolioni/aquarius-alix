@@ -199,47 +199,50 @@ begin
             end if;
          end;
 
-         Aquarius.Programs.Arrangements.Arrange
-           (Input,
-            Line_Length => Aquarius.Command_Line.Line_Length);
+         if Command_Line.Output_File /= "" then
 
-         if Command_Line.Renderer = "" then
-            Renderer := Aquarius.Rendering.Manager.Load_Renderer ("text");
-         else
-            Renderer :=
-              Aquarius.Rendering.Manager.Load_Renderer
-              (Command_Line.Renderer);
-         end if;
+            Aquarius.Programs.Arrangements.Arrange
+              (Input,
+               Line_Length => Aquarius.Command_Line.Line_Length);
 
-         if Command_Line.Theme = "" then
-            Theme := Aquarius.Themes.Active_Theme;
-         else
-            Theme := Aquarius.Themes.Load_Theme (Command_Line.Theme);
-         end if;
-
-         Renderer.Set_Theme (Theme);
-
-         declare
-            use Ada.Text_IO;
-            Using_File : constant Boolean := Command_Line.Output_File /= "";
-            File : File_Type;
-         begin
-            if Using_File then
-               Create (File, Out_File, Command_Line.Output_File);
-               Set_Output (File);
+            if Command_Line.Renderer = "" then
+               Renderer := Aquarius.Rendering.Manager.Load_Renderer ("text");
+            else
+               Renderer :=
+                 Aquarius.Rendering.Manager.Load_Renderer
+                   (Command_Line.Renderer);
             end if;
 
-            Aquarius.Programs.Arrangements.Render
-              (Program   => Input,
-               Renderer  => Renderer,
-               Point     => Aquarius.Trees.Cursors.Left_Of_Tree (Input),
-               Partial   => "");
-
-            if Using_File then
-               Close (File);
-               Set_Output (Standard_Output);
+            if Command_Line.Theme = "" then
+               Theme := Aquarius.Themes.Active_Theme;
+            else
+               Theme := Aquarius.Themes.Load_Theme (Command_Line.Theme);
             end if;
-         end;
+
+            Renderer.Set_Theme (Theme);
+
+            declare
+               use Ada.Text_IO;
+               Using_File : constant Boolean := Command_Line.Output_File /= "";
+               File       : File_Type;
+            begin
+               if Using_File then
+                  Create (File, Out_File, Command_Line.Output_File);
+                  Set_Output (File);
+               end if;
+
+               Aquarius.Programs.Arrangements.Render
+                 (Program   => Input,
+                  Renderer  => Renderer,
+                  Point     => Aquarius.Trees.Cursors.Left_Of_Tree (Input),
+                  Partial   => "");
+
+               if Using_File then
+                  Close (File);
+                  Set_Output (Standard_Output);
+               end if;
+            end;
+         end if;
 
          if Command_Line.Enable_Debug /= "" then
             Aquarius.Trace.End_Trace;
