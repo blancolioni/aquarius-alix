@@ -7,22 +7,22 @@ package Aqua is
 
    type Address is mod 2 ** 15;
    type External_Reference is mod 2 ** 14;
-   type Aqua_Integer is range -2 ** 13 .. 2 ** 13 - 1;
+   type Aqua_Integer is range -2 ** 11 .. 2 ** 11 - 1;
    type String_Reference is mod 2 ** 12;
    type Subroutine_Reference is mod 2 ** 12;
 
    type Array_Of_Words is array (Positive range <>) of Word;
 
-   Address_Mask_Bits     : constant := 16#8000#;
-   Address_Mask_Value    : constant := 16#8000#;
+   Address_Mask_Bits     : constant := 2#1000_0000_0000_0000#;
+   Address_Mask_Value    : constant := 2#1000_0000_0000_0000#;
 
    External_Mask_Bits    : constant := 2#1100_0000_0000_0000#;
    External_Mask_Value   : constant := 2#0100_0000_0000_0000#;
 
    String_Mask_Bits      : constant := 2#1111_0000_0000_0000#;
-   String_Mask_Value     : constant := 2#1110_0000_0000_0000#;
+   String_Mask_Value     : constant := 2#0011_0000_0000_0000#;
 
-   Integer_Mask_Bits     : constant := 2#1100_0000_0000_0000#;
+   Integer_Mask_Bits     : constant := 2#1111_0000_0000_0000#;
    Integer_Mask_Value    : constant := 2#0000_0000_0000_0000#;
 
    function Is_Integer (Value : Word) return Boolean;
@@ -39,7 +39,9 @@ package Aqua is
    function To_External_Word (Reference : External_Reference)
                               return Word;
 
-   function Is_String_Reference (Value : Word) return Boolean;
+   function Is_String_Reference (Value : Word) return Boolean
+   is ((Value and String_Mask_Bits) = String_Mask_Value);
+
    function Get_String_Reference (Value : Word) return String_Reference
      with Pre => Is_String_Reference (Value);
    function To_String_Word (Reference : String_Reference) return Word;
