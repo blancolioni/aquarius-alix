@@ -62,7 +62,7 @@ case_option ::= 'when' expression '=>' sequence_of_statements
 for_loop_statement ::= iterator_loop
 
 iterator_loop ::=
-   'for' object_reference loop_statement
+   'for' identifier 'in' object_reference loop_statement
 
 loop_statement ::= 'loop' sequence_of_statements 'end' 'loop'
 
