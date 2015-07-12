@@ -6,8 +6,8 @@ after top_level do
    aqua.report_state;
 end;
 
-after expression/primary_expression do
-   parent.value := child.image;
+after expression do
+   tree.value := tree.image;
 end;
 
 after file_declaration/file_name do
@@ -23,8 +23,12 @@ after file_entry/file_entry_name do
      ((name => child.image, declaration => parent));
 end;
 
+after location/expression do
+   location.value := expression.value;
+end;
+
 after file_entry/location do
-   parent.entry.location := location/expression.value;
+   parent.location := location.value;
 end;
 
 after array_size/expression do
@@ -37,21 +41,21 @@ end;
 
 after file_entry/record_type do
    if child.array_size then
-      parent.entry.array_size := child.array_size;
+      parent.array_size := child.array_size;
    end if;
 end;
 
 before component_type do
-   tree.component_size := "4";
+   tree.component_size := 4;
 end;
 
 after named_type/identifier do
    parent.type := identifier.text;
-   parent.component_size := "4";
+   parent.component_size := 4;
 end;
 
 after named_type/numeric_literal do
-   named_type.component_size := numeric_literal.text;
+   named_type.component_size := numeric_literal.text.to_integer;
 end;
 
 after component_type/named_type do
@@ -78,6 +82,10 @@ after record_component/array_size do
    parent.array_size := child.array_size;
 end;
 
+after record_component/required_value do
+   parent.required_value := child.image;
+end;
+
 after record_component do
    --  io.put_line (record_component/component_name.image);
    tree.component :=
@@ -85,9 +93,12 @@ after record_component do
        type   => tree.component_type,
        access => tree.component_access,
        array_size => tree.array_size,
-       size => tree.component_size);
-   if tree.component.type.to_lower = "word" then
-      tree.component.type_name := "WL.Binary_IO.Word_" & tree.component.size;
+       size => tree.component_size,
+       required_value => tree.required_value);
+   if tree.component_access then
+      tree.component.type_name := "WL.Binary_IO.Word_32";
+   elsif tree.component.type.to_lower = "word" then
+      tree.component.type_name := "WL.Binary_IO.Word_" & tree.component.size * 8;
    elsif tree.component.type.to_lower = "string" then
       tree.component.type_name := "String (1 .. " & tree.component.size & ")";
    else

@@ -24,7 +24,7 @@ private
 @      end loop;
       end record;
 
-@   if file_entry.declaration.entry.array_size then
+@   if file_entry.declaration.array_size then
    package [file_entry.name]_Vectors is
      new Ada.Containers.Vectors (Positive, [file_entry.name]_Type);
      
@@ -33,7 +33,7 @@ private
    type File_Type is
       record
 @   for file_entry in tree.entries loop
-@      if file_entry.declaration.entry.array_size then
+@      if file_entry.declaration.array_size then
          [file_entry.name]_Vector : [file_entry.name]_Vectors.Vector;
 @      else
          [file_entry.name]        : [file_entry.name]_Type;

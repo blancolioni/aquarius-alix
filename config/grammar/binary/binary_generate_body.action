@@ -3,6 +3,16 @@
 @IO.set_output (tree.file_name.to_lower & ".adb");
 package body [tree.file_name] is
 
+   pragma Style_Checks (Off);
+   
+@  for file_entry in tree.entries loop
+@     if not file_entry.declaration.location then
+   procedure Read_[file_entry.name]
+     (File : in out WL.Binary_IO.File_Type;
+      [file_entry.name] : out [file_entry.name]_Type);
+@     end if;
+@  end loop;
+
    ----------
    -- Load --
    ----------
@@ -12,11 +22,32 @@ package body [tree.file_name] is
       Path : String)
    is
       use WL.Binary_IO;
-      Bin : File_Type;
+      Bin : WL.Binary_IO.File_Type;
    begin
       Open (Bin, In_File, Path);
+@  for file_entry in tree.entries loop
+@     if not file_entry.declaration.location then
+      Read_[file_entry.name] (Bin, File.[file_entry.name]);
+@     end if;
+@  end loop;
       Close (Bin);
    end Load;
+   
+@  for file_entry in tree.entries loop
+@     if not file_entry.declaration.location then
+   procedure Read_[file_entry.name]
+     (File : in out WL.Binary_IO.File_Type;
+      [file_entry.name] : out [file_entry.name]_Type)
+   is
+   begin
+@      for component in file_entry.declaration.layout loop
+      WL.Binary_IO.Read (File, [file_entry.name].[component.name]);
+@      end loop;   
+   end Read_[file_entry.name];
+   
+@     end if;
+@  end loop;
+
 @end;
 @after file_declaration do
 end [tree.file_name];
