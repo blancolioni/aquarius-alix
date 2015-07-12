@@ -75,6 +75,11 @@ package body Aqua.Primitives.Init is
       Arguments : Array_Of_Words)
       return Word;
 
+   function Handle_To_Integer
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word;
+
    function Handle_To_Lower
      (Context : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Array_Of_Words)
@@ -122,6 +127,8 @@ package body Aqua.Primitives.Init is
       New_Primitive_Function ("array__append", 0, Handle_Array_Append'Access);
 
       New_Primitive_Function ("string__to_lower", 1, Handle_To_Lower'Access);
+      New_Primitive_Function ("string__to_integer", 1,
+                              Handle_To_Integer'Access);
 
       New_Primitive_Function ("aqua__report_state", 0,
                               Handle_Report_State'Access);
@@ -418,6 +425,22 @@ package body Aqua.Primitives.Init is
          end;
       end if;
    end Handle_Set_Output;
+
+   -----------------------
+   -- Handle_To_Integer --
+   -----------------------
+
+   function Handle_To_Integer
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word
+   is
+      S : constant String := Context.To_String (Arguments (1));
+      T : constant Aqua_Integer :=
+            Aqua_Integer'Value (S);
+   begin
+      return To_Integer_Word (T);
+   end Handle_To_Integer;
 
    ---------------------
    -- Handle_To_Lower --
