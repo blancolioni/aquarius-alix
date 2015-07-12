@@ -44,6 +44,11 @@ package Aqua.CPU is
       Value : Word)
       return String;
 
+   overriding function To_Integer
+     (CPU   : in out Aqua_CPU_Type;
+      Value : Word)
+      return Aqua_Integer;
+
    overriding function To_String_Word
      (CPU  : in out Aqua_CPU_Type;
       Text : String)
