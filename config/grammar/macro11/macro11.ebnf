@@ -36,11 +36,14 @@ directive ::= '.' identifier { operand }
 
 op ::= single_operand
      | double_operand
+     | extended_double_operand
      | branch
      | trap | jump | jump_subroutine | return | subtract_and_branch
      
 single_operand ::= single_operand_instruction arg
 double_operand ::= double_operand_instruction arg ',' arg
+extended_double_operand ::= extended_double_operand_instruction arg ',' identifier
+
 branch ::= branch_instruction branch_destination
 branch_destination ::= identifier | temporary_label
 temporary_label ::= label_direction integer
@@ -61,6 +64,8 @@ single_operand_instruction ::=
                  | 'adc' | 'adcb' | 'sbc' | 'sbcb' | 'tst' | 'tstb'
 
 double_operand_instruction ::= 'mov' | 'movb' | 'cmp' | 'cmpb' | 'add' | 'sub'
+
+extended_double_operand_instruction ::= 'mul' | 'div' | 'ash' | 'ashc' | 'xor'
 
 branch_instruction ::= 
           'br' | 'bne' | 'beq' | 'bge' | 'blt' | 'bgt' | 'ble'

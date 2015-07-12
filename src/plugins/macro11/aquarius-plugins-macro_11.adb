@@ -61,6 +61,10 @@ package body Aquarius.Plugins.Macro_11 is
          Plugins.Macro_11.Assemble.After_Double_Operand'Access);
 
       Plugin.Register_Action
+        ("extended_double_operand", Assemble, After,
+         Plugins.Macro_11.Assemble.After_Extended_Double_Operand'Access);
+
+      Plugin.Register_Action
         ("single_operand", Assemble, After,
          Plugins.Macro_11.Assemble.After_Single_Operand'Access);
 
