@@ -326,6 +326,11 @@ package body Aquarius.Actions.Pdp_11 is
          Put_Line (Processor.File, "    bne +1");
          Put_Line (Processor.File, "    inc r0");
          Put_Line (Processor.File, "1:  mov r0, -(sp)");
+      elsif Name = "*" then
+         Put_Line (Processor.File, "    mov (sp)+, r2");
+         Put_Line (Processor.File, "    mov (sp)+, r0");
+         Put_Line (Processor.File, "    mul r0, r2");
+         Put_Line (Processor.File, "    mov r2, -(sp)");
       else
          raise Constraint_Error with
            "unimplemented: " & Name;
