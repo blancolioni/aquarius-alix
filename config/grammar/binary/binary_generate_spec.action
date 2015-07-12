@@ -11,9 +11,34 @@ package [tree.file_name] is
    procedure Load 
      (File : in out File_Type;
       Path : String);
+      
+@   for file_entry in tree.entries loop
+@      if file_entry.declaration.array_size then
+   function [file_entry.name]_Count
+     (File : File_Type)
+     return Natural;
+     
+   type [file_entry.name]_Cursor is private;
+
+@      for component in file_entry.declaration.layout loop
+   function Get_[component.name] 
+     (Position : [file_entry.name]_Cursor) 
+     return [component.return_type_name];
+@      end loop;
+     
+@      end if;
+@   end loop;
+@   for file_entry in tree.entries loop
+@      if file_entry.declaration.array_size then
+   procedure Scan
+     (File : File_Type;
+      Process : not null access
+        procedure (Position : [file_entry.name]_Cursor));
+        
+@      end if;
+@   end loop;        
 @end;
 @after file_declaration do
-
 private
 
 @   for file_entry in tree.entries loop
@@ -27,7 +52,8 @@ private
 @   if file_entry.declaration.array_size then
    package [file_entry.name]_Vectors is
      new Ada.Containers.Vectors (Positive, [file_entry.name]_Type);
-     
+
+   type [file_entry.name]_Cursor is new [file_entry.name]_Vectors.Cursor;     
 @   end if;
 @   end loop;
    type File_Type is

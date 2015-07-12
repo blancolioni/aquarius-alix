@@ -6,13 +6,36 @@ package body [tree.file_name] is
    pragma Style_Checks (Off);
    
 @  for file_entry in tree.entries loop
-@     if not file_entry.declaration.location then
    procedure Read_[file_entry.name]
      (File : in out WL.Binary_IO.File_Type;
       [file_entry.name] : out [file_entry.name]_Type);
-@     end if;
 @  end loop;
 
+@   for file_entry in tree.entries loop
+@      if file_entry.declaration.array_size then
+   function [file_entry.name]_Count
+     (File : File_Type)
+     return Natural
+   is
+   begin
+      return File.[file_entry.name]_Vector.Last_Index;
+   end [file_entry.name]_Count;
+   
+@      for component in file_entry.declaration.layout loop
+   function Get_[component.name] 
+     (Position : [file_entry.name]_Cursor) 
+     return [component.return_type_name]
+   is
+      use [file_entry.name]_Vectors;
+      Item : [file_entry.name]_Type renames Element (Cursor (Position));
+   begin
+      return [component.converter];
+   end Get_[component.name];
+   
+@      end loop;
+     
+@      end if;
+@   end loop;
    ----------
    -- Load --
    ----------
@@ -28,26 +51,61 @@ package body [tree.file_name] is
 @  for file_entry in tree.entries loop
 @     if not file_entry.declaration.location then
       Read_[file_entry.name] (Bin, File.[file_entry.name]);
+@     else
+      Set_Offset (Bin, File.[file_entry.declaration.location]);
+      declare
+         Count : constant Natural := Natural (File.[file_entry.declaration.array_size]);
+      begin
+         for I in 1 .. Count loop
+            declare
+               [file_entry.name] : [file_entry.name]_Type;
+            begin
+               Read_[file_entry.name] (Bin, [file_entry.name]);
+               File.[file_entry.name]_Vector.Append ([file_entry.name]);
+            end;
+         end loop;
+      end;
 @     end if;
 @  end loop;
       Close (Bin);
    end Load;
    
 @  for file_entry in tree.entries loop
-@     if not file_entry.declaration.location then
    procedure Read_[file_entry.name]
      (File : in out WL.Binary_IO.File_Type;
       [file_entry.name] : out [file_entry.name]_Type)
    is
    begin
 @      for component in file_entry.declaration.layout loop
+@         if component.access then
+      declare
+         Offset : WL.Binary_IO.Word_32;
+      begin
+         WL.Binary_IO.Read (File, Offset);
+         [file_entry.name].[component.name] := new String'(WL.Binary_IO.Read (File, Offset));
+      end;
+@        else
       WL.Binary_IO.Read (File, [file_entry.name].[component.name]);
+@        end if;
 @      end loop;   
    end Read_[file_entry.name];
-   
-@     end if;
-@  end loop;
 
+@  end loop;
+@   for file_entry in tree.entries loop
+@      if file_entry.declaration.array_size then
+   procedure Scan
+     (File : File_Type;
+      Process : not null access
+        procedure (Position : [file_entry.name]_Cursor))
+   is
+   begin
+      for Position in File.[file_entry.name]_Vector.Iterate loop
+         Process ([file_entry.name]_Cursor (Position));
+      end loop;
+   end Scan;
+        
+@      end if;
+@   end loop;        
 @end;
 @after file_declaration do
 end [tree.file_name];

@@ -96,11 +96,17 @@ after record_component do
        size => tree.component_size,
        required_value => tree.required_value);
    if tree.component_access then
-      tree.component.type_name := "WL.Binary_IO.Word_32";
+      tree.component.type_name := "access String";
+      tree.component.return_type_name := "String";
+      tree.component.converter := "Item." & tree.component.name & ".all";
    elsif tree.component.type.to_lower = "word" then
       tree.component.type_name := "WL.Binary_IO.Word_" & tree.component.size * 8;
+      tree.component.return_type_name := "Natural";
+      tree.component.converter := "Natural (Item." & tree.component.name & ")";
    elsif tree.component.type.to_lower = "string" then
       tree.component.type_name := "String (1 .. " & tree.component.size & ")";
+      tree.component.return_type_name := "String";
+      tree.component.converter := "Item." & tree.component.name;
    else
       io.put_line ("warning: unknown type: " & tree.component.type);
    end if;  
