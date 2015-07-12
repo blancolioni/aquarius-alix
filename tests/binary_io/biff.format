@@ -1,0 +1,71 @@
+package Infinity is
+
+for Endien use Little;
+for Access'size use 4;
+for Word'Default_Size use 4;
+
+file Key is
+   Header : record
+      Signature        : String/4 = "KEY ";
+      Version          : String/4 = "V1  ";
+      Bif_Count        : Word;
+      Resource_Count   : Word;
+      Bif_Start        : Word;
+      Resource_Start   : Word;
+   end Header;
+   
+   Bif_Entry at Header.Bif_Start : record (Header.Bif_Count)
+      Length           : Word;
+      File_Name        : access String;
+      File_Name_Length : Word/2;
+      Flags            : Word/2;
+   end Bif_Entry;
+   
+   Resource_Entry at Header.Resource_Start : record (Header.Resource_Count)
+      Name             : String/8;
+      Resource_Type    : Word/2;
+      Resource_Locator : Word/4;
+   end Resource_Entry;
+   
+end Key;
+
+file Biff is
+   Header : record
+      Signature        : String/4 = "BIFF";
+      Version          : String/4 = "V1  ";
+      File_Entry_Count : Word;
+      Tile_Entry_Count : Word;
+      File_Entry_Start : Word;
+   end Header;
+   
+   File_Entry at Header.File_Entry_Start : record (Header.File_Entry_Count)
+      Resource_Locator     : Word;
+      Resource_Data_Offset : Word;
+      Resource_Size        : Word;
+      Resource_Data        : access Word_8 from Resource_Data_Offset, Resource_Size;
+      Resource_Type        : Word/2;
+      Padding              : Word/2;
+   end File_Entry;
+   
+end Biff;
+
+file Tlk is
+   Header : record
+      Signature       : String/4 = "TLK ";
+      Version         : String/4 = "V1  ";
+      Language_Id     : Word/2;
+      String_Refs     : Word;
+      String_Offset   : Word;
+   end Header;
+   
+   Strref_Entry at 18 : record (Header.String_Refs)
+      Entry_Type      : Word/2;
+      Sound_Resource  : String/8;
+      Volume_Variance : Word/4;
+      Pitch_Variance  : Word/4;
+      String_Offset   : Word/4;
+      String_Length   : Word/4;
+      String_Text     : access String from String_Offset, String_Length base Header.String_Offset;
+   end Strref_Entry;
+      
+end Infinity;
