@@ -1,13 +1,15 @@
 @!aquarius:actionscript
 @before file_declaration do
-@IO.set_output (tree.file_name.to_lower & ".adb");
-package body [tree.file_name] is
+@IO.set_output (top.package_file & "-" & tree.file_name.to_lower & ".adb");
+package body [top.package_name].[tree.file_name] is
 
    pragma Style_Checks (Off);
+   pragma Warnings (Off);
    
 @  for file_entry in tree.entries loop
    procedure Read_[file_entry.name]
      (File : in out WL.Binary_IO.File_Type;
+      Target : File_Type;
       [file_entry.name] : out [file_entry.name]_Type);
 @  end loop;
 
@@ -50,9 +52,9 @@ package body [tree.file_name] is
       Open (Bin, In_File, Path);
 @  for file_entry in tree.entries loop
 @     if not file_entry.declaration.location then
-      Read_[file_entry.name] (Bin, File.[file_entry.name]);
+      Read_[file_entry.name] (Bin, File, File.[file_entry.name]);
 @     else
-      Set_Offset (Bin, File.[file_entry.declaration.location]);
+      Set_Offset (Bin, [file_entry.declaration.location]);
       declare
          Count : constant Natural := Natural (File.[file_entry.declaration.array_size]);
       begin
@@ -60,7 +62,7 @@ package body [tree.file_name] is
             declare
                [file_entry.name] : [file_entry.name]_Type;
             begin
-               Read_[file_entry.name] (Bin, [file_entry.name]);
+               Read_[file_entry.name] (Bin, File, [file_entry.name]);
                File.[file_entry.name]_Vector.Append ([file_entry.name]);
             end;
          end loop;
@@ -73,15 +75,52 @@ package body [tree.file_name] is
 @  for file_entry in tree.entries loop
    procedure Read_[file_entry.name]
      (File : in out WL.Binary_IO.File_Type;
+      Target : File_Type;
       [file_entry.name] : out [file_entry.name]_Type)
    is
    begin
 @      for component in file_entry.declaration.layout loop
-@         if component.access then
+@         if component.offset then
+      declare
+         use System.Storage_Elements;
+@            if component.base then
+         use type WL.Binary_IO.Word_32;
+@            end if;
+         Storage : Storage_Array (0 .. Storage_Offset ([file_entry.name].[component.offset.length]) - 1);
+      begin
+@            if component.base then
+         WL.Binary_IO.Read (File, Storage, Target.[component.base] + [file_entry.name].[component.offset.offset]);
+@            else
+         WL.Binary_IO.Read (File, Storage, [file_entry.name].[component.offset.offset]);
+@            end if;
+@            if component.type.to_lower = "string" then
+         declare
+            Count : Natural := 0;
+         begin
+            for X of Storage loop
+               exit when X = 0;
+               Count := Count + 1;
+            end loop;
+            [file_entry.name].[component.name] := new String (1 .. Count);
+            Count := 0;
+            for X of Storage loop
+               exit when X = 0;
+               Count := Count + 1;
+               [file_entry.name].[component.name] (Count) := Character'Val (X);
+            end loop;
+         end;
+@            else
+         [file_entry.name].[component.name] := new Storage_Array'(Storage);
+@            end if;
+      end;
+@         elsif component.access then
       declare
          Offset : WL.Binary_IO.Word_32;
       begin
          WL.Binary_IO.Read (File, Offset);
+@            if component.base then
+         Offset := Offset + Target.[component.base];
+@            end if;
          [file_entry.name].[component.name] := new String'(WL.Binary_IO.Read (File, Offset));
       end;
 @        else
@@ -108,6 +147,6 @@ package body [tree.file_name] is
 @   end loop;        
 @end;
 @after file_declaration do
-end [tree.file_name];
+end [top.package_name].[tree.file_name];
 @IO.set_output (0);
 @end;

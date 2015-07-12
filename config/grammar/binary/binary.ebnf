@@ -1,4 +1,4 @@
-top_level ::= list_of_declarations
+top_level ::= package_declaration
 
 case_sensitive = false
 
@@ -18,6 +18,12 @@ format '(' space_before no_space_after
 format ')' no_space_before space_after
 format ''' no_space_before no_space_after
 format 'is' new_line_after
+
+package_declaration ::= 'package' package_name 'is' list_of_declarations 'end' matching_package_name ';'
+
+package_name ::= < identifier / '.' >
+
+matching_package_name ::= package_name
 
 list_of_declarations ::= { declaration ';' }
 
@@ -68,7 +74,17 @@ component_type ::= named_type | access_type
 
 named_type ::= identifier [ '/' numeric_literal ]
 
-access_type ::=  'access' identifier
+access_type ::=  'access' identifier [ from_clause ] [ base_clause ]
+
+from_clause ::= 'from' access_offset ',' access_length
+
+base_clause ::= 'base' base_offset
+
+base_offset   ::= < identifier / '.' >
+
+access_offset ::= identifier
+
+access_length ::= identifier
 
 array_size ::= '(' expression ')'
 
