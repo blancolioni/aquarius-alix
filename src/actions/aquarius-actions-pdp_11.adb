@@ -188,7 +188,10 @@ package body Aquarius.Actions.Pdp_11 is
          Put_Line (Processor.File,
                    "    tst (sp)+");
          Put_Line (Processor.File,
-                   "    beq " & Image (L1));
+                   "    bne +1");
+         Put_Line (Processor.File,
+                   "    jmp " & Image (L1));
+         Put_Line (Processor.File, "1:");
          Scanner.Scan_Action (Processor, Statements (I));
          Put_Line (Processor.File,
                    "    jmp " & Image (Exit_Label));
