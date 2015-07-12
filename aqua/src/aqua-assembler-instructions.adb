@@ -47,6 +47,10 @@ package body Aqua.Assembler.Instructions is
                         Op_Code      : Word;
                         Byte_Version : Boolean := True);
 
+      procedure Extended_Double
+        (Mnemonic     : String;
+         Op_Code      : Word);
+
       ------------
       -- Branch --
       ------------
@@ -94,6 +98,28 @@ package body Aqua.Assembler.Instructions is
          Info_Map.Insert (Key, Info);
       end Double;
 
+      ---------------------
+      -- Extended_Double --
+      ---------------------
+
+      procedure Extended_Double
+        (Mnemonic     : String;
+         Op_Code      : Word)
+      is
+         Key : Mnemonic_String := (others => ' ');
+         Base : constant Word := 8#070000# + Op_Code * 2 ** 9;
+         Src_Shift : constant Bit_Index := 3;
+         Dst_Shift : constant Bit_Index := 0;
+         Info : constant Instruction_Info :=
+                  (Base      => Base,
+                   Operands  => 2,
+                   Src_Shift => Src_Shift,
+                   Dst_Shift => Dst_Shift);
+      begin
+         Key (Mnemonic'Range) := Mnemonic;
+         Info_Map.Insert (Key, Info);
+      end Extended_Double;
+
       ------------
       -- Single --
       ------------
@@ -132,6 +158,12 @@ package body Aqua.Assembler.Instructions is
       Double ("mov", 1);
       Double ("cmp", 2);
       Double ("add", 6);
+
+      Extended_Double ("mul", 0);
+      Extended_Double ("div", 1);
+      Extended_Double ("ash", 2);
+      Extended_Double ("ashc", 3);
+      Extended_Double ("xor", 4);
 
       Single ("clr", 8#0050#);
       Single ("com", 8#0051#);
@@ -218,6 +250,28 @@ package body Aqua.Assembler.Instructions is
            + Aqua.Architecture.Get_Bits (Dst, Info.Dst_Shift);
       end;
 
+   end Create_Instruction_Word;
+
+   -----------------------------
+   -- Create_Instruction_Word --
+   -----------------------------
+
+   function Create_Instruction_Word
+     (Mnemonic : String;
+      Src      : Aqua.Architecture.Operand_Type;
+      Register : Aqua.Architecture.Register_Index)
+      return Word
+   is
+   begin
+      Check_Instructions;
+
+      declare
+         Info : constant Instruction_Info := Get_Instruction_Info (Mnemonic);
+      begin
+         return Info.Base
+           + Aqua.Architecture.Get_Bits (Src, Info.Src_Shift)
+           + Word (Register);
+      end;
    end Create_Instruction_Word;
 
    ----------------------------

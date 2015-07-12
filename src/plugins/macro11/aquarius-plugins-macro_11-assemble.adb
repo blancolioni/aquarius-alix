@@ -209,6 +209,36 @@ package body Aquarius.Plugins.Macro_11.Assemble is
       Place_Operand (Dst);
    end After_Double_Operand;
 
+   procedure After_Extended_Double_Operand
+     (Target : not null access Aquarius.Actions.Actionable'Class)
+   is
+      use Aquarius.Programs;
+      Op : constant Program_Tree := Program_Tree (Target);
+      Mnemonic : constant String :=
+                   Op.Program_Child
+                     ("extended_double_operand_instruction")
+                     .Concatenate_Children;
+      Src      : constant Program_Tree :=
+                   Op.Program_Child ("arg");
+      Reg      : constant String :=
+                   Op.Program_Child ("identifier").Text;
+      Assembly       : constant Aqua.Assembler.Assembly :=
+                         Assembly_Object
+                           (Op.Property
+                              (Global_Plugin.Assembly)).Assembly;
+   begin
+      if not Assembly.Is_Register (Reg) then
+         raise Constraint_Error
+           with Mnemonic & ": require a register but found " & Reg;
+      end if;
+      Assembly.Append
+        (Aqua.Assembler.Instructions.Create_Instruction_Word
+           (Mnemonic => Mnemonic,
+            Src      => Get_Operand (Src),
+            Register => Assembly.Get_Register (Reg)));
+      Place_Operand (Src);
+   end After_Extended_Double_Operand;
+
    ----------------
    -- After_Jump --
    ----------------

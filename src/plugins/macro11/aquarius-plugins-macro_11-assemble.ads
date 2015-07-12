@@ -21,6 +21,9 @@ package Aquarius.Plugins.Macro_11.Assemble is
    procedure After_Double_Operand
      (Target : not null access Aquarius.Actions.Actionable'Class);
 
+   procedure After_Extended_Double_Operand
+     (Target : not null access Aquarius.Actions.Actionable'Class);
+
    procedure After_Single_Operand
      (Target : not null access Aquarius.Actions.Actionable'Class);
 

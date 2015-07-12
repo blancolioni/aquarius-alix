@@ -10,6 +10,12 @@ package Aqua.Assembler.Instructions is
 
    function Create_Instruction_Word
      (Mnemonic : String;
+      Src      : Aqua.Architecture.Operand_Type;
+      Register : Aqua.Architecture.Register_Index)
+      return Word;
+
+   function Create_Instruction_Word
+     (Mnemonic : String;
       Dst      : Aqua.Architecture.Operand_Type)
       return Word;
 
