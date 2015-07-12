@@ -1,3 +1,4 @@
+with Ada.Strings.Fixed.Equal_Case_Insensitive;
 with Ada.Strings.Unbounded;
 
 with Ada.Text_IO;
@@ -335,7 +336,9 @@ package body Aqua.CPU is
          --  they will end up with different string references, so
          --  we have to use a string compare as a backup
          CPU.N := False;
-         CPU.Z := X = Y or else CPU.Show (X) = CPU.Show (Y);
+         CPU.Z := X = Y
+           or else Ada.Strings.Fixed.Equal_Case_Insensitive
+             (CPU.Show (X), CPU.Show (Y));
       else
          CPU.N := False;
          CPU.Z := X = Y;
