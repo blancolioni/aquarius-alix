@@ -280,6 +280,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
          Child_Name  : String;
          Start       : Aqua.Address)
       is
+         use type Aquarius.Syntax.Syntax_Tree;
          Executor : constant Aqua_Action_Executor :=
                       (Plugin => Plugin,
                        Start  => Start);
@@ -296,12 +297,22 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                                 else Grammar.Get_Definition
                                   (Child_Name));
       begin
+         if Parent_Node = null then
+            raise Constraint_Error
+              with "no such node: " & Parent_Name;
+         end if;
+
          if Child_Name = "" then
             Parent_Node.Set_Action
               (Group    => Group,
                Position => Position,
                Action   => Executor);
          else
+            if Child_Node = null then
+               raise Constraint_Error
+                 with "no such node: " & Child_Name;
+            end if;
+
             Parent_Node.Set_Action
               (Child      => Child_Node,
                Group      => Group,
