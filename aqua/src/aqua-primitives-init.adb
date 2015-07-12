@@ -2,7 +2,7 @@ with Ada.Characters.Handling;
 with Ada.Directories;
 with Ada.Text_IO;
 
-with Aqua.IO;
+--  with Aqua.IO;
 with Aqua.Objects.Arrays;
 with Aqua.Words;
 
@@ -415,8 +415,9 @@ package body Aqua.Primitives.Init is
       else
          begin
             Ada.Text_IO.Create (Current_Output, Ada.Text_IO.Out_File,
-                                Ada.Directories.Compose
-                                  (Aqua.IO.Current_IO_Path, Name));
+                                Ada.Directories.Simple_Name (Name));
+--                                  Ada.Directories.Compose
+--                                    (Aqua.IO.Current_IO_Path, Name));
             Output_Redirected := True;
             return 1;
          exception
