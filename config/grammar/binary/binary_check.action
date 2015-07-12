@@ -6,6 +6,28 @@ after top_level do
    aqua.report_state;
 end;
 
+after package_declaration/package_name do
+   top.package_name := child.image;
+   top.package_file := top.package_name.replace(".", "-").to_lower;
+end;
+
+after primary_expression/named_reference
+   or primary_expression/member_expression
+do
+   parent.is_constant := 0;
+end;
+
+after primary_expression/numeric_literal
+   or primary_expression/character_literal
+   or primary_expression/string_literal
+do
+   parent.is_constant := 1;
+end;
+
+after expression/primary_expression do
+   parent.is_constant := child.is_constant;
+end;
+
 after expression do
    tree.value := tree.image;
 end;
@@ -25,6 +47,9 @@ end;
 
 after location/expression do
    location.value := expression.value;
+   if not expression.is_constant then
+      location.value := "File." & location.value;
+   end if;
 end;
 
 after file_entry/location do
@@ -63,9 +88,21 @@ after component_type/named_type do
    parent.component_size := named_type.component_size;
 end;
 
+after access_type/from_clause do
+   parent.access_offset := from_clause/access_offset.image;
+   parent.access_length := from_clause/access_length.image;
+end;
+
+after access_type/base_clause do
+   parent.access_base := child/base_offset.image;
+end;
+
 after component_type/access_Type do
    parent.type := access_type/identifier.image;
    parent.access_type := 1;
+   parent.access_offset := child.access_offset;
+   parent.access_length := child.access_length;
+   parent.access_base   := child.access_base;
 end;
 
 after record_component/component_name do
@@ -75,6 +112,10 @@ end;
 after record_component/component_type do
    parent.component_type := child.type;
    parent.component_access := child.access_type;
+   if child.access_offset then
+      parent.offset_and_length := (offset => child.access_offset, length => child.access_length);
+   end if;
+   parent.access_base := child.access_base;
    parent.component_size := child.component_size;
 end;
 
@@ -92,17 +133,29 @@ after record_component do
       (name   => tree.component_name,
        type   => tree.component_type,
        access => tree.component_access,
+       offset => tree.offset_and_length,
+       base   => tree.access_base,
        array_size => tree.array_size,
        size => tree.component_size,
        required_value => tree.required_value);
-   if tree.component_access then
+   if tree.component.offset then
+      if tree.component.type.to_lower = "string" then
+         tree.component.type_name := "access String";
+         tree.component.return_type_name := "String";
+         tree.component.converter := "Item." & tree.component.name & ".all";
+      else
+         tree.component.type_name := "Storage_Access";
+         tree.component.return_type_name := "System.Storage_Elements.Storage_Array";
+         tree.component.converter := "Item." & tree.component.name & ".all";
+      end if;
+   elsif tree.component_access then
       tree.component.type_name := "access String";
       tree.component.return_type_name := "String";
       tree.component.converter := "Item." & tree.component.name & ".all";
    elsif tree.component.type.to_lower = "word" then
       tree.component.type_name := "WL.Binary_IO.Word_" & tree.component.size * 8;
-      tree.component.return_type_name := "Natural";
-      tree.component.converter := "Natural (Item." & tree.component.name & ")";
+      tree.component.return_type_name := tree.component.type_name;
+      tree.component.converter := "Item." & tree.component.name;
    elsif tree.component.type.to_lower = "string" then
       tree.component.type_name := "String (1 .. " & tree.component.size & ")";
       tree.component.return_type_name := "String";

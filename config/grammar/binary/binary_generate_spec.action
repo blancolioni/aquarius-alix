@@ -1,11 +1,15 @@
 @!aquarius:actionscript
 @before file_declaration do
-@IO.set_output (tree.file_name.to_lower & ".ads");
+@IO.set_output (top.package_file & "-" & tree.file_name.to_lower & ".ads");
 private with Ada.Containers.Vectors;
-private with WL.Binary_IO;
+with System.Storage_Elements;
+with WL.Binary_IO;
 
-package [tree.file_name] is
+package [top.package_name].[tree.file_name] is
 
+   pragma Style_Checks (Off);
+   pragma Warnings (Off);
+   
    type File_Type is private;
    
    procedure Load 
@@ -41,6 +45,8 @@ package [tree.file_name] is
 @after file_declaration do
 private
 
+   type Storage_Access is access System.Storage_Elements.Storage_Array;
+   
 @   for file_entry in tree.entries loop
    type [file_entry.name]_Type is
       record
@@ -67,6 +73,6 @@ private
 @   end loop;
       end record;
    
-end [tree.file_name];
+end [top.package_name].[tree.file_name];
 @IO.set_output (0);
 @end;
