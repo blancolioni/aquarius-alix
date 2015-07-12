@@ -24,6 +24,11 @@ package body Aqua.CPU is
      procedure (CPU      : in out Aqua_CPU_Type'Class;
                 Src, Dst : Aqua.Architecture.Operand_Type);
 
+   type Extended_Double_Operand_Handler is access
+     procedure (CPU      : in out Aqua_CPU_Type'Class;
+                Src      : Aqua.Architecture.Operand_Type;
+                R        : Aqua.Architecture.Register_Index);
+
    type Single_Operand_Handler is access
      procedure (CPU     : in out Aqua_CPU_Type'Class;
                 Operand : Aqua.Architecture.Operand_Type);
@@ -52,10 +57,19 @@ package body Aqua.CPU is
      (CPU     : in out Aqua_CPU_Type'Class;
       Operand : Aqua.Architecture.Operand_Type);
 
+   procedure Handle_Mul (CPU      : in out Aqua_CPU_Type'Class;
+                         Src      : Aqua.Architecture.Operand_Type;
+                         R        : Aqua.Architecture.Register_Index);
+
    Double_Operand : constant array (Word range 1 .. 6)
      of Double_Operand_Handler :=
        (1      => Handle_Mov'Access,
         2      => Handle_Cmp'Access,
+        others => null);
+
+   Extended_Double_Operand : constant array (Word range 0 .. 7)
+     of Extended_Double_Operand_Handler :=
+       (0      => Handle_Mul'Access,
         others => null);
 
    Single_Operand : constant array (Word range 8 .. 23)
@@ -216,6 +230,14 @@ package body Aqua.CPU is
          Handle_Branch (CPU, Condition_Code'Val (CC_Code / 2),
                         CC_Code mod 2 = 0,
                         Op mod 256);
+      elsif (Op and 8#170000#) = 8#070000# then
+         declare
+            Opcode : constant Word := Get_Bits (Op, 11, 3);
+         begin
+            Extended_Double_Operand (Opcode)
+              (CPU, Get_Operand (Op, 8),
+               Register_Index (Get_Bits (Op, 2, 3)));
+         end;
       else
          raise Constraint_Error
            with "unimplemented instruction "
@@ -436,6 +458,24 @@ package body Aqua.CPU is
         (Dst, CPU.R, CPU.Image.all, X);
    end Handle_Mov;
 
+   ----------------
+   -- Handle_Mul --
+   ----------------
+
+   procedure Handle_Mul (CPU      : in out Aqua_CPU_Type'Class;
+                         Src      : Aqua.Architecture.Operand_Type;
+                         R        : Aqua.Architecture.Register_Index)
+   is
+      Src_Word : Word;
+      X, Y     : Aqua_Integer;
+   begin
+      Aqua.Architecture.Read
+        (Src, CPU.R, CPU.Image.all, Src_Word);
+      X := CPU.To_Integer (Src_Word);
+      Y := CPU.To_Integer (CPU.R (R));
+      CPU.R (R) := To_Integer_Word (X * Y);
+   end Handle_Mul;
+
    -----------------
    -- Handle_Trap --
    -----------------
@@ -466,10 +506,10 @@ package body Aqua.CPU is
             declare
                Right_Word : constant Word := CPU.Pop;
                Left_Word  : constant Word := CPU.Pop;
-               pragma Assert (Right_Word = 0
+               pragma Assert (Is_Integer (Right_Word)
                               or else Is_String_Reference (Right_Word));
-               pragma Assert (Left_Word = 0
-                                or else Is_String_Reference (Left_Word));
+               pragma Assert (Is_Integer (Right_Word)
+                              or else Is_String_Reference (Left_Word));
                Result     : constant String :=
                               CPU.To_String (Left_Word)
                             & CPU.To_String (Right_Word);
@@ -802,6 +842,31 @@ package body Aqua.CPU is
       return CPU.Ext (Positive (Value and not External_Mask_Bits));
    end To_External_Object;
 
+   ----------------
+   -- To_Integer --
+   ----------------
+
+   overriding function To_Integer
+     (CPU   : in out Aqua_CPU_Type;
+      Value : Word)
+      return Aqua_Integer
+   is
+   begin
+      if Is_Integer (Value) then
+         return Get_Integer (Value);
+      else
+         declare
+            S : constant String := CPU.To_String (Value);
+         begin
+            if S = "" then
+               return 0;
+            else
+               return Aqua_Integer'Value (S);
+            end if;
+         end;
+      end if;
+   end To_Integer;
+
    ---------------
    -- To_String --
    ---------------
@@ -814,6 +879,10 @@ package body Aqua.CPU is
    begin
       if Value = 0 then
          return "";
+      elsif Is_Integer (Value) then
+         return Ada.Strings.Fixed.Trim
+           (Aqua_Integer'Image (Get_Integer (Value)),
+            Ada.Strings.Left);
       elsif CPU.Image.Have_String (Value) then
          return CPU.Image.To_String (Value);
       else

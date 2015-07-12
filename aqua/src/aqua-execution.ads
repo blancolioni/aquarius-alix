@@ -23,7 +23,16 @@ package Aqua.Execution is
       Value : Word)
       return String
    is abstract
-     with Pre'Class => Value = 0 or else Is_String_Reference (Value);
+     with Pre'Class => Is_Integer (Value)
+     or else Is_String_Reference (Value);
+
+   function To_Integer
+     (Context : in out Execution_Interface;
+      Value : Word)
+      return Aqua_Integer
+   is abstract
+     with Pre'Class => Is_Integer (Value)
+     or else Is_String_Reference (Value);
 
    function To_External_Object
      (Context : in out Execution_Interface;
