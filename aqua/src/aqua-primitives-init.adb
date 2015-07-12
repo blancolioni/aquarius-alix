@@ -13,6 +13,7 @@ package body Aqua.Primitives.Init is
    Local_Object_Class : Primitive_Object_Access;
 
    Current_Output : Ada.Text_IO.File_Type;
+   Output_Redirected : Boolean := False;
 
    type String_Access is access all String;
 
@@ -290,7 +291,11 @@ package body Aqua.Primitives.Init is
       pragma Unreferenced (Context);
       pragma Unreferenced (Arguments);
    begin
-      Ada.Text_IO.New_Line;
+      if Output_Redirected then
+         Ada.Text_IO.New_Line (Current_Output);
+      else
+         Ada.Text_IO.New_Line;
+      end if;
       return 1;
    end Handle_New_Line;
 
@@ -319,8 +324,13 @@ package body Aqua.Primitives.Init is
       Arguments : Array_Of_Words)
       return Word
    is
+      Text : constant String := Context.To_String (Arguments (2));
    begin
-      Ada.Text_IO.Put (Context.To_String (Arguments (2)));
+      if Output_Redirected then
+         Ada.Text_IO.Put (Current_Output, Text);
+      else
+         Ada.Text_IO.Put (Text);
+      end if;
       return 1;
    end Handle_Put;
 
@@ -333,8 +343,13 @@ package body Aqua.Primitives.Init is
       Arguments : Array_Of_Words)
       return Word
    is
+      Text : constant String := Context.To_String (Arguments (2));
    begin
-      Ada.Text_IO.Put_Line (Context.To_String (Arguments (2)));
+      if Output_Redirected then
+         Ada.Text_IO.Put_Line (Current_Output, Text);
+      else
+         Ada.Text_IO.Put_Line (Text);
+      end if;
       return 1;
    end Handle_Put_Line;
 
@@ -384,21 +399,18 @@ package body Aqua.Primitives.Init is
    is
       Name : constant String := Context.To_String (Arguments (2));
    begin
+      if Output_Redirected then
+         Output_Redirected := False;
+         Ada.Text_IO.Close (Current_Output);
+      end if;
       if Name = "" then
-         Ada.Text_IO.Set_Output (Ada.Text_IO.Standard_Output);
-         if Ada.Text_IO.Is_Open (Current_Output) then
-            Ada.Text_IO.Close (Current_Output);
-         end if;
          return 1;
       else
          begin
-            if Ada.Text_IO.Is_Open (Current_Output) then
-               Ada.Text_IO.Close (Current_Output);
-            end if;
             Ada.Text_IO.Create (Current_Output, Ada.Text_IO.Out_File,
                                 Ada.Directories.Compose
                                   (Aqua.IO.Current_IO_Path, Name));
-            Ada.Text_IO.Set_Output (Current_Output);
+            Output_Redirected := True;
             return 1;
          exception
             when others =>
