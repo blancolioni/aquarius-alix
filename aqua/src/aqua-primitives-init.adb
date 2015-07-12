@@ -1,5 +1,6 @@
 with Ada.Characters.Handling;
 with Ada.Directories;
+with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 --  with Aqua.IO;
@@ -85,6 +86,11 @@ package body Aqua.Primitives.Init is
       Arguments : Array_Of_Words)
       return Word;
 
+   function Handle_String_Replace
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word;
+
    function Handle_Put
      (Context : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Array_Of_Words)
@@ -129,6 +135,8 @@ package body Aqua.Primitives.Init is
       New_Primitive_Function ("string__to_lower", 1, Handle_To_Lower'Access);
       New_Primitive_Function ("string__to_integer", 1,
                               Handle_To_Integer'Access);
+      New_Primitive_Function ("string__replace", 3,
+                              Handle_String_Replace'Access);
 
       New_Primitive_Function ("aqua__report_state", 0,
                               Handle_Report_State'Access);
@@ -426,6 +434,37 @@ package body Aqua.Primitives.Init is
          end;
       end if;
    end Handle_Set_Output;
+
+   ---------------------------
+   -- Handle_String_Replace --
+   ---------------------------
+
+   function Handle_String_Replace
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word
+   is
+      use Ada.Strings.Unbounded;
+      Result : Unbounded_String;
+      S      : constant String := Context.To_String (Arguments (1));
+      X      : constant String := Context.To_String (Arguments (2));
+      Y      : constant String := Context.To_String (Arguments (3));
+      Index  : Positive := S'First;
+   begin
+      while Index <= S'Length - X'Length loop
+         if S (Index .. Index + X'Length - 1) = X then
+            Result := Result & Y;
+            Index := Index + X'Length;
+         else
+            Result := Result & S (Index);
+            Index := Index + 1;
+         end if;
+      end loop;
+
+      Result := Result & S (Index .. S'Last);
+
+      return Context.To_String_Word (To_String (Result));
+   end Handle_String_Replace;
 
    -----------------------
    -- Handle_To_Integer --
