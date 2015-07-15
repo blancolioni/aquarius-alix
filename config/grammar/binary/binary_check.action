@@ -156,6 +156,10 @@ after record_component do
       tree.component.type_name := "WL.Binary_IO.Word_" & tree.component.size * 8;
       tree.component.return_type_name := tree.component.type_name;
       tree.component.converter := "Item." & tree.component.name;
+   elsif tree.component.type.to_lower = "integer" then
+      tree.component.type_name := "WL.Binary_IO.Integer_" & tree.component.size * 8;
+      tree.component.return_type_name := tree.component.type_name;
+      tree.component.converter := "Item." & tree.component.name;
    elsif tree.component.type.to_lower = "string" then
       tree.component.type_name := "String (1 .. " & tree.component.size & ")";
       tree.component.return_type_name := "String";
