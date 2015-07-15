@@ -2,7 +2,7 @@ top_level ::= package_declaration
 
 case_sensitive = false
 
-identifier         ::= !\l\w*!
+identifier         ::= ![\l_]\w*!
 numeric_literal    ::= ![0-9]+!
 character_literal  ::= !'[.]'!
 string_literal     ::= !\x22[^\x22]*\x22!
@@ -70,7 +70,9 @@ record_component ::= component_name ':' component_type [ required_value ]
 
 component_name ::= identifier
 
-component_type ::= named_type | access_type
+component_type ::= [ type_count ] named_type | access_type
+
+type_count ::= numeric_literal '*'
 
 named_type ::= identifier [ '/' numeric_literal ]
 
