@@ -23,20 +23,39 @@ package body [top.package_name].[tree.file_name] is
       return File.[file_entry.name]_Vector.Last_Index;
    end [file_entry.name]_Count;
    
+@      end if;
+
 @      for component in file_entry.declaration.layout loop
+@         if not component.private then
    function Get_[component.name] 
+@         if file_entry.declaration.array_size then
      (Position : [file_entry.name]_Cursor) 
+@            elsif component.inline_array_dec then
+     (File  : File_Type;
+      Index : Positive)
+@         else
+     (File : File_Type)
+@         end if;
      return [component.return_type_name]
    is
+@         if file_entry.declaration.array_size then
       use [file_entry.name]_Vectors;
       Item : [file_entry.name]_Type renames Element (Cursor (Position));
+@            elsif component.inline_array_dec then
+      Item : [component.inline_array_type_name] renames File.[file_entry.name].[component.name];
+@         else
+      Item : [file_entry.name]_Type renames File.[file_entry.name];
+@         end if;
    begin
+@         if component.inline_array_dec then
+      return Item (Index);
+@         else
       return [component.converter];
+@         end if;
    end Get_[component.name];
-   
+
+@         end if;   
 @      end loop;
-     
-@      end if;
 @   end loop;
    ----------
    -- Load --
@@ -132,6 +151,10 @@ package body [top.package_name].[tree.file_name] is
 @            end if;
          [file_entry.name].[component.name] := new String'(WL.Binary_IO.Read (File, Offset));
       end;
+@        elsif component.inline_array_dec then
+      for I in [file_entry.name].[component.name]'Range loop
+         WL.Binary_IO.Read (File, [file_entry.name].[component.name] (I));
+      end loop;
 @        else
       WL.Binary_IO.Read (File, [file_entry.name].[component.name]);
 @        end if;

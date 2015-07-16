@@ -1,5 +1,6 @@
 before top_level do
    top.files := new Array;
+   top.next_id := 1;
 end;
 
 after top_level do
@@ -61,6 +62,7 @@ after array_size/expression do
 end;
 
 after record_type/array_size do 
+   tree^file_declaration.need_vectors := 1;
    parent.array_size := child.array_size;
 end;
 
@@ -72,6 +74,10 @@ end;
 
 before component_type do
    tree.component_size := 4;
+end;
+
+after component_type/type_count do
+   tree.inline_array := type_count/numeric_literal.image;
 end;
 
 after named_type/identifier do
@@ -117,6 +123,7 @@ after record_component/component_type do
    end if;
    parent.access_base := child.access_base;
    parent.component_size := child.component_size;
+   parent.inline_array := child.inline_array;
 end;
 
 after record_component/array_size do
@@ -138,6 +145,19 @@ after record_component do
        array_size => tree.array_size,
        size => tree.component_size,
        required_value => tree.required_value);
+       
+   if tree.component_name = "_" then
+      tree.component.name := "Private_" & top.next_id;
+      tree.component.private := 1;
+      io.put_line (tree.component.name);
+      top.next_id := top.next_id + 1;
+   elsif tree.component_name.slice (1, 1) = "_" then
+      tree.component.name := "Private_" & top.next_id & tree.component_name;
+      tree.component.private := 1;
+      io.put_line (tree.component.name);
+      top.next_id := top.next_id + 1;
+   end if;
+   
    if tree.component.offset then
       if tree.component.type.to_lower = "string" then
          tree.component.type_name := "access String";
@@ -167,6 +187,14 @@ after record_component do
    else
       io.put_line ("warning: unknown type: " & tree.component.type);
    end if;  
+
+   if tree.inline_array then
+      tree.component.inline_array_type_name := tree.component.name & "_Array";
+      tree.component.inline_array_dec := "array (1 .. " & tree.inline_array & ") of " & tree.component.type_name;
+      tree.component.element_type_name := tree.component.type_name;
+      tree.component.type_name := tree.component.inline_array_type_name;
+   end if;
+   
    tree^file_entry.layout.append (tree.component);
    tree^file_entry.entry.set (tree.component.name, tree.component);
 end;
