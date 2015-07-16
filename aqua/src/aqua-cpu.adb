@@ -22,8 +22,9 @@ package body Aqua.CPU is
      (Always, EQ, LT, LE, MI, LOS, VS, CS);
 
    type Double_Operand_Handler is access
-     procedure (CPU      : in out Aqua_CPU_Type'Class;
-                Src, Dst : Aqua.Architecture.Operand_Type);
+     procedure (CPU       : in out Aqua_CPU_Type'Class;
+                Byte      : Boolean;
+                Src, Dst  : Aqua.Architecture.Operand_Type);
 
    type Extended_Double_Operand_Handler is access
      procedure (CPU      : in out Aqua_CPU_Type'Class;
@@ -32,30 +33,42 @@ package body Aqua.CPU is
 
    type Single_Operand_Handler is access
      procedure (CPU     : in out Aqua_CPU_Type'Class;
+                Byte    : Boolean;
                 Operand : Aqua.Architecture.Operand_Type);
 
    procedure Handle_Mov
      (CPU      : in out Aqua_CPU_Type'Class;
+      Byte     : Boolean;
       Src, Dst : Aqua.Architecture.Operand_Type);
 
    procedure Handle_Cmp
      (CPU      : in out Aqua_CPU_Type'Class;
+      Byte     : Boolean;
+      Src, Dst : Aqua.Architecture.Operand_Type);
+
+   procedure Handle_Add
+     (CPU      : in out Aqua_CPU_Type'Class;
+      Byte     : Boolean;
       Src, Dst : Aqua.Architecture.Operand_Type);
 
    procedure Handle_Clr
      (CPU     : in out Aqua_CPU_Type'Class;
+      Byte    : Boolean;
       Operand : Aqua.Architecture.Operand_Type);
 
    procedure Handle_Dec
      (CPU     : in out Aqua_CPU_Type'Class;
+      Byte    : Boolean;
       Operand : Aqua.Architecture.Operand_Type);
 
    procedure Handle_Inc
      (CPU     : in out Aqua_CPU_Type'Class;
+      Byte    : Boolean;
       Operand : Aqua.Architecture.Operand_Type);
 
    procedure Handle_Tst
      (CPU     : in out Aqua_CPU_Type'Class;
+      Byte    : Boolean;
       Operand : Aqua.Architecture.Operand_Type);
 
    procedure Handle_Mul (CPU      : in out Aqua_CPU_Type'Class;
@@ -66,6 +79,7 @@ package body Aqua.CPU is
      of Double_Operand_Handler :=
        (1      => Handle_Mov'Access,
         2      => Handle_Cmp'Access,
+        6      => Handle_Add'Access,
         others => null);
 
    Extended_Double_Operand : constant array (Word range 0 .. 7)
@@ -194,6 +208,8 @@ package body Aqua.CPU is
       use Aqua.Architecture;
       Double_Opcode : constant Word := Get_Bits (Op, 14, 3);
       Single_Opcode : constant Word := Get_Bits (Op, 10, 5);
+      Byte          : constant Boolean := Get_Bits (Op, 15, 1) = 1;
+
       CC_Code       : constant Word :=
                         Get_Bits (Op, 15, 1) * 8
                         + Get_Bits (Op, 10, 3);
@@ -219,10 +235,10 @@ package body Aqua.CPU is
                      Get_Operand (Op, 5));
       elsif (Op and 8#074000#) = 8#004000# then
          Single_Operand (Single_Opcode)
-           (CPU, Get_Operand (Op, 5));
+           (CPU, Byte, Get_Operand (Op, 5));
       elsif Double_Opcode in 1 .. 6 then
          Double_Operand (Double_Opcode)
-           (CPU, Get_Operand (Op, 11), Get_Operand (Op, 5));
+           (CPU, Byte, Get_Operand (Op, 11), Get_Operand (Op, 5));
       elsif (Op and 8#177700#) = 8#000100# then
          Handle_Jump (CPU, Get_Operand (Op, 5));
       elsif Get_Bits (Op, 14, 4) = 0
@@ -245,6 +261,48 @@ package body Aqua.CPU is
              & Aqua.IO.Octal_Image (Op);
       end if;
    end Handle;
+
+   ----------------
+   -- Handle_Add --
+   ----------------
+
+   procedure Handle_Add
+     (CPU      : in out Aqua_CPU_Type'Class;
+      Byte     : Boolean;
+      Src, Dst : Aqua.Architecture.Operand_Type)
+   is
+      X, Y, Z : Aqua_Integer;
+      T       : Word;
+
+      function Update (W : Word) return Word;
+
+      ------------
+      -- Update --
+      ------------
+
+      function Update (W : Word) return Word is
+      begin
+         Y := CPU.To_Integer (W);
+         if Byte then
+            Z := Y - X;
+         else
+            Z := Y + X;
+         end if;
+         Set_NZ (CPU, To_Integer_Word (Z));
+         return To_Integer_Word (Z);
+      end Update;
+
+   begin
+
+      Aqua.Architecture.Read
+        (Src, CPU.R, CPU.Image.all, T);
+
+      X := CPU.To_Integer (T);
+
+      Aqua.Architecture.Update
+        (Dst, CPU.R, CPU.Image.all, Update'Access);
+
+   end Handle_Add;
 
    -------------------
    -- Handle_Branch --
@@ -302,8 +360,10 @@ package body Aqua.CPU is
 
    procedure Handle_Clr
      (CPU     : in out Aqua_CPU_Type'Class;
+      Byte    : Boolean;
       Operand : Aqua.Architecture.Operand_Type)
    is
+      pragma Unreferenced (Byte);
    begin
       Aqua.Architecture.Write
         (Operand => Operand,
@@ -319,8 +379,10 @@ package body Aqua.CPU is
 
    procedure Handle_Cmp
      (CPU      : in out Aqua_CPU_Type'Class;
+      Byte      : Boolean;
       Src, Dst : Aqua.Architecture.Operand_Type)
    is
+      pragma Unreferenced (Byte);
       X, Y : Word;
    begin
       Aqua.Architecture.Read
@@ -358,8 +420,11 @@ package body Aqua.CPU is
 
    procedure Handle_Dec
      (CPU     : in out Aqua_CPU_Type'Class;
+      Byte    : Boolean;
       Operand : Aqua.Architecture.Operand_Type)
    is
+      pragma Unreferenced (Byte);
+
       function Update (W : Word) return Word;
 
       ------------
@@ -385,8 +450,11 @@ package body Aqua.CPU is
 
    procedure Handle_Inc
      (CPU     : in out Aqua_CPU_Type'Class;
+      Byte    : Boolean;
       Operand : Aqua.Architecture.Operand_Type)
    is
+      pragma Unreferenced (Byte);
+
       function Update (W : Word) return Word;
 
       ------------
@@ -447,8 +515,10 @@ package body Aqua.CPU is
 
    procedure Handle_Mov
      (CPU      : in out Aqua_CPU_Type'Class;
+      Byte     : Boolean;
       Src, Dst : Aqua.Architecture.Operand_Type)
    is
+      pragma Unreferenced (Byte);
       X : Word;
    begin
       Aqua.Architecture.Read
@@ -638,8 +708,11 @@ package body Aqua.CPU is
 
    procedure Handle_Tst
      (CPU     : in out Aqua_CPU_Type'Class;
+      Byte    : Boolean;
       Operand : Aqua.Architecture.Operand_Type)
    is
+      pragma Unreferenced (Byte);
+
       X : Word;
    begin
       Aqua.Architecture.Read
