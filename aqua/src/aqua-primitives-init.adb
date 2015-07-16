@@ -91,6 +91,11 @@ package body Aqua.Primitives.Init is
       Arguments : Array_Of_Words)
       return Word;
 
+   function Handle_String_Slice
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word;
+
    function Handle_Put
      (Context : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Array_Of_Words)
@@ -137,6 +142,8 @@ package body Aqua.Primitives.Init is
                               Handle_To_Integer'Access);
       New_Primitive_Function ("string__replace", 3,
                               Handle_String_Replace'Access);
+      New_Primitive_Function ("string__slice", 3,
+                              Handle_String_Slice'Access);
 
       New_Primitive_Function ("aqua__report_state", 0,
                               Handle_Report_State'Access);
@@ -465,6 +472,24 @@ package body Aqua.Primitives.Init is
 
       return Context.To_String_Word (To_String (Result));
    end Handle_String_Replace;
+
+   -------------------------
+   -- Handle_String_Slice --
+   -------------------------
+
+   function Handle_String_Slice
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word
+   is
+      S      : constant String := Context.To_String (Arguments (1));
+      X      : constant Natural :=
+                 Natural'Max (Natural (Arguments (2)), S'First);
+      Y      : constant Natural :=
+                 Natural'Min (X + Natural (Arguments (3)) - 1, S'Last);
+   begin
+      return Context.To_String_Word (S (X .. Y));
+   end Handle_String_Slice;
 
    -----------------------
    -- Handle_To_Integer --
