@@ -1,7 +1,9 @@
 @!aquarius:actionscript
 @before file_declaration do
 @IO.set_output (top.package_file & "-" & tree.file_name.to_lower & ".ads");
+@if tree.need_vectors then
 private with Ada.Containers.Vectors;
+@end if;
 with System.Storage_Elements;
 with WL.Binary_IO;
 
@@ -24,13 +26,22 @@ package [top.package_name].[tree.file_name] is
      
    type [file_entry.name]_Cursor is private;
 
-@      for component in file_entry.declaration.layout loop
-   function Get_[component.name] 
-     (Position : [file_entry.name]_Cursor) 
-     return [component.return_type_name];
-@      end loop;
-     
 @      end if;
+@      for component in file_entry.declaration.layout loop
+@         if not component.private then
+   function Get_[component.name] 
+@            if file_entry.declaration.array_size then   
+     (Position : [file_entry.name]_Cursor) 
+@            elsif component.inline_array_dec then
+     (File  : File_Type;
+      Index : Positive)
+@            else
+     (File : File_Type)
+@            end if;
+     return [component.return_type_name];
+     
+@         end if;
+@      end loop;
 @   end loop;
 @   for file_entry in tree.entries loop
 @      if file_entry.declaration.array_size then
@@ -48,6 +59,12 @@ private
    type Storage_Access is access System.Storage_Elements.Storage_Array;
    
 @   for file_entry in tree.entries loop
+@      for component in file_entry.declaration.layout loop
+@         if component.inline_array_dec then
+   type [component.inline_array_type_name] is [component.inline_array_dec];
+   
+@         end if;
+@      end loop;
    type [file_entry.name]_Type is
       record
 @      for component in file_entry.declaration.layout loop
