@@ -178,6 +178,13 @@ package body Aquarius.Source.File_System is
          end if;
       end;
 
+      --  check for carriage return as last character
+      if Length > 0
+        and then File.Current_Line (Length) = Character'Val (13)
+      then
+         Length := Length - 1;
+      end if;
+
       if not Ada.Text_IO.End_Of_File (File.File) then
          Ada.Text_IO.Skip_Line (File.File);
       end if;
