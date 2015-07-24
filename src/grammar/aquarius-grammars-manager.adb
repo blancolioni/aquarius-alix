@@ -1,6 +1,7 @@
 with Ada.Characters.Handling;
 with Ada.Containers.Vectors;
 with Ada.Directories;
+with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with Komnenos.UI;
@@ -86,15 +87,26 @@ package body Aquarius.Grammars.Manager is
          end if;
       end loop;
 
-      Ada.Text_IO.Put_Line ("Loading grammar: " & Standard_Name);
+      Ada.Text_IO.Put_Line
+        ("Loading grammar: " & Standard_Name);
 
-      if Ada.Directories.Exists (Standard_Name) then
-         return Load_Grammar_From_File
-           (Ada.Directories.Simple_Name (Standard_Name),
-            Standard_Name);
-      else
-         return Load_Grammar (Standard_Name);
-      end if;
+      --  Maybe we want to load a custom grammar.  Check to see if
+      --  a file exists in the current directory, and that the name
+      --  we supplied has an extension
+      declare
+         use Ada.Directories;
+      begin
+         if Exists (Standard_Name)
+           and then Kind (Standard_Name) = Ordinary_File
+           and then Ada.Strings.Fixed.Index (Standard_Name, ".") > 0
+         then
+            return Load_Grammar_From_File
+              (Ada.Directories.Simple_Name (Standard_Name),
+               Standard_Name);
+         else
+            return Load_Grammar (Standard_Name);
+         end if;
+      end;
 
    end Get_Grammar;
 
