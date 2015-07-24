@@ -1,9 +1,17 @@
+with Ada.Characters.Handling;
+with Ada.Directories;
+with Ada.Text_IO;
+
 with Aquarius.Buffers;
 with Aquarius.Syntax;
 with Aquarius.Trees.Properties;
 with Aquarius.UI.Menus;
 
+with Aquarius.Loader;
+
 with Aquarius.VM.Library;
+
+with Aquarius.Config_Paths;
 
 package body Aquarius.Plugins is
 
@@ -107,6 +115,60 @@ package body Aquarius.Plugins is
       return Plugin.Action_Groups.Element (To_Plugin_Group_Name (Name));
    end Get_Action_Group;
 
+   -----------------
+   -- Get_Program --
+   -----------------
+
+   overriding function Get_Program
+     (Plugin    : not null access Aquarius_Plugin_Type;
+      File_Name : String)
+      return Aquarius.Programs.Program_Tree
+   is
+      use Ada.Directories;
+      Result : Aquarius.Programs.Program_Tree;
+   begin
+      if Plugin.Loaded_Programs.Contains (File_Name) then
+         Result := Plugin.Loaded_Programs (File_Name);
+      else
+         declare
+            use Ada.Characters.Handling;
+            use Aquarius.Programs;
+            Standard_Path : constant String :=
+                              Aquarius.Config_Paths.Config_Path
+                              & "/"
+                              & To_Lower
+                                (Aquarius_Plugin_Type'Class (Plugin.all).Name)
+                              & "/"
+                              & File_Name;
+         begin
+            if Exists (File_Name)
+              and then Kind (File_Name) = Ordinary_File
+            then
+               Result := Plugin.Load_Program_Tree (File_Name);
+            elsif Exists (Standard_Path)
+              and then Kind (Standard_Path) = Ordinary_File
+            then
+               Result := Plugin.Load_Program_Tree (Standard_Path);
+            else
+               Ada.Text_IO.Put_Line
+                 (Ada.Text_IO.Standard_Error,
+                  "not found: " & File_Name);
+               Result := null;
+            end if;
+
+            Plugin.Loaded_Programs.Insert (File_Name, Result);
+
+            Plugin.Grammar.Run_Action_Trigger
+              (Result, Aquarius.Actions.Semantic_Trigger);
+
+         end;
+
+      end if;
+
+      return Result;
+
+   end Get_Program;
+
    ------------------------
    -- Get_Standard_Entry --
    ------------------------
@@ -178,6 +240,20 @@ package body Aquarius.Plugins is
       Aquarius.VM.Insert (Plugin.VM_Env, "grammar",
                                  Aquarius.VM.To_Value (Grammar));
    end Load;
+
+   -----------------------
+   -- Load_Program_Tree --
+   -----------------------
+
+   function Load_Program_Tree
+     (Plugin : Aquarius_Plugin_Type'Class;
+      Path   : String)
+      return Aquarius.Programs.Program_Tree
+   is
+   begin
+      return Aquarius.Loader.Load_From_File
+        (Plugin.Grammar, Path);
+   end Load_Program_Tree;
 
    -----------------
    -- New_Command --

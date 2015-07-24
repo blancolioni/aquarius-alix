@@ -10,12 +10,15 @@ with Aquarius.Types;
 with Aquarius.VM;
 
 private with Ada.Containers.Hashed_Maps;
+private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Strings.Fixed.Hash;
 
 package Aquarius.Plugins is
 
    type Aquarius_Plugin_Type is
-     abstract new Root_Aquarius_Object and Watcher
+     abstract new Root_Aquarius_Object
+     and Aquarius.Programs.Root_Program_Tree_Store
+     and Watcher
      with private;
 
    type Aquarius_Plugin is access all Aquarius_Plugin_Type'Class;
@@ -31,6 +34,11 @@ package Aquarius.Plugins is
    procedure Report_State
      (Plugin : Aquarius_Plugin_Type)
    is null;
+
+   overriding function Get_Program
+     (Plugin    : not null access Aquarius_Plugin_Type;
+      File_Name : String)
+      return Aquarius.Programs.Program_Tree;
 
    function Get_Standard_Entry (Plugin : access Aquarius_Plugin_Type;
                                 Name   : in     String)
@@ -152,8 +160,17 @@ private
       Equivalent_Keys => "=",
       "="             => Aquarius.Actions."=");
 
+   package Program_Tree_Maps is
+     new Ada.Containers.Indefinite_Hashed_Maps
+       (Key_Type        => String,
+        Element_Type    => Aquarius.Programs.Program_Tree,
+        Hash            => Ada.Strings.Fixed.Hash,
+        Equivalent_Keys => "=",
+        "="             => Aquarius.Programs."=");
+
    type Aquarius_Plugin_Type is
-     abstract new Root_Aquarius_Object and Watcher with
+     abstract new Root_Aquarius_Object and Watcher
+     and Aquarius.Programs.Root_Program_Tree_Store with
       record
          Grammar         : Aquarius.Grammars.Aquarius_Grammar;
          Standard        : Aquarius.Entries.Symbol_Table;
@@ -162,6 +179,7 @@ private
          Action_Groups   : Group_Map.Map;
          Group_List      : Aquarius.Actions.Action_Group_List;
          Change_Flag     : Aquarius.Properties.Property_Type;
+         Loaded_Programs : Program_Tree_Maps.Map;
          Have_Menu       : Boolean := False;
       end record;
 
@@ -170,5 +188,10 @@ private
      (W       : in out Aquarius_Plugin_Type;
       Item    : not null access Aquarius.Root_Aquarius_Object'Class;
       Context : not null access Aquarius.Root_Aquarius_Object'Class);
+
+   function Load_Program_Tree
+     (Plugin : Aquarius_Plugin_Type'Class;
+      Path : String)
+     return Aquarius.Programs.Program_Tree;
 
 end Aquarius.Plugins;
