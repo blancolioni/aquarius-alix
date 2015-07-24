@@ -1,0 +1,31 @@
+before class_declaration do
+   IO.Put_Line ("resolving ...");
+   if tree.class.inheritance then
+      for inherited in tree.class.inheritance.list loop
+         IO.Put_Line ("loading inherited class: " & inherited.name);
+         inherited.tree := Aqua.load_object (inherited.name & ".aqua");
+         IO.Put_Line ("inherited class loaded: " & inherited.name);
+         IO.put_line (inherited.tree.image);
+         IO.put_line (inherited.tree.class.name);
+         inherited.class := inherited.tree.class;
+      end loop;
+   end if;
+end;
+
+after class_declaration do
+   IO.Put_line (tree.class.image);
+   IO.Put_Line (tree.class.name);
+   for feature in tree.class.features.list loop
+      IO.Put_Line ("feature " & feature.standard_name);
+   end loop;
+   for client in tree.class.clients loop
+      IO.Put_Line ("client: " & client);
+   end loop;
+   if tree.class.inheritance then
+      for parent in tree.class.inheritance.list loop
+         IO.Put_Line ("parent: " & parent.name);
+      end loop;
+   end if;
+   
+   aqua.report_state;
+end;

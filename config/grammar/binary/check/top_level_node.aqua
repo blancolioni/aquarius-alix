@@ -1,0 +1,41 @@
+class Top_Level_Node
+   inherit
+      Root_Node
+
+   feature { NONE }
+      files   : Vector[Binary_File]
+      next_id : Natural;
+
+   feature
+      New_File (Name : String;
+                Entries : Vector[Record_Entry])
+         local
+            Entry : Binary_File
+         do
+            create Entry (Name, Entries)
+            Files.Append (Entry)
+         end
+            
+   feature
+   
+      Package_Name : String
+      Package_File : String
+      
+      before
+         do
+            create files
+            next_id := 1
+         end
+
+      after
+         do
+            Aqua.Report_State
+	 end
+
+      after Package_Declaration/Package_Name
+         do
+            Package_Name := Child.Image
+	    Package_File := Package_Name.Replace (".", ",").To_Lower;
+	 end
+
+end Top_Level_Node

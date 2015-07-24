@@ -1,0 +1,137 @@
+before class_declaration do
+   IO.put_line ("checking ...");
+end;
+
+after class_declaration do
+   top.class := tree.class;
+   aqua.report_state;
+   IO.put_line ("finished checking");
+end;
+
+after class_declaration/class_header do
+   parent.class := class_header.class;
+   parent.class.clients := new Array;
+   parent.class.features := (list => new Array, table => new Map);
+end;
+
+after class_declaration/inheritance do
+   parent.class.inheritance := inheritance.inheritance;
+end;
+
+before class_declaration/features do
+   child.features := parent.class.features;
+end;
+
+before class_header do
+   tree.class := (deferred => 0, expanded => 0, frozen => 0, generic => 0);
+end;
+
+after class_header/header_mark do
+   if child.image = "deferred" then
+      parent.class.deferred := 1;
+   elsif child.image = "expanded" then
+      parent.class.expanded := 1;
+   elsif child.image = "frozen" then
+      parent.class.frozen := 1;
+   end if;
+end;
+
+after class_header/class_name do
+   parent.class.name := class_name.image;
+end;
+
+after class_header/formal_generics do
+   parent.class.generic := 1;
+   parent.class.generic_parameters := formal_generics;
+end;
+
+after class_declaration/class_header do
+   parent.class := class_header.class;
+end;
+
+before inheritance do
+   tree.inheritance := (list => new Array, table => new Map, full_list => new Array);
+end;
+
+after inherit_list/inherited do
+   parent^inheritance.inheritance.list.append (child.inherit);
+   parent^inheritance.inheritance.table.insert (child.inherit.name, child.inherit);
+end;
+
+after inherited/class_type do
+   parent.inherit := (name => class_type.name);
+end;
+
+before features do
+end;
+
+before feature_declaration do
+   tree.new_feature_names := new Array;
+end;
+
+after feature_declaration/declaration_body do
+   tree.feature_body :=
+      (formal_arguments => child.formal_arguments,
+       type             => child.type,
+       value            => child.value);
+   if child.type then
+      if child.type.class_name then
+         parent^class_declaration.class.clients.append (child.type.class_name);
+      end if;
+   end if;
+end;
+
+after feature_declaration do
+   for name in tree.new_feature_names loop
+      tree.new_feature :=
+         (name => name,
+          standard_name => name.to_lower,
+          body => tree.feature_body);
+      tree^features.features.list.append (tree.new_feature);
+      tree^features.features.table.insert (tree.new_feature.standard_name, tree.new_feature);
+   end loop;
+end;
+
+after declaration_body/formal_arguments do
+   tree.formal_arguments := child.arguments;
+end;
+
+after declaration_body/type_mark do
+   parent.type := child.type;
+end;
+
+after declaration_body/feature_value do
+   tree.value := child.value;
+end;
+
+after new_feature_list/new_feature do
+   parent^feature_declaration.new_feature_names.append (child.name);
+end;
+
+after new_feature/extended_feature_name do
+   parent.name := child.name;
+end;
+
+after extended_feature_name/feature_name do
+   parent.name := feature_name.image;
+end;
+
+after extended_feature_name/action_header do
+   parent.name := action_header/position.image & ":" & action_header/tree_path.image;
+end;
+
+after type_mark/type do
+   parent.type := child.type;
+end;
+
+before type do
+   type.type := new Map;
+end;
+
+after type/class_type do
+   parent.type.class_name := class_type.name;
+end;
+
+after class_type/class_name do
+   parent.name := class_name.image.to_lower;
+end;
