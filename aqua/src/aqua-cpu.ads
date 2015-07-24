@@ -69,6 +69,11 @@ package Aqua.CPU is
    overriding procedure Report
      (CPU : Aqua_CPU_Type);
 
+   overriding function Loader
+     (CPU : Aqua_CPU_Type)
+      return access Aqua.Execution.Loader_Interface'Class
+   is (CPU.Load);
+
 private
 
    type External_Object_Access is
@@ -84,12 +89,15 @@ private
         Hash            => Ada.Strings.Fixed.Hash,
         Equivalent_Keys => "=");
 
-   type Aqua_CPU_Type (Image : access Aqua.Images.Root_Image_Type'Class) is
+   type Aqua_CPU_Type
+     (Image : access Aqua.Images.Root_Image_Type'Class;
+      Load : access Aqua.Execution.Loader_Interface'Class) is
    limited new Ada.Finalization.Limited_Controlled
      and Aqua.Execution.Execution_Interface with
       record
 --         Image      : Aqua.Images.Image_Type;
-         R          : Aqua.Architecture.Registers;
+         R          : Aqua.Architecture.Registers :=
+                        (0, 2, 4, 6, 8, 10, 16#FFFE#, 0);
          N, Z, C, V : Boolean := False;
          B          : Boolean := False;
          Ext        : External_Object_Vectors.Vector;
