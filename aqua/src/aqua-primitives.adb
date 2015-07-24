@@ -95,10 +95,12 @@ package body Aqua.Primitives is
             W : constant Word :=
                   Executor.To_Word (Prim_Objects (I).Instance);
          begin
-            Ada.Text_IO.Put_Line
-              (Prim_Objects (I).Name.all & ": "
-               & Aqua.IO.Hex_Image (W)
-               & " - " & Executor.Show (W));
+            if False then
+               Ada.Text_IO.Put_Line
+                 (Prim_Objects (I).Name.all & ": "
+                    & Aqua.IO.Hex_Image (W)
+                    & " - " & Executor.Show (W));
+            end if;
          end;
       end loop;
    end Load_Primitive_Objects;
