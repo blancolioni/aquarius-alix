@@ -61,4 +61,16 @@ package Aqua.Execution is
      (Context : Execution_Interface)
    is abstract;
 
+   type Loader_Interface is interface;
+
+   function Load_Object (Loader    : in out Loader_Interface;
+                         File_Name : String)
+                         return access External_Object_Interface'Class
+                         is abstract;
+
+   function Loader
+     (Context : Execution_Interface)
+      return access Loader_Interface'Class
+      is abstract;
+
 end Aqua.Execution;
