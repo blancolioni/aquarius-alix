@@ -51,6 +51,11 @@ package body Aqua.Primitives.Init is
       Arguments : Array_Of_Words)
       return Word;
 
+   function Handle_Load_Object
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word;
+
    function Handle_Report_State
      (Context : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Array_Of_Words)
@@ -147,6 +152,8 @@ package body Aqua.Primitives.Init is
 
       New_Primitive_Function ("aqua__report_state", 0,
                               Handle_Report_State'Access);
+      New_Primitive_Function ("aqua__load_object", 2,
+                              Handle_Load_Object'Access);
 
       New_Primitive_Function ("io__put", 1,
                               Handle_Put'Access);
@@ -174,8 +181,11 @@ package body Aqua.Primitives.Init is
                  ((new String'("new"), Get_Primitive ("array__new")),
                   (new String'("append"), Get_Primitive ("array__append"))));
 
-      New_Class ("aqua", (1 => (new String'("report_state"),
-                                Get_Primitive ("aqua__report_state"))));
+      New_Class ("aqua",
+                 ((new String'("report_state"),
+                  Get_Primitive ("aqua__report_state")),
+                  (new String'("load_object"),
+                   Get_Primitive ("aqua__load_object"))));
 
       New_Class ("io",
                  ((new String'("put"), Get_Primitive ("io__put")),
@@ -300,6 +310,22 @@ package body Aqua.Primitives.Init is
       end if;
       return Arguments (1);
    end Handle_Include;
+
+   ------------------------
+   -- Handle_Load_Object --
+   ------------------------
+
+   function Handle_Load_Object
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word
+   is
+      File_Name : constant String := Context.To_String (Arguments (2));
+      Result    : constant access External_Object_Interface'Class :=
+                 Context.Loader.Load_Object (File_Name);
+   begin
+      return Context.To_Word (Result);
+   end Handle_Load_Object;
 
    ---------------------
    -- Handle_New_Line --
