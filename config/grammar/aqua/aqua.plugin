@@ -1,0 +1,11 @@
+plugin Aqua version 0.1 is
+
+   group run_check : semantic is
+      aqua_check;
+   end run_check;
+
+   group resolve_references : semantic is
+      aqua_resolve;
+   end resolve_references;
+   
+end Aqua;

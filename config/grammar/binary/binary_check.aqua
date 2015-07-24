@@ -1,0 +1,220 @@
+class Top_Level_Node
+   inherit
+      Root_Node
+
+   feature { NONE }
+      files   : Vector[Binary_File]
+      next_id : Natural;
+
+   feature
+      New_File (Name : String;
+                Entries : Vector[Record_Entry])
+         local
+            Entry : Binary_File
+         do
+            create Entry (Name, Entries)
+            Files.Append (Entry)
+         end
+            
+   feature
+   
+      Package_Name : String
+      Package_File : String
+      
+      before
+         do
+            create files
+            next_id := 1
+         end
+
+      after
+         do
+            Aqua.Report_State
+	 end
+
+      after Package_Declaration/Package_Name
+         do
+            Package_Name := Child.Image
+	    Package_File := Package_Name.Replace (".", ",").To_Lower;
+	 end
+
+end Top_Level_Node
+
+class Expression
+   inherit Node
+
+   feature
+      Is_Constant : Boolean
+      Value       : String
+
+   feature
+
+      after Primary_Expression
+         do
+	    Is_Constant := Child.Is_Constant
+	 end
+
+      after
+         do
+	    Value := Image
+	 end
+
+end Expression
+
+class Primary_Expression
+   inherit
+      Node
+
+   feature
+
+      Is_Constant : Boolean
+      
+      after {Named_Reference, Member_Expression}
+         do
+            Is_Constant := False
+         end
+
+      after {Numeric_Literal, Character_Literal, String_Literal}
+         do
+            Is_Constant := True
+         end
+
+end Primary_Expression
+
+class File_Declaration
+
+   inherit
+      Node
+
+   feature
+      File_Name : String
+      Entries   : Vector [Record_Entry]
+      Has_Array : Boolean
+
+   feature
+
+      Set_Has_Array do Has_Array := True end
+      
+   feature
+
+      after File_Name
+         do
+            File_Name := Child.Image
+            create Entries
+            Top.Create_File (File_Name, Entries)
+         end
+
+end File_Declaration
+
+class File_Entry
+
+   inherit
+      Node
+
+   feature
+
+      Entries : Map [String, Record_Component_Entry]
+      Layout  : Vector [Record_Component_Entry]
+
+      Location   : String
+      Array_Size : Natural
+      
+   feature
+
+      after File_Entry_Name
+         do
+            create Entries
+            create Layout
+            ^File_Declaration.New_Record (Child.Image.To_Lower, Current)
+         end
+
+      after Location
+         do
+            Location := Child.Location
+         end
+
+      after Record_Type
+         do
+            if Child.Array_Size then
+               Array_Size := Child.Array_Size
+               ^File_Declaration.Set_Has_Array
+            end if
+         end
+
+end File_Entry
+
+class Component_Type_Name
+
+   feature
+      Name               : String
+      Standard_Name      : String
+      Object_Declaration : String
+      Return_Type_Name   : String
+
+   invariant      
+      Meaning_Of_Standard:
+         Name = null implies Standard_Name = null
+         and Name /= null implies Standard_Name = Name.To_Lower
+         
+end Component_Type_Name
+
+class Record_Component_Entry
+
+   feature
+      Declared_Name      : String
+      Declared_Type_Name : String
+      Component_Name     : String
+      Type_Name          : Component_Type_Name
+      Has_Offset         : Boolean
+      Offset             : Natural
+      Is_Access          : Boolean
+      Is_Inline_Array    : Boolean
+      Inline_Array_Size  : Positive
+      
+end Record_Component_Entry
+
+class Record_Component
+
+   inherit
+
+      Node
+      Record_Component_Entry
+            
+   feature { NONE }
+
+      Set_Exported_Name
+            --  Create a value for the Component_Name (which appears
+            --  as the name of the component in the generated source text)
+         require
+            Declared_Name /= null
+         do
+            if Declared_Name = "_" then
+               Component_Name := Top.Next_Anonymous_Name
+               Is_Private     := True
+            elsif Declared_Name.Slice (1, 1) = "_" then
+               Component_Name := Top.Next_Private_Name (Declared_Name.Slice_From (2))
+            else
+               Component_Name := Declared_Name
+            end if
+         ensure
+            Got_Name: Component_Name /= null and then Component_Name /= ""
+            Valid_Name: Component_Name.Head /= '_'
+         end
+
+      Create_Type_info
+         do
+            if Has_Offset then
+               
+   feature
+
+      after
+         do
+         
+            Set_Exported_Name
+            Create_Type_Info
+            
+         ensure
+            Exported_Name_Created: Exported_Name /= null
+            Have_Type_Info: Type_Name /= null and Return_Type /= null and Converter /= null
+         end
+                

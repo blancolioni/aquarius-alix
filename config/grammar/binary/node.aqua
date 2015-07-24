@@ -1,0 +1,28 @@
+class Node
+
+   inherit
+      Container
+      
+   feature
+      Top      : Top_Level_Node
+      Terminal : Boolean
+      Name     : String
+      Text     : String
+      Children : Array[Node]
+         ensure
+            Terminal_Is_Leaf: Terminal implies Result.Length = 0
+         end
+         
+      Image : String
+         do
+            if Terminal then
+               Result := Text
+            else
+               Result := ""
+               for Child of Current loop
+                  Result := Result & Child.Image
+               end loop;
+            end if;
+         end
+
+end Node
