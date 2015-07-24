@@ -13,7 +13,9 @@ with Aqua.Images;
 
 package Aqua.CPU is
 
-   type Aqua_CPU_Type (Image : access Aqua.Images.Root_Image_Type'Class) is
+   type Aqua_CPU_Type
+     (Image : access Aqua.Images.Root_Image_Type'Class;
+      Load  : access Aqua.Execution.Loader_Interface'Class) is
    limited new Ada.Finalization.Limited_Controlled
      and Aqua.Execution.Execution_Interface with private;
 

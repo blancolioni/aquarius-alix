@@ -144,19 +144,20 @@ package body Aqua.CPU is
       end if;
 
       CPU.Start := Ada.Calendar.Clock;
-      CPU.Image.Set_Word (Address'Last - 1, 0);
-      CPU.R (6) := To_Address_Word (Address'Last - 1);
+      CPU.Push (CPU.R (7));
 
       for Arg of reverse Arguments loop
          CPU.Push (Arg);
       end loop;
 
-      CPU.Push (To_Address_Word (Address'Last - 1));
+      CPU.Push (0);
 
       CPU.R (7) := To_Address_Word (Start);
       CPU.B := False;
 
-      while not CPU.B loop
+      while not CPU.B
+        and then CPU.R (7) /= 0
+      loop
          declare
             Op : constant Word :=
                    CPU.Image.Get_Word (Get_Address (CPU.R (7)));
@@ -181,6 +182,9 @@ package body Aqua.CPU is
             end if;
          end;
       end loop;
+
+      Aqua.Arithmetic.Inc (CPU.R (6), 2 * Arguments'Length);
+      CPU.R (7) := CPU.Pop;
 
       CPU.Exec_Time := CPU.Exec_Time + Ada.Calendar.Clock - CPU.Start;
 
