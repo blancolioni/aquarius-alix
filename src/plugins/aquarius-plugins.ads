@@ -10,6 +10,7 @@ with Aquarius.Types;
 with Aquarius.VM;
 
 private with Ada.Containers.Hashed_Maps;
+private with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Strings.Fixed.Hash;
 
@@ -34,6 +35,10 @@ package Aquarius.Plugins is
    procedure Report_State
      (Plugin : Aquarius_Plugin_Type)
    is null;
+
+   procedure Add_Search_Path
+     (Plugin : in out Aquarius_Plugin_Type'Class;
+      Path   : String);
 
    overriding function Get_Program
      (Plugin    : not null access Aquarius_Plugin_Type;
@@ -168,6 +173,9 @@ private
         Equivalent_Keys => "=",
         "="             => Aquarius.Programs."=");
 
+   package String_Lists is
+     new Ada.Containers.Indefinite_Doubly_Linked_Lists (String);
+
    type Aquarius_Plugin_Type is
      abstract new Root_Aquarius_Object and Watcher
      and Aquarius.Programs.Root_Program_Tree_Store with
@@ -181,6 +189,7 @@ private
          Change_Flag     : Aquarius.Properties.Property_Type;
          Loaded_Programs : Program_Tree_Maps.Map;
          Have_Menu       : Boolean := False;
+         Standard_Paths  : String_Lists.List;
       end record;
 
    overriding
