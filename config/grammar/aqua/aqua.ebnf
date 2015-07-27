@@ -105,15 +105,6 @@ feature_body ::=
       
 extended_feature_name ::=
          feature_name
-       | action_header
-
-action_header ::= position tree_path
-
-position ::= 'before' | 'after'
-
-tree_path ::=  { path_element / '/' }
-
-path_element ::= identifier
 
 feature_name ::=
          identifier
