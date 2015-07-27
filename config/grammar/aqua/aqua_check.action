@@ -116,10 +116,6 @@ after extended_feature_name/feature_name do
    parent.name := feature_name.image;
 end;
 
-after extended_feature_name/action_header do
-   parent.name := action_header/position.image & ":" & action_header/tree_path.image;
-end;
-
 after type_mark/type do
    parent.type := child.type;
 end;
