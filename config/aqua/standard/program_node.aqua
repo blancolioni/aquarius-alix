@@ -1,0 +1,13 @@
+class Program_Node
+
+feature
+
+   Before
+      do
+      end
+
+   After
+      do
+      end
+
+end
