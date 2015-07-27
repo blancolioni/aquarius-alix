@@ -19,6 +19,7 @@ package body Aquarius.Plugins.Script_Plugin.Generated is
       procedure Actionable_group_declaration_After
         (Target_Actionable : not null access Aquarius.Actions.Actionable'Class);
       procedure Actionable_After_File_Reference (Target_Actionable : not null access Aquarius.Actions.Actionable'Class);
+      procedure Actionable_After_Value_Declaration (Target_Actionable : not null access Aquarius.Actions.Actionable'Class);
    end Bindings;
    package body Bindings is
       procedure Actionable_plugin_declaration_Before_list_of_declarations (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
@@ -73,6 +74,12 @@ package body Aquarius.Plugins.Script_Plugin.Generated is
          Aquarius.Plugins.Script_Plugin.Bindings.After_Action_File_Reference (Aquarius.Programs.Program_Tree
                                                                               (Target_Actionable));
       end Actionable_After_File_Reference;
+      procedure Actionable_After_Value_Declaration
+        (Target_Actionable : not null access Aquarius.Actions.Actionable'Class) is
+      begin
+         Aquarius.Plugins.Script_Plugin.Bindings.After_Value_Declaration (Aquarius.Programs.Program_Tree
+                                                                              (Target_Actionable));
+      end Actionable_After_Value_Declaration;
    end Bindings;
    procedure Bind_Actions (Plugin : in out Script_Plugin_Type;
                            Grammar : in Aquarius.Grammars.Aquarius_Grammar) is
@@ -106,5 +113,8 @@ package body Aquarius.Plugins.Script_Plugin.Generated is
       Plugin.Register_Action ("action_file_reference", Parser,
                               Aquarius.After,
                               Bindings.Actionable_After_File_Reference'Access);
+      Plugin.Register_Action ("value_declaration", Parser,
+                              Aquarius.After,
+                              Bindings.Actionable_After_Value_Declaration'Access);
    end Bind_Actions;
 end Aquarius.Plugins.Script_Plugin.Generated;
