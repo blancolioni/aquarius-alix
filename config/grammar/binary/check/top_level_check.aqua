@@ -1,0 +1,30 @@
+class Top_Level_Check
+   inherit
+      Top_Level_Node
+         redefine Before, After
+      end
+      
+   feature { NONE }
+      files   : Vector[Binary_File]
+      next_id : Natural;
+
+   feature  --  files
+   
+      New_File (Name : String;
+                Entries : Vector[Record_Entry])
+         local
+            Entry : Binary_File
+         do
+            create Entry (Name, Entries)
+            Files.Append (Entry)
+         end
+            
+   feature -- actions
+   
+      Before
+         do
+            create files
+            next_id := 1
+         end
+
+end Top_Level_Check
