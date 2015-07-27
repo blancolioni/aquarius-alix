@@ -1,6 +1,11 @@
 class Program_Node
 
-feature
+feature { NONE }  -- tree structure
+
+   Parent : Program_Node
+   Left, Right : Program_Node
+   
+feature  -- action handlers
 
    Before
       do
