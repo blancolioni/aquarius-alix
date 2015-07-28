@@ -1,6 +1,6 @@
 plugin Aqua version 0.1 is
 
-   source_path = (".", "/", "/standard", "/standard/generated");
+   source_path = (".", "/", "/standard", "/binary", "/standard/generated");
    
    group run_check : semantic is
       aqua_check;
