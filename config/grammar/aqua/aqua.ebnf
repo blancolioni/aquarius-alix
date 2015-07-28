@@ -316,7 +316,7 @@ conditional ::=
       { 'elseif' boolean_expression 'then' compound }
       [ 'else' compound ]
    'end'
-	 
+
 multi_branch ::=
          'inspect' expression [ when_part_list ] [ 'else' compound ] 'end'
 	 
@@ -425,6 +425,7 @@ primary ::= manifest_constant
 	 | '(' expression ')'
 	 | old
          | object_test
+         | 'void'
 	 
 boolean_operator ::=
 	'and' | 'and' 'then' | 'or' | 'or' 'else' | 'xor'
