@@ -25,7 +25,7 @@ format inherit_list indented_child
 format feature_adaptation indented_child
 format feature_declaration_list indented_child
 format new_export_list indented_child
-format attribute_or_routine indented_child
+format attribute indented_child
 format deferred new_line_after
 format assertion_clause indented_child
 format local_entity_declaration_list indented_child
@@ -84,7 +84,7 @@ declaration_body ::=
 type_mark ::=
          ':' type
 
-feature_value ::= explicit_value | attribute_or_routine
+feature_value ::= explicit_value | routine
 	 
 explicit_value ::=
          '=' manifest_constant
@@ -95,13 +95,12 @@ new_feature_list ::=
 new_feature ::=
          [ 'frozen' ] extended_feature_name
 	 
-attribute_or_routine ::=
+routine ::=
          [ precondition ] [ local_declarations ] feature_body [ postcondition ] [ rescue ] 'end'
 
 feature_body ::=
          deferred
       |  effective_routine
-      |  attribute
       
 extended_feature_name ::=
          feature_name
