@@ -71,6 +71,11 @@ package body Aqua.Primitives.Init is
       Arguments : Array_Of_Words)
       return Word;
 
+   function Handle_Clone
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word;
+
    function Handle_Array_New
      (Context : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Array_Of_Words)
@@ -137,6 +142,7 @@ package body Aqua.Primitives.Init is
       New_Primitive_Function ("object__include", 2, Handle_Include'Access);
       New_Primitive_Function ("object__set", 3, Handle_Set'Access);
       New_Primitive_Function ("object__new", 0, Handle_Object_New'Access);
+      New_Primitive_Function ("object__clone", 1, Handle_Clone'Access);
 
       New_Primitive_Function ("array__new", 0, Handle_Array_New'Access);
       New_Primitive_Function ("array__image", 0, Handle_Image'Access);
@@ -171,6 +177,11 @@ package body Aqua.Primitives.Init is
            ("new",
             Aqua.Words.To_Subroutine_Word
               (Get_Primitive ("object__new")));
+
+         Object_Class.Set_Property
+           ("clone",
+            Aqua.Words.To_Subroutine_Word
+              (Get_Primitive ("object__clone")));
 
          Local_Object_Class :=
            new Aqua.Objects.Root_Object_Type'(Object_Class);
@@ -231,6 +242,23 @@ package body Aqua.Primitives.Init is
    begin
       return Context.To_Word (Item);
    end Handle_Array_New;
+
+   ------------------
+   -- Handle_Clone --
+   ------------------
+
+   function Handle_Clone
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word
+   is
+      Object : constant access External_Object_Interface'Class :=
+                 Context.To_External_Object (Arguments (1));
+      Clone  : constant Primitive_Object_Access :=
+                 new External_Object_Interface'Class'(Object.all);
+   begin
+      return Context.To_Word (Clone);
+   end Handle_Clone;
 
    ---------------------
    -- Handle_Contains --
