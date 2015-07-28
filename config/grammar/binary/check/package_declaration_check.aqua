@@ -1,6 +1,6 @@
 class Package_Declaration_Check
    inherit Package_Declaration_Node
-      redefine After_Package_Name, After_Matching_Package_Name
+      redefine After_Package_Name, After_Matching_Package_Name end
 
 feature  -- packages
 
@@ -20,6 +20,11 @@ feature  -- packages
          Matching_Name := Child.Image
          if Matching_Name /= Package_Name then
             Error ("expected " & Package_Name)
-         end if
+         end
       end
+
+invariant
+   Package_Name_And_File_Match:
+     Package_Name = void or else Package_Name.To_Lower = Package_File.Replace ("-", ".")
+     
 end
