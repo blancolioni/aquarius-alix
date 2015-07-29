@@ -1,21 +1,19 @@
 before class_declaration do
-   IO.put_line ("checking ...");
 end;
 
 after class_declaration do
    top.class := tree.class;
-   aqua.report_state;
-   IO.put_line ("finished checking");
 end;
 
 after class_declaration/class_header do
    parent.class := class_header.class;
-   parent.class.clients := new Array;
+   parent.class.clients := (list => new Array, table => new Map);
+   parent.class.inheritance := (list => new Array, table => new Map, full_list => new Array);
    parent.class.features := (list => new Array, table => new Map);
 end;
 
-after class_declaration/inheritance do
-   parent.class.inheritance := inheritance.inheritance;
+before class_declaration/inheritance do
+   inheritance.inheritance := parent.class.inheritance;
 end;
 
 before class_declaration/features do
@@ -50,7 +48,6 @@ after class_declaration/class_header do
 end;
 
 before inheritance do
-   tree.inheritance := (list => new Array, table => new Map, full_list => new Array);
 end;
 
 after inherit_list/inherited do
@@ -76,7 +73,11 @@ after feature_declaration/declaration_body do
        value            => child.value);
    if child.type then
       if child.type.class_name then
-         parent^class_declaration.class.clients.append (child.type.class_name);
+         tree.client_info := (name => child.type.class_name);
+         if not parent^class_declaration.class.clients.table.get (tree.client_info.name) then
+            parent^class_declaration.class.clients.list.append (tree.client_info);
+            parent^class_declaration.class.clients.table.set (tree.client_info.name, tree.client_info);
+         end if;
       end if;
    end if;
 end;
