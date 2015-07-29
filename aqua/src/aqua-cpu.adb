@@ -831,8 +831,11 @@ package body Aqua.CPU is
          & " heap ="
          & Address'Image
            (CPU.Image.Heap_High - CPU.Image.Code_High)
+         & " stack ="
+         & Address'Image (Address'Last - Get_Address (CPU.R (6)) + 1)
          & " free ="
-         & Address'Image (Address'Last - CPU.Image.Heap_High + 1));
+         & Address'Image
+           (Get_Address (CPU.R (6)) - CPU.Image.Heap_High));
 
       Put_Line ("Objects:" & Natural'Image (CPU.Ext.Last_Index + 1)
                 & "/"
