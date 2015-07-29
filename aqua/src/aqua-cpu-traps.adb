@@ -42,6 +42,14 @@ package body Aqua.CPU.Traps is
                      Aqua.Primitives.Get_Primitive
                        ("string__" & CPU.Image.To_String (Name));
          begin
+            if Prim = 0 then
+               raise Constraint_Error
+                 with "property "
+                 & CPU.Show (Name)
+                 & " not defined for string "
+                 & CPU.Show (Target);
+            end if;
+
             Value :=
               Aqua.Primitives.Call_Primitive
                 (CPU, Prim, Target & Arguments (1 .. Argument_Count));
