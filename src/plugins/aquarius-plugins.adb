@@ -158,8 +158,10 @@ package body Aquarius.Plugins is
 
             Plugin.Loaded_Programs.Insert (File_Name, Result);
 
-            Plugin.Grammar.Run_Action_Trigger
-              (Result, Aquarius.Actions.Semantic_Trigger);
+            if Result /= null then
+               Plugin.Grammar.Run_Action_Trigger
+                 (Result, Aquarius.Actions.Semantic_Trigger);
+            end if;
 
          end;
 
