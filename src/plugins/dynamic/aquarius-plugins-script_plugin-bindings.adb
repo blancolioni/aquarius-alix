@@ -1,4 +1,5 @@
 with Ada.Calendar;
+with Ada.Characters.Handling;
 with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Text_IO;
@@ -106,6 +107,69 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
         (Base_Name & ".o11");
 
    end After_Action_File_Reference;
+
+   -----------------------------
+   -- After_Value_Declaration --
+   -----------------------------
+
+   procedure After_Value_Declaration
+     (Item : Aquarius.Programs.Program_Tree)
+   is
+      use Ada.Characters.Handling;
+      Name : constant String :=
+               To_Lower (Item.Program_Child ("identifier").Text);
+      New_Plugin : constant Aquarius_Plugin :=
+                     Aquarius_Plugin
+                       (Item.Property (Plugin.Property_Plugin));
+      Value      : constant Program_Tree :=
+                     Item.Program_Child ("value");
+      Simple_Value : constant Program_Tree :=
+                       Value.Program_Child ("simple_value");
+      List_Value   : constant Program_Tree :=
+                       Value.Program_Child ("list_value");
+
+      function To_Path (X : String) return String;
+
+      -------------
+      -- To_Path --
+      -------------
+
+      function To_Path (X : String) return String is
+      begin
+         if X'Length >= 2
+           and then X (X'First) = '"'
+           and then X (X'Last) = '"'
+         then
+            declare
+               Result : constant String (1 .. X'Length - 2) :=
+                          X (X'First + 1 .. X'Last - 1);
+            begin
+               return Result;
+            end;
+         else
+            return X;
+         end if;
+      end To_Path;
+
+   begin
+      if Name = "source_path" then
+         if List_Value /= null then
+            declare
+               Elements : constant Array_Of_Program_Trees :=
+                            List_Value.Direct_Children ("value");
+            begin
+               for List_Element of Elements loop
+                  New_Plugin.Add_Search_Path
+                    (To_Path (List_Element.Concatenate_Children));
+               end loop;
+            end;
+         else
+            New_Plugin.Add_Search_Path
+              (To_Path (Simple_Value.Concatenate_Children));
+         end if;
+      end if;
+
+   end After_Value_Declaration;
 
    -------------
    -- Execute --

@@ -1,0 +1,36 @@
+before class_declaration do
+   tagatha.begin_unit (tree.class.name)
+end
+
+after class_declaration do
+
+   if not tree.class.deferred then
+      tagatha.procedure (tree.class.name & "$new", 0, 0, 1);
+      tagatha.alloc (tree.class.size);
+      tagatha.return
+   end if
+   
+   for feature in tree.class.features loop
+      if feature.attribute then
+         null
+      else
+         tagatha.procedure
+           (tree.class.name & "__" & feature.name,
+            feature.arguments.length,
+            feature.local.list.length,
+            (if feature.function then 1 else 0),
+            0)
+         tagatha.return
+      end if
+   end loop
+
+   tagatha.label (tree.class.name & "$vt");
+   for class in tree.class.ancestors loop
+      tagatha.data (tree.class.name & "$vt");
+      for feature in class.defined_features loop
+         tagatha.data (feature.class_name & "__" & feature.name);
+      end loop;
+   end loop;
+   tagatha.end_unit;
+end
+

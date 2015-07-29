@@ -2,7 +2,6 @@ before class_declaration do
 end;
 
 after class_declaration do
-   top.class := tree.class;
 end;
 
 after class_declaration/class_header do
@@ -13,7 +12,7 @@ after class_declaration/class_header do
 end;
 
 before class_declaration/inheritance do
-   inheritance.inheritance := parent.class.inheritance;
+   child.inheritance := parent.class.inheritance;
 end;
 
 before class_declaration/features do
@@ -35,7 +34,7 @@ after class_header/header_mark do
 end;
 
 after class_header/class_name do
-   parent.class.name := class_name.image;
+   parent.class.name := class_name.image.to_lower;
 end;
 
 after class_header/formal_generics do
@@ -52,12 +51,33 @@ end;
 
 after inherit_list/inherited do
    parent^inheritance.inheritance.list.append (child.inherit);
-   parent^inheritance.inheritance.table.insert (child.inherit.name, child.inherit);
+   parent^inheritance.inheritance.table.set (child.inherit.name, child.inherit);
 end;
 
 after inherited/class_type do
-   parent.inherit := (name => class_type.name);
+   parent.inherit := (name => class_type.name)
 end;
+
+before inherited/feature_adaptation do
+   child.inherit := parent.inherit
+end
+
+before feature_adaptation/redefine do
+   parent.inherit.redefines := (list => new Array, table => new Map)
+   child.redefines := parent.inherit.redefines
+end
+
+before redefine/feature_list do
+   child.features := parent.redefines
+end
+
+after redefine/feature_list do
+end
+
+after feature_list/feature_name do
+   parent.features.list.append (feature_name.image.to_lower)
+   parent.features.table.set (feature_name.image.to_lower, 1)
+end
 
 before features do
 end;
@@ -70,6 +90,8 @@ after feature_declaration/declaration_body do
    tree.feature_body :=
       (formal_arguments => child.formal_arguments,
        type             => child.type,
+       deferred         => child.deferred,
+       redefine         => top.class.inheritance.redefines,
        value            => child.value);
    if child.type then
       if child.type.class_name then
@@ -80,16 +102,20 @@ after feature_declaration/declaration_body do
          end if;
       end if;
    end if;
+   if child.value then
+      tree.feature_body.routine := 1
+   else
+      tree.feature_body.attribute := 1
+   end if
 end;
 
 after feature_declaration do
    for name in tree.new_feature_names loop
-      tree.new_feature :=
-         (name => name,
-          standard_name => name.to_lower,
-          body => tree.feature_body);
+      tree.new_feature := tree.feature_body.clone;
+      tree.new_feature.name := name
+      tree.new_feature.standard_name := name.to_lower
       tree^features.features.list.append (tree.new_feature);
-      tree^features.features.table.insert (tree.new_feature.standard_name, tree.new_feature);
+      tree^features.features.table.set (tree.new_feature.standard_name, tree.new_feature);
    end loop;
 end;
 
@@ -103,7 +129,25 @@ end;
 
 after declaration_body/feature_value do
    tree.value := child.value;
+   tree.deferred := child.deferred
 end;
+
+after feature_value/explicit_value do
+   parent.value := (constant_feature => child)
+end
+
+after feature_value/routine do
+   parent.value := (routine => child)
+   parent.deferred := child.deferred
+end
+
+after routine/feature_body do
+   parent.deferred := child.deferred
+end
+
+after feature_body/deferred do
+   parent.deferred := 1
+end
 
 after new_feature_list/new_feature do
    parent^feature_declaration.new_feature_names.append (child.name);
@@ -115,10 +159,6 @@ end;
 
 after extended_feature_name/feature_name do
    parent.name := feature_name.image;
-end;
-
-after extended_feature_name/action_header do
-   parent.name := action_header/position.image & ":" & action_header/tree_path.image;
 end;
 
 after type_mark/type do

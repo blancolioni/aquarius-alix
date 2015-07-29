@@ -10,7 +10,56 @@ before class_declaration do
          client.class := client.tree.class;
       end if;
    end loop;
+
+   tree.class.ancestors := (list => new Array, table => new Map)
+   tree.class.ancestors.list.append (tree.class)
+   tree.class.ancestors.table.set (tree.class.name, tree.class)
+
+   if tree.class.inheritance then
+      for item in tree.class.inheritance.list loop
+         if not tree.class.ancestors.table.get (item.class.name) then
+            for indirect_item in item.class.ancestors.list loop
+               if not tree.class.ancestors.table.get (indirect_item.name) then
+                  tree.class.ancestors.list.append (indirect_item)
+                  tree.class.ancestors.table.set (indirect_item.name, indirect_item)
+               end if
+            end loop;
+         end if
+         if item.redefines then
+            for feature_name in item.redefines.list loop
+               if tree.class.features.table.get (feature_name) then
+                  tree.class.features.table.get (feature_name).redefined := 1
+               end if
+            end loop
+            
+            tree.t := tree.class.ancestors.table.get (item.class.name)
+            if tree.t then
+               tree.t.redefines := item.redefines
+            end if
+         end if
+      end loop
+   end if;   
+
 end;
 
 after class_declaration do
+   for feature in tree.class.features.list loop
+      if feature.deferred then
+         IO.put ("deferred ")
+      end if;
+      if feature.attribute then
+         IO.put ("attribute ")
+      end if;
+      if feature.routine then
+         IO.put ("routine ")
+      end if;
+      if feature.redefined then
+         IO.put ("redefined ")
+      end if;
+      if feature.renamed then
+         IO.put ("renamed [" & feature.renamed & "]")
+      end if;
+      
+      IO.put_line ("feature: " & feature.standard_name)
+   end loop
 end;
