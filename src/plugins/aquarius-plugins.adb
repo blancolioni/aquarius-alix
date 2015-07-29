@@ -41,6 +41,18 @@ package body Aquarius.Plugins is
          Group);
    end Add_Action_Group;
 
+   ---------------------
+   -- Add_Search_Path --
+   ---------------------
+
+   procedure Add_Search_Path
+     (Plugin : in out Aquarius_Plugin_Type'Class;
+      Path   : String)
+   is
+   begin
+      Plugin.Standard_Paths.Append (Path);
+   end Add_Search_Path;
+
    ------------------------
    -- Add_Standard_Entry --
    ------------------------
@@ -124,37 +136,47 @@ package body Aquarius.Plugins is
       File_Name : String)
       return Aquarius.Programs.Program_Tree
    is
+      use Ada.Characters.Handling;
       use Ada.Directories;
+      use Aquarius.Programs;
       Result : Aquarius.Programs.Program_Tree;
+      Standard_Path : constant String :=
+                        Aquarius.Config_Paths.Config_Path
+                        & "/"
+                        & To_Lower
+                          (Aquarius_Plugin_Type'Class
+                             (Plugin.all).Name);
    begin
       if Plugin.Loaded_Programs.Contains (File_Name) then
          Result := Plugin.Loaded_Programs (File_Name);
       else
-         declare
-            use Ada.Characters.Handling;
-            use Aquarius.Programs;
-            Standard_Path : constant String :=
-                              Aquarius.Config_Paths.Config_Path
-                              & "/"
-                              & To_Lower
-                                (Aquarius_Plugin_Type'Class (Plugin.all).Name)
-                              & "/"
-                              & File_Name;
-         begin
-            if Exists (File_Name)
-              and then Kind (File_Name) = Ordinary_File
-            then
-               Result := Plugin.Load_Program_Tree (File_Name);
-            elsif Exists (Standard_Path)
-              and then Kind (Standard_Path) = Ordinary_File
-            then
-               Result := Plugin.Load_Program_Tree (Standard_Path);
-            else
-               Ada.Text_IO.Put_Line
-                 (Ada.Text_IO.Standard_Error,
-                  "not found: " & File_Name);
-               Result := null;
-            end if;
+         if Plugin.Standard_Paths.Is_Empty then
+            Plugin.Standard_Paths.Append (".");
+            Plugin.Standard_Paths.Append ("/");
+         end if;
+
+         for Base_Path of Plugin.Standard_Paths loop
+            declare
+               File_Path : constant String :=
+                             (if Base_Path (Base_Path'First) = '/'
+                              then Standard_Path & Base_Path & "/" & File_Name
+                              else Base_Path & "/" & File_Name);
+            begin
+               if Exists (File_Path)
+                 and then Kind (File_Path) = Ordinary_File
+               then
+                  Result := Plugin.Load_Program_Tree (File_Path);
+                  exit;
+               end if;
+            end;
+         end loop;
+
+         if Result = null then
+            Ada.Text_IO.Put_Line
+              (Ada.Text_IO.Standard_Error,
+               "not found: " & File_Name);
+
+         else
 
             Plugin.Loaded_Programs.Insert (File_Name, Result);
 
@@ -163,7 +185,7 @@ package body Aquarius.Plugins is
                  (Result, Aquarius.Actions.Semantic_Trigger);
             end if;
 
-         end;
+         end if;
 
       end if;
 

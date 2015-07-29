@@ -10,9 +10,10 @@ symbol             ::= ![:=><&^\.\*/+-]+!
 line_comment = "--"
 
 format sequence_of_statements indented_child
+
 format actual_argument_list soft_new_line
 
-format ';' no_space_before no_space_after new_line_after
+format ';' no_space_before
 format '.' no_space_before no_space_after
 format '(' space_before no_space_after
 format ')' no_space_before space_after
@@ -23,7 +24,7 @@ format 'is' new_line_after
 
 compilation_unit ::= sequence_of_statements
 
-sequence_of_statements ::= { statement ';' }
+sequence_of_statements ::= { statement [ ';' ] }
 
 statement ::= for_loop_statement | case_statement | if_statement | assignment_statement
             | procedure_call_statement | declare_statement | null_statement | action_statement

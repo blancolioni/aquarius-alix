@@ -6,6 +6,7 @@ with Aquarius.Actions;
 with Aquarius.Command_Line;
 with Aquarius.Config_Paths;
 with Aquarius.Configuration;
+with Aquarius.Grammars.Aqua_Gen;
 with Aquarius.Grammars.Manager;
 with Aquarius.Library;
 with Aquarius.Loader;
@@ -184,7 +185,12 @@ begin
          end;
 
          if Command_Line.Action /= "" then
-            Grammar.Run_Actions (Command_Line.Action, Input);
+            if Command_Line.Action = "grammar-gen" then
+               Aquarius.Grammars.Aqua_Gen.Generate
+                 (Grammar, ".");
+            else
+               Grammar.Run_Actions (Command_Line.Action, Input);
+            end if;
          end if;
 
          declare

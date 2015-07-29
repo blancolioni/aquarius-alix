@@ -1,0 +1,18 @@
+class Program_Node
+
+feature { NONE }  -- tree structure
+
+   Parent : Program_Node
+   Left, Right : Program_Node
+   
+feature  -- action handlers
+
+   Before
+      do
+      end
+
+   After
+      do
+      end
+
+end

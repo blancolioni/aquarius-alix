@@ -1,0 +1,30 @@
+class Package_Declaration_Check
+   inherit Package_Declaration_Node
+      redefine After_Package_Name, After_Matching_Package_Name end
+
+feature  -- packages
+
+   Package_Name : String
+   Package_File : String
+
+   After_Package_Name (Child : Package_Name_Node)
+      do
+         Package_Name := Child.Image
+         Package_File := Package_Name.Replace (".", "-").To_Lower;
+      end
+
+   After_Matching_Package_Name (Child : Matching_Package_Name_Node)
+      local
+         Matching_Name : String
+      do
+         Matching_Name := Child.Image
+         if Matching_Name /= Package_Name then
+            Error ("expected " & Package_Name)
+         end
+      end
+
+invariant
+   Package_Name_And_File_Match:
+     Package_Name = void or else Package_Name.To_Lower = Package_File.Replace ("-", ".")
+     
+end

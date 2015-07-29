@@ -30,4 +30,7 @@ package Aquarius.Plugins.Script_Plugin.Bindings is
    procedure After_Action_File_Reference
      (Item : Aquarius.Programs.Program_Tree);
 
+   procedure After_Value_Declaration
+     (Item : Aquarius.Programs.Program_Tree);
+
 end Aquarius.Plugins.Script_Plugin.Bindings;

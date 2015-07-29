@@ -30,7 +30,9 @@ version_spec ::= < numeric_literal / '.' >
 
 list_of_declarations ::= { declaration }
 
-declaration ::= property_declaration | group_declaration
+declaration ::= value_declaration | property_declaration | group_declaration
+
+value_declaration ::= identifier '=' value ';'
 
 property_declaration ::= 'property' identifier [ 'inherited' ] ';'
 
@@ -41,3 +43,9 @@ group_declaration ::= 'group' identifier ':' identifier 'is'
 list_of_actions ::= { action_file_reference ';' }
 
 action_file_reference ::= < identifier / '.' >
+
+value ::= list_value | simple_value
+
+simple_value ::= string_literal
+
+list_value ::= '(' { value / ',' } ')'
