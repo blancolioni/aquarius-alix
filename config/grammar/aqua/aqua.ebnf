@@ -176,8 +176,16 @@ deferred ::=
          'deferred'
 	 
 effective_routine ::=
-         internal
+          internal
+        | external
+        
+external ::=
+   'external' [ calling_convention ] external_name
+   
+calling_convention ::= identifier
 
+external_name ::= string_literal
+   
 internal ::=
          routine_mark compound
 	 
@@ -438,10 +446,10 @@ factor ::= [ unary_primary_operator ] primary
 
 primary ::= manifest_constant
          | precursor
-	 | '(' expression ')'
-	 | old
+	     | '(' expression ')'
+	     | old
          | object_test
-	 
+         
 boolean_operator ::=
 	'and' | 'and' 'then' | 'or' | 'or' 'else' | 'xor'
 
