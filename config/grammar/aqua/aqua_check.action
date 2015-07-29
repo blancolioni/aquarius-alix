@@ -6,6 +6,7 @@ end;
 
 after class_declaration/class_header do
    parent.class := class_header.class;
+   top.class := tree.class;
    parent.class.clients := (list => new Array, table => new Map);
    parent.class.inheritance := (list => new Array, table => new Map, full_list => new Array);
    parent.class.features := (list => new Array, table => new Map);
