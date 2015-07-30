@@ -1,4 +1,3 @@
-with Ada.Strings.Fixed;
 with Ada.Text_IO;
 with Ada.Unchecked_Conversion;
 
@@ -9,21 +8,9 @@ package body Tagatha.Code.Pdp11 is
 
    Result_Register : constant String := "r0";
 
-   function To_Integer is new
-     Ada.Unchecked_Conversion (Tagatha_Floating_Point,
-                               Floating_Point_Integer);
-
    function To_String (Cond    : Tagatha_Condition;
                        Negated : Boolean)
                       return String;
-
-   function To_String
-     (V          : Tagatha.Constants.Tagatha_Constant;
-      Slice_Mask : Tagatha_Integer := Tagatha_Integer'Last;
-      Bit_Offset : Natural := 0)
-      return String;
-
-   function Image (Item : Tagatha_Integer) return String;
 
    procedure Move (Asm       : in out Assembly'Class;
                    Source    : in     Tagatha.Transfers.Transfer_Operand;
@@ -67,20 +54,6 @@ package body Tagatha.Code.Pdp11 is
      (Asm      : in out Assembly'Class;
       Op       : in     One_Argument_Operator;
       Dest     : in     Tagatha.Transfers.Transfer_Operand);
-
-   ----------
-   -- Data --
-   ----------
-
-   overriding procedure Data
-     (T     : in out Pdp11_Translator;
-      Asm   : in out Assembly'Class;
-      Value : Tagatha.Constants.Tagatha_Constant)
-   is
-      pragma Unreferenced (T);
-   begin
-      Asm.Put_Line ("    .word " & To_String (Value));
-   end Data;
 
    ------------
    -- Encode --
@@ -238,16 +211,6 @@ package body Tagatha.Code.Pdp11 is
    begin
       return Translator'Class (Result);
    end Get_Translator;
-
-   -----------
-   -- Image --
-   -----------
-
-   function Image (Item : Tagatha_Integer) return String is
-   begin
-      return Ada.Strings.Fixed.Trim (Tagatha_Integer'Image (Item),
-                                     Ada.Strings.Left);
-   end Image;
 
    -----------------
    -- Instruction --
@@ -558,66 +521,13 @@ package body Tagatha.Code.Pdp11 is
    ---------------
 
    function To_String
-     (V : Tagatha.Constants.Tagatha_Constant;
-      Slice_Mask : Tagatha_Integer := Tagatha_Integer'Last;
-      Bit_Offset : Natural := 0)
-      return String
-   is
-      use Tagatha.Constants;
-   begin
-      if Is_Integer (V) then
-         return Image ((Get_Integer (V) and Slice_Mask) /
-                       (2 ** Bit_Offset));
-      elsif Is_Floating_Point (V) then
-         return Floating_Point_Integer'Image
-           (To_Integer (Get_Floating_Point (V)));
-      elsif Is_Label (V) then
-         return Tagatha.Labels.Show (Get_Label (V), '_');
-      else
-         raise Constraint_Error with
-           "unknown constant type in " & Show (V);
-      end if;
-   end To_String;
-
-   ---------------
-   -- To_String --
-   ---------------
-
-   function To_String
      (Item : Tagatha.Transfers.Transfer_Operand)
       return String
    is
       use Tagatha.Transfers;
    begin
       if Is_Constant (Item) then
-         declare
-            use Tagatha.Constants;
-            V : constant Tagatha_Constant := Get_Value (Item);
-         begin
-            if Is_Integer (V) then
-               return Image ((Get_Integer (V) and Get_Slice_Mask (Item)) /
-                               (2 ** Natural (Get_Slice_Bit_Offset (Item))));
-            elsif Is_Floating_Point (V) then
-               return Floating_Point_Integer'Image
-                 (To_Integer (Get_Floating_Point (V)));
-            elsif Is_Label (V) then
-               if Has_Slice (Item) then
-                  if Slice_Fits (Item, Size_8) then
-                     return Tagatha.Labels.Show (Get_Label (V), '_') & " +" &
-                       Image (Get_Slice_Byte_Offset (Item));
-                  else
-                     raise Constraint_Error with
-                       "can't take non-byte slice from label: " &
-                       Show (Item);
-                  end if;
-               else
-                  return Tagatha.Labels.Show (Get_Label (V), '_');
-               end if;
-            else
-               raise Constraint_Error with
-                 "unknown constant type in " & Show (V);
-            end if;
-         end;
+         return To_String (Get_Value (Item), Item);
       elsif Is_Argument (Item) or else Is_Local (Item) then
          declare
             Addr : Tagatha_Integer;

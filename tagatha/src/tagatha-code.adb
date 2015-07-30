@@ -1,9 +1,16 @@
+with Ada.Strings.Fixed;
+with Ada.Unchecked_Conversion;
+
 with Tagatha.Code.Pdp11;
 with Tagatha.Code.I686;
 with Tagatha.Code.M6502;
 with Tagatha.Code.X86_64;
 
 package body Tagatha.Code is
+
+   function To_Integer is new
+     Ada.Unchecked_Conversion (Tagatha_Floating_Point,
+                               Floating_Point_Integer);
 
    ------------------
    -- Address_Size --
@@ -13,6 +20,20 @@ package body Tagatha.Code is
    begin
       return Word_Size (Translator'Class (T));
    end Address_Size;
+
+   ----------
+   -- Data --
+   ----------
+
+   procedure Data
+     (T     : in out Translator;
+      Asm   : in out Assembly'Class;
+      Value : Tagatha.Constants.Tagatha_Constant)
+   is
+      pragma Unreferenced (T);
+   begin
+      Asm.Put_Line ("    .word " & To_String (Value));
+   end Data;
 
    --------------------
    -- Get_Translator --
@@ -34,6 +55,16 @@ package body Tagatha.Code is
       end if;
    end Get_Translator;
 
+   -----------
+   -- Image --
+   -----------
+
+   function Image (Item : Tagatha_Integer) return String is
+   begin
+      return Ada.Strings.Fixed.Trim (Tagatha_Integer'Image (Item),
+                                     Ada.Strings.Left);
+   end Image;
+
    ------------------
    -- Integer_Size --
    ------------------
@@ -42,5 +73,43 @@ package body Tagatha.Code is
    begin
       return Word_Size (Translator'Class (T));
    end Integer_Size;
+
+   ---------------
+   -- To_String --
+   ---------------
+
+   function To_String
+     (V    : Tagatha.Constants.Tagatha_Constant;
+      From : Tagatha.Transfers.Transfer_Operand :=
+        Tagatha.Transfers.Null_Operand)
+      return String
+   is
+      use Tagatha.Constants;
+      use Tagatha.Transfers;
+   begin
+      if Is_Integer (V) then
+         return Image ((Get_Integer (V) and Get_Slice_Mask (From)) /
+                       (2 ** Natural (Get_Slice_Bit_Offset (From))));
+      elsif Is_Floating_Point (V) then
+         return Floating_Point_Integer'Image
+           (To_Integer (Get_Floating_Point (V)));
+      elsif Is_Label (V) then
+         if Has_Slice (From) then
+            if Slice_Fits (From, Size_8) then
+               return Tagatha.Labels.Show (Get_Label (V), '_') & " +" &
+                 Image (Get_Slice_Byte_Offset (From));
+            else
+               raise Constraint_Error with
+                 "can't take non-byte slice from label: " &
+                 Show (From);
+            end if;
+         else
+            return Tagatha.Labels.Show (Get_Label (V), '_');
+         end if;
+      else
+         raise Constraint_Error with
+           "unknown constant type in " & Show (V);
+      end if;
+   end To_String;
 
 end Tagatha.Code;
