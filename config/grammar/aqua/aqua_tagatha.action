@@ -31,7 +31,15 @@ after class_declaration do
    for class in tree.class.ancestors.list loop
       tree.data (tree.class.name & "$vt");
       for feature in class.features.list loop
-         tree.data (class.name & "__" & feature.standard_name);
+         if feature.attribute then
+            null
+         elsif feature.redefined then
+            null
+         elsif tree.class.features.table.get (feature.standard_name) then
+            tree.data (tree.class.name & "__" & feature.standard_name);
+         else
+            tree.data (class.name & "__" & feature.standard_name);
+         end if
       end loop;
    end loop;
    tree.code_segment
