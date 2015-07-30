@@ -1,4 +1,5 @@
 with Ada.Strings.Unbounded;
+private with Ada.Containers.Doubly_Linked_Lists;
 
 private with Tagatha.Labels;
 
@@ -15,12 +16,20 @@ package Tagatha.Units is
 
    procedure Create_Unit (New_Unit       : in out Tagatha_Unit;
                           Name           : in     String;
-                          Source_File    : in     String;
-                          Argument_Words : in     Natural;
-                          Frame_Words    : in     Natural;
-                          Global         : in     Boolean := True);
+                          Source_File    : in     String);
 
    procedure Finish_Unit (Unit : in out Tagatha_Unit);
+
+   procedure Begin_Routine
+     (Unit           : in out Tagatha_Unit;
+      Name           : in     String;
+      Argument_Words : in     Natural;
+      Frame_Words    : in     Natural;
+      Result_Words   : in     Natural;
+      Global         : in     Boolean);
+
+   procedure End_Routine
+     (Unit : in out Tagatha_Unit);
 
    procedure Optimise (Unit : in out Tagatha_Unit);
 
@@ -45,6 +54,10 @@ package Tagatha.Units is
 
    procedure Data (Unit    : in out Tagatha_Unit;
                    Value   : in     Tagatha_Integer;
+                   Size    : in     Tagatha_Size     := Default_Integer_Size);
+
+   procedure Data (Unit    : in out Tagatha_Unit;
+                   Label   : in     String;
                    Size    : in     Tagatha_Size     := Default_Integer_Size);
 
    procedure Data (Unit    : in out Tagatha_Unit;
@@ -141,10 +154,14 @@ package Tagatha.Units is
 
 private
 
-   type Tagatha_Unit_Record;
+   type Tagatha_Subprogram_Record;
 
-   type Tagatha_Unit_Record_Access is
-     access all Tagatha_Unit_Record;
+   type Tagatha_Subprogram_Record_Access is
+     access Tagatha_Subprogram_Record;
+
+   package List_Of_Subprograms is
+     new Ada.Containers.Doubly_Linked_Lists
+       (Tagatha_Subprogram_Record_Access);
 
    type Segment_Length_Array is array (Tagatha_Segment) of Natural;
 
@@ -153,12 +170,11 @@ private
          Name               : Ada.Strings.Unbounded.Unbounded_String;
          Source_File        : Ada.Strings.Unbounded.Unbounded_String;
          Current_Segment    : Tagatha_Segment        := Executable;
-         Next_Address       : Segment_Length_Array   := (others => 1);
-         Argument_Words     : Natural;
-         Frame_Words        : Natural;
+         Labels             : Tagatha.Labels.Tagatha_Label_List;
          Last_Label         : Tagatha.Labels.Tagatha_Label;
-         Global             : Boolean := True;
-         Unit               : Tagatha_Unit_Record_Access;
+         Next_Label         : Positive := 1;
+         Subprograms        : List_Of_Subprograms.List;
+         Current_Sub        : Tagatha_Subprogram_Record_Access;
       end record;
 
 end Tagatha.Units;
