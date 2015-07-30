@@ -9,5 +9,9 @@ plugin Aqua version 0.1 is
    group resolve_references : semantic is
       aqua_resolve;
    end resolve_references;
+
+   group tagatha : code is
+      aqua_tagatha;
+   end tagatha;
    
 end Aqua;
