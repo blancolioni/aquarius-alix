@@ -56,9 +56,10 @@ package Tagatha.Units is
                    Value   : in     Tagatha_Integer;
                    Size    : in     Tagatha_Size     := Default_Integer_Size);
 
-   procedure Data (Unit    : in out Tagatha_Unit;
-                   Label   : in     String;
-                   Size    : in     Tagatha_Size     := Default_Integer_Size);
+   procedure Data
+     (Unit       : in out Tagatha_Unit;
+      Label_Name : in     String;
+      Size       : in     Tagatha_Size     := Default_Integer_Size);
 
    procedure Data (Unit    : in out Tagatha_Unit;
                    Value   : in     Tagatha_Integer_Array;
@@ -164,6 +165,8 @@ private
        (Tagatha_Subprogram_Record_Access);
 
    type Segment_Length_Array is array (Tagatha_Segment) of Natural;
+   type Last_Label_Array is
+     array (Tagatha_Segment) of Tagatha.Labels.Tagatha_Label;
 
    type Tagatha_Unit is tagged
       record
@@ -171,7 +174,7 @@ private
          Source_File        : Ada.Strings.Unbounded.Unbounded_String;
          Current_Segment    : Tagatha_Segment        := Executable;
          Labels             : Tagatha.Labels.Tagatha_Label_List;
-         Last_Label         : Tagatha.Labels.Tagatha_Label;
+         Last_Label         : Last_Label_Array;
          Next_Label         : Positive := 1;
          Subprograms        : List_Of_Subprograms.List;
          Current_Sub        : Tagatha_Subprogram_Record_Access;

@@ -4,6 +4,7 @@ with Ada.Strings.Maps;
 with Ada.Text_IO;
 
 with Tagatha.Code;
+with Tagatha.Constants;
 with Tagatha.File_Assembly;
 with Tagatha.Registry;
 with Tagatha.Transfers;
@@ -26,6 +27,7 @@ package body Tagatha.Units is
 
    type Tagatha_Data (Data_Type : Tagatha_Data_Type := Integer_Data) is
       record
+         Label : Tagatha.Labels.Tagatha_Label;
          Size : Tagatha_Size;
          case Data_Type is
             when Integer_Data =>
@@ -33,7 +35,7 @@ package body Tagatha.Units is
             when Floating_Point_Data =>
                Floating_Point_Value : Tagatha_Floating_Point;
             when Label_Data =>
-               Label_Value          : access String;
+               Label_Value          : Tagatha.Labels.Tagatha_Label;
             when String_Data =>
                String_Value         : String (1 .. 16);
          end case;
@@ -85,8 +87,8 @@ package body Tagatha.Units is
                      Command : in     Tagatha.Commands.Tagatha_Command)
    is
    begin
-      Tagatha.Commands.Set_Label (Command, To_Unit.Last_Label);
-      To_Unit.Last_Label := Tagatha.Labels.No_Label;
+      Tagatha.Commands.Set_Label (Command, To_Unit.Last_Label (Executable));
+      To_Unit.Last_Label (Executable) := Tagatha.Labels.No_Label;
       Command_Vector.Append (To_Unit.Current_Sub.Executable_Segment, Command);
       Increment_Address (To_Unit, Executable);
    end Append;
@@ -102,9 +104,15 @@ package body Tagatha.Units is
    begin
       while Start <= Value'Last loop
          declare
-            Data : Tagatha_Data := (String_Data, Size_8, (others => ' '));
+            Data : Tagatha_Data :=
+                     (String_Data,
+                      Unit.Last_Label (Unit.Current_Segment),
+                      Size_8,
+                      (others => ' '));
             Last : Positive     := Start + Data.String_Value'Length;
          begin
+            Unit.Last_Label (Unit.Current_Segment) :=
+              Tagatha.Labels.No_Label;
             if Last > Value'Last then
                Last := Value'Last;
             end if;
@@ -201,8 +209,11 @@ package body Tagatha.Units is
                    Value   : in     Tagatha_Integer;
                    Size    : in     Tagatha_Size     := Default_Integer_Size)
    is
-      New_Value : constant Tagatha_Data := (Integer_Data, Size, Value);
+      New_Value : constant Tagatha_Data :=
+                    (Integer_Data, Unit.Last_Label (Unit.Current_Segment),
+                     Size, Value);
    begin
+      Unit.Last_Label (Unit.Current_Segment) := Tagatha.Labels.No_Label;
       case Unit.Current_Segment is
          when Executable | Read_Only =>
             Unit.Current_Sub.Read_Only_Segment.Append (New_Value);
@@ -216,13 +227,20 @@ package body Tagatha.Units is
    -- Data --
    ----------
 
-   procedure Data (Unit    : in out Tagatha_Unit;
-                   Label   : in     String;
-                   Size    : in     Tagatha_Size     := Default_Integer_Size)
+   procedure Data
+     (Unit       : in out Tagatha_Unit;
+      Label_Name : in     String;
+      Size       : in     Tagatha_Size     := Default_Integer_Size)
    is
-      New_Value : constant Tagatha_Data :=
-                    (Label_Data, Size, new String'(Label));
+      Label : Tagatha.Labels.Tagatha_Label;
+      New_Value : Tagatha_Data;
    begin
+      Tagatha.Labels.Reference_Label (Unit.Labels, Label,
+                                      Label_Name, Import => True);
+      New_Value :=
+        (Label_Data, Unit.Last_Label (Unit.Current_Segment),
+         Size, Label);
+      Unit.Last_Label (Unit.Current_Segment) := Tagatha.Labels.No_Label;
       case Unit.Current_Segment is
          when Executable | Read_Only =>
             Unit.Current_Sub.Read_Only_Segment.Append (New_Value);
@@ -255,8 +273,10 @@ package body Tagatha.Units is
    is
       New_Value : constant Tagatha_Data :=
                     (Floating_Point_Data,
+                     Unit.Last_Label (Unit.Current_Segment),
                      Default_Size, Value);
    begin
+      Unit.Last_Label (Unit.Current_Segment) := Tagatha.Labels.No_Label;
       case Unit.Current_Segment is
       when Executable | Read_Only =>
          Unit.Current_Sub.Read_Only_Segment.Append (New_Value);
@@ -397,12 +417,12 @@ package body Tagatha.Units is
       Create_Label
         (In_List    => Unit.Labels,
          Label      => Label,
-         Linked_To  => Unit.Last_Label,
+         Linked_To  => Unit.Last_Label (Unit.Current_Segment),
          Segment    => Unit.Current_Segment,
          Location   => Unit.Current_Sub.Next_Address (Unit.Current_Segment),
          Name       => Name,
          Export     => Export);
-      Unit.Last_Label := Label;
+      Unit.Last_Label (Unit.Current_Segment) := Label;
    end Label;
 
    -----------
@@ -418,10 +438,10 @@ package body Tagatha.Units is
       Create_Label
         (In_List    => Unit.Labels,
          Label      => Label,
-         Linked_To  => Unit.Last_Label,
+         Linked_To  => Unit.Last_Label (Unit.Current_Segment),
          Location   => Unit.Current_Sub.Next_Address (Executable),
          Index      => Index);
-      Unit.Last_Label := Label;
+      Unit.Last_Label (Unit.Current_Segment) := Label;
    end Label;
 
    -----------------
@@ -734,10 +754,10 @@ package body Tagatha.Units is
                              Sub.Frame_Words);
          for I in Sub.Transfers.all'Range loop
             if I = Sub.Transfers'Last
-              and then Unit.Last_Label /= Tagatha.Labels.No_Label
+              and then Unit.Last_Label (Executable) /= Tagatha.Labels.No_Label
             then
                Target.Label (File_Assembly_Type'Class (File),
-                             Unit.Last_Label);
+                             Unit.Last_Label (Executable));
             end if;
             Target.Encode (File_Assembly_Type'Class (File),
                            Sub.Transfers (I));
@@ -747,6 +767,34 @@ package body Tagatha.Units is
                            Sub.Argument_Words,
                            Sub.Frame_Words);
          Target.Finish (File_Assembly_Type'Class (File));
+      end loop;
+
+      for Sub of Unit.Subprograms loop
+
+         for Datum of Sub.Read_Only_Segment loop
+
+            if Datum.Label /= Tagatha.Labels.No_Label then
+               Target.Label (File_Assembly_Type'Class (File),
+                             Datum.Label);
+            end if;
+
+            case Datum.Data_Type is
+               when Integer_Data =>
+                  Target.Data (File_Assembly_Type'Class (File),
+                               Tagatha.Constants.Integer_Constant
+                                 (Datum.Integer_Value));
+               when Floating_Point_Data =>
+                  Target.Data (File_Assembly_Type'Class (File),
+                               Tagatha.Constants.Floating_Point_Constant
+                                 (Datum.Floating_Point_Value));
+               when Label_Data =>
+                  Target.Data (File_Assembly_Type'Class (File),
+                               Tagatha.Constants.Label_Constant
+                                 (Datum.Label_Value));
+               when String_Data =>
+                  null;
+            end case;
+         end loop;
       end loop;
 
       Target.File_Postamble (File_Assembly_Type'Class (File));
