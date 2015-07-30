@@ -92,8 +92,7 @@ end;
 
 after feature_declaration/declaration_body do
    tree.feature_body :=
-      (formal_arguments => child.formal_arguments,
-       type             => child.type,
+      (type             => child.type,
        deferred         => child.deferred,
        redefine         => top.class.inheritance.redefines,
        value            => child.value);
@@ -104,8 +103,14 @@ after feature_declaration/declaration_body do
    end if;
    if child.value then
       tree.feature_body.routine := 1
+      tree.feature_body.local := child.value.local
    else
       tree.feature_body.attribute := 1
+   end if
+   if child.formal_arguments then
+      tree.feature_body.formal_arguments := child.formal_arguments
+   else
+      tree.feature_body.formal_arguments := (list => new Array, table => new Map)
    end if
 end;
 
@@ -137,7 +142,7 @@ after feature_value/explicit_value do
 end
 
 after feature_value/routine do
-   parent.value := (routine => child)
+   parent.value := (routine => child, local => (list => new Array, table => new Map))
    parent.deferred := child.deferred
 end
 
