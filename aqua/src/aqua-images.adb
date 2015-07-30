@@ -1,3 +1,5 @@
+with Ada.Directories;
+with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with Aqua.Arithmetic;
@@ -243,6 +245,25 @@ package body Aqua.Images is
          end;
       end loop;
 
+      declare
+         use Ada.Strings.Unbounded;
+         Source_File_Name : constant Unbounded_String :=
+                              To_Unbounded_String (Read_String_Literal (File));
+         Position_Count   : Word;
+         Start            : Address;
+         Line, Column     : Word;
+      begin
+         Read_Word (File, Position_Count);
+         for I in 1 .. Position_Count loop
+            Read_Word (File, Line);
+            Read_Word (File, Column);
+            Read_Address (File, Start);
+            Image.Locations.Append
+              ((Source_File_Name, Start + Image.High,
+               Natural (Line), Natural (Column)));
+         end loop;
+      end;
+
       for Addr in 0 .. (High - Low + 1) / 2 loop
 
          if Trace_Load then
@@ -440,6 +461,37 @@ package body Aqua.Images is
          return Aqua.IO.Hex_Image (Value);
       end if;
    end Show;
+
+   --------------------------
+   -- Show_Source_Position --
+   --------------------------
+
+   function Show_Source_Position
+     (Image : Root_Image_Type'Class;
+      Addr  : Address)
+      return String
+   is
+      use Ada.Strings, Ada.Strings.Fixed;
+      use Ada.Strings.Unbounded;
+      File_Name : Unbounded_String := To_Unbounded_String ("unknown");
+      Line      : Natural := 0;
+      Column    : Natural := 0;
+   begin
+      for Loc of Image.Locations loop
+         if Loc.Start > Addr then
+            return Ada.Directories.Simple_Name (To_String (File_Name))
+              & ":" & Trim (Natural'Image (Line), Left)
+              & ":" & Trim (Natural'Image (Column), Left);
+         else
+            File_Name := Loc.Source_File;
+            Line      := Loc.Line;
+            Column    := Loc.Column;
+         end if;
+      end loop;
+
+      return "unknown";
+
+   end Show_Source_Position;
 
    ------------------
    -- String_Count --

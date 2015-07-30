@@ -16,6 +16,15 @@ package Aqua.Assembler is
 
    procedure Start (A          : in out Root_Assembly_Type);
 
+   procedure Set_Source_File
+     (A    : in out Root_Assembly_Type;
+      Path : String);
+
+   procedure Set_Source_Location
+     (A      : in out Root_Assembly_Type;
+      Line   : Natural;
+      Column : Natural);
+
    procedure Append
      (A : in out Root_Assembly_Type'Class;
       W : Word);
@@ -156,9 +165,21 @@ private
    package Binding_Info_Vectors is
      new Ada.Containers.Vectors (Positive, Binding_Info);
 
+   type Source_Position is
+      record
+         Start    : Address;
+         Line     : Natural;
+         Column   : Natural;
+      end record;
+
+   package Source_Position_Lists is
+     new Ada.Containers.Doubly_Linked_Lists (Source_Position);
+
    type Root_Assembly_Type is
      new Memory_Interface with
       record
+         Source_Path    : Ada.Strings.Unbounded.Unbounded_String;
+         Source_Locs    : Source_Position_Lists.List;
          Low            : Address := Address'Last;
          High           : Address := 0;
          PC             : Address := 0;
