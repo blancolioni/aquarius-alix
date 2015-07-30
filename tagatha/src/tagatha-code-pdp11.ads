@@ -28,11 +28,6 @@ package Tagatha.Code.Pdp11 is
    overriding
    function Word_Size (T : Pdp11_Translator) return Tagatha_Size;
 
-   overriding procedure Data
-     (T     : in out Pdp11_Translator;
-      Asm   : in out Assembly'Class;
-      Value : Tagatha.Constants.Tagatha_Constant);
-
    function Get_Translator return Translator'Class;
 
 private

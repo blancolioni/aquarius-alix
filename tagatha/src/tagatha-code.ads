@@ -59,8 +59,7 @@ package Tagatha.Code is
    procedure Data
      (T     : in out Translator;
       Asm   : in out Assembly'Class;
-      Value : Tagatha.Constants.Tagatha_Constant)
-   is null;
+      Value : Tagatha.Constants.Tagatha_Constant);
 
    function Word_Size (T : Translator) return Tagatha_Size is abstract;
    function Address_Size (T : Translator) return Tagatha_Size;
@@ -71,5 +70,13 @@ package Tagatha.Code is
 private
 
    type Translator is abstract tagged null record;
+
+   function Image (Item : Tagatha_Integer) return String;
+
+   function To_String
+     (V : Tagatha.Constants.Tagatha_Constant;
+      From : Tagatha.Transfers.Transfer_Operand :=
+        Tagatha.Transfers.Null_Operand)
+      return String;
 
 end Tagatha.Code;
