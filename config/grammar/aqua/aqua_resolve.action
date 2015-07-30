@@ -1,10 +1,15 @@
 before class_declaration do
-   if tree.class.inheritance then
-      for inherited in tree.class.inheritance.list loop
-         inherited.tree := Aqua.load_object (inherited.name & ".aqua");
-         inherited.class := inherited.tree.class;
-      end loop;
-   end if;
+   for inherited in tree.class.inheritance.list loop
+      inherited.tree := Aqua.load_object (inherited.name & ".aqua");
+      inherited.class := inherited.tree.class;
+   end loop;
+   
+   for client in tree.class.clients.list loop
+      client.tree := aqua.load_object (client.name & ".aqua");
+      if client.tree then
+         client.class := client.tree.class;
+      end if;
+   end loop;
 
    tree.class.ancestors := (list => new Array, table => new Map)
    tree.class.ancestors.list.append (tree.class)
@@ -38,9 +43,6 @@ before class_declaration do
 end;
 
 after class_declaration do
-   for ancestor in tree.class.ancestors.list loop
-      IO.put_line ("ancestor: " & ancestor.name);
-   end loop;
    for feature in tree.class.features.list loop
       if feature.deferred then
          IO.put ("deferred ")
@@ -60,5 +62,4 @@ after class_declaration do
       
       IO.put_line ("feature: " & feature.standard_name)
    end loop
-   aqua.report_state;
 end;
