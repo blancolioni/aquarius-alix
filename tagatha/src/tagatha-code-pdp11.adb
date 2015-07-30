@@ -17,6 +17,12 @@ package body Tagatha.Code.Pdp11 is
                        Negated : Boolean)
                       return String;
 
+   function To_String
+     (V          : Tagatha.Constants.Tagatha_Constant;
+      Slice_Mask : Tagatha_Integer := Tagatha_Integer'Last;
+      Bit_Offset : Natural := 0)
+      return String;
+
    function Image (Item : Tagatha_Integer) return String;
 
    procedure Move (Asm       : in out Assembly'Class;
@@ -61,6 +67,20 @@ package body Tagatha.Code.Pdp11 is
      (Asm      : in out Assembly'Class;
       Op       : in     One_Argument_Operator;
       Dest     : in     Tagatha.Transfers.Transfer_Operand);
+
+   ----------
+   -- Data --
+   ----------
+
+   overriding procedure Data
+     (T     : in out Pdp11_Translator;
+      Asm   : in out Assembly'Class;
+      Value : Tagatha.Constants.Tagatha_Constant)
+   is
+      pragma Unreferenced (T);
+   begin
+      Asm.Put_Line ("    .word " & To_String (Value));
+   end Data;
 
    ------------
    -- Encode --
@@ -537,8 +557,35 @@ package body Tagatha.Code.Pdp11 is
    -- To_String --
    ---------------
 
-   function To_String (Item        : Tagatha.Transfers.Transfer_Operand)
-        return String
+   function To_String
+     (V : Tagatha.Constants.Tagatha_Constant;
+      Slice_Mask : Tagatha_Integer := Tagatha_Integer'Last;
+      Bit_Offset : Natural := 0)
+      return String
+   is
+      use Tagatha.Constants;
+   begin
+      if Is_Integer (V) then
+         return Image ((Get_Integer (V) and Slice_Mask) /
+                       (2 ** Bit_Offset));
+      elsif Is_Floating_Point (V) then
+         return Floating_Point_Integer'Image
+           (To_Integer (Get_Floating_Point (V)));
+      elsif Is_Label (V) then
+         return Tagatha.Labels.Show (Get_Label (V), '_');
+      else
+         raise Constraint_Error with
+           "unknown constant type in " & Show (V);
+      end if;
+   end To_String;
+
+   ---------------
+   -- To_String --
+   ---------------
+
+   function To_String
+     (Item : Tagatha.Transfers.Transfer_Operand)
+      return String
    is
       use Tagatha.Transfers;
    begin

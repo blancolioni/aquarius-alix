@@ -1,3 +1,4 @@
+with Tagatha.Constants;
 with Tagatha.Labels;
 with Tagatha.Transfers;
 
@@ -53,7 +54,13 @@ package Tagatha.Code is
      is abstract;
 
    function General_Registers (T : Translator) return Positive
-      is abstract;
+                               is abstract;
+
+   procedure Data
+     (T     : in out Translator;
+      Asm   : in out Assembly'Class;
+      Value : Tagatha.Constants.Tagatha_Constant)
+   is null;
 
    function Word_Size (T : Translator) return Tagatha_Size is abstract;
    function Address_Size (T : Translator) return Tagatha_Size;
