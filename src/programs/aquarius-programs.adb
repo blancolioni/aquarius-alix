@@ -9,6 +9,8 @@ with Ada.Text_IO;
 with Aquarius.Properties;
 with Aquarius.Trees.Properties;
 
+with Aquarius.Programs.Aqua_Tagatha;
+
 with Aqua.Execution;
 with Aqua.Primitives;
 with Aqua.Words;
@@ -314,6 +316,51 @@ package body Aquarius.Programs is
         (Name           => "tree__right_sibling",
          Argument_Count => 1,
          Handler        => Aqua_Tree_Right_Sibling'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__allocate",
+         Argument_Count => 2,
+         Handler        => Aqua_Tagatha.Tagatha_Allocate'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__begin_unit",
+         Argument_Count => 2,
+         Handler        => Aqua_Tagatha.Tagatha_Begin_Unit'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__code_segment",
+         Argument_Count => 1,
+         Handler        => Aqua_Tagatha.Tagatha_Code_Segment'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__data",
+         Argument_Count => 2,
+         Handler        => Aqua_Tagatha.Tagatha_Data'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__end_unit",
+         Argument_Count => 1,
+         Handler        => Aqua_Tagatha.Tagatha_End_Unit'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__label",
+         Argument_Count => 2,
+         Handler        => Aqua_Tagatha.Tagatha_Label'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__procedure",
+         Argument_Count => 5,
+         Handler        => Aqua_Tagatha.Tagatha_Procedure'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__return",
+         Argument_Count => 1,
+         Handler        => Aqua_Tagatha.Tagatha_Return'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__text_segment",
+         Argument_Count => 1,
+         Handler        => Aqua_Tagatha.Tagatha_Text_Segment'Access);
 
       Have_Aqua_Primitives := True;
 
