@@ -175,14 +175,10 @@ package body Aquarius.Plugins is
             Ada.Text_IO.Put_Line
               (Ada.Text_IO.Standard_Error,
                "not found: " & File_Name);
-
          else
-
             Plugin.Loaded_Programs.Insert (File_Name, Result);
-
             Plugin.Grammar.Run_Action_Trigger
               (Result, Aquarius.Actions.Semantic_Trigger);
-
          end if;
 
       end if;

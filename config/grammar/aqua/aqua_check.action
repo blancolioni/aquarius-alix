@@ -6,14 +6,11 @@ end;
 
 after class_declaration/class_header do
    parent.class := class_header.class;
-   top.class := parent.class
-   parent.class.clients := new Array;
-   parent.class.features := (list => new Array, table => new Map);
+   top.class := tree.class;
+   parent.class.clients := (list => new Array, table => new Map);
    parent.class.inheritance := (list => new Array, table => new Map, full_list => new Array);
+   parent.class.features := (list => new Array, table => new Map);
 end;
-
-before class_declaration/inheritance do
-end
 
 before class_declaration/inheritance do
    child.inheritance := parent.class.inheritance;
@@ -98,7 +95,11 @@ after feature_declaration/declaration_body do
        value            => child.value);
    if child.type then
       if child.type.class_name then
-         parent^class_declaration.class.clients.append (child.type.class_name);
+         tree.client_info := (name => child.type.class_name);
+         if not parent^class_declaration.class.clients.table.get (tree.client_info.name) then
+            parent^class_declaration.class.clients.list.append (tree.client_info);
+            parent^class_declaration.class.clients.table.set (tree.client_info.name, tree.client_info);
+         end if;
       end if;
    end if;
    if child.value then
