@@ -78,6 +78,11 @@ package Aqua.Images is
                   Value : Word)
                   return String;
 
+   function Show_Source_Position
+     (Image : Root_Image_Type'Class;
+      Addr  : Address)
+      return String;
+
    type Image_Type is access all Root_Image_Type'Class;
 
    function New_Image return Image_Type;
@@ -123,8 +128,20 @@ private
    package Binding_Info_Vectors is
      new Ada.Containers.Vectors (Positive, Binding_Info);
 
+   type Source_Location is
+      record
+         Source_File : Ada.Strings.Unbounded.Unbounded_String;
+         Start       : Address;
+         Line        : Natural;
+         Column      : Natural;
+      end record;
+
+   package List_Of_Source_Locations is
+     new Ada.Containers.Doubly_Linked_Lists (Source_Location);
+
    type Root_Image_Type is new Memory_Interface with
       record
+         Locations     : List_Of_Source_Locations.List;
          Bindings      : Binding_Info_Vectors.Vector;
          String_Vector : Link_Vectors.Vector;
          Label_Vector  : Link_Vectors.Vector;

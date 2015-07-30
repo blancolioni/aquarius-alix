@@ -1,3 +1,4 @@
+with Ada.Exceptions;
 with Ada.Strings.Fixed.Equal_Case_Insensitive;
 with Ada.Strings.Unbounded;
 
@@ -264,6 +265,14 @@ package body Aqua.CPU is
            with "unimplemented instruction "
              & Aqua.IO.Octal_Image (Op);
       end if;
+
+   exception
+      when E : others =>
+         raise Aqua.Execution.Execution_Error with
+         CPU.Image.Show_Source_Position
+           (Get_Address (CPU.R (7)) - 2)
+           & ": " & Ada.Exceptions.Exception_Message (E);
+
    end Handle;
 
    ----------------

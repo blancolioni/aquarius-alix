@@ -1,5 +1,7 @@
 package Aqua.Execution is
 
+   Execution_Error : exception;
+
    type Execution_Interface is limited interface;
 
    procedure Execute (Context   : in out Execution_Interface;

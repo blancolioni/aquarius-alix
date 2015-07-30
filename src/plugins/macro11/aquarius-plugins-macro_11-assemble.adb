@@ -176,6 +176,13 @@ package body Aquarius.Plugins.Macro_11.Assemble is
                                   Parent, Child);
          end;
 
+      elsif Name = "source_file" then
+         Assembly.Set_Source_File
+           (Arguments (1).Chosen_Tree.Text);
+      elsif Name = "source_position" then
+         Assembly.Set_Source_Location
+           (Line   => Natural'Value (Arguments (1).Chosen_Tree.Text),
+            Column => Natural'Value (Arguments (2).Chosen_Tree.Text));
       end if;
    end After_Directive;
 

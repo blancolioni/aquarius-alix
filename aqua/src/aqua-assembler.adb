@@ -447,6 +447,34 @@ package body Aqua.Assembler is
       Assembly.Memory.Set_Byte (Addr, Value);
    end Set_Byte;
 
+   ---------------------
+   -- Set_Source_File --
+   ---------------------
+
+   procedure Set_Source_File
+     (A    : in out Root_Assembly_Type;
+      Path : String)
+   is
+   begin
+      A.Source_Path :=
+        Ada.Strings.Unbounded.To_Unbounded_String (Path);
+   end Set_Source_File;
+
+   -------------------------
+   -- Set_Source_Location --
+   -------------------------
+
+   procedure Set_Source_Location
+     (A      : in out Root_Assembly_Type;
+      Line   : Natural;
+      Column : Natural)
+   is
+      New_Position : constant Source_Position :=
+                       (A.PC, Line, Column);
+   begin
+      A.Source_Locs.Append (New_Position);
+   end Set_Source_Location;
+
    -----------
    -- Start --
    -----------
@@ -557,6 +585,20 @@ package body Aqua.Assembler is
 
             Write_Address (File, Binding.Start);
          end;
+      end loop;
+
+      declare
+         S : constant String :=
+               Ada.Strings.Unbounded.To_String (A.Source_Path);
+      begin
+         Write_String_Literal (File, S (2 .. S'Last - 1));
+      end;
+
+      Write_Word (File, Word (A.Source_Locs.Length));
+      for Loc of A.Source_Locs loop
+         Write_Word (File, Word (Loc.Line));
+         Write_Word (File, Word (Loc.Column));
+         Write_Address (File, Loc.Start);
       end loop;
 
       for Addr in A.Low .. A.High + 1 loop
