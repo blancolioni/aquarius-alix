@@ -207,6 +207,53 @@ package body Aquarius.Actions.Pdp_11 is
 
    end If_Statement;
 
+   -----------------------------
+   -- If_Then_Else_Expression --
+   -----------------------------
+
+   overriding procedure If_Then_Else_Expression
+     (Processor : in out Pdp_Scanner;
+      Sequence  : Aquarius.Programs.Array_Of_Program_Trees)
+   is
+      Condition  : Boolean := True;
+      L1         : Label_Type := Next_Label (Processor);
+      Exit_Label : constant Label_Type := Next_Label (Processor);
+   begin
+      for I in Sequence'Range loop
+         if I > Sequence'First then
+            if Condition then
+               Put_Line (Processor.File, Image (L1) & ":");
+               L1 := Next_Label (Processor);
+            end if;
+         end if;
+
+         Scanner.Scan_Expression (Processor, Sequence (I));
+
+         if I < Sequence'Last then
+            if Condition then
+               Put_Line (Processor.File,
+                         "    tst (sp)+");
+               Put_Line (Processor.File,
+                         "    bne +1");
+               Put_Line (Processor.File,
+                         "    jmp " & Image (L1));
+               Put_Line (Processor.File, "1:");
+            else
+               Put_Line (Processor.File,
+                         "    jmp " & Image (Exit_Label));
+            end if;
+
+            Condition := not Condition;
+         end if;
+
+      end loop;
+
+      Put_Line (Processor.File, Image (L1) & ":");
+
+      Put_Line (Processor.File, Image (Exit_Label) & ":");
+
+   end If_Then_Else_Expression;
+
    -----------
    -- Image --
    -----------
