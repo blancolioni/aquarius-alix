@@ -2,7 +2,14 @@ with Aqua.Execution;
 
 package Aquarius.Programs.Aqua_Tagatha is
 
+   procedure Add_Handlers;
+
    function Tagatha_Allocate
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
+   function Tagatha_Apply_Fragment
      (Context : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Aqua.Array_Of_Words)
       return Aqua.Word;
