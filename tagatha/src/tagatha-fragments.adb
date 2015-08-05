@@ -234,6 +234,26 @@ package body Tagatha.Fragments is
       return Result;
    end Reference_Argument;
 
+   ------------------------
+   -- Reference_External --
+   ------------------------
+
+   function Reference_External
+     (Name      : String;
+      Immediate : Boolean;
+      Size      : Tagatha_Size  := Default_Integer_Size)
+      return Tagatha_Fragment
+   is
+      Result : Tagatha_Fragment;
+   begin
+      Result.Records.Append ((Fragment_Type => Operand_Fragment,
+                              Reference     =>
+                                Tagatha.Operands.External_Operand
+                                  (Name, Immediate),
+                              Size          => Size));
+      return Result;
+   end Reference_External;
+
    ---------------------
    -- Reference_Local --
    ---------------------
@@ -251,6 +271,23 @@ package body Tagatha.Fragments is
                               Size          => Size));
       return Result;
    end Reference_Local;
+
+   ----------------------
+   -- Reference_Result --
+   ----------------------
+
+   function Reference_Result
+     (Size     : in Tagatha_Size  := Default_Integer_Size)
+     return Tagatha_Fragment
+   is
+      Result : Tagatha_Fragment;
+   begin
+      Result.Records.Append ((Fragment_Type => Operand_Fragment,
+                              Reference     =>
+                                Tagatha.Operands.Result_Operand,
+                              Size          => Size));
+      return Result;
+   end Reference_Result;
 
    ----------
    -- Show --
