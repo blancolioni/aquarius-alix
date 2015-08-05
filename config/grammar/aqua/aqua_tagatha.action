@@ -1,11 +1,27 @@
 before class_declaration do
    IO.put_line ("generating: " & tree.class.name)
    tree.begin_unit (tree.class.name)
+   tree.strings := (list => new Array, table => new Map)
+end
+
+before routine do
+   tree.code_segment
+   tree.procedure
+      (tree^class_declaration.class.name & "__" & tree.feature.standard_name,
+       tree.feature.formal_arguments.list.length,
+       tree.feature.local.list.length,
+       (if tree.feature.function then 1 else 0),
+       1)
+end
+
+after routine do
+   tree.return
 end
 
 after class_declaration do
 
    if not tree.class.deferred then
+      tree.code_segment
       tree.procedure (tree.class.name & "$new", 0, 0, 1);
       tree.alloc (tree.class.size);
       tree.return
@@ -15,14 +31,6 @@ after class_declaration do
       if feature.attribute then
          null
       else
-         IO.put_line ("routine: " & feature.standard_name);
-         tree.procedure
-           (tree.class.name & "__" & feature.standard_name,
-            feature.formal_arguments.list.length,
-            feature.local.list.length,
-            (if feature.function then 1 else 0),
-            1)
-         tree.return
       end if
    end loop
 
@@ -46,3 +54,39 @@ after class_declaration do
    tree.end_unit;
 end
 
+after primary do
+   tree.push
+   tree.apply_fragment
+end
+
+after manifest_constant/manifest_value do
+   parent.join_fragment (child)
+end
+
+after constant/manifest_constant do
+   parent.join_fragment (child)
+end
+
+after primary/manifest_constant do
+   parent.join_fragment (child)
+end
+
+after manifest_value/integer_constant do
+   parent.integer_constant (child.image)
+end
+
+after manifest_value/boolean_constant do
+   parent.integer_constant ((if child.image.to_lower = "false" then 0 else 1))
+end
+
+after manifest_value/string_literal do
+   parent.string_value := child.image
+   parent.strings := parent^class_declaration.strings
+   if parent.strings.table.get (parent.string_value) then
+   else
+      parent.strings.list.append (parent.string_value)
+      parent.strings.table.set (parent.string_value, parent.strings.list.length)
+   end if
+
+   parent.string_constant ("__string_lit_" & parent.strings.table.get (parent.string_value))
+end
