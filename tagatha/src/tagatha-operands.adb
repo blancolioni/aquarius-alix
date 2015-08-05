@@ -44,6 +44,20 @@ package body Tagatha.Operands is
       return Constant_Operand (Constants.Integer_Constant (Value));
    end Constant_Operand;
 
+   ----------------------
+   -- External_Operand --
+   ----------------------
+
+   function External_Operand (Name : String;
+                              Immediate : Boolean)
+                              return Tagatha_Operand
+   is
+   begin
+      return new Tagatha_Operand_Record'
+        (O_External, Ada.Strings.Unbounded.To_Unbounded_String (Name),
+         Immediate);
+   end External_Operand;
+
    --------------------
    -- Get_Arg_Offset --
    --------------------
@@ -156,6 +170,13 @@ package body Tagatha.Operands is
             return Constants.Show (Operand.Value);
          when O_Argument =>
             return "arg" & Argument_Offset'Image (-Operand.Arg_Offset);
+         when O_External =>
+            if Operand.Ext_Immediate then
+               return "#"
+                 & Ada.Strings.Unbounded.To_String (Operand.Ext_Label);
+            else
+               return Ada.Strings.Unbounded.To_String (Operand.Ext_Label);
+            end if;
          when O_Local =>
             return "loc" & Local_Offset'Image (-Operand.Loc_Offset);
          when O_Result =>

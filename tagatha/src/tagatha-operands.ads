@@ -1,3 +1,5 @@
+private with Ada.Strings.Unbounded;
+
 with Tagatha.Constants;
 with Tagatha.Labels;
 
@@ -20,12 +22,16 @@ package Tagatha.Operands is
                           return Tagatha_Operand;
 
    function Argument_Operand (Offset : Argument_Offset)
-                                  return Tagatha_Operand;
+                              return Tagatha_Operand;
 
    function Local_Operand (Offset : Local_Offset)
-                               return Tagatha_Operand;
+                           return Tagatha_Operand;
 
    function Result_Operand return Tagatha_Operand;
+
+   function External_Operand (Name : String;
+                              Immediate : Boolean)
+                              return Tagatha_Operand;
 
    function Is_Constant (Item : Tagatha_Operand) return Boolean;
    function Is_Argument (Item : Tagatha_Operand) return Boolean;
@@ -45,19 +51,23 @@ private
      (O_Constant,
       O_Argument,
       O_Local,
-      O_Result);
+      O_Result,
+      O_External);
 
    type Tagatha_Operand_Record (Operand_Type : Tagatha_Operand_Type) is
       record
          case Operand_Type is
             when O_Constant =>
-               Value   : Tagatha.Constants.Tagatha_Constant;
+               Value         : Tagatha.Constants.Tagatha_Constant;
             when O_Argument =>
-               Arg_Offset : Argument_Offset;
+               Arg_Offset    : Argument_Offset;
             when O_Local =>
-               Loc_Offset : Local_Offset;
+               Loc_Offset    : Local_Offset;
             when O_Result =>
                null;
+            when O_External =>
+               Ext_Label     : Ada.Strings.Unbounded.Unbounded_String;
+               Ext_Immediate : Boolean;
          end case;
       end record;
 
