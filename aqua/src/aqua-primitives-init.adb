@@ -86,12 +86,27 @@ package body Aqua.Primitives.Init is
       Arguments : Array_Of_Words)
       return Word;
 
+   function Handle_Array_First
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word;
+
+   function Handle_Array_Last
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word;
+
    function Handle_To_Integer
      (Context : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Array_Of_Words)
       return Word;
 
    function Handle_To_Lower
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word;
+
+   function Handle_String_Length
      (Context : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Array_Of_Words)
       return Word;
@@ -147,6 +162,8 @@ package body Aqua.Primitives.Init is
       New_Primitive_Function ("array__new", 0, Handle_Array_New'Access);
       New_Primitive_Function ("array__image", 0, Handle_Image'Access);
       New_Primitive_Function ("array__append", 0, Handle_Array_Append'Access);
+      New_Primitive_Function ("array__first", 0, Handle_Array_First'Access);
+      New_Primitive_Function ("array__last", 0, Handle_Array_Last'Access);
 
       New_Primitive_Function ("string__to_lower", 1, Handle_To_Lower'Access);
       New_Primitive_Function ("string__to_integer", 1,
@@ -155,6 +172,8 @@ package body Aqua.Primitives.Init is
                               Handle_String_Replace'Access);
       New_Primitive_Function ("string__slice", 3,
                               Handle_String_Slice'Access);
+      New_Primitive_Function ("string__length", 1,
+                              Handle_String_Length'Access);
 
       New_Primitive_Function ("aqua__report_state", 0,
                               Handle_Report_State'Access);
@@ -190,7 +209,9 @@ package body Aqua.Primitives.Init is
 
       New_Class ("array",
                  ((new String'("new"), Get_Primitive ("array__new")),
-                  (new String'("append"), Get_Primitive ("array__append"))));
+                  (new String'("append"), Get_Primitive ("array__append")),
+                  (new String'("first"), Get_Primitive ("array__first")),
+                  (new String'("last"), Get_Primitive ("array__last"))));
 
       New_Class ("aqua",
                  ((new String'("report_state"),
@@ -226,6 +247,38 @@ package body Aqua.Primitives.Init is
       Arr.Append (Value);
       return Arguments (1);
    end Handle_Array_Append;
+
+   ------------------------
+   -- Handle_Array_First --
+   ------------------------
+
+   function Handle_Array_First
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word
+   is
+      Arr : constant access Aqua.Objects.Arrays.Root_Array_Type'Class :=
+                 Aqua.Objects.Arrays.Root_Array_Type'Class
+                   (Context.To_External_Object (Arguments (1)).all)'Access;
+   begin
+      return Arr.Get_Element (1);
+   end Handle_Array_First;
+
+   -----------------------
+   -- Handle_Array_Last --
+   -----------------------
+
+   function Handle_Array_Last
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word
+   is
+      Arr : constant access Aqua.Objects.Arrays.Root_Array_Type'Class :=
+                 Aqua.Objects.Arrays.Root_Array_Type'Class
+                   (Context.To_External_Object (Arguments (1)).all)'Access;
+   begin
+      return Arr.Get_Element (Arr.Last_Index);
+   end Handle_Array_Last;
 
    ----------------------
    -- Handle_Array_New --
@@ -495,6 +548,20 @@ package body Aqua.Primitives.Init is
          end;
       end if;
    end Handle_Set_Output;
+
+   --------------------------
+   -- Handle_String_Length --
+   --------------------------
+
+   function Handle_String_Length
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word
+   is
+      S : constant String := Context.To_String (Arguments (1));
+   begin
+      return To_Integer_Word (Aqua_Integer (S'Length));
+   end Handle_String_Length;
 
    ---------------------------
    -- Handle_String_Replace --
