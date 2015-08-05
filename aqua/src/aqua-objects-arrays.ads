@@ -24,6 +24,16 @@ package Aqua.Objects.Arrays is
      (Object : in out Root_Array_Type;
       Value  : Word);
 
+   function Last_Index
+     (Object : Root_Array_Type)
+     return Aqua_Integer;
+
+   function Get_Element
+     (Object : Root_Array_Type;
+      Index  : Aqua_Integer)
+      return Word
+     with Pre => Index in 1 .. Object.Last_Index;
+
 private
 
    package Object_Vectors is

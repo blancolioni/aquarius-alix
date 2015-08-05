@@ -16,6 +16,19 @@ package body Aqua.Objects.Arrays is
       Object.Vector.Append (Value);
    end Append;
 
+   -----------------
+   -- Get_Element --
+   -----------------
+
+   function Get_Element
+     (Object : Root_Array_Type;
+      Index  : Aqua_Integer)
+      return Word
+   is
+   begin
+      return Object.Vector.Element (Positive (Index));
+   end Get_Element;
+
    ------------------
    -- Get_Property --
    ------------------
@@ -97,6 +110,18 @@ package body Aqua.Objects.Arrays is
          end;
       end if;
    end Has_Property;
+
+   ----------------
+   -- Last_Index --
+   ----------------
+
+   function Last_Index
+     (Object : Root_Array_Type)
+      return Aqua_Integer
+   is
+   begin
+      return Aqua_Integer (Object.Vector.Last_Index);
+   end Last_Index;
 
    ----------
    -- Next --
