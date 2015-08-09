@@ -196,6 +196,11 @@ package Aquarius.Actions.Scanner is
      (Processor : in out Action_Processor_Interface)
    is abstract;
 
+   procedure If_Then_Else_Expression
+     (Processor   : in out Action_Processor_Interface;
+      Sequence    : Aquarius.Programs.Array_Of_Program_Trees)
+   is abstract;
+
    procedure If_Statement
      (Processor   : in out Action_Processor_Interface;
       Expressions : Aquarius.Programs.Array_Of_Program_Trees;

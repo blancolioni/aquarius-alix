@@ -26,6 +26,16 @@ package Tagatha.Fragments is
       Size     : in Tagatha_Size  := Default_Integer_Size)
      return Tagatha_Fragment;
 
+   function Reference_Result
+     (Size     : in Tagatha_Size  := Default_Integer_Size)
+     return Tagatha_Fragment;
+
+   function Reference_External
+     (Name      : String;
+      Immediate : Boolean;
+      Size      : Tagatha_Size  := Default_Integer_Size)
+      return Tagatha_Fragment;
+
    function Push return Tagatha_Fragment;
 
    function Pop return Tagatha_Fragment;

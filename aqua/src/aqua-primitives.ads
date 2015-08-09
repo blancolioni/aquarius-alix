@@ -9,6 +9,15 @@ package Aqua.Primitives is
    procedure Load_Primitive_Objects
      (Executor : in out Aqua.Execution.Execution_Interface'Class);
 
+   type Handler_Interface is interface;
+
+   function Handle
+     (Primitive : Handler_Interface;
+      Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word
+      is abstract;
+
    type Primitive_Handler is access
      function (Context : in out Aqua.Execution.Execution_Interface'Class;
                Arguments : Array_Of_Words)
@@ -18,6 +27,11 @@ package Aqua.Primitives is
      (Name           : String;
       Argument_Count : Natural;
       Handler        : Primitive_Handler);
+
+   procedure New_Primitive_Handler
+     (Name           : String;
+      Argument_Count : Natural;
+      Handler        : Handler_Interface'Class);
 
    function Call_Primitive
      (Context   : in out Aqua.Execution.Execution_Interface'Class;
