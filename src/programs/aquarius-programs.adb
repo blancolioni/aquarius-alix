@@ -317,10 +317,17 @@ package body Aquarius.Programs is
          Argument_Count => 1,
          Handler        => Aqua_Tree_Right_Sibling'Access);
 
+      Aqua_Tagatha.Add_Handlers;
+
       Aqua.Primitives.New_Primitive_Function
         (Name           => "tree__allocate",
          Argument_Count => 2,
          Handler        => Aqua_Tagatha.Tagatha_Allocate'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__apply_fragment",
+         Argument_Count => 1,
+         Handler        => Aqua_Tagatha.Tagatha_Apply_Fragment'Access);
 
       Aqua.Primitives.New_Primitive_Function
         (Name           => "tree__begin_unit",

@@ -431,6 +431,27 @@ package body Aquarius.Actions.Scanner is
                  (Processor, Child.Program_Child ("object_reference"));
                Processor.Push_String_Literal ("new");
                Processor.Get_Property (0);
+            elsif Child.Name = "if_expression" then
+               declare
+                  Children         : constant Array_Of_Program_Trees :=
+                                       Child.Direct_Children;
+                  Expressions      : Array_Of_Program_Trees (Children'Range);
+                  Expression_Count : Natural := 0;
+               begin
+                  for T of Children loop
+                     if T.Name = "expression" then
+                        Expression_Count := Expression_Count + 1;
+                        Expressions (Expression_Count) := T;
+                     end if;
+                  end loop;
+
+                  pragma Assert (Expression_Count >= 3);
+                  pragma Assert (Expression_Count mod 2 = 1);
+
+                  Processor.If_Then_Else_Expression
+                    (Expressions (1 .. Expression_Count));
+               end;
+
             else
                raise Constraint_Error with
                  "cannot process expression primary: " & Child.Name;

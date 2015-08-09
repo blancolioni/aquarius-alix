@@ -125,6 +125,10 @@ private
    overriding procedure Literal_Null
      (Processor : in out Pdp_Scanner);
 
+   overriding procedure If_Then_Else_Expression
+     (Processor : in out Pdp_Scanner;
+      Sequence  : Aquarius.Programs.Array_Of_Program_Trees);
+
    overriding procedure If_Statement
      (Processor : in out Pdp_Scanner;
       Expressions : Aquarius.Programs.Array_Of_Program_Trees;

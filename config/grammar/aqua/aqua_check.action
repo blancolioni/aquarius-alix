@@ -85,14 +85,15 @@ end;
 
 before feature_declaration do
    tree.new_feature_names := new Array;
+   tree.feature_body := new Map;
 end;
 
 after feature_declaration/declaration_body do
-   tree.feature_body :=
-      (type             => child.type,
-       deferred         => child.deferred,
-       redefine         => top.class.inheritance.redefines,
-       value            => child.value);
+   tree.feature_body.type := child.type
+   tree.feature_body.deferred := child.deferred
+   tree.feature_body.redefine := top.class.inheritance.redefines
+   tree.feature_body.value := child.value
+
    if child.type then
       if child.type.class_name then
          tree.client_info := (name => child.type.class_name);
@@ -123,6 +124,8 @@ after feature_declaration do
       tree^features.features.list.append (tree.new_feature);
       tree^features.features.table.set (tree.new_feature.standard_name, tree.new_feature);
    end loop;
+   tree.feature_body.names := tree.new_feature_names
+   tree.feature_body.canonical_name := tree.feature_body.names.first
 end;
 
 after declaration_body/formal_arguments do
@@ -149,6 +152,10 @@ end
 after feature_value/routine do
    parent.value := (routine => child, local => (list => new Array, table => new Map))
    parent.deferred := child.deferred
+end
+
+before routine do
+   tree.feature := tree^feature_declaration.feature_body
 end
 
 after routine/feature_body do

@@ -15,11 +15,24 @@ package body Aqua.Primitives is
    package Primitive_Object_Vectors is
      new Ada.Containers.Vectors (Positive, Primitive_Object_Info);
 
+   type Function_Handler_Interface is
+     new Handler_Interface with
+      record
+         Handler : Primitive_Handler;
+      end record;
+
+   overriding function Handle
+     (Primitive : Function_Handler_Interface;
+      Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Array_Of_Words)
+      return Word
+   is (Primitive.Handler (Context, Arguments));
+
    type Primitive_Function_Info is
       record
          Name      : access String;
          Arg_Count : Natural;
-         Handler   : Primitive_Handler;
+         Handler   : access Handler_Interface'Class;
       end record;
 
    package Primitive_Function_Vectors is
@@ -41,7 +54,7 @@ package body Aqua.Primitives is
       Info : Primitive_Function_Info
       renames Prim_Functions (Positive (Primitive));
    begin
-      return Info.Handler (Context, Arguments);
+      return Info.Handler.Handle (Context, Arguments);
    end Call_Primitive;
 
    --------------------
@@ -60,7 +73,7 @@ package body Aqua.Primitives is
       for I in Args'Range loop
          Args (I) := Context.Pop;
       end loop;
-      return Info.Handler (Context, Args);
+      return Info.Handler.Handle (Context, Args);
    end Call_Primitive;
 
    -------------------
@@ -115,8 +128,25 @@ package body Aqua.Primitives is
       Handler        : Primitive_Handler)
    is
    begin
-      Prim_Functions.Append ((new String'(Name), Argument_Count, Handler));
+      Prim_Functions.Append
+        ((new String'(Name), Argument_Count,
+         new Function_Handler_Interface'(Handler => Handler)));
    end New_Primitive_Function;
+
+   ---------------------------
+   -- New_Primitive_Handler --
+   ---------------------------
+
+   procedure New_Primitive_Handler
+     (Name           : String;
+      Argument_Count : Natural;
+      Handler        : Handler_Interface'Class)
+   is
+   begin
+      Prim_Functions.Append
+        ((new String'(Name), Argument_Count,
+         new Handler_Interface'Class'(Handler)));
+   end New_Primitive_Handler;
 
    --------------------------
    -- New_Primitive_Object --
