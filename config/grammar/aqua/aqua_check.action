@@ -129,6 +129,10 @@ after declaration_body/formal_arguments do
    tree.formal_arguments := child.arguments;
 end;
 
+after formal_arguments/entity_declaration_list do
+   parent.formal_arguments := child.declarations
+end
+
 after declaration_body/type_mark do
    parent.type := child.type;
 end;
