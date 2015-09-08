@@ -12,10 +12,15 @@ after package_declaration/package_name do
    top.package_file := top.package_name.replace(".", "-").to_lower;
 end;
 
-after primary_expression/named_reference
-   or primary_expression/member_expression
-do
+after primary_expression/named_reference do
    parent.is_constant := 0;
+end;
+
+after primary_expression/member_expression do
+   parent.is_constant := 0;
+   parent.reference :=
+      (record_entry => parent^file_declaration.entry_table.get (member_expression/record_reference.image),
+       component_name => member_expression/identifier.text);
 end;
 
 after primary_expression/numeric_literal
@@ -27,27 +32,33 @@ end;
 
 after expression/primary_expression do
    parent.is_constant := child.is_constant;
+   parent.reference := child.reference;
 end;
 
 after expression do
    tree.value := tree.image;
+   tree.reference := tree/primary_expression.reference;
 end;
 
 after file_declaration/file_name do
-   tree.file_name := file_name.image;
-   tree.entries := new Array;
-   top.files.append ((name => child.image, entries => tree.entries));
+   parent.file_name := file_name.image;
+   parent.entries := new Array;
+   parent.entry_table := new Map;
+   top.files.append ((name => child.image, entries => tree.entries, entry_table => tree.entry_table));
 end;
 
 after file_entry/file_entry_name do
    parent.entry := new Map;
    parent.layout := new Array;
-   parent^file_declaration.entries.append
-     ((name => child.image, declaration => parent));
+   child.new_entry := (name => child.image, declaration => parent);
+   parent^file_declaration.entries.append (child.new_entry);
+   parent^file_declaration.entry_table.set
+     (child.image, child.new_entry);
 end;
 
 after location/expression do
    location.value := expression.value;
+   location.reference := expression.reference;
    if not expression.is_constant then
       location.value := "File." & location.value;
    end if;
@@ -55,20 +66,41 @@ end;
 
 after file_entry/location do
    parent.location := location.value;
+   parent.reference := location.reference;
+   if parent.reference then
+      if parent.reference.record_entry.declaration.has_array then
+         parent.has_array := 1;
+         parent.indirect_array := 1;
+      end if;
+   end if;
 end;
 
 after array_size/expression do
    parent.array_size := expression.value;
 end;
 
-after record_type/array_size do 
+after array_size do
+   if tree.array_size then
+      null;
+   else
+      tree.indefinite_array := 1;
+      io.put_line ("indefinite array: " & tree^file_entry/file_entry_name.image);
+   end if;
+end;
+
+after record_type/array_size do
    tree^file_declaration.need_vectors := 1;
+   tree^file_entry.has_array := 1;
+   parent.has_array := 1;
    parent.array_size := child.array_size;
+   parent.indefinite_array := child.indefinite_array;
 end;
 
 after file_entry/record_type do
-   if child.array_size then
+   if child.has_array then
+      parent.has_array := child.has_array;
       parent.array_size := child.array_size;
+      parent.indefinite_array := child.indefinite_array;
    end if;
 end;
 
@@ -135,7 +167,6 @@ after record_component/required_value do
 end;
 
 after record_component do
-   --  io.put_line (record_component/component_name.image);
    tree.component :=
       (name   => tree.component_name,
        type   => tree.component_type,
@@ -144,18 +175,32 @@ after record_component do
        base   => tree.access_base,
        array_size => tree.array_size,
        size => tree.component_size,
-       required_value => tree.required_value);
-       
+       required_value => tree.required_value,
+       variant_field => tree^record_type.current_variant_field,
+       variant_value => tree^record_type.current_variant_value);
+
+   
    if tree.component_name = "_" then
       tree.component.name := "Private_" & top.next_id;
       tree.component.private := 1;
-      io.put_line (tree.component.name);
       top.next_id := top.next_id + 1;
    elsif tree.component_name.slice (1, 1) = "_" then
       tree.component.name := "Private_" & top.next_id & tree.component_name;
       tree.component.private := 1;
-      io.put_line (tree.component.name);
       top.next_id := top.next_id + 1;
+   end if;
+
+   if tree.component.variant_field then
+      if not tree^file_entry.variants then
+         tree^file_entry.variants := new Map;
+      end if;
+      if not tree^file_entry.variants.get (tree.component.variant_field) then
+         tree^file_entry.variants.set (tree.component.variant_field, new Map);
+      end if;
+      if not tree^file_entry.variants.get (tree.component.variant_field).get (tree.component.variant_value) then
+         tree^file_entry.variants.get (tree.component.variant_field).set (tree.component.variant_value, new Array);
+      end if;
+      tree^file_entry.variants.get (tree.component.variant_field).get (tree.component.variant_value).append (tree.component);
    end if;
    
    if tree.component.offset then
@@ -197,4 +242,21 @@ after record_component do
    
    tree^file_entry.layout.append (tree.component);
    tree^file_entry.entry.set (tree.component.name, tree.component);
+end;
+
+before variant_component/identifier do
+   IO.Put_line ("variant: " & identifier.text);
+   tree^record_type.current_variant_field := identifier.text;
+end;
+
+after variant_component do
+   tree^record_type.current_variant_field := null;
+end;
+
+before variant do
+   tree^record_type.current_variant_value := tree/numeric_literal.text;
+end;
+
+after variant do
+   tree^record_type.current_variant_value := null;
 end;

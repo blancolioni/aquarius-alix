@@ -99,6 +99,9 @@ package body [top.package_name].[tree.file_name] is
    is
    begin
 @      for component in file_entry.declaration.layout loop
+@         if component.variant_field then
+      if [file_entry.name].[component.variant_field] = [component.variant_value] then
+@         end if;
 @         if component.offset then
       declare
          use System.Storage_Elements;
@@ -158,6 +161,9 @@ package body [top.package_name].[tree.file_name] is
 @        else
       WL.Binary_IO.Read (File, [file_entry.name].[component.name]);
 @        end if;
+@         if component.variant_field then
+      end if;
+@         end if;
 @      end loop;   
    end Read_[file_entry.name];
 
