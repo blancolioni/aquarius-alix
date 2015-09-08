@@ -38,11 +38,12 @@ constant_expression ::= identifier | numeric_literal | character_literal | strin
 
 expression ::= primary_expression
 
-primary_expression ::= named_reference | member_expression | numeric_literal | character_literal | string_literal
+primary_expression ::=
+         named_reference | member_expression | numeric_literal | character_literal | string_literal
 
 named_reference ::= identifier
 
-member_expression ::= record_reference < '.' identifier >
+member_expression ::= record_reference '.' identifier
 
 record_reference ::= identifier
 
@@ -64,9 +65,15 @@ location ::= 'at' expression
 
 record_type ::= 'record' [ array_size ] record_components
 
-record_components ::= { record_component ';' }
+record_components ::= { single_record_component ';' }
+
+single_record_component ::= record_component | variant_component
 
 record_component ::= component_name ':' component_type [ required_value ]
+
+variant_component ::= 'case' identifier 'is' < variant > 'end' 'case'
+
+variant ::= 'when' numeric_literal '=>' record_components
 
 component_name ::= identifier
 
@@ -88,6 +95,6 @@ access_offset ::= identifier
 
 access_length ::= identifier
 
-array_size ::= '(' expression ')'
+array_size ::= '(' (expression | '<>') ')'
 
 required_value ::= '=' expression
