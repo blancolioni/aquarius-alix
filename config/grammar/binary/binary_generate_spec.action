@@ -84,6 +84,11 @@ private
 @      end loop;
    type [file_entry.name]_Type is
       record
+@      if file_entry.declaration.has_array then
+@         if file_entry.declaration.indefinite_array then
+         Internal_Record_Present : Boolean := False;
+@         end if;
+@      end if;
 @      for component in file_entry.declaration.layout loop
          [component.name] : [component.type_name];
 @      end loop;
