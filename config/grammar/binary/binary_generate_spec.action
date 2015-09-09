@@ -30,6 +30,11 @@ package [top.package_name].[tree.file_name] is
      (File : File_Type)
      return Natural;
 
+   function Get_[file_entry.name]
+     (File   : in out File_Type;
+      Index  : Natural)
+     return [file_entry.name]_Cursor;
+     
 @      elsif file_entry.declaration.indirect_array then
    function Get_[file_entry.name]
      (File   : in out File_Type;

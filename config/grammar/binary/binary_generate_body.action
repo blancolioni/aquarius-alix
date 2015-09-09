@@ -23,6 +23,15 @@ package body [top.package_name].[tree.file_name] is
    begin
       return File.[file_entry.name]_Vector.Last_Index;
    end [file_entry.name]_Count;
+
+   function Get_[file_entry.name]
+     (File   : in out File_Type;
+      Index  : Natural)
+     return [file_entry.name]_Cursor
+   is
+   begin
+      return [file_entry.name]_Cursor (File.[file_entry.name]_Vector.To_Cursor (Index + 1));
+   end Get_[file_entry.name];
 @      elsif file_entry.declaration.indirect_array then
    function Get_[file_entry.name]
      (File   : in out File_Type;
