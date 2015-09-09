@@ -6,8 +6,6 @@ package body [top.package_name].[tree.file_name] is
    pragma Style_Checks (Off);
    pragma Warnings (Off);
    
-   Bin : WL.Binary_IO.File_Type;
-   
 @  for file_entry in tree.entries loop
    procedure Read_[file_entry.name]
      (File : in out WL.Binary_IO.File_Type;
@@ -27,29 +25,29 @@ package body [top.package_name].[tree.file_name] is
    end [file_entry.name]_Count;
 @      elsif file_entry.declaration.indirect_array then
    function Get_[file_entry.name]
-     (File   : File_Type;
+     (File   : in out File_Type;
       Offset : WL.Binary_IO.Word_32)
      return [file_entry.name]_Cursor
    is
-      use [file_entry.name]_Maps;
-      Result : Cursor := File.[file_entry.name]_Map.Element (Offset);
+      use [file_entry.name]_Containers;
+      Result : Cursor := File.[file_entry.name]_Map.Find (Offset);
    begin
       if not Has_Element (Result) then
          declare
             Item : [file_entry.name]_Type;
          begin               
-            WL.Binary_IO.Set_Offset (Bin, Offset);
-            Read_[file_entry.name] (Bin, File, Item);
+            WL.Binary_IO.Set_Offset (File.Bin, Offset);
+            Read_[file_entry.name] (File.Bin, File, Item);
             File.[file_entry.name]_Map.Insert (Offset, Item);
-            Result := File.[file_entry.name]_Map.Element (Offset);
+            Result := File.[file_entry.name]_Map.Find (Offset);
          end;
       end if;
 
-      return Result;
+      return [file_entry.name]_Cursor (Result);
    end Get_[file_entry.name];
 @      else
    function Get_[file_entry.name]
-     (File   : File_Type;
+     (File   : in out File_Type;
       Index  : Natural)
      return [file_entry.name]_Cursor
    is
@@ -60,21 +58,22 @@ package body [top.package_name].[tree.file_name] is
             (Ada.Containers.Count_Type (Vector_Index));
       end if;
 
-      if not File.[file_entry.name]_Vector (Vector_Index).Internal_Present then
+      if not File.[file_entry.name]_Vector.Element (Vector_Index).Internal_Record_Present then
          declare
-            use WL.Binary_IO_32;
+            use WL.Binary_IO;
             Offset : constant Word_32 :=
               [file_entry.declaration.location] + Word_32 (Index) * [file_entry.declaration.size];
             Item : [file_entry.name]_Type;
          begin
-            WL.Binary_IO.Set_Offset (Bin, Offset);
-            Read_[file_entry.name] (Bin, File, Item);
-            Item.Internal_Present := True;
+            WL.Binary_IO.Set_Offset (File.Bin, Offset);
+            Read_[file_entry.name] (File.Bin, File, Item);
+            Item.Internal_Record_Present := True;
             File.[file_entry.name]_Vector (Vector_Index) := Item;
          end;
       end if;
 
-      return [file_entry.name]_Vectors.To_Cursor (Vector_Index);
+      return [file_entry.name]_Cursor
+         (File.[file_entry.name]_Vector.To_Cursor (Vector_Index));
    end Get_[file_entry.name];
 @         end if;        
 @      end if;
@@ -93,7 +92,7 @@ package body [top.package_name].[tree.file_name] is
      return [component.return_type_name]
    is
 @         if file_entry.declaration.has_array then
-      use [file_entry.name]_[(if file_entry.declaration.indirect_array then "Maps" else "Vectors")];
+      use [file_entry.name]_Containers;
       Item : [file_entry.name]_Type renames Element (Cursor (Position));
 @         elsif component.inline_array_dec then
       Item : [component.inline_array_type_name] renames File.[file_entry.name].[component.name];
@@ -121,12 +120,12 @@ package body [top.package_name].[tree.file_name] is
    is
       use WL.Binary_IO;
    begin
-      Open (Bin, In_File, Path);
+      Open (File.Bin, In_File, Path);
 @  for file_entry in tree.entries loop
 @     if not file_entry.declaration.location then
-      Read_[file_entry.name] (Bin, File, File.[file_entry.name]);
+      Read_[file_entry.name] (File.Bin, File, File.[file_entry.name]);
 @     elsif file_entry.declaration.array_size then
-      Set_Offset (Bin, [file_entry.declaration.location]);
+      Set_Offset (File.Bin, [file_entry.declaration.location]);
       declare
          Count : constant Natural := Natural (File.[file_entry.declaration.array_size]);
       begin
@@ -134,14 +133,14 @@ package body [top.package_name].[tree.file_name] is
             declare
                [file_entry.name] : [file_entry.name]_Type;
             begin
-               Read_[file_entry.name] (Bin, File, [file_entry.name]);
+               Read_[file_entry.name] (File.Bin, File, [file_entry.name]);
                File.[file_entry.name]_Vector.Append ([file_entry.name]);
             end;
          end loop;
       end;
 @     end if;
 @  end loop;
-
+@--      Close (Bin);
    end Load;
    
 @  for file_entry in tree.entries loop
@@ -150,6 +149,7 @@ package body [top.package_name].[tree.file_name] is
       Target : File_Type;
       [file_entry.name] : out [file_entry.name]_Type)
    is
+      use WL.Binary_IO;
    begin
 @      for component in file_entry.declaration.layout loop
 @         if component.variant_field then

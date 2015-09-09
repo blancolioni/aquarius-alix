@@ -32,13 +32,13 @@ package [top.package_name].[tree.file_name] is
 
 @      elsif file_entry.declaration.indirect_array then
    function Get_[file_entry.name]
-     (File   : File_Type;
+     (File   : in out File_Type;
       Offset : WL.Binary_IO.Word_32)
      return [file_entry.name]_Cursor;
      
 @      else
    function Get_[file_entry.name]
-     (File   : File_Type;
+     (File   : in out File_Type;
       Index  : Natural)
      return [file_entry.name]_Cursor;
      
@@ -97,27 +97,28 @@ private
 @   if file_entry.declaration.has_array then
 @      if file_entry.declaration.indirect_array then
    use type WL.Binary_IO.Word_32;
-   package [file_entry.name]_Maps is
+   package [file_entry.name]_Containers is
      new Ada.Containers.Ordered_Maps
           (WL.Binary_IO.Word_32,
            [file_entry.name]_Type);
 @      else
-   package [file_entry.name]_Vectors is
+   package [file_entry.name]_Containers is
      new Ada.Containers.Vectors (Positive, [file_entry.name]_Type);
 @      end if
 
-   type [file_entry.name]_Cursor is new [file_entry.name]_Vectors.Cursor;
+   type [file_entry.name]_Cursor is new [file_entry.name]_Containers.Cursor;
    
 @   end if;
 @   end loop;
    type File_Type is
       record
+         Bin : WL.Binary_IO.File_Type;
 @   for file_entry in tree.entries loop
 @      if file_entry.declaration.has_array then
 @         if file_entry.declaration.indirect_array then
-         [file_entry.name]_Map : [file_entry.name]_Maps.Map;
+         [file_entry.name]_Map : [file_entry.name]_Containers.Map;
 @         else         
-         [file_entry.name]_Vector : [file_entry.name]_Vectors.Vector;
+         [file_entry.name]_Vector : [file_entry.name]_Containers.Vector;
 @         end if;         
 @      else
          [file_entry.name] : [file_entry.name]_Type;
