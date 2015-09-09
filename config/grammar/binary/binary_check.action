@@ -71,6 +71,7 @@ after file_entry/location do
       if parent.reference.record_entry.declaration.has_array then
          parent.has_array := 1;
          parent.indirect_array := 1;
+         parent^file_declaration.need_ordered_maps := 1;
       end if;
    end if;
 end;
@@ -84,6 +85,7 @@ after array_size do
       null;
    else
       tree.indefinite_array := 1;
+      tree^file_declaration.need_vectors := 1;
       io.put_line ("indefinite array: " & tree^file_entry/file_entry_name.image);
    end if;
 end;
