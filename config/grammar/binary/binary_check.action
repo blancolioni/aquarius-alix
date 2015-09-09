@@ -98,12 +98,17 @@ after record_type/array_size do
    parent.indefinite_array := child.indefinite_array;
 end;
 
+before record_type do
+   tree.size := 0;
+end;
+
 after file_entry/record_type do
    if child.has_array then
       parent.has_array := child.has_array;
       parent.array_size := child.array_size;
       parent.indefinite_array := child.indefinite_array;
    end if;
+   parent.size := child.size;
 end;
 
 before component_type do
@@ -244,6 +249,7 @@ after record_component do
    
    tree^file_entry.layout.append (tree.component);
    tree^file_entry.entry.set (tree.component.name, tree.component);
+   tree^record_type.size := tree^record_type.size + tree.component.size;
 end;
 
 before variant_component/identifier do
