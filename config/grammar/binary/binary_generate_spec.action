@@ -4,6 +4,9 @@
 @if tree.need_vectors then
 private with Ada.Containers.Vectors;
 @end if;
+@if tree.need_ordered_maps then
+private with Ada.Containers.Ordered_Maps;
+@end if;
 with System.Storage_Elements;
 with WL.Binary_IO;
 
@@ -86,20 +89,33 @@ private
 @      end loop;
       end record;
 
-@   if file_entry.declaration.array_size then
+@   if file_entry.declaration.has_array then
+@      if file_entry.declaration.indirect_array then
+   use type WL.Binary_IO.Word_32;
+   package [file_entry.name]_Maps is
+     new Ada.Containers.Ordered_Maps
+          (WL.Binary_IO.Word_32,
+           [file_entry.name]_Type);
+@      else
    package [file_entry.name]_Vectors is
      new Ada.Containers.Vectors (Positive, [file_entry.name]_Type);
+@      end if
 
-   type [file_entry.name]_Cursor is new [file_entry.name]_Vectors.Cursor;     
+   type [file_entry.name]_Cursor is new [file_entry.name]_Vectors.Cursor;
+   
 @   end if;
 @   end loop;
    type File_Type is
       record
 @   for file_entry in tree.entries loop
-@      if file_entry.declaration.array_size then
+@      if file_entry.declaration.has_array then
+@         if file_entry.declaration.indirect_array then
+         [file_entry.name]_Map : [file_entry.name]_Maps.Map;
+@         else         
          [file_entry.name]_Vector : [file_entry.name]_Vectors.Vector;
+@         end if;         
 @      else
-         [file_entry.name]        : [file_entry.name]_Type;
+         [file_entry.name] : [file_entry.name]_Type;
 @      end if;
 @   end loop;
       end record;
