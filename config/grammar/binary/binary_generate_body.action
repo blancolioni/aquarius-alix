@@ -25,7 +25,7 @@ package body [top.package_name].[tree.file_name] is
    end [file_entry.name]_Count;
 
    function Get_[file_entry.name]
-     (File   : in out File_Type;
+     (File   : File_Type;
       Index  : Natural)
      return [file_entry.name]_Cursor
    is
