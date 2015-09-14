@@ -136,7 +136,11 @@ package body [top.package_name].[tree.file_name] is
 @     elsif file_entry.declaration.array_size then
       Set_Offset (File.Bin, [file_entry.declaration.location]);
       declare
+@        if file_entry.declaration.static_array then
+         Count : constant Natural := [file_entry.declaration.array_size];
+@        else
          Count : constant Natural := Natural (File.[file_entry.declaration.array_size]);
+@        end if;
       begin
          for I in 1 .. Count loop
             declare
