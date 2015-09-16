@@ -58,6 +58,7 @@ end;
 
 after location/expression do
    location.value := expression.value;
+   location.is_constant := expression.is_constant;
    location.reference := expression.reference;
    if not expression.is_constant then
       location.value := "File." & location.value;
@@ -78,6 +79,7 @@ end;
 
 after array_size/expression do
    parent.array_size := expression.value;
+   parent.is_constant := expression.is_constant;
 end;
 
 after array_size do
@@ -96,6 +98,7 @@ after record_type/array_size do
    parent.has_array := 1;
    parent.array_size := child.array_size;
    parent.indefinite_array := child.indefinite_array;
+   parent.static_array := child.is_constant;
 end;
 
 before record_type do
@@ -107,6 +110,7 @@ after file_entry/record_type do
       parent.has_array := child.has_array;
       parent.array_size := child.array_size;
       parent.indefinite_array := child.indefinite_array;
+      parent.static_array := child.static_array;
    end if;
    parent.size := child.size;
 end;
