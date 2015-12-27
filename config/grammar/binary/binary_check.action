@@ -137,9 +137,17 @@ after component_type/named_type do
    parent.component_size := named_type.component_size;
 end;
 
+before access_length do
+   tree.elements := new Array;
+end;
+
+after access_length/identifier do
+   parent.elements.append (identifier.text);
+end;
+
 after access_type/from_clause do
    parent.access_offset := from_clause/access_offset.image;
-   parent.access_length := from_clause/access_length.image;
+   parent.access_length := from_clause/access_length.elements;
 end;
 
 after access_type/base_clause do
@@ -189,7 +197,6 @@ after record_component do
        required_value => tree.required_value,
        variant_field => tree^record_type.current_variant_field,
        variant_value => tree^record_type.current_variant_value);
-
    
    if tree.component_name = "_" then
       tree.component.name := "Private_" & top.next_id;

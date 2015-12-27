@@ -85,7 +85,7 @@ named_type ::= identifier [ '/' numeric_literal ]
 
 access_type ::=  'access' identifier [ from_clause ] [ base_clause ]
 
-from_clause ::= 'from' access_offset ',' access_length
+from_clause ::= 'from' access_offset access_length
 
 base_clause ::= 'base' base_offset
 
@@ -93,7 +93,7 @@ base_offset   ::= < identifier / '.' >
 
 access_offset ::= identifier
 
-access_length ::= identifier
+access_length ::= '(' < identifier / ',' > ')'
 
 array_size ::= '(' (expression | '<>') ')'
 
