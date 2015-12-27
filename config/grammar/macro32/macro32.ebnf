@@ -1,0 +1,101 @@
+top_level ::= source_file
+
+end_of_line ::= !\n!
+identifier  ::= !\l\w*!
+integer     ::= !\d+!
+string      ::= !\x22[^\x22]*\x22!
+delimiter   ::= delimiters ".:$#()+-@=,!"
+comment     ::= !;[.]*!
+
+format '(' space_before no_space_after
+format ')' no_space_before space_after
+format '+' no_space_before space_after
+format '-' space_before no_space_after
+format ',' no_space_before space_after
+format '#' space_before no_space_after
+format '@' space_before no_space_after
+format '=' space_before space_after
+format ':' no_space_before new_line_after
+format '$' space_before no_space_after
+format '.' space_before no_space_after
+
+format integer no_space_after
+format source_element new_line_after
+
+source_file ::= { source_element end_of_line }
+
+source_element ::= [ label ':' ] [ instruction ]
+
+label ::= identifier | integer
+
+instruction ::= pseudo_op | op
+
+pseudo_op ::= directive | declaration
+
+directive ::= '.' identifier { operand }
+
+op ::= single_operand
+     | double_operand
+     | extended_double_operand
+     | branch
+     | trap | jump | jump_subroutine | return | subtract_and_branch
+     
+single_operand ::= single_operand_instruction arg
+double_operand ::= double_operand_instruction arg ',' arg
+extended_double_operand ::= extended_double_operand_instruction arg ',' identifier
+
+branch ::= branch_instruction branch_destination
+branch_destination ::= identifier | temporary_label
+temporary_label ::= label_direction integer
+label_direction ::= '+' | '-'
+
+trap ::= 'trap' trap_operand
+
+trap_operand ::= identifier | integer
+
+jump ::= 'jmp' arg
+jump_subroutine ::= 'jsr' identifier ',' arg
+return ::= 'rts' identifier
+subtract_and_branch ::= 'sob' identifier operand
+     
+single_operand_instruction ::=
+                  'swab' | 'clr' | 'clrb' | 'com' | 'comb' 
+                 | 'inc' | 'incb' | 'dec' | 'decb' | 'neg' | 'negb'
+                 | 'adc' | 'adcb' | 'sbc' | 'sbcb' | 'tst' | 'tstb'
+
+double_operand_instruction ::= 'mov' | 'movb' | 'cmp' | 'cmpb' | 'add' | 'sub'
+
+extended_double_operand_instruction ::= 'mul' | 'div' | 'ash' | 'ashc' | 'xor'
+
+branch_instruction ::= 
+          'br' | 'bne' | 'beq' | 'bge' | 'blt' | 'bgt' | 'ble'
+         | 'bpl' | 'bmi' | 'bhi' | 'blos' 
+         | 'bvc' | 'bvs' | 'bcc' | 'bcs'
+         | 'bhis' | 'blo'
+         
+arg ::= identifier | deferred
+      | autoincrement | autoincrement_deferred
+      | autodecrement | autodecrement_deferred
+      | indexed | indexed_deferred
+      | immediate | absolute
+      | string
+      
+deferred ::= '(' identifier ')'
+autoincrement ::= '(' identifier ')' '+'
+autoincrement_deferred ::= '@' '(' identifier ')' '+'
+autodecrement ::= '-' '(' identifier ')'
+autodecrement_deferred ::= '@' '-' '(' identifier ')'
+indexed ::= operand '(' identifier ')'
+indexed_deferred ::= '@' operand '(' identifier ')'
+immediate ::= '#' expression
+absolute ::= '@' '#' expression
+
+expression ::= < operand / operator >
+
+operand ::= identifier | integer | string | negative_integer
+
+negative_integer ::= '-' integer
+
+operator ::= '+' | '-'
+
+declaration ::= identifier '=' expression
