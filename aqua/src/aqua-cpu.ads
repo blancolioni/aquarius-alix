@@ -97,7 +97,7 @@ private
       record
 --         Image      : Aqua.Images.Image_Type;
          R          : Aqua.Architecture.Registers :=
-                        (0, 2, 4, 6, 8, 10, 16#FFFE#, 0);
+                        (0, 2, 4, 6, 8, 10, 16#1FFF_FFFC#, 0);
          N, Z, C, V : Boolean := False;
          B          : Boolean := False;
          Ext        : External_Object_Vectors.Vector;
