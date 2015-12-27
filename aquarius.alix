@@ -27,6 +27,7 @@ source_dir = src/plugins/generated
 source_dir = src/plugins/haskell
 source_dir = src/plugins/klein
 source_dir = src/plugins/macro11
+source_dir = src/plugins/macro32
 source_dir = src/plugins/projects
 source_dir = src/programs
 source_dir = src/projects
@@ -55,6 +56,7 @@ source_dir = komnenos/src/ui/gtk
 source_dir = tagatha/src
 depend = { project = gtkada external = yes }
 depend = { project = tropos version = any }
+depend = { project = lith version = any }
 depend = { project = wlib version = any }
 main_unit = aquarius-driver
 exec_name = aquarius

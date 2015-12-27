@@ -6,7 +6,7 @@ package body Aqua is
 
    function Get_Address (Value : Word) return Address is
    begin
-      return Address (Value and not Address_Mask_Bits);
+      return Address (Value and Payload_Mask);
    end Get_Address;
 
    --------------
@@ -35,7 +35,7 @@ package body Aqua is
       return External_Reference
    is
    begin
-      return External_Reference (Value and not External_Mask_Bits);
+      return External_Reference (Value and Payload_Mask);
    end Get_External_Reference;
 
    -----------------
@@ -44,12 +44,12 @@ package body Aqua is
 
    function Get_Integer (Value : Word) return Aqua_Integer is
    begin
-      if (Value and 16#0800#) = 0 then
+      if (Value and 16#0800_0000#) = 0 then
          return Aqua_Integer (Value);
-      elsif Value = 16#0800# then
+      elsif Value = 16#0800_0000# then
          return Aqua_Integer'First;
       else
-         return -Aqua_Integer (16#1000# - Value);
+         return -Aqua_Integer (16#1000_0000# - Value);
       end if;
    end Get_Integer;
 
@@ -62,7 +62,7 @@ package body Aqua is
       return String_Reference
    is
    begin
-      return String_Reference (Value and not String_Mask_Bits);
+      return String_Reference (Value and Payload_Mask);
    end Get_String_Reference;
 
    --------------
@@ -74,9 +74,12 @@ package body Aqua is
       Addr   : Address)
       return Word
    is
+      It : Word := 0;
    begin
-      return Word (Memory.Get_Byte (Addr))
-        + Word (Memory.Get_Byte (Addr + 1)) * 256;
+      for I in reverse Address range 0 .. Bytes_Per_Word - 1 loop
+         It := It * 256 + Word (Memory.Get_Byte (Addr + I));
+      end loop;
+      return It;
    end Get_Word;
 
    ----------------
@@ -85,7 +88,7 @@ package body Aqua is
 
    function Is_Address (Value : Word) return Boolean is
    begin
-      return (Value and Address_Mask_Bits) = Address_Mask_Value;
+      return Get_Tag (Value) = Address_Tag;
    end Is_Address;
 
    ---------------------------
@@ -94,7 +97,7 @@ package body Aqua is
 
    function Is_External_Reference (Value : Word) return Boolean is
    begin
-      return (Value and External_Mask_Bits) = External_Mask_Value;
+      return Get_Tag (Value) = External_Tag;
    end Is_External_Reference;
 
    ----------------
@@ -103,7 +106,7 @@ package body Aqua is
 
    function Is_Integer (Value : Word) return Boolean is
    begin
-      return (Value and Integer_Mask_Bits) = Integer_Mask_Value;
+      return Get_Tag (Value) = Integer_Tag;
    end Is_Integer;
 
    --------------
@@ -115,9 +118,12 @@ package body Aqua is
       Addr   : Address;
       Value  : Word)
    is
+      It : Word := Value;
    begin
-      Memory.Set_Byte (Addr, Byte (Value mod 256));
-      Memory.Set_Byte (Addr + 1, Byte (Value / 256));
+      for I in Address range 0 .. Bytes_Per_Word - 1 loop
+         Memory.Set_Byte (Addr + I, Byte (It mod 256));
+         It := It / 256;
+      end loop;
    end Set_Word;
 
    ---------------------
@@ -126,7 +132,7 @@ package body Aqua is
 
    function To_Address_Word (Addr : Address) return Word is
    begin
-      return Word (Addr) + Address_Mask_Value;
+      return Set_Tag (Word (Addr), Address_Tag);
    end To_Address_Word;
 
    ----------------------
@@ -138,7 +144,7 @@ package body Aqua is
       return Word
    is
    begin
-      return Word (Reference) + External_Mask_Value;
+      return Set_Tag (Word (Reference), External_Tag);
    end To_External_Word;
 
    ---------------------
@@ -149,8 +155,10 @@ package body Aqua is
    begin
       if Value >= 0 then
          return Word (Value);
+      elsif Value = Aqua_Integer'First then
+         return 16#0800_0000#;
       else
-         return 16#1000# - Word (abs Value);
+         return 16#1000_0000# - Word (abs Value);
       end if;
    end To_Integer_Word;
 
@@ -163,7 +171,7 @@ package body Aqua is
       return Word
    is
    begin
-      return Word (Reference) + String_Mask_Value;
+      return Set_Tag (Word (Reference), String_Tag);
    end To_String_Word;
 
 end Aqua;

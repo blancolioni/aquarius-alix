@@ -21,7 +21,7 @@ package body Aqua.Assembler is
       A.High := Address'Max (A.High, A.PC);
       A.Low  := Address'Min (A.Low, A.PC);
       A.Set_Word (A.PC, W);
-      A.PC := A.PC + 2;
+      A.PC := A.PC + Bytes_Per_Word;
    end Append;
 
    -----------------
@@ -187,15 +187,15 @@ package body Aqua.Assembler is
                   declare
                      Code   : constant Word := A.Get_Word (Addr);
                      Offset : constant Address :=
-                                (if Dest >= Addr + 2
-                                 then Dest - (Addr + 2)
-                                 else 512 - (Addr + 2 - Dest));
+                                (if Dest >= Addr + 4
+                                 then Dest - (Addr + 4)
+                                 else 512 - (Addr + 4 - Dest));
                   begin
                      pragma Assert (Offset < 256);
-                     pragma Assert (Offset mod 2 = 0);
+                     pragma Assert (Offset mod 4 = 0);
                      A.Set_Word (Addr,
                                  (Code and 16#FF00#)
-                                 + Word (Offset) / 2);
+                                 + Word (Offset) / 4);
                   end;
                elsif Relative then
                   pragma Assert (Is_Address (Info.Value));
@@ -601,7 +601,7 @@ package body Aqua.Assembler is
          Write_Address (File, Loc.Start);
       end loop;
 
-      for Addr in A.Low .. A.High + 1 loop
+      for Addr in A.Low .. A.High + 3 loop
          Write_Byte (File, A.Memory.Get_Byte (Addr));
       end loop;
 

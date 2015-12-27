@@ -15,8 +15,7 @@ with Aquarius.Source;
 with Aquarius.Syntax;
 
 with Aquarius.Actions.Scanner;
-with Aquarius.Actions.Pdp_11;
---  with Aquarius.Actions.Tagatha_Actions;
+with Aquarius.Actions.Pdp_32;
 
 with Aqua.Images;
 
@@ -61,10 +60,10 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                          Extension            => "action");
       Assembly_Path : constant String :=
                         Aquarius.Paths.Scratch_File
-                          (Base_Name, "m11");
+                          (Base_Name, "m32");
       Object_Path : constant String :=
                       Aquarius.Paths.Scratch_File
-                        (Base_Name, "o11");
+                        (Base_Name, "o32");
       Action_Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
                          Aquarius.Grammars.Manager.Get_Grammar_For_File
                            (Action_Path);
@@ -81,16 +80,11 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       if Aquarius.Paths.Is_Newer (Action_Path, Assembly_Path) then
          declare
             use Aquarius.Messages;
-            Processor : Aquarius.Actions.Pdp_11.Pdp_Scanner;
---            Tagatha_Proc : Aquarius.Actions.Tagatha_Actions.Tagatha_Scanner;
+            Processor : Aquarius.Actions.Pdp_32.Pdp_Scanner;
          begin
             Aquarius.Actions.Scanner.Scan_Actions
               (Processor, Action_Program, Group);
---              Aquarius.Actions.Scanner.Scan_Actions
---                (Tagatha_Proc, Action_Program, Group);
-            if Aquarius.Messages.Console.Check_Messages (Action_Program.all)
-              >= Warning
-            then
+            if Console.Check_Messages (Action_Program.all) >= Warning then
                Ada.Text_IO.Put_Line
                  (Ada.Text_IO.Standard_Error,
                   "errors detected");
@@ -104,7 +98,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       end if;
 
       Dynamic.Dynamic_Plugin (Get_Plugin (Item)).Image.Load
-        (Base_Name & ".o11");
+        (Base_Name & ".o32");
 
    end After_Action_File_Reference;
 
@@ -419,7 +413,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
    is
       use type Aquarius.Messages.Message_Level;
       Path : constant String :=
-               Aquarius.Paths.Scratch_File (Assembly_Name, "m11");
+               Aquarius.Paths.Scratch_File (Assembly_Name, "m32");
       Output_Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
                          Aquarius.Grammars.Manager.Get_Grammar_For_File
                            (Path);

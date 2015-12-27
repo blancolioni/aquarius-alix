@@ -159,6 +159,7 @@ package body Aqua.CPU is
       while not CPU.B
         and then CPU.R (7) /= 0
       loop
+         pragma Assert (CPU.R (7) mod 4 = 0);
          declare
             Op : constant Word :=
                    CPU.Image.Get_Word (Get_Address (CPU.R (7)));
@@ -176,15 +177,16 @@ package body Aqua.CPU is
                  (Aqua.IO.Octal_Image (Op));
 
             end if;
-            Inc (CPU.R (7), 2);
+            Inc (CPU.R (7), 4);
             Handle (CPU, Op);
+            pragma Assert (CPU.R (7) mod 4 = 0);
             if Trace_Code then
                Ada.Text_IO.New_Line;
             end if;
          end;
       end loop;
 
-      Aqua.Arithmetic.Inc (CPU.R (6), 2 * Arguments'Length);
+      Aqua.Arithmetic.Inc (CPU.R (6), 4 * Arguments'Length);
       CPU.R (7) := CPU.Pop;
 
       CPU.Exec_Time := CPU.Exec_Time + Ada.Calendar.Clock - CPU.Start;
@@ -270,7 +272,7 @@ package body Aqua.CPU is
       when E : others =>
          raise Aqua.Execution.Execution_Error with
          CPU.Image.Show_Source_Position
-           (Get_Address (CPU.R (7)) - 2)
+           (Get_Address (CPU.R (7)) - 4)
            & ": " & Ada.Exceptions.Exception_Message (E);
 
    end Handle;
@@ -353,9 +355,9 @@ package body Aqua.CPU is
 
       if Branch then
          if Offset < 128 then
-            Aqua.Arithmetic.Inc (CPU.R (7), Integer (Offset * 2));
+            Aqua.Arithmetic.Inc (CPU.R (7), Integer (Offset * 4));
          else
-            Aqua.Arithmetic.Dec (CPU.R (7), Integer ((256 - Offset) * 2));
+            Aqua.Arithmetic.Dec (CPU.R (7), Integer ((256 - Offset) * 4));
          end if;
 
          if Trace_Code then
@@ -792,7 +794,7 @@ package body Aqua.CPU is
       end if;
 
       Aqua.Arithmetic.Inc
-        (CPU.R (6), 2);
+        (CPU.R (6), 4);
 
       return X;
 
@@ -807,7 +809,7 @@ package body Aqua.CPU is
       Value : Word)
    is
    begin
-      Aqua.Arithmetic.Dec (CPU.R (6), 2);
+      Aqua.Arithmetic.Dec (CPU.R (6), 4);
       CPU.Image.Set_Word (Get_Address (CPU.R (6)), Value);
       if Trace_Stack or else Trace_Code then
          Ada.Text_IO.Put_Line
@@ -911,7 +913,7 @@ package body Aqua.CPU is
    begin
       Ada.Text_IO.Put_Line ("---- stack dump");
       for A in Get_Address (CPU.R (6)) .. Address'Last - 1 loop
-         if A mod 2 = 0 then
+         if A mod 4 = 0 then
             Ada.Text_IO.Put_Line
               (Aqua.IO.Hex_Image (A)
                & ": "
@@ -931,7 +933,7 @@ package body Aqua.CPU is
       return access External_Object_Interface'Class
    is
    begin
-      return CPU.Ext (Positive (Value and not External_Mask_Bits));
+      return CPU.Ext (Positive (Value and Payload_Mask));
    end To_External_Object;
 
    ----------------
@@ -1022,7 +1024,7 @@ package body Aqua.CPU is
 
       for I in 1 .. CPU.Ext.Last_Index loop
          if External_Object_Access (Item) = CPU.Ext (I) then
-            return Word (I) or External_Mask_Value;
+            return Set_Tag (Word (I), External_Tag);
          end if;
       end loop;
 
@@ -1032,7 +1034,7 @@ package body Aqua.CPU is
       end if;
 
       CPU.Ext.Append (External_Object_Access (Item));
-      return Word (CPU.Ext.Last_Index) or External_Mask_Value;
+      return Set_Tag (Word (CPU.Ext.Last_Index), External_Tag);
    end To_Word;
 
 end Aqua.CPU;

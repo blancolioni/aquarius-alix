@@ -9,6 +9,7 @@ package body Aqua.Images is
 
    Trace_Link : constant Boolean := False;
    Trace_Load : constant Boolean := False;
+   Trace_Code : constant Boolean := False;
 
    ----------
    -- Bind --
@@ -264,14 +265,14 @@ package body Aqua.Images is
          end loop;
       end;
 
-      for Addr in 0 .. (High - Low + 1) / 2 loop
+      for Addr in 0 .. (High - Low + 1) / 4 loop
 
-         if Trace_Load then
+         if Trace_Code then
             if Addr mod 8 = 0 then
                if Addr > 0 then
                   Ada.Text_IO.New_Line;
                end if;
-               Ada.Text_IO.Put (Aqua.IO.Hex_Image (Address (Addr * 2)
+               Ada.Text_IO.Put (Aqua.IO.Hex_Image (Address (Addr * 4)
                                 + Image.High));
             end if;
          end if;
@@ -281,15 +282,15 @@ package body Aqua.Images is
          begin
             Read_Word (File, W);
 
-            if Trace_Load then
+            if Trace_Code then
                Ada.Text_IO.Put (" " & Aqua.IO.Octal_Image (W));
             end if;
 
-            Image.Set_Word (Image.High + Address (Addr * 2), W);
+            Image.Set_Word (Image.High + Address (Addr * 4), W);
          end;
       end loop;
 
-      if Trace_Load then
+      if Trace_Code then
          Ada.Text_IO.New_Line;
       end if;
 
@@ -395,7 +396,7 @@ package body Aqua.Images is
       end loop;
 
       Image.High := Image.High
-        + (Get_Address (High) - Get_Address (Low) + 2);
+        + (Get_Address (High) - Get_Address (Low) + 4);
       Image.Code_High := Image.High;
 
       Close (File);
