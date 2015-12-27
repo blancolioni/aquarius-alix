@@ -131,10 +131,20 @@ package body [top.package_name].[tree.file_name] is
    begin
       Open (File.Bin, In_File, Path);
 @  for file_entry in tree.entries loop
-@     if not file_entry.declaration.location then
-      Read_[file_entry.name] (File.Bin, File, File.[file_entry.name]);
-@     elsif file_entry.declaration.array_size then
+@     if file_entry.declaration.location then
+@        if file_entry.declaration.indirect_array then
+@           null;
+@        elsif file_entry.declaration.indefinite_array then
+@           null;
+@        else
       Set_Offset (File.Bin, [file_entry.declaration.location]);
+@        end if;
+@     end if;
+@     if file_entry.declaration.indefinite_array then
+      --  indefinite array: [file_entry.name]
+@     elsif file_entry.declaration.indirect_array then
+      --  indirect array: [file_entry.name]
+@     elsif file_entry.declaration.array_size then
       declare
 @        if file_entry.declaration.static_array then
          Count : constant Natural := [file_entry.declaration.array_size];
@@ -151,6 +161,8 @@ package body [top.package_name].[tree.file_name] is
             end;
          end loop;
       end;
+@     else
+      Read_[file_entry.name] (File.Bin, File, File.[file_entry.name]);
 @     end if;
 @  end loop;
 @--      Close (Bin);
@@ -174,12 +186,23 @@ package body [top.package_name].[tree.file_name] is
 @            if component.base then
          use type WL.Binary_IO.Word_32;
 @            end if;
+         --  length: [component.offset.length.image]
+@               component.length_expression := 0;
+@               for elem in component.offset.length loop
+         --  elem: [elem]
+@                    if component.length_expression then
+@                       component.length_expression := component.length_expression & " * " & file_entry.name & "." & elem;
+@                    else
+@                       component.length_expression := file_entry.name & "." & elem;
+@                    end if;
+@                 end loop;
+         --  expr: [component.length_expression]
 @            if component.type.to_lower = "string" then
-         Storage : Storage_Array (0 .. Storage_Offset ([file_entry.name].[component.offset.length]) - 1);
+         Storage : Storage_Array (0 .. Storage_Offset ([component.length_expression]) - 1);
       begin
 @            else
       begin
-         [file_entry.name].[component.name] := new Storage_Array (0 .. Storage_Offset ([file_entry.name].[component.offset.length]) - 1);
+         [file_entry.name].[component.name] := new Storage_Array (0 .. Storage_Offset ([component.length_expression]) - 1);
 @            end if;
 @            if component.type.to_lower = "string" then
 @            if component.base then
