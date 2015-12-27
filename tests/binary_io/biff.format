@@ -67,5 +67,68 @@ file Tlk is
       String_Length   : Word/4;
       String_Text     : access String from String_Offset, String_Length base Header.String_Offset;
    end Strref_Entry;
-      
+
+end Tlk;
+
+file Chu is
+   Header : record
+      _Signature       : String/4 = "CHUI";
+      _Version         : String/4 = "V1  ";
+      Window_Count    : Word;
+      Controls_Offset : Word;
+      Windows_Offset  : Word;
+   end Header;
+
+   Window at Header.Windows_Offset : record (Header.Window_Count)
+      Window_Id       : Word/2;
+      _               : Word/2;
+      X               : Word/2;
+      Y               : Word/2;
+      Width           : Word/2;
+      Height          : Word/2;
+      Background_Flag : Word/2;
+      Control_Count   : Word/2;
+      Background_File : String/8;
+      First_Control   : Word/2;
+      _               : Word/2;
+   end Window;
+
+   Control_Entry at Header.Controls_Offset : record (<>)
+      Offset          : Word;
+      Length          : Word;
+   end Control_Map;
+
+   Control at Control_Entry.Offset : record
+      Id              : Word/4;
+      X               : Word/2;
+      Y               : Word/2;
+      Width           : Word/2;
+      Height          : Word/2;
+      Control_Type    : Word/1;
+      _               : Word/1;
+      case Control_Type is
+         when 0 =>    --  button
+            Button_Image       : String/8;
+            Animation_Cycle    : Word/1;
+            Text_Justification : Word/1;
+            Frame_Unpressed    : Word/1;
+            Anchor_X1          : Word/1;
+            Frame_Pressed      : Word/1;
+            Anchor_X2          : Word/1;
+            Frame_Selected     : Word/1;
+            Anchor_Y1          : Word/1;
+            Frame_Disabled     : Word/1;
+            Anchor_Y2          : Word/1;
+         when 2 =>   --  slider
+            Slider_Background  : String/8;
+            Slider_Knob        : String/8;
+            Cycle_Number       : Word/2;
+            Frame_Ungrabbed    : Word/2;
+            Frame_Grabbed      : Word/2;
+            Knob_X             : Word/2;
+            Knob_Y             : Word/2;
+            Knob_Jump_Width    : Word/2;
+            Knob_Jump_Count    : Word/2;
+      end case;
+   end Control;
 end Infinity;

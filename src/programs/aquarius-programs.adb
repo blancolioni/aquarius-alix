@@ -5,7 +5,7 @@ with Ada.Strings.Fixed.Equal_Case_Insensitive;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
---  with Aquarius.Errors;
+with Aquarius.Errors;
 with Aquarius.Properties;
 with Aquarius.Trees.Properties;
 
@@ -86,6 +86,16 @@ package body Aquarius.Programs is
       return Aqua.Word;
 
    function Aqua_Tree_Left_Sibling
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
+   function Aqua_Tree_Error
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
+   function Aqua_Tree_Warning
      (Context : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Aqua.Array_Of_Words)
       return Aqua.Word;
@@ -224,6 +234,25 @@ package body Aquarius.Programs is
 
    end Aqua_Tree_Child;
 
+   ---------------------
+   -- Aqua_Tree_Error --
+   ---------------------
+
+   function Aqua_Tree_Error
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      Tree    : constant Program_Tree :=
+                  Program_Tree
+                    (Context.To_External_Object (Arguments (1)));
+      Message : constant String :=
+                  Context.To_String (Arguments (2));
+   begin
+      Aquarius.Errors.Error (Tree, Message);
+      return 0;
+   end Aqua_Tree_Error;
+
    ----------------------------
    -- Aqua_Tree_Left_Sibling --
    ----------------------------
@@ -282,6 +311,25 @@ package body Aquarius.Programs is
       return Context.To_String_Word (Tree.Text);
    end Aqua_Tree_Text;
 
+   -----------------------
+   -- Aqua_Tree_Warning --
+   -----------------------
+
+   function Aqua_Tree_Warning
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      Tree    : constant Program_Tree :=
+                  Program_Tree
+                    (Context.To_External_Object (Arguments (1)));
+      Message : constant String :=
+                  Context.To_String (Arguments (2));
+   begin
+      Aquarius.Errors.Warning (Tree, Message);
+      return 0;
+   end Aqua_Tree_Warning;
+
    ---------------------------
    -- Check_Aqua_Primitives --
    ---------------------------
@@ -316,6 +364,16 @@ package body Aquarius.Programs is
         (Name           => "tree__right_sibling",
          Argument_Count => 1,
          Handler        => Aqua_Tree_Right_Sibling'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__error",
+         Argument_Count => 2,
+         Handler        => Aqua_Tree_Error'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__warning",
+         Argument_Count => 2,
+         Handler        => Aqua_Tree_Warning'Access);
 
       Aqua_Tagatha.Add_Handlers;
 
