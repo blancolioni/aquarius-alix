@@ -4,6 +4,9 @@
 @if tree.need_vectors then
 private with Ada.Containers.Vectors;
 @end if;
+@if tree.need_ordered_maps then
+private with Ada.Containers.Ordered_Maps;
+@end if;
 with System.Storage_Elements;
 with WL.Binary_IO;
 
@@ -19,18 +22,37 @@ package [top.package_name].[tree.file_name] is
       Path : String);
       
 @   for file_entry in tree.entries loop
-@      if file_entry.declaration.array_size then
+@      if file_entry.declaration.has_array then
+   type [file_entry.name]_Cursor is private;
+
+@         if file_entry.declaration.array_size then
    function [file_entry.name]_Count
      (File : File_Type)
      return Natural;
-     
-   type [file_entry.name]_Cursor is private;
 
+   function Get_[file_entry.name]
+     (File   : File_Type;
+      Index  : Natural)
+     return [file_entry.name]_Cursor;
+     
+@      elsif file_entry.declaration.indirect_array then
+   function Get_[file_entry.name]
+     (File   : in out File_Type;
+      Offset : WL.Binary_IO.Word_32)
+     return [file_entry.name]_Cursor;
+     
+@      else
+   function Get_[file_entry.name]
+     (File   : in out File_Type;
+      Index  : Natural)
+     return [file_entry.name]_Cursor;
+     
+@         end if;     
 @      end if;
 @      for component in file_entry.declaration.layout loop
 @         if not component.private then
    function Get_[component.name] 
-@            if file_entry.declaration.array_size then   
+@            if file_entry.declaration.has_array then   
      (Position : [file_entry.name]_Cursor) 
 @            elsif component.inline_array_dec then
      (File  : File_Type;
@@ -67,25 +89,44 @@ private
 @      end loop;
    type [file_entry.name]_Type is
       record
+@      if file_entry.declaration.has_array then
+@         if file_entry.declaration.indefinite_array then
+         Internal_Record_Present : Boolean := False;
+@         end if;
+@      end if;
 @      for component in file_entry.declaration.layout loop
          [component.name] : [component.type_name];
 @      end loop;
       end record;
 
-@   if file_entry.declaration.array_size then
-   package [file_entry.name]_Vectors is
+@   if file_entry.declaration.has_array then
+@      if file_entry.declaration.indirect_array then
+   use type WL.Binary_IO.Word_32;
+   package [file_entry.name]_Containers is
+     new Ada.Containers.Ordered_Maps
+          (WL.Binary_IO.Word_32,
+           [file_entry.name]_Type);
+@      else
+   package [file_entry.name]_Containers is
      new Ada.Containers.Vectors (Positive, [file_entry.name]_Type);
+@      end if
 
-   type [file_entry.name]_Cursor is new [file_entry.name]_Vectors.Cursor;     
+   type [file_entry.name]_Cursor is new [file_entry.name]_Containers.Cursor;
+   
 @   end if;
 @   end loop;
    type File_Type is
       record
+         Bin : WL.Binary_IO.File_Type;
 @   for file_entry in tree.entries loop
-@      if file_entry.declaration.array_size then
-         [file_entry.name]_Vector : [file_entry.name]_Vectors.Vector;
+@      if file_entry.declaration.has_array then
+@         if file_entry.declaration.indirect_array then
+         [file_entry.name]_Map : [file_entry.name]_Containers.Map;
+@         else         
+         [file_entry.name]_Vector : [file_entry.name]_Containers.Vector;
+@         end if;         
 @      else
-         [file_entry.name]        : [file_entry.name]_Type;
+         [file_entry.name] : [file_entry.name]_Type;
 @      end if;
 @   end loop;
       end record;

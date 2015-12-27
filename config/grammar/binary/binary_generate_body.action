@@ -14,6 +14,7 @@ package body [top.package_name].[tree.file_name] is
 @  end loop;
 
 @   for file_entry in tree.entries loop
+@      if file_entry.declaration.has_array then
 @      if file_entry.declaration.array_size then
    function [file_entry.name]_Count
      (File : File_Type)
@@ -22,13 +23,74 @@ package body [top.package_name].[tree.file_name] is
    begin
       return File.[file_entry.name]_Vector.Last_Index;
    end [file_entry.name]_Count;
-   
+
+   function Get_[file_entry.name]
+     (File   : File_Type;
+      Index  : Natural)
+     return [file_entry.name]_Cursor
+   is
+   begin
+      return [file_entry.name]_Cursor (File.[file_entry.name]_Vector.To_Cursor (Index + 1));
+   end Get_[file_entry.name];
+@      elsif file_entry.declaration.indirect_array then
+   function Get_[file_entry.name]
+     (File   : in out File_Type;
+      Offset : WL.Binary_IO.Word_32)
+     return [file_entry.name]_Cursor
+   is
+      use [file_entry.name]_Containers;
+      Result : Cursor := File.[file_entry.name]_Map.Find (Offset);
+   begin
+      if not Has_Element (Result) then
+         declare
+            Item : [file_entry.name]_Type;
+         begin               
+            WL.Binary_IO.Set_Offset (File.Bin, Offset);
+            Read_[file_entry.name] (File.Bin, File, Item);
+            File.[file_entry.name]_Map.Insert (Offset, Item);
+            Result := File.[file_entry.name]_Map.Find (Offset);
+         end;
+      end if;
+
+      return [file_entry.name]_Cursor (Result);
+   end Get_[file_entry.name];
+@      else
+   function Get_[file_entry.name]
+     (File   : in out File_Type;
+      Index  : Natural)
+     return [file_entry.name]_Cursor
+   is
+      Vector_Index : constant Positive := Index + 1;
+   begin
+      if Vector_Index > File.[file_entry.name]_Vector.Last_Index then
+         File.[file_entry.name]_Vector.Set_Length
+            (Ada.Containers.Count_Type (Vector_Index));
+      end if;
+
+      if not File.[file_entry.name]_Vector.Element (Vector_Index).Internal_Record_Present then
+         declare
+            use WL.Binary_IO;
+            Offset : constant Word_32 :=
+              [file_entry.declaration.location] + Word_32 (Index) * [file_entry.declaration.size];
+            Item : [file_entry.name]_Type;
+         begin
+            WL.Binary_IO.Set_Offset (File.Bin, Offset);
+            Read_[file_entry.name] (File.Bin, File, Item);
+            Item.Internal_Record_Present := True;
+            File.[file_entry.name]_Vector (Vector_Index) := Item;
+         end;
+      end if;
+
+      return [file_entry.name]_Cursor
+         (File.[file_entry.name]_Vector.To_Cursor (Vector_Index));
+   end Get_[file_entry.name];
+@         end if;        
 @      end if;
 
 @      for component in file_entry.declaration.layout loop
 @         if not component.private then
    function Get_[component.name] 
-@         if file_entry.declaration.array_size then
+@         if file_entry.declaration.has_array then
      (Position : [file_entry.name]_Cursor) 
 @            elsif component.inline_array_dec then
      (File  : File_Type;
@@ -38,10 +100,10 @@ package body [top.package_name].[tree.file_name] is
 @         end if;
      return [component.return_type_name]
    is
-@         if file_entry.declaration.array_size then
-      use [file_entry.name]_Vectors;
+@         if file_entry.declaration.has_array then
+      use [file_entry.name]_Containers;
       Item : [file_entry.name]_Type renames Element (Cursor (Position));
-@            elsif component.inline_array_dec then
+@         elsif component.inline_array_dec then
       Item : [component.inline_array_type_name] renames File.[file_entry.name].[component.name];
 @         else
       Item : [file_entry.name]_Type renames File.[file_entry.name];
@@ -66,29 +128,32 @@ package body [top.package_name].[tree.file_name] is
       Path : String)
    is
       use WL.Binary_IO;
-      Bin : WL.Binary_IO.File_Type;
    begin
-      Open (Bin, In_File, Path);
+      Open (File.Bin, In_File, Path);
 @  for file_entry in tree.entries loop
 @     if not file_entry.declaration.location then
-      Read_[file_entry.name] (Bin, File, File.[file_entry.name]);
-@     else
-      Set_Offset (Bin, [file_entry.declaration.location]);
+      Read_[file_entry.name] (File.Bin, File, File.[file_entry.name]);
+@     elsif file_entry.declaration.array_size then
+      Set_Offset (File.Bin, [file_entry.declaration.location]);
       declare
+@        if file_entry.declaration.static_array then
+         Count : constant Natural := [file_entry.declaration.array_size];
+@        else
          Count : constant Natural := Natural (File.[file_entry.declaration.array_size]);
+@        end if;
       begin
          for I in 1 .. Count loop
             declare
                [file_entry.name] : [file_entry.name]_Type;
             begin
-               Read_[file_entry.name] (Bin, File, [file_entry.name]);
+               Read_[file_entry.name] (File.Bin, File, [file_entry.name]);
                File.[file_entry.name]_Vector.Append ([file_entry.name]);
             end;
          end loop;
       end;
 @     end if;
 @  end loop;
-      Close (Bin);
+@--      Close (Bin);
    end Load;
    
 @  for file_entry in tree.entries loop
@@ -97,8 +162,12 @@ package body [top.package_name].[tree.file_name] is
       Target : File_Type;
       [file_entry.name] : out [file_entry.name]_Type)
    is
+      use WL.Binary_IO;
    begin
 @      for component in file_entry.declaration.layout loop
+@         if component.variant_field then
+      if [file_entry.name].[component.variant_field] = [component.variant_value] then
+@         end if;
 @         if component.offset then
       declare
          use System.Storage_Elements;
@@ -158,6 +227,9 @@ package body [top.package_name].[tree.file_name] is
 @        else
       WL.Binary_IO.Read (File, [file_entry.name].[component.name]);
 @        end if;
+@         if component.variant_field then
+      end if;
+@         end if;
 @      end loop;   
    end Read_[file_entry.name];
 
