@@ -23,9 +23,9 @@ package body Aqua.Architecture is
          when Autoincrement =>
             Result := Get_Address (R (Operand.Register));
 
-            R (Operand.Register) := R (Operand.Register) + 2;
+            R (Operand.Register) := R (Operand.Register) + 4;
          when Autodecrement =>
-            R (Operand.Register) := R (Operand.Register) - 2;
+            R (Operand.Register) := R (Operand.Register) - 4;
             Result := Get_Address (R (Operand.Register));
          when Indexed =>
             Result := Get_Address (R (Operand.Register));
@@ -47,7 +47,7 @@ package body Aqua.Architecture is
                   Result := Result + Get_Address (A);
                end if;
             end;
-            R (7) := R (7) + 2;
+            R (7) := R (7) + 4;
       end case;
 
       if Operand.Deferred then

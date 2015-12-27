@@ -1,29 +1,39 @@
 package Aqua is
 
-   type Word is mod 2 ** 16;
+   Word_Size      : constant := 32;
+   Bytes_Per_Word : constant := Word_Size / 8;
+
+   type Word is mod 2 ** Word_Size;
    type Byte is mod 2 ** 8;
 
-   type Bit_Index is range 0 .. 15;
+   type Bit_Index is range 0 .. 31;
 
-   type Address is mod 2 ** 15;
-   type External_Reference is mod 2 ** 14;
-   type Aqua_Integer is range -2 ** 11 .. 2 ** 11 - 1;
-   type String_Reference is mod 2 ** 12;
-   type Subroutine_Reference is mod 2 ** 12;
+   Payload_Bits : constant := 28;
+   type Payload is mod 2 ** Payload_Bits;
+   Payload_Mask : constant := 16#0FFF_FFFF#;
+
+   type Address is new Payload;
+   type External_Reference is new Payload;
+   type String_Reference is new Payload;
+   type Subroutine_Reference is new Payload;
+
+   type Aqua_Integer is range -2 ** 27 .. 2 ** 27 - 1;
 
    type Array_Of_Words is array (Positive range <>) of Word;
 
-   Address_Mask_Bits     : constant := 2#1000_0000_0000_0000#;
-   Address_Mask_Value    : constant := 2#1000_0000_0000_0000#;
+   Integer_Tag    : constant := 0;
+   Address_Tag    : constant := 1;
+   String_Tag     : constant := 2;
+   External_Tag   : constant := 3;
+   Subroutine_Tag : constant := 4;
 
-   External_Mask_Bits    : constant := 2#1100_0000_0000_0000#;
-   External_Mask_Value   : constant := 2#0100_0000_0000_0000#;
+   function Get_Tag (Value : Word) return Word
+   is (Value / 16#1000_0000#);
 
-   String_Mask_Bits      : constant := 2#1111_0000_0000_0000#;
-   String_Mask_Value     : constant := 2#0011_0000_0000_0000#;
-
-   Integer_Mask_Bits     : constant := 2#1111_0000_0000_0000#;
-   Integer_Mask_Value    : constant := 2#0000_0000_0000_0000#;
+   function Set_Tag (Value : Word;
+                     Tag   : Word)
+                     return Word
+   is (Value + Tag * 16#1000_0000#);
 
    function Is_Integer (Value : Word) return Boolean;
    function Get_Integer (Value : Word) return Aqua_Integer;
@@ -40,7 +50,7 @@ package Aqua is
                               return Word;
 
    function Is_String_Reference (Value : Word) return Boolean
-   is ((Value and String_Mask_Bits) = String_Mask_Value);
+   is (Get_Tag (Value) = String_Tag);
 
    function Get_String_Reference (Value : Word) return String_Reference
      with Pre => Is_String_Reference (Value);

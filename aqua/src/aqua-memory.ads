@@ -3,7 +3,7 @@ package Aqua.Memory is
    type Memory_Type is new Memory_Interface with private;
 
    overriding function Get_Byte (Memory : Memory_Type;
-                                  Addr   : Address)
+                                 Addr   : Address)
                                  return Byte;
 
    overriding procedure Set_Byte (Memory : in out Memory_Type;

@@ -51,7 +51,7 @@ package body Aqua.IO is
       return String
    is
       Hex_Digits : constant String := "0123456789ABCDEF";
-      Result     : String (1 .. 4);
+      Result     : String (1 .. 8);
       Acc        : Natural := Natural (Value);
    begin
       for I in reverse Result'Range loop
@@ -81,9 +81,9 @@ package body Aqua.IO is
      (Value : Byte)
       return String
    is
-      Result : constant String := Hex_Image (Word (Value) * 256);
+      Result : constant String := Hex_Image (Word (Value));
    begin
-      return Result (1 .. 2);
+      return Result (Result'Last - 1 .. Result'Last);
    end Hex_Image;
 
    -----------------
@@ -95,7 +95,7 @@ package body Aqua.IO is
       return String
    is
       Octal_Digits : constant String := "01234567";
-      Result     : String (1 .. 6);
+      Result     : String (1 .. 12);
       Acc        : Natural := Natural (Value);
    begin
       for I in reverse Result'Range loop
@@ -181,12 +181,15 @@ package body Aqua.IO is
      (File  : File_Type;
       Value : out Word)
    is
-      X : Byte;
+      X : array (1 .. 4) of Byte;
    begin
-      Read_Byte (File, X);
-      Value := Word (X);
-      Read_Byte (File, X);
-      Value := Value + Word (X) * 256;
+      for I in X'Range loop
+         Read_Byte (File, X (I));
+      end loop;
+      Value := 0;
+      for I in reverse X'Range loop
+         Value := Value * 256 + Word (X (I));
+      end loop;
    end Read_Word;
 
    -----------------
@@ -247,9 +250,12 @@ package body Aqua.IO is
      (File  : File_Type;
       Value : Word)
    is
+      It : Word := Value;
    begin
-      Write_Byte (File, Byte (Value mod 256));
-      Write_Byte (File, Byte (Value / 256));
+      for I in 1 .. 4 loop
+         Write_Byte (File, Byte (It mod 256));
+         It := It / 256;
+      end loop;
    end Write_Word;
 
 end Aqua.IO;
