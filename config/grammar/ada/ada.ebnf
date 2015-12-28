@@ -36,6 +36,8 @@ format binary_adding_operator soft_new_line
 format multiplying_operator soft_new_line
 format formal_argument_spec soft_new_line_before
 format subprogram_body new_line_before
+format array_type_definition soft_new_line
+format function_return_type soft_new_line_before space_after space_before
 
 format 'then' closing space_after space_before
 format 'loop' closing space_after space_before
@@ -51,7 +53,6 @@ format '=>' soft_new_line_after
 format 'with' soft_new_line_after space_after space_before
 format 'of' soft_new_line_before space_after space_before
 format ':' space_after space_before
-format 'return' soft_new_line_before space_after space_before
 format 'is' soft_new_line_before space_before space_after
 
 xref procedure_declaration defining_program_unit_name
@@ -103,8 +104,10 @@ function_specification ::=
    [ overriding_indication ]
    'function' (defining_qualified_reference | string_literal)
          [ formal_argument_spec ]
-         'return' type_indication
+       function_return_type
        [ 'with' list_of_aspects ]
+
+function_return_type ::= 'return' type_indication
 
 list_of_aspects ::= < aspect / ',' >
 
@@ -329,8 +332,6 @@ general_access_modifier ::= 'all' | 'constant'
 
 function_type_definition ::= [null_exclusion] 'access' 'function' [ formal_argument_spec ]
                                 function_return_type
-
-function_return_type ::= 'return' type_indication
 
 procedure_type_definition ::= [null_exclusion] 'access' 'procedure' [ formal_argument_spec ]
 
