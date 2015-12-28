@@ -620,6 +620,8 @@ package body Aquarius.Programs.Arrangements is
                               - Start.Start_Position.Column;
 
       Had_Soft_New_Line_After : Boolean := False;
+      Last_Soft_New_Line      : Program_Tree := null;
+      Last_Soft_Column        : Count := 0;
 
       Closing : constant Boolean := Enabled (Finish.Rules.Closing);
 
@@ -658,14 +660,18 @@ package body Aquarius.Programs.Arrangements is
                then
                   Program.Separator_NL := True;
                   Partial_Length := New_Line_Indent;
+                  Last_Soft_New_Line := null;
                end if;
             elsif (Program.Has_Soft_New_Line_Rule_Before
                    or else Had_Soft_New_Line_After)
               and then Count (Program.Text'Length) + Remaining_Length
                 > Context.Right_Margin
             then
-               Program.Set_Soft_New_Line;
-               Partial_Length := New_Line_Indent;
+               Last_Soft_New_Line := Program;
+               Last_Soft_Column := Partial_Length;
+
+--                 Program.Set_Soft_New_Line;
+--                 Partial_Length := New_Line_Indent;
             end if;
 
             Had_Soft_New_Line_After := False;
@@ -673,6 +679,15 @@ package body Aquarius.Programs.Arrangements is
             if Program.Is_Terminal then
                Partial_Length := Partial_Length
                  + Program.End_Position.Column - Last_Column_Index;
+               if Partial_Length > Context.Right_Margin
+                 and then Last_Soft_New_Line /= null
+               then
+                  Last_Soft_New_Line.Set_Soft_New_Line;
+                  Partial_Length :=
+                    New_Line_Indent + (Partial_Length - Last_Soft_Column);
+                  Last_Soft_New_Line := null;
+               end if;
+
                Last_Column_Index := Program.End_Position.Column;
                Remaining_Length :=
                  Finish.End_Position.Column
