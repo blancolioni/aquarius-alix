@@ -602,7 +602,7 @@ package body Aquarius.Programs.Arrangements is
                      or else Enabled (Program.Rules.Soft_New_Line_After));
       end Separator_With_New_Line;
 
-      Separator : Program_Tree :=
+      Separator : constant Program_Tree :=
         Program_Tree
           (Item.Breadth_First_Search
              (Separator_With_New_Line'Access));
@@ -610,24 +610,28 @@ package body Aquarius.Programs.Arrangements is
       Got_Start         : Boolean := False;
       Got_Finish        : Boolean := False;
       Applied_Separator : Boolean := False;
+      Cancel_Separator  : Boolean := False;
+      Separator_Level   : Natural := 0;
 
       Partial_Length   : Positive_Count := Context.Current_Indent;
       New_Line_Indent  : constant Positive_Count :=
                            Context.Current_Indent + 2;
       Last_Column_Index : Positive_Count := Context.Current_Indent;
 
-      Remaining_Length  : Count :=
-                            Finish.End_Position.Column
-                              - Start.Start_Position.Column;
+--        Remaining_Length  : Count :=
+--                              Finish.End_Position.Column
+--                                - Start.Start_Position.Column;
 
       Had_Soft_New_Line_After : Boolean := False;
       Last_Soft_New_Line      : Program_Tree := null;
       Last_Soft_Column        : Count := 0;
+      Last_Soft_Level         : Natural := 0;
 
       Closing : constant Boolean := Enabled (Finish.Rules.Closing);
 
       procedure Apply_Newlines
-        (Program : Program_Tree);
+        (Program : Program_Tree;
+         Level   : Natural);
 
       pragma Style_Checks (Off);
 
@@ -636,7 +640,8 @@ package body Aquarius.Programs.Arrangements is
       --------------------
 
       procedure Apply_Newlines
-        (Program : Program_Tree)
+        (Program : Program_Tree;
+         Level   : Natural)
       is
       begin
          if Got_Finish then
@@ -655,10 +660,18 @@ package body Aquarius.Programs.Arrangements is
 
          if Got_Start then
 
+            if not Cancel_Separator
+              and then Separator /= null
+              and then Program.Syntax = Separator.Syntax
+            then
+               Separator_Level := Level;
+            end if;
+
             if Program.Is_Separator then
-               if Separator /= null
+               if not Cancel_Separator and then Separator /= null
                  and then Program.Syntax = Separator.Syntax
                then
+                  Log (Context, Program, "setting separator new line");
                   Program.Separator_NL := True;
                   Partial_Length := New_Line_Indent;
                   Last_Soft_New_Line := null;
@@ -666,11 +679,24 @@ package body Aquarius.Programs.Arrangements is
                end if;
             elsif (Program.Has_Soft_New_Line_Rule_Before
                    or else Had_Soft_New_Line_After)
-              and then Count (Program.Text'Length) + Remaining_Length
-                > Context.Right_Margin
             then
-               Last_Soft_New_Line := Program;
-               Last_Soft_Column := Partial_Length;
+               declare
+                  New_Length : constant Count :=
+                                 Program.End_Position.Column
+                                   - Last_Column_Index
+                                 + Partial_Length;
+               begin
+                  if New_Length > Context.Right_Margin then
+                     Log (Context, Program, "setting last soft new line");
+                     Last_Soft_New_Line := Program;
+                     Last_Soft_Column := Partial_Length;
+                     Last_Soft_Level := Level;
+                  else
+                     Log (Context, Program,
+                          "ignoring soft new line because line length is"
+                          & Count'Image (New_Length));
+                  end if;
+               end;
 
 --                 Program.Set_Soft_New_Line;
 --                 Partial_Length := New_Line_Indent;
@@ -681,24 +707,38 @@ package body Aquarius.Programs.Arrangements is
             if Program.Is_Terminal then
                Partial_Length := Partial_Length
                  + Program.End_Position.Column - Last_Column_Index;
-               if Partial_Length > Context.Right_Margin
-                 and then Last_Soft_New_Line /= null
-               then
-                  Last_Soft_New_Line.Set_Soft_New_Line;
-                  Partial_Length :=
-                    New_Line_Indent + (Partial_Length - Last_Soft_Column);
-                  Last_Soft_New_Line := null;
-                  if Partial_Length <= Context.Right_Margin
-                    and then not Applied_Separator
+               if Partial_Length > Context.Right_Margin then
+                  Log (Context, Program,
+                       "overflow: separator = "
+                       & (if Separator_Level > 0
+                         then Separator.Text & ":" & Separator_Level'Img
+                         else " <>")
+                       & "; soft new line level ="
+                       & Last_Soft_Level'Img);
+                  if Last_Soft_New_Line /= null
+                    and then (True or else Separator = null
+                              or else Separator_Level = 0
+                              or else Separator_Level >= Last_Soft_Level)
                   then
-                     Separator := null;
+                     Log (Context, Program, "using last soft new line");
+                     Last_Soft_New_Line.Set_Soft_New_Line;
+                     Partial_Length :=
+                       New_Line_Indent + (Partial_Length - Last_Soft_Column);
+                     Last_Soft_New_Line := null;
+                     if Partial_Length <= Context.Right_Margin
+                       and then not Applied_Separator
+                     then
+                        Cancel_Separator := True;
+                     end if;
+                  elsif Separator /= null then
+                     Log (Context, Program, "using last separator");
                   end if;
                end if;
 
                Last_Column_Index := Program.End_Position.Column;
-               Remaining_Length :=
-                 Finish.End_Position.Column
-                   - Program.End_Position.Column;
+--                 Remaining_Length :=
+--                   Finish.End_Position.Column
+--                     - Program.End_Position.Column;
             end if;
 
             if Program.Has_Soft_New_Line_Rule_After then
@@ -713,7 +753,7 @@ package body Aquarius.Programs.Arrangements is
                            (Skip_Separators => False);
          begin
             for I in Children'Range loop
-               Apply_Newlines (Children (I));
+               Apply_Newlines (Children (I), Level + 1);
             end loop;
          end;
       end Apply_Newlines;
@@ -722,7 +762,7 @@ package body Aquarius.Programs.Arrangements is
 
    begin
 
-      Apply_Newlines (Item);
+      Apply_Newlines (Item, 0);
 
       Context.Current_Indent := Context.Previous_Indent;
       Context.Current_Line := Item.Start_Position.Line;
