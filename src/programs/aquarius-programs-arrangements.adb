@@ -602,13 +602,14 @@ package body Aquarius.Programs.Arrangements is
                      or else Enabled (Program.Rules.Soft_New_Line_After));
       end Separator_With_New_Line;
 
-      Separator : constant Program_Tree :=
+      Separator : Program_Tree :=
         Program_Tree
           (Item.Breadth_First_Search
              (Separator_With_New_Line'Access));
 
-      Got_Start  : Boolean    := False;
-      Got_Finish : Boolean    := False;
+      Got_Start         : Boolean := False;
+      Got_Finish        : Boolean := False;
+      Applied_Separator : Boolean := False;
 
       Partial_Length   : Positive_Count := Context.Current_Indent;
       New_Line_Indent  : constant Positive_Count :=
@@ -661,6 +662,7 @@ package body Aquarius.Programs.Arrangements is
                   Program.Separator_NL := True;
                   Partial_Length := New_Line_Indent;
                   Last_Soft_New_Line := null;
+                  Applied_Separator := True;
                end if;
             elsif (Program.Has_Soft_New_Line_Rule_Before
                    or else Had_Soft_New_Line_After)
@@ -686,6 +688,11 @@ package body Aquarius.Programs.Arrangements is
                   Partial_Length :=
                     New_Line_Indent + (Partial_Length - Last_Soft_Column);
                   Last_Soft_New_Line := null;
+                  if Partial_Length <= Context.Right_Margin
+                    and then not Applied_Separator
+                  then
+                     Separator := null;
+                  end if;
                end if;
 
                Last_Column_Index := Program.End_Position.Column;
