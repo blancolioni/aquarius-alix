@@ -52,13 +52,13 @@ package body Aqua.IO is
    is
       Hex_Digits : constant String := "0123456789ABCDEF";
       Result     : String (1 .. 8);
-      Acc        : Natural := Natural (Value);
+      Acc        : Word := Value;
    begin
       for I in reverse Result'Range loop
-         Result (I) := Hex_Digits (Acc mod 16 + 1);
+         Result (I) := Hex_Digits (Natural (Acc mod 16) + 1);
          Acc := Acc / 16;
       end loop;
-      return Result;
+      return Result (1 .. 4) & "_" & Result (5 .. 8);
    end Hex_Image;
 
    ---------------

@@ -102,7 +102,7 @@ package body Aquarius.Actions.Pdp_32 is
       Put_Line (Processor.File,
                 "    mov (sp)+, fp");
       Put_Line (Processor.File,
-                "    rts pc");
+                "    rts");
    end End_Action_Body;
 
    -------------------
@@ -199,10 +199,7 @@ package body Aquarius.Actions.Pdp_32 is
          Put_Line (Processor.File,
                    "    tst (sp)+");
          Put_Line (Processor.File,
-                   "    bne +1");
-         Put_Line (Processor.File,
-                   "    jmp " & Image (L1));
-         Put_Line (Processor.File, "1:");
+                   "    beq " & Image (L1));
          Scanner.Scan_Action (Processor, Statements (I));
          Put_Line (Processor.File,
                    "    jmp " & Image (Exit_Label));
@@ -245,9 +242,7 @@ package body Aquarius.Actions.Pdp_32 is
                Put_Line (Processor.File,
                          "    tst (sp)+");
                Put_Line (Processor.File,
-                         "    bne +1");
-               Put_Line (Processor.File,
-                         "    jmp " & Image (L1));
+                         "    beq " & Image (L1));
                Put_Line (Processor.File, "1:");
             else
                Put_Line (Processor.File,
@@ -296,9 +291,7 @@ package body Aquarius.Actions.Pdp_32 is
       Put_Line (Processor.File, "    trap iterator_start");
       Put_Line (Processor.File, Image (Loop_Label) & ":");
       Put_Line (Processor.File, "    trap iterator_next");
-      Put_Line (Processor.File, "    bne +1");
-      Put_Line (Processor.File, "    jmp " & Image (Exit_Label));
-      Put_Line (Processor.File, "1:");
+      Put_Line (Processor.File, "    beq " & Image (Exit_Label));
       Scanner.Scan_Action (Processor, Statements);
       Put_Line (Processor.File, "    jmp " & Image (Loop_Label));
       Put_Line (Processor.File, Image (Exit_Label) & ":");

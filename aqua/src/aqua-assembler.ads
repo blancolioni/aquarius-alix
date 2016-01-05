@@ -64,6 +64,11 @@ package Aqua.Assembler is
       X : String)
       return Word;
 
+   function Reference_Property_Name
+     (A    : in out Root_Assembly_Type'Class;
+      Name : String)
+      return Word;
+
    procedure Define_Label
      (A    : in out Root_Assembly_Type'Class;
       Name : String);

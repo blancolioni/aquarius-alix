@@ -10,13 +10,11 @@ package Aqua.Assembler.Instructions is
 
    function Create_Instruction_Word
      (Mnemonic : String;
-      Src      : Aqua.Architecture.Operand_Type;
-      Register : Aqua.Architecture.Register_Index)
+      Dst      : Aqua.Architecture.Operand_Type)
       return Word;
 
    function Create_Instruction_Word
-     (Mnemonic : String;
-      Dst      : Aqua.Architecture.Operand_Type)
+     (Mnemonic : String)
       return Word;
 
    function Create_Branch_Instruction_Word
@@ -24,17 +22,9 @@ package Aqua.Assembler.Instructions is
       Dst      : Word)
       return Word;
 
-   function Create_Jump_Instruction
-      (Dst      : Aqua.Architecture.Operand_Type)
-      return Word;
-
-   function Create_Jsr_Instruction
-     (Register : Aqua.Architecture.Register_Index;
-      Dst      : Aqua.Architecture.Operand_Type)
-      return Word;
-
-   function Create_Return_Instruction_Word
-     (R : Aqua.Architecture.Register_Index)
+   function Create_Property_Instruction_Word
+     (Mnemonic      : String;
+      Property_Name : Word)
       return Word;
 
    function Create_Trap_Instruction_Word

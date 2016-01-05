@@ -216,110 +216,52 @@ package body Aquarius.Plugins.Macro_32.Assemble is
       Place_Operand (Dst);
    end After_Double_Operand;
 
-   procedure After_Extended_Double_Operand
+   ----------------------
+   -- After_No_Operand --
+   ----------------------
+
+   procedure After_No_Operand
      (Target : not null access Aquarius.Actions.Actionable'Class)
    is
       use Aquarius.Programs;
       Op : constant Program_Tree := Program_Tree (Target);
-      Mnemonic : constant String :=
-                   Op.Program_Child
-                     ("extended_double_operand_instruction")
-                     .Concatenate_Children;
-      Src      : constant Program_Tree :=
-                   Op.Program_Child ("arg");
-      Reg      : constant String :=
-                   Op.Program_Child ("identifier").Text;
+      Mnemonic : constant String := Op.Concatenate_Children;
       Assembly       : constant Aqua.Assembler.Assembly :=
                          Assembly_Object
                            (Op.Property
                               (Global_Plugin.Assembly)).Assembly;
    begin
-      if not Assembly.Is_Register (Reg) then
-         raise Constraint_Error
-           with Mnemonic & ": require a register but found " & Reg;
-      end if;
       Assembly.Append
         (Aqua.Assembler.Instructions.Create_Instruction_Word
-           (Mnemonic => Mnemonic,
-            Src      => Get_Operand (Src),
-            Register => Assembly.Get_Register (Reg)));
-      Place_Operand (Src);
-   end After_Extended_Double_Operand;
+           (Mnemonic => Mnemonic));
+   end After_No_Operand;
 
-   ----------------
-   -- After_Jump --
-   ----------------
+   --------------------
+   -- After_Property --
+   --------------------
 
-   procedure After_Jump
+   procedure After_Property
      (Target : not null access Aquarius.Actions.Actionable'Class)
    is
       use Aquarius.Programs;
       Op : constant Program_Tree := Program_Tree (Target);
-      Dst      : constant Program_Tree :=
-                   Op.Program_Child ("arg");
+      Mnemonic       : constant String :=
+                         Op.Program_Child
+                           ("property_instruction").Concatenate_Children;
+      Operand_Tree   : constant Program_Tree :=
+                         Op.Program_Child ("operand").Chosen_Tree;
       Assembly       : constant Aqua.Assembler.Assembly :=
                          Assembly_Object
                            (Op.Property
                               (Global_Plugin.Assembly)).Assembly;
+      Property_Name  : constant Aqua.Word :=
+                         Assembly.Reference_Property_Name
+                           (Operand_Tree.Concatenate_Children);
    begin
       Assembly.Append
-        (Aqua.Assembler.Instructions.Create_Jump_Instruction
-           (Dst      => Get_Operand (Dst)));
-      Place_Operand (Dst);
-   end After_Jump;
-
-   ---------------------------
-   -- After_Jump_Subroutine --
-   ---------------------------
-
-   procedure After_Jump_Subroutine
-     (Target : not null access Aquarius.Actions.Actionable'Class)
-   is
-      use Aquarius.Programs;
-      Jsr : constant Program_Tree := Program_Tree (Target);
-      Reg : constant String := Jsr.Program_Child ("identifier").Text;
-      Dst : constant Program_Tree :=
-              Jsr.Program_Child ("arg");
-      Assembly       : constant Aqua.Assembler.Assembly :=
-                         Assembly_Object
-                           (Jsr.Property
-                              (Global_Plugin.Assembly)).Assembly;
-   begin
-      if not Assembly.Is_Register (Reg) then
-         raise Constraint_Error
-           with "jsr: require a register but found " & Reg;
-      end if;
-      Assembly.Append
-        (Aqua.Assembler.Instructions.Create_Jsr_Instruction
-           (Register => Assembly.Get_Register (Reg),
-            Dst      => Get_Operand (Dst)));
-      Place_Operand (Dst);
-   end After_Jump_Subroutine;
-
-   ------------------
-   -- After_Return --
-   ------------------
-
-   procedure After_Return
-     (Target : not null access Aquarius.Actions.Actionable'Class)
-   is
-      use Aquarius.Programs;
-      Rts            : constant Program_Tree := Program_Tree (Target);
-      Reg            : constant String :=
-                         Rts.Program_Child ("identifier").Text;
-      Assembly       : constant Aqua.Assembler.Assembly :=
-                         Assembly_Object
-                           (Rts.Property
-                              (Global_Plugin.Assembly)).Assembly;
-   begin
-      if not Assembly.Is_Register (Reg) then
-         raise Constraint_Error
-           with "rts: require a register but found " & Reg;
-      end if;
-      Assembly.Append
-        (Aqua.Assembler.Instructions.Create_Return_Instruction_Word
-           (Assembly.Get_Register (Reg)));
-   end After_Return;
+        (Aqua.Assembler.Instructions.Create_Property_Instruction_Word
+           (Mnemonic, Property_Name));
+   end After_Property;
 
    --------------------------
    -- After_Single_Operand --
@@ -567,7 +509,7 @@ package body Aquarius.Plugins.Macro_32.Assemble is
             return (Register, False,
                     Assembly.Get_Register (Operand_Tree.Text));
          else
-            return (Indexed, False, 7);
+            return (Indexed, False, Aqua.Architecture.R_PC);
          end if;
       elsif Operand_Name = "deferred" then
          if Assembly.Is_Register
@@ -577,7 +519,7 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                     Assembly.Get_Register
                       (Operand_Tree.Program_Child ("identifier").Text));
          else
-            return (Indexed, True, 7);
+            return (Indexed, True, Aqua.Architecture.R_PC);
          end if;
       elsif Operand_Name = "autoincrement" then
          return (Autoincrement, False,
@@ -604,11 +546,11 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                  Assembly.Get_Register
                    (Operand_Tree.Program_Child ("identifier").Text));
       elsif Operand_Name = "immediate" then
-         return (Autoincrement, False, 7);
+         return (Autoincrement, False, Aqua.Architecture.R_PC);
       elsif Operand_Name = "absolute" then
-         return (Autoincrement, True, 7);
+         return (Autoincrement, True, Aqua.Architecture.R_PC);
       elsif Operand_Name = "string" then
-         return (Autoincrement, False, 7);
+         return (Autoincrement, False, Aqua.Architecture.R_PC);
       else
          raise Constraint_Error
            with "unknown mode: " & Operand_Name;
