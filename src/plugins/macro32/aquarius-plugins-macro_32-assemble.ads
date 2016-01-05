@@ -21,25 +21,19 @@ package Aquarius.Plugins.Macro_32.Assemble is
    procedure After_Double_Operand
      (Target : not null access Aquarius.Actions.Actionable'Class);
 
-   procedure After_Extended_Double_Operand
+   procedure After_Single_Operand
      (Target : not null access Aquarius.Actions.Actionable'Class);
 
-   procedure After_Single_Operand
+   procedure After_No_Operand
      (Target : not null access Aquarius.Actions.Actionable'Class);
 
    procedure After_Branch
      (Target : not null access Aquarius.Actions.Actionable'Class);
 
-   procedure After_Jump
-     (Target : not null access Aquarius.Actions.Actionable'Class);
-
-   procedure After_Jump_Subroutine
-     (Target : not null access Aquarius.Actions.Actionable'Class);
-
-   procedure After_Return
-     (Target : not null access Aquarius.Actions.Actionable'Class);
-
    procedure After_Trap
+     (Target : not null access Aquarius.Actions.Actionable'Class);
+
+   procedure After_Property
      (Target : not null access Aquarius.Actions.Actionable'Class);
 
 end Aquarius.Plugins.Macro_32.Assemble;

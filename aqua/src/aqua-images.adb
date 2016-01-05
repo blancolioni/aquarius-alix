@@ -134,6 +134,18 @@ package body Aqua.Images is
                   Image.Set_Word
                     (Ref.Addr,
                      To_String_Word (String_Reference (Info.Value)));
+               elsif Ref.Branch then
+                  declare
+                     Branch : constant Word :=
+                                Image.Get_Word (Ref.Addr);
+                     Target : constant Address :=
+                                Aqua.Arithmetic.Relative_Address
+                                  (Ref.Addr, Get_Address (Info.Value));
+                  begin
+                     Image.Set_Word
+                       (Ref.Addr,
+                        Branch + Word (Target and 16#00FF_FFFF#));
+                  end;
                elsif Ref.Relative then
                   declare
                      W : constant Word :=
@@ -368,11 +380,17 @@ package body Aqua.Images is
                      Read_Address (File, Addr);
                      Read_Byte (File, Relative);
                      Info.References.Append
-                       ((Addr + Image.High, Boolean'Val (Relative)));
+                       ((Addr     => Addr + Image.High,
+                         Relative => Boolean'Val (Relative mod 2),
+                         Branch   => Boolean'Val (Relative / 2 mod 2)));
                      if Trace_Load then
                         if I <= External_Count then
                            Ada.Text_IO.Put
                              (" " & Aqua.IO.Hex_Image (Addr + Image.High));
+                           Ada.Text_IO.Put
+                             ((if Relative mod 2 = 1 then "r" else ""));
+                           Ada.Text_IO.Put
+                             ((if Relative mod 2 = 1 then "b" else ""));
                         end if;
                      end if;
                   end;

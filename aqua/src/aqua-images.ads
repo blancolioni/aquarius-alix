@@ -91,8 +91,9 @@ private
 
    type Reference_Info is
       record
-         Addr : Address;
+         Addr     : Address;
          Relative : Boolean;
+         Branch   : Boolean;
       end record;
 
    package List_Of_References is

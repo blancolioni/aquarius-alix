@@ -189,13 +189,12 @@ package body Aqua.Assembler is
                      Offset : constant Address :=
                                 (if Dest >= Addr + 4
                                  then Dest - (Addr + 4)
-                                 else 512 - (Addr + 4 - Dest));
+                                 else 16#0100_0000# - (Addr + 4 - Dest));
                   begin
-                     pragma Assert (Offset < 256);
                      pragma Assert (Offset mod 4 = 0);
                      A.Set_Word (Addr,
-                                 (Code and 16#FF00#)
-                                 + Word (Offset) / 4);
+                                 (Code and 16#FF00_0000#)
+                                 + Word (Offset));
                   end;
                elsif Relative then
                   pragma Assert (Is_Address (Info.Value));
@@ -316,16 +315,6 @@ package body Aqua.Assembler is
       declare
          Info : Label_Info := A.Labels (Name);
       begin
-         if Info.Defined then
-            if Address'Max (A.PC, Get_Address (Info.Value))
-              - Address'Min (A.PC, Get_Address (Info.Value))
-              > 254
-            then
-               raise Constraint_Error with
-                 Aqua.IO.Hex_Image (A.PC) & ": branch too far";
-            end if;
-         end if;
-
          Info.References.Append ((A.PC, Relative => False, Branch => True));
          A.Labels (Name) := Info;
          return Info.Value;
@@ -370,6 +359,21 @@ package body Aqua.Assembler is
          end if;
       end;
    end Reference_Label;
+
+   -----------------------------
+   -- Reference_Property_Name --
+   -----------------------------
+
+   function Reference_Property_Name
+     (A    : in out Root_Assembly_Type'Class;
+      Name : String)
+      return Word
+   is
+   begin
+      A.Ensure_Label (Name,  True);
+      A.Labels (Name).References.Append ((A.PC, False, False));
+      return A.Next_String - 1;
+   end Reference_Property_Name;
 
    ----------------------
    -- Reference_String --
@@ -484,8 +488,9 @@ package body Aqua.Assembler is
    begin
       for R in Register_Index loop
          declare
+            X  : constant String := Register_Index'Image (R);
             Rx : constant String :=
-                   ('R', Character'Val (Character'Pos ('0') + Natural (R)));
+                   "R" & X (2 .. X'Last);
             Info : constant Label_Info :=
                      (References      => Label_Reference_Lists.Empty_List,
                       Defined         => False,
@@ -495,11 +500,22 @@ package body Aqua.Assembler is
                       Value           => Word (R));
          begin
             A.Labels.Insert (Rx, Info);
-            if R = 5 then
+            if R = 248 then
+               A.Labels.Insert ("TOP", Info);
+            elsif R = 249 then
+               A.Labels.Insert ("PARENT", Info);
+               A.Labels.Insert ("TREE", Info);
+            elsif R = 250 then
+               A.Labels.Insert ("CHILD", Info);
+            elsif R = 251 then
+               A.Labels.Insert ("PV", Info);
+            elsif R = 252 then
+               A.Labels.Insert ("OP", Info);
+            elsif R = 253 then
                A.Labels.Insert ("FP", Info);
-            elsif R = 6 then
+            elsif R = 254 then
                A.Labels.Insert ("SP", Info);
-            elsif R = 7 then
+            elsif R = 255 then
                A.Labels.Insert ("PC", Info);
             end if;
          end;
@@ -622,7 +638,10 @@ package body Aqua.Assembler is
                end if;
                for Ref of Info.References loop
                   Write_Address (File, Ref.Addr);
-                  Write_Byte (File, Boolean'Pos (Ref.Relative));
+                  Write_Byte
+                    (File,
+                     Boolean'Pos (Ref.Relative)
+                         + 2 * Boolean'Pos (Ref.Branch));
                end loop;
             end if;
          end;
