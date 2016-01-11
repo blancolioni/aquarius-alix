@@ -1,46 +1,19 @@
---  with Ada.Characters.Handling;
 with Ada.Exceptions;
-with Ada.Strings.Fixed;
 
 with Aquarius.Formats;
 with Aquarius.Layout;
 with Aquarius.Messages;
 with Aquarius.Messages.Files;
 
+with Aquarius.Programs.Arrangements.Contexts;
+with Aquarius.Programs.Arrangements.Logging;
+with Aquarius.Programs.Arrangements.Reformatting;
+
 package body Aquarius.Programs.Arrangements is
 
    use Aquarius.Layout;
    use Aquarius.Formats;
-
-   type Arrangement_Context is
-      record
-         Need_New_Line      : Boolean             := False;
-         Need_Soft_New_Line : Boolean             := False;
-         Vertical_Gap       : Count               := 0;
-         New_Line_Priority  : Rule_Priority       := 1;
-         Got_New_Line       : Boolean             := False;
-         First_On_Line      : Boolean             := True;
-         First_Terminal     : Program_Tree;
-         Previous_Terminal  : Program_Tree;
-         Previous_Indent    : Count               := 1;
-         Need_Space         : Boolean             := False;
-         No_Space           : Boolean             := False;
-         Cancel_Indent      : Boolean             := False;
-         Message_Level      : Aquarius.Messages.Message_Level :=
-                                Aquarius.Messages.No_Message;
-         Space_Priority     : Rule_Priority       := 1;
-         Current_Line       : Count               := 1;
-         Current_Column     : Count               := 1;
-         Current_Position   : Count               := 0;
-         Current_Indent     : Positive_Count      := 1;
-         Right_Margin       : Positive_Count      := 72;
-         Rearranging        : Boolean             := False;
-         User_Text_Length   : Count               := 0;
-         User_Cursor        : Aquarius.Trees.Cursors.Cursor;
-         Logging            : Aquarius.Messages.Message_List;
-         Stop_Tree          : Program_Tree        := null;
-         Stopped            : Boolean             := False;
-      end record;
+   use Aquarius.Programs.Arrangements.Contexts;
 
    procedure Arrange
      (Item    : in     Program_Tree;
@@ -67,15 +40,6 @@ package body Aquarius.Programs.Arrangements is
                           Point    : Aquarius.Trees.Cursors.Cursor)
                          return Boolean;
 
-   procedure Log
-     (Context  : in out Arrangement_Context;
-      Program  : Program_Tree;
-      Text     : String);
-
-   procedure Log
-     (Context  : in out Arrangement_Context;
-      Program  : Program_Tree);
-
    -------------
    -- Arrange --
    -------------
@@ -93,7 +57,7 @@ package body Aquarius.Programs.Arrangements is
       end if;
 
       if Item.Name /= "" then
-         Log (Context, Item);
+         Logging.Log (Context, Item);
       end if;
 
       if Item.Has_Messages and then
@@ -134,7 +98,7 @@ package body Aquarius.Programs.Arrangements is
         ("arrangement.log", Context.Logging);
    exception
       when E : others =>
-         Log (Context, Item,
+         Logging.Log (Context, Item,
               "exception: "
               & Ada.Exceptions.Exception_Message (E));
          Aquarius.Messages.Files.Save_Messages
@@ -233,7 +197,7 @@ package body Aquarius.Programs.Arrangements is
       then
          --  we already added all the vertical gaps when we first
          --  arranged this sub tree
-         Log (Context, Item, "vertical gap before ="
+         Logging.Log (Context, Item, "vertical gap before ="
               & Aquarius.Layout.Count'Image (Context.Vertical_Gap));
          Context.Current_Line :=
            Context.Current_Line + Context.Vertical_Gap;
@@ -254,7 +218,7 @@ package body Aquarius.Programs.Arrangements is
       if Context.Need_Soft_New_Line then
          Context.Need_New_Line := True;
          Context.Current_Indent := Context.Current_Indent + 2;
-         Log (Context, Item,
+         Logging.Log (Context, Item,
               "enter soft new line; new indent ="
               & Context.Current_Indent'Img);
       end if;
@@ -271,7 +235,7 @@ package body Aquarius.Programs.Arrangements is
             Context.Got_New_Line  := True;
             Context.Need_Space    := False;
             Context.First_On_Line := True;
-            Log (Context, Item, "got new line because need new line");
+            Logging.Log (Context, Item, "got new line because need new line");
          end if;
       end if;
 
@@ -321,11 +285,11 @@ package body Aquarius.Programs.Arrangements is
       Item.End_Position := (Context.Current_Line,
                             Context.Current_Column + Item.Layout_Length);
 
-      Log (Context, Item, "start: " & Show (Item.Start_Position));
+      Logging.Log (Context, Item, "start: " & Show (Item.Start_Position));
 
       if Context.Need_Soft_New_Line then
          Context.Current_Indent := Context.Current_Indent - 2;
-         Log (Context, Item,
+         Logging.Log (Context, Item,
               "leave soft new line; new indent ="
               & Context.Current_Indent'Img);
          Context.Need_Soft_New_Line := False;
@@ -389,12 +353,12 @@ package body Aquarius.Programs.Arrangements is
          end;
          Context.Got_New_Line  := True;
          if Item.Separator_New_Line then
-            Log (Context, Item, "got new line because of separator");
+            Logging.Log (Context, Item, "got new line because of separator");
          end if;
          if Enabled (Rules.New_Line_After)
            and then Item.Is_Separator
          then
-            Log (Context, Item, "got new line because of rule");
+            Logging.Log (Context, Item, "got new line because of rule");
          end if;
          Context.Need_New_Line := False;
          Context.First_On_Line := True;
@@ -453,8 +417,8 @@ package body Aquarius.Programs.Arrangements is
      (Context : in out Arrangement_Context)
    is
    begin
-      Log (Context, Context.First_Terminal, "checking previous line");
-      Log (Context, Context.Previous_Terminal,
+      Logging.Log (Context, Context.First_Terminal, "checking previous line");
+      Logging.Log (Context, Context.Previous_Terminal,
            "ends in column"
            & Positive_Count'Image
              (Context.Previous_Terminal.End_Position.Column));
@@ -474,98 +438,23 @@ package body Aquarius.Programs.Arrangements is
                Left_Ancestor  => Left_Ancestor,
                Right_Ancestor => Right_Ancestor);
             Ancestor := Program_Tree (Ancestor_Tree);
-            Log (Context, Ancestor, "re-arranging");
+            Logging.Log (Context, Ancestor, "re-arranging");
+
+            Aquarius.Programs.Arrangements.Reformatting.Reformat
+              (Context => Context,
+               Top     => Ancestor,
+               Start   => Context.First_Terminal,
+               Finish  => Context.Previous_Terminal);
+
             Re_Arrange (Ancestor, Context,
                         Context.First_Terminal,
                         Context.Previous_Terminal);
-            Log (Context, Ancestor, "after re-arrangement");
-            Log (Context, Ancestor);
+
+            Logging.Log (Context, Ancestor, "after re-arrangement");
+            Logging.Log (Context, Ancestor);
          end;
       end if;
    end Check_Previous_Line_Length;
-
-   ---------
-   -- Log --
-   ---------
-
-   procedure Log
-     (Context  : in out Arrangement_Context;
-      Program  : Aquarius.Programs.Program_Tree;
-      Text     : String)
-   is
-      Current : constant String :=
-                  (if Program.Name = ""
-                   then "(" & Program.Parent.Name & ")"
-                   else Program.Name
-                   & (if Program.Name /= Program.Text
-                     then "[" & Program.Text & "]"
-                     else ""))
-                   & ": ";
-
-      Message : constant Aquarius.Messages.Message :=
-                  Aquarius.Messages.New_Message
-                    (Level    => Aquarius.Messages.Informational,
-                     Location => Program,
-                     Text     => Current & Text);
-   begin
-      Aquarius.Messages.Add_Message (Context.Logging, Message);
-   end Log;
-
-   ---------
-   -- Log --
-   ---------
-
-   procedure Log
-     (Context  : in out Arrangement_Context;
-      Program  : Program_Tree)
-   is
---        use Ada.Characters.Handling;
-      use Ada.Strings, Ada.Strings.Fixed;
---        function To_String (B : Boolean) return String
---        is (To_Lower (Boolean'Image (B)));
-      function To_String (I : Integer) return String
-      is (Trim (Integer'Image (I), Left));
-
---           Need_New_Line     : Boolean             := False;
---           New_Line_Priority : Rule_Priority       := 1;
---           Got_New_Line      : Boolean             := False;
---           First_On_Line     : Boolean             := True;
---           First_Terminal    : Program_Tree;
---           Previous_Terminal : Program_Tree;
---           Need_Space        : Boolean             := False;
---           No_Space          : Boolean             := False;
---           Cancel_Indent     : Boolean             := False;
---           Message_Level     : Aquarius.Messages.Message_Level :=
---             Aquarius.Messages.No_Message;
---           Space_Priority    : Rule_Priority       := 1;
---           Current_Line      : Count               := 1;
---           Current_Column    : Count               := 1;
---           Current_Position  : Count               := 0;
---           Current_Indent    : Count               := 1;
---           Right_Margin      : Positive_Count      := 72;
---           Overflow          : Boolean             := False;
---           Overflow_Line     : Count               := 0;
---           Rearranging       : Boolean             := False;
---           User_Text_Length  : Count               := 0;
---           User_Cursor       : Aquarius.Trees.Cursors.Cursor;
---           Logging           : Aquarius.Messages.Message_List;
-   begin
-      Log (Context, Program,
-           (if Context.Need_New_Line then "[need-nl]" else "")
-           & (if Context.Got_New_Line then "[got-nl]" else "")
-           & (if Context.First_On_Line then "[first]" else "")
-           & (if Context.Rearranging then "[rearranging]" else "")
-          & ","
-           & "line="
-           & To_String (Integer (Context.Current_Line))
-           & ","
-           & "col="
-           & To_String (Integer (Context.Current_Column))
-           & ","
-           & "indent="
-           & To_String (Integer (Context.Current_Indent))
-          );
-   end Log;
 
    ----------------
    -- Re_Arrange --
@@ -664,6 +553,7 @@ package body Aquarius.Programs.Arrangements is
               and then Separator /= null
               and then Program.Syntax = Separator.Syntax
             then
+               Logging.Log (Context, Program, "separator level:" & Level'Img);
                Separator_Level := Level;
             end if;
 
@@ -671,7 +561,7 @@ package body Aquarius.Programs.Arrangements is
                if not Cancel_Separator and then Separator /= null
                  and then Program.Syntax = Separator.Syntax
                then
-                  Log (Context, Program, "setting separator new line");
+                  Logging.Log (Context, Program, "setting separator new line");
                   Program.Separator_NL := True;
                   Partial_Length := New_Line_Indent;
                   Last_Soft_New_Line := null;
@@ -687,12 +577,12 @@ package body Aquarius.Programs.Arrangements is
                                  + Partial_Length;
                begin
                   if New_Length > Context.Right_Margin then
-                     Log (Context, Program, "setting last soft new line");
+                     Logging.Log (Context, Program, "setting last soft new line");
                      Last_Soft_New_Line := Program;
                      Last_Soft_Column := Partial_Length;
                      Last_Soft_Level := Level;
                   else
-                     Log (Context, Program,
+                     Logging.Log (Context, Program,
                           "ignoring soft new line because line length is"
                           & Count'Image (New_Length));
                   end if;
@@ -708,11 +598,11 @@ package body Aquarius.Programs.Arrangements is
                Partial_Length := Partial_Length
                  + Program.End_Position.Column - Last_Column_Index;
                if Partial_Length > Context.Right_Margin then
-                  Log (Context, Program,
+                  Logging.Log (Context, Program,
                        "overflow: separator = "
                        & (if Separator_Level > 0
                          then Separator.Text & ":" & Separator_Level'Img
-                         else " <>")
+                         else "<>")
                        & "; soft new line level ="
                        & Last_Soft_Level'Img);
                   if Last_Soft_New_Line /= null
@@ -720,7 +610,7 @@ package body Aquarius.Programs.Arrangements is
                               or else Separator_Level = 0
                               or else Separator_Level >= Last_Soft_Level)
                   then
-                     Log (Context, Program, "using last soft new line");
+                     Logging.Log (Context, Program, "using last soft new line");
                      Last_Soft_New_Line.Set_Soft_New_Line;
                      Partial_Length :=
                        New_Line_Indent + (Partial_Length - Last_Soft_Column);
@@ -731,7 +621,7 @@ package body Aquarius.Programs.Arrangements is
                         Cancel_Separator := True;
                      end if;
                   elsif Separator /= null then
-                     Log (Context, Program, "using last separator");
+                     Logging.Log (Context, Program, "using last separator");
                   end if;
                end if;
 
@@ -780,7 +670,7 @@ package body Aquarius.Programs.Arrangements is
       Context.Current_Column   := 1;
       Context.Need_New_Line := False;
       Context.Got_New_Line  := True;
-      Log (Context, Item, "got new line because of rearrangement");
+      Logging.Log (Context, Item, "got new line because of rearrangement");
       Context.Need_Space    := False;
       Context.First_On_Line := True;
       Context.Previous_Indent := Context.Current_Indent;
