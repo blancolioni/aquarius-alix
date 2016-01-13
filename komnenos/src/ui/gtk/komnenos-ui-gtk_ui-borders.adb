@@ -141,28 +141,29 @@ package body Komnenos.UI.Gtk_UI.Borders is
          when Top_Left =>
             X := Gdouble (Width);
             Y := Gdouble (Height);
-            A1 := Pi;
-            A2 := 2.0 * Pi / 3.0;
+            A1 := Pi / 2.0;
+            A2 := 3.0 * Pi / 2.0;
          when Top_Right =>
             X := 0.0;
             Y := Gdouble (Height);
-            A1 := 2.0 * Pi / 3.0;
-            A2 := 2.0 * Pi;
+            A2 := 0.0;
+            A1 := Pi / 2.0;
          when Bottom_Left =>
             X := Gdouble (Width);
             Y := 0.0;
-            A2 := Pi / 2.0;
-            A1 := Pi;
+            A1 := 3.0 * Pi / 2.0;
+            A2 := Pi;
          when Bottom_Right =>
             X := 0.0;
             Y := 0.0;
-            A1 := 0.0;
-            A2 := Pi / 2.0;
+            A1 := 2.0 * Pi;
+            A2 := 3.0 * Pi / 2.0;
       end case;
 
       if False then
          Cairo.Rectangle (Cr, 0.0, 0.0, Gdouble (Width), Gdouble (Height));
       else
+         Cairo.Move_To (Cr, X, Y);
          Cairo.Arc (Cr, X, Y, R, A1, A2);
       end if;
       Cairo.Fill (Cr);
