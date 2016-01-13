@@ -15,7 +15,7 @@ package body Aqua.CPU is
    use Aqua.Architecture;
 
    Trace_Properties : constant Boolean := False;
-   Trace_Code       : constant Boolean := True;
+   Trace_Code       : constant Boolean := False;
    Trace_Stack      : constant Boolean := False;
 
    Current_Output : Ada.Text_IO.File_Type;
