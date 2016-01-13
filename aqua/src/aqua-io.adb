@@ -11,7 +11,7 @@ package body Aqua.IO is
 
    procedure Close (File : in out File_Type) is
    begin
-      Byte_IO.Close (File.F);
+      Octet_IO.Close (File.F);
    end Close;
 
    ------------
@@ -28,7 +28,7 @@ package body Aqua.IO is
          raise Constraint_Error
            with "Aqua: scratch path not set";
       end if;
-      Byte_IO.Create (File.F, Byte_IO.Out_File,
+      Octet_IO.Create (File.F, Octet_IO.Out_File,
                       Ada.Directories.Compose
                         (To_String (Local_IO_Path), Name));
    end Create;
@@ -58,7 +58,7 @@ package body Aqua.IO is
          Result (I) := Hex_Digits (Natural (Acc mod 16) + 1);
          Acc := Acc / 16;
       end loop;
-      return Result (1 .. 4) & "_" & Result (5 .. 8);
+      return Result;
    end Hex_Image;
 
    ---------------
@@ -78,12 +78,33 @@ package body Aqua.IO is
    ---------------
 
    function Hex_Image
-     (Value : Byte)
+     (Value : Octet)
       return String
    is
       Result : constant String := Hex_Image (Word (Value));
    begin
       return Result (Result'Last - 1 .. Result'Last);
+   end Hex_Image;
+
+   ---------------
+   -- Hex_Image --
+   ---------------
+
+   function Hex_Image
+     (Value : Word;
+      Size  : Data_Size)
+      return String
+   is
+      Result : constant String := Hex_Image (Value);
+   begin
+      case Size is
+         when Word_8_Size =>
+            return Result (7 .. 8);
+         when Word_16_Size =>
+            return Result (5 .. 8);
+         when Word_32_Size =>
+            return Result;
+      end case;
    end Hex_Image;
 
    -----------------
@@ -119,7 +140,7 @@ package body Aqua.IO is
          raise Constraint_Error
            with "Aqua: scratch path not set";
       end if;
-      Byte_IO.Open (File.F, Byte_IO.In_File,
+      Octet_IO.Open (File.F, Octet_IO.In_File,
                     Ada.Directories.Compose
                       (To_String (Local_IO_Path), Name));
    end Open;
@@ -139,16 +160,16 @@ package body Aqua.IO is
    end Read_Address;
 
    ---------------
-   -- Read_Byte --
+   -- Read_Octet --
    ---------------
 
-   procedure Read_Byte
+   procedure Read_Octet
      (File  : File_Type;
-      Value : out Byte)
+      Value : out Octet)
    is
    begin
-      Byte_IO.Read (File.F, Value);
-   end Read_Byte;
+      Octet_IO.Read (File.F, Value);
+   end Read_Octet;
 
    -------------------------
    -- Read_String_Literal --
@@ -164,9 +185,9 @@ package body Aqua.IO is
       return Result : String (1 .. Natural (Length)) do
          for I in Result'Range loop
             declare
-               X : Byte;
+               X : Octet;
             begin
-               Read_Byte (File, X);
+               Read_Octet (File, X);
                Result (I) := Character'Val (X);
             end;
          end loop;
@@ -181,10 +202,10 @@ package body Aqua.IO is
      (File  : File_Type;
       Value : out Word)
    is
-      X : array (1 .. 4) of Byte;
+      X : array (1 .. 4) of Octet;
    begin
       for I in X'Range loop
-         Read_Byte (File, X (I));
+         Read_Octet (File, X (I));
       end loop;
       Value := 0;
       for I in reverse X'Range loop
@@ -216,16 +237,16 @@ package body Aqua.IO is
    end Write_Address;
 
    ----------------
-   -- Write_Byte --
+   -- Write_Octet --
    ----------------
 
-   procedure Write_Byte
+   procedure Write_Octet
      (File  : File_Type;
-      Value : Byte)
+      Value : Octet)
    is
    begin
-      Byte_IO.Write (File.F, Value);
-   end Write_Byte;
+      Octet_IO.Write (File.F, Value);
+   end Write_Octet;
 
    --------------------------
    -- Write_String_Literal --
@@ -238,7 +259,7 @@ package body Aqua.IO is
    begin
       Write_Word (File, Word (Value'Length));
       for Ch of Value loop
-         Write_Byte (File, Character'Pos (Ch));
+         Write_Octet (File, Character'Pos (Ch));
       end loop;
    end Write_String_Literal;
 
@@ -253,7 +274,7 @@ package body Aqua.IO is
       It : Word := Value;
    begin
       for I in 1 .. 4 loop
-         Write_Byte (File, Byte (It mod 256));
+         Write_Octet (File, Octet (It mod 256));
          It := It / 256;
       end loop;
    end Write_Word;

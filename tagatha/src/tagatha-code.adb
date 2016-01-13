@@ -97,10 +97,10 @@ package body Tagatha.Code is
          if Has_Slice (From) then
             if Slice_Fits (From, Size_8) then
                return Tagatha.Labels.Show (Get_Label (V), '_') & " +" &
-                 Image (Get_Slice_Byte_Offset (From));
+                 Image (Get_Slice_Octet_Offset (From));
             else
                raise Constraint_Error with
-                 "can't take non-byte slice from label: " &
+                 "can't take non-Octet slice from label: " &
                  Show (From);
             end if;
          else

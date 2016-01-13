@@ -1,29 +1,29 @@
 package body Aqua.Memory is
 
    --------------
-   -- Get_Byte --
+   -- Get_Octet --
    --------------
 
-   overriding function Get_Byte
+   overriding function Get_Octet
      (Memory : Memory_Type;
       Addr   : Address)
-      return Byte
+      return Octet
    is
    begin
       return Memory.Mem (Addr);
-   end Get_Byte;
+   end Get_Octet;
 
    --------------
-   -- Set_Byte --
+   -- Set_Octet --
    --------------
 
-   overriding procedure Set_Byte
+   overriding procedure Set_Octet
      (Memory : in out Memory_Type;
       Addr   : Address;
-      Value  : Byte)
+      Value  : Octet)
    is
    begin
       Memory.Mem (Addr) := Value;
-   end Set_Byte;
+   end Set_Octet;
 
 end Aqua.Memory;

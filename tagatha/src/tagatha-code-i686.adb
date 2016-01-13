@@ -465,10 +465,10 @@ package body Tagatha.Code.I686 is
                if Has_Slice (Item) then
                   if Slice_Fits (Item, Size_8) then
                      return Tagatha.Labels.Show (Get_Label (V), '_') & " +" &
-                       Image (Get_Slice_Byte_Offset (Item));
+                       Image (Get_Slice_Octet_Offset (Item));
                   else
                      raise Constraint_Error with
-                       "can't take non-byte slice from label: " &
+                       "can't take non-Octet slice from label: " &
                        Show (Item);
                   end if;
                else
@@ -490,7 +490,7 @@ package body Tagatha.Code.I686 is
             end if;
             if Has_Slice (Item) then
                if Slice_Fits (Item, Size_8) then
-                  return Image (Addr + Get_Slice_Byte_Offset (Item)) &
+                  return Image (Addr + Get_Slice_Octet_Offset (Item)) &
                   "(%ebp)";
                elsif Is_Argument (Item) then
                   return Image (Addr) & "(%ebp)";

@@ -99,11 +99,11 @@ package Tagatha.Transfers is
    function Slice_Fits (Item : Transfer_Operand;
                         Size : Tagatha_Size)
                        return Boolean;
-   function Get_Slice_Byte_Offset (Item : Transfer_Operand)
+   function Get_Slice_Octet_Offset (Item : Transfer_Operand)
                                   return Tagatha_Integer;
    function Get_Slice_Bit_Offset  (Item : Transfer_Operand)
                                   return Tagatha_Integer;
-   function Get_Slice_Byte_Length (Item : Transfer_Operand)
+   function Get_Slice_Octet_Length (Item : Transfer_Operand)
                                   return Tagatha_Integer;
    function Get_Slice_Bit_Length  (Item : Transfer_Operand)
                                   return Tagatha_Integer;

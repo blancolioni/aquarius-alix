@@ -19,13 +19,13 @@ package Aqua.IO is
 
    procedure Close (File : in out File_Type);
 
-   procedure Write_Byte
+   procedure Write_Octet
      (File  : File_Type;
-      Value : Byte);
+      Value : Octet);
 
-   procedure Read_Byte
+   procedure Read_Octet
      (File  : File_Type;
-      Value : out Byte);
+      Value : out Octet);
 
    procedure Write_Word
      (File  : File_Type;
@@ -55,6 +55,11 @@ package Aqua.IO is
      (Value : Word)
       return String;
 
+   function Hex_Image
+     (Value : Word;
+      Size  : Data_Size)
+      return String;
+
    function Octal_Image
      (Value : Word)
       return String;
@@ -64,17 +69,17 @@ package Aqua.IO is
       return String;
 
    function Hex_Image
-     (Value : Byte)
+     (Value : Octet)
       return String;
 
 private
 
-   package Byte_IO is
-     new Ada.Sequential_IO (Byte);
+   package Octet_IO is
+     new Ada.Sequential_IO (Octet);
 
    type File_Type is limited
       record
-         F : Byte_IO.File_Type;
+         F : Octet_IO.File_Type;
       end record;
 
 end Aqua.IO;

@@ -1,30 +1,55 @@
 package body Aqua.Architecture is
 
-   procedure Set_Instruction
-     (W           : in out Word;
-      Instruction : Aqua_Instruction);
-
-   procedure Set_Operands
-     (Instruction : in out Word;
-      Source      : Operand_Type;
-      Destination : Operand_Type);
-
-   procedure Set_Operand
-     (Instruction : in out Word;
-      Destination : Operand_Type);
-
    ------------
    -- Encode --
    ------------
 
    function Encode
-     (Instruction : No_Operand_Instruction)
-      return Word
+     (Instruction : Aqua_Instruction;
+      Size        : Data_Size := Word_32_Size;
+      Immediate   : Octet := 0)
+      return Octet
    is
-      Result : Word := 0;
    begin
-      Set_Instruction (Result, Instruction);
-      return Result;
+      case Instruction is
+         when No_Operand_Instruction =>
+            return Aqua_Instruction'Pos (Instruction);
+         when Single_Operand_Instruction =>
+            return (Data_Size'Pos (Size) + 1) * 64
+              + 2#00010000#
+            + (Aqua_Instruction'Pos (Instruction)
+               - Aqua_Instruction'Pos (Single_Operand_Instruction'First));
+         when Double_Operand_Instruction =>
+            return (Data_Size'Pos (Size) + 1) * 64
+              + 2#00100000#
+            + (Aqua_Instruction'Pos (Instruction)
+               - Aqua_Instruction'Pos (Double_Operand_Instruction'First));
+         when Triple_Operand_Instruction =>
+            return (Data_Size'Pos (Size) + 1) * 64
+              + 2#00110000#
+            + (Aqua_Instruction'Pos (Instruction)
+               - Aqua_Instruction'Pos (Triple_Operand_Instruction'First));
+         when Branch_Instruction =>
+            return 2#0100_0000# +
+              (Aqua_Instruction'Pos (Instruction)
+               - Aqua_Instruction'Pos (Branch_Instruction'First));
+         when A_Get_Property =>
+            return 2#00100000# + Immediate mod 16;
+         when A_Set_Property =>
+            return 2#00110000#;
+         when A_Start_Iteration =>
+            return 2#00110001#;
+         when A_Next_Iteration =>
+            return 2#00110010#;
+         when A_Join =>
+            return 2#00110011#;
+         when A_Jmp =>
+            return 2#00110100#;
+         when A_Jsr =>
+            return 2#00110101#;
+         when A_Trap =>
+            return 2#00010000# + Immediate mod 16;
+      end case;
    end Encode;
 
    ------------
@@ -32,76 +57,18 @@ package body Aqua.Architecture is
    ------------
 
    function Encode
-     (Instruction : Single_Operand_Instruction;
-      Operand     : Operand_Type)
-      return Word
+     (Operand : Operand_Type)
+      return Octet
    is
-      Result : Word := 0;
    begin
-      Set_Instruction (Result, Instruction);
-      Set_Operand (Result, Operand);
-      return Result;
+      if Operand.Mode = Literal then
+         return Operand.Lit;
+      else
+         return (Addressing_Mode'Pos (Operand.Mode) + 3) * 32
+           + Boolean'Pos (Operand.Deferred) * 16
+           + Octet (Operand.Register);
+      end if;
    end Encode;
-
-   ------------
-   -- Encode --
-   ------------
-
-   function Encode
-     (Instruction : Double_Operand_Instruction;
-      Src, Dst    : Operand_Type)
-      return Word
-   is
-      Result : Word := 0;
-   begin
-      Set_Instruction (Result, Instruction);
-      Set_Operands (Result, Src, Dst);
-      return Result;
-   end Encode;
-
-   -------------------
-   -- Encode_Branch --
-   -------------------
-
-   function Encode_Branch
-     (Instruction : Branch_Instruction;
-      Offset      : Word)
-      return Word
-   is
-      Result : Word := Offset;
-   begin
-      Set_Instruction (Result, Instruction);
-      return Result;
-   end Encode_Branch;
-
-   -------------------------
-   -- Encode_Get_Property --
-   -------------------------
-
-   function Encode_Property
-     (Instruction   : Property_Instruction;
-      Property_Name : Word)
-      return Word
-   is
-      Result : Word := Property_Name;
-   begin
-      Set_Instruction (Result, Instruction);
-      return Result;
-   end Encode_Property;
-
-   -----------------
-   -- Encode_Trap --
-   -----------------
-
-   function Encode_Trap
-     (Trap        : Natural)
-      return Word
-   is
-      Result : Word := Word (Trap);
-   begin
-      Set_Instruction (Result, A_Trap);
-      return Result;
-   end Encode_Trap;
 
    -----------------
    -- Get_Address --
@@ -109,13 +76,21 @@ package body Aqua.Architecture is
 
    function Get_Address
      (Operand : Operand_Type;
+      Size    : Data_Size;
       R       : in out Registers;
       Memory  : in out Memory_Interface'Class)
       return Address
    is
       Result : Address;
+      Auto_Size : constant Word :=
+                    (if Operand.Deferred
+                     then Data_Octets (Address_Size)
+                     else Data_Octets (Size));
    begin
       case Operand.Mode is
+         when Literal =>
+            raise Constraint_Error with
+              "cannot get address of literal mode";
          when Register =>
             if Operand.Deferred then
                return Get_Address (R (Operand.Register));
@@ -125,170 +100,211 @@ package body Aqua.Architecture is
             end if;
          when Autoincrement =>
             Result := Get_Address (R (Operand.Register));
-
-            R (Operand.Register) := R (Operand.Register) + 4;
+            R (Operand.Register) := R (Operand.Register) + Auto_Size;
          when Autodecrement =>
-            R (Operand.Register) := R (Operand.Register) - 4;
+            R (Operand.Register) := R (Operand.Register) - Auto_Size;
             Result := Get_Address (R (Operand.Register));
-         when Indexed =>
+         when Indexed | Indexed_8 | Indexed_16 =>
             Result := Get_Address (R (Operand.Register));
             declare
+               Index_Size : constant Data_Size :=
+                              (if Operand.Mode = Indexed
+                               then Word_32_Size
+                               elsif Operand.Mode = Indexed_16
+                               then Word_16_Size
+                               else Word_8_Size);
                A : constant Word :=
-                     Memory.Get_Word (Get_Address (R (R_PC)));
+                              Memory.Get_Value (Get_Address (R (R_PC)),
+                                                Index_Size);
             begin
-               if Is_Integer (A) then
-                  declare
-                     I : constant Aqua_Integer := Get_Integer (A);
-                  begin
-                     if I < 0 then
-                        Result := Result - Address (abs I);
-                     else
-                        Result := Result + Address (I);
-                     end if;
-                  end;
+               if Operand.Mode = Indexed_16 then
+                  if A < 32768 then
+                     Result := Result + Address (A);
+                  else
+                     Result := Result - Address (65536 - A);
+                  end if;
+               elsif Operand.Mode = Indexed_8 then
+                  if A < 128 then
+                     Result := Result + Address (A);
+                  else
+                     Result := Result - Address (256 - A);
+                  end if;
                else
-                  Result := Result + Get_Address (A);
+                  if Is_Integer (A) then
+                     declare
+                        I : constant Aqua_Integer := Get_Integer (A);
+                     begin
+                        if I < 0 then
+                           Result := Result - Address (abs I);
+                        else
+                           Result := Result + Address (I);
+                        end if;
+                     end;
+                  else
+                     Result := Result + Get_Address (A);
+                  end if;
                end if;
+
+               R (R_PC) := R (R_PC) + Data_Octets (Index_Size);
             end;
-            R (R_PC) := R (R_PC) + 4;
       end case;
 
       if Operand.Deferred then
-         Result := Get_Address (Memory.Get_Word (Result));
+         Result := Get_Address (Memory.Get_Value (Result, Word_32_Size));
       end if;
 
       return Result;
    end Get_Address;
 
-   -----------------------------
-   -- Get_Destination_Operand --
-   -----------------------------
+   ---------------------
+   -- Get_Instruction --
+   ---------------------
 
-   function Get_Destination_Operand
-     (Instruction : Word)
+   function Get_Instruction
+     (Instruction : Octet)
+      return Aqua_Instruction
+   is
+      subtype Octet_2 is Octet range 0 .. 3;
+      subtype Octet_4 is Octet range 0 .. 15;
+      Size_Bits     : constant Octet_2 := Instruction / 64;
+      Op_Count_Bits : constant Octet_2 := Instruction / 16 mod 4;
+      Low_Nybble    : constant Octet_4 := Instruction mod 16;
+   begin
+      if Size_Bits = 0 then
+         case Op_Count_Bits is
+            when 0 =>
+               return Aqua_Instruction'Val (Instruction);
+            when 1 =>
+               return A_Trap;
+            when 2 =>
+               return A_Get_Property;
+            when 3 =>
+               case Low_Nybble is
+                  when 0 =>
+                     return A_Set_Property;
+                  when 1 =>
+                     return A_Start_Iteration;
+                  when 2 =>
+                     return A_Next_Iteration;
+                  when 3 =>
+                     return A_Join;
+                  when 4 =>
+                     return A_Jmp;
+                  when 5 =>
+                     return A_Jsr;
+                  when others =>
+                     raise Bad_Instruction with Octet'Image (Instruction);
+               end case;
+         end case;
+      elsif Size_Bits = 1 and then Op_Count_Bits = 0 then
+         return Aqua_Instruction'Val (Aqua_Instruction'Pos (A_Br)
+                                      + Low_Nybble);
+      else
+         case Op_Count_Bits is
+            when 0 =>
+               raise Bad_Instruction with Octet'Image (Instruction);
+            when 1 =>
+               return Aqua_Instruction'Val
+                 (Aqua_Instruction'Pos (Single_Operand_Instruction'First)
+                  + Low_Nybble);
+            when 2 =>
+               return Aqua_Instruction'Val
+                 (Aqua_Instruction'Pos (Double_Operand_Instruction'First)
+                  + Low_Nybble);
+            when 3 =>
+               return Aqua_Instruction'Val
+                 (Aqua_Instruction'Pos (Triple_Operand_Instruction'First)
+                  + Low_Nybble);
+         end case;
+      end if;
+   end Get_Instruction;
+
+   -----------------
+   -- Get_Operand --
+   -----------------
+
+   function Get_Operand
+     (Op : Octet)
       return Operand_Type
    is
    begin
-      return Operand : Operand_Type do
-         Operand.Register :=
-           Register_Index (Get_Bits (Instruction, 15, 8));
-         Operand.Deferred := Boolean'Val (Get_Bits (Instruction, 3, 1));
-         Operand.Mode := Addressing_Mode'Val (Get_Bits (Instruction, 2, 3));
-      end return;
-   end Get_Destination_Operand;
+      if (Op and 2#11000000#) = 0 then
+         return (Register => 0,
+                 Deferred => False,
+                 Mode     => Literal,
+                 Lit      => Op);
+      else
+         return (Register => Register_Index (Op mod 16),
+                 Deferred => (Op and 2#00010000#) /= 0,
+                 Mode     => Addressing_Mode'Val (Op / 32 - 3),
+                 Lit      => 0);
+      end if;
+   end Get_Operand;
 
-   ------------------------
-   -- Get_Source_Operand --
-   ------------------------
+   --------------
+   -- Get_Size --
+   --------------
 
-   function Get_Source_Operand
-     (Instruction : Word)
-      return Operand_Type
+   function Get_Size
+     (Instruction : Octet)
+      return Data_Size
    is
    begin
-      return Operand : Operand_Type do
-         Operand.Register :=
-           Register_Index (Get_Bits (Instruction, 23, 8));
-         Operand.Deferred := Boolean'Val (Get_Bits (Instruction, 7, 1));
-         Operand.Mode := Addressing_Mode'Val (Get_Bits (Instruction, 6, 3));
-      end return;
-   end Get_Source_Operand;
+      return Data_Size'Val (Instruction / 64 - 1);
+   end Get_Size;
 
    ----------
    -- Read --
    ----------
 
    procedure Read
-     (Operand   : Operand_Type;
-      R      : in out Registers;
-      Memory : in out Memory_Interface'Class;
-      Value  :    out Word)
+     (Operand : Operand_Type;
+      Size    : Data_Size;
+      R       : in out Registers;
+      Memory  : in out Memory_Interface'Class;
+      Value   :    out Word)
    is
    begin
-      if Operand.Mode = Register
+      if Operand.Mode = Literal then
+         Value := Word (Operand.Lit);
+      elsif Operand.Mode = Register
         and then not Operand.Deferred
       then
-         Value := R (Operand.Register);
+         Value := Get (R (Operand.Register), Size);
       else
          declare
-            A : constant Address := Get_Address (Operand, R, Memory);
+            A : constant Address := Get_Address (Operand, Size, R, Memory);
          begin
-            Value := Memory.Get_Word (A);
+            Value := Memory.Get_Value (A, Size);
          end;
       end if;
    end Read;
-
-   ---------------------
-   -- Set_Instruction --
-   ---------------------
-
-   procedure Set_Instruction
-     (W           : in out Word;
-      Instruction : Aqua_Instruction)
-   is
-   begin
-      W := (W and 16#00FF_FFFF#) or
-        2 ** 24 * Aqua_Instruction'Pos (Instruction);
-   end Set_Instruction;
-
-   -----------------
-   -- Set_Operand --
-   -----------------
-
-   procedure Set_Operand
-     (Instruction : in out Word;
-      Destination : Operand_Type)
-   is
-   begin
-      Set_Operands (Instruction, (Register, False, 0), Destination);
-   end Set_Operand;
-
-   ------------------
-   -- Set_Operands --
-   ------------------
-
-   procedure Set_Operands
-     (Instruction : in out Word;
-      Source      : Operand_Type;
-      Destination : Operand_Type)
-   is
-      R_Src  : constant Word := Word (Source.Register);
-      R_Dst  : constant Word := Word (Destination.Register);
-      Op_Src : constant Word :=
-                 Boolean'Pos (Source.Deferred) * 8
-                 + Addressing_Mode'Pos (Source.Mode);
-      Op_Dst : constant Word :=
-                 Boolean'Pos (Destination.Deferred) * 8
-                 + Addressing_Mode'Pos (Destination.Mode);
-   begin
-      Instruction := (Instruction and 16#FF00_0000#)
-        + R_Src * 2 ** 16
-        + R_Dst * 2 ** 8
-        + Op_Src * 2 ** 4
-        + Op_Dst;
-   end Set_Operands;
 
    ------------
    -- Update --
    ------------
 
    procedure Update
-     (Operand   : Operand_Type;
-      R      : in out Registers;
-      Memory : in out Memory_Interface'Class;
-      Fn     : not null access
+     (Operand : Operand_Type;
+      Size    : Data_Size;
+      R       : in out Registers;
+      Memory  : in out Memory_Interface'Class;
+      Fn      : not null access
         function (X : Word) return Word)
    is
    begin
-      if Operand.Mode = Register
+      if Operand.Mode = Literal then
+         raise Constraint_Error with "cannot update a literal operand";
+      elsif Operand.Mode = Register
         and then not Operand.Deferred
       then
-         R (Operand.Register) := Fn (R (Operand.Register));
+         Set (R (Operand.Register),
+              Size, Fn (Get (R (Operand.Register), Size)));
       else
          declare
-            Addr : constant Address := Get_Address (Operand, R, Memory);
+            Addr : constant Address := Get_Address (Operand, Size, R, Memory);
          begin
-            Memory.Set_Word (Addr, Fn (Memory.Get_Word (Addr)));
+            Memory.Set_Value (Addr, Size, Fn (Memory.Get_Value (Addr, Size)));
          end;
       end if;
    end Update;
@@ -298,21 +314,24 @@ package body Aqua.Architecture is
    -----------
 
    procedure Write
-     (Operand   : Operand_Type;
-      R      : in out Registers;
-      Memory : in out Memory_Interface'Class;
-      Value  : Word)
+     (Operand : Operand_Type;
+      Size    : Data_Size;
+      R       : in out Registers;
+      Memory  : in out Memory_Interface'Class;
+      Value   : Word)
    is
    begin
-      if Operand.Mode = Register
+      if Operand.Mode = Literal then
+         raise Constraint_Error with "cannot update a literal operand";
+      elsif Operand.Mode = Register
         and then not Operand.Deferred
       then
-         R (Operand.Register) := Value;
+         Set (R (Operand.Register), Size, Value);
       else
          declare
-            A : constant Address := Get_Address (Operand, R, Memory);
+            A : constant Address := Get_Address (Operand, Size, R, Memory);
          begin
-            Memory.Set_Word (A, Value);
+            Memory.Set_Value (A, Size, Value);
          end;
       end if;
    end Write;

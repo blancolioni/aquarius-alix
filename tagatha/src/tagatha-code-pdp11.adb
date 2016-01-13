@@ -27,13 +27,13 @@ package body Tagatha.Code.Pdp11 is
 
    procedure Instruction (Asm      : in out Assembly'Class;
                           Mnemonic : in     String;
-                          Byte     : in     Boolean;
+                          Octet     : in     Boolean;
                           Source   : in     String;
                           Dest     : in     String);
 
    procedure Instruction (Asm      : in out Assembly'Class;
                           Mnemonic : in     String;
-                          Byte     : in     Boolean;
+                          Octet     : in     Boolean;
                           Dest     : in     String);
 
    function Get_Mnemonic (Op : Tagatha_Operator) return String;
@@ -243,12 +243,12 @@ package body Tagatha.Code.Pdp11 is
 
    procedure Instruction (Asm      : in out Assembly'Class;
                           Mnemonic : in     String;
-                          Byte     : in     Boolean;
+                          Octet     : in     Boolean;
                           Source   : in     String;
                           Dest     : in     String)
    is
    begin
-      if Byte then
+      if Octet then
          Instruction (Asm, Mnemonic & "b", Source, Dest);
       else
          Instruction (Asm, Mnemonic, Source, Dest);
@@ -261,11 +261,11 @@ package body Tagatha.Code.Pdp11 is
 
    procedure Instruction (Asm      : in out Assembly'Class;
                           Mnemonic : in     String;
-                          Byte     : in     Boolean;
+                          Octet     : in     Boolean;
                           Dest     : in     String)
    is
    begin
-      if Byte then
+      if Octet then
          Instruction (Asm, Mnemonic & "b", Dest);
       else
          Instruction (Asm, Mnemonic, Dest);
@@ -339,18 +339,18 @@ package body Tagatha.Code.Pdp11 is
       Dest     : in     Tagatha.Transfers.Transfer_Operand)
    is
       use Tagatha.Transfers;
-      Byte : constant Boolean := Get_Size (Dest) = Size_8;
+      Octet : constant Boolean := Get_Size (Dest) = Size_8;
    begin
       if Get_Size (Dest) in Size_8 .. Size_16 then
          case Op is
             when Op_Negate =>
-               Instruction (Asm, "neg", Byte, To_String (Dest));
+               Instruction (Asm, "neg", Octet, To_String (Dest));
             when Op_Complement =>
-               Instruction (Asm, "not", Byte, To_String (Dest));
+               Instruction (Asm, "not", Octet, To_String (Dest));
             when Op_Test =>
-               Instruction (Asm, "tst", Byte, To_String (Dest));
+               Instruction (Asm, "tst", Octet, To_String (Dest));
             when Op_Dereference =>
-               Instruction (Asm, "mov", Byte,
+               Instruction (Asm, "mov", Octet,
                             To_Dereferenced_String (Dest),
                             To_String (Dest));
          end case;
@@ -474,13 +474,13 @@ package body Tagatha.Code.Pdp11 is
          Src      : constant String := To_String (Source);
          Dst      : constant String := To_String (Dest);
          Mnemonic : constant String := Get_Mnemonic (Op);
-         Byte     : constant Boolean := Get_Size (Dest) = Size_8;
+         Octet     : constant Boolean := Get_Size (Dest) = Size_8;
       begin
          if Get_Size (Dest) > Size_16 then
             raise Constraint_Error with
               "pdp-11 cannot operate on 32 or 64 bit data (yet)";
          end if;
-         Instruction (Asm, Mnemonic, Byte, Src, Dst);
+         Instruction (Asm, Mnemonic, Octet, Src, Dst);
       end;
    end Operate;
 
@@ -539,7 +539,7 @@ package body Tagatha.Code.Pdp11 is
             end if;
             if Has_Slice (Item) then
                if Slice_Fits (Item, Size_8) then
-                  return Image (Addr + Get_Slice_Byte_Offset (Item)) & "(r5)";
+                  return Image (Addr + Get_Slice_Octet_Offset (Item)) & "(r5)";
                elsif Is_Argument (Item) then
                   return Image (Addr) & "(r5)";
                else
