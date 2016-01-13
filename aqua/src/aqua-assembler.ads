@@ -25,9 +25,18 @@ package Aqua.Assembler is
       Line   : Natural;
       Column : Natural);
 
-   procedure Append
+   procedure Append_Octet
+     (A : in out Root_Assembly_Type'Class;
+      X : Octet);
+
+   procedure Append_Word
      (A : in out Root_Assembly_Type'Class;
       W : Word);
+
+   procedure Append
+     (A    : in out Root_Assembly_Type'Class;
+      W    : Word;
+      Size : Aqua.Data_Size);
 
    procedure Bind_Action
      (A      : in out Root_Assembly_Type'Class;
@@ -196,16 +205,16 @@ private
          Bindings       : Binding_Info_Vectors.Vector;
       end record;
 
-   overriding function Get_Byte
+   overriding function Get_Octet
      (Assembly : Root_Assembly_Type;
       Addr     : Address)
-      return Byte
-     is (Assembly.Memory.Get_Byte (Addr));
+      return Octet
+     is (Assembly.Memory.Get_Octet (Addr));
 
-   overriding procedure Set_Byte
+   overriding procedure Set_Octet
      (Assembly : in out Root_Assembly_Type;
       Addr   : Address;
-      Value  : Byte);
+      Value  : Octet);
 
    procedure Ensure_Label
      (A         : in out Root_Assembly_Type'Class;

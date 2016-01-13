@@ -61,17 +61,17 @@ package body Aqua.Images is
    end Code_Low;
 
    --------------
-   -- Get_Byte --
+   -- Get_Octet --
    --------------
 
-   overriding function Get_Byte
+   overriding function Get_Octet
      (Image : Root_Image_Type;
       Addr  : Address)
-      return Byte
+      return Octet
    is
    begin
-      return Image.Memory.Get_Byte (Addr);
-   end Get_Byte;
+      return Image.Memory.Get_Octet (Addr);
+   end Get_Octet;
 
    -----------------
    -- Have_String --
@@ -277,28 +277,28 @@ package body Aqua.Images is
          end loop;
       end;
 
-      for Addr in 0 .. (High - Low + 1) / 4 loop
+      for Addr in 0 .. High - Low loop
 
          if Trace_Code then
-            if Addr mod 8 = 0 then
+            if Addr mod 16 = 0 then
                if Addr > 0 then
                   Ada.Text_IO.New_Line;
                end if;
-               Ada.Text_IO.Put (Aqua.IO.Hex_Image (Address (Addr * 4)
+               Ada.Text_IO.Put (Aqua.IO.Hex_Image (Address (Addr)
                                 + Image.High));
             end if;
          end if;
 
          declare
-            W : Word;
+            X : Octet;
          begin
-            Read_Word (File, W);
+            Read_Octet (File, X);
 
             if Trace_Code then
-               Ada.Text_IO.Put (" " & Aqua.IO.Octal_Image (W));
+               Ada.Text_IO.Put (" " & Aqua.IO.Hex_Image (X));
             end if;
 
-            Image.Set_Word (Image.High + Address (Addr * 4), W);
+            Image.Set_Octet (Image.High + Address (Addr), X);
          end;
       end loop;
 
@@ -310,18 +310,18 @@ package body Aqua.Images is
          declare
             Length  : Word;
             Refs    : Word;
-            Defined : Byte;
+            Defined : Octet;
          begin
             Read_Word (File, Length);
             Read_Word (File, Refs);
-            Read_Byte (File, Defined);
+            Read_Octet (File, Defined);
             declare
                S : String (1 .. Natural (Length));
-               X : Byte;
+               X : Octet;
                Info : Link_Info;
             begin
                for J in S'Range loop
-                  Read_Byte (File, X);
+                  Read_Octet (File, X);
                   S (J) := Character'Val (X);
                end loop;
 
@@ -375,10 +375,10 @@ package body Aqua.Images is
                for J in 1 .. Refs loop
                   declare
                      Addr : Address;
-                     Relative : Byte;
+                     Relative : Octet;
                   begin
                      Read_Address (File, Addr);
-                     Read_Byte (File, Relative);
+                     Read_Octet (File, Relative);
                      Info.References.Append
                        ((Addr     => Addr + Image.High,
                          Relative => Boolean'Val (Relative mod 2),
@@ -445,17 +445,17 @@ package body Aqua.Images is
    end Save;
 
    --------------
-   -- Set_Byte --
+   -- Set_Octet --
    --------------
 
-   overriding procedure Set_Byte
+   overriding procedure Set_Octet
      (Image : in out Root_Image_Type;
       Addr  : Address;
-      Value : Byte)
+      Value : Octet)
    is
    begin
-      Image.Memory.Set_Byte (Addr, Value);
-   end Set_Byte;
+      Image.Memory.Set_Octet (Addr, Value);
+   end Set_Octet;
 
    ----------
    -- Show --

@@ -11,15 +11,15 @@ package Aqua.Images is
 
    type Root_Image_Type is new Memory_Interface with private;
 
-   overriding function Get_Byte
+   overriding function Get_Octet
      (Image : Root_Image_Type;
       Addr  : Address)
-      return Byte;
+      return Octet;
 
-   overriding procedure Set_Byte
+   overriding procedure Set_Octet
      (Image : in out Root_Image_Type;
       Addr  : Address;
-      Value : Byte);
+      Value : Octet);
 
    procedure Load
      (Image : in out Root_Image_Type'Class;

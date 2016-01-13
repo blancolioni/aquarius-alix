@@ -166,33 +166,6 @@ package body Tagatha.Transfers is
       end if;
    end Get_Slice_Bit_Offset;
 
-   ---------------------------
-   -- Get_Slice_Byte_Length --
-   ---------------------------
-
-   function Get_Slice_Byte_Length (Item : Transfer_Operand)
-                                  return Tagatha_Integer
-   is
-      Bit_Length : Tagatha_Integer := Get_Slice_Bit_Length (Item);
-   begin
-      if Bit_Length mod 8 /= 0 then
-         Bit_Length := Bit_Length + (8 - Bit_Length mod 8);
-      end if;
-      return Bit_Length;
-   end Get_Slice_Byte_Length;
-
-   ---------------------------
-   -- Get_Slice_Byte_Offset --
-   ---------------------------
-
-   function Get_Slice_Byte_Offset (Item : Transfer_Operand)
-                                  return Tagatha_Integer
-   is
-      Bit_Offset : constant Tagatha_Integer := Get_Slice_Bit_Offset (Item);
-   begin
-      return Bit_Offset - Bit_Offset mod 8;
-   end Get_Slice_Byte_Offset;
-
    --------------------
    -- Get_Slice_Mask --
    --------------------
@@ -207,6 +180,33 @@ package body Tagatha.Transfers is
            Get_Slice_Bit_Offset (Item);
       end if;
    end Get_Slice_Mask;
+
+   ----------------------------
+   -- Get_Slice_Octet_Length --
+   ----------------------------
+
+   function Get_Slice_Octet_Length (Item : Transfer_Operand)
+                                  return Tagatha_Integer
+   is
+      Bit_Length : Tagatha_Integer := Get_Slice_Bit_Length (Item);
+   begin
+      if Bit_Length mod 8 /= 0 then
+         Bit_Length := Bit_Length + (8 - Bit_Length mod 8);
+      end if;
+      return Bit_Length;
+   end Get_Slice_Octet_Length;
+
+   ----------------------------
+   -- Get_Slice_Octet_Offset --
+   ----------------------------
+
+   function Get_Slice_Octet_Offset (Item : Transfer_Operand)
+                                  return Tagatha_Integer
+   is
+      Bit_Offset : constant Tagatha_Integer := Get_Slice_Bit_Offset (Item);
+   begin
+      return Bit_Offset - Bit_Offset mod 8;
+   end Get_Slice_Octet_Offset;
 
    ----------------
    -- Get_Source --

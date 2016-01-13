@@ -38,38 +38,47 @@ op ::= no_operand
      | single_operand
      | double_operand
      | branch
+     | jump
      | trap
      | property
 
 no_operand ::= 'halt' | 'nop' | 'rts'
-single_operand ::= single_operand_instruction arg
-double_operand ::= double_operand_instruction arg ',' arg
-property ::= property_instruction operand
+single_operand ::= single_operand_instruction [size] arg
+double_operand ::= double_operand_instruction [size] arg ',' arg
+property ::= property_instruction operand [ integer ]
 property_instruction ::= 'get_property' | 'set_property'
 
 branch ::= branch_instruction branch_destination
 branch_destination ::= identifier | temporary_label
+
+jump ::= jump_instruction jump_destination
+jump_destination ::= identifier | temporary_label
+
 temporary_label ::= label_direction integer
 label_direction ::= '+' | '-'
 
 trap ::= 'trap' trap_operand
 
 trap_operand ::= identifier | integer
-     
-single_operand_instruction ::=
-                  'swab' | 'clr' | 'clrb' | 'com' | 'comb' 
-                 | 'inc' | 'incb' | 'dec' | 'decb' | 'neg' | 'negb'
-                 | 'adc' | 'adcb' | 'sbc' | 'sbcb' | 'tst' | 'tstb'
-                 | 'jmp' | 'jsr'
 
-double_operand_instruction ::= 'mov' | 'movb' | 'cmp' | 'cmpb' | 'add' | 'sub' | 'mul' | 'div' | 'mod' | 'xor'
+size ::= '.' integer
+
+single_operand_instruction ::=
+                  'clr' | 'not'
+                 | 'inc' | 'dec' | 'neg'
+                 | 'adc' | 'sbc' | 'tst'
+
+double_operand_instruction ::=
+     'mov' | 'cmp' | 'add' | 'sub' | 'mul' | 'div' | 'mod' | 'and' | 'or' | 'xor'
 
 branch_instruction ::= 
           'br' | 'bne' | 'beq' | 'bge' | 'blt' | 'bgt' | 'ble'
          | 'bpl' | 'bmi' | 'bhi' | 'blos' 
          | 'bvc' | 'bvs' | 'bcc' | 'bcs'
          | 'bhis' | 'blo'
-         
+
+jump_instruction ::= 'jmp' | 'jsr'
+
 arg ::= identifier | deferred
       | autoincrement | autoincrement_deferred
       | autodecrement | autodecrement_deferred

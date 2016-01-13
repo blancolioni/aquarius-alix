@@ -1,107 +1,116 @@
 package Aqua.Architecture is
 
-   type Register_Index is mod 256;
+   Bad_Instruction : exception;
+
+   type Register_Index is mod 16;
+
+   R_PC : constant Register_Index := 15;
+   R_SP : constant Register_Index := 14;
+   R_FP : constant Register_Index := 13;
+   R_OP : constant Register_Index := 12;
+   R_PV : constant Register_Index := 11;
 
    type Registers is array (Register_Index) of Word;
 
-   type Addressing_Mode is (Register, Autoincrement, Autodecrement, Indexed);
-
-   R_PC : constant Register_Index := 255;
-   R_SP : constant Register_Index := 254;
-   R_FP : constant Register_Index := 253;
-   R_OP : constant Register_Index := 252;
-   R_PV : constant Register_Index := 251;
+   type Addressing_Mode is
+     (Literal, Register, Autoincrement, Autodecrement,
+      Indexed, Indexed_8, Indexed_16);
 
    type Condition_Code is
      (Always, EQ, LT, LE, MI, LOS, VS, CS);
 
    type Aqua_Instruction is
-     (A_Halt, A_Rts,
-      A_Clr, A_Dec, A_Inc, A_Jmp, A_Jsr, A_Neg, A_Not, A_Tst,
-      A_Add, A_Bic, A_Bis, A_Bit, A_Cmp, A_Div, A_Mov, A_Mul, A_Sub,
-      A_Nop, A_Br, A_Bne, A_Beq, A_Bge, A_Blt, A_Bgt, A_Ble, A_Bpl, A_Bmi,
+     (A_Halt, A_Nop, A_Rts,
+      A_Clr, A_Dec, A_Inc, A_Neg, A_Not, A_Tst,
+      A_Mov, A_Cmp, A_Add, A_And, A_Div, A_Mul, A_Or, A_Sub, A_Xor,
+      A_Add_3, A_And_3, A_Div_3, A_Mul_3, A_Or_3, A_Sub_3, A_Xor_3,
+      A_Br, A_Bne, A_Beq, A_Bge, A_Blt, A_Bgt, A_Ble, A_Bpl, A_Bmi,
       A_Bhi, A_Blos, A_Bvc, A_Bvs, A_Bcc, A_Bcs,
+      A_Jmp, A_Jsr,
       A_Trap,
-      A_Get_Property, A_Set_Property);
+      A_Get_Property, A_Set_Property,
+      A_Start_Iteration, A_Next_Iteration,
+      A_Join);
 
-   subtype No_Operand_Instruction is Aqua_Instruction range A_Halt .. A_Nop;
-   subtype Single_Operand_Instruction is Aqua_Instruction range A_Clr .. A_Tst;
-   subtype Double_Operand_Instruction is Aqua_Instruction range A_Add .. A_Sub;
-   subtype Branch_Instruction is Aqua_Instruction range A_Nop .. A_Bcs;
-   subtype Property_Instruction is Aqua_Instruction range
-     A_Get_Property .. A_Set_Property;
+   subtype No_Operand_Instruction is
+     Aqua_Instruction range A_Halt .. A_Rts;
+   subtype Single_Operand_Instruction is
+     Aqua_Instruction range A_Clr .. A_Tst;
+   subtype Double_Operand_Instruction is
+     Aqua_Instruction range A_Mov .. A_Xor;
+   subtype Triple_Operand_Instruction is
+     Aqua_Instruction range A_Add_3 .. A_Xor_3;
+   subtype Branch_Instruction is
+     Aqua_Instruction range A_Br .. A_Bcs;
+   subtype Jump_Instruction is
+     Aqua_Instruction range A_Jmp .. A_Jsr;
+   subtype Property_Instruction is
+     Aqua_Instruction range A_Get_Property .. A_Set_Property;
+   subtype Iteration_Instruction is
+     Aqua_Instruction range A_Start_Iteration .. A_Next_Iteration;
+   subtype String_Instruction is
+     Aqua_Instruction range A_Join .. A_Join;
+
+   subtype Sized_Instruction is
+     Aqua_Instruction range A_Clr .. A_Xor_3;
 
    type Operand_Type is
       record
          Mode     : Addressing_Mode;
          Deferred : Boolean;
          Register : Register_Index;
+         Lit      : Octet;
       end record;
 
    function Get_Instruction
-     (Instruction : Word)
-      return Aqua_Instruction
-   is (Aqua_Instruction'Val (Instruction / 2 ** 24));
+     (Instruction : Octet)
+      return Aqua_Instruction;
 
-   function Get_Source_Operand
-     (Instruction : Word)
+   function Get_Size
+     (Instruction : Octet)
+      return Data_Size;
+
+   function Get_Operand
+     (Op : Octet)
       return Operand_Type;
 
-   function Get_Destination_Operand
-     (Instruction : Word)
-      return Operand_Type;
+   function Encode
+     (Instruction : Aqua_Instruction;
+      Size        : Data_Size := Word_32_Size;
+      Immediate   : Octet := 0)
+      return Octet;
 
    function Encode
-     (Instruction : No_Operand_Instruction)
-      return Word;
-
-   function Encode
-     (Instruction : Single_Operand_Instruction;
-      Operand     : Operand_Type)
-      return Word;
-
-   function Encode
-     (Instruction : Double_Operand_Instruction;
-      Src, Dst    : Operand_Type)
-      return Word;
-
-   function Encode_Branch
-     (Instruction : Branch_Instruction;
-      Offset      : Word)
-      return Word;
-
-   function Encode_Trap
-     (Trap        : Natural)
-      return Word;
-
-   function Encode_Property
-     (Instruction   : Property_Instruction;
-      Property_Name : Word)
-      return Word;
+     (Operand : Operand_Type)
+      return Octet;
 
    function Get_Address
      (Operand : Operand_Type;
+      Size    : Data_Size;
       R       : in out Registers;
       Memory  : in out Memory_Interface'Class)
       return Address;
 
    procedure Read
      (Operand : Operand_Type;
-      R      : in out Registers;
-      Memory : in out Memory_Interface'Class;
-      Value  :    out Word);
+      Size    : Data_Size;
+      R       : in out Registers;
+      Memory  : in out Memory_Interface'Class;
+      Value   :    out Word);
 
    procedure Write
      (Operand : Operand_Type;
-      R      : in out Registers;
-      Memory : in out Memory_Interface'Class;
-      Value  : Word);
+      Size    : Data_Size;
+      R       : in out Registers;
+      Memory  : in out Memory_Interface'Class;
+      Value   : Word);
 
    procedure Update
      (Operand : Operand_Type;
-      R      : in out Registers;
-      Memory : in out Memory_Interface'Class;
-      Fn     : not null access
+      Size    : Data_Size;
+      R       : in out Registers;
+      Memory  : in out Memory_Interface'Class;
+      Fn      : not null access
         function (X : Word) return Word);
 
 end Aqua.Architecture;

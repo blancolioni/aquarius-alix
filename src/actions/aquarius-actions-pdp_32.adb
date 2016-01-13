@@ -202,7 +202,7 @@ package body Aquarius.Actions.Pdp_32 is
                    "    beq " & Image (L1));
          Scanner.Scan_Action (Processor, Statements (I));
          Put_Line (Processor.File,
-                   "    jmp " & Image (Exit_Label));
+                   "    br " & Image (Exit_Label));
       end loop;
 
       Put_Line (Processor.File, Image (L1) & ":");
@@ -246,7 +246,7 @@ package body Aquarius.Actions.Pdp_32 is
                Put_Line (Processor.File, "1:");
             else
                Put_Line (Processor.File,
-                         "    jmp " & Image (Exit_Label));
+                         "    br " & Image (Exit_Label));
             end if;
 
             Condition := not Condition;
@@ -293,7 +293,7 @@ package body Aquarius.Actions.Pdp_32 is
       Put_Line (Processor.File, "    trap iterator_next");
       Put_Line (Processor.File, "    beq " & Image (Exit_Label));
       Scanner.Scan_Action (Processor, Statements);
-      Put_Line (Processor.File, "    jmp " & Image (Loop_Label));
+      Put_Line (Processor.File, "    br " & Image (Loop_Label));
       Put_Line (Processor.File, Image (Exit_Label) & ":");
       Processor.Delete_Frame_Entry (Id);
       Processor.Frame_Offset := Processor.Frame_Offset + 8;

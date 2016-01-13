@@ -1,10 +1,19 @@
 package Aqua is
 
    Word_Size      : constant := 32;
-   Bytes_Per_Word : constant := Word_Size / 8;
+   Octets_Per_Word : constant := Word_Size / 8;
 
    type Word is mod 2 ** Word_Size;
-   type Byte is mod 2 ** 8;
+   type Word_16 is mod 65536;
+   type Octet is mod 2 ** 8;
+
+   type Data_Size is
+     (Word_8_Size, Word_16_Size, Word_32_Size);
+
+   Address_Size : constant Data_Size := Word_32_Size;
+
+   Data_Octets : constant array (Data_Size) of Word :=
+                   (1, 2, 4);
 
    type Bit_Index is range 0 .. 31;
 
@@ -62,21 +71,42 @@ package Aqua is
       Count : Bit_Index)
       return Word;
 
+   procedure Set
+     (Target : in out Word;
+      Size   : in     Data_Size;
+      Value  : in     Word);
+
+   function Get
+     (Source : Word;
+      Size   : Data_Size)
+      return Word;
+
    type Memory_Interface is interface;
 
-   function Get_Byte (Memory : Memory_Interface;
-                      Addr   : Address)
-                      return Byte
-                      is abstract;
+   function Get_Octet (Memory : Memory_Interface;
+                       Addr   : Address)
+                       return Octet
+                       is abstract;
 
-   procedure Set_Byte (Memory : in out Memory_Interface;
-                       Addr   : Address;
-                       Value  : Byte)
+   procedure Set_Octet (Memory : in out Memory_Interface;
+                        Addr   : Address;
+                        Value  : Octet)
    is abstract;
+
+   function Get_Value (Memory : Memory_Interface'Class;
+                       Addr   : Address;
+                       Size   : Data_Size)
+                       return Word;
+
+   procedure Set_Value (Memory : in out Memory_Interface'Class;
+                        Addr   : Address;
+                        Size   : Data_Size;
+                        Value  : Word);
 
    function Get_Word (Memory : Memory_Interface'Class;
                       Addr   : Address)
-                      return Word;
+                      return Word
+   is (Get_Value (Memory, Addr, Word_32_Size));
 
    procedure Set_Word (Memory : in out Memory_Interface'Class;
                        Addr   : Address;

@@ -6,7 +6,7 @@ package body Aqua.Arithmetic is
 
    procedure Dec
      (X : in out Word;
-      Y : in     Positive)
+      Y : in     Positive := 1)
    is
    begin
       if Is_Address (X) then
@@ -34,7 +34,7 @@ package body Aqua.Arithmetic is
 
    procedure Inc
      (X : in out Word;
-      Y : in     Positive)
+      Y : in     Positive := 1)
    is
    begin
       if Is_Address (X) then
