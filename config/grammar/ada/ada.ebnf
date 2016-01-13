@@ -1,5 +1,5 @@
 compilation_unit ::= { context_clause }
-	             top_level_subprogram_declaration
+                     top_level_subprogram_declaration
 
 case_sensitive = false
 
@@ -34,7 +34,6 @@ format boolean_operator soft_new_line
 format relational_operator soft_new_line
 format binary_adding_operator soft_new_line
 format multiplying_operator soft_new_line
-format formal_argument_spec soft_new_line_before
 format subprogram_body new_line_before
 format array_type_definition soft_new_line
 format function_return_type soft_new_line_before space_after space_before
@@ -139,7 +138,7 @@ package_spec ::= 'package' defining_qualified_reference
 
 package_spec_declaration ::=
                    list_of_declarations
-		   [ private_part]
+                   [ private_part]
                    'end' [ matching_name ]
 
 matching_name ::= < identifier / '.' > | operator_symbol
@@ -248,7 +247,7 @@ default_expression ::= expression
 block ::=
    list_of_declarations
    'begin'
-	handled_sequence_of_statements
+        handled_sequence_of_statements
    'end' [ block_name ]
 
 list_of_declarations ::= { declaration }
@@ -276,7 +275,7 @@ incomplete_type_declaration ::=
           'type' defining_identifier [type_discriminator] [ 'is' 'tagged' ] ';'
 
 type_discriminator ::=
- 	'(' discriminant_list ')'
+        '(' discriminant_list ')'
 
 discriminant_list ::= identifier ':' type_indication [ ':=' static_expression ]
                     | '<>'
@@ -314,10 +313,10 @@ implicitly_typed_range_constraint ::= simple_expression [ '..' simple_expression
 
 type_definition ::= derived_type_definition | record_type_definition |
                     array_type_definition | private_type_definition |
-		    enumerated_type_definition | access_type_definition |
-		    range_type_definition | function_type_definition |
+                    enumerated_type_definition | access_type_definition |
+                    range_type_definition | function_type_definition |
                     modular_type_definition | floating_point_type_definition |
-		    procedure_type_definition | interface_type_definition
+                    procedure_type_definition | interface_type_definition
 
 range_type_definition ::= 'range' (bounded_range | '<>')
 modular_type_definition ::= 'mod' static_expression
@@ -336,7 +335,7 @@ function_type_definition ::= [null_exclusion] 'access' 'function' [ formal_argum
 procedure_type_definition ::= [null_exclusion] 'access' 'procedure' [ formal_argument_spec ]
 
 enumerated_type_definition ::=
-	'(' < enumerated_literal / ',' > ')'
+        '(' < enumerated_literal / ',' > ')'
 
 enumerated_literal ::= identifier | character_literal
 
@@ -376,13 +375,13 @@ variant_case_options ::= < variant_case_value / '|' >
 variant_case_value ::= qualified_reference | numeric_literal | character_literal
 
 array_type_definition ::=
- 	'array' '(' < array_bound / ',' > ')' 'of' type_indication
+        'array' '(' < array_bound / ',' > ')' 'of' type_indication
 
 array_bound ::= explicitly_typed_array_bound
               | bounded_range
 
 explicitly_typed_array_bound ::=
-	type_name [ 'range' ( bounded_range | '<>' ) ]
+        type_name [ 'range' ( bounded_range | '<>' ) ]
       | type_name ''' 'range' [ dimension_index ]
       
 dimension_index ::= '(' constant_expression ')'
@@ -400,7 +399,7 @@ label ::= '<<' identifier '>>'
 statement ::= null_statement | procedure_call | assignment_statement |
               if_statement | return_statement | declare_statement |
               loop_statement | exit_statement | case_statement |
-  	          raise_statement | pragma_spec | delay_statement | goto_statement
+                  raise_statement | pragma_spec | delay_statement | goto_statement
 
 null_statement ::= 'null' ';'
 
@@ -445,7 +444,7 @@ if_statement ::= 'if' expression 'then' sequence_of_statements
 
 case_statement ::= 'case' expression 'is'
                      case_list
-		   'end' 'case' ';'
+                   'end' 'case' ';'
 
 case_list ::= < 'when' case_option '=>'
                             sequence_of_statements >
@@ -472,7 +471,7 @@ declare_statement ::=
    [ 'declare'
      list_of_declarations ]
    'begin'
-	handled_sequence_of_statements
+        handled_sequence_of_statements
    'end' [ identifier ] ';'
 
 declare_block_name ::= identifier
@@ -507,8 +506,8 @@ expression ::=
     relation { boolean_operator relation }
 
 relation ::=
-	simple_expression [ (relational_operator simple_expression  |
-			    ['not'] 'in' (explicit_range | subtype_mark)) ]
+        simple_expression [ (relational_operator simple_expression  |
+                            ['not'] 'in' (explicit_range | subtype_mark)) ]
 
 explicit_range ::= simple_expression '..' simple_expression
 
@@ -523,10 +522,10 @@ factor ::= primary [ exponentation_operator primary ]
 primary ::= numeric_literal | string_literal : string |
             object_reference | 'null' |
             parenthesised_expression | aggregate |
-	    character_literal | allocator
+            character_literal | allocator
 
 boolean_operator ::=
-	'and' | 'and' 'then' | 'or' | 'or' 'else' | 'xor'
+        'and' | 'and' 'then' | 'or' | 'or' 'else' | 'xor'
 
 relational_operator ::= '=' | '/=' | '<' | '<=' | '>' | '>='
 
@@ -553,10 +552,10 @@ scalar_constraint ::= range_constraint
 composite_constraint ::= '(' < discrete_range_or_discriminant / ',' > ')'
 
 discrete_range_or_discriminant ::=
-	expression |
-	subtype_mark constraint |
-	range |
-	< discriminant_selector_name / '|' > '=>' expression
+        expression |
+        subtype_mark constraint |
+        range |
+        < discriminant_selector_name / '|' > '=>' expression
 
 discrete_range ::= discrete_subtype_indication | range
 
@@ -630,7 +629,7 @@ selector_expression ::= selector '=>' expression
                       | expression
 
 object_reference_with ::=
-	object_reference 'with'
+        object_reference 'with'
 
 selector ::= list_of_selector_items | 'others'
 
@@ -653,7 +652,7 @@ pragma_arg ::= expression
              | identifier '=>' expression
 
 attribute_definition_clause ::=
-	'for' local_name ''' attribute_designator 'use' expression ';'
+        'for' local_name ''' attribute_designator 'use' expression ';'
 
 record_representation_clause ::=
    'for' local_name 'use' (record_representation | expression) ';'
@@ -661,7 +660,7 @@ record_representation_clause ::=
 local_name ::= identifier
 
 attribute_designator ::= identifier [ '(' static_expression ')' ] |
-			'access' | 'delta' | 'digits'
+                        'access' | 'delta' | 'digits'
 
 record_representation ::=
    'record' [ mod_clause ]
@@ -671,7 +670,7 @@ record_representation ::=
 mod_clause ::= 'at' 'mod' static_expression ';'
 
 component_clause ::=
-	component_local_name 'at' position 'range' first_bit '..' last_bit ';'
+        component_local_name 'at' position 'range' first_bit '..' last_bit ';'
 
 component_local_name ::= name
 
