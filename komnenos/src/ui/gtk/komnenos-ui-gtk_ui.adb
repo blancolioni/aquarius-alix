@@ -162,26 +162,10 @@ package body Komnenos.UI.Gtk_UI is
       UI       : not null access Root_Gtk_UI'Class)
       return Gtk.Widget.Gtk_Widget;
 
---     function Find_Layout_Record_By_Display
---       (Display : not null access Gtk.Widget.Gtk_Widget_Record'Class;
---        UI      : not null access Root_Gtk_UI'Class)
---        return Layout_Widget_Access;
-
    function Find_Layout_Record_By_Title
      (Title   : not null access Gtk.Widget.Gtk_Widget_Record'Class;
       UI      : not null access Root_Gtk_UI'Class)
       return Layout_Widget_Access;
-
---     package Fragment_Return_Callback is
---       new Gtk.Handlers.User_Return_Callback
---         (Widget_Type => Gtk.Widget.Gtk_Widget_Record,
---          User_Type   => Komnenos.Fragments.Fragment_Type,
---          Return_Type => Boolean);
---
---     function Configure_Fragment_Handler
---       (W        : access Gtk.Widget.Gtk_Widget_Record'Class;
---        Fragment : Komnenos.Fragments.Fragment_Type)
---        return Boolean;
 
    package Window_Callback is
       new Gtk.Handlers.Callback (Gtk.Window.Gtk_Window_Record);
@@ -287,20 +271,6 @@ package body Komnenos.UI.Gtk_UI is
       return True;
    end Click_Navigation_Handler;
 
-   --------------------------------
-   -- Configure_Fragment_Handler --
-   --------------------------------
-
---     function Configure_Fragment_Handler
---       (W        : access Gtk.Widget.Gtk_Widget_Record'Class;
---        Fragment : Komnenos.Fragments.Fragment_Type)
---        return Boolean
---     is
---     begin
---        Update_Fragment_Size (W, Fragment);
---        return True;
---     end Configure_Fragment_Handler;
-
    ---------------------------------
    -- Configure_Main_View_Handler --
    ---------------------------------
@@ -384,13 +354,6 @@ package body Komnenos.UI.Gtk_UI is
       UI.Main_View.Put (Top,
                         Glib.Gint (Fragment.X - UI.View_Left),
                         Glib.Gint (Fragment.Y - UI.View_Top));
-
---        declare
---           Start_Iter : Gtk.Text_Iter.Gtk_Text_Iter;
---        begin
---           Text.Get_Buffer.Get_Start_Iter (Start_Iter);
---           Text.Get_Buffer.Place_Cursor (Start_Iter);
---        end;
 
    end Create_Fragment_Widget;
 
