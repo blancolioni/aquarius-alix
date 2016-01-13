@@ -24,6 +24,10 @@ package body Aquarius.Plugins.Macro_32.Assemble is
      (Arg : Aquarius.Programs.Program_Tree)
       return Aqua.Architecture.Operand_Type;
 
+   function Get_Operand_Size
+     (Tree : Aquarius.Programs.Program_Tree)
+      return Aqua.Data_Size;
+
    function Get_Size
      (Tree : Aquarius.Programs.Program_Tree)
       return Aqua.Data_Size;
@@ -648,9 +652,24 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                  Assembly.Get_Register
                    (Operand_Tree.Program_Child ("identifier").Text), 0);
       elsif Operand_Name = "indexed" then
-         return (Indexed, False,
-                 Assembly.Get_Register
-                   (Operand_Tree.Program_Child ("identifier").Text), 0);
+         declare
+            use Aqua;
+            Size : constant Aqua.Data_Size :=
+                     Get_Operand_Size
+                       (Operand_Tree.Program_Child ("operand"));
+            Mode : constant Addressing_Mode :=
+                     (case Size is
+                         when Aqua.Word_8_Size =>
+                            Indexed_8,
+                         when Aqua.Word_16_Size =>
+                            Indexed_16,
+                         when Aqua.Word_32_Size =>
+                            Indexed);
+         begin
+            return (Mode, False,
+                    Assembly.Get_Register
+                      (Operand_Tree.Program_Child ("identifier").Text), 0);
+         end;
       elsif Operand_Name = "indexed_deferred" then
          return (Indexed, True,
                  Assembly.Get_Register
@@ -663,7 +682,7 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                     (Assembly,
                      Operand_Tree.Program_Child ("expression"));
          begin
-            if X < 64 then
+            if X < 32 then
                return (Literal, False, 0, Octet (X));
             else
                return (Autoincrement, False, Aqua.Architecture.R_PC, 0);
@@ -678,6 +697,51 @@ package body Aquarius.Plugins.Macro_32.Assemble is
            with "unknown mode: " & Operand_Name;
       end if;
    end Get_Operand;
+
+   ----------------------
+   -- Get_Operand_Size --
+   ----------------------
+
+   function Get_Operand_Size
+     (Tree : Aquarius.Programs.Program_Tree)
+      return Aqua.Data_Size
+   is
+      use Aquarius.Programs;
+      Op : constant Program_Tree := Tree.Chosen_Tree;
+   begin
+      if Op.Name = "identifier" then
+         return Aqua.Word_32_Size;
+      elsif Op.Name = "integer" then
+         declare
+            Value : constant Integer :=
+                      Integer'Value (Op.Text);
+         begin
+            if Value < 128 then
+               return Aqua.Word_8_Size;
+            elsif Value < 32768 then
+               return Aqua.Word_16_Size;
+            else
+               return Aqua.Word_32_Size;
+            end if;
+         end;
+      elsif Op.Name = "negative_integer" then
+         declare
+            Value : constant Integer :=
+                  Integer'Value (Op.Program_Child ("integer").Text);
+         begin
+            if Value <= 128 then
+               return Aqua.Word_8_Size;
+            elsif Value <= 32768 then
+               return Aqua.Word_16_Size;
+            else
+               return Aqua.Word_32_Size;
+            end if;
+         end;
+      else
+         raise Constraint_Error
+           with "invalid operand: " & Op.Name;
+      end if;
+   end Get_Operand_Size;
 
    --------------
    -- Get_Size --
@@ -726,6 +790,7 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                               (Global_Plugin.Assembly)).Assembly;
       Operand_Tree   : constant Program_Tree := Arg.Chosen_Tree;
       Operand_Name   : constant String := Operand_Tree.Name;
+
    begin
       if Operand.Mode = Literal
         or else Operand.Mode = Register
@@ -753,7 +818,7 @@ package body Aquarius.Plugins.Macro_32.Assemble is
         or else Operand_Name = "indexed_deferred"
       then
          Evaluate_Operand (Assembly, Operand_Tree.Program_Child ("operand"),
-                           False, Aqua.Word_32_Size);
+                           False, Get_Mode_Size (Operand.Mode));
       elsif Operand_Name = "immediate"
         or else Operand_Name = "absolute"
       then

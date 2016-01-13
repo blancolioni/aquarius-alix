@@ -15,7 +15,7 @@ package body Aqua.CPU is
    use Aqua.Architecture;
 
    Trace_Properties : constant Boolean := False;
-   Trace_Code       : constant Boolean := False;
+   Trace_Code       : constant Boolean := True;
    Trace_Stack      : constant Boolean := False;
 
    Current_Output : Ada.Text_IO.File_Type;
@@ -828,7 +828,7 @@ package body Aqua.CPU is
             CPU.Image.Get_Word
               (Get_Address (CPU.R (R_SP)));
    begin
-      if Trace_Stack or else Trace_Code then
+      if Trace_Stack then
          Ada.Text_IO.Put_Line
            ("pop("
             & Aqua.IO.Hex_Image
@@ -855,7 +855,7 @@ package body Aqua.CPU is
    begin
       Aqua.Arithmetic.Dec (CPU.R (R_SP), 4);
       CPU.Image.Set_Word (Get_Address (CPU.R (R_SP)), Value);
-      if Trace_Stack or else Trace_Code then
+      if Trace_Stack then
          Ada.Text_IO.Put_Line
            ("push("
             & Aqua.IO.Hex_Image
