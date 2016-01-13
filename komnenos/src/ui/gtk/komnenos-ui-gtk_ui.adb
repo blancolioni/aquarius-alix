@@ -14,6 +14,7 @@ with Komnenos.Connectors;
 with Komnenos.Layouts;
 
 with Komnenos.UI.Gtk_UI.Entity_Lists;
+with Komnenos.UI.Gtk_UI.Borders;
 
 with Glib.Error;
 with Glib.Properties;
@@ -80,19 +81,36 @@ package body Komnenos.UI.Gtk_UI is
       Item   : Komnenos.Fragments.Fragment_Type);
 
    type Layout_Widget_Record is
+     new Komnenos.UI.Gtk_UI.Borders.UI_Fragment_Interface with
       record
          Widget       : Gtk.Widget.Gtk_Widget;
+         Grid         : Gtk.Grid.Gtk_Grid;
          Display      : Gtk.Widget.Gtk_Widget;
          Title        : Gtk.Widget.Gtk_Widget;
          Fragment     : Komnenos.Fragments.Fragment_Type;
          Background   : Gdk.Color.Gdk_Color;
-         Border       : Gdk.Color.Gdk_Color;
+         Border       : Gdk.RGBA.Gdk_RGBA;
          Show_Border  : Boolean;
          Grab_Focus   : Boolean;
          Dragging     : Boolean := False;
          Start_X      : Glib.Gdouble;
          Start_Y      : Glib.Gdouble;
       end record;
+
+   overriding function Border_Colour
+     (Fragment : Layout_Widget_Record)
+      return Gdk.RGBA.Gdk_RGBA
+   is (Fragment.Border);
+
+   overriding procedure Set_Corner_Widget
+     (Fragment  : in out Layout_Widget_Record;
+      Corner    : Borders.Border_Corner;
+      Widget    : access Gtk.Widget.Gtk_Widget_Record'Class);
+
+   overriding procedure Set_Side_Widget
+     (Fragment  : in out Layout_Widget_Record;
+      Edge      : Borders.Border_Edge;
+      Widget    : access Gtk.Widget.Gtk_Widget_Record'Class);
 
    type Layout_Widget_Access is access Layout_Widget_Record;
 
@@ -154,7 +172,8 @@ package body Komnenos.UI.Gtk_UI is
    procedure Create_Fragment_Widget
      (Fragment : Komnenos.Fragments.Fragment_Type;
       UI       : not null access Root_Gtk_UI'Class;
-      Widget   : out Gtk.Widget.Gtk_Widget;
+      Top      : out Gtk.Widget.Gtk_Widget;
+      Grid     : out Gtk.Grid.Gtk_Grid;
       Display  : out Gtk.Widget.Gtk_Widget;
       Title    : out Gtk.Widget.Gtk_Widget);
 
@@ -316,7 +335,7 @@ package body Komnenos.UI.Gtk_UI is
      (Context       : Cairo.Cairo_Context;
       X, Y          : Glib.Gdouble;
       Width, Height : Glib.Gdouble;
-      Radius        : Glib.Gdouble);
+      Radius        : Glib.Gdouble) with Unreferenced;
 
    --------------------------------
    -- Apply_Style_To_Text_Buffer --
@@ -428,13 +447,13 @@ package body Komnenos.UI.Gtk_UI is
    procedure Create_Fragment_Widget
      (Fragment : Komnenos.Fragments.Fragment_Type;
       UI       : not null access Root_Gtk_UI'Class;
-      Widget   : out Gtk.Widget.Gtk_Widget;
+      Top      : out Gtk.Widget.Gtk_Widget;
+      Grid     : out Gtk.Grid.Gtk_Grid;
       Display  : out Gtk.Widget.Gtk_Widget;
       Title    : out Gtk.Widget.Gtk_Widget)
    is
       Text   : Gtk.Text_View.Gtk_Text_View;
       Scroll : Gtk.Scrolled_Window.Gtk_Scrolled_Window;
-      Grid   : Gtk.Grid.Gtk_Grid;
       Label  : Gtk.Label.Gtk_Label;
       Events : Gtk.Event_Box.Gtk_Event_Box;
 
@@ -503,22 +522,20 @@ package body Komnenos.UI.Gtk_UI is
 
       Grid.Attach (Events,
                    Left   => 1,
-                   Top    => 0,
+                   Top    => 1,
                    Width  => 1,
                    Height => 1);
       Grid.Attach (Scroll,
                    Left   => 1,
-                   Top    => 1,
+                   Top    => 2,
                    Width  => 1,
                    Height => 1);
 
-      Widget := Gtk.Widget.Gtk_Widget (Grid);
+      Top := Gtk.Widget.Gtk_Widget (Grid);
       Display := Gtk.Widget.Gtk_Widget (Text);
       Title := Gtk.Widget.Gtk_Widget (Events);
 
-      Widget.Show_All;
-
-      UI.Main_View.Put (Widget,
+      UI.Main_View.Put (Top,
                         Glib.Gint (Fragment.X - UI.View_Left),
                         Glib.Gint (Fragment.Y - UI.View_Top));
 
@@ -723,41 +740,41 @@ package body Komnenos.UI.Gtk_UI is
       Cairo.Rectangle (Context, 0.0, 0.0, Width, Height);
       Cairo.Fill (Context);
 
-      for LW of UI.Widgets loop
-         if LW.Show_Border then
-            declare
-               Fragment : constant Komnenos.Fragments.Fragment_Type :=
-                            LW.Fragment;
-               Widget   : constant Gtk.Widget.Gtk_Widget :=
-                            LW.Widget;
-               Margin   : constant := Komnenos.Layouts.Margin;
-               X        : constant Gdouble :=
-                            Gdouble (Fragment.X) - Gdouble (Margin / 2)
-                          - Gdouble (UI.View_Left);
-               Y        : constant Gdouble :=
-                            Gdouble (Fragment.Y) - Gdouble (Margin / 2)
-                          - Gdouble (UI.View_Top);
-               Width    : constant Gdouble :=
-                            Gdouble (Widget.Get_Allocated_Width)
-                            + Gdouble (Margin);
-               Height   : constant Gdouble :=
-                            Gdouble (Widget.Get_Allocated_Height)
-                            + Gdouble (Margin);
-               Colour   : constant Gdk.Color.Gdk_Color :=
-                            LW.Border;
-               Red      : constant Gdouble :=
-                            Gdouble (Gdk.Color.Red (Colour)) / 65535.0;
-               Green    : constant Gdouble :=
-                            Gdouble (Gdk.Color.Green (Colour)) / 65535.0;
-               Blue     : constant Gdouble :=
-                            Gdouble (Gdk.Color.Blue (Colour)) / 65535.0;
-            begin
-               Cairo.Set_Source_Rgb (Context, Red, Green, Blue);
-               Draw_Rounded_Rectangle (Context, X, Y, Width, Height, 25.0);
-               Cairo.Fill (Context);
-            end;
-         end if;
-      end loop;
+--        for LW of UI.Widgets loop
+--           if LW.Show_Border then
+--              declare
+--                 Fragment : constant Komnenos.Fragments.Fragment_Type :=
+--                              LW.Fragment;
+--                 Widget   : constant Gtk.Widget.Gtk_Widget :=
+--                              LW.Widget;
+--                 Margin   : constant := Komnenos.Layouts.Margin;
+--                 X        : constant Gdouble :=
+--                              Gdouble (Fragment.X) - Gdouble (Margin / 2)
+--                            - Gdouble (UI.View_Left);
+--                 Y        : constant Gdouble :=
+--                              Gdouble (Fragment.Y) - Gdouble (Margin / 2)
+--                            - Gdouble (UI.View_Top);
+--                 Width    : constant Gdouble :=
+--                              Gdouble (Widget.Get_Allocated_Width)
+--                              + Gdouble (Margin);
+--                 Height   : constant Gdouble :=
+--                              Gdouble (Widget.Get_Allocated_Height)
+--                              + Gdouble (Margin);
+--                 Colour   : constant Gdk.Color.Gdk_Color :=
+--                              LW.Border;
+--                 Red      : constant Gdouble :=
+--                              Gdouble (Gdk.Color.Red (Colour)) / 65535.0;
+--                 Green    : constant Gdouble :=
+--                              Gdouble (Gdk.Color.Green (Colour)) / 65535.0;
+--                 Blue     : constant Gdouble :=
+--                              Gdouble (Gdk.Color.Blue (Colour)) / 65535.0;
+--              begin
+--                 Cairo.Set_Source_Rgb (Context, Red, Green, Blue);
+--                 Draw_Rounded_Rectangle (Context, X, Y, Width, Height, 25.0);
+--                 Cairo.Fill (Context);
+--              end;
+--           end if;
+--        end loop;
 
       for Connector of UI.Connectors loop
          declare
@@ -884,7 +901,7 @@ package body Komnenos.UI.Gtk_UI is
                B        : constant Guint16 :=
                             Gdk.Color.Blue (Widget.Background);
             begin
-               Widget.Widget.Get_Allocation (F_Size);
+               Widget.Grid.Get_Allocation (F_Size);
 
                Cairo.Set_Source_Rgb
                  (Context,
@@ -1293,13 +1310,15 @@ package body Komnenos.UI.Gtk_UI is
       Item   : Komnenos.Fragments.Fragment_Type)
    is
       Widget  : Gtk.Widget.Gtk_Widget;
+      Grid    : Gtk.Grid.Gtk_Grid;
       Display : Gtk.Widget.Gtk_Widget;
       Title   : Gtk.Widget.Gtk_Widget;
    begin
       Create_Fragment_Widget
         (Fragment => Item,
          UI       => Layout.UI,
-         Widget   => Widget,
+         Top      => Widget,
+         Grid     => Grid,
          Display  => Display,
          Title    => Title);
 
@@ -1307,20 +1326,25 @@ package body Komnenos.UI.Gtk_UI is
          New_Item : constant Layout_Widget_Access :=
                       new Layout_Widget_Record'
                         (Widget     => Widget,
+                         Grid        => Grid,
                          Display    => Display,
                          Title      => Title,
                          Fragment   => Item,
                          Background =>
                            Gdk.Color.Parse (Item.Background_Colour),
-                         Border     =>
-                           Gdk.Color.Parse (Item.Border_Colour),
+                         Border     => (0.0, 0.0, 0.0, 1.0),
                          Show_Border => True,
                          Grab_Focus => True,
                          Dragging   => False,
                          Start_X    => 0.0,
-                         Start_Y    => 0.0);
+                         Start_Y     => 0.0);
+         Got_Colour : Boolean;
+         pragma Unreferenced (Got_Colour);
       begin
+         Gdk.RGBA.Parse (New_Item.Border, Item.Border_Colour, Got_Colour);
+         Borders.Add_Borders (New_Item.all);
          Layout.UI.Widgets.Append (New_Item);
+         New_Item.Widget.Show_All;
       end;
 
       Layout.UI.Navigation.Queue_Draw;
@@ -1457,6 +1481,54 @@ package body Komnenos.UI.Gtk_UI is
    begin
       Fragment.Iterate (Put'Access, New_Line'Access);
    end Render_Text;
+
+   -----------------------
+   -- Set_Corner_Widget --
+   -----------------------
+
+   overriding procedure Set_Corner_Widget
+     (Fragment  : in out Layout_Widget_Record;
+      Corner    : Borders.Border_Corner;
+      Widget    : access Gtk.Widget.Gtk_Widget_Record'Class)
+   is
+      use Borders;
+      Left : constant array (Border_Corner) of Glib.Gint :=
+               (Top_Left | Bottom_Left => 0,
+                Top_Right | Bottom_Right => 2);
+      Top : constant array (Border_Corner) of Glib.Gint :=
+               (Top_Left | Top_Right => 0,
+                Bottom_Left | Bottom_Right => 3);
+
+   begin
+      Widget.Set_Size_Request (16, 16);
+      Fragment.Grid.Attach
+        (Widget, Left (Corner), Top (Corner), 1, 1);
+   end Set_Corner_Widget;
+
+   ---------------------
+   -- Set_Side_Widget --
+   ---------------------
+
+   overriding procedure Set_Side_Widget
+     (Fragment  : in out Layout_Widget_Record;
+      Edge      : Borders.Border_Edge;
+      Widget    : access Gtk.Widget.Gtk_Widget_Record'Class)
+   is
+      use Borders;
+      Attach_Left : constant array (Border_Edge) of Glib.Gint :=
+               (Left => 0, Top | Bottom => 1, Right => 2);
+      Attach_Top  : constant array (Border_Edge) of Glib.Gint :=
+               (Left | Right => 1, Top => 0, Bottom => 3);
+      Width : constant array (Border_Edge) of Glib.Gint :=
+                (others => 1);
+      Height : constant array (Border_Edge) of Glib.Gint :=
+                      (Left | Right => 2, Top | Bottom => 1);
+   begin
+      Widget.Set_Size_Request (16, 16);
+      Fragment.Grid.Attach
+        (Widget, Attach_Left (Edge), Attach_Top (Edge),
+         Width (Edge), Height (Edge));
+   end Set_Side_Widget;
 
    --------------------
    -- Set_Text_State --
