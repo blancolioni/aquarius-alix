@@ -64,7 +64,7 @@ package body Aqua.Architecture is
       if Operand.Mode = Literal then
          return Operand.Lit;
       else
-         return (Addressing_Mode'Pos (Operand.Mode) + 3) * 32
+         return (Addressing_Mode'Pos (Operand.Mode)) * 32
            + Boolean'Pos (Operand.Deferred) * 16
            + Octet (Operand.Register);
       end if;
@@ -228,7 +228,7 @@ package body Aqua.Architecture is
       return Operand_Type
    is
    begin
-      if (Op and 2#11000000#) = 0 then
+      if (Op and 2#11100000#) = 0 then
          return (Register => 0,
                  Deferred => False,
                  Mode     => Literal,
@@ -236,7 +236,7 @@ package body Aqua.Architecture is
       else
          return (Register => Register_Index (Op mod 16),
                  Deferred => (Op and 2#00010000#) /= 0,
-                 Mode     => Addressing_Mode'Val (Op / 32 - 3),
+                 Mode     => Addressing_Mode'Val (Op / 32),
                  Lit      => 0);
       end if;
    end Get_Operand;

@@ -13,7 +13,8 @@ package Aqua.Architecture is
    type Registers is array (Register_Index) of Word;
 
    type Addressing_Mode is
-     (Literal, Register, Autoincrement, Autodecrement,
+     (Literal, Register,
+      Autoincrement, Autodecrement,
       Indexed, Indexed_8, Indexed_16);
 
    type Condition_Code is
@@ -69,6 +70,14 @@ package Aqua.Architecture is
    function Get_Size
      (Instruction : Octet)
       return Data_Size;
+
+   function Get_Mode_Size (Mode : Addressing_Mode) return Data_Size
+   is (case Mode is
+          when Indexed => Word_32_Size,
+          when Indexed_16 => Word_16_Size,
+          when Indexed_8  => Word_8_Size,
+          when others     => raise Constraint_Error with
+            "cannot calculate size for mode " & Mode'Img);
 
    function Get_Operand
      (Op : Octet)
