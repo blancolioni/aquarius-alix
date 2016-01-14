@@ -15,7 +15,7 @@ with Aquarius.Source;
 with Aquarius.Syntax;
 
 with Aquarius.Actions.Scanner;
-with Aquarius.Actions.Pdp_32;
+with Aquarius.Actions.Tagatha_Scanner;
 
 with Aqua.Images;
 
@@ -80,7 +80,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       if Aquarius.Paths.Is_Newer (Action_Path, Assembly_Path) then
          declare
             use Aquarius.Messages;
-            Processor : Aquarius.Actions.Pdp_32.Pdp_Scanner;
+            Processor : Aquarius.Actions.Tagatha_Scanner.Tagatha_Scanner;
          begin
             Aquarius.Actions.Scanner.Scan_Actions
               (Processor, Action_Program, Group);
@@ -90,6 +90,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                   "errors detected");
                return;
             end if;
+            Processor.Write;
          end;
       end if;
 
