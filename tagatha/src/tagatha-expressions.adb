@@ -33,7 +33,11 @@ package body Tagatha.Expressions is
       begin
          case E.Class is
             when Simple =>
-               return (1 => Simple_Transfer (Expr.Term, Dst));
+               if Expr.Term = Dst then
+                  return No_Transfers;
+               else
+                  return (1 => Simple_Transfer (Expr.Term, Dst));
+               end if;
 
             when Structured =>
                if E.Op in Zero_Argument_Operator then

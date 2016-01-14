@@ -408,6 +408,8 @@ package body Tagatha.Code.X86_64 is
       case Op is
          when Op_Negate =>
             Instruction (Asm, "neg", To_String (T, Dest));
+         when Op_Not =>
+            Instruction (Asm, "not", To_String (T, Dest));
          when Op_Complement =>
             Instruction (Asm, "not", To_String (T, Dest));
          when Op_Test =>

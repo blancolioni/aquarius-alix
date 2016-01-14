@@ -13,6 +13,20 @@ package body Tagatha.Commands is
                                          Target);
    end Call;
 
+   ----------
+   -- Drop --
+   ----------
+
+   function Drop  (Size       : Tagatha_Size     := Default_Integer_Size)
+                   return Tagatha_Command
+   is
+   begin
+      return new Tagatha_Command_Record'(T_Stack, Size,
+                                         Tagatha.Labels.No_Label,
+                                         False,
+                                         S_Drop, Operands.Null_Operand);
+   end Drop;
+
    --------------------------
    -- Get_Command_Operator --
    --------------------------
@@ -100,6 +114,25 @@ package body Tagatha.Commands is
                                          Loop_Count, Loop_Index, Label);
    end Loop_Around;
 
+   --------------------
+   -- Native_Command --
+   --------------------
+
+   function Native_Command
+     (Name         : String;
+      Input_Words  : Natural;
+      Output_Words : Natural)
+      return Tagatha_Command
+   is
+   begin
+      return new Tagatha_Command_Record'
+        (T_Native, Default_Size,
+         Tagatha.Labels.No_Label,
+         False,
+         Ada.Strings.Unbounded.To_Unbounded_String (Name),
+         Input_Words, Output_Words);
+   end Native_Command;
+
    -------------
    -- Operate --
    -------------
@@ -148,32 +181,38 @@ package body Tagatha.Commands is
    -- Register_Command --
    ----------------------
 
-   procedure Register_Command
-     (Register  : in out Tagatha.Registry.Tagatha_Registry;
-      Command   : in     Tagatha_Command)
-   is
-   begin
-      Register.Record_Label (Get_Label (Command));
-      case Command.Instruction is
-         when T_Stack =>
-            case Command.Stack_Op is
-               when S_Push =>
-                  Register.Record_Push (Command.Size, Command.Operand);
-               when S_Pop =>
-                  Register.Record_Pop (Command.Size, Command.Operand);
-            end case;
-         when T_Operate =>
-            Register.Record_Operation (Command.Operator);
-         when T_Call =>
-            Register.Record_Call (Command.Subroutine);
-         when T_Loop =>
-            Register.Record_Loop (Command.Limit,
-                                  Command.Counter, Command.End_Label);
-         when T_Jump =>
-            Register.Record_Jump (Command.Condition,
-                                  Command.Destination);
-      end case;
-   end Register_Command;
+--     procedure Register_Command
+--       (Register  : in out Tagatha.Registry.Tagatha_Registry;
+--        Command   : in     Tagatha_Command)
+--     is
+--     begin
+--        Register.Record_Label (Get_Label (Command));
+--        case Command.Instruction is
+--           when T_Stack =>
+--              case Command.Stack_Op is
+--                 when S_Push =>
+--                    Register.Record_Push (Command.Size, Command.Operand);
+--                 when S_Pop =>
+--                    Register.Record_Pop (Command.Size, Command.Operand);
+--                 when S_Drop =>
+--                    Register.Record_Drop (Command.Size);
+--              end case;
+--           when T_Operate =>
+--              Register.Record_Operation (Command.Operator);
+--           when T_Call =>
+--              Register.Record_Call (Command.Subroutine);
+--           when T_Loop =>
+--              Register.Record_Loop (Command.Limit,
+--                                    Command.Counter, Command.End_Label);
+--           when T_Jump =>
+--              Register.Record_Jump (Command.Condition,
+--                                    Command.Destination);
+--           when T_Native =>
+--              Register.Record_Native_Operation
+--                (Ada.Strings.Unbounded.To_String (Command.Native_Name),
+--                 Command.Input_Words, Command.Output_Words);
+--        end case;
+--     end Register_Command;
 
    ---------------
    -- Set_Label --
@@ -199,6 +238,8 @@ package body Tagatha.Commands is
                   return "push " & Tagatha.Operands.Show (Command.Operand);
                when S_Pop =>
                   return "pop  " & Tagatha.Operands.Show (Command.Operand);
+               when S_Drop =>
+                  return "drop";
             end case;
          when T_Operate =>
             return Command.Operator'Img;
@@ -210,6 +251,8 @@ package body Tagatha.Commands is
          when T_Jump =>
             return "jump " & Command.Condition'Img &
               " " & Tagatha.Labels.Show (Command.Destination, 'L');
+         when T_Native =>
+            return Ada.Strings.Unbounded.To_String (Command.Native_Name);
       end case;
    end Show;
 

@@ -18,10 +18,10 @@ package Tagatha is
    type Tagatha_Operator is
      (Op_Nop,
       Op_Add, Op_Sub, Op_Mul, Op_Div, Op_Mod,
-      Op_And, Op_Or, Op_Xor, Op_Not,
+      Op_And, Op_Or, Op_Xor,
       Op_Bit_Test, Op_Bit_Clear, Op_Bit_Set, Op_Bit_Slice,
       Op_Compare, Op_Change_Size,
-      Op_Negate, Op_Complement, Op_Test,
+      Op_Negate, Op_Not, Op_Complement, Op_Test,
       Op_Dereference);
 
    subtype Multiplication_Operator is

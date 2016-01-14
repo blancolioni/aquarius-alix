@@ -145,6 +145,15 @@ package body Tagatha.Labels is
       Find_Label (In_List, "", Index, Label, Success);
    end Find_Label;
 
+   ---------------
+   -- Has_Label --
+   ---------------
+
+   function Has_Label (Label : Tagatha_Label) return Boolean is
+   begin
+      return Label /= No_Label;
+   end Has_Label;
+
    -------------
    -- Link_To --
    -------------
@@ -253,7 +262,7 @@ package body Tagatha.Labels is
             return Result;
          end;
       else
-         return '_' & Ada.Strings.Unbounded.To_String (Item.Name);
+         return Ada.Strings.Unbounded.To_String (Item.Name);
       end if;
    end Show;
 

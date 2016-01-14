@@ -56,6 +56,11 @@ package Tagatha.Code is
    function General_Registers (T : Translator) return Positive
                                is abstract;
 
+   function Extension
+     (T : Translator)
+      return String
+   is (".s");
+
    procedure Data
      (T     : in out Translator;
       Asm   : in out Assembly'Class;

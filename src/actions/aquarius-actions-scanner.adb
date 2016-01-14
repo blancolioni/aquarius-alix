@@ -1,3 +1,4 @@
+with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Directories;
 
 with Aquarius.Errors;
@@ -6,6 +7,9 @@ with Aquarius.Source;
 package body Aquarius.Actions.Scanner is
 
    use Aquarius.Programs;
+
+   package String_Lists is
+     new Ada.Containers.Indefinite_Doubly_Linked_Lists (String);
 
    procedure Scan
      (Processor : in out Action_Processor_Interface'Class;
@@ -307,7 +311,8 @@ package body Aquarius.Actions.Scanner is
       Processor.Top := Top;
       Processor.Group := Group;
 
-      Processor.Start_Process (Action_Group_Name (Group));
+      Processor.Start_Process (Top.Source_File_Name,
+                               Action_Group_Name (Group));
       Processor.Source_File
         (Top.Source_Directory,
          Top.Source_File_Name);
@@ -412,7 +417,7 @@ package body Aquarius.Actions.Scanner is
                      Index := Index + 1;
                   end loop;
 
-                  Processor.Literal_String
+                  Processor.Push_String_Literal
                     (String_Text  (String_Text'First .. Count));
                end;
             elsif Child.Name = "parenthesised_expression" then
@@ -429,8 +434,7 @@ package body Aquarius.Actions.Scanner is
             elsif Child.Name = "new_expression" then
                Scan_Object_Reference
                  (Processor, Child.Program_Child ("object_reference"));
-               Processor.Push_String_Literal ("new");
-               Processor.Get_Property (0);
+               Processor.Get_Property ("new", 0);
             elsif Child.Name = "if_expression" then
                declare
                   Children         : constant Array_Of_Program_Trees :=
@@ -478,99 +482,172 @@ package body Aquarius.Actions.Scanner is
       Ops : constant Array_Of_Program_Trees :=
               Reference.Direct_Children ("object_operator");
       No_Arguments : Array_Of_Program_Trees (1 .. 0);
-      Q            : Program_Tree := Qs (Qs'First);
-      Id           : Program_Tree := Q.Program_Child ("identifier");
-      Start_Name   : constant String := Id.Text;
-      Arg_Tree     : Program_Tree := Q.Program_Child ("actual_argument_list");
-      Arguments    : constant Array_Of_Program_Trees :=
-                       (if Arg_Tree = null then No_Arguments
-                        else Arg_Tree.Direct_Children ("expression"));
-      pragma Unreferenced (Arguments);
+--        Q            : Program_Tree := Qs (Qs'First);
+--        Id           : Program_Tree := Q.Program_Child ("identifier");
+      Start_Index  : Positive := 1;
+
+      function Component_Name (Q : Program_Tree) return String
+      is (Q.Program_Child ("identifier").Text);
+
    begin
 
-      if Processor.Frame_Table.Contains (Start_Name) then
-         declare
-            Start_Entry : constant Frame_Entry :=
-                            Processor.Frame_Table.Element (Start_Name);
-         begin
-            if Destination and then Qs'Length = 1 then
-               Processor.Pop_Frame_Entry (Integer (Start_Entry));
-            else
-               Processor.Push_Frame_Entry (Integer (Start_Entry));
-            end if;
-         end;
-      elsif Processor.External_Table.Contains (Start_Name) then
-         declare
-            Ext : constant External_Entry :=
-                    Processor.External_Table.Element (Start_Name);
-         begin
-            if Destination and then Qs'Length = 1 then
-               pragma Assert (not Ext.Is_Immediate);
-               Processor.Pop_External_Entry
-                 (Ada.Strings.Unbounded.To_String (Ext.External_Name));
-            else
-               Processor.Push_External_Entry
-                 (Ada.Strings.Unbounded.To_String (Ext.External_Name),
-                  Immediate => Ext.Is_Immediate);
-            end if;
-         end;
-      else
-         Aquarius.Errors.Error
-           (Reference,
-            "undefined: " & Start_Name);
+      if Qs'Length > 1 then
+         Processor.Start_Object_Reference;
       end if;
 
-      for I in Qs'First + 1 .. Qs'Last loop
-         Q := Qs (I);
-         Id := Q.Program_Child ("identifier");
-         Arg_Tree := Q.Program_Child ("actual_argument_list");
-
+      for I in reverse Qs'Range loop
          declare
-            Component : constant String := Id.Text;
+            First     : constant Boolean := I = Qs'First;
             Last      : constant Boolean := I = Qs'Last;
-            Op        : constant String := Ops (I - 1).Chosen_Tree.Text;
+            Q         : constant Program_Tree := Qs (I);
+--              Component : constant String := Component_Name (Q);
+            Arg_Tree  : constant Program_Tree :=
+                          Q.Program_Child ("actual_argument_list");
+            Op        : constant String :=
+                          (if First then ""
+                           else Ops (I - 1).Chosen_Tree.Text);
             Arguments : constant Array_Of_Program_Trees :=
                           (if Arg_Tree = null then No_Arguments
                            else Arg_Tree.Direct_Children ("expression"));
          begin
-            if Op = "." then
 
-               if Last and then Destination then
-                  if Arguments'Length > 0 then
-                     raise Constraint_Error
-                       with "invalid target for assignment";
-                  end if;
-                  Processor.Push_String_Literal (Component);
-                  Processor.Set_Property;
-               else
+            if Arguments'Length > 0
+              or else (not First and then Op /= ".")
+            then
+
+               if Last and then Destination
+                 and then (Arguments'Length > 0
+                            or else (Op /= "." and then Op /= ""))
+               then
+                  raise Constraint_Error
+                    with "invalid target for assignment: "
+                    & Reference.Concatenate_Children;
+               end if;
+
+               if Arguments'Length > 0 then
                   for Arg of reverse Arguments loop
                      Processor.Scan_Expression (Arg);
                   end loop;
-                  Processor.Push_String_Literal (Component);
-                  Processor.Get_Property (Arguments'Length);
+               elsif Op = "." then
+                  null;
+               elsif Op = "/" or else Op = "^" then
+                  Processor.Push_String_Literal
+                    (Component_Name (Q));
+               elsif not First or else Op /= "" then
+                  raise Constraint_Error with
+                    "cannot process qualifier: " & Op;
                end if;
-            elsif Op = "/" then
-               if Last and then Destination then
-                  raise Constraint_Error
-                    with "invalid target for assignment";
-               end if;
-               Processor.Push_String_Literal (Component);
-               Processor.Push_String_Literal ("tree_child");
-               Processor.Get_Property (1);
-            elsif Op = "^" then
-               if Last and then Destination then
-                  raise Constraint_Error
-                    with "invalid target for assignment";
-               end if;
-               Processor.Push_String_Literal (Component);
-               Processor.Push_String_Literal ("tree_ancestor");
-               Processor.Get_Property (1);
-            else
-               raise Constraint_Error with
-                 "cannot process qualifier: " & Op;
             end if;
          end;
       end loop;
+
+      for I in Qs'Range loop
+         declare
+            First     : constant Boolean := I = Qs'First;
+            Last      : constant Boolean := I = Qs'Last;
+            Q         : constant Program_Tree := Qs (I);
+--              Component : constant String := Component_Name (Q);
+            Arg_Tree  : constant Program_Tree :=
+                          Q.Program_Child ("actual_argument_list");
+            Op        : constant String :=
+                          (if First then ""
+                           else Ops (I - 1).Chosen_Tree.Text);
+            Arguments : constant Array_Of_Program_Trees :=
+                          (if Arg_Tree = null then No_Arguments
+                           else Arg_Tree.Direct_Children ("expression"));
+         begin
+
+            if Last
+              or else Arguments'Length > 0
+              or else (not First and then Op /= ".")
+            then
+
+               for J in Start_Index .. I loop
+
+                  declare
+                     Component : constant String :=
+                                   Component_Name (Qs (J));
+                  begin
+                     if J = Qs'First then
+                        if Processor.Frame_Table.Contains (Component) then
+                           declare
+                              Start_Entry : constant Frame_Entry :=
+                                              Processor.Frame_Table.Element
+                                                (Component);
+                           begin
+                              if Destination and then Qs'Length = 1 then
+                                 Processor.Pop_Frame_Entry
+                                   (Integer (Start_Entry));
+                              else
+                                 Processor.Push_Frame_Entry
+                                   (Integer (Start_Entry));
+                              end if;
+                           end;
+                        elsif Processor.External_Table.Contains
+                          (Component)
+                        then
+                           declare
+                              Ext : constant External_Entry :=
+                                      Processor.External_Table.Element
+                                        (Component);
+                           begin
+                              if Destination and then Qs'Length = 1 then
+                                 pragma Assert (not Ext.Is_Immediate);
+                                 Processor.Pop_External_Entry
+                                   (Ada.Strings.Unbounded.To_String
+                                      (Ext.External_Name));
+                              else
+                                 Processor.Push_External_Entry
+                                   (Ada.Strings.Unbounded.To_String
+                                      (Ext.External_Name),
+                                    Immediate => Ext.Is_Immediate);
+                              end if;
+                           end;
+                        else
+                           Aquarius.Errors.Error
+                             (Reference,
+                              "undefined: " & Component);
+                        end if;
+
+                     else
+                        declare
+                           Op        : constant String :=
+                                         Ops (J - 1).Chosen_Tree.Text;
+                        begin
+                           if Op = "." then
+
+                              if J = Qs'Last and then Destination then
+                                 Processor.Set_Property (Component);
+                              elsif J = I then
+                                 Processor.Get_Property
+                                   (Component, Arguments'Length);
+                              else
+                                 Processor.Get_Property
+                                   (Component, 0);
+                              end if;
+                           elsif Op = "/" then
+                              Processor.Get_Property ("tree_child", 1);
+                           elsif Op = "^" then
+                              Processor.Get_Property ("tree_ancestor", 1);
+                           else
+                              raise Constraint_Error with
+                                "cannot process qualifier: " & Op;
+                           end if;
+                        end;
+                     end if;
+                  end;
+               end loop;
+
+               Start_Index := I + 1;
+
+            end if;
+
+         end;
+      end loop;
+
+      if Qs'Length > 1 then
+         Processor.Finish_Object_Reference;
+      end if;
 
    end Scan_Object_Reference;
 
