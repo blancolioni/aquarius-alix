@@ -21,7 +21,7 @@ package body Ada_Plugin.Ch10.Gen is
 
       Unit.Finish_Unit;
       Unit.Optimise;
-      Unit.Write ("6502");
+      Unit.Write ("6502", ".");
 
    end Compilation_Unit_After;
 

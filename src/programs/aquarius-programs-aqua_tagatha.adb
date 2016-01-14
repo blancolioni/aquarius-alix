@@ -399,7 +399,7 @@ package body Aquarius.Programs.Aqua_Tagatha is
       pragma Unreferenced (Arguments);
    begin
       Current_Unit.Finish_Unit;
-      Current_Unit.Write ("6502");
+      Current_Unit.Write ("6502", ".");
       return 0;
    end Tagatha_End_Unit;
 

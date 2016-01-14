@@ -340,6 +340,8 @@ package body Tagatha.Code.I686 is
       case Op is
          when Op_Negate =>
             Instruction (Asm, "neg", To_String (Dest));
+         when Op_Not =>
+            Instruction (Asm, "cmpl", "$0", To_String (Dest));
          when Op_Complement =>
             Instruction (Asm, "not", To_String (Dest));
          when Op_Test =>

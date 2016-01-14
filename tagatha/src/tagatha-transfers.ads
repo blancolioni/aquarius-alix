@@ -1,3 +1,5 @@
+private with Ada.Strings.Unbounded;
+
 with Tagatha.Constants;
 with Tagatha.Labels;
 with Tagatha.Operands;
@@ -12,6 +14,8 @@ package Tagatha.Transfers is
    Null_Operand : constant Transfer_Operand;
 
    type Array_Of_Transfers is array (Positive range <>) of Transfer;
+
+   function No_Transfers return Array_Of_Transfers;
 
    function To_Temporary (Src_1, Src_2 : Transfer_Operand;
                           Op           : Tagatha_Operator;
@@ -29,6 +33,15 @@ package Tagatha.Transfers is
 
    function Result_Operand return Transfer_Operand;
 
+   function External_Operand
+     (Name      : String;
+      Immediate : Boolean)
+      return Transfer_Operand;
+
+   function Text_Operand
+     (Text      : String)
+      return Transfer_Operand;
+
    function To_Transfer (Op   : Tagatha.Operands.Tagatha_Operand)
                         return Transfer_Operand;
 
@@ -41,6 +54,8 @@ package Tagatha.Transfers is
 
    function Temporary_Operand (Temp          : Tagatha.Temporaries.Temporary)
                               return Transfer_Operand;
+
+   function Stack_Operand return Transfer_Operand;
 
    function Condition_Operand return Transfer_Operand;
 
@@ -66,6 +81,8 @@ package Tagatha.Transfers is
    function Control_Transfer (Condition   : Tagatha_Condition;
                               Destination : Tagatha.Labels.Tagatha_Label)
                              return Transfer;
+
+   function Native_Transfer (Name : String) return Transfer;
 
    function Reserve_Stack (Frame_Size : Natural) return Transfer;
    function Restore_Stack (Frame_Size : Natural) return Transfer;
@@ -94,6 +111,19 @@ package Tagatha.Transfers is
    function Is_Argument (Item : Transfer_Operand) return Boolean;
    function Is_Local    (Item : Transfer_Operand) return Boolean;
    function Is_Result   (Item : Transfer_Operand) return Boolean;
+   function Is_Stack    (Item : Transfer_Operand) return Boolean;
+   function Is_External (Item : Transfer_Operand) return Boolean;
+   function Is_Immediate (Item : Transfer_Operand) return Boolean;
+
+   function Is_Text     (Item : Transfer_Operand) return Boolean;
+   function Get_Text    (Item : Transfer_Operand) return String;
+
+   function Is_Temporary (Item : Transfer_Operand) return Boolean;
+   function Get_Temporary
+     (Item : Transfer_Operand)
+      return Tagatha.Temporaries.Temporary;
+
+   function External_Name (Item : Transfer_Operand) return String;
 
    function Has_Slice (Item : Transfer_Operand) return Boolean;
    function Slice_Fits (Item : Transfer_Operand;
@@ -121,7 +151,10 @@ package Tagatha.Transfers is
    function Get_Local_Offset (Item : Transfer_Operand) return Local_Offset;
 
    function Is_Simple    (Item : Transfer) return Boolean;
+   function Is_Native    (Item : Transfer) return Boolean;
    function Has_Operator (Item : Transfer) return Boolean;
+
+   function Get_Native_Text (Item : Transfer) return String;
 
    function Get_Destination (Item : Transfer) return Transfer_Operand;
    function Get_Source (Item : Transfer) return Transfer_Operand;
@@ -129,12 +162,28 @@ package Tagatha.Transfers is
    function Get_Source_2 (Item : Transfer) return Transfer_Operand;
    function Get_Operator (Item : Transfer) return Tagatha_Operator;
 
+   procedure Reference_Temporaries
+     (Item    : in out Transfer;
+      Address : Positive);
+
+   type Register_Allocation is
+      record
+         Start, Finish : Natural := 0;
+      end record;
+
+   type Register_Allocation_Array is
+     array (Positive range <>) of Register_Allocation;
+
+   procedure Assign_Registers
+     (Item : in out Transfer;
+      Rs   : in out Register_Allocation_Array);
+
 private
 
    type Transfer_Operand_Type is
      (T_No_Operand, T_Stack, T_Temporary,
-      T_Local, T_Argument, T_Result, T_Immediate,
-      T_Condition);
+      T_Local, T_Argument, T_Result, T_Immediate, T_External,
+      T_Condition, T_Text);
 
    type Bit_Slice is
       record
@@ -174,6 +223,11 @@ private
                null;
             when T_Immediate =>
                Value      : Tagatha.Constants.Tagatha_Constant;
+            when T_External =>
+               External_Name : Ada.Strings.Unbounded.Unbounded_String;
+               External_Imm  : Boolean;
+            when T_Text =>
+               Text          : Ada.Strings.Unbounded.Unbounded_String;
          end case;
       end record;
 
@@ -184,6 +238,7 @@ private
 
    type Transfer_Type is
      (T_Control,
+      T_Native,
       T_Data,
       T_Change_Stack);
 
@@ -195,6 +250,7 @@ private
          Condition   : Tagatha_Condition;
          Destination : Tagatha.Labels.Tagatha_Label;
          Self        : Boolean;
+         Native      : Ada.Strings.Unbounded.Unbounded_String;
          Src_1       : Transfer_Operand;
          Src_2       : Transfer_Operand;
          Dst         : Transfer_Operand;

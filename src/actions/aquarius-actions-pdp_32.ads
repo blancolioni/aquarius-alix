@@ -24,13 +24,13 @@ private
    type Pdp_Scanner is
    limited new Aquarius.Actions.Scanner.Action_Processor_Interface with
       record
-         File            : Ada.Text_IO.File_Type;
-         Frame_Offset    : Integer := 0;
-         Action_Parent   : Boolean;
-         Action_Child    : Boolean;
-         Next_Label      : Label_Type := 0;
-         Object_Start    : Ada.Strings.Unbounded.Unbounded_String;
-         Object_Partial  : Aqua.String_Vectors.Vector;
+         File                : Ada.Text_IO.File_Type;
+         Frame_Offset        : Integer := 0;
+         Action_Parent       : Boolean;
+         Action_Child        : Boolean;
+         Next_Label          : Label_Type := 0;
+         Object_Start        : Ada.Strings.Unbounded.Unbounded_String;
+         Object_Partial      : Aqua.String_Vectors.Vector;
       end record;
 
    procedure Line (Processor : Pdp_Scanner'Class;
@@ -97,11 +97,13 @@ private
       Name       : String);
 
    overriding procedure Get_Property
-     (Processor : in out Pdp_Scanner;
+     (Processor      : in out Pdp_Scanner;
+      Name           : String;
       Argument_Count : Natural);
 
    overriding procedure Set_Property
-     (Processor : in out Pdp_Scanner);
+     (Processor : in out Pdp_Scanner;
+      Name      : String);
 
    overriding procedure Clear_Result
      (Processor : in out Pdp_Scanner);
