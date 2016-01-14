@@ -516,7 +516,7 @@ package body Tagatha.Code.Pdp32 is
             end if;
             if Has_Slice (Item) then
                if Slice_Fits (Item, Size_8) then
-                  return Image (Addr + Get_Slice_Byte_Offset (Item)) & "(fp)";
+                  return Image (Addr + Get_Slice_Octet_Offset (Item)) & "(fp)";
                elsif Is_Argument (Item) then
                   return Image (Addr) & "(fp)";
                else
