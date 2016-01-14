@@ -374,13 +374,13 @@ package body Tagatha.Code.Pdp11 is
       if Get_Size (Dest) in Size_8 .. Size_16 then
          case Op is
             when Op_Negate =>
-               Instruction (Asm, "neg", Byte, To_Dst (Dest));
+               Instruction (Asm, "neg", Octet, To_Dst (Dest));
             when Op_Complement =>
-               Instruction (Asm, "not", Byte, To_Dst (Dest));
+               Instruction (Asm, "not", Octet, To_Dst (Dest));
             when Op_Not =>
-               Instruction (Asm, "not", Byte, To_Dst (Dest));
+               Instruction (Asm, "not", Octet, To_Dst (Dest));
             when Op_Test =>
-               Instruction (Asm, "tst", Byte, To_Dst (Dest));
+               Instruction (Asm, "tst", Octet, To_Dst (Dest));
             when Op_Dereference =>
                Instruction (Asm, "mov", Octet,
                             To_Dereferenced_String (Dest),
