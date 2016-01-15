@@ -1,5 +1,4 @@
 with Ada.Strings.Fixed;
-with Ada.Text_IO;
 with Ada.Unchecked_Conversion;
 
 with Tagatha.Constants;
@@ -89,8 +88,9 @@ package body Tagatha.Code.Pdp32 is
       use type Tagatha.Labels.Tagatha_Label;
       Label : Tagatha.Labels.Tagatha_Label := Get_Label (Item);
    begin
+
       while Label /= Tagatha.Labels.No_Label loop
-         Asm.Put_Line (Tagatha.Labels.Show (Label, '_') & ":");
+         Asm.Put_Line (Tagatha.Labels.Show (Label, 'L') & ":");
          Label := Tagatha.Labels.Next_Linked_Label (Label);
       end loop;
 
@@ -101,7 +101,7 @@ package body Tagatha.Code.Pdp32 is
             Dest : constant Tagatha_Label     := Get_Destination (Item);
          begin
             Asm.Put_Line ("    b" & To_String (Cond, T.Reverse_Test) &
-                            " " & Show (Dest, '_'));
+                            " " & Show (Dest, 'L'));
             T.Reverse_Test := False;
          end;
       elsif Is_Frame_Reservation (Item) then
@@ -152,6 +152,12 @@ package body Tagatha.Code.Pdp32 is
                      Get_Destination (Item));
          end if;
       end if;
+
+   exception
+      when others =>
+         raise Constraint_Error with
+           "failed to encode instruction: " & Transfers.Show (Item);
+
    end Encode;
 
    ------------
@@ -307,7 +313,7 @@ package body Tagatha.Code.Pdp32 is
    begin
 
       while L /= Tagatha.Labels.No_Label loop
-         Asm.Put_Line (Tagatha.Labels.Show (L, '_') & ":");
+         Asm.Put_Line (Tagatha.Labels.Show (L, 'L') & ":");
          L := Tagatha.Labels.Next_Linked_Label (L);
       end loop;
 
@@ -427,8 +433,6 @@ package body Tagatha.Code.Pdp32 is
             if Quick_Ops (I).Op = Op and then
               Quick_Ops (I).Source_Value = Get_Value (Source)
             then
-               Ada.Text_IO.Put_Line ("quick: " &
-                                       Quick_Ops (I).Mnemonic);
                Instruction
                  (Asm,
                   Trim (Quick_Ops (I).Mnemonic, Right),
