@@ -1,3 +1,5 @@
+with Aquarius.Config_Paths;
+
 package body Aquarius.Tagatha_Object is
 
    ---------------------------
@@ -16,12 +18,13 @@ package body Aquarius.Tagatha_Object is
    -- Generate --
    --------------
 
-   procedure Generate (Item : access Aquarius_Tagatha_Record'Class;
-                       Arch : in     String)
+   procedure Generate
+     (Item : access Aquarius_Tagatha_Record'Class;
+      Arch : in     String)
    is
    begin
       Item.Unit.Optimise;
-      Item.Unit.Write (Arch);
+      Item.Unit.Write (Arch, Aquarius.Config_Paths.Config_File ("scratch"));
    end Generate;
 
    --------------

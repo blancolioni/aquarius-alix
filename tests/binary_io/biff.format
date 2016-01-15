@@ -42,7 +42,7 @@ file Biff is
       Resource_Locator     : Word;
       Resource_Data_Offset : Word;
       Resource_Size        : Word;
-      Resource_Data        : access Word_8 from Resource_Data_Offset, Resource_Size;
+--      Resource_Data        : access Word_8 from Resource_Data_Offset, Resource_Size;
       Resource_Type        : Word/2;
       Padding              : Word/2;
    end File_Entry;
@@ -65,7 +65,7 @@ file Tlk is
       Pitch_Variance  : Word/4;
       String_Offset   : Word/4;
       String_Length   : Word/4;
-      String_Text     : access String from String_Offset, String_Length base Header.String_Offset;
+--      String_Text     : access String from String_Offset, String_Length base Header.String_Offset;
    end Strref_Entry;
 
 end Tlk;

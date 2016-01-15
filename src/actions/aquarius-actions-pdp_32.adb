@@ -166,7 +166,8 @@ package body Aquarius.Actions.Pdp_32 is
    ------------------
 
    overriding procedure Get_Property
-     (Processor : in out Pdp_Scanner;
+     (Processor      : in out Pdp_Scanner;
+      Name           : String;
       Argument_Count : Natural)
    is
    begin
@@ -175,7 +176,7 @@ package body Aquarius.Actions.Pdp_32 is
          "    mov #" & Natural'Image (Argument_Count) & ", -(sp)");
       Put_Line
         (Processor.File,
-         "    trap property_get");
+         "    get_property " & Name);
    end Get_Property;
 
    ------------------
@@ -517,12 +518,13 @@ package body Aquarius.Actions.Pdp_32 is
    ------------------
 
    overriding procedure Set_Property
-     (Processor : in out Pdp_Scanner)
+     (Processor : in out Pdp_Scanner;
+      Name      : String)
    is
    begin
       Put_Line
         (Processor.File,
-         "    trap property_set");
+         "    set_property " & Name);
    end Set_Property;
 
    ----------------------
@@ -564,6 +566,7 @@ package body Aquarius.Actions.Pdp_32 is
                 "    mov fp, -(sp)");
       Put_Line (Processor.File,
                 "    mov sp, fp");
+
    end Start_Action_Body;
 
    ---------------------

@@ -84,15 +84,18 @@ package Aquarius.Actions.Scanner is
 
    procedure Get_Property
      (Processor      : in out Action_Processor_Interface;
+      Name           : String;
       Argument_Count : Natural)
    is abstract;
 
    procedure Set_Property
-     (Processor      : in out Action_Processor_Interface)
+     (Processor      : in out Action_Processor_Interface;
+      Name           : String)
    is abstract;
 
    procedure Start_Process
-     (Processor : in out Action_Processor_Interface;
+     (Processor  : in out Action_Processor_Interface;
+      File_Name  : String;
       Group_Name : String)
    is abstract;
 
@@ -157,6 +160,14 @@ package Aquarius.Actions.Scanner is
    is abstract;
 
    procedure Assign (Processor : in out Action_Processor_Interface)
+   is abstract;
+
+   procedure Start_Object_Reference
+     (Processor : in out Action_Processor_Interface)
+   is abstract;
+
+   procedure Finish_Object_Reference
+     (Processor : in out Action_Processor_Interface)
    is abstract;
 
    procedure Start_Aggregate
