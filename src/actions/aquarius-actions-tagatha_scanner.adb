@@ -184,7 +184,10 @@ package body Aquarius.Actions.Tagatha_Scanner is
    begin
       Processor.Unit.Pop_Register ("op");
       Processor.Unit.Native_Stack_Operation
-        ("get_property " & Name & "," & Natural'Image (Argument_Count),
+        ("get_property " & Name
+         & (if Argument_Count > 0
+           then "," & Natural'Image (Argument_Count)
+           else ""),
          Argument_Count, 0);
       Processor.Unit.Push_Register ("pv");
    end Get_Property;
@@ -296,7 +299,9 @@ package body Aquarius.Actions.Tagatha_Scanner is
       Processor.Frame_Offset := Processor.Frame_Offset - 4;
       Processor.Add_Frame_Entry (Id, Processor.Frame_Offset);
       Processor.Unit.Label (Loop_Label);
-      Processor.Unit.Native_Stack_Operation ("iterator_next", 0, 1);
+      Processor.Unit.Native_Stack_Operation ("iterator_next", 0, 0);
+      Processor.Unit.Push_Register ("it");
+      Processor.Unit.Operate (Tagatha.Op_Test);
       Processor.Unit.Jump (Exit_Label, Tagatha.C_Equal);
 
       Scanner.Scan_Action (Processor, Statements);
@@ -362,7 +367,7 @@ package body Aquarius.Actions.Tagatha_Scanner is
    is
    begin
       if Name = "&" then
-         Processor.Unit.Native_Stack_Operation ("join", 2, 1);
+         Processor.Unit.Operate (Tagatha.Op_Add);
       elsif Name = "=" then
          Processor.Unit.Operate (Tagatha.Op_Compare);
       elsif Name = "not" then
@@ -550,8 +555,13 @@ package body Aquarius.Actions.Tagatha_Scanner is
          Processor.Unit.Push_Register ("agg");
       end if;
       Processor.Nested_Aggregates := Processor.Nested_Aggregates + 1;
+      Processor.Unit.Push_Operand
+        (Tagatha.Operands.External_Operand ("map", True),
+         Tagatha.Default_Size);
+      Processor.Unit.Pop_Register ("op");
       Processor.Unit.Native_Stack_Operation
-        ("allocate", 0, 1);
+        ("get_property new", 0, 0);
+      Processor.Unit.Push_Register ("pv");
       Processor.Unit.Pop_Register ("agg");
       Processor.Unit.Push_Register ("agg");
    end Start_Aggregate;
@@ -600,6 +610,27 @@ package body Aquarius.Actions.Tagatha_Scanner is
         (Ada.Directories.Base_Name (File_Name),
          Processor.Source_Path);
       Processor.Unit.Directive (".group " & Group_Name, 0);
+
+      Processor.Unit.Directive
+        ("map ="
+         & Natural'Image (16#3000_0001#));
+
+      Processor.Unit.Directive
+        ("array ="
+         & Natural'Image (16#3000_0002#));
+
+      Processor.Unit.Directive
+        ("aqua ="
+         & Natural'Image (16#3000_0003#));
+
+      Processor.Unit.Directive
+        ("io ="
+         & Natural'Image (16#3000_0004#));
+
+      Processor.Unit.Directive
+        ("project ="
+         & Natural'Image (16#0100#));
+
       External_Procedure (Processor, "map", Immediate => True);
       External_Procedure (Processor, "array", Immediate => True);
       External_Procedure (Processor, "io", Immediate => True);
