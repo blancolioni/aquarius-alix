@@ -49,6 +49,11 @@ package Tagatha.Labels is
                   Local_Prefix : Character)
                  return String;
 
+   function Show_All
+     (Item         : Tagatha_Label;
+      Local_Prefix : Character)
+      return String;
+
    function Has_Label (Label : Tagatha_Label) return Boolean;
 
    No_Label : constant Tagatha_Label;

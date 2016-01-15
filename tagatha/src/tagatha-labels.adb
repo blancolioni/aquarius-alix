@@ -45,6 +45,7 @@ package body Tagatha.Labels is
          end if;
          Label.Location := Location;
          Label.Has_Location := True;
+         Label.Linked_To := Linked_To;
       else
          Label := new Tagatha_Label_Record'
            (Name         => Ada.Strings.Unbounded.To_Unbounded_String (Name),
@@ -265,5 +266,25 @@ package body Tagatha.Labels is
          return Ada.Strings.Unbounded.To_String (Item.Name);
       end if;
    end Show;
+
+   --------------
+   -- Show_All --
+   --------------
+
+   function Show_All
+     (Item         : Tagatha_Label;
+      Local_Prefix : Character)
+      return String
+   is
+      use Ada.Strings.Unbounded;
+      Label : Tagatha_Label := Item;
+      Label_Text : Unbounded_String;
+   begin
+      while Has_Label (Label) loop
+         Label_Text := Label_Text & Show (Label, Local_Prefix) & ":";
+         Label := Next_Linked_Label (Label);
+      end loop;
+      return To_String (Label_Text);
+   end Show_All;
 
 end Tagatha.Labels;
