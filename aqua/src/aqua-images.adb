@@ -131,9 +131,14 @@ package body Aqua.Images is
                   Ada.Text_IO.Put (" " & Aqua.IO.Hex_Image (Ref.Addr));
                end if;
                if Info.Is_String then
-                  Image.Set_Word
-                    (Ref.Addr,
-                     To_String_Word (String_Reference (Info.Value)));
+                  declare
+                     Addr : constant Address := Ref.Addr;
+                     Index : constant String_Reference :=
+                               String_Reference (Info.Value);
+                     Value : constant Word := To_String_Word (Index);
+                  begin
+                     Image.Set_Word (Addr, Value);
+                  end;
                elsif Ref.Branch then
                   declare
                      Branch : constant Word :=
@@ -498,9 +503,15 @@ package body Aqua.Images is
    begin
       for Loc of Image.Locations loop
          if Loc.Start > Addr then
-            return Ada.Directories.Simple_Name (To_String (File_Name))
-              & ":" & Trim (Natural'Image (Line), Left)
-              & ":" & Trim (Natural'Image (Column), Left);
+            declare
+               Name : constant String := To_String (File_Name);
+            begin
+               if Name /= "" then
+                  return Ada.Directories.Simple_Name (To_String (File_Name))
+                    & ":" & Trim (Natural'Image (Line), Left)
+                    & ":" & Trim (Natural'Image (Column), Left);
+               end if;
+            end;
          else
             File_Name := Loc.Source_File;
             Line      := Loc.Line;

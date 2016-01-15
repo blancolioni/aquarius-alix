@@ -33,18 +33,18 @@ package body Aquarius.Actions.Tagatha_Scanner is
       Processor.Action_Child  := Child /= "";
 
       if not Processor.Frame_Contains (Parent) then
-         Processor.Add_Frame_Entry (Parent, 16);
+         Processor.Add_Frame_Entry (Parent, 3);
       end if;
 
       if Processor.Action_Child
         and then not Processor.Frame_Contains (Child)
       then
-         Processor.Add_Frame_Entry (Child, 20);
+         Processor.Add_Frame_Entry (Child, 4);
       end if;
 
       Processor.Unit.Begin_Routine
         (Name           => Routine_Name,
-         Argument_Words => (if Processor.Action_Child then 5 else 4),
+         Argument_Words => (if Processor.Action_Child then 4 else 3),
          Frame_Words    => 0,
          Result_Words   => 0,
          Global         => False);
@@ -454,10 +454,14 @@ package body Aquarius.Actions.Tagatha_Scanner is
    begin
       if Offset < 0 then
          Processor.Unit.Push_Local
-           (Tagatha.Local_Offset (abs Offset / 4));
+           (Tagatha.Local_Offset (abs Offset));
       else
-         Processor.Unit.Push_Argument
-           (Tagatha.Argument_Offset (Offset / 4));
+         if Offset < 20 then
+            Processor.Unit.Push_Argument
+              (Tagatha.Argument_Offset (Offset));
+         else
+            raise Constraint_Error with "suspiciously large offset";
+         end if;
       end if;
    end Push_Frame_Entry;
 
@@ -532,13 +536,13 @@ package body Aquarius.Actions.Tagatha_Scanner is
      (Processor : in out Tagatha_Scanner)
    is
    begin
-      Processor.Add_Frame_Entry ("komnenos", 8);
-      Processor.Add_Frame_Entry ("top", 12);
-      Processor.Add_Frame_Entry ("tree", 16);
+      Processor.Add_Frame_Entry ("komnenos", 1);
+      Processor.Add_Frame_Entry ("top", 2);
+      Processor.Add_Frame_Entry ("tree", 3);
 
       if Processor.Action_Child then
-         Processor.Add_Frame_Entry ("parent", 16);
-         Processor.Add_Frame_Entry ("child", 20);
+         Processor.Add_Frame_Entry ("parent", 3);
+         Processor.Add_Frame_Entry ("child", 4);
       end if;
 
    end Start_Action_Body;

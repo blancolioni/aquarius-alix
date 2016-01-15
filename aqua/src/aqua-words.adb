@@ -9,7 +9,7 @@ package body Aqua.Words is
       return Subroutine_Reference
    is
    begin
-      return Subroutine_Reference (Value and not Subroutine_Mask);
+      return Subroutine_Reference (Value and Payload_Mask);
    end Get_Subroutine_Reference;
 
    -----------------------------
@@ -21,7 +21,7 @@ package body Aqua.Words is
       return Boolean
    is
    begin
-      return (Value and Subroutine_Mask) = Subroutine_Tag;
+      return Get_Tag (Value) = Subroutine_Tag;
    end Is_Subroutine_Reference;
 
    ------------------------
@@ -33,7 +33,7 @@ package body Aqua.Words is
       return Word
    is
    begin
-      return Word (Reference) + Subroutine_Tag;
+      return Set_Tag (Word (Reference), Subroutine_Tag);
    end To_Subroutine_Word;
 
 end Aqua.Words;

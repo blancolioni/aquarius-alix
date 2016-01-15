@@ -345,26 +345,29 @@ package body Aquarius.Plugins.Macro_32.Assemble is
       Operand_Tree   : constant Program_Tree :=
                          Op.Program_Child ("operand").Chosen_Tree;
       Argument_Tree  : constant Program_Tree :=
-                         Op.Program_Child ("arguments");
+                         Op.Program_Child ("integer");
       Argument_Count : constant Natural :=
                          (if Argument_Tree /= null
                           then Natural'Value
-                            (Argument_Tree.Concatenate_Children)
+                            (Argument_Tree.Text)
                           else 0);
       Assembly       : constant Aqua.Assembler.Assembly :=
                          Assembly_Object
                            (Op.Property
                               (Global_Plugin.Assembly)).Assembly;
-      Property_Name  : constant Aqua.Word :=
-                         Assembly.Reference_Property_Name
-                           (Operand_Tree.Concatenate_Children);
    begin
       Assembly.Append_Octet
         (Aqua.Architecture.Encode
            (Aqua.Architecture.Aqua_Instruction'Value
                 ("A_" & Mnemonic),
             Immediate => Aqua.Octet (Argument_Count)));
-      Assembly.Append_Word (Property_Name);
+      declare
+         Property_Name  : constant Aqua.Word :=
+                            Assembly.Reference_Property_Name
+                              (Operand_Tree.Concatenate_Children);
+      begin
+         Assembly.Append_Word (Property_Name);
+      end;
    end After_Property;
 
    --------------------------

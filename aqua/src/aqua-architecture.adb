@@ -1,3 +1,6 @@
+with Ada.Text_IO;
+with Aqua.IO;
+
 package body Aqua.Architecture is
 
    ------------
@@ -41,8 +44,6 @@ package body Aqua.Architecture is
             return 2#00110001#;
          when A_Next_Iteration =>
             return 2#00110010#;
-         when A_Join =>
-            return 2#00110011#;
          when A_Jmp =>
             return 2#00110100#;
          when A_Jsr =>
@@ -77,6 +78,7 @@ package body Aqua.Architecture is
    function Get_Address
      (Operand : Operand_Type;
       Size    : Data_Size;
+      Trace   : Boolean;
       R       : in out Registers;
       Memory  : in out Memory_Interface'Class)
       return Address
@@ -117,6 +119,11 @@ package body Aqua.Architecture is
                               Memory.Get_Value (Get_Address (R (R_PC)),
                                                 Index_Size);
             begin
+
+               if Trace then
+                  Ada.Text_IO.Put (" " & Aqua.IO.Hex_Image (A, Index_Size));
+               end if;
+
                if Operand.Mode = Indexed_16 then
                   if A < 32768 then
                      Result := Result + Address (A);
@@ -186,8 +193,6 @@ package body Aqua.Architecture is
                      return A_Start_Iteration;
                   when 2 =>
                      return A_Next_Iteration;
-                  when 3 =>
-                     return A_Join;
                   when 4 =>
                      return A_Jmp;
                   when 5 =>
@@ -260,6 +265,7 @@ package body Aqua.Architecture is
    procedure Read
      (Operand : Operand_Type;
       Size    : Data_Size;
+      Trace   : Boolean;
       R       : in out Registers;
       Memory  : in out Memory_Interface'Class;
       Value   :    out Word)
@@ -273,41 +279,13 @@ package body Aqua.Architecture is
          Value := Get (R (Operand.Register), Size);
       else
          declare
-            A : constant Address := Get_Address (Operand, Size, R, Memory);
+            A : constant Address :=
+                  Get_Address (Operand, Size, Trace, R, Memory);
          begin
             Value := Memory.Get_Value (A, Size);
          end;
       end if;
    end Read;
-
-   ------------
-   -- Update --
-   ------------
-
-   procedure Update
-     (Operand : Operand_Type;
-      Size    : Data_Size;
-      R       : in out Registers;
-      Memory  : in out Memory_Interface'Class;
-      Fn      : not null access
-        function (X : Word) return Word)
-   is
-   begin
-      if Operand.Mode = Literal then
-         raise Constraint_Error with "cannot update a literal operand";
-      elsif Operand.Mode = Register
-        and then not Operand.Deferred
-      then
-         Set (R (Operand.Register),
-              Size, Fn (Get (R (Operand.Register), Size)));
-      else
-         declare
-            Addr : constant Address := Get_Address (Operand, Size, R, Memory);
-         begin
-            Memory.Set_Value (Addr, Size, Fn (Memory.Get_Value (Addr, Size)));
-         end;
-      end if;
-   end Update;
 
    -----------
    -- Write --
@@ -316,6 +294,7 @@ package body Aqua.Architecture is
    procedure Write
      (Operand : Operand_Type;
       Size    : Data_Size;
+      Trace   : Boolean;
       R       : in out Registers;
       Memory  : in out Memory_Interface'Class;
       Value   : Word)
@@ -329,7 +308,8 @@ package body Aqua.Architecture is
          Set (R (Operand.Register), Size, Value);
       else
          declare
-            A : constant Address := Get_Address (Operand, Size, R, Memory);
+            A : constant Address :=
+                  Get_Address (Operand, Size, Trace, R, Memory);
          begin
             Memory.Set_Value (A, Size, Value);
          end;

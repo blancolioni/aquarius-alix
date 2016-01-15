@@ -30,8 +30,7 @@ package Aqua.Architecture is
       A_Jmp, A_Jsr,
       A_Trap,
       A_Get_Property, A_Set_Property,
-      A_Start_Iteration, A_Next_Iteration,
-      A_Join);
+      A_Start_Iteration, A_Next_Iteration);
 
    subtype No_Operand_Instruction is
      Aqua_Instruction range A_Halt .. A_Rts;
@@ -49,8 +48,6 @@ package Aqua.Architecture is
      Aqua_Instruction range A_Get_Property .. A_Set_Property;
    subtype Iteration_Instruction is
      Aqua_Instruction range A_Start_Iteration .. A_Next_Iteration;
-   subtype String_Instruction is
-     Aqua_Instruction range A_Join .. A_Join;
 
    subtype Sized_Instruction is
      Aqua_Instruction range A_Clr .. A_Xor_3;
@@ -96,6 +93,7 @@ package Aqua.Architecture is
    function Get_Address
      (Operand : Operand_Type;
       Size    : Data_Size;
+      Trace   : Boolean;
       R       : in out Registers;
       Memory  : in out Memory_Interface'Class)
       return Address;
@@ -103,6 +101,7 @@ package Aqua.Architecture is
    procedure Read
      (Operand : Operand_Type;
       Size    : Data_Size;
+      Trace   : Boolean;
       R       : in out Registers;
       Memory  : in out Memory_Interface'Class;
       Value   :    out Word);
@@ -110,16 +109,9 @@ package Aqua.Architecture is
    procedure Write
      (Operand : Operand_Type;
       Size    : Data_Size;
+      Trace   : Boolean;
       R       : in out Registers;
       Memory  : in out Memory_Interface'Class;
       Value   : Word);
-
-   procedure Update
-     (Operand : Operand_Type;
-      Size    : Data_Size;
-      R       : in out Registers;
-      Memory  : in out Memory_Interface'Class;
-      Fn      : not null access
-        function (X : Word) return Word);
 
 end Aqua.Architecture;
