@@ -534,16 +534,18 @@ package body Tagatha.Units is
    -- Native_Stack_Operation --
    ----------------------------
 
-   procedure Native_Stack_Operation
-     (Unit         : in out Tagatha_Unit;
-      Name         : String;
-      Input_Words  : Natural;
-      Output_Words : Natural)
+   procedure Native_Operation
+     (Unit               : in out Tagatha_Unit;
+      Name               : String;
+      Input_Stack_Words  : Natural := 0;
+      Output_Stack_Words : Natural := 0;
+      Changed_Registers  : String  := "")
    is
    begin
       Unit.Command
-        (Commands.Native_Command (Name, Input_Words, Output_Words));
-   end Native_Stack_Operation;
+        (Commands.Native_Command
+           (Name, Input_Stack_Words, Output_Stack_Words, Changed_Registers));
+   end Native_Operation;
 
    ----------------
    -- Next_Label --

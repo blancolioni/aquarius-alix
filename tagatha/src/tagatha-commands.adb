@@ -1,3 +1,5 @@
+--  with Ada.Strings.Fixed;
+
 package body Tagatha.Commands is
 
    ----------
@@ -119,18 +121,32 @@ package body Tagatha.Commands is
    --------------------
 
    function Native_Command
-     (Name         : String;
-      Input_Words  : Natural;
-      Output_Words : Natural)
+     (Name              : String;
+      Input_Stack_Words  : Natural;
+      Output_Stack_Words : Natural;
+      Changed_Registers  : String)
       return Tagatha_Command
    is
+--        Rs : String_Vectors.Vector;
+--        Start : Positive := Changed_Registers'First;
+--        Index : Natural := Ada.Strings.Fixed.Index (Changed_Registers, ",");
    begin
+--        while Index > 0 loop
+--           Rs.Append (Changed_Registers (Start .. Index));
+--           Start := Index + 1;
+--           Index := Ada.Strings.Fixed.Index (Changed_Registers, ",", Start);
+--        end loop;
+--        if Start <= Changed_Registers'Last then
+--           Rs.Append (Changed_Registers (Start .. Changed_Registers'Last));
+--        end if;
+
       return new Tagatha_Command_Record'
         (T_Native, Default_Size,
          Tagatha.Labels.No_Label,
          False,
          Ada.Strings.Unbounded.To_Unbounded_String (Name),
-         Input_Words, Output_Words);
+         Ada.Strings.Unbounded.To_Unbounded_String (Changed_Registers),
+         Input_Stack_Words, Output_Stack_Words);
    end Native_Command;
 
    -------------
