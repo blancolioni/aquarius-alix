@@ -1,12 +1,23 @@
 with Ada.Text_IO;
 
-with Tagatha.Temporaries;
+----------------------
+-- Tagatha.Registry --
+----------------------
 
 package body Tagatha.Registry is
 
    procedure Record_Pop (Register : in out Tagatha_Registry;
                          Size     : in     Tagatha_Size;
                          Operand  : in     Transfers.Transfer_Operand);
+
+   procedure Force
+     (Register : in out Tagatha_Registry;
+      Size     : in     Tagatha_Size;
+      Offset   : in     Natural) with Unreferenced;
+
+   function Pop
+     (Register : in out Tagatha_Registry)
+      return Tagatha.Expressions.Expression;
 
    ------------
    -- Append --
@@ -21,32 +32,86 @@ package body Tagatha.Registry is
       Register.Transfers.Append (T);
    end Append;
 
+   -----------
+   -- Force --
+   -----------
+
+   procedure Force
+     (Register : in out Tagatha_Registry;
+      Size     : in     Tagatha_Size;
+      Offset   : in     Natural)
+   is
+      Transfers : Tagatha.Transfers.Array_Of_Transfers :=
+        Tagatha.Expressions.Get_Transfers
+        (Register.Temps,
+         Register.Stack.Element (Register.Stack.Last_Index - Offset),
+         Tagatha.Transfers.Stack_Operand);
+   begin
+      for I in Transfers'Range loop
+         Register.Append (Transfers (I));
+      end loop;
+      if Transfers'Length > 0 then
+         Tagatha.Transfers.Set_Size
+           (Transfers (Transfers'Last), Size);
+      end if;
+      Ada.Text_IO.Put_Line ("force");
+   end Force;
+
    -------------------
    -- Get_Transfers --
    -------------------
 
-   function Get_Transfers (Register : in Tagatha_Registry)
-                          return Tagatha.Transfers.Array_Of_Transfers
+   procedure Get_Transfers
+     (Register  : in Tagatha_Registry;
+      Transfers : in out Tagatha.Transfers.Transfer_Vectors.Vector)
    is
-      Result : Transfers.Array_Of_Transfers
-        (1 .. Natural (Register.Transfers.Length) + 2);
+      Reserve_Stack : constant Boolean := Register.Frame_Size > 0;
    begin
-      for I in Result'Range loop
-         if I = 1 then
-            Result (I) :=
-              Tagatha.Transfers.Reserve_Stack (Register.Frame_Size);
-         elsif I = Result'Last then
-            Result (I) :=
-              Tagatha.Transfers.Restore_Stack (Register.Frame_Size);
-         else
-            Result (I) := Register.Transfers.Element (I - 1);
-            Tagatha.Transfers.Set_Label (Result (I),
-                                         Register.Labels.Element (I - 1));
-         end if;
-         Ada.Text_IO.Put_Line (Tagatha.Transfers.Show (Result (I)));
+      Transfers.Clear;
+      if Reserve_Stack then
+         Transfers.Append
+           (Tagatha.Transfers.Reserve_Stack
+              (Register.Frame_Size));
+      end if;
+
+      for I in 1 .. Register.Transfers.Last_Index loop
+         declare
+            T : Tagatha.Transfers.Transfer :=
+                  Register.Transfers (I);
+         begin
+            Tagatha.Transfers.Set_Label
+              (T, Register.Labels.Element (I));
+            Transfers.Append (T);
+         end;
       end loop;
-      return Result;
+
+      if Reserve_Stack then
+         Transfers.Append
+           (Tagatha.Transfers.Restore_Stack (Register.Frame_Size));
+      end if;
+
    end Get_Transfers;
+
+   ---------
+   -- Pop --
+   ---------
+
+   function Pop
+     (Register : in out Tagatha_Registry)
+      return Tagatha.Expressions.Expression
+   is
+      E : Tagatha.Expressions.Expression;
+   begin
+      if Register.Stack.Is_Empty then
+         E :=
+           Tagatha.Expressions.New_Simple_Expression
+             (Tagatha.Transfers.Stack_Operand);
+      else
+         E := Register.Stack.Last_Element;
+         Register.Stack.Delete_Last;
+      end if;
+      return E;
+   end Pop;
 
    -----------------
    -- Record_Call --
@@ -60,6 +125,18 @@ package body Tagatha.Registry is
    begin
       null;
    end Record_Call;
+
+   -----------------
+   -- Record_Drop --
+   -----------------
+
+   procedure Record_Drop (Register : in out Tagatha_Registry;
+                          Size     : in     Tagatha_Size)
+   is
+   begin
+      Record_Pop (Register, Size, Tagatha.Transfers.Null_Operand);
+      Ada.Text_IO.Put_Line ("drop");
+   end Record_Drop;
 
    -----------------
    -- Record_Jump --
@@ -113,6 +190,40 @@ package body Tagatha.Registry is
       null;
    end Record_Loop;
 
+   -----------------------------
+   -- Record_Native_Operation --
+   -----------------------------
+
+   procedure Record_Native_Operation
+     (Register     : in out Tagatha_Registry;
+      Name         : String;
+      Input_Words  : Natural;
+      Output_Words : Natural)
+   is
+      pragma Unreferenced (Input_Words);
+   begin
+      for Operand of Register.Stack loop
+         declare
+            Transfers : constant Tagatha.Transfers.Array_Of_Transfers :=
+                          Tagatha.Expressions.Get_Transfers
+                            (Register.Temps, Operand,
+                             Tagatha.Transfers.Stack_Operand);
+         begin
+            for I in Transfers'Range loop
+               Register.Append (Transfers (I));
+            end loop;
+         end;
+      end loop;
+
+      Register.Stack.Clear;
+
+      Register.Append (Tagatha.Transfers.Native_Transfer (Name));
+      for I in 1 .. Output_Words loop
+         Register.Stack.Append
+           (Expressions.New_Simple_Expression (Transfers.Stack_Operand));
+      end loop;
+   end Record_Native_Operation;
+
    ----------------------
    -- Record_Operation --
    ----------------------
@@ -120,24 +231,26 @@ package body Tagatha.Registry is
    procedure Record_Operation (Register : in out Tagatha_Registry;
                                Operator : in     Tagatha_Operator)
    is
-      Top : constant Natural := Register.Stack.Last_Index;
       use Tagatha.Expressions;
    begin
       Ada.Text_IO.Put_Line (Operator'Img);
       if Operator in Zero_Argument_Operator then
          null;
       elsif Operator in One_Argument_Operator then
-         Register.Stack.Replace_Element
-           (Top,
-            New_Operator_Expression (Operator,
-                                     Register.Stack.Element (Top)));
+         declare
+            Left : constant Expression := Pop (Register);
+         begin
+            Register.Stack.Append
+              (New_Operator_Expression (Operator, Left));
+         end;
       else
-         Register.Stack.Replace_Element
-           (Top - 1,
-            New_Operator_Expression (Operator,
-                                     Register.Stack.Element (Top - 1),
-                                     Register.Stack.Element (Top)));
-         Register.Stack.Delete (Top);
+         declare
+            Left : constant Expression := Pop (Register);
+            Right : constant Expression := Pop (Register);
+         begin
+            Register.Stack.Append
+              (New_Operator_Expression (Operator, Left, Right));
+         end;
       end if;
    end Record_Operation;
 
@@ -166,20 +279,29 @@ package body Tagatha.Registry is
                          Size     : in     Tagatha_Size;
                          Operand  : in     Transfers.Transfer_Operand)
    is
-      Temps     : constant Tagatha.Temporaries.Temporary_Source :=
-        Tagatha.Temporaries.New_Source;
-      Transfers : Tagatha.Transfers.Array_Of_Transfers :=
-        Tagatha.Expressions.Get_Transfers
-        (Temps,
-         Register.Stack.Element (Register.Stack.Last_Index),
-         Operand);
    begin
-      for I in Transfers'Range loop
-         Register.Append (Transfers (I));
-      end loop;
-      Tagatha.Transfers.Set_Size
-        (Transfers (Transfers'Last), Size);
-      Register.Stack.Delete (Register.Stack.Last_Index);
+      if Register.Stack.Is_Empty then
+         Register.Append
+           (Tagatha.Transfers.Simple_Transfer
+              (From => Tagatha.Transfers.Stack_Operand,
+               To   => Operand));
+      else
+         declare
+            Transfers : Tagatha.Transfers.Array_Of_Transfers :=
+                          Tagatha.Expressions.Get_Transfers
+                            (Register.Temps,
+                             Register.Stack.Element
+                               (Register.Stack.Last_Index),
+                             Operand);
+         begin
+            for I in Transfers'Range loop
+               Register.Append (Transfers (I));
+            end loop;
+            Tagatha.Transfers.Set_Size
+              (Transfers (Transfers'Last), Size);
+            Register.Stack.Delete (Register.Stack.Last_Index);
+         end;
+      end if;
    end Record_Pop;
 
    -----------------
@@ -211,6 +333,7 @@ package body Tagatha.Registry is
    begin
       Register.Unit_Label := Unit_Label;
       Register.Frame_Size := Size;
+      Register.Temps := Tagatha.Temporaries.New_Source;
    end Start;
 
 end Tagatha.Registry;

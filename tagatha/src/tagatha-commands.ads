@@ -1,6 +1,7 @@
+with Ada.Strings.Unbounded;
+
 with Tagatha.Labels;
 with Tagatha.Operands;
-with Tagatha.Registry;
 
 package Tagatha.Commands is
 
@@ -13,6 +14,9 @@ package Tagatha.Commands is
    function Pop  (Operand    : Tagatha.Operands.Tagatha_Operand;
                   Size       : Tagatha_Size     := Default_Integer_Size)
                   return Tagatha_Command;
+
+   function Drop  (Size       : Tagatha_Size     := Default_Integer_Size)
+                   return Tagatha_Command;
 
    function Operate (Op   : Tagatha_Operator;
                      Neg  : Boolean           := False;
@@ -33,9 +37,11 @@ package Tagatha.Commands is
                   Size   : Tagatha_Size      := Default_Address_Size)
                  return Tagatha_Command;
 
-   procedure Register_Command
-     (Register  : in out Tagatha.Registry.Tagatha_Registry;
-      Command   : in     Tagatha_Command);
+   function Native_Command
+     (Name         : String;
+      Input_Words  : Natural;
+      Output_Words : Natural)
+      return Tagatha_Command;
 
    function Show (Command : Tagatha_Command) return String;
 
@@ -47,7 +53,7 @@ package Tagatha.Commands is
 
 private
 
-   type Stack_Operation is (S_Push, S_Pop);
+   type Stack_Operation is (S_Push, S_Pop, S_Drop);
 
    type Tagatha_Instruction is
      (T_Stack,     --  push or pop
@@ -58,7 +64,9 @@ private
 
       T_Loop,      --  bounded loop
 
-      T_Jump       --  local jump within this unit
+      T_Jump,      --  local jump within this unit
+
+      T_Native     --  a command that should be output literally
      );
 
    type Tagatha_Command_Record
@@ -82,6 +90,10 @@ private
             when T_Jump =>
                Condition   : Tagatha_Condition;
                Destination : Tagatha.Labels.Tagatha_Label;
+            when T_Native =>
+               Native_Name  : Ada.Strings.Unbounded.Unbounded_String;
+               Input_Words  : Natural;
+               Output_Words : Natural;
          end case;
       end record;
 
