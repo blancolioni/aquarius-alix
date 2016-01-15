@@ -44,7 +44,8 @@ package body Aqua.CPU is
                           A_Bcs => (CS, True));
 
    type Double_Operand_Handler is access
-     procedure (Size : Aqua.Data_Size;
+     procedure (CPU  : in out Aqua_CPU_Type'Class;
+                Size : Aqua.Data_Size;
                 Src  : Aqua.Word;
                 Dst  : in out Aqua.Word);
 
@@ -57,22 +58,26 @@ package body Aqua.CPU is
       return Double_Operand_Instruction;
 
    procedure Handle_Mov
-     (Size : Aqua.Data_Size;
+     (CPU  : in out Aqua_CPU_Type'Class;
+      Size : Aqua.Data_Size;
       Src  : Aqua.Word;
       Dst  : in out Aqua.Word);
 
    procedure Handle_Cmp
-     (Size : Aqua.Data_Size;
+     (CPU  : in out Aqua_CPU_Type'Class;
+      Size : Aqua.Data_Size;
       Src  : Aqua.Word;
       Dst  : in out Aqua.Word);
 
    procedure Handle_Add
-     (Size : Aqua.Data_Size;
+     (CPU  : in out Aqua_CPU_Type'Class;
+      Size : Aqua.Data_Size;
       Src  : Aqua.Word;
       Dst  : in out Aqua.Word);
 
    procedure Handle_Mul
-     (Size : Aqua.Data_Size;
+     (CPU  : in out Aqua_CPU_Type'Class;
+      Size : Aqua.Data_Size;
       Src  : Aqua.Word;
       Dst  : in out Aqua.Word);
 
@@ -358,7 +363,7 @@ package body Aqua.CPU is
                   end if;
                end if;
 
-               Double_Operand (Instruction) (Size, X, Y);
+               Double_Operand (Instruction) (CPU, Size, X, Y);
 
                Set_NZ (CPU, Size, Y);
 
@@ -392,7 +397,7 @@ package body Aqua.CPU is
                Dst := Next_Operand (CPU);
 
                Double_Operand (Convert_Triple_To_Double (Instruction))
-                 (Size, X, Y);
+                 (CPU, Size, X, Y);
 
                Set_NZ (CPU, Size, Y);
 
@@ -432,6 +437,7 @@ package body Aqua.CPU is
             begin
                Aqua.CPU.Traps.Handle_Get_Property
                  (CPU, Argument_Count, Name_Word);
+               Set_NZ (CPU, Word_32_Size, CPU.R (Aqua.Architecture.R_PV));
             end;
 
          when A_Set_Property =>
@@ -458,7 +464,7 @@ package body Aqua.CPU is
       when E : others =>
          raise Aqua.Execution.Execution_Error with
          CPU.Image.Show_Source_Position
-           (Get_Address (PC) - 4)
+           (Get_Address (PC) - 1)
            & ": " & Ada.Exceptions.Exception_Message (E);
 
    end Handle;
@@ -468,16 +474,35 @@ package body Aqua.CPU is
    ----------------
 
    procedure Handle_Add
-     (Size : Aqua.Data_Size;
+     (CPU  : in out Aqua_CPU_Type'Class;
+      Size : Aqua.Data_Size;
       Src  : Aqua.Word;
       Dst  : in out Aqua.Word)
    is
-      R : constant Word :=
-            (Src and Payload_Mask) + (Dst and Payload_Mask);
    begin
-      Aqua.Set
-        (Dst, Size,
-         (R and Payload_Mask) or (Dst and not Payload_Mask));
+      if Is_String_Reference (Src) or else Is_String_Reference (Dst) then
+         declare
+            Left : constant String :=
+                     (if Is_String_Reference (Src) or else Is_Integer (Src)
+                      then CPU.To_String (Src)
+                      else CPU.Show (Src));
+            Right : constant String :=
+                      (if Is_String_Reference (Dst) or else Is_Integer (Dst)
+                       then CPU.To_String (Dst)
+                       else CPU.Show (Dst));
+         begin
+            Dst := CPU.To_String_Word (Left & Right);
+         end;
+      else
+         declare
+            R : constant Word :=
+                  (Src and Payload_Mask) + (Dst and Payload_Mask);
+         begin
+            Aqua.Set
+              (Dst, Size,
+               (R and Payload_Mask) or (Dst and not Payload_Mask));
+         end;
+      end if;
    end Handle_Add;
 
    -------------------
@@ -552,10 +577,12 @@ package body Aqua.CPU is
    ----------------
 
    procedure Handle_Cmp
-     (Size     : Aqua.Data_Size;
-      Src      : Aqua.Word;
-      Dst      : in out Aqua.Word)
+     (CPU  : in out Aqua_CPU_Type'Class;
+      Size : Aqua.Data_Size;
+      Src  : Aqua.Word;
+      Dst  : in out Aqua.Word)
    is
+      pragma Unreferenced (CPU);
    begin
       if Size = Word_32_Size
         and then Is_Integer (Src) and then Is_Integer (Dst)
@@ -614,10 +641,12 @@ package body Aqua.CPU is
    ----------------
 
    procedure Handle_Mov
-     (Size     : Aqua.Data_Size;
-      Src      : Aqua.Word;
-      Dst      : in out Aqua.Word)
+     (CPU  : in out Aqua_CPU_Type'Class;
+      Size : Aqua.Data_Size;
+      Src  : Aqua.Word;
+      Dst  : in out Aqua.Word)
    is
+      pragma Unreferenced (CPU);
    begin
       Set (Dst, Size, Get (Src, Size));
    end Handle_Mov;
@@ -627,10 +656,12 @@ package body Aqua.CPU is
    ----------------
 
    procedure Handle_Mul
-     (Size     : Aqua.Data_Size;
-      Src      : Aqua.Word;
-      Dst      : in out Aqua.Word)
+     (CPU  : in out Aqua_CPU_Type'Class;
+      Size : Aqua.Data_Size;
+      Src  : Aqua.Word;
+      Dst  : in out Aqua.Word)
    is
+      pragma Unreferenced (CPU);
       R : constant Word :=
             (Src and Payload_Mask) * (Dst and Payload_Mask);
    begin
