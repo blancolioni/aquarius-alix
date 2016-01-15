@@ -522,8 +522,12 @@ package body Aqua.Assembler is
                       Value           => Word (R));
          begin
             A.Labels.Insert (Rx, Info);
-            if R = 10 then
+            if R = 8 then
                A.Labels.Insert ("AGG", Info);
+            elsif R = 9 then
+               A.Labels.Insert ("IT", Info);
+            elsif R = 10 then
+               A.Labels.Insert ("CTR", Info);
             elsif R = 11 then
                A.Labels.Insert ("PV", Info);
             elsif R = 12 then
