@@ -14,6 +14,7 @@ with Aqua.Images;
 package Aqua.CPU is
 
    Halt_Instruction : exception;
+   Runtime_Error    : exception;
 
    type Aqua_CPU_Type
      (Image : access Aqua.Images.Root_Image_Type'Class;

@@ -207,6 +207,7 @@ package body Aqua.CPU is
          declare
             Op : constant Octet :=
                    CPU.Image.Get_Octet (Get_Address (PC));
+            Original_PC : constant Word := PC;
          begin
             if Trace_Code then
                Ada.Text_IO.Put
@@ -222,10 +223,23 @@ package body Aqua.CPU is
 
             end if;
             Inc (PC);
-            Handle (CPU, Op);
-            if Trace_Code then
-               Ada.Text_IO.New_Line;
-            end if;
+
+            begin
+               Handle (CPU, Op);
+               if Trace_Code then
+                  Ada.Text_IO.New_Line;
+               end if;
+            exception
+               when E : Runtime_Error =>
+                  Ada.Text_IO.Put_Line
+                    (Ada.Text_IO.Standard_Error,
+                     CPU.Image.Show_Source_Position
+                       (Get_Address (Original_PC))
+                     & ": error: "
+                     & Ada.Exceptions.Exception_Message (E));
+                  CPU.B := True;
+            end;
+
          end;
       end loop;
 
@@ -262,7 +276,7 @@ package body Aqua.CPU is
       case Instruction is
          when A_Halt =>
             declare
-               Msg : constant String := Aqua.IO.Hex_Image (PC - 4);
+               Msg : constant String := Aqua.IO.Hex_Image (PC - 1);
             begin
                raise Halt_Instruction with "PC = " & Msg;
             end;
@@ -281,7 +295,7 @@ package body Aqua.CPU is
 
                if Instruction = A_Tst then
                   Aqua.Architecture.Read
-                    (Dst, Size, CPU.R, CPU.Image.all, X);
+                    (Dst, Size, Trace_Code, CPU.R, CPU.Image.all, X);
                else
                   if Dst.Mode = Register and then not Dst.Deferred then
                      A := 0;
@@ -290,7 +304,8 @@ package body Aqua.CPU is
                      A := 0;
                      X := Word (Dst.Lit);
                   else
-                     A := Get_Address (Dst, Size, CPU.R, CPU.Image.all);
+                     A := Get_Address (Dst, Size, Trace_Code,
+                                       CPU.R, CPU.Image.all);
                      X := CPU.Image.Get_Value (A, Size);
                   end if;
                end if;
@@ -322,13 +337,13 @@ package body Aqua.CPU is
                Src := Next_Operand (CPU);
 
                Aqua.Architecture.Read
-                 (Src, Size, CPU.R, CPU.Image.all, X);
+                 (Src, Size, Trace_Code, CPU.R, CPU.Image.all, X);
 
                Dst := Next_Operand (CPU);
 
                if Instruction = A_Cmp then
                   Aqua.Architecture.Read
-                    (Dst, Size, CPU.R, CPU.Image.all, Y);
+                    (Dst, Size, Trace_Code, CPU.R, CPU.Image.all, Y);
                else
                   if Dst.Mode = Register and then not Dst.Deferred then
                      A := 0;
@@ -337,7 +352,8 @@ package body Aqua.CPU is
                      A := 0;
                      Y := Word (Dst.Lit);
                   else
-                     A := Get_Address (Dst, Size, CPU.R, CPU.Image.all);
+                     A := Get_Address (Dst, Size, Trace_Code,
+                                       CPU.R, CPU.Image.all);
                      Y := CPU.Image.Get_Value (A, Size);
                   end if;
                end if;
@@ -366,12 +382,12 @@ package body Aqua.CPU is
                Src_1 := Next_Operand (CPU);
 
                Aqua.Architecture.Read
-                 (Src_1, Size, CPU.R, CPU.Image.all, X);
+                 (Src_1, Size, Trace_Code, CPU.R, CPU.Image.all, X);
 
                Src_2 := Next_Operand (CPU);
 
                Aqua.Architecture.Read
-                 (Src_2, Size, CPU.R, CPU.Image.all, Y);
+                 (Src_2, Size, Trace_Code, CPU.R, CPU.Image.all, Y);
 
                Dst := Next_Operand (CPU);
 
@@ -381,7 +397,7 @@ package body Aqua.CPU is
                Set_NZ (CPU, Size, Y);
 
                Aqua.Architecture.Write
-                 (Dst, Size, CPU.R, CPU.Image.all, Y);
+                 (Dst, Size, Trace_Code, CPU.R, CPU.Image.all, Y);
             end;
          when Branch_Instruction =>
             declare
@@ -407,20 +423,34 @@ package body Aqua.CPU is
                PC := To_Address_Word (New_PC);
             end;
 
+         when A_Get_Property =>
+            declare
+               Argument_Count : constant Natural :=
+                                  Natural (Op mod 16);
+               Name_Word      : constant Word :=
+                                  Next_Value (CPU, Word_32_Size);
+            begin
+               Aqua.CPU.Traps.Handle_Get_Property
+                 (CPU, Argument_Count, Name_Word);
+            end;
+
+         when A_Set_Property =>
+            declare
+               Name_Word      : constant Word :=
+                                  Next_Value (CPU, Word_32_Size);
+            begin
+               Aqua.CPU.Traps.Handle_Set_Property
+                 (CPU, Name_Word);
+            end;
+
          when A_Trap =>
 
             Handle_Trap
               (CPU, Natural (Op and 2#0000_1111#));
 
-         when A_Get_Property =>
-            null;
-         when A_Set_Property =>
-            null;
          when A_Start_Iteration =>
             null;
          when A_Next_Iteration =>
-            null;
-         when A_Join =>
             null;
       end case;
 
@@ -650,12 +680,6 @@ package body Aqua.CPU is
                CPU.Push
                  (CPU.To_String_Word (Result));
             end;
-         when Aqua.Traps.Property_Get =>
-
-            Aqua.CPU.Traps.Handle_Get_Property (CPU);
-
-         when Aqua.Traps.Property_Set =>
-            Aqua.CPU.Traps.Handle_Set_Property (CPU);
 
          when Aqua.Traps.Iterator_Start =>
             Aqua.CPU.Traps.Handle_Iterator_Start (CPU);

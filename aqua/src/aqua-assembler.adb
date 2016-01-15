@@ -522,13 +522,8 @@ package body Aqua.Assembler is
                       Value           => Word (R));
          begin
             A.Labels.Insert (Rx, Info);
-            if R = 8 then
-               A.Labels.Insert ("TOP", Info);
-            elsif R = 9 then
-               A.Labels.Insert ("PARENT", Info);
-               A.Labels.Insert ("TREE", Info);
-            elsif R = 10 then
-               A.Labels.Insert ("CHILD", Info);
+            if R = 10 then
+               A.Labels.Insert ("AGG", Info);
             elsif R = 11 then
                A.Labels.Insert ("PV", Info);
             elsif R = 12 then
@@ -678,19 +673,28 @@ package body Aqua.Assembler is
             Count       : Natural := 0;
             Index       : Positive := Raw_Text'First + 1;
          begin
-            --  Remove surrounding quotes, and convert two double quotes
-            --  into one.
-            while Index < Raw_Text'Last loop
-               if Index < Raw_Text'Last - 1
-                 and then Raw_Text (Index) = '"'
-                 and then Raw_Text (Index + 1) = '"'
-               then
+
+            if Raw_Text'Length >= 2
+              and then Raw_Text (Raw_Text'First) = '"'
+              and then Raw_Text (Raw_Text'Last) = '"'
+            then
+               --  Remove surrounding quotes, and convert two double quotes
+               --  into one.
+               while Index < Raw_Text'Last loop
+                  if Index < Raw_Text'Last - 1
+                    and then Raw_Text (Index) = '"'
+                    and then Raw_Text (Index + 1) = '"'
+                  then
+                     Index := Index + 1;
+                  end if;
+                  Count := Count + 1;
+                  String_Text (Count) := Raw_Text (Index);
                   Index := Index + 1;
-               end if;
-               Count := Count + 1;
-               String_Text (Count) := Raw_Text (Index);
-               Index := Index + 1;
-            end loop;
+               end loop;
+            else
+               String_Text := Raw_Text;
+               Count := Raw_Text'Length;
+            end if;
 
             Write_Word (File, Word (Count));
             Write_Word (File, Word (Info.References.Length));

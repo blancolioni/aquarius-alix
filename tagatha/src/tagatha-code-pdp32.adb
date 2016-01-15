@@ -170,6 +170,8 @@ package body Tagatha.Code.Pdp32 is
    is
       pragma Unreferenced (T);
    begin
+      Asm.Put_Line ("    mov fp, sp");
+      Asm.Put_Line ("    mov (sp)+, fp");
       Asm.Put_Line ("    rts");
    end Finish;
 

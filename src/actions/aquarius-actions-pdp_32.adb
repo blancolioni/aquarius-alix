@@ -553,13 +553,13 @@ package body Aquarius.Actions.Pdp_32 is
      (Processor : in out Pdp_Scanner)
    is
    begin
-      Processor.Add_Frame_Entry ("komnenos", 8);
-      Processor.Add_Frame_Entry ("top", 12);
-      Processor.Add_Frame_Entry ("tree", 16);
+      Processor.Add_Frame_Entry ("komnenos", 1);
+      Processor.Add_Frame_Entry ("top", 2);
+      Processor.Add_Frame_Entry ("tree", 3);
 
       if Processor.Action_Child then
-         Processor.Add_Frame_Entry ("parent", 16);
-         Processor.Add_Frame_Entry ("child", 20);
+         Processor.Add_Frame_Entry ("parent", 3);
+         Processor.Add_Frame_Entry ("child", 4);
       end if;
 
       Put_Line (Processor.File,
