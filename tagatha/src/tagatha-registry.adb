@@ -1,9 +1,3 @@
-with Ada.Text_IO;
-
-----------------------
--- Tagatha.Registry --
-----------------------
-
 package body Tagatha.Registry is
 
    procedure Record_Pop (Register : in out Tagatha_Registry;
@@ -26,10 +20,13 @@ package body Tagatha.Registry is
    procedure Append (Register : in out Tagatha_Registry;
                      T        : in     Tagatha.Transfers.Transfer)
    is
+      LT : Tagatha.Transfers.Transfer := T;
    begin
-      Register.Labels.Append (Register.Last_Label);
-      Register.Last_Label := Tagatha.Labels.No_Label;
-      Register.Transfers.Append (T);
+      if Labels.Has_Label (Register.Last_Label) then
+         Transfers.Set_Label (LT, Register.Last_Label);
+         Register.Last_Label := Tagatha.Labels.No_Label;
+      end if;
+      Register.Transfers.Append (LT);
    end Append;
 
    -----------
@@ -54,7 +51,6 @@ package body Tagatha.Registry is
          Tagatha.Transfers.Set_Size
            (Transfers (Transfers'Last), Size);
       end if;
-      Ada.Text_IO.Put_Line ("force");
    end Force;
 
    -------------------
@@ -76,14 +72,22 @@ package body Tagatha.Registry is
 
       for I in 1 .. Register.Transfers.Last_Index loop
          declare
-            T : Tagatha.Transfers.Transfer :=
+            T : constant Tagatha.Transfers.Transfer :=
                   Register.Transfers (I);
          begin
-            Tagatha.Transfers.Set_Label
-              (T, Register.Labels.Element (I));
             Transfers.Append (T);
          end;
       end loop;
+
+      if Labels.Has_Label (Register.Last_Label) then
+         declare
+            T : Tagatha.Transfers.Transfer :=
+                  Tagatha.Transfers.Reserve_Stack (0);
+         begin
+            Tagatha.Transfers.Set_Label (T, Register.Last_Label);
+            Transfers.Append (T);
+         end;
+      end if;
 
       if Reserve_Stack then
          Transfers.Append
@@ -135,7 +139,6 @@ package body Tagatha.Registry is
    is
    begin
       Record_Pop (Register, Size, Tagatha.Transfers.Null_Operand);
-      Ada.Text_IO.Put_Line ("drop");
    end Record_Drop;
 
    -----------------
@@ -147,8 +150,6 @@ package body Tagatha.Registry is
                           Destination : in     Tagatha.Labels.Tagatha_Label)
    is
    begin
-      Ada.Text_IO.Put_Line ("jump " & Condition'Img &
-                              " " & Tagatha.Labels.Show (Destination, 'L'));
       if Condition /= C_Always then
          Record_Pop (Register, Default_Address_Size,
                      Tagatha.Transfers.Condition_Operand);
@@ -233,7 +234,6 @@ package body Tagatha.Registry is
    is
       use Tagatha.Expressions;
    begin
-      Ada.Text_IO.Put_Line (Operator'Img);
       if Operator in Zero_Argument_Operator then
          null;
       elsif Operator in One_Argument_Operator then
@@ -263,10 +263,6 @@ package body Tagatha.Registry is
                          Operand  : in     Tagatha.Operands.Tagatha_Operand)
    is
    begin
-      Ada.Text_IO.Put_Line ("pop " &
-                              Positive'Image (Register.Stack.Last_Index) &
-                              " " &
-                              Tagatha.Operands.Show (Operand));
       Record_Pop (Register, Size,
                   Tagatha.Transfers.To_Transfer (Operand));
    end Record_Pop;
@@ -316,10 +312,6 @@ package body Tagatha.Registry is
    begin
       Register.Stack.Append
         (New_Simple_Expression (Transfers.To_Transfer (Operand, Size)));
-      Ada.Text_IO.Put_Line ("push" &
-                              Positive'Image (Register.Stack.Last_Index) &
-                              " " &
-                              Tagatha.Operands.Show (Operand));
    end Record_Push;
 
    -----------

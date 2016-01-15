@@ -67,11 +67,6 @@ private
                                  Tagatha.Transfers.Transfer,
                                  Tagatha.Transfers."=");
 
-   package Label_Vectors is
-     new Ada.Containers.Vectors (Positive,
-                                 Tagatha.Labels.Tagatha_Label,
-                                 Tagatha.Labels."=");
-
    type Tagatha_Registry is tagged
       record
          Frame_Size  : Natural;
@@ -79,7 +74,6 @@ private
          Stack       : Expression_Vectors.Vector;
          Transfers   : Tagatha.Transfers.Transfer_Vectors.Vector;
          Temps       : Tagatha.Temporaries.Temporary_Source;
-         Labels      : Label_Vectors.Vector;
          Last_Label  : Tagatha.Labels.Tagatha_Label;
       end record;
 
