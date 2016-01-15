@@ -230,30 +230,43 @@ package body Tagatha.Commands is
    ----------
 
    function Show (Command : Tagatha_Command) return String is
+      use Ada.Strings.Unbounded;
+      Label : Labels.Tagatha_Label := Command.Label;
+      Label_Text : Unbounded_String;
+      Command_Text : constant String :=
+                       (case Command.Instruction is
+                           when T_Stack   =>
+                          (case Command.Stack_Op is
+                              when S_Push =>
+                                 "push " &
+                                 Tagatha.Operands.Show (Command.Operand),
+                              when S_Pop  =>
+                                 "pop  " &
+                                 Tagatha.Operands.Show (Command.Operand),
+                              when S_Drop =>
+                                 "drop"),
+                           when T_Operate =>
+                              Command.Operator'Img,
+                           when T_Call    =>
+                              "call " &
+                              Tagatha.Labels.Show (Command.Subroutine, 'L'),
+                           when T_Loop    =>
+                              "loop" &
+                              Command.Limit'Img & Command.Counter'Img &
+                          " " & Tagatha.Labels.Show (Command.End_Label, 'L'),
+                           when T_Jump    =>
+                              "jump " & Command.Condition'Img &
+                              " " &
+                          Tagatha.Labels.Show (Command.Destination, 'L'),
+                           when T_Native  =>
+                              Ada.Strings.Unbounded.To_String
+                          (Command.Native_Name));
    begin
-      case Command.Instruction is
-         when T_Stack =>
-            case Command.Stack_Op is
-               when S_Push =>
-                  return "push " & Tagatha.Operands.Show (Command.Operand);
-               when S_Pop =>
-                  return "pop  " & Tagatha.Operands.Show (Command.Operand);
-               when S_Drop =>
-                  return "drop";
-            end case;
-         when T_Operate =>
-            return Command.Operator'Img;
-         when T_Call =>
-            return "call " & Tagatha.Labels.Show (Command.Subroutine, 'L');
-         when T_Loop =>
-            return "loop" & Command.Limit'Img & Command.Counter'Img &
-              " " & Tagatha.Labels.Show (Command.End_Label, 'L');
-         when T_Jump =>
-            return "jump " & Command.Condition'Img &
-              " " & Tagatha.Labels.Show (Command.Destination, 'L');
-         when T_Native =>
-            return Ada.Strings.Unbounded.To_String (Command.Native_Name);
-      end case;
+      while Tagatha.Labels.Has_Label (Label) loop
+         Label_Text := Label_Text & Labels.Show (Label, 'L') & ":";
+         Label := Tagatha.Labels.Next_Linked_Label (Label);
+      end loop;
+      return To_String (Label_Text) & Command_Text;
    end Show;
 
 end Tagatha.Commands;
