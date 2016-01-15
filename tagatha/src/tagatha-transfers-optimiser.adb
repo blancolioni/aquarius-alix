@@ -2,8 +2,6 @@ with Ada.Containers.Hashed_Maps;
 with Ada.Strings.Unbounded.Hash_Case_Insensitive;
 with Ada.Strings.Unbounded.Equal_Case_Insensitive;
 
-with Ada.Text_IO;
-
 package body Tagatha.Transfers.Optimiser is
 
    package Known_Value_Maps is
@@ -38,7 +36,6 @@ package body Tagatha.Transfers.Optimiser is
               and then Transfers (From_Index + 2).Trans = T_Control
               and then Transfers (From_Index + 2).Condition /= C_Always
             then
-               Ada.Text_IO.Put_Line ("  compressing conditional jump");
                From := Transfers (From_Index + 2);
                From.Condition := Negate (From.Condition);
                From_Index := From_Index + 2;
@@ -46,7 +43,6 @@ package body Tagatha.Transfers.Optimiser is
               and then From.Op = Op_Nop
               and then Same_Operand (From.Src_1, From.Dst)
             then
-               Ada.Text_IO.Put_Line ("  skipping null operation");
                Copy := False;
             elsif From.Trans = T_Data
               and then From.Op = Op_Nop
@@ -55,7 +51,6 @@ package body Tagatha.Transfers.Optimiser is
               and then Known_Values.Contains (From.Dst.External_Name)
               and then Known_Values (From.Dst.External_Name) = From.Src_1
             then
-               Ada.Text_IO.Put_Line ("  skipping repeated assignment");
                Copy := False;
             end if;
 
