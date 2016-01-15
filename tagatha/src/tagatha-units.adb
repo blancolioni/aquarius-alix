@@ -1,7 +1,6 @@
 with Ada.Characters.Handling;
 with Ada.Containers.Vectors;
 with Ada.Strings.Maps;
-with Ada.Text_IO;
 
 with Tagatha.Code;
 with Tagatha.Commands.Command_Vectors;
@@ -122,8 +121,15 @@ package body Tagatha.Units is
                      Command : in     Tagatha.Commands.Tagatha_Command)
    is
    begin
-      Tagatha.Commands.Set_Label (Command, To_Unit.Last_Label (Executable));
-      To_Unit.Last_Label (Executable) := Tagatha.Labels.No_Label;
+      if Tagatha.Labels.Has_Label (To_Unit.Last_Label (Executable)) then
+         declare
+            Label : constant Labels.Tagatha_Label :=
+                      To_Unit.Last_Label (Executable);
+         begin
+            Tagatha.Commands.Set_Label (Command, Label);
+            To_Unit.Last_Label (Executable) := Tagatha.Labels.No_Label;
+         end;
+      end if;
       To_Unit.Current_Sub.Executable_Segment.Append (Command);
       Increment_Address (To_Unit, Executable);
    end Append;
@@ -371,17 +377,18 @@ package body Tagatha.Units is
      (Unit : in out Tagatha_Unit)
    is
    begin
-      Ada.Text_IO.Put_Line ("begin: "
-                            & Ada.Strings.Unbounded.To_String
-                              (Unit.Current_Sub.Name));
-
-      for I in 1 .. Unit.Current_Sub.Executable_Segment.Last_Index loop
-         Ada.Text_IO.Put_Line
-           (Tagatha.Commands.Show
-              (Unit.Current_Sub.Executable_Segment.Element (I)));
-      end loop;
-
-      Ada.Text_IO.Put_Line ("optimising");
+      if Labels.Has_Label (Unit.Last_Label (Executable)) then
+         declare
+            Nop : constant Tagatha.Commands.Tagatha_Command :=
+                    Tagatha.Commands.Operate
+                      (Op_Nop, False, Default_Size);
+         begin
+            Commands.Set_Label (Nop, Unit.Last_Label (Executable));
+            Unit.Last_Label (Executable) := Labels.No_Label;
+            Unit.Current_Sub.Executable_Segment.Append (Nop);
+            Increment_Address (Unit, Executable, 1);
+         end;
+      end if;
 
       Unit.Optimise;
 
