@@ -176,11 +176,20 @@ package Tagatha.Units is
                            Op        : in     Operands.Tagatha_Operand;
                            Size      : in     Tagatha_Size);
 
-   procedure Native_Stack_Operation
-     (Unit         : in out Tagatha_Unit;
-      Name         : String;
-      Input_Words  : Natural;
-      Output_Words : Natural);
+   procedure Native_Operation
+     (Unit               : in out Tagatha_Unit;
+      Name               : String;
+      Input_Stack_Words  : Natural := 0;
+      Output_Stack_Words : Natural := 0;
+      Changed_Registers  : String := "");
+   --  An operation which is understood by the target architecture is created.
+   --  Input_Stack_Words holds the number of words which the
+   --  operation pops off the stack before executing.
+   --  Output_Stack_Words holds the number of words pushed to the stack
+   --  after execution.
+   --  Changed_Registers should be a comma-separated list
+   --  of registers that can be changed by this operation
+   --  If empty, no (relevant) registers are changed
 
 private
 

@@ -71,10 +71,9 @@ package body Aquarius.Actions.Tagatha_Scanner is
    begin
       Processor.Unit.Pop_Register ("op");
       Processor.Unit.Pop_Register ("pv");
-      Processor.Unit.Native_Stack_Operation
+      Processor.Unit.Native_Operation
         ("set_property "
-         & Ada.Strings.Unbounded.To_String (Processor.Property_Name),
-         0, 0);
+         & Ada.Strings.Unbounded.To_String (Processor.Property_Name));
    end Assign;
 
    ------------------
@@ -126,8 +125,8 @@ package body Aquarius.Actions.Tagatha_Scanner is
       Processor.Unit.Pop_Register ("pv");
       Processor.Unit.Push_Register ("agg");
       Processor.Unit.Pop_Register ("op");
-      Processor.Unit.Native_Stack_Operation
-        ("set_property " & Name, 0, 0);
+      Processor.Unit.Native_Operation
+        ("set_property " & Name);
    end End_Aggregate_Element;
 
    -----------------
@@ -183,12 +182,14 @@ package body Aquarius.Actions.Tagatha_Scanner is
    is
    begin
       Processor.Unit.Pop_Register ("op");
-      Processor.Unit.Native_Stack_Operation
+      Processor.Unit.Native_Operation
         ("get_property " & Name
          & (if Argument_Count > 0
            then "," & Natural'Image (Argument_Count)
            else ""),
-         Argument_Count, 0);
+         Input_Stack_Words => Argument_Count,
+         Output_Stack_Words => 0,
+         Changed_Registers  => "pv");
       Processor.Unit.Push_Register ("pv");
    end Get_Property;
 
@@ -295,11 +296,13 @@ package body Aquarius.Actions.Tagatha_Scanner is
 
       Processor.Nested_Loops := Processor.Nested_Loops + 1;
 
-      Processor.Unit.Native_Stack_Operation ("iterator_start", 0, 0);
+      Processor.Unit.Native_Operation
+        ("iterator_start", Changed_Registers => "ctr");
       Processor.Frame_Offset := Processor.Frame_Offset - 4;
       Processor.Add_Frame_Entry (Id, Processor.Frame_Offset);
       Processor.Unit.Label (Loop_Label);
-      Processor.Unit.Native_Stack_Operation ("iterator_next", 0, 0);
+      Processor.Unit.Native_Operation
+        ("iterator_next", Changed_Registers => "it");
       Processor.Unit.Push_Register ("it");
       Processor.Unit.Operate (Tagatha.Op_Test);
       Processor.Unit.Jump (Exit_Label, Tagatha.C_Equal);
@@ -504,8 +507,8 @@ package body Aquarius.Actions.Tagatha_Scanner is
    begin
       Processor.Unit.Pop_Register ("op");
       Processor.Unit.Pop_Register ("pv");
-      Processor.Unit.Native_Stack_Operation
-        ("set_property " & Name, 0, 0);
+      Processor.Unit.Native_Operation
+        ("set_property " & Name);
    end Set_Property;
 
    ----------------------
@@ -563,8 +566,8 @@ package body Aquarius.Actions.Tagatha_Scanner is
         (Tagatha.Operands.External_Operand ("map", True),
          Tagatha.Default_Size);
       Processor.Unit.Pop_Register ("op");
-      Processor.Unit.Native_Stack_Operation
-        ("get_property new", 0, 0);
+      Processor.Unit.Native_Operation
+        ("get_property new", Changed_Registers => "pv");
       Processor.Unit.Push_Register ("pv");
       Processor.Unit.Pop_Register ("agg");
       Processor.Unit.Push_Register ("agg");
