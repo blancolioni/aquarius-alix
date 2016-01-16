@@ -40,6 +40,11 @@ package Aquarius.Actions.Scanner is
       Name      : String;
       Offset    : Integer);
 
+   procedure Add_Frame_Entry
+     (Processor     : in out Action_Processor_Interface'Class;
+      Name          : String;
+      Internal_Name : String);
+
    procedure Add_Global_Entry
      (Processor : in out Action_Processor_Interface'Class;
       Name      : String;
@@ -226,7 +231,17 @@ package Aquarius.Actions.Scanner is
 
 private
 
-   type Frame_Entry is new Integer;
+   type Frame_Entry_Type is (Stack_Offset, Register_Name);
+
+   type Frame_Entry (Entry_Type : Frame_Entry_Type) is
+      record
+         case Entry_Type is
+            when Stack_Offset =>
+               Offset : Integer;
+            when Register_Name =>
+               Name   : Ada.Strings.Unbounded.Unbounded_String;
+         end case;
+      end record;
 
    package Frame_Tables is
      new Ada.Containers.Indefinite_Hashed_Maps

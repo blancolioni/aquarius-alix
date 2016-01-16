@@ -247,6 +247,36 @@ package body Aquarius.Plugins.Macro_32.Assemble is
       Place_Operand (Dst, Dst_Op, Size);
    end After_Double_Operand;
 
+   --------------------
+   -- After_Iterator --
+   --------------------
+
+   procedure After_Iterator
+     (Target : not null access Aquarius.Actions.Actionable'Class)
+   is
+      use Aquarius.Programs;
+      Op : constant Program_Tree := Program_Tree (Target);
+      Mnemonic       : constant String :=
+                         Op.Program_Child
+                           ("iterator_instruction").Concatenate_Children;
+      Register       : constant Program_Tree :=
+                         Op.Program_Child ("identifier");
+      Assembly       : constant Aqua.Assembler.Assembly :=
+                         Assembly_Object
+                           (Op.Property
+                              (Global_Plugin.Assembly)).Assembly;
+   begin
+      Assembly.Append_Octet
+        (Aqua.Architecture.Encode
+           (Aqua.Architecture.Aqua_Instruction'Value
+                ("A_" & Mnemonic)));
+      if Register /= null then
+         Assembly.Append_Octet
+           (Aqua.Octet
+              (Assembly.Get_Register (Register.Text)));
+      end if;
+   end After_Iterator;
+
    ----------------
    -- After_Jump --
    ----------------

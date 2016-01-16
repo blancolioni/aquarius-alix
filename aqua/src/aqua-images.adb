@@ -141,15 +141,21 @@ package body Aqua.Images is
                   end;
                elsif Ref.Branch then
                   declare
-                     Branch : constant Word :=
-                                Image.Get_Word (Ref.Addr);
                      Target : constant Address :=
                                 Aqua.Arithmetic.Relative_Address
                                   (Ref.Addr, Get_Address (Info.Value));
                   begin
-                     Image.Set_Word
-                       (Ref.Addr,
-                        Branch + Word (Target and 16#00FF_FFFF#));
+                     if Ref.Addr > Get_Address (Info.Value) then
+                        Ada.Text_IO.Put_Line
+                          ("branch backward: "
+                           & IO.Hex_Image (Ref.Addr)
+                           & " "
+                           & IO.Hex_Image (Info.Value)
+                           & " "
+                           & IO.Hex_Image (Target));
+                     end if;
+                     Image.Set_Value
+                             (Ref.Addr, Word_16_Size, Word (Target));
                   end;
                elsif Ref.Relative then
                   declare

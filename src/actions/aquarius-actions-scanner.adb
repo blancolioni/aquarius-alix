@@ -47,7 +47,24 @@ package body Aquarius.Actions.Scanner is
       Offset    : Integer)
    is
    begin
-      Processor.Frame_Table.Insert (Name, Frame_Entry (Offset));
+      Processor.Frame_Table.Insert
+        (Name, (Stack_Offset, Offset));
+   end Add_Frame_Entry;
+
+   ---------------------
+   -- Add_Frame_Entry --
+   ---------------------
+
+   procedure Add_Frame_Entry
+     (Processor     : in out Action_Processor_Interface'Class;
+      Name          : String;
+      Internal_Name : String)
+   is
+   begin
+      Processor.Frame_Table.Insert
+        (Name,
+         (Register_Name,
+          Ada.Strings.Unbounded.To_Unbounded_String (Internal_Name)));
    end Add_Frame_Entry;
 
    ----------------------
@@ -571,16 +588,29 @@ package body Aquarius.Actions.Scanner is
                      if J = Qs'First then
                         if Processor.Frame_Table.Contains (Component) then
                            declare
+                              use Ada.Strings.Unbounded;
                               Start_Entry : constant Frame_Entry :=
                                               Processor.Frame_Table.Element
                                                 (Component);
                            begin
                               if Destination and then Qs'Length = 1 then
-                                 Processor.Pop_Frame_Entry
-                                   (Integer (Start_Entry));
+                                 case Start_Entry.Entry_Type is
+                                    when Stack_Offset =>
+                                       Processor.Pop_Frame_Entry
+                                         (Start_Entry.Offset);
+                                    when Register_Name =>
+                                       Processor.Pop_External_Entry
+                                         (To_String (Start_Entry.Name));
+                                 end case;
                               else
-                                 Processor.Push_Frame_Entry
-                                   (Integer (Start_Entry));
+                                 case Start_Entry.Entry_Type is
+                                    when Stack_Offset =>
+                                       Processor.Push_Frame_Entry
+                                         (Start_Entry.Offset);
+                                    when Register_Name =>
+                                       Processor.Push_External_Entry
+                                         (To_String (Start_Entry.Name), False);
+                                 end case;
                               end if;
                            end;
                         elsif Processor.External_Table.Contains

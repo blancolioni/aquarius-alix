@@ -1,3 +1,5 @@
+with Aqua.Architecture;
+
 package Aqua.CPU.Traps is
 
    procedure Handle_Get_Property
@@ -13,6 +15,7 @@ package Aqua.CPU.Traps is
      (CPU   : in out Aqua_CPU_Type'Class);
 
    procedure Handle_Iterator_Next
-     (CPU   : in out Aqua_CPU_Type'Class);
+     (CPU   : in out Aqua_CPU_Type'Class;
+      R     : Aqua.Architecture.Register_Index);
 
 end Aqua.CPU.Traps;

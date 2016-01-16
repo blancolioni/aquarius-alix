@@ -454,10 +454,14 @@ package body Aqua.CPU is
             Handle_Trap
               (CPU, Natural (Op and 2#0000_1111#));
 
-         when A_Start_Iteration =>
-            null;
-         when A_Next_Iteration =>
-            null;
+         when A_Iterator_Start =>
+            Traps.Handle_Iterator_Start (CPU);
+         when A_Iterator_Next =>
+            declare
+               R : constant Octet := Next_Octet (CPU);
+            begin
+               Traps.Handle_Iterator_Next (CPU, Register_Index (R));
+            end;
       end case;
 
    exception
@@ -542,13 +546,13 @@ package body Aqua.CPU is
       if Branch then
          if Offset = 0 then
             null;
-         elsif Offset < 16#0080_0000# then
+         elsif Offset < 16#8000# then
             Aqua.Arithmetic.Inc
               (CPU.R (R_PC), Integer (Offset));
          else
             Aqua.Arithmetic.Dec
               (CPU.R (R_PC),
-               Integer ((16#0100_0000# - Offset)));
+               Integer ((16#1_0000# - Offset)));
          end if;
 
          if Trace_Code then
@@ -646,8 +650,11 @@ package body Aqua.CPU is
       Src  : Aqua.Word;
       Dst  : in out Aqua.Word)
    is
-      pragma Unreferenced (CPU);
+      Data : constant Word := Get (Src, Size);
    begin
+      if Trace_Code then
+         Ada.Text_IO.Put (" " & CPU.Show (Data));
+      end if;
       Set (Dst, Size, Get (Src, Size));
    end Handle_Mov;
 
@@ -711,12 +718,6 @@ package body Aqua.CPU is
                CPU.Push
                  (CPU.To_String_Word (Result));
             end;
-
-         when Aqua.Traps.Iterator_Start =>
-            Aqua.CPU.Traps.Handle_Iterator_Start (CPU);
-
-         when Aqua.Traps.Iterator_Next =>
-            Aqua.CPU.Traps.Handle_Iterator_Next (CPU);
 
          when Aqua.Traps.IO_Put_String =>
             declare

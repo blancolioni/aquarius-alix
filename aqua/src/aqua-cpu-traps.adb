@@ -123,12 +123,12 @@ package body Aqua.CPU.Traps is
    --------------------------
 
    procedure Handle_Iterator_Next
-     (CPU   : in out Aqua_CPU_Type'Class)
+     (CPU   : in out Aqua_CPU_Type'Class;
+      R     : Aqua.Architecture.Register_Index)
    is
+      use Aqua.Architecture;
       use Aqua.Iterators;
-      Old_Value     : constant Word := CPU.Pop;
-      pragma Unreferenced (Old_Value);
-      Iterator_Word : constant Word := CPU.Pop;
+      Iterator_Word : constant Word := CPU.R (R_CTR);
       Iterator_Ext  : access External_Object_Interface'Class;
       Iterator      : access Aqua_Iterator_Interface'Class;
    begin
@@ -163,8 +163,7 @@ package body Aqua.CPU.Traps is
                & " [" & Aqua.IO.Hex_Image (Iterator.Current) & "] "
                & CPU.Show (Iterator.Current));
          end if;
-         CPU.Push (Iterator_Word);
-         CPU.Push (Iterator.Current);
+         CPU.R (R) := Iterator.Current;
       else
          if Trace_Properties then
             Ada.Text_IO.Put_Line
@@ -180,8 +179,9 @@ package body Aqua.CPU.Traps is
    procedure Handle_Iterator_Start
      (CPU   : in out Aqua_CPU_Type'Class)
    is
+      use Aqua.Architecture;
       use Aqua.Iterators;
-      Container_Word : constant Word := CPU.Pop;
+      Container_Word : constant Word := CPU.R (R_CTR);
       Container_Ext  : access External_Object_Interface'Class;
       Container      : access Aqua_Container_Interface'Class;
    begin
@@ -211,8 +211,7 @@ package body Aqua.CPU.Traps is
                 new Aqua_Iterator_Interface'Class'
                   (Container.Start);
       begin
-         CPU.Push (CPU.To_Word (It));
-         CPU.Push (0);
+         CPU.R (R_CTR) := CPU.To_Word (It);
       end;
    end Handle_Iterator_Start;
 
