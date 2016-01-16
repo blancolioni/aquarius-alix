@@ -24,6 +24,10 @@ package body Tagatha.Transfers.Optimiser is
       Result : Tagatha.Transfers.Transfer_Vectors.Vector;
       Label        : Tagatha.Labels.Tagatha_Label := Tagatha.Labels.No_Label;
 
+      procedure Clear_Known_Registers
+        (Changed_Registers : String)
+      is null;
+
    begin
       while From_Index <= Transfers.Last_Index loop
          declare
@@ -47,6 +51,7 @@ package body Tagatha.Transfers.Optimiser is
             elsif From.Trans = T_Data
               and then From.Op = Op_Nop
               and then From.Src_1.Op /= T_Stack
+              and then From.Src_1.Op /= T_External
               and then From.Dst.Op = T_External
               and then Known_Values.Contains (From.Dst.External_Name)
               and then Known_Values (From.Dst.External_Name) = From.Src_1
@@ -71,6 +76,9 @@ package body Tagatha.Transfers.Optimiser is
                   else
                      Known_Values.Insert (From.Dst.External_Name, From.Src_1);
                   end if;
+               elsif From.Trans = T_Native then
+                  Clear_Known_Registers
+                    (Ada.Strings.Unbounded.To_String (From.Changed_Registers));
                end if;
             elsif Tagatha.Labels.Has_Label (From.Label) then
                Tagatha.Labels.Link_To (From.Label, Label);
