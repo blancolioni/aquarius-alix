@@ -3,6 +3,8 @@ package Aquarius.Command_Line is
    function Version return Boolean;
    function Help    return Boolean;
 
+   function Clear_Cache return Boolean;
+
    function Filter  return Boolean;
 
    function Action       return String;

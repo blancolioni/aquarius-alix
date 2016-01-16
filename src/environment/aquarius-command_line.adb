@@ -22,6 +22,15 @@ package body Aquarius.Command_Line is
       return Get_Argument ("a", "action");
    end Action;
 
+   -----------------
+   -- Clear_Cache --
+   -----------------
+
+   function Clear_Cache return Boolean is
+   begin
+      return Get_Flag ("", "clear-cache");
+   end Clear_Cache;
+
    ------------------
    -- Enable_Debug --
    ------------------
