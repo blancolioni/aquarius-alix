@@ -30,9 +30,52 @@ with Komnenos.Entities.Aqua_Entities;
 
 procedure Aquarius.Driver is
 
+   procedure Clear_Cache;
+
    procedure Show_Usage_Text;
 
    procedure Show_Allocations;
+
+   -----------------
+   -- Clear_Cache --
+   -----------------
+
+   procedure Clear_Cache is
+      use Ada.Directories;
+      Path : constant String :=
+               Aquarius.Config_Paths.Config_File ("scratch");
+
+      procedure Clear_Cache_Files (Pattern : String);
+
+      -----------------------
+      -- Clear_Cache_Files --
+      -----------------------
+
+      procedure Clear_Cache_Files (Pattern : String) is
+         Search : Search_Type;
+         Next   : Directory_Entry_Type;
+      begin
+         Start_Search (Search, Path, Pattern,
+                       Filter => (Ordinary_File => True, others => False));
+         while More_Entries (Search) loop
+            Get_Next_Entry (Search, Next);
+            begin
+               Delete_File (Full_Name (Next));
+            exception
+               when others =>
+                  Ada.Text_IO.Put_Line
+                    ("clear-cache: failed to delete "
+                     & Full_Name (Next));
+            end;
+         end loop;
+         End_Search (Search);
+      end Clear_Cache_Files;
+
+   begin
+      Clear_Cache_Files ("*.action");
+      Clear_Cache_Files ("*.m32");
+      Clear_Cache_Files ("*.o32");
+   end Clear_Cache;
 
    ----------------------
    -- Show_Allocations --
@@ -113,6 +156,12 @@ begin
    if Command_Line.Help then
       Ada.Text_IO.Put_Line (Version.Version_String);
       Show_Usage_Text;
+      return;
+   end if;
+
+   if Command_Line.Clear_Cache then
+      Clear_Cache;
+      Ada.Text_IO.Put_Line ("Finished clearing cache");
       return;
    end if;
 
