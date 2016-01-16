@@ -9,6 +9,11 @@ package body Aqua.Assembler is
       Index : Positive)
       return String;
 
+   function Branch_Offset
+     (PC          : Address;
+      Destination : Address)
+      return Word;
+
    ------------
    -- Append --
    ------------
@@ -82,6 +87,25 @@ package body Aqua.Assembler is
                To_Unbounded_String (Child));
       A.Bindings.Append (Info);
    end Bind_Action;
+
+   -------------------
+   -- Branch_Offset --
+   -------------------
+
+   function Branch_Offset
+     (PC          : Address;
+      Destination : Address)
+      return Word
+   is
+      Offset : Address;
+   begin
+      if Destination >= PC + 2 then
+         Offset := Destination - PC - 2;
+      else
+         Offset := 16#1_0000# - (PC + 2 - Destination);
+      end if;
+      return Word (Offset mod 65536);
+   end Branch_Offset;
 
    ---------------------------
    -- Define_Exported_Label --
@@ -211,12 +235,10 @@ package body Aqua.Assembler is
             begin
                if Branch then
                   declare
-                     Offset : constant Address :=
-                                (if Dest >= Addr + 2
-                                 then Dest - (Addr + 2)
-                                 else 16#1_0000# - (Addr + 2 - Dest));
+                     Offset : constant Word :=
+                                Branch_Offset (Addr, Dest);
                   begin
-                     A.Set_Value (Addr, Word_16_Size, Word (Offset));
+                     A.Set_Value (Addr, Word_16_Size, Offset);
                   end;
                elsif Relative then
                   pragma Assert (Is_Address (Info.Value));
@@ -339,7 +361,11 @@ package body Aqua.Assembler is
       begin
          Info.References.Append ((A.PC, Relative => False, Branch => True));
          A.Labels (Name) := Info;
-         return Info.Value;
+         if Info.Defined then
+            return Branch_Offset (A.PC, Get_Address (Info.Value));
+         else
+            return 0;
+         end if;
       end;
    end Reference_Branch_Label;
 
@@ -522,10 +548,8 @@ package body Aqua.Assembler is
                       Value           => Word (R));
          begin
             A.Labels.Insert (Rx, Info);
-            if R = 8 then
+            if R = 9 then
                A.Labels.Insert ("AGG", Info);
-            elsif R = 9 then
-               A.Labels.Insert ("IT", Info);
             elsif R = 10 then
                A.Labels.Insert ("CTR", Info);
             elsif R = 11 then

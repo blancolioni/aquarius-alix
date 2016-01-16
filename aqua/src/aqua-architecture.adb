@@ -40,9 +40,9 @@ package body Aqua.Architecture is
             return 2#00100000# + Immediate mod 16;
          when A_Set_Property =>
             return 2#00110000#;
-         when A_Start_Iteration =>
+         when A_Iterator_Start =>
             return 2#00110001#;
-         when A_Next_Iteration =>
+         when A_Iterator_Next =>
             return 2#00110010#;
          when A_Jmp =>
             return 2#00110100#;
@@ -190,9 +190,9 @@ package body Aqua.Architecture is
                   when 0 =>
                      return A_Set_Property;
                   when 1 =>
-                     return A_Start_Iteration;
+                     return A_Iterator_Start;
                   when 2 =>
-                     return A_Next_Iteration;
+                     return A_Iterator_Next;
                   when 4 =>
                      return A_Jmp;
                   when 5 =>

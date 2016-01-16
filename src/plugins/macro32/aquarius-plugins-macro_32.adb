@@ -77,6 +77,10 @@ package body Aquarius.Plugins.Macro_32 is
          Plugins.Macro_32.Assemble.After_Property'Access);
 
       Plugin.Register_Action
+        ("iterator", Assemble, After,
+         Plugins.Macro_32.Assemble.After_Iterator'Access);
+
+      Plugin.Register_Action
         ("branch", Assemble, After,
          Plugins.Macro_32.Assemble.After_Branch'Access);
 

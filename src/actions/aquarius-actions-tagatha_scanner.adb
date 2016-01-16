@@ -4,7 +4,11 @@ with Aquarius.Paths;
 
 with Tagatha.Operands;
 
+with Tagatha.Units.Listing;
+
 package body Aquarius.Actions.Tagatha_Scanner is
+
+   Write_Listing : constant Boolean := False;
 
    procedure External_Procedure
      (Processor : in out Tagatha_Scanner'Class;
@@ -138,6 +142,10 @@ package body Aquarius.Actions.Tagatha_Scanner is
    is
    begin
       Processor.Unit.Finish_Unit;
+      if Write_Listing then
+         Tagatha.Units.Listing.Write_Command_Listing
+           (Processor.Unit);
+      end if;
    end End_Process;
 
    ------------------------
@@ -278,32 +286,33 @@ package body Aquarius.Actions.Tagatha_Scanner is
    is
       Id : constant String :=
              (if Identifier = "" then "current" else Identifier);
+      Register   : String := "r8";
       Loop_Label : constant Positive := Processor.Unit.Next_Label;
       Exit_Label : constant Positive := Processor.Unit.Next_Label;
    begin
+      Register (2) :=
+        Character'Val (Character'Pos ('8') - Processor.Nested_Loops);
+
       if Processor.Nested_Loops > 0 then
          Processor.Unit.Push_Register ("ctr");
-         Processor.Unit.Pop_Register ("t1");
+         Processor.Unit.Pop_Register ("r0");
       end if;
 
       Processor.Unit.Pop_Register ("ctr");
 
       if Processor.Nested_Loops > 0 then
-         Processor.Unit.Push_Register ("t1");
-         Processor.Unit.Push_Register ("it");
-         Processor.Frame_Offset := Processor.Frame_Offset - 8;
+         Processor.Unit.Push_Register ("r0");
       end if;
 
       Processor.Nested_Loops := Processor.Nested_Loops + 1;
 
       Processor.Unit.Native_Operation
         ("iterator_start", Changed_Registers => "ctr");
-      Processor.Frame_Offset := Processor.Frame_Offset - 4;
-      Processor.Add_Frame_Entry (Id, Processor.Frame_Offset);
+      Processor.Add_Frame_Entry (Id, Register);
       Processor.Unit.Label (Loop_Label);
       Processor.Unit.Native_Operation
-        ("iterator_next", Changed_Registers => "it");
-      Processor.Unit.Push_Register ("it");
+        ("iterator_next " & Register, Changed_Registers => "ctr," & Register);
+      Processor.Unit.Push_Register (Register);
       Processor.Unit.Operate (Tagatha.Op_Test);
       Processor.Unit.Jump (Exit_Label, Tagatha.C_Equal);
 
@@ -315,12 +324,9 @@ package body Aquarius.Actions.Tagatha_Scanner is
       Processor.Nested_Loops := Processor.Nested_Loops - 1;
 
       Processor.Delete_Frame_Entry (Id);
-      Processor.Frame_Offset := Processor.Frame_Offset + 4;
 
       if Processor.Nested_Loops > 0 then
-         Processor.Unit.Pop_Register ("it");
          Processor.Unit.Pop_Register ("ctr");
-         Processor.Frame_Offset := Processor.Frame_Offset + 8;
       end if;
 
    end Iterator_Statement;
@@ -658,6 +664,9 @@ package body Aquarius.Actions.Tagatha_Scanner is
       Scanner.Unit.Write
         (Target_Name => "pdp32",
          Directory_Path => Aquarius.Paths.Scratch_Path);
+      if Write_Listing then
+         Tagatha.Units.Listing.Write_Transfer_Listing (Scanner.Unit);
+      end if;
    end Write;
 
 end Aquarius.Actions.Tagatha_Scanner;

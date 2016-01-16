@@ -4,11 +4,13 @@ package Aqua.Architecture is
 
    type Register_Index is mod 16;
 
-   R_PC : constant Register_Index := 15;
-   R_SP : constant Register_Index := 14;
-   R_FP : constant Register_Index := 13;
-   R_OP : constant Register_Index := 12;
-   R_PV : constant Register_Index := 11;
+   R_PC  : constant Register_Index := 15;
+   R_SP  : constant Register_Index := 14;
+   R_FP  : constant Register_Index := 13;
+   R_OP  : constant Register_Index := 12;
+   R_PV  : constant Register_Index := 11;
+   R_CTR : constant Register_Index := 10;
+   R_AGG : constant Register_Index := 9;
 
    type Registers is array (Register_Index) of Word;
 
@@ -30,7 +32,7 @@ package Aqua.Architecture is
       A_Jmp, A_Jsr,
       A_Trap,
       A_Get_Property, A_Set_Property,
-      A_Start_Iteration, A_Next_Iteration);
+      A_Iterator_Start, A_Iterator_Next);
 
    subtype No_Operand_Instruction is
      Aqua_Instruction range A_Halt .. A_Rts;
@@ -47,7 +49,7 @@ package Aqua.Architecture is
    subtype Property_Instruction is
      Aqua_Instruction range A_Get_Property .. A_Set_Property;
    subtype Iteration_Instruction is
-     Aqua_Instruction range A_Start_Iteration .. A_Next_Iteration;
+     Aqua_Instruction range A_Iterator_Start .. A_Iterator_Next;
 
    subtype Sized_Instruction is
      Aqua_Instruction range A_Clr .. A_Xor_3;
