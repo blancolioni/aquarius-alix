@@ -470,6 +470,53 @@ package body Aquarius.Plugins.Macro_32.Assemble is
 
    end After_Trap;
 
+   --------------------------
+   -- After_Triple_Operand --
+   --------------------------
+
+   procedure After_Triple_Operand
+     (Target : not null access Aquarius.Actions.Actionable'Class)
+   is
+      use Aquarius.Programs;
+      Op : constant Program_Tree := Program_Tree (Target);
+      Mnemonic : constant String :=
+                   Op.Program_Child
+                     ("double_operand_instruction").Concatenate_Children;
+      Size_Tree : constant Program_Tree :=
+                    Op.Program_Child ("size");
+      Size      : constant Aqua.Data_Size := Get_Size (Size_Tree);
+      Src_1     : constant Program_Tree :=
+                   Op.Program_Child ("arg", 1);
+      Src_2     : constant Program_Tree :=
+                    Op.Program_Child ("arg", 2);
+      Dst      : constant Program_Tree :=
+                   Op.Program_Child ("arg", 3);
+      Assembly       : constant Aqua.Assembler.Assembly :=
+                         Assembly_Object
+                           (Op.Property
+                              (Global_Plugin.Assembly)).Assembly;
+      Src_1_Op       : constant Aqua.Architecture.Operand_Type :=
+                         Get_Operand (Src_1);
+      Src_2_Op       : constant Aqua.Architecture.Operand_Type :=
+                         Get_Operand (Src_2);
+      Dst_Op         : constant Aqua.Architecture.Operand_Type :=
+                         Get_Operand (Dst);
+   begin
+      Assembly.Append_Octet
+        (Aqua.Architecture.Encode
+           (Aqua.Architecture.Aqua_Instruction'Value
+                ("A_" & Mnemonic & "_3")));
+      Assembly.Append_Octet
+        (Aqua.Architecture.Encode (Src_1_Op));
+      Place_Operand (Src_1, Src_1_Op, Size);
+      Assembly.Append_Octet
+        (Aqua.Architecture.Encode (Src_2_Op));
+      Place_Operand (Src_2, Src_2_Op, Size);
+      Assembly.Append_Octet
+        (Aqua.Architecture.Encode (Dst_Op));
+      Place_Operand (Dst, Dst_Op, Size);
+   end After_Triple_Operand;
+
    ------------------------
    -- Before_Source_File --
    ------------------------

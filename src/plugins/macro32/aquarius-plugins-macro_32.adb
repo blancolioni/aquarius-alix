@@ -57,6 +57,10 @@ package body Aquarius.Plugins.Macro_32 is
          Plugins.Macro_32.Assemble.After_Directive'Access);
 
       Plugin.Register_Action
+        ("triple_operand", Assemble, After,
+         Plugins.Macro_32.Assemble.After_Triple_Operand'Access);
+
+      Plugin.Register_Action
         ("double_operand", Assemble, After,
          Plugins.Macro_32.Assemble.After_Double_Operand'Access);
 

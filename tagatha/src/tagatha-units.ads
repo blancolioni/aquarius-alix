@@ -1,5 +1,8 @@
 with Ada.Strings.Unbounded;
 private with Ada.Containers.Doubly_Linked_Lists;
+private with Ada.Containers.Vectors;
+private with Tagatha.Commands.Command_Vectors;
+private with Tagatha.Transfers.Transfer_Vectors;
 
 private with Tagatha.Labels;
 
@@ -193,14 +196,28 @@ package Tagatha.Units is
 
 private
 
-   type Tagatha_Subprogram_Record;
+   type Tagatha_Data_Type is
+     (Integer_Data, Floating_Point_Data,
+      String_Data, Label_Data);
 
-   type Tagatha_Subprogram_Record_Access is
-     access Tagatha_Subprogram_Record;
+   type Tagatha_Data (Data_Type : Tagatha_Data_Type := Integer_Data) is
+      record
+         Label : Tagatha.Labels.Tagatha_Label;
+         Size : Tagatha_Size;
+         case Data_Type is
+            when Integer_Data =>
+               Integer_Value        : Tagatha_Integer;
+            when Floating_Point_Data =>
+               Floating_Point_Value : Tagatha_Floating_Point;
+            when Label_Data =>
+               Label_Value          : Tagatha.Labels.Tagatha_Label;
+            when String_Data =>
+               String_Value         : Ada.Strings.Unbounded.Unbounded_String;
+         end case;
+      end record;
 
-   package List_Of_Subprograms is
-     new Ada.Containers.Doubly_Linked_Lists
-       (Tagatha_Subprogram_Record_Access);
+   package Data_Vector is
+     new Ada.Containers.Vectors (Positive, Tagatha_Data);
 
    type Segment_Length_Array is array (Tagatha_Segment) of Natural;
    type Last_Label_Array is
@@ -216,6 +233,34 @@ private
    package List_Of_Directives is
      new Ada.Containers.Doubly_Linked_Lists (Directive_Record);
 
+   type Tagatha_Subprogram_Record is
+      record
+         Name               : Ada.Strings.Unbounded.Unbounded_String;
+         Current_Segment    : Tagatha_Segment        := Executable;
+         Next_Address       : Segment_Length_Array   := (others => 1);
+         Argument_Words     : Natural;
+         Frame_Words        : Natural;
+         Result_Words       : Natural;
+         Last_Label         : Tagatha.Labels.Tagatha_Label;
+         Global             : Boolean := True;
+         Executable_Segment : Tagatha.Commands.Command_Vectors.Vector;
+         Read_Only_Segment  : Data_Vector.Vector;
+         Read_Write_Segment : Data_Vector.Vector;
+         Directives         : List_Of_Directives.List;
+         Transfers          : Tagatha.Transfers.Transfer_Vectors.Vector;
+      end record;
+
+   type Tagatha_Subprogram is access Tagatha_Subprogram_Record;
+
+   function Subprogram_Name
+     (Subprogram : Tagatha_Subprogram)
+      return String
+   is (Ada.Strings.Unbounded.To_String (Subprogram.Name));
+
+   package List_Of_Subprograms is
+     new Ada.Containers.Doubly_Linked_Lists
+       (Tagatha_Subprogram);
+
    type Tagatha_Unit is tagged
       record
          Name               : Ada.Strings.Unbounded.Unbounded_String;
@@ -226,7 +271,7 @@ private
          Last_Label         : Last_Label_Array;
          Next_Label         : Positive := 1;
          Subprograms        : List_Of_Subprograms.List;
-         Current_Sub        : Tagatha_Subprogram_Record_Access;
+         Current_Sub        : Tagatha_Subprogram;
       end record;
 
 end Tagatha.Units;
