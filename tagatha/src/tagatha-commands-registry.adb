@@ -33,6 +33,7 @@ package body Tagatha.Commands.Registry is
          when T_Native =>
             Register.Record_Native_Operation
               (Ada.Strings.Unbounded.To_String (Command.Native_Name),
+               Ada.Strings.Unbounded.To_String (Command.Changed_Registers),
                Command.Input_Words, Command.Output_Words);
       end case;
    end Register_Command;

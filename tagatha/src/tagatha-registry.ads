@@ -31,10 +31,11 @@ package Tagatha.Registry is
                                Operator : in     Tagatha_Operator);
 
    procedure Record_Native_Operation
-     (Register     : in out Tagatha_Registry;
-      Name         : String;
-      Input_Words  : Natural;
-      Output_Words : Natural);
+     (Register          : in out Tagatha_Registry;
+      Name              : String;
+      Changed_Registers : String;
+      Input_Words       : Natural;
+      Output_Words      : Natural);
 
    procedure Record_Call (Register   : in out Tagatha_Registry;
                           Subroutine : in     Tagatha.Labels.Tagatha_Label);

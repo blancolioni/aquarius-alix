@@ -196,10 +196,11 @@ package body Tagatha.Registry is
    -----------------------------
 
    procedure Record_Native_Operation
-     (Register     : in out Tagatha_Registry;
-      Name         : String;
-      Input_Words  : Natural;
-      Output_Words : Natural)
+     (Register          : in out Tagatha_Registry;
+      Name              : String;
+      Changed_Registers : String;
+      Input_Words       : Natural;
+      Output_Words      : Natural)
    is
       pragma Unreferenced (Input_Words);
    begin
@@ -218,7 +219,9 @@ package body Tagatha.Registry is
 
       Register.Stack.Clear;
 
-      Register.Append (Tagatha.Transfers.Native_Transfer (Name));
+      Register.Append
+        (Tagatha.Transfers.Native_Transfer (Name, Changed_Registers));
+
       for I in 1 .. Output_Words loop
          Register.Stack.Append
            (Expressions.New_Simple_Expression (Transfers.Stack_Operand));

@@ -82,7 +82,9 @@ package Tagatha.Transfers is
                               Destination : Tagatha.Labels.Tagatha_Label)
                              return Transfer;
 
-   function Native_Transfer (Name : String) return Transfer;
+   function Native_Transfer (Name              : String;
+                             Changed_Registers : String)
+                             return Transfer;
 
    function Reserve_Stack (Frame_Size : Natural) return Transfer;
    function Restore_Stack (Frame_Size : Natural) return Transfer;
@@ -244,17 +246,18 @@ private
 
    type Transfer is
       record
-         Trans       : Transfer_Type;
-         Reserve     : Integer;
-         Label       : Tagatha.Labels.Tagatha_Label;
-         Condition   : Tagatha_Condition;
-         Destination : Tagatha.Labels.Tagatha_Label;
-         Self        : Boolean;
-         Native      : Ada.Strings.Unbounded.Unbounded_String;
-         Src_1       : Transfer_Operand;
-         Src_2       : Transfer_Operand;
-         Dst         : Transfer_Operand;
-         Op          : Tagatha_Operator;
+         Trans             : Transfer_Type;
+         Reserve           : Integer;
+         Label             : Tagatha.Labels.Tagatha_Label;
+         Condition         : Tagatha_Condition;
+         Destination       : Tagatha.Labels.Tagatha_Label;
+         Self              : Boolean;
+         Native            : Ada.Strings.Unbounded.Unbounded_String;
+         Changed_Registers : Ada.Strings.Unbounded.Unbounded_String;
+         Src_1             : Transfer_Operand;
+         Src_2             : Transfer_Operand;
+         Dst               : Transfer_Operand;
+         Op                : Tagatha_Operator;
       end record;
 
 end Tagatha.Transfers;

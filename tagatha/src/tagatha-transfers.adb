@@ -89,20 +89,21 @@ package body Tagatha.Transfers is
 
    function Control_Transfer (Condition   : Tagatha_Condition;
                               Destination : Tagatha.Labels.Tagatha_Label)
-                             return Transfer
+                              return Transfer
    is
    begin
-      return (Trans       => T_Control,
-              Reserve     => 0,
-              Label       => Tagatha.Labels.No_Label,
-              Condition   => Condition,
-              Destination => Destination,
-              Self        => False,
-              Native      => Ada.Strings.Unbounded.Null_Unbounded_String,
-              Src_1       => Null_Operand,
-              Src_2       => Null_Operand,
-              Dst         => Null_Operand,
-              Op          => Op_Nop);
+      return (Trans             => T_Control,
+              Reserve           => 0,
+              Label             => Tagatha.Labels.No_Label,
+              Condition         => Condition,
+              Destination       => Destination,
+              Self              => False,
+              Native            => Ada.Strings.Unbounded.Null_Unbounded_String,
+              Changed_Registers => Ada.Strings.Unbounded.Null_Unbounded_String,
+              Src_1             => Null_Operand,
+              Src_2             => Null_Operand,
+              Dst               => Null_Operand,
+              Op                => Op_Nop);
    end Control_Transfer;
 
    -------------------
@@ -535,21 +536,24 @@ package body Tagatha.Transfers is
    ---------------------
 
    function Native_Transfer
-     (Name : String)
+     (Name              : String;
+      Changed_Registers : String)
       return Transfer
    is
+      use Ada.Strings.Unbounded;
    begin
-      return (Trans       => T_Native,
-              Reserve     => 0,
-              Label       => Tagatha.Labels.No_Label,
-              Condition   => C_Always,
-              Destination => Tagatha.Labels.No_Label,
-              Self        => False,
-              Native      => Ada.Strings.Unbounded.To_Unbounded_String (Name),
-              Src_1       => Null_Operand,
-              Src_2       => Null_Operand,
-              Dst         => Null_Operand,
-              Op          => Op_Nop);
+      return (Trans             => T_Native,
+              Reserve           => 0,
+              Label             => Tagatha.Labels.No_Label,
+              Condition         => C_Always,
+              Destination       => Tagatha.Labels.No_Label,
+              Self              => False,
+              Native            => To_Unbounded_String (Name),
+              Changed_Registers => To_Unbounded_String (Changed_Registers),
+              Src_1             => Null_Operand,
+              Src_2             => Null_Operand,
+              Dst               => Null_Operand,
+              Op                => Op_Nop);
    end Native_Transfer;
 
    ------------------
@@ -574,17 +578,18 @@ package body Tagatha.Transfers is
                                 return Transfer
    is
    begin
-      return (Trans       => T_Data,
-              Reserve     => 0,
-              Label       => Tagatha.Labels.No_Label,
-              Condition   => C_Always,
-              Destination => Tagatha.Labels.No_Label,
-              Self        => Same_Operand (Src_1, To),
-              Native      => Ada.Strings.Unbounded.Null_Unbounded_String,
-              Src_1       => Src_1,
-              Src_2       => Src_2,
-              Dst         => To,
-              Op          => Op);
+      return (Trans             => T_Data,
+              Reserve           => 0,
+              Label             => Tagatha.Labels.No_Label,
+              Condition         => C_Always,
+              Destination       => Tagatha.Labels.No_Label,
+              Self              => Same_Operand (Src_1, To),
+              Native            => Ada.Strings.Unbounded.Null_Unbounded_String,
+              Changed_Registers => Ada.Strings.Unbounded.Null_Unbounded_String,
+              Src_1             => Src_1,
+              Src_2             => Src_2,
+              Dst               => To,
+              Op                => Op);
    end Operation_Transfer;
 
    --------------
@@ -874,6 +879,7 @@ package body Tagatha.Transfers is
               Condition   => C_Always,
               Destination => Tagatha.Labels.No_Label,
               Native      => Ada.Strings.Unbounded.Null_Unbounded_String,
+              Changed_Registers => Ada.Strings.Unbounded.Null_Unbounded_String,
               Self        => Same_Operand (From, To),
               Src_1       => From,
               Src_2       => Null_Operand,
@@ -960,6 +966,7 @@ package body Tagatha.Transfers is
               Condition   => C_Always,
               Destination => Tagatha.Labels.No_Label,
               Native      => Ada.Strings.Unbounded.Null_Unbounded_String,
+              Changed_Registers => Ada.Strings.Unbounded.Null_Unbounded_String,
               Self        => False,
               Src_1       => Src_1,
               Src_2       => Src_2,
