@@ -1,19 +1,14 @@
 with Ada.Characters.Handling;
-with Ada.Containers.Vectors;
 with Ada.Strings.Maps;
 
 with Tagatha.Code;
-with Tagatha.Commands.Command_Vectors;
 with Tagatha.Commands.Registry;
 with Tagatha.Constants;
 with Tagatha.File_Assembly;
 with Tagatha.Transfers;
 with Tagatha.Transfers.Optimiser;
-with Tagatha.Transfers.Transfer_Vectors;
 
 with Tagatha.Registry;
-
---  with Tagatha.Units.Optimisation;
 
 package body Tagatha.Units is
 
@@ -25,52 +20,6 @@ package body Tagatha.Units is
      (Unit   : in     Tagatha_Unit;
       Target : in out Tagatha.Code.Translator'Class;
       Directory_Path : String);
-
-   type Tagatha_Data_Type is
-     (Integer_Data, Floating_Point_Data,
-      String_Data, Label_Data);
-
-   type Tagatha_Data (Data_Type : Tagatha_Data_Type := Integer_Data) is
-      record
-         Label : Tagatha.Labels.Tagatha_Label;
-         Size : Tagatha_Size;
-         case Data_Type is
-            when Integer_Data =>
-               Integer_Value        : Tagatha_Integer;
-            when Floating_Point_Data =>
-               Floating_Point_Value : Tagatha_Floating_Point;
-            when Label_Data =>
-               Label_Value          : Tagatha.Labels.Tagatha_Label;
-            when String_Data =>
-               String_Value         : Ada.Strings.Unbounded.Unbounded_String;
-         end case;
-      end record;
-
-   package Data_Vector is
-     new Ada.Containers.Vectors (Positive, Tagatha_Data);
-
-   type Tagatha_Subprogram_Record is
-      record
-         Name               : Ada.Strings.Unbounded.Unbounded_String;
-         Current_Segment    : Tagatha_Segment        := Executable;
-         Next_Address       : Segment_Length_Array   := (others => 1);
-         Argument_Words     : Natural;
-         Frame_Words        : Natural;
-         Result_Words       : Natural;
-         Last_Label         : Tagatha.Labels.Tagatha_Label;
-         Global             : Boolean := True;
-         Executable_Segment : Tagatha.Commands.Command_Vectors.Vector;
-         Read_Only_Segment  : Data_Vector.Vector;
-         Read_Write_Segment : Data_Vector.Vector;
-         Directives         : List_Of_Directives.List;
-         Transfers          : Tagatha.Transfers.Transfer_Vectors.Vector;
-      end record;
-
-   function Subprogram_Name
-     (Unit       : Tagatha_Unit'Class;
-      Subprogram : Tagatha_Subprogram_Record_Access)
-      return String
-   is (Ada.Strings.Unbounded.To_String (Subprogram.Name));
 
    procedure Append (To_Unit : in out Tagatha_Unit;
                      Command : in     Tagatha.Commands.Tagatha_Command);
@@ -902,7 +851,7 @@ package body Tagatha.Units is
             end loop;
 
             Target.Start (File_Assembly_Type'Class (File),
-                          Subprogram_Name (Unit, Sub), True);
+                          Subprogram_Name (Sub), True);
 
             Target.Begin_Frame (File_Assembly_Type'Class (File),
                                 Sub.Argument_Words,

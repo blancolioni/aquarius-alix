@@ -33,8 +33,7 @@ package body Tagatha.Code.Pdp32 is
                           Size     : in     Tagatha_Size;
                           Source_1 : in     String;
                           Source_2 : in     String;
-                          Dest     : in     String)
-     with Unreferenced;
+                          Dest     : in     String);
 
    function Get_Mnemonic (Op : Tagatha_Operator) return String;
 
@@ -67,8 +66,7 @@ package body Tagatha.Code.Pdp32 is
       Op       : in     Tagatha_Operator;
       Source_1 : in     Tagatha.Transfers.Transfer_Operand;
       Source_2 : in     Tagatha.Transfers.Transfer_Operand;
-      Dest     : in     Tagatha.Transfers.Transfer_Operand)
-   is null;
+      Dest     : in     Tagatha.Transfers.Transfer_Operand);
 
    procedure Operate
      (Asm      : in out Assembly'Class;
@@ -142,7 +140,9 @@ package body Tagatha.Code.Pdp32 is
                Operate (Asm, Op_Compare,
                         Get_Source_1 (Item), Get_Source_2 (Item));
             end if;
-         elsif Same_Operand (Get_Source_2 (Item), Get_Destination (Item)) then
+         elsif Same_Operand (Get_Source_2 (Item), Get_Destination (Item))
+           and then not Is_Stack (Get_Destination (Item))
+         then
             Operate (Asm, Get_Operator (Item), Get_Source_1 (Item),
                      Get_Destination (Item));
          else
@@ -464,6 +464,26 @@ package body Tagatha.Code.Pdp32 is
       begin
          Instruction (Asm, Mnemonic, Get_Size (Dest), Src, Dst);
       end;
+   end Operate;
+
+   -------------
+   -- Operate --
+   -------------
+
+   procedure Operate
+     (Asm      : in out Assembly'Class;
+      Op       : in     Tagatha_Operator;
+      Source_1 : in     Tagatha.Transfers.Transfer_Operand;
+      Source_2 : in     Tagatha.Transfers.Transfer_Operand;
+      Dest     : in     Tagatha.Transfers.Transfer_Operand)
+   is
+      Src_1    : constant String := To_Src (Source_1);
+      Src_2    : constant String := To_Src (Source_2);
+      Dst      : constant String := To_Dst (Dest);
+      Mnemonic : constant String := Get_Mnemonic (Op);
+   begin
+      Instruction (Asm, Mnemonic,
+                   Tagatha.Transfers.Get_Size (Dest), Src_1, Src_2, Dst);
    end Operate;
 
    -----------

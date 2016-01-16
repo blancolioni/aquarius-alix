@@ -491,7 +491,7 @@ package body Aqua.CPU is
                        then CPU.To_String (Dst)
                        else CPU.Show (Dst));
          begin
-            Dst := CPU.To_String_Word (Left & Right);
+            Dst := CPU.To_String_Word (Right & Left);
          end;
       else
          declare

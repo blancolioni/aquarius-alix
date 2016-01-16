@@ -37,6 +37,7 @@ directive ::= '.' identifier { operand }
 op ::= no_operand
      | single_operand
      | double_operand
+     | triple_operand
      | branch
      | jump
      | trap
@@ -46,6 +47,8 @@ op ::= no_operand
 no_operand ::= 'halt' | 'nop' | 'rts'
 single_operand ::= single_operand_instruction [size] arg
 double_operand ::= double_operand_instruction [size] arg ',' arg
+triple_operand ::= double_operand_instruction [size] arg ',' arg ',' arg
+
 property ::= property_instruction operand [ ',' integer ]
 property_instruction ::= 'get_property' | 'set_property'
 iterator ::= 'iterator_start' | 'iterator_next'
