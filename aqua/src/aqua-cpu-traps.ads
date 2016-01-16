@@ -1,10 +1,13 @@
 package Aqua.CPU.Traps is
 
    procedure Handle_Get_Property
-     (CPU   : in out Aqua_CPU_Type'Class);
+     (CPU            : in out Aqua_CPU_Type'Class;
+      Argument_Count : Natural;
+      Property_Name  : Word);
 
    procedure Handle_Set_Property
-     (CPU   : in out Aqua_CPU_Type'Class);
+     (CPU  : in out Aqua_CPU_Type'Class;
+      Name : Word);
 
    procedure Handle_Iterator_Start
      (CPU   : in out Aqua_CPU_Type'Class);

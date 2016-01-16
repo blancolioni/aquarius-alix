@@ -1,25 +1,30 @@
 with Ada.Characters.Handling;
 with Ada.Containers.Vectors;
 with Ada.Strings.Maps;
-with Ada.Text_IO;
 
 with Tagatha.Code;
+with Tagatha.Commands.Command_Vectors;
+with Tagatha.Commands.Registry;
 with Tagatha.Constants;
 with Tagatha.File_Assembly;
-with Tagatha.Registry;
 with Tagatha.Transfers;
+with Tagatha.Transfers.Optimiser;
+with Tagatha.Transfers.Transfer_Vectors;
+
+with Tagatha.Registry;
 
 --  with Tagatha.Units.Optimisation;
 
 package body Tagatha.Units is
 
-   procedure Write (Unit   : in     Tagatha_Unit;
-                    Target : in out Tagatha.Code.Translator'Class);
+   procedure Allocate_Registers
+     (Unit : Tagatha_Unit;
+      Register_Count : Positive);
 
-   package Command_Vector is
-     new Ada.Containers.Vectors (Positive,
-                                 Tagatha.Commands.Tagatha_Command,
-                                 Tagatha.Commands."=");
+   procedure Write
+     (Unit   : in     Tagatha_Unit;
+      Target : in out Tagatha.Code.Translator'Class;
+      Directory_Path : String);
 
    type Tagatha_Data_Type is
      (Integer_Data, Floating_Point_Data,
@@ -37,15 +42,12 @@ package body Tagatha.Units is
             when Label_Data =>
                Label_Value          : Tagatha.Labels.Tagatha_Label;
             when String_Data =>
-               String_Value         : String (1 .. 16);
+               String_Value         : Ada.Strings.Unbounded.Unbounded_String;
          end case;
       end record;
 
    package Data_Vector is
      new Ada.Containers.Vectors (Positive, Tagatha_Data);
-
-   type Array_Of_Transfers_Access is
-     access Tagatha.Transfers.Array_Of_Transfers;
 
    type Tagatha_Subprogram_Record is
       record
@@ -57,10 +59,11 @@ package body Tagatha.Units is
          Result_Words       : Natural;
          Last_Label         : Tagatha.Labels.Tagatha_Label;
          Global             : Boolean := True;
-         Executable_Segment : Command_Vector.Vector;
+         Executable_Segment : Tagatha.Commands.Command_Vectors.Vector;
          Read_Only_Segment  : Data_Vector.Vector;
          Read_Write_Segment : Data_Vector.Vector;
-         Transfers          : Array_Of_Transfers_Access;
+         Directives         : List_Of_Directives.List;
+         Transfers          : Tagatha.Transfers.Transfer_Vectors.Vector;
       end record;
 
    function Subprogram_Name
@@ -79,6 +82,37 @@ package body Tagatha.Units is
                                 For_Segment : in     Tagatha_Segment;
                                 By          : in     Positive         := 1);
 
+   ------------------------
+   -- Allocate_Registers --
+   ------------------------
+
+   procedure Allocate_Registers
+     (Unit : Tagatha_Unit;
+      Register_Count : Positive)
+   is
+      Allocation   : Transfers.Register_Allocation_Array (1 .. Register_Count);
+      Base_Address : Natural := 0;
+   begin
+      for Sub of Unit.Subprograms loop
+         for Offset in 1 .. Sub.Transfers.Last_Index loop
+            declare
+               Address  : constant Positive := Base_Address + Offset;
+            begin
+               Tagatha.Transfers.Reference_Temporaries
+                 (Sub.Transfers (Offset), Address);
+            end;
+         end loop;
+         Base_Address := Base_Address + Sub.Executable_Segment.Last_Index;
+      end loop;
+
+      for Sub of Unit.Subprograms loop
+         for Offset in 1 .. Sub.Transfers.Last_Index loop
+            Tagatha.Transfers.Assign_Registers
+              (Sub.Transfers (Offset), Allocation);
+         end loop;
+      end loop;
+   end Allocate_Registers;
+
    ------------
    -- Append --
    ------------
@@ -87,9 +121,16 @@ package body Tagatha.Units is
                      Command : in     Tagatha.Commands.Tagatha_Command)
    is
    begin
-      Tagatha.Commands.Set_Label (Command, To_Unit.Last_Label (Executable));
-      To_Unit.Last_Label (Executable) := Tagatha.Labels.No_Label;
-      Command_Vector.Append (To_Unit.Current_Sub.Executable_Segment, Command);
+      if Tagatha.Labels.Has_Label (To_Unit.Last_Label (Executable)) then
+         declare
+            Label : constant Labels.Tagatha_Label :=
+                      To_Unit.Last_Label (Executable);
+         begin
+            Tagatha.Commands.Set_Label (Command, Label);
+            To_Unit.Last_Label (Executable) := Tagatha.Labels.No_Label;
+         end;
+      end if;
+      To_Unit.Current_Sub.Executable_Segment.Append (Command);
       Increment_Address (To_Unit, Executable);
    end Append;
 
@@ -100,28 +141,11 @@ package body Tagatha.Units is
    procedure Ascii_String (Unit  : in out Tagatha_Unit;
                            Value : in     String)
    is
-      Start : Positive := Value'First;
    begin
-      while Start <= Value'Last loop
-         declare
-            Data : Tagatha_Data :=
-                     (String_Data,
-                      Unit.Last_Label (Unit.Current_Segment),
-                      Size_8,
-                      (others => ' '));
-            Last : Positive     := Start + Data.String_Value'Length;
-         begin
-            Unit.Last_Label (Unit.Current_Segment) :=
-              Tagatha.Labels.No_Label;
-            if Last > Value'Last then
-               Last := Value'Last;
-            end if;
-            Data.String_Value (1 .. Last - Start + 1) := Value;
-            Unit.Current_Sub.Read_Only_Segment.Append (Data);
-            Increment_Address (Unit, Read_Only);
-            Start := Start + Data.String_Value'Length;
-         end;
-      end loop;
+      Unit.Current_Sub.Read_Only_Segment.Append
+        ((String_Data, Unit.Last_Label (Unit.Current_Segment), Size_8,
+         Ada.Strings.Unbounded.To_Unbounded_String (Value)));
+      Increment_Address (Unit, Read_Only);
    end Ascii_String;
 
    ------------------
@@ -310,6 +334,41 @@ package body Tagatha.Units is
       Operate (Unit, Op_Dereference, Size);
    end Dereference;
 
+   ---------------
+   -- Directive --
+   ---------------
+
+   procedure Directive (Unit : in out Tagatha_Unit;
+                        Value : String;
+                        Address : Integer := -1)
+   is
+   begin
+      if Unit.Current_Sub /= null then
+         Unit.Current_Sub.Directives.Append
+           ((Unit.Current_Segment,
+            (if Address < 0
+             then Unit.Current_Sub.Next_Address (Unit.Current_Segment)
+             else Address),
+            Ada.Strings.Unbounded.To_Unbounded_String (Value)));
+      else
+         Unit.Directives.Append
+           ((Unit.Current_Segment,
+            0,
+            Ada.Strings.Unbounded.To_Unbounded_String (Value)));
+      end if;
+   end Directive;
+
+   ----------
+   -- Drop --
+   ----------
+
+   procedure Drop (Unit      : in out Tagatha_Unit;
+                   Size      : in     Tagatha_Size := Default_Size)
+   is
+   begin
+      Append (Unit, Commands.Drop (Size));
+   end Drop;
+
    -----------------
    -- End_Routine --
    -----------------
@@ -318,11 +377,21 @@ package body Tagatha.Units is
      (Unit : in out Tagatha_Unit)
    is
    begin
-      for I in 1 .. Unit.Current_Sub.Executable_Segment.Last_Index loop
-         Ada.Text_IO.Put_Line
-           (Tagatha.Commands.Show
-              (Unit.Current_Sub.Executable_Segment.Element (I)));
-      end loop;
+      if Labels.Has_Label (Unit.Last_Label (Executable)) then
+         declare
+            Nop : constant Tagatha.Commands.Tagatha_Command :=
+                    Tagatha.Commands.Operate
+                      (Op_Nop, False, Default_Size);
+         begin
+            Commands.Set_Label (Nop, Unit.Last_Label (Executable));
+            Unit.Last_Label (Executable) := Labels.No_Label;
+            Unit.Current_Sub.Executable_Segment.Append (Nop);
+            Increment_Address (Unit, Executable, 1);
+         end;
+      end if;
+
+      Unit.Optimise;
+
    end End_Routine;
 
    -------------------
@@ -461,17 +530,33 @@ package body Tagatha.Units is
               Tagatha.Commands.Loop_Around (Label, Loop_Count, Loop_Index));
    end Loop_Around;
 
+   ----------------------------
+   -- Native_Stack_Operation --
+   ----------------------------
+
+   procedure Native_Operation
+     (Unit               : in out Tagatha_Unit;
+      Name               : String;
+      Input_Stack_Words  : Natural := 0;
+      Output_Stack_Words : Natural := 0;
+      Changed_Registers  : String  := "")
+   is
+   begin
+      Unit.Command
+        (Commands.Native_Command
+           (Name, Input_Stack_Words, Output_Stack_Words, Changed_Registers));
+   end Native_Operation;
+
    ----------------
    -- Next_Label --
    ----------------
 
-   procedure Next_Label (Unit   : in out Tagatha_Unit;
-                         Index  :    out Positive)
-   is
+   function Next_Label (Unit   : in out Tagatha_Unit) return Positive is
+      Result : constant Positive := Unit.Next_Label;
    begin
-      Index := Unit.Next_Label;
       Unit.Next_Label :=
         Unit.Next_Label + 1;
+      return Result;
    end Next_Label;
 
    -------------
@@ -494,6 +579,7 @@ package body Tagatha.Units is
       Registry : Tagatha.Registry.Tagatha_Registry;
       Start_Label : Tagatha.Labels.Tagatha_Label;
    begin
+
       Tagatha.Labels.Create_Label
         (In_List    => Unit.Labels,
          Label      => Start_Label,
@@ -508,19 +594,25 @@ package body Tagatha.Units is
               (Unit.Current_Sub.Name),
          Export     => True);
 
-      Registry.Start (Start_Label,
-                      Unit.Current_Sub.Frame_Words);
+      Registry.Start
+        (Unit_Label => Start_Label,
+         Size       => Unit.Current_Sub.Frame_Words);
+
       for I in 1 .. Unit.Current_Sub.Next_Address (Executable) - 1 loop
          declare
             Command : constant Tagatha.Commands.Tagatha_Command :=
               Unit.Current_Sub.Executable_Segment.Element (I);
          begin
-            Tagatha.Commands.Register_Command (Registry, Command);
+            Tagatha.Commands.Registry.Register_Command
+              (Registry, Command);
          end;
       end loop;
 
-      Unit.Current_Sub.Transfers :=
-        new Tagatha.Transfers.Array_Of_Transfers'(Registry.Get_Transfers);
+      Tagatha.Registry.Get_Transfers
+        (Registry, Unit.Current_Sub.Transfers);
+
+      Tagatha.Transfers.Optimiser.Optimise (Unit.Current_Sub.Transfers);
+
    end Optimise;
 
    ------------------
@@ -543,13 +635,14 @@ package body Tagatha.Units is
 
    procedure Pop_Label
      (Unit       : in out Tagatha_Unit;
-      Label_Name : in     String;
-      Size       : in     Tagatha_Size  := Default_Integer_Size)
+      Label_Name : String;
+      Size       : Tagatha_Size := Default_Integer_Size;
+      External   : Boolean      := False)
    is
       Label : Tagatha.Labels.Tagatha_Label;
    begin
       Tagatha.Labels.Reference_Label (Unit.Labels, Label,
-                                      Label_Name);
+                                      Label_Name, Import => External);
       Append (Unit,
               Commands.Pop (Operands.Label_Operand (Label), Size));
    end Pop_Label;
@@ -579,6 +672,18 @@ package body Tagatha.Units is
    begin
       Append (Unit, Commands.Pop (Op, Size));
    end Pop_Operand;
+
+   ------------------
+   -- Pop_Register --
+   ------------------
+
+   procedure Pop_Register
+     (Unit : in out Tagatha_Unit;
+      Name : in     String)
+   is
+   begin
+      Pop_Operand (Unit, Operands.Register_Operand (Name), Default_Size);
+   end Pop_Register;
 
    ----------------
    -- Pop_Result --
@@ -653,12 +758,13 @@ package body Tagatha.Units is
    procedure Push_Label
      (Unit       : in out Tagatha_Unit;
       Label_Name : in     String;
-      Size       : in     Tagatha_Size  := Default_Integer_Size)
+      Size       : in     Tagatha_Size  := Default_Integer_Size;
+      External   : in     Boolean       := False)
    is
       Label : Tagatha.Labels.Tagatha_Label;
    begin
       Tagatha.Labels.Reference_Label (Unit.Labels, Label,
-                                      Label_Name);
+                                      Label_Name, Import => External);
       Append (Unit,
               Commands.Push (Operands.Label_Operand (Label), Size));
    end Push_Label;
@@ -705,6 +811,30 @@ package body Tagatha.Units is
       Append (Unit, Commands.Push (Op, Size));
    end Push_Operand;
 
+   -------------------
+   -- Push_Register --
+   -------------------
+
+   procedure Push_Register
+     (Unit : in out Tagatha_Unit;
+      Name : in     String)
+   is
+   begin
+      Push_Operand (Unit, Operands.Register_Operand (Name), Default_Size);
+   end Push_Register;
+
+   ---------------
+   -- Push_Text --
+   ---------------
+
+   procedure Push_Text
+     (Unit : in out Tagatha_Unit;
+      Text : String)
+   is
+   begin
+      Push_Operand (Unit, Operands.Text_Operand (Text), Default_Size);
+   end Push_Text;
+
    ------------------------
    -- Push_Local_Address --
    ------------------------
@@ -733,40 +863,86 @@ package body Tagatha.Units is
    -- Write --
    -----------
 
-   procedure Write (Unit   : in     Tagatha_Unit;
-                    Target : in out Tagatha.Code.Translator'Class)
+   procedure Write
+     (Unit   : in     Tagatha_Unit;
+      Target : in out Tagatha.Code.Translator'Class;
+      Directory_Path : String)
    is
       use Tagatha.File_Assembly;
       use type Tagatha.Labels.Tagatha_Label;
+      File_Path : constant String :=
+                    Directory_Path
+                    & "/" & Unit.File_System_Name
+                    & Target.Extension;
       File   : File_Assembly_Type;
    begin
-      Open (File, Unit.File_System_Name & ".s");
+      Open (File, File_Path);
       Target.File_Preamble (File_Assembly_Type'Class (File),
                             Ada.Strings.Unbounded.To_String
                               (Unit.Source_File));
+
+      for Directive of Unit.Directives loop
+         File.Put_Line (Ada.Strings.Unbounded.To_String (Directive.Value));
+      end loop;
+
       for Sub of Unit.Subprograms loop
 
-         Target.Start (File_Assembly_Type'Class (File),
-                       Subprogram_Name (Unit, Sub), True);
+         declare
+            use List_Of_Directives;
+            Directive : Cursor := Sub.Directives.First;
+         begin
 
-         Target.Begin_Frame (File_Assembly_Type'Class (File),
-                             Sub.Argument_Words,
-                             Sub.Frame_Words);
-         for I in Sub.Transfers.all'Range loop
-            if I = Sub.Transfers'Last
-              and then Unit.Last_Label (Executable) /= Tagatha.Labels.No_Label
-            then
-               Target.Label (File_Assembly_Type'Class (File),
-                             Unit.Last_Label (Executable));
-            end if;
-            Target.Encode (File_Assembly_Type'Class (File),
-                           Sub.Transfers (I));
-         end loop;
+            while Has_Element (Directive)
+              and then Element (Directive).Index < 1
+            loop
+               File.Put_Line
+                 (Ada.Strings.Unbounded.To_String
+                    (Element (Directive).Value));
+               Next (Directive);
+            end loop;
 
-         Target.End_Frame (File_Assembly_Type'Class (File),
-                           Sub.Argument_Words,
-                           Sub.Frame_Words);
-         Target.Finish (File_Assembly_Type'Class (File));
+            Target.Start (File_Assembly_Type'Class (File),
+                          Subprogram_Name (Unit, Sub), True);
+
+            Target.Begin_Frame (File_Assembly_Type'Class (File),
+                                Sub.Argument_Words,
+                                Sub.Frame_Words);
+
+            for I in 1 .. Sub.Transfers.Last_Index loop
+
+               while Has_Element (Directive)
+                 and then Element (Directive).Index <= I
+               loop
+                  File.Put_Line
+                    (Ada.Strings.Unbounded.To_String
+                       (Element (Directive).Value));
+                  Next (Directive);
+               end loop;
+
+               if I = Sub.Executable_Segment.Last_Index
+                 and then Unit.Last_Label (Executable)
+                 /= Tagatha.Labels.No_Label
+               then
+                  Target.Label (File_Assembly_Type'Class (File),
+                                Unit.Last_Label (Executable));
+               end if;
+
+               Target.Encode (File_Assembly_Type'Class (File),
+                                 Sub.Transfers (I));
+            end loop;
+
+            while Has_Element (Directive) loop
+               File.Put_Line
+                 (Ada.Strings.Unbounded.To_String
+                    (Element (Directive).Value));
+               Next (Directive);
+            end loop;
+
+            Target.End_Frame (File_Assembly_Type'Class (File),
+                              Sub.Argument_Words,
+                              Sub.Frame_Words);
+            Target.Finish (File_Assembly_Type'Class (File));
+         end;
       end loop;
 
       for Sub of Unit.Subprograms loop
@@ -805,13 +981,16 @@ package body Tagatha.Units is
    -- Write --
    -----------
 
-   procedure Write (Unit        : in     Tagatha_Unit;
-                    Target_Name : in String)
+   procedure Write
+     (Unit           : Tagatha_Unit;
+      Target_Name    : String;
+      Directory_Path : String)
    is
       Target : Tagatha.Code.Translator'Class :=
                  Tagatha.Code.Get_Translator (Target_Name);
    begin
-      Write (Unit, Target);
+      Allocate_Registers (Unit, Target.General_Registers);
+      Write (Unit, Target, Directory_Path);
    end Write;
 
 end Tagatha.Units;

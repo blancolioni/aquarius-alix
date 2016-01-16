@@ -15,11 +15,12 @@ package body Aqua.CPU.Traps is
    -------------------------
 
    procedure Handle_Get_Property
-     (CPU   : in out Aqua_CPU_Type'Class)
+     (CPU            : in out Aqua_CPU_Type'Class;
+      Argument_Count : Natural;
+      Property_Name  : Word)
    is
-      Argument_Count : constant Natural := Natural (Get_Integer (CPU.Pop));
+      use Aqua.Architecture;
       Arguments      : Array_Of_Words (1 .. Argument_Count);
-      Name           : constant Word := CPU.Pop;
       Target         : Word;
       Value          : Word;
    begin
@@ -28,24 +29,24 @@ package body Aqua.CPU.Traps is
          Arguments (I) := CPU.Pop;
       end loop;
 
-      Target := CPU.Pop;
+      Target := CPU.R (R_OP);
 
-      if not Is_String_Reference (Name) then
+      if not Is_String_Reference (Property_Name) then
          raise Constraint_Error
            with "property name must be a string: "
-           & Aqua.IO.Hex_Image (Name);
+           & Aqua.IO.Hex_Image (Property_Name);
       end if;
 
       if Is_String_Reference (Target) then
          declare
             Prim : constant Subroutine_Reference :=
                      Aqua.Primitives.Get_Primitive
-                       ("string__" & CPU.Image.To_String (Name));
+                       ("string__" & CPU.Image.To_String (Property_Name));
          begin
             if Prim = 0 then
                raise Constraint_Error
                  with "property "
-                 & CPU.Show (Name)
+                 & CPU.Show (Property_Name)
                  & " not defined for string "
                  & CPU.Show (Target);
             end if;
@@ -55,16 +56,23 @@ package body Aqua.CPU.Traps is
                 (CPU, Prim, Target & Arguments (1 .. Argument_Count));
             if Trace_Properties then
                Ada.Text_IO.Put_Line
-                 (CPU.Show (Target) & "." & CPU.Show (Name) & " -> "
+                 (CPU.Show (Target) & "." & CPU.Show (Property_Name) & " -> "
                   & CPU.Show (Value));
             end if;
          end;
       elsif not Is_External_Reference (Target) then
-         raise Constraint_Error
-           with "property "
-           & CPU.Show (Name)
-           & " defined only on objects; found "
-           & CPU.Show (Target);
+         if Target = 0 then
+            raise Runtime_Error
+              with "cannot get property "
+              & CPU.Show (Property_Name)
+              & " from null or undefined object";
+         else
+            raise Runtime_Error
+              with "property "
+              & CPU.Show (Property_Name)
+              & " defined only on objects; found "
+              & CPU.Show (Target);
+         end if;
       else
          declare
             Ext : constant access External_Object_Interface'Class :=
@@ -73,7 +81,7 @@ package body Aqua.CPU.Traps is
             if Ext.all not in Aqua.Objects.Object_Interface'Class then
                raise Constraint_Error
                  with "property "
-                 & CPU.Show (Name)
+                 & CPU.Show (Property_Name)
                  & " defined only on objects; found "
                  & "[" & Aqua.IO.Hex_Image (Target) & "] "
                  & CPU.Show (Target);
@@ -86,13 +94,13 @@ package body Aqua.CPU.Traps is
                               Object_Interface'Class
                                 (CPU.To_External_Object
                                    (Target).all)'Access;
-            Property_Name : constant String :=
-                              CPU.Image.To_String (Name);
+            Name : constant String :=
+                              CPU.Image.To_String (Property_Name);
          begin
-            Value := Target_Object.Get_Property (Property_Name);
+            Value := Target_Object.Get_Property (Name);
             if Trace_Properties then
                Ada.Text_IO.Put_Line
-                 (Target_Object.Name & "." & CPU.Show (Name) & " -> "
+                 (Target_Object.Name & "." & CPU.Show (Property_Name) & " -> "
                   & CPU.Show (Value));
             end if;
          end;
@@ -106,7 +114,8 @@ package body Aqua.CPU.Traps is
 
       end if;
 
-      CPU.Push (Value);
+      CPU.R (R_PV) := Value;
+
    end Handle_Get_Property;
 
    --------------------------
@@ -212,11 +221,11 @@ package body Aqua.CPU.Traps is
    -------------------------
 
    procedure Handle_Set_Property
-     (CPU   : in out Aqua_CPU_Type'Class)
+     (CPU  : in out Aqua_CPU_Type'Class;
+      Name : Word)
    is
-      Name   : constant Word := CPU.Pop;
-      Target : constant Word := CPU.Pop;
-      Value  : constant Word := CPU.Pop;
+      Target : constant Word := CPU.R (Aqua.Architecture.R_OP);
+      Value  : constant Word := CPU.R (Aqua.Architecture.R_PV);
    begin
       if Trace_Properties then
          Ada.Text_IO.Put_Line

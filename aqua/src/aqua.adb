@@ -1,5 +1,25 @@
 package body Aqua is
 
+   ---------
+   -- Get --
+   ---------
+
+   function Get
+     (Source : Word;
+      Size   : Data_Size)
+      return Word
+   is
+   begin
+      case Size is
+         when Word_8_Size =>
+            return Source and 16#0000_00FF#;
+         when Word_16_Size =>
+            return Source and 16#0000_FFFF#;
+         when Word_32_Size =>
+            return Source;
+      end case;
+   end Get;
+
    -----------------
    -- Get_Address --
    -----------------
@@ -65,22 +85,23 @@ package body Aqua is
       return String_Reference (Value and Payload_Mask);
    end Get_String_Reference;
 
-   --------------
-   -- Get_Word --
-   --------------
+   ---------------
+   -- Get_Value --
+   ---------------
 
-   function Get_Word
+   function Get_Value
      (Memory : Memory_Interface'Class;
-      Addr   : Address)
+      Addr   : Address;
+      Size   : Data_Size)
       return Word
    is
       It : Word := 0;
    begin
-      for I in reverse Address range 0 .. Bytes_Per_Word - 1 loop
-         It := It * 256 + Word (Memory.Get_Byte (Addr + I));
+      for I in reverse Address range 0 .. Address (Data_Octets (Size)) - 1 loop
+         It := It * 256 + Word (Memory.Get_Octet (Addr + I));
       end loop;
       return It;
-   end Get_Word;
+   end Get_Value;
 
    ----------------
    -- Is_Address --
@@ -109,6 +130,46 @@ package body Aqua is
       return Get_Tag (Value) = Integer_Tag;
    end Is_Integer;
 
+   ---------
+   -- Set --
+   ---------
+
+   procedure Set
+     (Target : in out Word;
+      Size   : in     Data_Size;
+      Value  : in     Word)
+   is
+   begin
+      case Size is
+         when Word_8_Size =>
+            Target := (Target and 16#FFFF_FF00#)
+              or (Value and 16#0000_00FF#);
+         when Word_16_Size =>
+            Target := (Target and 16#FFFF_0000#)
+              or (Value and 16#0000_FFFF#);
+         when Word_32_Size =>
+            Target := Value;
+      end case;
+   end Set;
+
+   ---------------
+   -- Set_Value --
+   ---------------
+
+   procedure Set_Value
+     (Memory : in out Memory_Interface'Class;
+      Addr   : Address;
+      Size   : Data_Size;
+      Value  : Word)
+   is
+      It : Word := Value;
+   begin
+      for I in Address range 0 .. Address (Data_Octets (Size)) - 1 loop
+         Memory.Set_Octet (Addr + I, Octet (It mod 256));
+         It := It / 256;
+      end loop;
+   end Set_Value;
+
    --------------
    -- Set_Word --
    --------------
@@ -118,12 +179,8 @@ package body Aqua is
       Addr   : Address;
       Value  : Word)
    is
-      It : Word := Value;
    begin
-      for I in Address range 0 .. Bytes_Per_Word - 1 loop
-         Memory.Set_Byte (Addr + I, Byte (It mod 256));
-         It := It / 256;
-      end loop;
+      Set_Value (Memory, Addr, Word_32_Size, Value);
    end Set_Word;
 
    ---------------------

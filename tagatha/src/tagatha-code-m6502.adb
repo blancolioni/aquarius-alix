@@ -79,7 +79,7 @@ package body Tagatha.Code.M6502 is
       Asm  : in out Assembly'Class;
       Op   : Tagatha.Transfers.Transfer_Operand);
 
-   procedure Next_Operand_Byte
+   procedure Next_Operand_Octet
      (T           : in out M6502_Translator'Class;
       Asm         : in out Assembly'Class;
       Op          : Tagatha.Transfers.Transfer_Operand;
@@ -96,7 +96,7 @@ package body Tagatha.Code.M6502 is
       Asm         : in out Assembly'Class;
       Op          : Tagatha.Transfers.Transfer_Operand;
       Destination : Boolean;
-      Byte        : Positive;
+      Octet        : Positive;
       Instr       : String);
 
    procedure Load_Register
@@ -121,7 +121,7 @@ package body Tagatha.Code.M6502 is
       Op : Tagatha.Transfers.Transfer_Operand)
       return Natural;
 
-   function Size_Bytes (Size : Tagatha_Size) return Positive;
+   function Size_Octets (Size : Tagatha_Size) return Positive;
 
    ------------------
    -- Address_Size --
@@ -145,26 +145,26 @@ package body Tagatha.Code.M6502 is
       Dest        : in     Tagatha.Transfers.Transfer_Operand)
    is
       Source_Size : constant Positive :=
-                      Size_Bytes (Transfers.Get_Size (Source));
+                      Size_Octets (Transfers.Get_Size (Source));
       Dest_Size   : constant Positive :=
-                      Size_Bytes (Transfers.Get_Size (Dest));
+                      Size_Octets (Transfers.Get_Size (Dest));
    begin
       Asm.Put_Line ("    ; compare " & Tagatha.Transfers.Show (Source)
                     & ", " & Tagatha.Transfers.Show (Dest));
       Start_Operands (T, Asm, Src => Source, Dst => Dest);
 
-      for Byte in 1 .. Dest_Size loop
-         if Byte <= Source_Size then
-            Operate (T, Asm, Source, False, Byte, "LDA");
-         elsif Byte = Source_Size + 1 then
+      for Octet in 1 .. Dest_Size loop
+         if Octet <= Source_Size then
+            Operate (T, Asm, Source, False, Octet, "LDA");
+         elsif Octet = Source_Size + 1 then
             Instruction (Asm, "LDA", "#0");
          end if;
-         Operate (T, Asm, Dest, True, Byte, "CMP");
-         if Byte < Source_Size then
-            Next_Operand_Byte (T, Asm, Source, False);
+         Operate (T, Asm, Dest, True, Octet, "CMP");
+         if Octet < Source_Size then
+            Next_Operand_Octet (T, Asm, Source, False);
          end if;
-         if Byte < Dest_Size then
-            Next_Operand_Byte (T, Asm, Source, False);
+         if Octet < Dest_Size then
+            Next_Operand_Octet (T, Asm, Source, False);
          end if;
       end loop;
       Finish_Operand (T, Asm, Source, Destination => False);
@@ -258,7 +258,7 @@ package body Tagatha.Code.M6502 is
          --  Summary of timing and space
          --     Reservation:   1   2   3   4   5+
          --     Cycles:        4   8  10  12  12
-         --     Bytes:         1   2   5   6   7
+         --     Octets:         1   2   5   6   7
 
          declare
             Reservation : constant Integer := Get_Reservation (Item);
@@ -622,26 +622,26 @@ package body Tagatha.Code.M6502 is
       Dest        : in     Tagatha.Transfers.Transfer_Operand)
    is
       Source_Size : constant Positive :=
-                      Size_Bytes (Transfers.Get_Size (Source));
+                      Size_Octets (Transfers.Get_Size (Source));
       Dest_Size   : constant Positive :=
-                      Size_Bytes (Transfers.Get_Size (Dest));
+                      Size_Octets (Transfers.Get_Size (Dest));
    begin
       Asm.Put_Line ("    ; move " & Tagatha.Transfers.Show (Source)
                     & ", " & Tagatha.Transfers.Show (Dest));
       Start_Operands (T, Asm, Src => Source, Dst => Dest);
 
-      for Byte in 1 .. Dest_Size loop
-         if Byte <= Source_Size then
-            Operate (T, Asm, Source, False, Byte, "LDA");
-         elsif Byte = Source_Size + 1 then
+      for Octet in 1 .. Dest_Size loop
+         if Octet <= Source_Size then
+            Operate (T, Asm, Source, False, Octet, "LDA");
+         elsif Octet = Source_Size + 1 then
             Instruction (Asm, "LDA", "#0");
          end if;
-         Operate (T, Asm, Dest, True, Byte, "STA");
-         if Byte < Source_Size then
-            Next_Operand_Byte (T, Asm, Source, False);
+         Operate (T, Asm, Dest, True, Octet, "STA");
+         if Octet < Source_Size then
+            Next_Operand_Octet (T, Asm, Source, False);
          end if;
-         if Byte < Dest_Size then
-            Next_Operand_Byte (T, Asm, Source, False);
+         if Octet < Dest_Size then
+            Next_Operand_Octet (T, Asm, Source, False);
          end if;
       end loop;
       Finish_Operand (T, Asm, Source, Destination => False);
@@ -659,17 +659,17 @@ package body Tagatha.Code.M6502 is
       Dest   : in     Tagatha.Transfers.Transfer_Operand)
    is
       Dest_Size : constant Positive :=
-                    Size_Bytes (Transfers.Get_Size (Dest));
+                    Size_Octets (Transfers.Get_Size (Dest));
    begin
       Start_Operand (T, Asm, Dest);
 
-      for Byte in 1 .. Dest_Size loop
-         if Byte = 1 then
+      for Octet in 1 .. Dest_Size loop
+         if Octet = 1 then
             Instruction (Asm, "LDA", Temp'Img);
          else
-            Instruction (Asm, "LDA", Temp'Img & " +" & Byte'Img);
+            Instruction (Asm, "LDA", Temp'Img & " +" & Octet'Img);
          end if;
-         Operate (T, Asm, Dest, True, Byte, "STA");
+         Operate (T, Asm, Dest, True, Octet, "STA");
       end loop;
 
       Finish_Operand (T, Asm, Dest, Destination => True);
@@ -686,16 +686,16 @@ package body Tagatha.Code.M6502 is
       Source : in     Tagatha.Transfers.Transfer_Operand)
    is
       Source_Size : constant Positive :=
-                      Size_Bytes (Transfers.Get_Size (Source));
+                      Size_Octets (Transfers.Get_Size (Source));
    begin
       Start_Operand (T, Asm, Source);
 
-      for Byte in 1 .. Source_Size loop
-         Operate (T, Asm, Source, False, Byte, "LDA");
-         if Byte = 1 then
+      for Octet in 1 .. Source_Size loop
+         Operate (T, Asm, Source, False, Octet, "LDA");
+         if Octet = 1 then
             Instruction (Asm, "STA", Temp'Img);
          else
-            Instruction (Asm, "STA", Temp'Img & " +" & Byte'Img);
+            Instruction (Asm, "STA", Temp'Img & " +" & Octet'Img);
          end if;
       end loop;
 
@@ -715,7 +715,7 @@ package body Tagatha.Code.M6502 is
       Dest        : in     Tagatha.Transfers.Transfer_Operand)
    is
       Dest_Size   : constant Positive :=
-                      Size_Bytes (Transfers.Get_Size (Dest));
+                      Size_Octets (Transfers.Get_Size (Dest));
    begin
       Move_To_Temp_Address (T, Asm, Div_Mul_Arg_1, Source_1);
       Move_To_Temp_Address (T, Asm, Div_Mul_Arg_2, Source_2);
@@ -750,10 +750,10 @@ package body Tagatha.Code.M6502 is
    end Multiply;
 
    -----------------------
-   -- Next_Operand_Byte --
+   -- Next_Operand_Octet --
    -----------------------
 
-   procedure Next_Operand_Byte
+   procedure Next_Operand_Octet
      (T           : in out M6502_Translator'Class;
       Asm         : in out Assembly'Class;
       Op          : Tagatha.Transfers.Transfer_Operand;
@@ -775,7 +775,7 @@ package body Tagatha.Code.M6502 is
             T.Y_Decremented := False;
          end if;
       end if;
-   end Next_Operand_Byte;
+   end Next_Operand_Octet;
 
    -------------
    -- Operate --
@@ -816,7 +816,7 @@ package body Tagatha.Code.M6502 is
       Asm         : in out Assembly'Class;
       Op          : Tagatha.Transfers.Transfer_Operand;
       Destination : Boolean;
-      Byte        : Positive;
+      Octet        : Positive;
       Instr       : String)
    is
       use Tagatha.Transfers;
@@ -826,11 +826,11 @@ package body Tagatha.Code.M6502 is
          declare
             Value : constant Tagatha.Constants.Tagatha_Constant :=
                       Transfers.Get_Value (Op);
-            Byte_Value : constant Natural :=
+            Octet_Value : constant Natural :=
                            Constants.Get_Octet
-                             (Value, Byte);
+                             (Value, Octet);
          begin
-            Load_Register (T, Asm, A, Byte_Value);
+            Load_Register (T, Asm, A, Octet_Value);
          end;
       elsif Is_Argument (Op)
         or else Is_Local (Op)
@@ -851,10 +851,10 @@ package body Tagatha.Code.M6502 is
    end Operate;
 
    ----------------
-   -- Size_Bytes --
+   -- Size_Octets --
    ----------------
 
-   function Size_Bytes (Size : Tagatha_Size) return Positive is
+   function Size_Octets (Size : Tagatha_Size) return Positive is
    begin
       case Size is
          when Default_Size =>
@@ -872,7 +872,7 @@ package body Tagatha.Code.M6502 is
          when Size_64 =>
             return 8;
       end case;
-   end Size_Bytes;
+   end Size_Octets;
 
    -----------
    -- Start --
@@ -1046,7 +1046,7 @@ package body Tagatha.Code.M6502 is
       Source : in     Tagatha.Transfers.Transfer_Operand)
    is
       Source_Size : constant Positive :=
-                      Size_Bytes (Transfers.Get_Size (Source));
+                      Size_Octets (Transfers.Get_Size (Source));
    begin
       Asm.Put_Line ("    ; test " & Tagatha.Transfers.Show (Source));
       if Source_Size > 1 then
@@ -1055,12 +1055,12 @@ package body Tagatha.Code.M6502 is
 
       Start_Operand (T, Asm, Source);
 
-      for Byte in 1 .. Source_Size loop
-         Operate (T, Asm, Source, False, Byte, "LDA");
+      for Octet in 1 .. Source_Size loop
+         Operate (T, Asm, Source, False, Octet, "LDA");
          if Source_Size > 1 then
             Instruction (Asm, "BNE", "out");
-            if Byte < Source_Size then
-               Next_Operand_Byte (T, Asm, Source, False);
+            if Octet < Source_Size then
+               Next_Operand_Octet (T, Asm, Source, False);
             end if;
          end if;
       end loop;

@@ -61,17 +61,17 @@ package body Aqua.Images is
    end Code_Low;
 
    --------------
-   -- Get_Byte --
+   -- Get_Octet --
    --------------
 
-   overriding function Get_Byte
+   overriding function Get_Octet
      (Image : Root_Image_Type;
       Addr  : Address)
-      return Byte
+      return Octet
    is
    begin
-      return Image.Memory.Get_Byte (Addr);
-   end Get_Byte;
+      return Image.Memory.Get_Octet (Addr);
+   end Get_Octet;
 
    -----------------
    -- Have_String --
@@ -131,9 +131,26 @@ package body Aqua.Images is
                   Ada.Text_IO.Put (" " & Aqua.IO.Hex_Image (Ref.Addr));
                end if;
                if Info.Is_String then
-                  Image.Set_Word
-                    (Ref.Addr,
-                     To_String_Word (String_Reference (Info.Value)));
+                  declare
+                     Addr : constant Address := Ref.Addr;
+                     Index : constant String_Reference :=
+                               String_Reference (Info.Value);
+                     Value : constant Word := To_String_Word (Index);
+                  begin
+                     Image.Set_Word (Addr, Value);
+                  end;
+               elsif Ref.Branch then
+                  declare
+                     Branch : constant Word :=
+                                Image.Get_Word (Ref.Addr);
+                     Target : constant Address :=
+                                Aqua.Arithmetic.Relative_Address
+                                  (Ref.Addr, Get_Address (Info.Value));
+                  begin
+                     Image.Set_Word
+                       (Ref.Addr,
+                        Branch + Word (Target and 16#00FF_FFFF#));
+                  end;
                elsif Ref.Relative then
                   declare
                      W : constant Word :=
@@ -265,28 +282,28 @@ package body Aqua.Images is
          end loop;
       end;
 
-      for Addr in 0 .. (High - Low + 1) / 4 loop
+      for Addr in 0 .. High - Low loop
 
          if Trace_Code then
-            if Addr mod 8 = 0 then
+            if Addr mod 16 = 0 then
                if Addr > 0 then
                   Ada.Text_IO.New_Line;
                end if;
-               Ada.Text_IO.Put (Aqua.IO.Hex_Image (Address (Addr * 4)
+               Ada.Text_IO.Put (Aqua.IO.Hex_Image (Address (Addr)
                                 + Image.High));
             end if;
          end if;
 
          declare
-            W : Word;
+            X : Octet;
          begin
-            Read_Word (File, W);
+            Read_Octet (File, X);
 
             if Trace_Code then
-               Ada.Text_IO.Put (" " & Aqua.IO.Octal_Image (W));
+               Ada.Text_IO.Put (" " & Aqua.IO.Hex_Image (X));
             end if;
 
-            Image.Set_Word (Image.High + Address (Addr * 4), W);
+            Image.Set_Octet (Image.High + Address (Addr), X);
          end;
       end loop;
 
@@ -298,18 +315,18 @@ package body Aqua.Images is
          declare
             Length  : Word;
             Refs    : Word;
-            Defined : Byte;
+            Defined : Octet;
          begin
             Read_Word (File, Length);
             Read_Word (File, Refs);
-            Read_Byte (File, Defined);
+            Read_Octet (File, Defined);
             declare
                S : String (1 .. Natural (Length));
-               X : Byte;
+               X : Octet;
                Info : Link_Info;
             begin
                for J in S'Range loop
-                  Read_Byte (File, X);
+                  Read_Octet (File, X);
                   S (J) := Character'Val (X);
                end loop;
 
@@ -363,16 +380,22 @@ package body Aqua.Images is
                for J in 1 .. Refs loop
                   declare
                      Addr : Address;
-                     Relative : Byte;
+                     Relative : Octet;
                   begin
                      Read_Address (File, Addr);
-                     Read_Byte (File, Relative);
+                     Read_Octet (File, Relative);
                      Info.References.Append
-                       ((Addr + Image.High, Boolean'Val (Relative)));
+                       ((Addr     => Addr + Image.High,
+                         Relative => Boolean'Val (Relative mod 2),
+                         Branch   => Boolean'Val (Relative / 2 mod 2)));
                      if Trace_Load then
                         if I <= External_Count then
                            Ada.Text_IO.Put
                              (" " & Aqua.IO.Hex_Image (Addr + Image.High));
+                           Ada.Text_IO.Put
+                             ((if Relative mod 2 = 1 then "r" else ""));
+                           Ada.Text_IO.Put
+                             ((if Relative mod 2 = 1 then "b" else ""));
                         end if;
                      end if;
                   end;
@@ -427,17 +450,17 @@ package body Aqua.Images is
    end Save;
 
    --------------
-   -- Set_Byte --
+   -- Set_Octet --
    --------------
 
-   overriding procedure Set_Byte
+   overriding procedure Set_Octet
      (Image : in out Root_Image_Type;
       Addr  : Address;
-      Value : Byte)
+      Value : Octet)
    is
    begin
-      Image.Memory.Set_Byte (Addr, Value);
-   end Set_Byte;
+      Image.Memory.Set_Octet (Addr, Value);
+   end Set_Octet;
 
    ----------
    -- Show --
@@ -480,9 +503,15 @@ package body Aqua.Images is
    begin
       for Loc of Image.Locations loop
          if Loc.Start > Addr then
-            return Ada.Directories.Simple_Name (To_String (File_Name))
-              & ":" & Trim (Natural'Image (Line), Left)
-              & ":" & Trim (Natural'Image (Column), Left);
+            declare
+               Name : constant String := To_String (File_Name);
+            begin
+               if Name /= "" then
+                  return Ada.Directories.Simple_Name (To_String (File_Name))
+                    & ":" & Trim (Natural'Image (Line), Left)
+                    & ":" & Trim (Natural'Image (Column), Left);
+               end if;
+            end;
          else
             File_Name := Loc.Source_File;
             Line      := Loc.Line;

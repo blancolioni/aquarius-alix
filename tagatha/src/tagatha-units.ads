@@ -33,8 +33,9 @@ package Tagatha.Units is
 
    procedure Optimise (Unit : in out Tagatha_Unit);
 
-   procedure Write (Unit        : in     Tagatha_Unit;
-                    Target_Name : in String);
+   procedure Write (Unit           : Tagatha_Unit;
+                    Target_Name    : String;
+                    Directory_Path : String);
 
    procedure Segment (Unit  : in out Tagatha_Unit;
                       Seg   : in     Tagatha_Segment);
@@ -43,8 +44,7 @@ package Tagatha.Units is
                     Name     : in     String;
                     Export   : in     Boolean := False);
 
-   procedure Next_Label (Unit   : in out Tagatha_Unit;
-                         Index  :    out Positive);
+   function Next_Label (Unit   : in out Tagatha_Unit) return Positive;
 
    procedure Label (Unit   : in out Tagatha_Unit;
                     Index  : in     Positive);
@@ -77,6 +77,10 @@ package Tagatha.Units is
    procedure Asciz_String (Unit  : in out Tagatha_Unit;
                            Value : in     String);
 
+   procedure Directive (Unit : in out Tagatha_Unit;
+                        Value : String;
+                        Address : Integer := -1);
+
    procedure Push (Unit    : in out Tagatha_Unit;
                    Value   : in     Tagatha_Integer;
                    Size    : in     Tagatha_Size     := Default_Integer_Size);
@@ -84,9 +88,15 @@ package Tagatha.Units is
    procedure Push (Unit  : in out Tagatha_Unit;
                    Value : in     Tagatha_Floating_Point);
 
-   procedure Push_Label (Unit    : in out Tagatha_Unit;
-                         Label_Name : String;
-                         Size       : Tagatha_Size := Default_Integer_Size);
+   procedure Push_Label
+     (Unit       : in out Tagatha_Unit;
+      Label_Name : in     String;
+      Size       : in     Tagatha_Size  := Default_Integer_Size;
+      External   : in     Boolean       := False);
+
+   procedure Push_Text
+     (Unit : in out Tagatha_Unit;
+      Text : String);
 
    procedure Push_Local (Unit    : in out Tagatha_Unit;
                          Offset  : in     Local_Offset;
@@ -95,6 +105,10 @@ package Tagatha.Units is
    procedure Push_Argument (Unit    : in out Tagatha_Unit;
                             Offset  : in     Argument_Offset;
                             Size    : Tagatha_Size := Default_Integer_Size);
+
+   procedure Push_Register
+     (Unit : in out Tagatha_Unit;
+      Name : in     String);
 
    --  procedure Push_Label_Address (Unit       : in out Tagatha_Unit;
    --                                Label_Name : String);
@@ -105,9 +119,11 @@ package Tagatha.Units is
    --  procedure Push_Argument_Address (Unit    : in out Tagatha_Unit;
    --                                   Offset  : in     Argument_Offset);
 
-   procedure Pop_Label (Unit       : in out Tagatha_Unit;
-                        Label_Name : String;
-                        Size       : Tagatha_Size := Default_Integer_Size);
+   procedure Pop_Label
+     (Unit       : in out Tagatha_Unit;
+      Label_Name : String;
+      Size       : Tagatha_Size := Default_Integer_Size;
+      External   : Boolean      := False);
 
    procedure Pop_Local (Unit    : in out Tagatha_Unit;
                         Offset  : in     Local_Offset;
@@ -122,6 +138,10 @@ package Tagatha.Units is
    procedure Pop_Result
      (Unit    : in out Tagatha_Unit;
       Size    : in     Tagatha_Size := Default_Integer_Size);
+
+   procedure Pop_Register
+     (Unit : in out Tagatha_Unit;
+      Name : in     String);
 
    procedure Dereference (Unit : in out Tagatha_Unit;
                           Size : in     Tagatha_Size := Default_Integer_Size);
@@ -145,6 +165,9 @@ package Tagatha.Units is
    function External_Name (Unit : Tagatha_Unit) return String;
    function File_System_Name (Unit : Tagatha_Unit) return String;
 
+   procedure Drop (Unit      : in out Tagatha_Unit;
+                   Size      : in     Tagatha_Size := Default_Size);
+
    procedure Pop_Operand (Unit      : in out Tagatha_Unit;
                           Op        : in     Operands.Tagatha_Operand;
                           Size      : in     Tagatha_Size);
@@ -152,6 +175,21 @@ package Tagatha.Units is
    procedure Push_Operand (Unit      : in out Tagatha_Unit;
                            Op        : in     Operands.Tagatha_Operand;
                            Size      : in     Tagatha_Size);
+
+   procedure Native_Operation
+     (Unit               : in out Tagatha_Unit;
+      Name               : String;
+      Input_Stack_Words  : Natural := 0;
+      Output_Stack_Words : Natural := 0;
+      Changed_Registers  : String := "");
+   --  An operation which is understood by the target architecture is created.
+   --  Input_Stack_Words holds the number of words which the
+   --  operation pops off the stack before executing.
+   --  Output_Stack_Words holds the number of words pushed to the stack
+   --  after execution.
+   --  Changed_Registers should be a comma-separated list
+   --  of registers that can be changed by this operation
+   --  If empty, no (relevant) registers are changed
 
 private
 
@@ -168,11 +206,22 @@ private
    type Last_Label_Array is
      array (Tagatha_Segment) of Tagatha.Labels.Tagatha_Label;
 
+   type Directive_Record is
+      record
+         Segment : Tagatha_Segment;
+         Index   : Natural;
+         Value   : Ada.Strings.Unbounded.Unbounded_String;
+      end record;
+
+   package List_Of_Directives is
+     new Ada.Containers.Doubly_Linked_Lists (Directive_Record);
+
    type Tagatha_Unit is tagged
       record
          Name               : Ada.Strings.Unbounded.Unbounded_String;
          Source_File        : Ada.Strings.Unbounded.Unbounded_String;
          Current_Segment    : Tagatha_Segment        := Executable;
+         Directives         : List_Of_Directives.List;
          Labels             : Tagatha.Labels.Tagatha_Label_List;
          Last_Label         : Last_Label_Array;
          Next_Label         : Positive := 1;
