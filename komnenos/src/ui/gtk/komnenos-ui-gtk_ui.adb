@@ -1,33 +1,22 @@
-with Ada.Characters.Latin_1;
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Numerics;
 --  with Ada.Text_IO;
 
 with Tropos;
 
-with Aquarius.Colours;
-with Aquarius.Fonts;
-with Aquarius.Styles;
-with Aquarius.Themes;
-
 with Komnenos.Connectors;
 with Komnenos.Layouts;
 
 with Komnenos.UI.Gtk_UI.Entity_Lists;
+with Komnenos.UI.Gtk_UI.Borders;
+with Komnenos.UI.Gtk_UI.Text;
 
 with Glib.Error;
-with Glib.Properties;
-with Glib.Values;
 
 with Gdk.Cairo;
 with Gdk.Color;
-with Gdk.Cursor;
 with Gdk.Event;
-with Gdk.Main;
 with Gdk.Pixbuf;
-with Gdk.Rectangle;
-with Gdk.RGBA;
-with Gdk.Window;
 
 with Gtk.Builder;
 with Gtk.Drawing_Area;
@@ -39,21 +28,12 @@ with Gtk.GEntry;
 with Gtk.Grid;
 with Gtk.Handlers;
 with Gtk.Main;
-with Gtk.Scrolled_Window;
 with Gtk.Style_Provider;
-with Gtk.Text_Buffer;
-with Gtk.Text_Iter;
-with Gtk.Text_Tag;
-with Gtk.Text_Tag_Table;
-with Gtk.Text_View;
 with Gtk.Tree_View;
 with Gtk.Widget;
 with Gtk.Window;
 
 with Gtkada.Style;
-
-with Pango.Enums;
-with Pango.Font;
 
 with Cairo;
 with Cairo.Image_Surface;
@@ -80,19 +60,36 @@ package body Komnenos.UI.Gtk_UI is
       Item   : Komnenos.Fragments.Fragment_Type);
 
    type Layout_Widget_Record is
+     new Komnenos.UI.Gtk_UI.Borders.UI_Fragment_Interface with
       record
          Widget       : Gtk.Widget.Gtk_Widget;
-         Display      : Gtk.Widget.Gtk_Widget;
+         Grid         : Gtk.Grid.Gtk_Grid;
+         Display      : access Display_Interface'Class;
          Title        : Gtk.Widget.Gtk_Widget;
          Fragment     : Komnenos.Fragments.Fragment_Type;
          Background   : Gdk.Color.Gdk_Color;
-         Border       : Gdk.Color.Gdk_Color;
+         Border       : Gdk.RGBA.Gdk_RGBA;
          Show_Border  : Boolean;
          Grab_Focus   : Boolean;
          Dragging     : Boolean := False;
          Start_X      : Glib.Gdouble;
          Start_Y      : Glib.Gdouble;
       end record;
+
+   overriding function Border_Colour
+     (Fragment : Layout_Widget_Record)
+      return Gdk.RGBA.Gdk_RGBA
+   is (Fragment.Border);
+
+   overriding procedure Set_Corner_Widget
+     (Fragment  : in out Layout_Widget_Record;
+      Corner    : Borders.Border_Corner;
+      Widget    : access Gtk.Widget.Gtk_Widget_Record'Class);
+
+   overriding procedure Set_Side_Widget
+     (Fragment  : in out Layout_Widget_Record;
+      Edge      : Borders.Border_Edge;
+      Widget    : access Gtk.Widget.Gtk_Widget_Record'Class);
 
    type Layout_Widget_Access is access Layout_Widget_Record;
 
@@ -110,22 +107,23 @@ package body Komnenos.UI.Gtk_UI is
       record
          Top_Level       : Gtk.Window.Gtk_Window;
          Main_View       : Gtk.Layout.Gtk_Layout;
+         Main_Surface    : Cairo.Cairo_Surface;
          Entity_Tree     : Gtk.Tree_View.Gtk_Tree_View;
          Entity_Filter   : Gtk.GEntry.Gtk_Entry;
          Navigation      : Gtk.Drawing_Area.Gtk_Drawing_Area;
+         Nav_Surface     : Cairo.Cairo_Surface;
          Layout          : access Root_Gtk_Layout'Class;
          Widgets         : Layout_Widget_Lists.List;
          Connectors      : Connector_Lists.List;
          Active          : Komnenos.Fragments.Fragment_Type := null;
-         Hover_Start     : Natural := 0;
-         Hover_Finish    : Natural := 0;
-         Hover_Style     : Aquarius.Styles.Aquarius_Style;
          Dragging        : Layout_Widget_Access := null;
          Vertical_Scale  : Float := 3.0;  --  three main views fit vertically
                                           --  into the navigator
       end record;
 
    type Gtk_UI_Access is access all Root_Gtk_UI'Class;
+
+   Current_UI : Gtk_UI_Access;
 
    overriding function Name (UI : Root_Gtk_UI) return String
    is ("Komnenos UI");
@@ -154,8 +152,9 @@ package body Komnenos.UI.Gtk_UI is
    procedure Create_Fragment_Widget
      (Fragment : Komnenos.Fragments.Fragment_Type;
       UI       : not null access Root_Gtk_UI'Class;
-      Widget   : out Gtk.Widget.Gtk_Widget;
-      Display  : out Gtk.Widget.Gtk_Widget;
+      Top      : out Gtk.Widget.Gtk_Widget;
+      Grid     : out Gtk.Grid.Gtk_Grid;
+      Display  : out Komnenos_Display;
       Title    : out Gtk.Widget.Gtk_Widget);
 
    function Find_Fragment_Widget
@@ -163,46 +162,10 @@ package body Komnenos.UI.Gtk_UI is
       UI       : not null access Root_Gtk_UI'Class)
       return Gtk.Widget.Gtk_Widget;
 
-   function Find_Fragment_By_Display
-     (Display : not null access Gtk.Widget.Gtk_Widget_Record'Class;
-      UI      : not null access Root_Gtk_UI'Class)
-      return Komnenos.Fragments.Fragment_Type;
-
-   function Find_Layout_Record_By_Display
-     (Display : not null access Gtk.Widget.Gtk_Widget_Record'Class;
-      UI      : not null access Root_Gtk_UI'Class)
-      return Layout_Widget_Access;
-
    function Find_Layout_Record_By_Title
      (Title   : not null access Gtk.Widget.Gtk_Widget_Record'Class;
       UI      : not null access Root_Gtk_UI'Class)
       return Layout_Widget_Access;
-
---     package Fragment_Return_Callback is
---       new Gtk.Handlers.User_Return_Callback
---         (Widget_Type => Gtk.Widget.Gtk_Widget_Record,
---          User_Type   => Komnenos.Fragments.Fragment_Type,
---          Return_Type => Boolean);
---
---     function Configure_Fragment_Handler
---       (W        : access Gtk.Widget.Gtk_Widget_Record'Class;
---        Fragment : Komnenos.Fragments.Fragment_Type)
---        return Boolean;
-
-   function Get_Tag_Entry
-     (Buffer : Gtk.Text_Buffer.Gtk_Text_Buffer;
-      Style  : Aquarius.Styles.Aquarius_Style)
-      return Gtk.Text_Tag.Gtk_Text_Tag;
-   --  return a text tag corresponding to the given Style.  Create a new
-   --  text tag if necessary.
-
-   procedure Render_Text
-     (View : Gtk.Text_View.Gtk_Text_View;
-      Fragment : Komnenos.Fragments.Fragment_Type);
-
-   function To_RGBA
-     (Colour_Spec : String)
-      return Gdk.RGBA.Gdk_RGBA;
 
    package Window_Callback is
       new Gtk.Handlers.Callback (Gtk.Window.Gtk_Window_Record);
@@ -238,12 +201,6 @@ package body Komnenos.UI.Gtk_UI is
       Event : Gdk.Event.Gdk_Event_Button)
       return Boolean;
 
-   package Text_View_Event_Handler is
-     new Gtk.Handlers.User_Return_Callback
-       (Widget_Type => Gtk.Text_View.Gtk_Text_View_Record,
-        Return_Type => Boolean,
-        User_Type   => Gtk_UI_Access);
-
    function Fragment_Title_Button_Press_Handler
      (W     : access Gtk.Widget.Gtk_Widget_Record'Class;
       Event : Gdk.Event.Gdk_Event_Button)
@@ -259,23 +216,6 @@ package body Komnenos.UI.Gtk_UI is
       Event : Gdk.Event.Gdk_Event_Motion)
       return Boolean;
 
-   function Text_View_Button_Release_Handler
-     (Text_View : access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Event     : Gdk.Event.Gdk_Event;
-      UI        : Gtk_UI_Access)
-      return Boolean;
-
-   function Text_View_Motion_Handler
-     (Text_View : access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Event     : Gdk.Event.Gdk_Event;
-      UI        : Gtk_UI_Access)
-      return Boolean;
-
-   function Text_View_Draw_Handler
-     (Widget : access Gtk.Widget.Gtk_Widget_Record'Class;
-      Cr     : Cairo.Cairo_Context)
-      return Boolean;
-
    procedure Update_Fragment_Size
      (Widget   : access Gtk.Widget.Gtk_Widget_Record'Class;
       Fragment : Komnenos.Fragments.Fragment_Type);
@@ -287,69 +227,11 @@ package body Komnenos.UI.Gtk_UI is
      (UI   : Gtk_UI_Access;
       Item : Komnenos.Fragments.Fragment_Type);
 
-   procedure Set_Text_State
-     (UI        : Gtk_UI_Access;
-      Text_View : not null access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Iter      : Gtk.Text_Iter.Gtk_Text_Iter;
-      State     : Aquarius.Themes.Element_State);
-
-   procedure Follow_If_Link
-     (UI        : Gtk_UI_Access;
-      Text_View : not null access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Iter      : Gtk.Text_Iter.Gtk_Text_Iter);
-
-   procedure Apply_Style_To_Text
-     (View : not null access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Start_Offset  : Positive;
-      Finish_Offset : Positive;
-      Style         : Aquarius.Styles.Aquarius_Style;
-      Remove        : Boolean);
-
-   procedure Paint_Line_Background
-     (View : not null access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Context : Cairo.Cairo_Context;
-      Y       : Glib.Gint;
-      Height  : Glib.Gint;
-      Colour  : Gdk.RGBA.Gdk_RGBA);
-
    procedure Draw_Rounded_Rectangle
      (Context       : Cairo.Cairo_Context;
       X, Y          : Glib.Gdouble;
       Width, Height : Glib.Gdouble;
-      Radius        : Glib.Gdouble);
-
-   --------------------------------
-   -- Apply_Style_To_Text_Buffer --
-   --------------------------------
-
-   procedure Apply_Style_To_Text
-     (View : not null access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Start_Offset  : Positive;
-      Finish_Offset : Positive;
-      Style         : Aquarius.Styles.Aquarius_Style;
-      Remove        : Boolean)
-   is
-      use Aquarius.Styles;
-      Buffer     : constant Gtk.Text_Buffer.Gtk_Text_Buffer :=
-                     View.Get_Buffer;
-      Tag        : constant Gtk.Text_Tag.Gtk_Text_Tag :=
-                     Get_Tag_Entry (Buffer, Style);
-      Start_Iter : Gtk.Text_Iter.Gtk_Text_Iter;
-      End_Iter   : Gtk.Text_Iter.Gtk_Text_Iter;
-   begin
-      Buffer.Get_Iter_At_Offset
-        (Start_Iter, Glib.Gint (Start_Offset - 1));
-      Buffer.Get_Iter_At_Offset
-        (End_Iter, Glib.Gint (Finish_Offset - 1));
-      if Remove then
-         Buffer.Remove_Tag
-           (Tag, Start_Iter, End_Iter);
-      else
-         Buffer.Apply_Tag
-           (Tag, Start_Iter, End_Iter);
-      end if;
-
-   end Apply_Style_To_Text;
+      Radius        : Glib.Gdouble) with Unreferenced;
 
    ------------------------------
    -- Click_Navigation_Handler --
@@ -362,7 +244,7 @@ package body Komnenos.UI.Gtk_UI is
    is
       pragma Unreferenced (W);
       UI       : constant Gtk_UI_Access :=
-                   Gtk_UI_Access (Current_UI);
+                   Current_UI;
       Nav_Size : Gtk.Widget.Gtk_Allocation;
       Height : Glib.Gdouble;
    begin
@@ -389,20 +271,6 @@ package body Komnenos.UI.Gtk_UI is
       return True;
    end Click_Navigation_Handler;
 
-   --------------------------------
-   -- Configure_Fragment_Handler --
-   --------------------------------
-
---     function Configure_Fragment_Handler
---       (W        : access Gtk.Widget.Gtk_Widget_Record'Class;
---        Fragment : Komnenos.Fragments.Fragment_Type)
---        return Boolean
---     is
---     begin
---        Update_Fragment_Size (W, Fragment);
---        return True;
---     end Configure_Fragment_Handler;
-
    ---------------------------------
    -- Configure_Main_View_Handler --
    ---------------------------------
@@ -428,13 +296,14 @@ package body Komnenos.UI.Gtk_UI is
    procedure Create_Fragment_Widget
      (Fragment : Komnenos.Fragments.Fragment_Type;
       UI       : not null access Root_Gtk_UI'Class;
-      Widget   : out Gtk.Widget.Gtk_Widget;
-      Display  : out Gtk.Widget.Gtk_Widget;
+      Top      : out Gtk.Widget.Gtk_Widget;
+      Grid     : out Gtk.Grid.Gtk_Grid;
+      Display  : out Komnenos_Display;
       Title    : out Gtk.Widget.Gtk_Widget)
    is
-      Text   : Gtk.Text_View.Gtk_Text_View;
-      Scroll : Gtk.Scrolled_Window.Gtk_Scrolled_Window;
-      Grid   : Gtk.Grid.Gtk_Grid;
+      Text   : constant Komnenos.UI.Gtk_UI.Text.Komnenos_Text_View :=
+                 Komnenos.UI.Gtk_UI.Text.Create_Text_View
+                   (Fragment);
       Label  : Gtk.Label.Gtk_Label;
       Events : Gtk.Event_Box.Gtk_Event_Box;
 
@@ -443,46 +312,16 @@ package body Komnenos.UI.Gtk_UI is
       Gtk.Label.Gtk_New (Label, Fragment.Title);
       Events.Add (Label);
 
-      Gtk.Text_View.Gtk_New (Text);
-
---        Label.Override_Background_Color
---          (Gtk.Enums.Gtk_State_Flag_Normal,
---           To_RGBA (Fragment.Background_Colour));
-
-      if Fragment.Background_Colour /= "" then
-         Text.Override_Background_Color
-           (Gtk.Enums.Gtk_State_Flag_Normal,
-            To_RGBA (Fragment.Background_Colour));
-      end if;
-
-      Text.Set_Size_Request (Glib.Gint (Fragment.Width - 6),
-                             Glib.Gint (Fragment.Height - 4));
-
-      Render_Text (Text, Fragment);
-
-      Text_View_Event_Handler.Connect
-        (Text, Gtk.Widget.Signal_Button_Release_Event,
-         Text_View_Event_Handler.To_Marshaller
-           (Text_View_Button_Release_Handler'Access),
-         Gtk_UI_Access (UI));
+      Label.Override_Background_Color
+        (Gtk.Enums.Gtk_State_Flag_Normal,
+         To_RGBA (Fragment.Background_Colour));
 
       declare
          use Gdk.Event;
       begin
-         Text.Add_Events
-           (Button_Press_Mask or Button_Release_Mask or Pointer_Motion_Mask);
          Label.Add_Events
            (Button_Press_Mask or Button_Release_Mask or Pointer_Motion_Mask);
       end;
-
-      Text_View_Event_Handler.Connect
-        (Text, Gtk.Widget.Signal_Motion_Notify_Event,
-         Text_View_Event_Handler.To_Marshaller
-           (Text_View_Motion_Handler'Access),
-         Gtk_UI_Access (UI));
-
-      Text.On_Draw
-        (Text_View_Draw_Handler'Access);
 
       Events.On_Button_Press_Event
         (Fragment_Title_Button_Press_Handler'Access);
@@ -493,41 +332,28 @@ package body Komnenos.UI.Gtk_UI is
       Events.On_Motion_Notify_Event
         (Fragment_Title_Motion_Handler'Access);
 
-      Gtk.Scrolled_Window.Gtk_New (Scroll);
-      Scroll.Set_Min_Content_Height (Glib.Gint (Fragment.Height));
-      Scroll.Set_Min_Content_Width (Glib.Gint (Fragment.Width));
-
-      Scroll.Add (Text);
+--        Gtk.Scrolled_Window.Gtk_New (Scroll);
 
       Gtk.Grid.Gtk_New (Grid);
 
       Grid.Attach (Events,
                    Left   => 1,
-                   Top    => 0,
-                   Width  => 1,
-                   Height => 1);
-      Grid.Attach (Scroll,
-                   Left   => 1,
                    Top    => 1,
                    Width  => 1,
                    Height => 1);
+      Grid.Attach (Text,
+                   Left   => 1,
+                   Top    => 2,
+                   Width  => 1,
+                   Height => 1);
 
-      Widget := Gtk.Widget.Gtk_Widget (Grid);
-      Display := Gtk.Widget.Gtk_Widget (Text);
+      Top := Gtk.Widget.Gtk_Widget (Grid);
+      Display := Komnenos_Display (Text);
       Title := Gtk.Widget.Gtk_Widget (Events);
 
-      Widget.Show_All;
-
-      UI.Main_View.Put (Widget,
+      UI.Main_View.Put (Top,
                         Glib.Gint (Fragment.X - UI.View_Left),
                         Glib.Gint (Fragment.Y - UI.View_Top));
-
-      declare
-         Start_Iter : Gtk.Text_Iter.Gtk_Text_Iter;
-      begin
-         Text.Get_Buffer.Get_Start_Iter (Start_Iter);
-         Text.Get_Buffer.Place_Cursor (Start_Iter);
-      end;
 
    end Create_Fragment_Widget;
 
@@ -542,6 +368,8 @@ package body Komnenos.UI.Gtk_UI is
       Result : constant Gtk_UI_Access := new Root_Gtk_UI;
       Builder : Gtk.Builder.Gtk_Builder;
    begin
+
+      Current_UI := Result;
 
       Result.View_Left := 0;
       Result.View_Top := 0;
@@ -675,6 +503,28 @@ package body Komnenos.UI.Gtk_UI is
       Gtk.Main.Main_Quit;
    end Destroy_Handler;
 
+   -------------------------
+   -- Display_Grabs_Focus --
+   -------------------------
+
+   function Display_Grabs_Focus
+     (Display : not null access Display_Interface'Class)
+      return Boolean
+   is
+   begin
+      for LW of Current_UI.Widgets loop
+         if LW.Display = Display then
+            if LW.Grab_Focus then
+               LW.Grab_Focus := False;
+               return True;
+            else
+               return False;
+            end if;
+         end if;
+      end loop;
+      raise Constraint_Error with "orphaned display";
+   end Display_Grabs_Focus;
+
    --------------------
    -- Draw_Main_View --
    --------------------
@@ -722,42 +572,6 @@ package body Komnenos.UI.Gtk_UI is
 
       Cairo.Rectangle (Context, 0.0, 0.0, Width, Height);
       Cairo.Fill (Context);
-
-      for LW of UI.Widgets loop
-         if LW.Show_Border then
-            declare
-               Fragment : constant Komnenos.Fragments.Fragment_Type :=
-                            LW.Fragment;
-               Widget   : constant Gtk.Widget.Gtk_Widget :=
-                            LW.Widget;
-               Margin   : constant := Komnenos.Layouts.Margin;
-               X        : constant Gdouble :=
-                            Gdouble (Fragment.X) - Gdouble (Margin / 2)
-                          - Gdouble (UI.View_Left);
-               Y        : constant Gdouble :=
-                            Gdouble (Fragment.Y) - Gdouble (Margin / 2)
-                          - Gdouble (UI.View_Top);
-               Width    : constant Gdouble :=
-                            Gdouble (Widget.Get_Allocated_Width)
-                            + Gdouble (Margin);
-               Height   : constant Gdouble :=
-                            Gdouble (Widget.Get_Allocated_Height)
-                            + Gdouble (Margin);
-               Colour   : constant Gdk.Color.Gdk_Color :=
-                            LW.Border;
-               Red      : constant Gdouble :=
-                            Gdouble (Gdk.Color.Red (Colour)) / 65535.0;
-               Green    : constant Gdouble :=
-                            Gdouble (Gdk.Color.Green (Colour)) / 65535.0;
-               Blue     : constant Gdouble :=
-                            Gdouble (Gdk.Color.Blue (Colour)) / 65535.0;
-            begin
-               Cairo.Set_Source_Rgb (Context, Red, Green, Blue);
-               Draw_Rounded_Rectangle (Context, X, Y, Width, Height, 25.0);
-               Cairo.Fill (Context);
-            end;
-         end if;
-      end loop;
 
       for Connector of UI.Connectors loop
          declare
@@ -837,8 +651,7 @@ package body Komnenos.UI.Gtk_UI is
       Context : Cairo.Cairo_Context;
       Surface : Cairo.Cairo_Surface;
       Width, Height : Glib.Gdouble;
-      UI            : constant Gtk_UI_Access :=
-                        Gtk_UI_Access (Current_UI);
+      UI            : constant Gtk_UI_Access := Current_UI;
    begin
       UI.Navigation.Get_Allocation (Nav_Size);
       UI.Main_View.Get_Allocation (View_Size);
@@ -884,7 +697,7 @@ package body Komnenos.UI.Gtk_UI is
                B        : constant Guint16 :=
                             Gdk.Color.Blue (Widget.Background);
             begin
-               Widget.Widget.Get_Allocation (F_Size);
+               Widget.Grid.Get_Allocation (F_Size);
 
                Cairo.Set_Source_Rgb
                  (Context,
@@ -948,20 +761,18 @@ package body Komnenos.UI.Gtk_UI is
    -- Find_Fragment_By_Display --
    ------------------------------
 
-   function Find_Fragment_By_Display
-     (Display : not null access Gtk.Widget.Gtk_Widget_Record'Class;
-      UI      : not null access Root_Gtk_UI'Class)
+   function Find_Fragment
+     (Display : not null access Display_Interface'Class)
       return Komnenos.Fragments.Fragment_Type
    is
-      use type Gtk.Widget.Gtk_Widget;
    begin
-      for LW of UI.Widgets loop
-         if LW.Display = Gtk.Widget.Gtk_Widget (Display) then
+      for LW of Current_UI.Widgets loop
+         if LW.Display = Display then
             return LW.Fragment;
          end if;
       end loop;
       return null;
-   end Find_Fragment_By_Display;
+   end Find_Fragment;
 
    --------------------------
    -- Find_Fragment_Widget --
@@ -986,20 +797,20 @@ package body Komnenos.UI.Gtk_UI is
    -- Find_Layout_Record_By_Display --
    -----------------------------------
 
-   function Find_Layout_Record_By_Display
-     (Display : not null access Gtk.Widget.Gtk_Widget_Record'Class;
-      UI      : not null access Root_Gtk_UI'Class)
-      return Layout_Widget_Access
-   is
-      use type Gtk.Widget.Gtk_Widget;
-   begin
-      for LW of UI.Widgets loop
-         if LW.Display = Gtk.Widget.Gtk_Widget (Display) then
-            return LW;
-         end if;
-      end loop;
-      return null;
-   end Find_Layout_Record_By_Display;
+--     function Find_Layout_Record_By_Display
+--       (Display : not null access Gtk.Widget.Gtk_Widget_Record'Class;
+--        UI      : not null access Root_Gtk_UI'Class)
+--        return Layout_Widget_Access
+--     is
+--        use type Gtk.Widget.Gtk_Widget;
+--     begin
+--        for LW of UI.Widgets loop
+--           if LW.Display = Gtk.Widget.Gtk_Widget (Display) then
+--              return LW;
+--           end if;
+--        end loop;
+--        return null;
+--     end Find_Layout_Record_By_Display;
 
    ---------------------------------
    -- Find_Layout_Record_By_Title --
@@ -1020,36 +831,6 @@ package body Komnenos.UI.Gtk_UI is
       return null;
    end Find_Layout_Record_By_Title;
 
-   --------------------
-   -- Follow_If_Link --
-   --------------------
-
-   procedure Follow_If_Link
-     (UI        : Gtk_UI_Access;
-      Text_View : not null access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Iter      : Gtk.Text_Iter.Gtk_Text_Iter)
-   is
-      use type Komnenos.Entities.Entity_Reference;
-      Fragment : constant Komnenos.Fragments.Fragment_Type :=
-                   Find_Fragment_By_Display
-                     (Display => Text_View,
-                      UI      => UI);
-      Entity : constant Komnenos.Entities.Entity_Reference :=
-                 Fragment.Get_Link
-                   (Natural (Gtk.Text_Iter.Get_Offset (Iter)) + 1);
-   begin
-      if Entity /= null then
-         declare
-            Location : Gdk.Rectangle.Gdk_Rectangle;
-         begin
-            Text_View.Get_Iter_Location (Iter, Location);
-            Entity.Select_Entity
-              (UI, Find_Fragment_By_Display (Text_View, UI), null,
-               Natural (Location.Y) + Natural (Location.Height) / 2);
-         end;
-      end if;
-   end Follow_If_Link;
-
    -----------------------------------------
    -- Fragment_Title_Button_Press_Handler --
    -----------------------------------------
@@ -1059,7 +840,7 @@ package body Komnenos.UI.Gtk_UI is
       Event : Gdk.Event.Gdk_Event_Button)
       return Boolean
    is
-      UI : constant Gtk_UI_Access := Gtk_UI_Access (Current_UI);
+      UI : constant Gtk_UI_Access := Current_UI;
       LW : constant Layout_Widget_Access :=
              Find_Layout_Record_By_Title (W, UI);
    begin
@@ -1067,7 +848,6 @@ package body Komnenos.UI.Gtk_UI is
       LW.Dragging := True;
       LW.Start_X  := Event.X_Root;
       LW.Start_Y  := Event.Y_Root;
-      UI.Main_View.Queue_Draw;
       return True;
    end Fragment_Title_Button_Press_Handler;
 
@@ -1081,7 +861,7 @@ package body Komnenos.UI.Gtk_UI is
       return Boolean
    is
       use Glib;
-      UI : constant Gtk_UI_Access := Gtk_UI_Access (Current_UI);
+      UI : constant Gtk_UI_Access := Current_UI;
       LW : constant Layout_Widget_Access :=
              Find_Layout_Record_By_Title (W, UI);
    begin
@@ -1113,7 +893,7 @@ package body Komnenos.UI.Gtk_UI is
       return Boolean
    is
       use Glib;
-      UI : constant Gtk_UI_Access := Gtk_UI_Access (Current_UI);
+      UI : constant Gtk_UI_Access := Current_UI;
       LW : constant Layout_Widget_Access :=
              Find_Layout_Record_By_Title (W, UI);
    begin
@@ -1132,10 +912,6 @@ package body Komnenos.UI.Gtk_UI is
               (Child_Widget => LW.Widget,
                X            => New_X,
                Y            => New_Y);
-            if LW.Show_Border then
-               LW.Show_Border := False;
-               UI.Main_View.Queue_Draw;
-            end if;
          end;
       end if;
       return True;
@@ -1183,95 +959,6 @@ package body Komnenos.UI.Gtk_UI is
       UI.Layout.Scan (Attach_Entity'Access);
    end From_Config;
 
-   -------------------
-   -- Get_Tag_Entry --
-   -------------------
-
-   function Get_Tag_Entry
-     (Buffer : Gtk.Text_Buffer.Gtk_Text_Buffer;
-      Style  : Aquarius.Styles.Aquarius_Style)
-      return Gtk.Text_Tag.Gtk_Text_Tag
-   is
-      use Gtk.Text_Tag, Gtk.Text_Tag_Table;
-      Tag_Table : constant Gtk.Text_Tag_Table.Gtk_Text_Tag_Table :=
-        Buffer.Get_Tag_Table;
-      Result    : Gtk_Text_Tag;
-      Name : constant String := Aquarius.Styles.Name (Style);
-   begin
-      Result := Tag_Table.Lookup (Name);
-      if Result = null then
-         Result := Buffer.Create_Tag (Name);
-         declare
-            use Pango.Font, Aquarius.Fonts;
-            Font : constant Aquarius_Font := Style.Font;
-            Desc : constant Pango_Font_Description :=
-                     To_Font_Description
-                       (Aquarius.Fonts.Name (Font),
-                        Size => Glib.Gint (Size (Font)));
-         begin
-            if Is_Bold (Font) then
-               Set_Weight (Desc, Pango.Enums.Pango_Weight_Bold);
-            end if;
-            if Is_Italic (Font) then
-               Set_Style (Desc, Pango.Enums.Pango_Style_Italic);
-            end if;
-            Set_Property (Result, Font_Desc_Property, Desc);
-
-            if Is_Underlined (Font) then
-               declare
-                  Value     : Glib.Values.GValue;
-               begin
-                  Glib.Values.Init (Value, Glib.GType_Int);
-                  Glib.Values.Set_Int
-                    (Value,
-                     Pango.Enums.Underline'Pos
-                       (Pango.Enums.Pango_Underline_Single));
-                  Glib.Properties.Set_Property
-                    (Result, "underline", Value);
-               end;
-            end if;
-
-            if Has_Foreground (Font) then
-               declare
-                  use Glib;
-                  use Aquarius.Colours;
-                  Colour : constant Aquarius_Colour :=
-                             Get_Foreground (Font);
-                  Foreground : Gdk.Color.Gdk_Color;
-               begin
-                  Gdk.Color.Set_Rgb
-                    (Color => Foreground,
-                     Red   => Guint16 (Red (Colour)) * 256,
-                     Green => Guint16 (Green (Colour)) * 256,
-                     Blue  => Guint16 (Blue (Colour)) * 256);
-                  Gdk.Color.Set_Property
-                    (Result, Foreground_Gdk_Property, Foreground);
-               end;
-            end if;
-
-            if Has_Background (Font) then
-               declare
-                  use Glib;
-                  use Aquarius.Colours;
-                  Colour : constant Aquarius_Colour :=
-                             Get_Foreground (Font);
-                  Background : Gdk.Color.Gdk_Color;
-               begin
-                  Gdk.Color.Set_Rgb
-                    (Color => Background,
-                     Red   => Guint16 (Red (Colour)) * 256,
-                     Green => Guint16 (Green (Colour)) * 256,
-                     Blue  => Guint16 (Blue (Colour)) * 256);
-                  Gdk.Color.Set_Property
-                    (Result, Background_Gdk_Property, Background);
-               end;
-            end if;
-
-         end;
-      end if;
-      return Result;
-   end Get_Tag_Entry;
-
    ----------------
    -- Item_Moved --
    ----------------
@@ -1293,13 +980,15 @@ package body Komnenos.UI.Gtk_UI is
       Item   : Komnenos.Fragments.Fragment_Type)
    is
       Widget  : Gtk.Widget.Gtk_Widget;
-      Display : Gtk.Widget.Gtk_Widget;
+      Grid    : Gtk.Grid.Gtk_Grid;
+      Display : Komnenos_Display;
       Title   : Gtk.Widget.Gtk_Widget;
    begin
       Create_Fragment_Widget
         (Fragment => Item,
          UI       => Layout.UI,
-         Widget   => Widget,
+         Top      => Widget,
+         Grid     => Grid,
          Display  => Display,
          Title    => Title);
 
@@ -1307,72 +996,30 @@ package body Komnenos.UI.Gtk_UI is
          New_Item : constant Layout_Widget_Access :=
                       new Layout_Widget_Record'
                         (Widget     => Widget,
+                         Grid        => Grid,
                          Display    => Display,
                          Title      => Title,
                          Fragment   => Item,
                          Background =>
                            Gdk.Color.Parse (Item.Background_Colour),
-                         Border     =>
-                           Gdk.Color.Parse (Item.Border_Colour),
+                         Border     => (0.0, 0.0, 0.0, 1.0),
                          Show_Border => True,
                          Grab_Focus => True,
                          Dragging   => False,
                          Start_X    => 0.0,
-                         Start_Y    => 0.0);
+                         Start_Y     => 0.0);
+         Got_Colour : Boolean;
+         pragma Unreferenced (Got_Colour);
       begin
+         Gdk.RGBA.Parse (New_Item.Border, Item.Border_Colour, Got_Colour);
+         Borders.Add_Borders (New_Item.all);
          Layout.UI.Widgets.Append (New_Item);
+         New_Item.Widget.Show_All;
       end;
 
       Layout.UI.Navigation.Queue_Draw;
-      Layout.UI.Main_View.Queue_Draw;
 
    end Item_Placed;
-
-   ---------------------------
-   -- Paint_Line_Background --
-   ---------------------------
-
-   procedure Paint_Line_Background
-     (View : not null access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Context : Cairo.Cairo_Context;
-      Y       : Glib.Gint;
-      Height  : Glib.Gint;
-      Colour  : Gdk.RGBA.Gdk_RGBA)
-   is
-      use Glib;
-      Visible_Rect : Gdk.Rectangle.Gdk_Rectangle;
-      Line_Rect    : Gdk.Rectangle.Gdk_Rectangle;
-      Win_Y        : Glib.Gint;
-      Clip_X1, Clip_Y1 : Glib.Gdouble;
-      Clip_X2, Clip_Y2 : Glib.Gdouble;
-   begin
-
-      View.Get_Visible_Rect (Visible_Rect);
-      View.Buffer_To_Window_Coords
-        (Win      => Gtk.Enums.Text_Window_Text,
-         Buffer_X => Visible_Rect.X,
-         Buffer_Y => Y,
-         Window_X => Line_Rect.X,
-         Window_Y => Win_Y);
-
-      Cairo.Clip_Extents
-        (Context, Clip_X1, Clip_Y1, Clip_X2, Clip_Y2);
-
-      Line_Rect.X := Gint (Clip_X1);
-      Line_Rect.Width := Gint (Clip_X2 - Clip_X1);
-      Line_Rect.Y := Win_Y;
-      Line_Rect.Height := Height;
-
-      Cairo.Set_Source_Rgba (Context,
-                             Colour.Red, Colour.Green, Colour.Blue,
-                             Colour.Alpha);
-      Cairo.Rectangle (Context,
-                       Gdouble (Line_Rect.X), Gdouble (Line_Rect.Y) + 0.5,
-                       Gdouble (Line_Rect.Width),
-                       Gdouble (Line_Rect.Height - 1));
-      Cairo.Stroke_Preserve (Context);
-      Cairo.Fill (Context);
-   end Paint_Line_Background;
 
    --------------------
    -- Place_Fragment --
@@ -1407,123 +1054,55 @@ package body Komnenos.UI.Gtk_UI is
                Destination        => Fragment,
                Destination_Offset => 0));
       end if;
-      UI.Main_View.Queue_Draw;
    end Place_Fragment;
 
-   -----------------
-   -- Render_Text --
-   -----------------
+   -----------------------
+   -- Set_Corner_Widget --
+   -----------------------
 
-   procedure Render_Text
-     (View : Gtk.Text_View.Gtk_Text_View;
-      Fragment : Komnenos.Fragments.Fragment_Type)
+   overriding procedure Set_Corner_Widget
+     (Fragment  : in out Layout_Widget_Record;
+      Corner    : Borders.Border_Corner;
+      Widget    : access Gtk.Widget.Gtk_Widget_Record'Class)
    is
-      Buffer : constant Gtk.Text_Buffer.Gtk_Text_Buffer := View.Get_Buffer;
-
-      procedure New_Line;
-      procedure Put
-        (Text  : String;
-         Style : Aquarius.Styles.Aquarius_Style;
-         Link  : Komnenos.Entities.Entity_Reference);
-
-      --------------
-      -- New_Line --
-      --------------
-
-      procedure New_Line is
-      begin
-         Buffer.Insert_At_Cursor ((1 => Ada.Characters.Latin_1.LF));
-      end New_Line;
-
-      ---------
-      -- Put --
-      ---------
-
-      procedure Put
-        (Text  : String;
-         Style : Aquarius.Styles.Aquarius_Style;
-         Link  : Komnenos.Entities.Entity_Reference)
-      is
-         pragma Unreferenced (Link);
-         Tag : constant Gtk.Text_Tag.Gtk_Text_Tag :=
-                 Get_Tag_Entry (Buffer, Style);
-         Iter : Gtk.Text_Iter.Gtk_Text_Iter;
-      begin
-         Buffer.Get_End_Iter (Iter);
-         Buffer.Insert_With_Tags
-           (Iter, Text, Tag);
-      end Put;
+      use Borders;
+      Left : constant array (Border_Corner) of Glib.Gint :=
+               (Top_Left | Bottom_Left => 0,
+                Top_Right | Bottom_Right => 2);
+      Top : constant array (Border_Corner) of Glib.Gint :=
+               (Top_Left | Top_Right => 0,
+                Bottom_Left | Bottom_Right => 3);
 
    begin
-      Fragment.Iterate (Put'Access, New_Line'Access);
-   end Render_Text;
+      Widget.Set_Size_Request (16, 16);
+      Fragment.Grid.Attach
+        (Widget, Left (Corner), Top (Corner), 1, 1);
+   end Set_Corner_Widget;
 
-   --------------------
-   -- Set_Text_State --
-   --------------------
+   ---------------------
+   -- Set_Side_Widget --
+   ---------------------
 
-   procedure Set_Text_State
-     (UI        : Gtk_UI_Access;
-      Text_View : not null access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Iter      : Gtk.Text_Iter.Gtk_Text_Iter;
-      State     : Aquarius.Themes.Element_State)
+   overriding procedure Set_Side_Widget
+     (Fragment  : in out Layout_Widget_Record;
+      Edge      : Borders.Border_Edge;
+      Widget    : access Gtk.Widget.Gtk_Widget_Record'Class)
    is
-      use Aquarius.Styles;
-
-      Fragment : constant Komnenos.Fragments.Fragment_Type :=
-                   Find_Fragment_By_Display
-                     (Display => Text_View,
-                      UI      => UI);
-      Style         : Aquarius_Style;
-      Current_Style : Aquarius_Style;
-      Offset        : constant Positive :=
-                        Natural (Gtk.Text_Iter.Get_Offset (Iter)) + 1;
-      Start_Offset  : Positive;
-      Finish_Offset : Positive;
+      use Borders;
+      Attach_Left : constant array (Border_Edge) of Glib.Gint :=
+               (Left => 0, Top | Bottom => 1, Right => 2);
+      Attach_Top  : constant array (Border_Edge) of Glib.Gint :=
+               (Left | Right => 1, Top => 0, Bottom => 3);
+      Width : constant array (Border_Edge) of Glib.Gint :=
+                (others => 1);
+      Height : constant array (Border_Edge) of Glib.Gint :=
+                      (Left | Right => 2, Top | Bottom => 1);
    begin
-      Fragment.Get_Style (State, Offset,
-                          Style, Start_Offset, Finish_Offset);
-
-      if Start_Offset = UI.Hover_Start
-        and then Finish_Offset = UI.Hover_Finish
-      then
-         return;
-      end if;
-
-      case Mouse_Cursor (Style) is
-         when Default =>
-            Gdk.Window.Set_Cursor (Text_View.Get_Root_Window, null);
-         when Hand =>
-            Gdk.Window.Set_Cursor (Text_View.Get_Root_Window,
-                                   Gdk.Cursor.Gdk_Cursor_New
-                                     (Gdk.Cursor.Hand2));
-            Gdk.Main.Flush;
-      end case;
-
-      if UI.Hover_Start /= 0 then
-         Apply_Style_To_Text
-           (Text_View, UI.Hover_Start, UI.Hover_Finish,
-            UI.Hover_Style, Remove => True);
-         UI.Hover_Start := 0;
-         UI.Hover_Finish := 0;
-      end if;
-
-      Current_Style :=
-        Fragment.Get_Style (Aquarius.Themes.Normal, Offset);
-
-      if Current_Style = Style then
-         return;
-      end if;
-
-      UI.Hover_Start := Start_Offset;
-      UI.Hover_Finish := Finish_Offset;
-      UI.Hover_Style := Style;
-
-      Apply_Style_To_Text
-        (Text_View, Start_Offset, Finish_Offset, Style,
-         Remove => False);
-
-   end Set_Text_State;
+      Widget.Set_Size_Request (16, 16);
+      Fragment.Grid.Attach
+        (Widget, Attach_Left (Edge), Attach_Top (Edge),
+         Width (Edge), Height (Edge));
+   end Set_Side_Widget;
 
    -----------
    -- Start --
@@ -1538,125 +1117,6 @@ package body Komnenos.UI.Gtk_UI is
 
       Gtk.Main.Main;
    end Start;
-
-   --------------------------------------
-   -- Text_View_Button_Release_Handler --
-   --------------------------------------
-
-   function Text_View_Button_Release_Handler
-     (Text_View : access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Event     : Gdk.Event.Gdk_Event;
-      UI        : Gtk_UI_Access)
-      return Boolean
-   is
-      use type Glib.Gint;
-      use Gtk.Text_Iter;
-      Buffer : constant Gtk.Text_Buffer.Gtk_Text_Buffer :=
-                 Text_View.Get_Buffer;
-      Have_Selection : Boolean;
-      Start, Finish : Gtk_Text_Iter;
-      Iter : Gtk_Text_Iter;
-      X, Y : Glib.Gint;
-   begin
-      Buffer.Get_Selection_Bounds (Start, Finish, Have_Selection);
-      if Have_Selection
-        and then Get_Offset (Start) /= Get_Offset (Finish)
-      then
-         return False;
-      end if;
-      Text_View.Window_To_Buffer_Coords
-        (Gtk.Enums.Text_Window_Widget,
-         Glib.Gint (Event.Button.X), Glib.Gint (Event.Button.Y),
-         X, Y);
-      Text_View.Get_Iter_At_Location (Iter, X, Y);
-
-      Follow_If_Link (UI, Text_View, Iter);
-
-      return False;
-   end Text_View_Button_Release_Handler;
-
-   ----------------------------
-   -- Text_View_Draw_Handler --
-   ----------------------------
-
-   function Text_View_Draw_Handler
-     (Widget : access Gtk.Widget.Gtk_Widget_Record'Class;
-      Cr     : Cairo.Cairo_Context)
-      return Boolean
-   is
-      use Glib;
-      Text_View    : constant Gtk.Text_View.Gtk_Text_View :=
-                       Gtk.Text_View.Gtk_Text_View (Widget);
-      Iter         : Gtk.Text_Iter.Gtk_Text_Iter;
-      Buffer       : constant Gtk.Text_Buffer.Gtk_Text_Buffer :=
-                       Text_View.Get_Buffer;
-      Location     : Gdk.Rectangle.Gdk_Rectangle;
-
-   begin
-
-      Buffer.Get_Iter_At_Mark
-        (Iter, Buffer.Get_Insert);
-      Text_View.Get_Iter_Location
-        (Iter, Location);
-
-      Paint_Line_Background
-        (View    => Text_View,
-         Context => Cr,
-         Y       => Location.Y + 1,
-         Height  => Location.Height - 1,
-         Colour  => (0.8, 0.5, 0.5, 0.2));
-
-      declare
-         LW : constant Layout_Widget_Access :=
-                Find_Layout_Record_By_Display
-                  (Widget, Gtk_UI_Access (Current_UI));
-      begin
-         if LW.Grab_Focus then
-            Text_View.Grab_Focus;
-            LW.Grab_Focus := False;
-         end if;
-      end;
-
-      return False;
-
-   end Text_View_Draw_Handler;
-
-   ------------------------------
-   -- Text_View_Motion_Handler --
-   ------------------------------
-
-   function Text_View_Motion_Handler
-     (Text_View : access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Event     : Gdk.Event.Gdk_Event;
-      UI        : Gtk_UI_Access)
-      return Boolean
-   is
-      use type Glib.Gint;
-      use Gtk.Text_Iter;
-      Buffer : constant Gtk.Text_Buffer.Gtk_Text_Buffer :=
-                 Text_View.Get_Buffer;
-      Have_Selection : Boolean;
-      Start, Finish : Gtk_Text_Iter;
-      Iter : Gtk_Text_Iter;
-      X, Y : Glib.Gint;
-   begin
-      Buffer.Get_Selection_Bounds (Start, Finish, Have_Selection);
-      if Have_Selection
-        and then Get_Offset (Start) /= Get_Offset (Finish)
-      then
-         return False;
-      end if;
-
-      Text_View.Window_To_Buffer_Coords
-        (Gtk.Enums.Text_Window_Widget,
-         Glib.Gint (Event.Button.X), Glib.Gint (Event.Button.Y),
-         X, Y);
-      Text_View.Get_Iter_At_Location (Iter, X, Y);
-
-      Set_Text_State (UI, Text_View, Iter, Aquarius.Themes.Hover);
-
-      return False;
-   end Text_View_Motion_Handler;
 
    ---------------
    -- To_Config --
@@ -1706,7 +1166,6 @@ package body Komnenos.UI.Gtk_UI is
         (Find_Fragment_Widget (Item, UI),
          Glib.Gint (Item.X - UI.View_Left),
          Glib.Gint (Item.Y - UI.View_Top));
-      UI.Main_View.Queue_Draw;
       UI.Navigation.Queue_Draw;
    end Update_Fragment_Position;
 
@@ -1721,7 +1180,6 @@ package body Komnenos.UI.Gtk_UI is
       for LW of UI.Widgets loop
          Update_Fragment_Position (UI, LW.Fragment);
       end loop;
-      UI.Main_View.Queue_Draw;
    end Update_Fragment_Positions;
 
    --------------------------

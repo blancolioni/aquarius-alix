@@ -61,12 +61,16 @@ package body Aquarius.Plugins.Macro_32 is
          Plugins.Macro_32.Assemble.After_Double_Operand'Access);
 
       Plugin.Register_Action
-        ("extended_double_operand", Assemble, After,
-         Plugins.Macro_32.Assemble.After_Extended_Double_Operand'Access);
-
-      Plugin.Register_Action
         ("single_operand", Assemble, After,
          Plugins.Macro_32.Assemble.After_Single_Operand'Access);
+
+      Plugin.Register_Action
+        ("no_operand", Assemble, After,
+         Plugins.Macro_32.Assemble.After_No_Operand'Access);
+
+      Plugin.Register_Action
+        ("property", Assemble, After,
+         Plugins.Macro_32.Assemble.After_Property'Access);
 
       Plugin.Register_Action
         ("branch", Assemble, After,
@@ -75,14 +79,6 @@ package body Aquarius.Plugins.Macro_32 is
       Plugin.Register_Action
         ("jump", Assemble, After,
          Plugins.Macro_32.Assemble.After_Jump'Access);
-
-      Plugin.Register_Action
-        ("jump_subroutine", Assemble, After,
-         Plugins.Macro_32.Assemble.After_Jump_Subroutine'Access);
-
-      Plugin.Register_Action
-        ("return", Assemble, After,
-         Plugins.Macro_32.Assemble.After_Return'Access);
 
       Plugin.Register_Action
         ("trap", Assemble, After,

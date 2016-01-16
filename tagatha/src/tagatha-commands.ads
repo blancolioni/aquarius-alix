@@ -1,6 +1,7 @@
+private with Ada.Strings.Unbounded;
+
 with Tagatha.Labels;
 with Tagatha.Operands;
-with Tagatha.Registry;
 
 package Tagatha.Commands is
 
@@ -13,6 +14,9 @@ package Tagatha.Commands is
    function Pop  (Operand    : Tagatha.Operands.Tagatha_Operand;
                   Size       : Tagatha_Size     := Default_Integer_Size)
                   return Tagatha_Command;
+
+   function Drop  (Size       : Tagatha_Size     := Default_Integer_Size)
+                   return Tagatha_Command;
 
    function Operate (Op   : Tagatha_Operator;
                      Neg  : Boolean           := False;
@@ -33,9 +37,12 @@ package Tagatha.Commands is
                   Size   : Tagatha_Size      := Default_Address_Size)
                  return Tagatha_Command;
 
-   procedure Register_Command
-     (Register  : in out Tagatha.Registry.Tagatha_Registry;
-      Command   : in     Tagatha_Command);
+   function Native_Command
+     (Name              : String;
+      Input_Stack_Words  : Natural;
+      Output_Stack_Words : Natural;
+      Changed_Registers  : String)
+      return Tagatha_Command;
 
    function Show (Command : Tagatha_Command) return String;
 
@@ -47,7 +54,7 @@ package Tagatha.Commands is
 
 private
 
-   type Stack_Operation is (S_Push, S_Pop);
+   type Stack_Operation is (S_Push, S_Pop, S_Drop);
 
    type Tagatha_Instruction is
      (T_Stack,     --  push or pop
@@ -58,7 +65,9 @@ private
 
       T_Loop,      --  bounded loop
 
-      T_Jump       --  local jump within this unit
+      T_Jump,      --  local jump within this unit
+
+      T_Native     --  a command that should be output literally
      );
 
    type Tagatha_Command_Record
@@ -69,19 +78,24 @@ private
          Negate : Boolean;
          case Instruction is
             when T_Stack =>
-               Stack_Op    : Stack_Operation;
-               Operand     : Tagatha.Operands.Tagatha_Operand;
+               Stack_Op          : Stack_Operation;
+               Operand           : Tagatha.Operands.Tagatha_Operand;
             when T_Operate =>
-               Operator    : Tagatha_Operator;
+               Operator          : Tagatha_Operator;
             when T_Call =>
-               Subroutine  : Tagatha.Labels.Tagatha_Label;
+               Subroutine        : Tagatha.Labels.Tagatha_Label;
             when T_Loop =>
-               Limit       : Local_Offset;
-               Counter     : Local_Offset;
-               End_Label   : Tagatha.Labels.Tagatha_Label;
+               Limit             : Local_Offset;
+               Counter           : Local_Offset;
+               End_Label         : Tagatha.Labels.Tagatha_Label;
             when T_Jump =>
-               Condition   : Tagatha_Condition;
-               Destination : Tagatha.Labels.Tagatha_Label;
+               Condition         : Tagatha_Condition;
+               Destination       : Tagatha.Labels.Tagatha_Label;
+            when T_Native =>
+               Native_Name       : Ada.Strings.Unbounded.Unbounded_String;
+               Changed_Registers : Ada.Strings.Unbounded.Unbounded_String;
+               Input_Words       : Natural;
+               Output_Words      : Natural;
          end case;
       end record;
 

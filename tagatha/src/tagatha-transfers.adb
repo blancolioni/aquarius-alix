@@ -1,3 +1,5 @@
+with Ada.Text_IO;
+
 package body Tagatha.Transfers is
 
    function Show_Operator (Item : Tagatha_Operator) return String;
@@ -12,6 +14,54 @@ package body Tagatha.Transfers is
    begin
       return (T_Argument, No_Modification, Arg_Index);
    end Argument_Operand;
+
+   ----------------------
+   -- Assign_Registers --
+   ----------------------
+
+   procedure Assign_Registers
+     (Item : in out Transfer;
+      Rs   : in out Register_Allocation_Array)
+   is
+
+      procedure Assign (Op : in out Transfer_Operand);
+
+      ------------
+      -- Assign --
+      ------------
+
+      procedure Assign (Op : in out Transfer_Operand) is
+         Assigned : Boolean := False;
+      begin
+         if Op.Op = T_Temporary
+           and then Temporaries.Get_Register (Op.Temp) = 0
+         then
+            for I in Rs'Range loop
+               declare
+                  R : Register_Allocation renames Rs (I);
+               begin
+                  if R.Finish < Temporaries.First_Reference (Op.Temp) then
+                     Temporaries.Assign_Register (Op.Temp, I);
+                     R := (Temporaries.First_Reference (Op.Temp),
+                           Temporaries.Last_Reference (Op.Temp));
+                     Assigned := True;
+                     exit;
+                  end if;
+               end;
+            end loop;
+
+            if not Assigned then
+               Ada.Text_IO.Put_Line ("warning: register spill");
+               Temporaries.Assign_Register (Op.Temp, Rs'Length + 1);
+            end if;
+         end if;
+      end Assign;
+
+   begin
+      Assign (Item.Src_1);
+      Assign (Item.Src_2);
+      Assign (Item.Dst);
+   end Assign_Registers;
 
    -----------------------
    -- Condition_Operand --
@@ -48,11 +98,36 @@ package body Tagatha.Transfers is
               Condition   => Condition,
               Destination => Destination,
               Self        => False,
+              Native      => Ada.Strings.Unbounded.Null_Unbounded_String,
               Src_1       => Null_Operand,
               Src_2       => Null_Operand,
               Dst         => Null_Operand,
               Op          => Op_Nop);
    end Control_Transfer;
+
+   -------------------
+   -- External_Name --
+   -------------------
+
+   function External_Name (Item : Transfer_Operand) return String is
+   begin
+      return Ada.Strings.Unbounded.To_String (Item.External_Name);
+   end External_Name;
+
+   ----------------------
+   -- External_Operand --
+   ----------------------
+
+   function External_Operand
+     (Name      : String;
+      Immediate : Boolean)
+      return Transfer_Operand
+   is
+   begin
+      return (T_External, No_Modification,
+              Ada.Strings.Unbounded.To_Unbounded_String (Name),
+              Immediate);
+   end External_Operand;
 
    --------------------
    -- Get_Arg_Offset --
@@ -112,6 +187,15 @@ package body Tagatha.Transfers is
       return Item.Loc_Offset;
    end Get_Local_Offset;
 
+   ---------------------
+   -- Get_Native_Text --
+   ---------------------
+
+   function Get_Native_Text (Item : Transfer) return String is
+   begin
+      return Ada.Strings.Unbounded.To_String (Item.Native);
+   end Get_Native_Text;
+
    ------------------
    -- Get_Operator --
    ------------------
@@ -166,33 +250,6 @@ package body Tagatha.Transfers is
       end if;
    end Get_Slice_Bit_Offset;
 
-   ---------------------------
-   -- Get_Slice_Byte_Length --
-   ---------------------------
-
-   function Get_Slice_Byte_Length (Item : Transfer_Operand)
-                                  return Tagatha_Integer
-   is
-      Bit_Length : Tagatha_Integer := Get_Slice_Bit_Length (Item);
-   begin
-      if Bit_Length mod 8 /= 0 then
-         Bit_Length := Bit_Length + (8 - Bit_Length mod 8);
-      end if;
-      return Bit_Length;
-   end Get_Slice_Byte_Length;
-
-   ---------------------------
-   -- Get_Slice_Byte_Offset --
-   ---------------------------
-
-   function Get_Slice_Byte_Offset (Item : Transfer_Operand)
-                                  return Tagatha_Integer
-   is
-      Bit_Offset : constant Tagatha_Integer := Get_Slice_Bit_Offset (Item);
-   begin
-      return Bit_Offset - Bit_Offset mod 8;
-   end Get_Slice_Byte_Offset;
-
    --------------------
    -- Get_Slice_Mask --
    --------------------
@@ -207,6 +264,33 @@ package body Tagatha.Transfers is
            Get_Slice_Bit_Offset (Item);
       end if;
    end Get_Slice_Mask;
+
+   ----------------------------
+   -- Get_Slice_Octet_Length --
+   ----------------------------
+
+   function Get_Slice_Octet_Length (Item : Transfer_Operand)
+                                  return Tagatha_Integer
+   is
+      Bit_Length : Tagatha_Integer := Get_Slice_Bit_Length (Item);
+   begin
+      if Bit_Length mod 8 /= 0 then
+         Bit_Length := Bit_Length + (8 - Bit_Length mod 8);
+      end if;
+      return Bit_Length;
+   end Get_Slice_Octet_Length;
+
+   ----------------------------
+   -- Get_Slice_Octet_Offset --
+   ----------------------------
+
+   function Get_Slice_Octet_Offset (Item : Transfer_Operand)
+                                  return Tagatha_Integer
+   is
+      Bit_Offset : constant Tagatha_Integer := Get_Slice_Bit_Offset (Item);
+   begin
+      return Bit_Offset - Bit_Offset mod 8;
+   end Get_Slice_Octet_Offset;
 
    ----------------
    -- Get_Source --
@@ -234,6 +318,27 @@ package body Tagatha.Transfers is
    begin
       return Item.Src_2;
    end Get_Source_2;
+
+   -------------------
+   -- Get_Temporary --
+   -------------------
+
+   function Get_Temporary
+     (Item : Transfer_Operand)
+      return Tagatha.Temporaries.Temporary
+   is
+   begin
+      return Item.Temp;
+   end Get_Temporary;
+
+   --------------
+   -- Get_Text --
+   --------------
+
+   function Get_Text    (Item : Transfer_Operand) return String is
+   begin
+      return Ada.Strings.Unbounded.To_String (Item.Text);
+   end Get_Text;
 
    ---------------
    -- Get_Value --
@@ -311,6 +416,15 @@ package body Tagatha.Transfers is
       return T.Trans = T_Control;
    end Is_Control;
 
+   -----------------
+   -- Is_External --
+   -----------------
+
+   function Is_External (Item : Transfer_Operand) return Boolean is
+   begin
+      return Item.Op = T_External;
+   end Is_External;
+
    --------------------------
    -- Is_Frame_Reservation --
    --------------------------
@@ -320,6 +434,16 @@ package body Tagatha.Transfers is
       return T.Trans = T_Change_Stack;
    end Is_Frame_Reservation;
 
+   ------------------
+   -- Is_Immediate --
+   ------------------
+
+   function Is_Immediate (Item : Transfer_Operand) return Boolean is
+   begin
+      return (Item.Op = T_External and then Item.External_Imm)
+        or else Item.Op = T_Immediate;
+   end Is_Immediate;
+
    --------------
    -- Is_Local --
    --------------
@@ -328,6 +452,15 @@ package body Tagatha.Transfers is
    begin
       return Item.Op = T_Local;
    end Is_Local;
+
+   ---------------
+   -- Is_Native --
+   ---------------
+
+   function Is_Native    (Item : Transfer) return Boolean is
+   begin
+      return Item.Trans = T_Native;
+   end Is_Native;
 
    ---------------
    -- Is_Result --
@@ -346,6 +479,33 @@ package body Tagatha.Transfers is
    begin
       return Item.Op = Op_Nop;
    end Is_Simple;
+
+   --------------
+   -- Is_Stack --
+   --------------
+
+   function Is_Stack    (Item : Transfer_Operand) return Boolean is
+   begin
+      return Item.Op = T_Stack;
+   end Is_Stack;
+
+   ------------------
+   -- Is_Temporary --
+   ------------------
+
+   function Is_Temporary (Item : Transfer_Operand) return Boolean is
+   begin
+      return Item.Op = T_Temporary;
+   end Is_Temporary;
+
+   -------------
+   -- Is_Text --
+   -------------
+
+   function Is_Text (Item : Transfer_Operand) return Boolean is
+   begin
+      return Item.Op = T_Text;
+   end Is_Text;
 
    -------------------
    -- Label_Operand --
@@ -370,6 +530,39 @@ package body Tagatha.Transfers is
       return (T_Local, No_Modification, Frame_Index);
    end Local_Operand;
 
+   ---------------------
+   -- Native_Transfer --
+   ---------------------
+
+   function Native_Transfer
+     (Name : String)
+      return Transfer
+   is
+   begin
+      return (Trans       => T_Native,
+              Reserve     => 0,
+              Label       => Tagatha.Labels.No_Label,
+              Condition   => C_Always,
+              Destination => Tagatha.Labels.No_Label,
+              Self        => False,
+              Native      => Ada.Strings.Unbounded.To_Unbounded_String (Name),
+              Src_1       => Null_Operand,
+              Src_2       => Null_Operand,
+              Dst         => Null_Operand,
+              Op          => Op_Nop);
+   end Native_Transfer;
+
+   ------------------
+   -- No_Transfers --
+   ------------------
+
+   function No_Transfers return Array_Of_Transfers is
+   begin
+      return Result : Array_Of_Transfers (1 .. 0) do
+         null;
+      end return;
+   end No_Transfers;
+
    ------------------------
    -- Operation_Transfer --
    ------------------------
@@ -387,11 +580,84 @@ package body Tagatha.Transfers is
               Condition   => C_Always,
               Destination => Tagatha.Labels.No_Label,
               Self        => Same_Operand (Src_1, To),
+              Native      => Ada.Strings.Unbounded.Null_Unbounded_String,
               Src_1       => Src_1,
               Src_2       => Src_2,
               Dst         => To,
               Op          => Op);
    end Operation_Transfer;
+
+   --------------
+   -- Optimise --
+   --------------
+
+--     function Optimise
+--       (Transfers : Array_Of_Transfers)
+--        return Array_Of_Transfers
+--     is
+--        Result : Array_Of_Transfers (Transfers'Range);
+--        From_Index : Positive := Transfers'First;
+--        To_Index   : Positive := Result'First;
+--
+--     begin
+--        while From_Index <= Transfers'Last loop
+--           Ada.Text_IO.Put_Line ("checking: "
+--                                 & Show (Transfers (From_Index)));
+--           if From_Index < Transfers'Last - 1
+--             and then Transfers (From_Index).Op = Op_Not
+--             and then Transfers (From_Index + 1).Op = Op_Test
+--             and then Transfers (From_Index + 2).Trans = T_Control
+--             and then Transfers (From_Index + 2).Condition /= C_Always
+--           then
+--              Ada.Text_IO.Put_Line ("  -- compressing conditional jump");
+--              Result (To_Index) := Transfers (From_Index + 2);
+--              Result (To_Index).Condition :=
+--                Negate (Result (To_Index).Condition);
+--              To_Index := To_Index + 1;
+--              From_Index := From_Index + 3;
+--           elsif Transfers (From_Index).Trans = T_Data
+--             and then Transfers (From_Index).Op = Op_Nop
+--             and then Same_Operand
+--               (Transfers (From_Index).Src_1,
+--                Transfers (From_Index).Dst)
+--           then
+--              Ada.Text_IO.Put_Line ("  -- skipping null operation");
+--              From_Index := From_Index + 1;
+--           else
+--              Result (To_Index) := Transfers (From_Index);
+--              To_Index := To_Index + 1;
+--              From_Index := From_Index + 1;
+--           end if;
+--        end loop;
+--        return Result (Result'First .. To_Index - 1);
+--     end Optimise;
+
+   -------------------------
+   -- Reference_Temporary --
+   -------------------------
+
+   procedure Reference_Temporaries
+     (Item : in out Transfer;
+      Address : Positive)
+   is
+      procedure Ref (Op : in out Transfer_Operand);
+
+      ---------
+      -- Ref --
+      ---------
+
+      procedure Ref (Op : in out Transfer_Operand) is
+      begin
+         if Op.Op = T_Temporary then
+            Temporaries.Record_Reference (Op.Temp, Address);
+         end if;
+      end Ref;
+
+   begin
+      Ref (Item.Src_1);
+      Ref (Item.Src_2);
+      Ref (Item.Dst);
+   end Reference_Temporaries;
 
    -------------------
    -- Reserve_Stack --
@@ -431,6 +697,7 @@ package body Tagatha.Transfers is
    ------------------
 
    function Same_Operand (Left, Right : Transfer_Operand) return Boolean is
+      use type Ada.Strings.Unbounded.Unbounded_String;
       use type Tagatha.Constants.Tagatha_Constant;
       use type Tagatha.Labels.Tagatha_Label;
       use type Tagatha.Temporaries.Temporary;
@@ -455,6 +722,11 @@ package body Tagatha.Transfers is
                return True;
             when T_Immediate =>
                return Left.Value = Right.Value;
+            when T_External =>
+               return Left.External_Name = Right.External_Name
+                 and then Left.External_Imm = Right.External_Imm;
+            when T_Text =>
+               return Left.Text = Right.Text;
          end case;
       end if;
    end Same_Operand;
@@ -537,6 +809,8 @@ package body Tagatha.Transfers is
                   Src_1 & " " & Op & " " & Src_2;
                end if;
             end;
+         when T_Native =>
+            return Ada.Strings.Unbounded.To_String (Item.Native);
       end case;
    end Show;
 
@@ -565,6 +839,13 @@ package body Tagatha.Transfers is
             Integer'Image (-1 * Integer (Item.Loc_Offset));
          when T_Immediate =>
             return Tagatha.Constants.Show (Item.Value);
+         when T_External =>
+            return (if Item.External_Imm then "#" else "")
+              & Ada.Strings.Unbounded.To_String (Item.External_Name);
+         when T_Text =>
+            return """"
+              & Ada.Strings.Unbounded.To_String (Item.Text)
+              & """";
       end case;
 
    end Show;
@@ -592,6 +873,7 @@ package body Tagatha.Transfers is
               Label       => Tagatha.Labels.No_Label,
               Condition   => C_Always,
               Destination => Tagatha.Labels.No_Label,
+              Native      => Ada.Strings.Unbounded.Null_Unbounded_String,
               Self        => Same_Operand (From, To),
               Src_1       => From,
               Src_2       => Null_Operand,
@@ -629,6 +911,15 @@ package body Tagatha.Transfers is
       return Get_Slice_Bit_Length (Item) <= 2**(Tagatha_Size'Pos (Size) + 3);
    end Slice_Fits;
 
+   -------------------
+   -- Stack_Operand --
+   -------------------
+
+   function Stack_Operand return Transfer_Operand is
+   begin
+      return (T_Stack, No_Modification);
+   end Stack_Operand;
+
    ----------------------
    -- Temprary_Operand --
    ----------------------
@@ -639,6 +930,19 @@ package body Tagatha.Transfers is
    begin
       return (T_Temporary, No_Modification, Temp);
    end Temporary_Operand;
+
+   ------------------
+   -- Text_Operand --
+   ------------------
+
+   function Text_Operand
+     (Text      : String)
+      return Transfer_Operand
+   is
+   begin
+      return (T_Text, No_Modification,
+              Ada.Strings.Unbounded.To_Unbounded_String (Text));
+   end Text_Operand;
 
    ------------------
    -- To_Temporary --
@@ -655,6 +959,7 @@ package body Tagatha.Transfers is
               Label       => Tagatha.Labels.No_Label,
               Condition   => C_Always,
               Destination => Tagatha.Labels.No_Label,
+              Native      => Ada.Strings.Unbounded.Null_Unbounded_String,
               Self        => False,
               Src_1       => Src_1,
               Src_2       => Src_2,
@@ -679,6 +984,12 @@ package body Tagatha.Transfers is
          return Local_Operand (Get_Local_Offset (Op));
       elsif Is_Result (Op) then
          return Result_Operand;
+      elsif Is_External (Op) then
+         return External_Operand (Get_Name (Op), Is_Immediate (Op));
+      elsif Is_Unknown (Op) then
+         return Null_Operand;
+      elsif Is_Text (Op) then
+         return Text_Operand (Get_Text (Op));
       else
          raise Constraint_Error with
            "unknown operand type: " & Show (Op);

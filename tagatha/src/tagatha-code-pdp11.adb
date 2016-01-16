@@ -3,6 +3,7 @@ with Ada.Unchecked_Conversion;
 
 with Tagatha.Constants;
 with Tagatha.Labels;
+with Tagatha.Temporaries;
 
 package body Tagatha.Code.Pdp11 is
 
@@ -27,19 +28,27 @@ package body Tagatha.Code.Pdp11 is
 
    procedure Instruction (Asm      : in out Assembly'Class;
                           Mnemonic : in     String;
-                          Byte     : in     Boolean;
+                          Octet     : in     Boolean;
                           Source   : in     String;
                           Dest     : in     String);
 
    procedure Instruction (Asm      : in out Assembly'Class;
                           Mnemonic : in     String;
-                          Byte     : in     Boolean;
+                          Octet     : in     Boolean;
                           Dest     : in     String);
 
    function Get_Mnemonic (Op : Tagatha_Operator) return String;
 
-   function To_String (Item : Tagatha.Transfers.Transfer_Operand)
-                      return String;
+   function To_String
+     (Item : Tagatha.Transfers.Transfer_Operand;
+      Source : Boolean)
+      return String;
+
+   function To_Src (Item : Tagatha.Transfers.Transfer_Operand) return String
+   is (To_String (Item, True));
+
+   function To_Dst (Item : Tagatha.Transfers.Transfer_Operand) return String
+   is (To_String (Item, False));
 
    function To_Dereferenced_String (Item : Tagatha.Transfers.Transfer_Operand)
                                    return String;
@@ -96,6 +105,8 @@ package body Tagatha.Code.Pdp11 is
                             Reservation (2 .. Reservation'Last) &
                             ", sp");
          end;
+      elsif Is_Native (Item) then
+         Asm.Put_Line ("    " & Get_Native_Text (Item));
       elsif Is_Simple (Item) then
          Move (Asm, Get_Source (Item), Get_Destination (Item));
       elsif Get_Operator (Item) in One_Argument_Operator then
@@ -111,7 +122,7 @@ package body Tagatha.Code.Pdp11 is
             if Is_Constant_Zero (Get_Source_2 (Item)) then
                Instruction (Asm, "tst",
                             Get_Size (Get_Source_1 (Item)) = Size_8,
-                            To_String (Get_Source_1 (Item)));
+                            To_String (Get_Source_1 (Item), True));
             else
                Operate (Asm, Op_Compare,
                         Get_Source_1 (Item), Get_Source_2 (Item));
@@ -243,12 +254,12 @@ package body Tagatha.Code.Pdp11 is
 
    procedure Instruction (Asm      : in out Assembly'Class;
                           Mnemonic : in     String;
-                          Byte     : in     Boolean;
+                          Octet     : in     Boolean;
                           Source   : in     String;
                           Dest     : in     String)
    is
    begin
-      if Byte then
+      if Octet then
          Instruction (Asm, Mnemonic & "b", Source, Dest);
       else
          Instruction (Asm, Mnemonic, Source, Dest);
@@ -261,11 +272,11 @@ package body Tagatha.Code.Pdp11 is
 
    procedure Instruction (Asm      : in out Assembly'Class;
                           Mnemonic : in     String;
-                          Byte     : in     Boolean;
+                          Octet     : in     Boolean;
                           Dest     : in     String)
    is
    begin
-      if Byte then
+      if Octet then
          Instruction (Asm, Mnemonic & "b", Dest);
       else
          Instruction (Asm, Mnemonic, Dest);
@@ -308,25 +319,44 @@ package body Tagatha.Code.Pdp11 is
       if Has_Size (Dest) then
          Transfer_Size := Get_Size (Dest);
       end if;
-      case Transfer_Size is
+
+      if Dest = Null_Operand then
+         if Source = Stack_Operand then
+            case Transfer_Size is
+               when Size_8 | Size_16
+                  | Default_Size
+                  | Default_Integer_Size | Default_Address_Size =>
+                  Asm.Put_Line ("    tst (sp)+");
+               when Size_32 =>
+                  Asm.Put_Line ("    tst (sp)+");
+                  Asm.Put_Line ("    tst (sp)+");
+               when Size_64 =>
+                  Asm.Put_Line ("    add #8, sp");
+            end case;
+         end if;
+      else
+         case Transfer_Size is
          when Size_8 =>
-            Instruction (Asm, "movb", To_String (Source), To_String (Dest));
+            Instruction (Asm, "movb",
+                         To_String (Source, True),
+                         To_String (Dest, False));
          when Size_16
             | Default_Size | Default_Integer_Size | Default_Address_Size =>
-            Instruction (Asm, "mov", To_String (Source), To_String (Dest));
+            Instruction (Asm, "mov", To_Src (Source), To_Dst (Dest));
          when Size_32 =>
             for I in 0 .. 1 loop
                Instruction (Asm, "mov",
-                            To_String (Slice (Source, I, Size_16)),
-                            To_String (Slice (Dest, I, Size_16)));
+                            To_Src (Slice (Source, I, Size_16)),
+                            To_Dst (Slice (Dest, I, Size_16)));
             end loop;
          when Size_64 =>
             for I in 0 .. 3 loop
                Instruction (Asm, "mov",
-                            To_String (Slice (Source, I, Size_16)),
-                            To_String (Slice (Dest, I, Size_16)));
+                            To_Src (Slice (Source, I, Size_16)),
+                            To_Dst (Slice (Dest, I, Size_16)));
             end loop;
-      end case;
+         end case;
+      end if;
    end Move;
 
    -------------
@@ -339,20 +369,22 @@ package body Tagatha.Code.Pdp11 is
       Dest     : in     Tagatha.Transfers.Transfer_Operand)
    is
       use Tagatha.Transfers;
-      Byte : constant Boolean := Get_Size (Dest) = Size_8;
+      Octet : constant Boolean := Get_Size (Dest) = Size_8;
    begin
       if Get_Size (Dest) in Size_8 .. Size_16 then
          case Op is
             when Op_Negate =>
-               Instruction (Asm, "neg", Byte, To_String (Dest));
+               Instruction (Asm, "neg", Octet, To_Dst (Dest));
             when Op_Complement =>
-               Instruction (Asm, "not", Byte, To_String (Dest));
+               Instruction (Asm, "not", Octet, To_Dst (Dest));
+            when Op_Not =>
+               Instruction (Asm, "not", Octet, To_Dst (Dest));
             when Op_Test =>
-               Instruction (Asm, "tst", Byte, To_String (Dest));
+               Instruction (Asm, "tst", Octet, To_Dst (Dest));
             when Op_Dereference =>
-               Instruction (Asm, "mov", Byte,
+               Instruction (Asm, "mov", Octet,
                             To_Dereferenced_String (Dest),
-                            To_String (Dest));
+                            To_Dst (Dest));
          end case;
       else
          raise Constraint_Error with
@@ -414,7 +446,7 @@ package body Tagatha.Code.Pdp11 is
             then
                Ada.Text_IO.Put_Line ("quick: " &
                                        Quick_Ops (I).Mnemonic);
-               Instruction (Asm, Quick_Ops (I).Mnemonic, To_String (Dest));
+               Instruction (Asm, Quick_Ops (I).Mnemonic, To_Dst (Dest));
                return;
             end if;
          end loop;
@@ -424,7 +456,7 @@ package body Tagatha.Code.Pdp11 is
                declare
                   Mul  : Tagatha_Integer := Get_Integer (Get_Value (Source));
                   Last : Positive        := 1;
-                  Dst : constant String := To_String (Dest);
+                  Dst : constant String := To_Dst (Dest);
                begin
                   Instruction (Asm, "mov", "r0", "-(sp)");
                   Instruction (Asm, "mov", Dst, "r0");
@@ -452,35 +484,49 @@ package body Tagatha.Code.Pdp11 is
       if Op = Op_Dereference then
          Instruction (Asm, "mov", Get_Size (Dest) = Size_8,
                       To_Dereferenced_String (Source),
-                      To_String (Dest));
+                      To_Dst (Dest));
          return;
       end if;
 
       if Op = Op_Div or else Op = Op_Mod then
          Asm.Put_Line ("    mov r0, -(sp)");
          Asm.Put_Line ("    mov r1, -(sp)");
-         Instruction (Asm, "mov", To_String (Source), "r1");
-         Instruction (Asm, "mov", To_String (Dest), "r0");
+         Instruction (Asm, "mov", To_Src (Source), "r1");
+         Instruction (Asm, "mov", To_Dst (Dest), "r0");
          Asm.Put_Line ("    call sys__divide");
          if Op = Op_Div then
-            Instruction (Asm, "mov", "r0", To_String (Dest));
+            Instruction (Asm, "mov", "r0", To_Dst (Dest));
          else
-            Instruction (Asm, "mov", "r1", To_String (Dest));
+            Instruction (Asm, "mov", "r1", To_Dst (Dest));
          end if;
          return;
       end if;
 
+      if Op = Op_Not then
+         Instruction (Asm, "tst", To_Src (Source));
+         Instruction (Asm, "beq", "+1");
+         Instruction (Asm, "clr", To_Dst (Dest));
+         Instruction (Asm, "beq", "+2");
+         Asm.Put_Line ("1:  mov #1, " & To_Dst (Dest));
+         Asm.Put_Line ("2:");
+         return;
+      end if;
+
+      if Op = Op_Test then
+         return;
+      end if;
+
       declare
-         Src      : constant String := To_String (Source);
-         Dst      : constant String := To_String (Dest);
+         Src      : constant String := To_Src (Source);
+         Dst      : constant String := To_Dst (Dest);
          Mnemonic : constant String := Get_Mnemonic (Op);
-         Byte     : constant Boolean := Get_Size (Dest) = Size_8;
+         Octet     : constant Boolean := Get_Size (Dest) = Size_8;
       begin
          if Get_Size (Dest) > Size_16 then
             raise Constraint_Error with
               "pdp-11 cannot operate on 32 or 64 bit data (yet)";
          end if;
-         Instruction (Asm, Mnemonic, Byte, Src, Dst);
+         Instruction (Asm, Mnemonic, Octet, Src, Dst);
       end;
    end Operate;
 
@@ -513,7 +559,7 @@ package body Tagatha.Code.Pdp11 is
      return String
    is
    begin
-      return "@" & To_String (Item);
+      return "@" & To_Src (Item);
    end To_Dereferenced_String;
 
    ---------------
@@ -521,7 +567,8 @@ package body Tagatha.Code.Pdp11 is
    ---------------
 
    function To_String
-     (Item : Tagatha.Transfers.Transfer_Operand)
+     (Item : Tagatha.Transfers.Transfer_Operand;
+      Source : Boolean)
       return String
    is
       use Tagatha.Transfers;
@@ -539,7 +586,7 @@ package body Tagatha.Code.Pdp11 is
             end if;
             if Has_Slice (Item) then
                if Slice_Fits (Item, Size_8) then
-                  return Image (Addr + Get_Slice_Byte_Offset (Item)) & "(r5)";
+                  return Image (Addr + Get_Slice_Octet_Offset (Item)) & "(r5)";
                elsif Is_Argument (Item) then
                   return Image (Addr) & "(r5)";
                else
@@ -553,6 +600,28 @@ package body Tagatha.Code.Pdp11 is
          end;
       elsif Is_Result (Item) then
          return Result_Register;
+      elsif Is_Stack (Item) then
+         if Source then
+            return "(sp)+";
+         else
+            return "-(sp)";
+         end if;
+      elsif Is_External (Item) then
+         if Is_Immediate (Item) then
+            return "#" & External_Name (Item);
+         else
+            return External_Name (Item);
+         end if;
+      elsif Is_Temporary (Item) then
+         declare
+            R : String :=
+                  Positive'Image
+                    (Tagatha.Temporaries.Get_Register
+                       (Get_Temporary (Item)));
+         begin
+            R (1) := 'r';
+            return R;
+         end;
       else
          raise Constraint_Error with
            "unknown operand type in " & Show (Item);

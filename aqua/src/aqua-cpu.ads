@@ -13,6 +13,9 @@ with Aqua.Images;
 
 package Aqua.CPU is
 
+   Halt_Instruction : exception;
+   Runtime_Error    : exception;
+
    type Aqua_CPU_Type
      (Image : access Aqua.Images.Root_Image_Type'Class;
       Load  : access Aqua.Execution.Loader_Interface'Class) is
@@ -97,7 +100,9 @@ private
       record
 --         Image      : Aqua.Images.Image_Type;
          R          : Aqua.Architecture.Registers :=
-                        (0, 2, 4, 6, 8, 10, 16#1FFF_FFFC#, 0);
+                        (Architecture.R_PC => 0,
+                         Architecture.R_SP => 16#1FFF_FFFC#,
+                         others => 16#BAAD_F00D#);
          N, Z, C, V : Boolean := False;
          B          : Boolean := False;
          Ext        : External_Object_Vectors.Vector;

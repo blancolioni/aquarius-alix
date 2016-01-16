@@ -1,9 +1,12 @@
 private with Ada.Containers.Vectors;
 
 private with Tagatha.Expressions;
+private with Tagatha.Temporaries;
+
 with Tagatha.Labels;
 with Tagatha.Operands;
 with Tagatha.Transfers;
+with Tagatha.Transfers.Transfer_Vectors;
 
 package Tagatha.Registry is
 
@@ -21,8 +24,17 @@ package Tagatha.Registry is
                          Size     : in     Tagatha_Size;
                          Operand  : in     Tagatha.Operands.Tagatha_Operand);
 
+   procedure Record_Drop (Register : in out Tagatha_Registry;
+                          Size     : in     Tagatha_Size);
+
    procedure Record_Operation (Register : in out Tagatha_Registry;
                                Operator : in     Tagatha_Operator);
+
+   procedure Record_Native_Operation
+     (Register     : in out Tagatha_Registry;
+      Name         : String;
+      Input_Words  : Natural;
+      Output_Words : Natural);
 
    procedure Record_Call (Register   : in out Tagatha_Registry;
                           Subroutine : in     Tagatha.Labels.Tagatha_Label);
@@ -39,8 +51,9 @@ package Tagatha.Registry is
    procedure Record_Label (Register   : in out Tagatha_Registry;
                            Label      : in     Tagatha.Labels.Tagatha_Label);
 
-   function Get_Transfers (Register : in Tagatha_Registry)
-                          return Tagatha.Transfers.Array_Of_Transfers;
+   procedure Get_Transfers
+     (Register  : in Tagatha_Registry;
+      Transfers : in out Tagatha.Transfers.Transfer_Vectors.Vector);
 
 private
 
@@ -54,18 +67,13 @@ private
                                  Tagatha.Transfers.Transfer,
                                  Tagatha.Transfers."=");
 
-   package Label_Vectors is
-     new Ada.Containers.Vectors (Positive,
-                                 Tagatha.Labels.Tagatha_Label,
-                                 Tagatha.Labels."=");
-
    type Tagatha_Registry is tagged
       record
          Frame_Size  : Natural;
          Unit_Label  : Tagatha.Labels.Tagatha_Label;
          Stack       : Expression_Vectors.Vector;
-         Transfers   : Transfer_Vectors.Vector;
-         Labels      : Label_Vectors.Vector;
+         Transfers   : Tagatha.Transfers.Transfer_Vectors.Vector;
+         Temps       : Tagatha.Temporaries.Temporary_Source;
          Last_Label  : Tagatha.Labels.Tagatha_Label;
       end record;
 

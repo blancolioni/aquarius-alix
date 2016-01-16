@@ -2,6 +2,7 @@ with Ada.Strings.Fixed;
 with Ada.Unchecked_Conversion;
 
 with Tagatha.Code.Pdp11;
+with Tagatha.Code.Pdp32;
 with Tagatha.Code.I686;
 with Tagatha.Code.M6502;
 with Tagatha.Code.X86_64;
@@ -49,6 +50,8 @@ package body Tagatha.Code is
          return Tagatha.Code.X86_64.Get_Translator;
       elsif Name = "6502" then
          return Tagatha.Code.M6502.Get_Translator;
+      elsif Name = "pdp32" then
+         return Tagatha.Code.Pdp32.Get_Translator;
       else
          raise Constraint_Error with
            "unknown target: " & Name;
@@ -97,10 +100,10 @@ package body Tagatha.Code is
          if Has_Slice (From) then
             if Slice_Fits (From, Size_8) then
                return Tagatha.Labels.Show (Get_Label (V), '_') & " +" &
-                 Image (Get_Slice_Byte_Offset (From));
+                 Image (Get_Slice_Octet_Offset (From));
             else
                raise Constraint_Error with
-                 "can't take non-byte slice from label: " &
+                 "can't take non-Octet slice from label: " &
                  Show (From);
             end if;
          else

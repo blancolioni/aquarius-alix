@@ -1,53 +1,117 @@
 package Aqua.Architecture is
 
-   type Register_Index is mod 8;
+   Bad_Instruction : exception;
+
+   type Register_Index is mod 16;
+
+   R_PC : constant Register_Index := 15;
+   R_SP : constant Register_Index := 14;
+   R_FP : constant Register_Index := 13;
+   R_OP : constant Register_Index := 12;
+   R_PV : constant Register_Index := 11;
 
    type Registers is array (Register_Index) of Word;
 
-   type Addressing_Mode is (Register, Autoincrement, Autodecrement, Indexed);
+   type Addressing_Mode is
+     (Literal, Register,
+      Autoincrement, Autodecrement,
+      Indexed, Indexed_8, Indexed_16);
+
+   type Condition_Code is
+     (Always, EQ, LT, LE, MI, LOS, VS, CS);
+
+   type Aqua_Instruction is
+     (A_Halt, A_Nop, A_Rts,
+      A_Clr, A_Dec, A_Inc, A_Neg, A_Not, A_Tst,
+      A_Mov, A_Cmp, A_Add, A_And, A_Div, A_Mul, A_Or, A_Sub, A_Xor,
+      A_Add_3, A_And_3, A_Div_3, A_Mul_3, A_Or_3, A_Sub_3, A_Xor_3,
+      A_Br, A_Bne, A_Beq, A_Bge, A_Blt, A_Bgt, A_Ble, A_Bpl, A_Bmi,
+      A_Bhi, A_Blos, A_Bvc, A_Bvs, A_Bcc, A_Bcs,
+      A_Jmp, A_Jsr,
+      A_Trap,
+      A_Get_Property, A_Set_Property,
+      A_Start_Iteration, A_Next_Iteration);
+
+   subtype No_Operand_Instruction is
+     Aqua_Instruction range A_Halt .. A_Rts;
+   subtype Single_Operand_Instruction is
+     Aqua_Instruction range A_Clr .. A_Tst;
+   subtype Double_Operand_Instruction is
+     Aqua_Instruction range A_Mov .. A_Xor;
+   subtype Triple_Operand_Instruction is
+     Aqua_Instruction range A_Add_3 .. A_Xor_3;
+   subtype Branch_Instruction is
+     Aqua_Instruction range A_Br .. A_Bcs;
+   subtype Jump_Instruction is
+     Aqua_Instruction range A_Jmp .. A_Jsr;
+   subtype Property_Instruction is
+     Aqua_Instruction range A_Get_Property .. A_Set_Property;
+   subtype Iteration_Instruction is
+     Aqua_Instruction range A_Start_Iteration .. A_Next_Iteration;
+
+   subtype Sized_Instruction is
+     Aqua_Instruction range A_Clr .. A_Xor_3;
 
    type Operand_Type is
       record
          Mode     : Addressing_Mode;
          Deferred : Boolean;
          Register : Register_Index;
+         Lit      : Octet;
       end record;
 
---     function Get_Register (Name : String) return Register_Index;
+   function Get_Instruction
+     (Instruction : Octet)
+      return Aqua_Instruction;
+
+   function Get_Size
+     (Instruction : Octet)
+      return Data_Size;
+
+   function Get_Mode_Size (Mode : Addressing_Mode) return Data_Size
+   is (case Mode is
+          when Indexed => Word_32_Size,
+          when Indexed_16 => Word_16_Size,
+          when Indexed_8  => Word_8_Size,
+          when others     => raise Constraint_Error with
+            "cannot calculate size for mode " & Mode'Img);
+
+   function Get_Operand
+     (Op : Octet)
+      return Operand_Type;
+
+   function Encode
+     (Instruction : Aqua_Instruction;
+      Size        : Data_Size := Word_32_Size;
+      Immediate   : Octet := 0)
+      return Octet;
+
+   function Encode
+     (Operand : Operand_Type)
+      return Octet;
 
    function Get_Address
      (Operand : Operand_Type;
+      Size    : Data_Size;
+      Trace   : Boolean;
       R       : in out Registers;
       Memory  : in out Memory_Interface'Class)
       return Address;
 
-   function Get_Bits
-     (Operand : Operand_Type;
-      Shift   : Bit_Index)
-      return Word;
-
-   function Get_Operand
-     (Value : Word;
-      Start : Bit_Index)
-      return Operand_Type;
-
    procedure Read
      (Operand : Operand_Type;
-      R      : in out Registers;
-      Memory : in out Memory_Interface'Class;
-      Value  :    out Word);
+      Size    : Data_Size;
+      Trace   : Boolean;
+      R       : in out Registers;
+      Memory  : in out Memory_Interface'Class;
+      Value   :    out Word);
 
    procedure Write
      (Operand : Operand_Type;
-      R      : in out Registers;
-      Memory : in out Memory_Interface'Class;
-      Value  : Word);
-
-   procedure Update
-     (Operand : Operand_Type;
-      R      : in out Registers;
-      Memory : in out Memory_Interface'Class;
-      Fn     : not null access
-        function (X : Word) return Word);
+      Size    : Data_Size;
+      Trace   : Boolean;
+      R       : in out Registers;
+      Memory  : in out Memory_Interface'Class;
+      Value   : Word);
 
 end Aqua.Architecture;

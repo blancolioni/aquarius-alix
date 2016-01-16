@@ -2,17 +2,17 @@ package Aqua.Memory is
 
    type Memory_Type is new Memory_Interface with private;
 
-   overriding function Get_Byte (Memory : Memory_Type;
+   overriding function Get_Octet (Memory : Memory_Type;
                                  Addr   : Address)
-                                 return Byte;
+                                 return Octet;
 
-   overriding procedure Set_Byte (Memory : in out Memory_Type;
+   overriding procedure Set_Octet (Memory : in out Memory_Type;
                                   Addr   : Address;
-                                  Value  : Byte);
+                                  Value  : Octet);
 
 private
 
-   type Memory_Array is array (Address) of Byte;
+   type Memory_Array is array (Address) of Octet;
 
    type Memory_Type is new Memory_Interface with
       record

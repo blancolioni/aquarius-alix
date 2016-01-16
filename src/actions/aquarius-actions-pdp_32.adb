@@ -102,7 +102,7 @@ package body Aquarius.Actions.Pdp_32 is
       Put_Line (Processor.File,
                 "    mov (sp)+, fp");
       Put_Line (Processor.File,
-                "    rts pc");
+                "    rts");
    end End_Action_Body;
 
    -------------------
@@ -166,7 +166,8 @@ package body Aquarius.Actions.Pdp_32 is
    ------------------
 
    overriding procedure Get_Property
-     (Processor : in out Pdp_Scanner;
+     (Processor      : in out Pdp_Scanner;
+      Name           : String;
       Argument_Count : Natural)
    is
    begin
@@ -175,7 +176,7 @@ package body Aquarius.Actions.Pdp_32 is
          "    mov #" & Natural'Image (Argument_Count) & ", -(sp)");
       Put_Line
         (Processor.File,
-         "    trap property_get");
+         "    get_property " & Name);
    end Get_Property;
 
    ------------------
@@ -199,13 +200,10 @@ package body Aquarius.Actions.Pdp_32 is
          Put_Line (Processor.File,
                    "    tst (sp)+");
          Put_Line (Processor.File,
-                   "    bne +1");
-         Put_Line (Processor.File,
-                   "    jmp " & Image (L1));
-         Put_Line (Processor.File, "1:");
+                   "    beq " & Image (L1));
          Scanner.Scan_Action (Processor, Statements (I));
          Put_Line (Processor.File,
-                   "    jmp " & Image (Exit_Label));
+                   "    br " & Image (Exit_Label));
       end loop;
 
       Put_Line (Processor.File, Image (L1) & ":");
@@ -245,13 +243,11 @@ package body Aquarius.Actions.Pdp_32 is
                Put_Line (Processor.File,
                          "    tst (sp)+");
                Put_Line (Processor.File,
-                         "    bne +1");
-               Put_Line (Processor.File,
-                         "    jmp " & Image (L1));
+                         "    beq " & Image (L1));
                Put_Line (Processor.File, "1:");
             else
                Put_Line (Processor.File,
-                         "    jmp " & Image (Exit_Label));
+                         "    br " & Image (Exit_Label));
             end if;
 
             Condition := not Condition;
@@ -296,11 +292,9 @@ package body Aquarius.Actions.Pdp_32 is
       Put_Line (Processor.File, "    trap iterator_start");
       Put_Line (Processor.File, Image (Loop_Label) & ":");
       Put_Line (Processor.File, "    trap iterator_next");
-      Put_Line (Processor.File, "    bne +1");
-      Put_Line (Processor.File, "    jmp " & Image (Exit_Label));
-      Put_Line (Processor.File, "1:");
+      Put_Line (Processor.File, "    beq " & Image (Exit_Label));
       Scanner.Scan_Action (Processor, Statements);
-      Put_Line (Processor.File, "    jmp " & Image (Loop_Label));
+      Put_Line (Processor.File, "    br " & Image (Loop_Label));
       Put_Line (Processor.File, Image (Exit_Label) & ":");
       Processor.Delete_Frame_Entry (Id);
       Processor.Frame_Offset := Processor.Frame_Offset + 8;
@@ -524,12 +518,13 @@ package body Aquarius.Actions.Pdp_32 is
    ------------------
 
    overriding procedure Set_Property
-     (Processor : in out Pdp_Scanner)
+     (Processor : in out Pdp_Scanner;
+      Name      : String)
    is
    begin
       Put_Line
         (Processor.File,
-         "    trap property_set");
+         "    set_property " & Name);
    end Set_Property;
 
    ----------------------
@@ -558,19 +553,20 @@ package body Aquarius.Actions.Pdp_32 is
      (Processor : in out Pdp_Scanner)
    is
    begin
-      Processor.Add_Frame_Entry ("komnenos", 8);
-      Processor.Add_Frame_Entry ("top", 12);
-      Processor.Add_Frame_Entry ("tree", 16);
+      Processor.Add_Frame_Entry ("komnenos", 1);
+      Processor.Add_Frame_Entry ("top", 2);
+      Processor.Add_Frame_Entry ("tree", 3);
 
       if Processor.Action_Child then
-         Processor.Add_Frame_Entry ("parent", 16);
-         Processor.Add_Frame_Entry ("child", 20);
+         Processor.Add_Frame_Entry ("parent", 3);
+         Processor.Add_Frame_Entry ("child", 4);
       end if;
 
       Put_Line (Processor.File,
                 "    mov fp, -(sp)");
       Put_Line (Processor.File,
                 "    mov sp, fp");
+
    end Start_Action_Body;
 
    ---------------------

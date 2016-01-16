@@ -57,8 +57,8 @@ package body Ada_Plugin.Ch05.Gen is
         Aquarius.Tagatha_Object.Get_Unit
         (Aquarius.Trees.Properties.Get_Tagatha (Tree.all));
    begin
-      Unit.Next_Label (Top_Label);
-      Unit.Next_Label (Out_Label);
+      Top_Label := Unit.Next_Label;
+      Out_Label := Unit.Next_Label;
       Tree.Set_Property (Plugin.Top_Label_Property,
                          Aquarius.Names.Name_Value (Top_Label'Img));
       Tree.Set_Property (Plugin.Out_Label_Property,

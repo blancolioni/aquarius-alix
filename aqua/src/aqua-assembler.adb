@@ -14,15 +14,41 @@ package body Aqua.Assembler is
    ------------
 
    procedure Append
+     (A    : in out Root_Assembly_Type'Class;
+      W    : Word;
+      Size : Aqua.Data_Size)
+   is
+   begin
+      A.High :=
+        Address'Max (A.High, A.PC + Address (Data_Octets (Size)));
+      A.Low  := Address'Min (A.Low, A.PC);
+      A.Set_Value (A.PC, Size, W);
+      A.PC := A.PC + Address (Data_Octets (Size));
+   end Append;
+
+   ------------------
+   -- Append_Octet --
+   ------------------
+
+   procedure Append_Octet
+     (A : in out Root_Assembly_Type'Class;
+      X : Octet)
+   is
+   begin
+      A.Append (Word (X), Word_8_Size);
+   end Append_Octet;
+
+   -----------------
+   -- Append_Word --
+   -----------------
+
+   procedure Append_Word
      (A : in out Root_Assembly_Type'Class;
       W : Word)
    is
    begin
-      A.High := Address'Max (A.High, A.PC);
-      A.Low  := Address'Min (A.Low, A.PC);
-      A.Set_Word (A.PC, W);
-      A.PC := A.PC + Bytes_Per_Word;
-   end Append;
+      A.Append (W, Word_32_Size);
+   end Append_Word;
 
    -----------------
    -- Bind_Action --
@@ -185,17 +211,12 @@ package body Aqua.Assembler is
             begin
                if Branch then
                   declare
-                     Code   : constant Word := A.Get_Word (Addr);
                      Offset : constant Address :=
-                                (if Dest >= Addr + 4
-                                 then Dest - (Addr + 4)
-                                 else 512 - (Addr + 4 - Dest));
+                                (if Dest >= Addr + 2
+                                 then Dest - (Addr + 2)
+                                 else 16#1_0000# - (Addr + 2 - Dest));
                   begin
-                     pragma Assert (Offset < 256);
-                     pragma Assert (Offset mod 4 = 0);
-                     A.Set_Word (Addr,
-                                 (Code and 16#FF00#)
-                                 + Word (Offset) / 4);
+                     A.Set_Value (Addr, Word_16_Size, Word (Offset));
                   end;
                elsif Relative then
                   pragma Assert (Is_Address (Info.Value));
@@ -316,16 +337,6 @@ package body Aqua.Assembler is
       declare
          Info : Label_Info := A.Labels (Name);
       begin
-         if Info.Defined then
-            if Address'Max (A.PC, Get_Address (Info.Value))
-              - Address'Min (A.PC, Get_Address (Info.Value))
-              > 254
-            then
-               raise Constraint_Error with
-                 Aqua.IO.Hex_Image (A.PC) & ": branch too far";
-            end if;
-         end if;
-
          Info.References.Append ((A.PC, Relative => False, Branch => True));
          A.Labels (Name) := Info;
          return Info.Value;
@@ -370,6 +381,21 @@ package body Aqua.Assembler is
          end if;
       end;
    end Reference_Label;
+
+   -----------------------------
+   -- Reference_Property_Name --
+   -----------------------------
+
+   function Reference_Property_Name
+     (A    : in out Root_Assembly_Type'Class;
+      Name : String)
+      return Word
+   is
+   begin
+      A.Ensure_Label (Name,  True);
+      A.Labels (Name).References.Append ((A.PC, False, False));
+      return A.Next_String - 1;
+   end Reference_Property_Name;
 
    ----------------------
    -- Reference_String --
@@ -435,17 +461,17 @@ package body Aqua.Assembler is
    end Reference_Temporary_Label;
 
    --------------
-   -- Set_Byte --
+   -- Set_Octet --
    --------------
 
-   overriding procedure Set_Byte
+   overriding procedure Set_Octet
      (Assembly : in out Root_Assembly_Type;
       Addr   : Address;
-      Value  : Byte)
+      Value  : Octet)
    is
    begin
-      Assembly.Memory.Set_Byte (Addr, Value);
-   end Set_Byte;
+      Assembly.Memory.Set_Octet (Addr, Value);
+   end Set_Octet;
 
    ---------------------
    -- Set_Source_File --
@@ -484,8 +510,9 @@ package body Aqua.Assembler is
    begin
       for R in Register_Index loop
          declare
+            X  : constant String := Register_Index'Image (R);
             Rx : constant String :=
-                   ('R', Character'Val (Character'Pos ('0') + Natural (R)));
+                   "R" & X (2 .. X'Last);
             Info : constant Label_Info :=
                      (References      => Label_Reference_Lists.Empty_List,
                       Defined         => False,
@@ -495,11 +522,21 @@ package body Aqua.Assembler is
                       Value           => Word (R));
          begin
             A.Labels.Insert (Rx, Info);
-            if R = 5 then
+            if R = 8 then
+               A.Labels.Insert ("AGG", Info);
+            elsif R = 9 then
+               A.Labels.Insert ("IT", Info);
+            elsif R = 10 then
+               A.Labels.Insert ("CTR", Info);
+            elsif R = 11 then
+               A.Labels.Insert ("PV", Info);
+            elsif R = 12 then
+               A.Labels.Insert ("OP", Info);
+            elsif R = 13 then
                A.Labels.Insert ("FP", Info);
-            elsif R = 6 then
+            elsif R = 14 then
                A.Labels.Insert ("SP", Info);
-            elsif R = 7 then
+            elsif R = 15 then
                A.Labels.Insert ("PC", Info);
             end if;
          end;
@@ -601,8 +638,8 @@ package body Aqua.Assembler is
          Write_Address (File, Loc.Start);
       end loop;
 
-      for Addr in A.Low .. A.High + 3 loop
-         Write_Byte (File, A.Memory.Get_Byte (Addr));
+      for Addr in A.Low .. A.High loop
+         Write_Octet (File, A.Memory.Get_Octet (Addr));
       end loop;
 
       for Position in A.Labels.Iterate loop
@@ -613,16 +650,19 @@ package body Aqua.Assembler is
             if Info.External then
                Write_Word (File, Word (Label'Length));
                Write_Word (File, Word (Info.References.Length));
-               Write_Byte (File, Boolean'Pos (Info.Defined));
+               Write_Octet (File, Boolean'Pos (Info.Defined));
                for Ch of Label loop
-                  Write_Byte (File, Character'Pos (Ch));
+                  Write_Octet (File, Character'Pos (Ch));
                end loop;
                if Info.Defined then
                   Write_Word (File, Info.Value);
                end if;
                for Ref of Info.References loop
                   Write_Address (File, Ref.Addr);
-                  Write_Byte (File, Boolean'Pos (Ref.Relative));
+                  Write_Octet
+                    (File,
+                     Boolean'Pos (Ref.Relative)
+                         + 2 * Boolean'Pos (Ref.Branch));
                end loop;
             end if;
          end;
@@ -637,30 +677,39 @@ package body Aqua.Assembler is
             Count       : Natural := 0;
             Index       : Positive := Raw_Text'First + 1;
          begin
-            --  Remove surrounding quotes, and convert two double quotes
-            --  into one.
-            while Index < Raw_Text'Last loop
-               if Index < Raw_Text'Last - 1
-                 and then Raw_Text (Index) = '"'
-                 and then Raw_Text (Index + 1) = '"'
-               then
+
+            if Raw_Text'Length >= 2
+              and then Raw_Text (Raw_Text'First) = '"'
+              and then Raw_Text (Raw_Text'Last) = '"'
+            then
+               --  Remove surrounding quotes, and convert two double quotes
+               --  into one.
+               while Index < Raw_Text'Last loop
+                  if Index < Raw_Text'Last - 1
+                    and then Raw_Text (Index) = '"'
+                    and then Raw_Text (Index + 1) = '"'
+                  then
+                     Index := Index + 1;
+                  end if;
+                  Count := Count + 1;
+                  String_Text (Count) := Raw_Text (Index);
                   Index := Index + 1;
-               end if;
-               Count := Count + 1;
-               String_Text (Count) := Raw_Text (Index);
-               Index := Index + 1;
-            end loop;
+               end loop;
+            else
+               String_Text := Raw_Text;
+               Count := Raw_Text'Length;
+            end if;
 
             Write_Word (File, Word (Count));
             Write_Word (File, Word (Info.References.Length));
-            Write_Byte (File, 0);
+            Write_Octet (File, 0);
             for I in 1 .. Count loop
-               Write_Byte (File, Character'Pos (String_Text (I)));
+               Write_Octet (File, Character'Pos (String_Text (I)));
             end loop;
 
             for Ref of Info.References loop
                Write_Address (File, Ref.Addr);
-               Write_Byte (File, Boolean'Pos (Ref.Relative));
+               Write_Octet (File, Boolean'Pos (Ref.Relative));
             end loop;
          end;
       end loop;

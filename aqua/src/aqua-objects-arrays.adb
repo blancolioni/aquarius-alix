@@ -192,7 +192,7 @@ package body Aqua.Objects.Arrays is
       function Elements_Image (Start : Positive) return String is
       begin
          if Start <= Object.Vector.Last_Index then
-            return (if Start = 1 then "[" else ",")
+            return (if Start = 1 then "" else ",")
               & Aqua.IO.Hex_Image (Object.Vector (Start))
               & Elements_Image (Start + 1);
          else
@@ -201,7 +201,7 @@ package body Aqua.Objects.Arrays is
       end Elements_Image;
 
    begin
-      return Elements_Image (1);
+      return "[" & Elements_Image (1);
    end Show;
 
    -----------
