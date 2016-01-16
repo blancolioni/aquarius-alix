@@ -37,7 +37,7 @@ format multiplying_operator soft_new_line
 format formal_argument_spec soft_new_line_before
 format subprogram_body new_line_before
 format array_type_definition soft_new_line
-format function_return_type soft_new_line_before space_after space_before
+format function_return_type soft_new_line space_after space_before
 
 format 'then' closing space_after space_before
 format 'loop' closing space_after space_before
