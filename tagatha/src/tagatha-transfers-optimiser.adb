@@ -51,7 +51,8 @@ package body Tagatha.Transfers.Optimiser is
             elsif From.Trans = T_Data
               and then From.Op = Op_Nop
               and then From.Src_1.Op /= T_Stack
-              and then From.Src_1.Op /= T_External
+              and then (From.Src_1.Op /= T_External
+                        or else From.Src_1.External_Imm)
               and then From.Dst.Op = T_External
               and then Known_Values.Contains (From.Dst.External_Name)
               and then Known_Values (From.Dst.External_Name) = From.Src_1
