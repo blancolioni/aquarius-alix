@@ -23,6 +23,10 @@ package Tagatha.Units is
 
    procedure Finish_Unit (Unit : in out Tagatha_Unit);
 
+   procedure Source_Position
+     (Unit         : in out Tagatha_Unit;
+      Line, Column : Positive);
+
    procedure Begin_Routine
      (Unit           : in out Tagatha_Unit;
       Name           : in     String;
@@ -233,6 +237,16 @@ private
    package List_Of_Directives is
      new Ada.Containers.Doubly_Linked_Lists (Directive_Record);
 
+   type Source_Reference is
+      record
+         Line, Column : Positive;
+         Segment      : Tagatha_Segment;
+         Start        : Natural;
+      end record;
+
+   package List_Of_Source_References is
+      new Ada.Containers.Doubly_Linked_Lists (Source_Reference);
+
    type Tagatha_Subprogram_Record is
       record
          Name               : Ada.Strings.Unbounded.Unbounded_String;
@@ -242,6 +256,8 @@ private
          Frame_Words        : Natural;
          Result_Words       : Natural;
          Last_Label         : Tagatha.Labels.Tagatha_Label;
+         Last_Line          : Positive := 1;
+         Last_Column        : Positive := 1;
          Global             : Boolean := True;
          Executable_Segment : Tagatha.Commands.Command_Vectors.Vector;
          Read_Only_Segment  : Data_Vector.Vector;

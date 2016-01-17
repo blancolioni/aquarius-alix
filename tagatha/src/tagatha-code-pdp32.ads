@@ -2,6 +2,12 @@ package Tagatha.Code.Pdp32 is
 
    type Pdp32_Translator is new Translator with private;
 
+   overriding procedure Set_Location
+     (T      : in out Pdp32_Translator;
+      Asm    : in out Assembly'Class;
+      Line   : Positive;
+      Column : Positive);
+
    overriding
    procedure Start (T      : in out Pdp32_Translator;
                     Asm    : in out Assembly'Class;

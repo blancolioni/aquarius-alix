@@ -499,10 +499,7 @@ package body Aquarius.Actions.Tagatha_Scanner is
       Column         : in Natural)
    is
    begin
-      Processor.Unit.Directive
-        (".source_position "
-         & Natural'Image (Line)
-         & Natural'Image (Column));
+      Processor.Unit.Source_Position (Line, Column);
    end Put_Source_Location;
 
    ------------------

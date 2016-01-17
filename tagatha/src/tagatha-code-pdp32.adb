@@ -487,6 +487,22 @@ package body Tagatha.Code.Pdp32 is
                    Tagatha.Transfers.Get_Size (Dest), Src_1, Src_2, Dst);
    end Operate;
 
+   ------------------
+   -- Set_Location --
+   ------------------
+
+   overriding procedure Set_Location
+     (T      : in out Pdp32_Translator;
+      Asm    : in out Assembly'Class;
+      Line   : Positive;
+      Column : Positive)
+   is
+      pragma Unreferenced (T);
+   begin
+      Asm.Put_Line (".source_position" & Positive'Image (Line)
+                    & Positive'Image (Column));
+   end Set_Location;
+
    -----------
    -- Start --
    -----------

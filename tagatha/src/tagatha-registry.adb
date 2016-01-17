@@ -26,6 +26,10 @@ package body Tagatha.Registry is
          Transfers.Set_Label (LT, Register.Last_Label);
          Register.Last_Label := Tagatha.Labels.No_Label;
       end if;
+      if Register.Last_Line > 0 then
+         Transfers.Set_Location
+           (LT, Register.Last_Line, Register.Last_Column);
+      end if;
       Register.Transfers.Append (LT);
    end Append;
 
@@ -173,6 +177,19 @@ package body Tagatha.Registry is
          Register.Last_Label := Label;
       end if;
    end Record_Label;
+
+   ---------------------
+   -- Record_Location --
+   ---------------------
+
+   procedure Record_Location (Register : in out Tagatha_Registry;
+                              Line     : in     Positive;
+                              Column   : in     Positive)
+   is
+   begin
+      Register.Last_Line := Line;
+      Register.Last_Column := Column;
+   end Record_Location;
 
    -----------------
    -- Record_Loop --

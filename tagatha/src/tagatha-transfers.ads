@@ -164,6 +164,9 @@ package Tagatha.Transfers is
    function Get_Source_2 (Item : Transfer) return Transfer_Operand;
    function Get_Operator (Item : Transfer) return Tagatha_Operator;
 
+   function Get_Line (Item : Transfer) return Positive;
+   function Get_Column (Item : Transfer) return Positive;
+
    procedure Reference_Temporaries
      (Item    : in out Transfer;
       Address : Positive);
@@ -179,6 +182,11 @@ package Tagatha.Transfers is
    procedure Assign_Registers
      (Item : in out Transfer;
       Rs   : in out Register_Allocation_Array);
+
+   procedure Set_Location
+     (Item   : in out Transfer;
+      Line   : Positive;
+      Column : Positive);
 
 private
 
@@ -254,6 +262,8 @@ private
          Self              : Boolean;
          Native            : Ada.Strings.Unbounded.Unbounded_String;
          Changed_Registers : Ada.Strings.Unbounded.Unbounded_String;
+         Line              : Positive;
+         Column            : Positive;
          Src_1             : Transfer_Operand;
          Src_2             : Transfer_Operand;
          Dst               : Transfer_Operand;
