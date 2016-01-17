@@ -46,12 +46,15 @@ package body Aquarius.Actions.Tagatha_Scanner is
          Processor.Add_Frame_Entry (Child, 4);
       end if;
 
-      Processor.Unit.Begin_Routine
-        (Name           => Routine_Name,
-         Argument_Words => (if Processor.Action_Child then 4 else 3),
-         Frame_Words    => 0,
-         Result_Words   => 0,
-         Global         => False);
+      if not Processor.Shared_Binding then
+         Processor.Shared_Binding := True;
+         Processor.Unit.Begin_Routine
+           (Name           => Routine_Name,
+            Argument_Words => (if Processor.Action_Child then 4 else 3),
+            Frame_Words    => 0,
+            Result_Words   => 0,
+            Global         => False);
+      end if;
 
       Processor.Unit.Directive
         (".bind_action "
@@ -553,6 +556,8 @@ package body Aquarius.Actions.Tagatha_Scanner is
          Processor.Add_Frame_Entry ("parent", 3);
          Processor.Add_Frame_Entry ("child", 4);
       end if;
+
+      Processor.Shared_Binding := False;
 
    end Start_Action_Body;
 
