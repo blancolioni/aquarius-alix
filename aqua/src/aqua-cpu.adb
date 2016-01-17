@@ -586,7 +586,6 @@ package body Aqua.CPU is
       Src  : Aqua.Word;
       Dst  : in out Aqua.Word)
    is
-      pragma Unreferenced (CPU);
    begin
       if Size = Word_32_Size
         and then Is_Integer (Src) and then Is_Integer (Dst)
@@ -597,7 +596,9 @@ package body Aqua.CPU is
         and then Is_String_Reference (Src)
         and then Is_String_Reference (Dst)
       then
-         if Src = Dst then
+         if Src = Dst
+           or else (CPU.To_String (Src) = CPU.To_String (Dst))
+         then
             Dst := 0;
          else
             Dst := 1;
