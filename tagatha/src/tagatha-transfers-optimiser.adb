@@ -34,6 +34,10 @@ package body Tagatha.Transfers.Optimiser is
             From : Transfer := Transfers (From_Index);
             Copy : Boolean  := True;
          begin
+            if Tagatha.Labels.Has_Label (From.Label) then
+               Known_Values.Clear;
+            end if;
+
             if From_Index < Transfers.Last_Index - 1
               and then Transfers (From_Index).Op = Op_Not
               and then Transfers (From_Index + 1).Op = Op_Test
