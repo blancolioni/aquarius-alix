@@ -36,12 +36,14 @@ private
          Frame_Offset        : Integer := 0;
          Action_Parent       : Boolean;
          Action_Child        : Boolean;
+         Shared_Binding      : Boolean := False;
          Object_Start        : Ada.Strings.Unbounded.Unbounded_String;
          Property_Name       : Ada.Strings.Unbounded.Unbounded_String;
          Nested_Loops        : Natural := 0;
          Nested_Aggregates   : Natural := 0;
          Nested_Properties   : Natural := 0;
          Local_Strings       : String_Maps.Map;
+         Next_Routine        : Natural := 0;
          Next_String_Label   : Natural := 0;
       end record;
 
