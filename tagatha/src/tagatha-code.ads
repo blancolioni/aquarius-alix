@@ -21,6 +21,13 @@ package Tagatha.Code is
                              Asm              : in out Assembly'Class)
    is null;
 
+   procedure Set_Location
+     (T      : in out Translator;
+      Asm    : in out Assembly'Class;
+      Line   : Positive;
+      Column : Positive)
+   is null;
+
    procedure Start (T      : in out Translator;
                     Asm    : in out Assembly'Class;
                     Name   : in     String;

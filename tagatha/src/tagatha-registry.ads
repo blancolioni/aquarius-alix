@@ -52,6 +52,10 @@ package Tagatha.Registry is
    procedure Record_Label (Register   : in out Tagatha_Registry;
                            Label      : in     Tagatha.Labels.Tagatha_Label);
 
+   procedure Record_Location (Register : in out Tagatha_Registry;
+                              Line     : in     Positive;
+                              Column   : in     Positive);
+
    procedure Get_Transfers
      (Register  : in Tagatha_Registry;
       Transfers : in out Tagatha.Transfers.Transfer_Vectors.Vector);
@@ -76,6 +80,8 @@ private
          Transfers   : Tagatha.Transfers.Transfer_Vectors.Vector;
          Temps       : Tagatha.Temporaries.Temporary_Source;
          Last_Label  : Tagatha.Labels.Tagatha_Label;
+         Last_Line   : Natural := 0;
+         Last_Column : Natural := 0;
       end record;
 
    procedure Append (Register : in out Tagatha_Registry;

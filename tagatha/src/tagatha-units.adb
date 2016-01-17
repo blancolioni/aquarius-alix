@@ -79,6 +79,9 @@ package body Tagatha.Units is
             To_Unit.Last_Label (Executable) := Tagatha.Labels.No_Label;
          end;
       end if;
+      Commands.Set_Source_Reference
+        (Command, To_Unit.Current_Sub.Last_Line,
+         To_Unit.Current_Sub.Last_Column);
       To_Unit.Current_Sub.Executable_Segment.Append (Command);
       Increment_Address (To_Unit, Executable);
    end Append;
@@ -808,6 +811,21 @@ package body Tagatha.Units is
       Unit.Current_Segment := Seg;
    end Segment;
 
+   ---------------------
+   -- Source_Position --
+   ---------------------
+
+   procedure Source_Position
+     (Unit         : in out Tagatha_Unit;
+      Line, Column : Positive)
+   is
+   begin
+      if Unit.Current_Sub /= null then
+         Unit.Current_Sub.Last_Line := Line;
+         Unit.Current_Sub.Last_Column := Column;
+      end if;
+   end Source_Position;
+
    -----------
    -- Write --
    -----------
@@ -824,6 +842,8 @@ package body Tagatha.Units is
                     & "/" & Unit.File_System_Name
                     & Target.Extension;
       File   : File_Assembly_Type;
+      Current_Line : Natural := 0;
+      Current_Column : Natural := 0;
    begin
       Open (File, File_Path);
       Target.File_Preamble (File_Assembly_Type'Class (File),
@@ -835,6 +855,20 @@ package body Tagatha.Units is
       end loop;
 
       for Sub of Unit.Subprograms loop
+
+         if Sub.Transfers.Last_Index > 0 then
+            declare
+               Line : constant Positive :=
+                        Transfers.Get_Line (Sub.Transfers (1));
+               Column : constant Positive :=
+                          Transfers.Get_Column (Sub.Transfers (1));
+            begin
+               Target.Set_Location
+                 (File_Assembly_Type'Class (File), Line, Column);
+               Current_Line := Line;
+               Current_Column := Column;
+            end;
+         end if;
 
          declare
             use List_Of_Directives;
@@ -858,6 +892,22 @@ package body Tagatha.Units is
                                 Sub.Frame_Words);
 
             for I in 1 .. Sub.Transfers.Last_Index loop
+
+               declare
+                  Line   : constant Positive :=
+                             Transfers.Get_Line (Sub.Transfers (I));
+                  Column : constant Positive :=
+                             Transfers.Get_Column (Sub.Transfers (I));
+               begin
+                  if Line /= Current_Line
+                    or else Column /= Current_Column
+                  then
+                     Target.Set_Location
+                       (File_Assembly_Type'Class (File), Line, Column);
+                     Current_Line := Line;
+                     Current_Column := Column;
+                  end if;
+               end;
 
                while Has_Element (Directive)
                  and then Element (Directive).Index <= I

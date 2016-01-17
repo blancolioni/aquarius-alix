@@ -100,6 +100,8 @@ package body Tagatha.Transfers is
               Self              => False,
               Native            => Ada.Strings.Unbounded.Null_Unbounded_String,
               Changed_Registers => Ada.Strings.Unbounded.Null_Unbounded_String,
+              Line              => 1,
+              Column            => 1,
               Src_1             => Null_Operand,
               Src_2             => Null_Operand,
               Dst               => Null_Operand,
@@ -138,6 +140,15 @@ package body Tagatha.Transfers is
    begin
       return Item.Arg_Offset;
    end Get_Arg_Offset;
+
+   ----------------
+   -- Get_Column --
+   ----------------
+
+   function Get_Column (Item : Transfer) return Positive is
+   begin
+      return Item.Column;
+   end Get_Column;
 
    -------------------
    -- Get_Condition --
@@ -178,6 +189,15 @@ package body Tagatha.Transfers is
    begin
       return T.Label;
    end Get_Label;
+
+   --------------
+   -- Get_Line --
+   --------------
+
+   function Get_Line (Item : Transfer) return Positive is
+   begin
+      return Item.Line;
+   end Get_Line;
 
    ----------------------
    -- Get_Local_Offset --
@@ -550,6 +570,8 @@ package body Tagatha.Transfers is
               Self              => False,
               Native            => To_Unbounded_String (Name),
               Changed_Registers => To_Unbounded_String (Changed_Registers),
+              Line              => 1,
+              Column            => 1,
               Src_1             => Null_Operand,
               Src_2             => Null_Operand,
               Dst               => Null_Operand,
@@ -586,6 +608,8 @@ package body Tagatha.Transfers is
               Self              => Same_Operand (Src_1, To),
               Native            => Ada.Strings.Unbounded.Null_Unbounded_String,
               Changed_Registers => Ada.Strings.Unbounded.Null_Unbounded_String,
+              Line              => 1,
+              Column            => 1,
               Src_1             => Src_1,
               Src_2             => Src_2,
               Dst               => To,
@@ -747,6 +771,20 @@ package body Tagatha.Transfers is
       T.Label := Label;
    end Set_Label;
 
+   ------------------
+   -- Set_Location --
+   ------------------
+
+   procedure Set_Location
+     (Item   : in out Transfer;
+      Line   : Positive;
+      Column : Positive)
+   is
+   begin
+      Item.Line := Line;
+      Item.Column := Column;
+   end Set_Location;
+
    --------------
    -- Set_Size --
    --------------
@@ -873,18 +911,20 @@ package body Tagatha.Transfers is
                              return Transfer
    is
    begin
-      return (Trans       => T_Data,
-              Reserve     => 0,
-              Label       => Tagatha.Labels.No_Label,
-              Condition   => C_Always,
-              Destination => Tagatha.Labels.No_Label,
-              Native      => Ada.Strings.Unbounded.Null_Unbounded_String,
+      return (Trans             => T_Data,
+              Reserve           => 0,
+              Label             => Tagatha.Labels.No_Label,
+              Condition         => C_Always,
+              Destination       => Tagatha.Labels.No_Label,
+              Native            => Ada.Strings.Unbounded.Null_Unbounded_String,
               Changed_Registers => Ada.Strings.Unbounded.Null_Unbounded_String,
-              Self        => Same_Operand (From, To),
-              Src_1       => From,
-              Src_2       => Null_Operand,
-              Dst         => To,
-              Op          => Op_Nop);
+              Line              => 1,
+              Column            => 1,
+              Self              => Same_Operand (From, To),
+              Src_1             => From,
+              Src_2             => Null_Operand,
+              Dst               => To,
+              Op                => Op_Nop);
    end Simple_Transfer;
 
    -----------
@@ -960,18 +1000,20 @@ package body Tagatha.Transfers is
                           return Transfer
    is
    begin
-      return (Trans       => T_Data,
-              Reserve     => 0,
-              Label       => Tagatha.Labels.No_Label,
-              Condition   => C_Always,
-              Destination => Tagatha.Labels.No_Label,
-              Native      => Ada.Strings.Unbounded.Null_Unbounded_String,
+      return (Trans             => T_Data,
+              Reserve           => 0,
+              Label             => Tagatha.Labels.No_Label,
+              Condition         => C_Always,
+              Destination       => Tagatha.Labels.No_Label,
+              Native            => Ada.Strings.Unbounded.Null_Unbounded_String,
               Changed_Registers => Ada.Strings.Unbounded.Null_Unbounded_String,
-              Self        => False,
-              Src_1       => Src_1,
-              Src_2       => Src_2,
-              Dst         => (T_Temporary, No_Modification, Dst),
-              Op          => Op);
+              Line              => 1,
+              Column            => 1,
+              Self              => False,
+              Src_1             => Src_1,
+              Src_2             => Src_2,
+              Dst               => (T_Temporary, No_Modification, Dst),
+              Op                => Op);
    end To_Temporary;
 
    -----------------

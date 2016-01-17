@@ -52,6 +52,10 @@ package Tagatha.Commands is
    function Get_Label (Command : in Tagatha_Command)
                       return Tagatha.Labels.Tagatha_Label;
 
+   procedure Set_Source_Reference
+     (Command : in Tagatha_Command;
+      Line, Column : Positive);
+
 private
 
    type Stack_Operation is (S_Push, S_Pop, S_Drop);
@@ -75,6 +79,8 @@ private
       record
          Size   : Tagatha_Size;
          Label  : Tagatha.Labels.Tagatha_Label;
+         Line   : Positive;
+         Column : Positive;
          Negate : Boolean;
          case Instruction is
             when T_Stack =>
