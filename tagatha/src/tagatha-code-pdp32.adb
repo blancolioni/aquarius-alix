@@ -140,6 +140,7 @@ package body Tagatha.Code.Pdp32 is
                Operate (Asm, Op_Compare,
                         Get_Source_1 (Item), Get_Source_2 (Item));
             end if;
+            T.Reverse_Test := True;
          elsif Same_Operand (Get_Source_2 (Item), Get_Destination (Item))
            and then not Is_Stack (Get_Destination (Item))
          then
