@@ -22,11 +22,44 @@ package body Tagatha.Transfers.Optimiser is
       Known_Values : Known_Value_Maps.Map;
 
       Result : Tagatha.Transfers.Transfer_Vectors.Vector;
-      Label        : Tagatha.Labels.Tagatha_Label := Tagatha.Labels.No_Label;
+      Label  : Tagatha.Labels.Tagatha_Label := Tagatha.Labels.No_Label;
+
+      procedure Clear_Known_Registers
+        (Changed_Registers : String);
+
+      ---------------------------
+      -- Clear_Known_Registers --
+      ---------------------------
 
       procedure Clear_Known_Registers
         (Changed_Registers : String)
-      is null;
+      is
+         Start : Positive := Changed_Registers'First;
+         Index : Positive := Changed_Registers'First;
+      begin
+         while Index <= Changed_Registers'Last loop
+            Index := Index + 1;
+            if Index > Changed_Registers'Last
+              or else Changed_Registers (Index) = ','
+            then
+               declare
+                  use Ada.Strings.Unbounded;
+                  R : constant Unbounded_String :=
+                        To_Unbounded_String
+                          (Changed_Registers (Start .. Index - 1));
+               begin
+                  if Known_Values.Contains (R) then
+                     --  FIXME: should also delete knowledge of names
+                     --  which contain R, since now they do not, and we
+                     --  risk ignoring the next transfer of R to that name
+                     --  Safest would be to delete everything
+                     Known_Values.Delete (R);
+                  end if;
+               end;
+               Start := Index + 1;
+            end if;
+         end loop;
+      end Clear_Known_Registers;
 
    begin
       while From_Index <= Transfers.Last_Index loop
@@ -82,8 +115,15 @@ package body Tagatha.Transfers.Optimiser is
                      Known_Values.Insert (From.Dst.External_Name, From.Src_1);
                   end if;
                elsif From.Trans = T_Native then
-                  Clear_Known_Registers
-                    (Ada.Strings.Unbounded.To_String (From.Changed_Registers));
+                  declare
+                     Rs : constant String :=
+                            Ada.Strings.Unbounded.To_String
+                              (From.Changed_Registers);
+                  begin
+                     if Rs /= "" then
+                        Clear_Known_Registers (Rs);
+                     end if;
+                  end;
                end if;
             elsif Tagatha.Labels.Has_Label (From.Label) then
                Tagatha.Labels.Link_To (From.Label, Label);
