@@ -265,8 +265,8 @@ package body Tagatha.Registry is
          end;
       else
          declare
-            Left : constant Expression := Pop (Register);
             Right : constant Expression := Pop (Register);
+            Left  : constant Expression := Pop (Register);
          begin
             Register.Stack.Append
               (New_Operator_Expression (Operator, Left, Right));
