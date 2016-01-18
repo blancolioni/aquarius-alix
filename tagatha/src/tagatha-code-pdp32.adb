@@ -105,7 +105,7 @@ package body Tagatha.Code.Pdp32 is
       elsif Is_Frame_Reservation (Item) then
          declare
             Reservation : constant String :=
-              Integer'Image (Get_Reservation (Item) * 2);
+              Integer'Image (Get_Reservation (Item) * 4);
             Operation   : String := "add";
          begin
             if Get_Reservation (Item) /= 0 then
