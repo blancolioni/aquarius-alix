@@ -67,8 +67,14 @@ package body Tagatha.Fragments is
 
                         Unit.Jump (Rec.Branch_Target, Cond);
 
+                     else
+
+                        Unit.Jump (Rec.Branch_Target, C_Always);
+
                      end if;
                   end;
+
+                  Last_Condition := 0;
 
                when Push_Fragment =>
                   if Last_Reference = 0 then
@@ -96,6 +102,8 @@ package body Tagatha.Fragments is
                         Unit.Pop_Operand (Ref.Reference, Ref.Size);
                      end;
                   end if;
+               when Label_Fragment =>
+                  Unit.Label (Rec.Label_Index);
             end case;
          end;
       end loop;
@@ -175,6 +183,20 @@ package body Tagatha.Fragments is
                               Size          => Size));
       return Result;
    end Integer_Constant;
+
+   -----------
+   -- Label --
+   -----------
+
+   function Label
+     (Index : Positive)
+      return Tagatha_Fragment
+   is
+   begin
+      return Result : Tagatha_Fragment do
+         Result.Records.Append ((Label_Fragment, Index));
+      end return;
+   end Label;
 
    --------------
    -- Operator --
@@ -307,6 +329,10 @@ package body Tagatha.Fragments is
          end if;
       end S;
 
+      -----------------
+      -- Show_Single --
+      -----------------
+
       function Show_Single (R : Fragment_Record) return String is
       begin
          case R.Fragment_Type is
@@ -331,6 +357,13 @@ package body Tagatha.Fragments is
                return "pop";
             when Push_Fragment =>
                return "push";
+            when Label_Fragment =>
+               declare
+                  Result : String := Positive'Image (R.Label_Index);
+               begin
+                  Result (Result'First) := '$';
+                  return Result;
+               end;
          end case;
       end Show_Single;
 

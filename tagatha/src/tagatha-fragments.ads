@@ -1,6 +1,7 @@
 private with Ada.Containers.Vectors;
 
 with Tagatha.Commands;
+
 private with Tagatha.Operands;
 
 with Tagatha.Units;
@@ -58,6 +59,10 @@ package Tagatha.Fragments is
    function Command (Cmd : Tagatha.Commands.Tagatha_Command)
                     return Tagatha_Fragment;
 
+   function Label
+     (Index : Positive)
+      return Tagatha_Fragment;
+
    procedure Append (To_Fragment : in out Tagatha_Fragment;
                      Fragment    : in     Tagatha_Fragment);
 
@@ -74,7 +79,7 @@ private
    type Fragment_Record_Type is
      (Command_Fragment, Operand_Fragment,
       Condition_Fragment, Branch_Fragment,
-      Pop_Fragment, Push_Fragment);
+      Pop_Fragment, Push_Fragment, Label_Fragment);
 
    type Fragment_Record
      (Fragment_Type : Fragment_Record_Type := Command_Fragment) is
@@ -94,6 +99,8 @@ private
                null;
             when Push_Fragment =>
                null;
+            when Label_Fragment =>
+               Label_Index      : Positive;
          end case;
       end record;
 
