@@ -2,6 +2,14 @@ before Program_Unit do
    null;
 end;
 
+before program_unit/subprogram do
+   subprogram.top_level := 1;
+end;
+
+before subprogram/procedure_declaration do
+   child.top_level := subprogram.top_level;
+end;
+
 after Program_Unit do
    Aqua.Report_State;
 end;
@@ -16,6 +24,7 @@ end;
 
 before block do
    block.table := new Map;
+   block.frame_offset := 0;
 end;
 
 before defining_identifier_list do
@@ -27,16 +36,18 @@ after defining_identifier_list/identifier do
 end;
 
 after variable_declaration/defining_identifier_list do
-   for child.defined_names loop
+   for current in child.defined_names loop
+      parent^block.frame_offset := parent^block.frame_offset + 1;
       parent^block.table.set 
         (current.image, 
-         Komnenos.Define (variable_declaration, current, "variable-declaration", 0));
+         (k => Komnenos.Define (variable_declaration, current, "variable-declaration", 0),
+          frame_offset => parent^block.frame_offset));
    end loop;
 end;
 
 after direct_name/identifier do
    if parent^block.table.get (identifier.text) then
       Komnenos.Cross_Reference (identifier,
-                                parent^block.table.get (identifier.text));
+                                parent^block.table.get (identifier.text).k);
    end if;
 end;
