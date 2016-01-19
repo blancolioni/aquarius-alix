@@ -1,5 +1,4 @@
 with Ada.Characters.Handling;
-with Ada.Text_IO;
 
 with Aqua.Primitives;
 with Tagatha.Units;
@@ -585,16 +584,7 @@ package body Aquarius.Programs.Aqua_Tagatha is
      (Parent, Child : Program_Tree)
    is
    begin
-      Ada.Text_IO.Put_Line
-        ("join: parent = "
-         & Tagatha.Fragments.Show (Parent.Fragment));
-      Ada.Text_IO.Put_Line
-        ("join: child = "
-         & Tagatha.Fragments.Show (Child.Fragment));
       Tagatha.Fragments.Append (Parent.Fragment, Child.Fragment);
-      Ada.Text_IO.Put_Line
-        ("join: result = "
-         & Tagatha.Fragments.Show (Parent.Fragment));
    end Tagatha_Join_Fragment;
 
    -------------------
