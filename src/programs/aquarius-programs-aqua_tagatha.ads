@@ -34,12 +34,27 @@ package Aquarius.Programs.Aqua_Tagatha is
       Arguments : Aqua.Array_Of_Words)
       return Aqua.Word;
 
+   function Tagatha_Code_Unit
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
    function Tagatha_Label
      (Context : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Aqua.Array_Of_Words)
       return Aqua.Word;
 
-   function Tagatha_Procedure
+   function Tagatha_Branch
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
+   function Tagatha_Begin_Procedure
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
+   function Tagatha_End_Procedure
      (Context : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Aqua.Array_Of_Words)
       return Aqua.Word;
