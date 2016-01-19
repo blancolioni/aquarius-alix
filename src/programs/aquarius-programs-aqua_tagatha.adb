@@ -1,5 +1,9 @@
+with Ada.Characters.Handling;
+with Ada.Text_IO;
+
 with Aqua.Primitives;
 with Tagatha.Units;
+with Tagatha.Units.Listing;
 
 package body Aquarius.Programs.Aqua_Tagatha is
 
@@ -84,6 +88,14 @@ package body Aquarius.Programs.Aqua_Tagatha is
      (Tree  : Program_Tree;
       Label : String);
 
+   procedure Tagatha_Frame_Offset
+     (Tree  : Program_Tree;
+      Value : Tagatha.Tagatha_Integer);
+
+   procedure Tagatha_Operator
+     (Tree     : Program_Tree;
+      Operator : String);
+
    procedure Tagatha_Pop
      (Tree  : Program_Tree);
 
@@ -114,6 +126,20 @@ package body Aquarius.Programs.Aqua_Tagatha is
              (Handler => Tagatha_String_Constant'Access));
 
       Aqua.Primitives.New_Primitive_Handler
+        (Name           => "tree__operator",
+         Argument_Count => 2,
+         Handler        =>
+           Handle_Procedure_Tree_String'
+             (Handler => Tagatha_Operator'Access));
+
+      Aqua.Primitives.New_Primitive_Handler
+        (Name           => "tree__frame_offset",
+         Argument_Count => 2,
+         Handler        =>
+           Handle_Procedure_Tree_Integer'
+             (Handler => Tagatha_Frame_Offset'Access));
+
+      Aqua.Primitives.New_Primitive_Handler
         (Name           => "tree__pop",
          Argument_Count => 1,
          Handler        =>
@@ -133,6 +159,11 @@ package body Aquarius.Programs.Aqua_Tagatha is
          Handler        =>
            Handle_Procedure_Tree_Tree'
              (Handler => Tagatha_Join_Fragment'Access));
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__branch",
+         Argument_Count => 3,
+         Handler        => Tagatha_Branch'Access);
 
    end Add_Handlers;
 
@@ -327,6 +358,28 @@ package body Aquarius.Programs.Aqua_Tagatha is
       return 0;
    end Tagatha_Apply_Fragment;
 
+   -----------------------------
+   -- Tagatha_Begin_Procedure --
+   -----------------------------
+
+   function Tagatha_Begin_Procedure
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      Name : constant String := Context.To_String (Arguments (2));
+      Arg_Count : constant Natural :=
+                    Natural (Aqua.Get_Integer (Arguments (3)));
+      Frame_Count : constant Natural :=
+                      Natural (Aqua.Get_Integer (Arguments (4)));
+      Result_Count : constant Natural :=
+                       Natural (Aqua.Get_Integer (Arguments (5)));
+   begin
+      Current_Unit.Begin_Routine
+        (Name, Arg_Count, Frame_Count, Result_Count, True);
+      return 0;
+   end Tagatha_Begin_Procedure;
+
    ------------------------
    -- Tagatha_Begin_Unit --
    ------------------------
@@ -347,6 +400,62 @@ package body Aquarius.Programs.Aqua_Tagatha is
       return 0;
    end Tagatha_Begin_Unit;
 
+   --------------------
+   -- Tagatha_Branch --
+   --------------------
+
+   function Tagatha_Branch
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      Tree : constant Program_Tree :=
+               Program_Tree (Context.To_External_Object (Arguments (1)));
+      Conditional : constant Boolean := Arguments'Length > 2;
+      Condition_Word : constant Aqua.Word :=
+                         (if Conditional
+                          then Arguments (2)
+                          else 0);
+      Label_Word     : constant Aqua.Word :=
+                         (if Conditional
+                          then Arguments (3)
+                          else Arguments (2));
+
+      function Condition return Tagatha.Tagatha_Condition;
+
+      ---------------
+      -- Condition --
+      ---------------
+
+      function Condition return Tagatha.Tagatha_Condition is
+         Text : constant String :=
+                  Ada.Characters.Handling.To_Lower
+                    (Context.To_String (Condition_Word));
+      begin
+         if Text = "eq" or else Text = "equal" then
+            return Tagatha.C_Equal;
+         elsif Text = "ne" or else Text = "not_equal" then
+            return Tagatha.C_Not_Equal;
+         else
+            return Tagatha.C_Always;
+         end if;
+      end Condition;
+
+   begin
+
+      if Conditional then
+         Tagatha.Fragments.Append
+           (Tree.Fragment, Tagatha.Fragments.Condition (Condition));
+      end if;
+
+      Tagatha.Fragments.Append
+        (Tree.Fragment,
+         Tagatha.Fragments.Branch
+           (Positive (Aqua.Get_Integer (Label_Word)),
+            Conditional));
+      return 1;
+   end Tagatha_Branch;
+
    --------------------------
    -- Tagatha_Code_Segment --
    --------------------------
@@ -362,6 +471,27 @@ package body Aquarius.Programs.Aqua_Tagatha is
       Current_Unit.Segment (Tagatha.Executable);
       return 0;
    end Tagatha_Code_Segment;
+
+   -----------------------
+   -- Tagatha_Code_Unit --
+   -----------------------
+
+   function Tagatha_Code_Unit
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      Arch : constant String :=
+               Context.To_String (Arguments (2));
+   begin
+      Tagatha.Units.Listing.Write_Command_Listing
+        (Current_Unit);
+      Current_Unit.Write (Arch, ".");
+      return 1;
+   exception
+      when others =>
+         return 0;
+   end Tagatha_Code_Unit;
 
    ------------------
    -- Tagatha_Data --
@@ -386,6 +516,22 @@ package body Aquarius.Programs.Aqua_Tagatha is
       return 0;
    end Tagatha_Data;
 
+   ---------------------------
+   -- Tagatha_End_Procedure --
+   ---------------------------
+
+   function Tagatha_End_Procedure
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      pragma Unreferenced (Context);
+      pragma Unreferenced (Arguments);
+   begin
+      Current_Unit.End_Routine;
+      return 1;
+   end Tagatha_End_Procedure;
+
    ----------------------
    -- Tagatha_End_Unit --
    ----------------------
@@ -399,9 +545,23 @@ package body Aquarius.Programs.Aqua_Tagatha is
       pragma Unreferenced (Arguments);
    begin
       Current_Unit.Finish_Unit;
-      Current_Unit.Write ("6502", ".");
       return 0;
    end Tagatha_End_Unit;
+
+   --------------------------
+   -- Tagatha_Frame_Offset --
+   --------------------------
+
+   procedure Tagatha_Frame_Offset
+     (Tree  : Program_Tree;
+      Value : Tagatha.Tagatha_Integer)
+   is
+   begin
+      Tagatha.Fragments.Append
+        (Tree.Fragment,
+         Tagatha.Fragments.Reference_Local
+           (Tagatha.Local_Offset (Value)));
+   end Tagatha_Frame_Offset;
 
    ------------------------------
    -- Tagatha_Integer_Constant --
@@ -425,7 +585,16 @@ package body Aquarius.Programs.Aqua_Tagatha is
      (Parent, Child : Program_Tree)
    is
    begin
+      Ada.Text_IO.Put_Line
+        ("join: parent = "
+         & Tagatha.Fragments.Show (Parent.Fragment));
+      Ada.Text_IO.Put_Line
+        ("join: child = "
+         & Tagatha.Fragments.Show (Child.Fragment));
       Tagatha.Fragments.Append (Parent.Fragment, Child.Fragment);
+      Ada.Text_IO.Put_Line
+        ("join: result = "
+         & Tagatha.Fragments.Show (Parent.Fragment));
    end Tagatha_Join_Fragment;
 
    -------------------
@@ -437,11 +606,51 @@ package body Aquarius.Programs.Aqua_Tagatha is
       Arguments : Aqua.Array_Of_Words)
       return Aqua.Word
    is
+      Tree : constant Program_Tree :=
+               Program_Tree (Context.To_External_Object (Arguments (1)));
    begin
-      Current_Unit.Label
-        (Context.To_String (Arguments (2)));
+      if Aqua.Is_Integer (Arguments (2)) then
+         Tagatha.Fragments.Append
+             (Tree.Fragment,
+              Tagatha.Fragments.Label
+                (Positive (Aqua.Get_Integer (Arguments (2)))));
+      else
+         Current_Unit.Label
+           (Context.To_String (Arguments (2)));
+      end if;
       return 0;
    end Tagatha_Label;
+
+   ----------------------
+   -- Tagatha_Operator --
+   ----------------------
+
+   procedure Tagatha_Operator
+     (Tree     : Program_Tree;
+      Operator : String)
+   is
+      use Tagatha;
+      Op : Tagatha.Tagatha_Operator := Op_Nop;
+   begin
+      if Operator = "*" then
+         Op := Op_Mul;
+      elsif Operator = "+" then
+         Op := Op_Add;
+      elsif Operator = "-" then
+         Op := Op_Sub;
+      elsif Operator = "/" then
+         Op := Op_Div;
+      elsif Operator = "mod" then
+         Op := Op_Mod;
+      elsif Operator = "=" then
+         Op := Op_Compare;
+      end if;
+
+      Tagatha.Fragments.Append
+        (Tree.Fragment,
+         Tagatha.Fragments.Operator (Op));
+
+   end Tagatha_Operator;
 
    -----------------
    -- Tagatha_Pop --
@@ -455,28 +664,6 @@ package body Aquarius.Programs.Aqua_Tagatha is
         (Tree.Fragment,
          Tagatha.Fragments.Pop);
    end Tagatha_Pop;
-
-   -----------------------
-   -- Tagatha_Procedure --
-   -----------------------
-
-   function Tagatha_Procedure
-     (Context : in out Aqua.Execution.Execution_Interface'Class;
-      Arguments : Aqua.Array_Of_Words)
-      return Aqua.Word
-   is
-      Name : constant String := Context.To_String (Arguments (2));
-      Arg_Count : constant Natural :=
-                    Natural (Aqua.Get_Integer (Arguments (3)));
-      Frame_Count : constant Natural :=
-                      Natural (Aqua.Get_Integer (Arguments (4)));
-      Result_Count : constant Natural :=
-                       Natural (Aqua.Get_Integer (Arguments (5)));
-   begin
-      Current_Unit.Begin_Routine
-        (Name, Arg_Count, Frame_Count, Result_Count, True);
-      return 0;
-   end Tagatha_Procedure;
 
    ------------------
    -- Tagatha_Push --

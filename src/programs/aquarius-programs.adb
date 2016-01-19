@@ -90,6 +90,11 @@ package body Aquarius.Programs is
       Arguments : Aqua.Array_Of_Words)
       return Aqua.Word;
 
+   function Aqua_Tree_Choice
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
    function Aqua_Tree_Error
      (Context : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Aqua.Array_Of_Words)
@@ -234,6 +239,22 @@ package body Aquarius.Programs is
 
    end Aqua_Tree_Child;
 
+   ----------------------
+   -- Aqua_Tree_Choice --
+   ----------------------
+
+   function Aqua_Tree_Choice
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      Tree : constant Program_Tree :=
+                 Program_Tree
+                 (Context.To_External_Object (Arguments (1)));
+   begin
+      return Context.To_Word (Tree.Chosen_Tree);
+   end Aqua_Tree_Choice;
+
    ---------------------
    -- Aqua_Tree_Error --
    ---------------------
@@ -356,6 +377,11 @@ package body Aquarius.Programs is
          Handler        => Aqua_Tree_Text'Access);
 
       Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__choice",
+         Argument_Count => 1,
+         Handler        => Aqua_Tree_Choice'Access);
+
+      Aqua.Primitives.New_Primitive_Function
         (Name           => "tree__left_sibling",
          Argument_Count => 1,
          Handler        => Aqua_Tree_Left_Sibling'Access);
@@ -408,14 +434,24 @@ package body Aquarius.Programs is
          Handler        => Aqua_Tagatha.Tagatha_End_Unit'Access);
 
       Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__code_unit",
+         Argument_Count => 2,
+         Handler        => Aqua_Tagatha.Tagatha_Code_Unit'Access);
+
+      Aqua.Primitives.New_Primitive_Function
         (Name           => "tree__label",
          Argument_Count => 2,
          Handler        => Aqua_Tagatha.Tagatha_Label'Access);
 
       Aqua.Primitives.New_Primitive_Function
-        (Name           => "tree__procedure",
+        (Name           => "tree__begin_routine",
          Argument_Count => 5,
-         Handler        => Aqua_Tagatha.Tagatha_Procedure'Access);
+         Handler        => Aqua_Tagatha.Tagatha_Begin_Procedure'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__end_routine",
+         Argument_Count => 1,
+         Handler        => Aqua_Tagatha.Tagatha_End_Procedure'Access);
 
       Aqua.Primitives.New_Primitive_Function
         (Name           => "tree__return",
