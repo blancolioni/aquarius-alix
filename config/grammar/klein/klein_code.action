@@ -1,0 +1,157 @@
+before program_unit do
+   top.next_label := 0;
+end;
+
+after program_unit do
+   tree.code_unit ("x86_64");
+end;
+
+before procedure_Declaration do
+   if tree.top_level then
+      IO.Put_line ("start top level routine");
+      tree.begin_unit (tree/procedure_definition/identifier.text);
+   end if;
+end;
+
+after procedure_Declaration do
+   IO.put_line ("apply fragment");
+   tree.apply_fragment;
+   IO.Put_line ("end routine");
+   tree.end_routine;
+   if tree.top_level then
+      tree.end_unit;
+   end if;
+end;
+
+before procedure_declaration/procedure_definition do
+   parent.begin_routine (child/identifier.text, 0, parent/block.frame_offset, 0);
+end;
+
+after procedure_declaration/block do
+   IO.Put_line ("copy block to procedure declaration");
+   parent.join_fragment (child);
+end;
+
+after block/sequence_of_statements do
+   parent.join_fragment (child);
+end;
+
+after statement do
+   statement.join_fragment (statement.choice);
+end;
+
+after sequence_of_statements/statement do
+   parent.join_fragment (child);
+end;
+
+before assignment_statement/name do
+   name.assignment_target := 1;
+end;
+
+before until_statement do
+   top.next_label := top.next_label + 1;
+   tree.loop_label := top.next_label;
+   top.next_label := top.next_label + 1;
+   tree.exit_label := top.next_Label;
+   IO.put_line ("until_statement: loop label");
+   tree.label (tree.loop_label);
+end;
+
+after until_statement do
+   IO.put_line ("until_statement: exit label");
+   tree.label(tree.exit_label);
+end;
+
+after until_statement/expression do
+   IO.Put_Line ("until: joining expression " & child.image);
+   parent.join_fragment (expression);
+   IO.Put_Line ("until: adding test");
+   parent.test;
+   IO.Put_Line ("until: adding branch");
+   parent.branch ("eq", tree.exit_label);
+   IO.Put_Line ("until: finished expression");
+end;
+
+after until_statement/sequence_of_statements do
+   IO.put_line ("until: joining child");
+   parent.join_fragment (child);
+   IO.put_line ("until: branching back to label " & parent.loop_label);
+   parent.branch (parent.loop_label);
+end;
+
+after direct_name/identifier do
+   parent.frame_offset (parent^block.table.get (identifier.text).frame_offset);
+end;
+
+before name do
+   name.previous := null;
+end;
+
+after name/direct_name do
+   if name.previous then
+      name.join_fragment (name.previous);
+      name.push;
+   end if;
+   name.previous := direct_name;
+end;
+
+after name do
+   if name.previous then
+      name.join_fragment (name.previous);
+      if name.assignment_target then
+         name.pop;
+      else
+         name.push;
+      end if;
+   end if;
+end;
+  
+after primary/numeric_literal do
+   parent.integer_constant (numeric_literal.text)
+   parent.push;
+end;
+
+before term do
+  term.current_op := null;
+end;
+
+after term/factor do
+   parent.join_fragment (child);
+   if parent.current_op then
+      parent.join_fragment (parent.current_op);
+   end if;
+end;
+
+after term/multiplying_operator do
+   child.choice.operator (child.choice.text);
+   term.current_op := child.choice;
+end;
+
+before relation do
+   tree.current_op := null;
+end;
+
+after relation/simple_expression do
+   tree.join_fragment (child);
+   if tree.current_op then
+      tree.join_fragment (tree.current_op);
+   end if;
+end;
+
+after relation/relational_operator do
+   child.choice.operator (child.choice.text);
+   parent.current_op := child.choice;
+end;
+
+after primary/name
+   or factor/primary
+   or simple_expression/term
+   or expression/relation
+do
+   tree.join_fragment (child);
+end;
+
+after assignment_statement do
+   tree.join_fragment (tree/expression);
+   tree.join_fragment (tree/name);
+end;
