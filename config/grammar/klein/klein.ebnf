@@ -32,7 +32,7 @@ package_spec ::= 'package' defining_package_name : function_name 'is'
                  'end' matching_end_identifier : function_name
 
 package_body ::= 'package' 'body' defining_package_name : function_name 'is'
-	  	    list_of_declarations
+                    list_of_declarations
                  'end' matching_end_identifier : function_name
 
 defining_package_name ::= identifier
@@ -86,14 +86,17 @@ sequence_of_statements ::= { [ label ] statement ';' }
 label ::= '<<' identifier '>>'
 
 statement ::= null_statement
-            | object_statement
-	    | if_statement
+            | procedure_call_statement
+            | assignment_statement
+            | if_statement
             | until_statement
-	    | goto_statement
+            | goto_statement
 
 null_statement ::= 'null'
 
-object_statement ::= name [ ':=' expression ]
+assignment_statement ::= name ':=' expression
+
+procedure_call_statement ::= name
 
 name ::= direct_name { name_qualifier }
 
@@ -110,9 +113,9 @@ actual_argument_list ::= '(' < expression / ','> ')'
 operator_name ::= string_literal
 
 if_statement ::= 'if' expression 'then' sequence_of_statements
-		 { 'elsif' expression 'then' sequence_of_statements }
-		 [ 'else' sequence_of_statements ]
-		 'end' 'if'
+                 { 'elsif' expression 'then' sequence_of_statements }
+                 [ 'else' sequence_of_statements ]
+                 'end' 'if'
 
 until_statement ::= 'until' expression 'loop' sequence_of_statements
                     'end' 'loop'
