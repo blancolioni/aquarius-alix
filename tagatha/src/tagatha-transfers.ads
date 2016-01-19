@@ -262,8 +262,8 @@ private
          Self              : Boolean;
          Native            : Ada.Strings.Unbounded.Unbounded_String;
          Changed_Registers : Ada.Strings.Unbounded.Unbounded_String;
-         Line              : Positive;
-         Column            : Positive;
+         Line              : Positive := 1;
+         Column            : Positive := 1;
          Src_1             : Transfer_Operand;
          Src_2             : Transfer_Operand;
          Dst               : Transfer_Operand;

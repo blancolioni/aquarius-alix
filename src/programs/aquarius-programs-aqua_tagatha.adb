@@ -584,6 +584,10 @@ package body Aquarius.Programs.Aqua_Tagatha is
      (Parent, Child : Program_Tree)
    is
    begin
+      Tagatha.Fragments.Check_Source_Location
+        (Child.Fragment,
+         Positive (Parent.Location_Line),
+         Positive (Parent.Location_Column));
       Tagatha.Fragments.Append (Parent.Fragment, Child.Fragment);
    end Tagatha_Join_Fragment;
 

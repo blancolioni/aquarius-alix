@@ -66,6 +66,10 @@ package Tagatha.Fragments is
    procedure Append (To_Fragment : in out Tagatha_Fragment;
                      Fragment    : in     Tagatha_Fragment);
 
+   procedure Check_Source_Location
+     (Fragment     : in out Tagatha_Fragment;
+      Line, Column : Positive);
+
    procedure Append_To_Unit
      (Unit     : in out Tagatha.Units.Tagatha_Unit'Class;
       Fragment : in     Tagatha_Fragment);
@@ -84,6 +88,7 @@ private
    type Fragment_Record
      (Fragment_Type : Fragment_Record_Type := Command_Fragment) is
       record
+         Line, Column : Natural := 0;
          case Fragment_Type is
             when Command_Fragment =>
                Command       : Tagatha.Commands.Tagatha_Command;
