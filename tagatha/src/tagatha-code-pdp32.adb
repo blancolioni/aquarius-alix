@@ -1,4 +1,6 @@
+with Ada.Exceptions;
 with Ada.Strings.Fixed;
+with Ada.Text_IO;
 with Ada.Unchecked_Conversion;
 
 with Tagatha.Constants;
@@ -155,9 +157,13 @@ package body Tagatha.Code.Pdp32 is
       end if;
 
    exception
-      when others =>
-         raise Constraint_Error with
-           "failed to encode instruction: " & Transfers.Show (Item);
+      when E : others =>
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "failed to encode instruction: " & Transfers.Show (Item));
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            Ada.Exceptions.Exception_Message (E));
 
    end Encode;
 
