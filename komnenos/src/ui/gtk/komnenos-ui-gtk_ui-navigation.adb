@@ -239,12 +239,14 @@ package body Komnenos.UI.Gtk_UI.Navigation is
 
       Panel.Layout.Scan (Draw_Fragment'Access);
 
-      Cairo.Set_Source_Rgba (Cr, 0.1, 0.1, 0.8, 0.5);
       Cairo.Rectangle
         (Cr, Panel.Left, Panel.Top,
          Gdouble (Panel.Layout.Visible_Width) * Scale,
          Gdouble (Panel.Layout.Visible_Height) * Scale);
-      Cairo.Fill (Cr);
+      Cairo.Set_Source_Rgba (Cr, 0.1, 0.1, 0.6, 0.2);
+      Cairo.Fill_Preserve (Cr);
+      Cairo.Set_Source_Rgb (Cr, 0.1, 0.1, 0.8);
+      Cairo.Stroke (Cr);
 
       Cairo.Destroy (Cr);
 
