@@ -86,8 +86,8 @@ package body Komnenos.UI.Gtk_UI.Navigation is
                                 Event.Y - Scaled_Visible_Height / 2.0;
    begin
       Navigator.Cb_Navigate (Navigator.Layout,
-                             Integer (New_Left * Scale),
-                             Integer (New_Top * Scale));
+                             Integer'Max (Integer (New_Left * Scale), 0),
+                             Integer'Max (Integer (New_Top * Scale), 0));
       Navigator.Left := New_Left;
       Navigator.Top  := New_Top;
       Navigator.Refresh;

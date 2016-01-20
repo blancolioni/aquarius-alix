@@ -29,7 +29,7 @@ package body Komnenos.UI.Gtk_UI.Layout_Table is
 
    procedure On_Navigation
      (Layout            : Komnenos.Layouts.Layout_Type;
-      New_Left, New_Top : Integer);
+      New_Left, New_Top : Natural);
 
    procedure Configure
      (Layout : Gtk_Layout_Table);
@@ -176,7 +176,7 @@ package body Komnenos.UI.Gtk_UI.Layout_Table is
 
    procedure On_Navigation
      (Layout            : Komnenos.Layouts.Layout_Type;
-      New_Left, New_Top : Integer)
+      New_Left, New_Top : Natural)
    is
       Gtk_Layout : constant Gtk_Layout_Table := Gtk_Layout_Table (Layout);
    begin
