@@ -363,6 +363,18 @@ package body Komnenos.Fragments is
       end loop;
    end Iterate;
 
+   ---------
+   -- Key --
+   ---------
+
+   function Key
+     (Fragment : Root_Fragment_Type'Class)
+      return String
+   is
+   begin
+      return Ada.Strings.Unbounded.To_String (Fragment.Key);
+   end Key;
+
    ------------------
    -- New_Fragment --
    ------------------
