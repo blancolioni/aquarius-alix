@@ -34,6 +34,11 @@ package Komnenos.Layouts is
       Item   : Komnenos.Fragments.Fragment_Type)
    is abstract;
 
+   procedure Item_Removed
+     (Layout : in out Root_Layout_Type;
+      Item   : Komnenos.Fragments.Fragment_Type)
+   is abstract;
+
    procedure Set_Full_Size
      (Layout      : in out Root_Layout_Type;
       Full_Width  : Natural;
@@ -83,6 +88,10 @@ package Komnenos.Layouts is
       Fragment  : Komnenos.Fragments.Fragment_Type);
    --  Update the position of Fragment.  Move other fragments around to
    --  accommodate it
+
+   procedure Remove_Item
+     (Layout    : in out Root_Layout_Type'Class;
+      Fragment  : Komnenos.Fragments.Fragment_Type);
 
    procedure Scan
      (Layout  : Root_Layout_Type'Class;

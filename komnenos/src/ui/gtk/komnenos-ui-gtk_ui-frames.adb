@@ -2,6 +2,10 @@ with Glib.Object;
 
 with Gdk.Event;
 
+with Gtk.Enums;
+
+with Gtk.Box;
+with Gtk.Button;
 with Gtk.Event_Box;
 with Gtk.Label;
 
@@ -31,6 +35,9 @@ package body Komnenos.UI.Gtk_UI.Frames is
      (Object : access Glib.Object.GObject_Record'Class;
       Event  : Gdk.Event.Gdk_Event_Motion)
       return Boolean;
+
+   procedure On_Close_Frame_Clicked
+     (Self : access Glib.Object.GObject_Record'Class);
 
    -------------------
    -- Border_Colour --
@@ -72,6 +79,11 @@ package body Komnenos.UI.Gtk_UI.Frames is
       return Gtk_Frame
    is
       Grid : constant Gtk_Frame := new Root_Gtk_Frame_Record;
+      Box  : constant Gtk.Box.Gtk_Box :=
+               Gtk.Box.Gtk_Box_New
+                 (Orientation => Gtk.Enums.Orientation_Horizontal,
+                  Spacing     => 0);
+      Close : Gtk.Button.Gtk_Button;
       Text : constant Komnenos.UI.Gtk_UI.Text.Komnenos_Text_View :=
                Komnenos.UI.Gtk_UI.Text.Create_Text_View
                  (Fragment);
@@ -83,9 +95,22 @@ package body Komnenos.UI.Gtk_UI.Frames is
       Object.Frame := Grid;
 
       Grid.Layout := Komnenos.Layouts.Layout_Type (Layout);
+
       Gtk.Event_Box.Gtk_New (Events);
       Gtk.Label.Gtk_New (Label, Fragment.Title);
+      Label.Set_Name ("Frame_Label");
       Events.Add (Label);
+      Box.Pack_Start
+        (Child   => Events,
+         Expand  => True,
+         Fill    => True,
+         Padding => 0);
+
+      Gtk.Button.Gtk_New (Close, "X");
+      Close.Set_Name ("Frame_Close");
+      Close.On_Clicked (On_Close_Frame_Clicked'Access, Object);
+
+      Box.Add (Close);
 
       declare
          use Gdk.Event;
@@ -107,7 +132,7 @@ package body Komnenos.UI.Gtk_UI.Frames is
 
       Gtk.Grid.Initialize (Grid);
 
-      Grid.Attach (Events,
+      Grid.Attach (Box,
                    Left   => 1,
                    Top    => 1,
                    Width  => 1,
@@ -127,6 +152,19 @@ package body Komnenos.UI.Gtk_UI.Frames is
       return Grid;
 
    end New_Frame;
+
+   ----------------------------
+   -- On_Close_Frame_Clicked --
+   ----------------------------
+
+   procedure On_Close_Frame_Clicked
+     (Self : access Glib.Object.GObject_Record'Class)
+   is
+      Frame : constant Gtk_Frame :=
+                Frame_Object_Access (Self).Frame;
+   begin
+      Frame.Layout.Remove_Item (Frame.Fragment);
+   end On_Close_Frame_Clicked;
 
    ---------------------------
    -- On_Title_Button_Press --

@@ -2,6 +2,10 @@
     background-color: lavender;
     }
 
-GtkLabel {
+#Frame_Label {
     background-color: rgb(175,203,232);
-        }
+}
+
+#Frame_Close {
+    background-color: rgb(175,203,232);
+}

@@ -140,6 +140,21 @@ package body Komnenos.UI.Gtk_UI.Layout_Table is
       Layout.Frame_Map.Insert (Item.Key, Frame);
    end Item_Placed;
 
+   ------------------
+   -- Item_Removed --
+   ------------------
+
+   overriding procedure Item_Removed
+     (Layout : in out Root_Gtk_Layout_Table;
+      Item   : Komnenos.Fragments.Fragment_Type)
+   is
+      Frame : constant Komnenos.UI.Gtk_UI.Frames.Gtk_Frame :=
+                Layout.Frame_Map.Element (Item.Key);
+   begin
+      Layout.Layout_Widget.Remove (Frame);
+      Layout.Frame_Map.Delete (Item.Key);
+   end Item_Removed;
+
    -------------------------
    -- On_Configure_Layout --
    -------------------------
