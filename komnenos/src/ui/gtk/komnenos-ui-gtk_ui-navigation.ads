@@ -11,8 +11,8 @@ package Komnenos.UI.Gtk_UI.Navigation is
 
    type Navigation_Callback is access
      procedure (Layout   : Komnenos.Layouts.Layout_Type;
-                New_Left : Integer;
-                New_Top  : Integer);
+                New_Left : Natural;
+                New_Top  : Natural);
 
    procedure Set_Layout
      (Panel  : in out Root_Gtk_Navigation_Panel'Class;
