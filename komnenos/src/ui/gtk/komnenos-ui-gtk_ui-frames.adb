@@ -125,6 +125,8 @@ package body Komnenos.UI.Gtk_UI.Frames is
 
       Grid.Fragment := Fragment;
 
+      Grid.Add_Borders;
+
       Grid.Show_All;
 
       return Grid;
