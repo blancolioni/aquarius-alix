@@ -1,5 +1,3 @@
-with Ada.Text_IO;
-
 with Glib.Object;
 with Gdk.Event;
 
@@ -208,8 +206,6 @@ package body Komnenos.UI.Gtk_UI.Layout_Table is
       Full_Height : Natural)
    is
    begin
-      Ada.Text_IO.Put_Line
-        ("Full size: " & Full_Width'Img & " x" & Full_Height'Img);
       Komnenos.Layouts.Root_Layout_Type (Layout).Set_Full_Size
         (Full_Width, Full_Height);
       Layout.Layout_Widget.Set_Size
