@@ -123,6 +123,10 @@ package body Komnenos.UI.Gtk_UI.Frames is
                    Width  => 1,
                    Height => 1);
 
+      Grid.Fragment := Fragment;
+
+      Grid.Show_All;
+
       return Grid;
 
    end New_Frame;
