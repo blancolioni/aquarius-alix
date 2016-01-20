@@ -78,6 +78,7 @@
                 <property name="shadow_type">in</property>
                 <child>
                   <object class="GtkLayout" id="Main_Layout">
+                    <property name="name">Main_Layout</property>
                     <property name="visible">True</property>
                     <property name="app_paintable">True</property>
                     <property name="can_focus">False</property>
