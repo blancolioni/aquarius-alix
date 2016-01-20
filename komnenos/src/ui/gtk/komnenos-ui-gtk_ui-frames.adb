@@ -2,7 +2,6 @@ with Glib.Object;
 
 with Gdk.Event;
 
-with Gtk.Enums;
 with Gtk.Event_Box;
 with Gtk.Label;
 
@@ -87,10 +86,6 @@ package body Komnenos.UI.Gtk_UI.Frames is
       Gtk.Event_Box.Gtk_New (Events);
       Gtk.Label.Gtk_New (Label, Fragment.Title);
       Events.Add (Label);
-
-      Label.Override_Background_Color
-        (Gtk.Enums.Gtk_State_Flag_Normal,
-         To_RGBA (Fragment.Background_Colour));
 
       declare
          use Gdk.Event;
