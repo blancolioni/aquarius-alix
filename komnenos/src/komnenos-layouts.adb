@@ -97,7 +97,9 @@ package body Komnenos.Layouts is
                                    (Session_Fragment);
          begin
             Layout.Items.Append (Fragment);
-            Root_Layout_Type'Class (Layout.all).Item_Placed (Fragment);
+            if False then
+               Root_Layout_Type'Class (Layout.all).Item_Placed (Fragment);
+            end if;
          end;
       end loop;
    end From_Config;
