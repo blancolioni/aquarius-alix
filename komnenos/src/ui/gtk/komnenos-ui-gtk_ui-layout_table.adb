@@ -137,6 +137,7 @@ package body Komnenos.UI.Gtk_UI.Layout_Table is
    begin
       Layout.Layout_Widget.Put
         (Frame, Glib.Gint (Item.X), Glib.Gint (Item.Y));
+      Layout.Frame_Map.Insert (Item.Key, Frame);
    end Item_Placed;
 
    -------------------------
