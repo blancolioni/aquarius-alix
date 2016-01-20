@@ -1,3 +1,5 @@
+with Ada.Text_IO;
+
 package body Komnenos.Layouts is
 
    type Direction is (Up, Down, Left, Right);
@@ -205,6 +207,26 @@ package body Komnenos.Layouts is
       Layout.Item_Placed (Fragment);
 
    end Place_Item;
+
+   -----------------
+   -- Remove_Item --
+   -----------------
+
+   procedure Remove_Item
+     (Layout    : in out Root_Layout_Type'Class;
+      Fragment  : Komnenos.Fragments.Fragment_Type)
+   is
+      Position : Fragment_Lists.Cursor := Layout.Items.Find (Fragment);
+   begin
+      if not Fragment_Lists.Has_Element (Position) then
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "warning: fragment " & Fragment.Title & " not found");
+      else
+         Layout.Item_Removed (Fragment);
+         Layout.Items.Delete (Position);
+      end if;
+   end Remove_Item;
 
    ----------
    -- Scan --

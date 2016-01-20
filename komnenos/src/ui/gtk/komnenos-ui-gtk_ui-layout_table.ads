@@ -43,6 +43,10 @@ private
      (Layout : in out Root_Gtk_Layout_Table;
       Item   : Komnenos.Fragments.Fragment_Type);
 
+   overriding procedure Item_Removed
+     (Layout : in out Root_Gtk_Layout_Table;
+      Item   : Komnenos.Fragments.Fragment_Type);
+
    overriding procedure Set_Full_Size
      (Layout      : in out Root_Gtk_Layout_Table;
       Full_Width  : Natural;
