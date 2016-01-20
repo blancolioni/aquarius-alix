@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.18.3 -->
 <interface>
-  <!-- interface-requires gtk+ 3.0 -->
+  <requires lib="gtk+" version="3.0"/>
   <object class="GtkWindow" id="Top_Window">
     <property name="can_focus">False</property>
     <child>
@@ -71,9 +72,17 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLayout" id="Main_View">
+              <object class="GtkScrolledWindow" id="Main_Scroll">
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can_focus">True</property>
+                <property name="shadow_type">in</property>
+                <child>
+                  <object class="GtkLayout" id="Main_Layout">
+                    <property name="visible">True</property>
+                    <property name="app_paintable">True</property>
+                    <property name="can_focus">False</property>
+                  </object>
+                </child>
               </object>
               <packing>
                 <property name="expand">True</property>

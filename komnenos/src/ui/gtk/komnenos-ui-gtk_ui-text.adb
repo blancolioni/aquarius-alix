@@ -129,6 +129,7 @@ package body Komnenos.UI.Gtk_UI.Text is
                  new Komnenos_Text_View_Record;
    begin
       Gtk.Scrolled_Window.Initialize (Result);
+      Result.Fragment := Fragment;
       Gtk.Text_View.Gtk_New (Result.Text);
 
       if Fragment.Background_Colour /= "" then
@@ -190,10 +191,8 @@ package body Komnenos.UI.Gtk_UI.Text is
       use type Komnenos.Entities.Entity_Reference;
       Display  : constant Komnenos_Text_View :=
                    Komnenos_Text_View (Text_View.Get_Parent);
-      Fragment : constant Komnenos.Fragments.Fragment_Type :=
-                   Display.Find_Fragment;
       Entity : constant Komnenos.Entities.Entity_Reference :=
-                 Fragment.Get_Link
+                 Display.Fragment.Get_Link
                    (Natural (Gtk.Text_Iter.Get_Offset (Iter)) + 1);
    begin
       if Entity /= null then
@@ -202,7 +201,7 @@ package body Komnenos.UI.Gtk_UI.Text is
          begin
             Text_View.Get_Iter_Location (Iter, Location);
             Entity.Select_Entity
-              (Current_UI, Display.Find_Fragment, null,
+              (Current_UI, Display.Fragment, null,
                Natural (Location.Y) + Natural (Location.Height) / 2);
          end;
       end if;
@@ -406,7 +405,7 @@ package body Komnenos.UI.Gtk_UI.Text is
       Display : constant Komnenos_Text_View :=
                   Komnenos_Text_View (Text_View.Get_Parent);
       Fragment : constant Komnenos.Fragments.Fragment_Type :=
-                   Display.Find_Fragment;
+                   Display.Fragment;
       Style         : Aquarius_Style;
       Current_Style : Aquarius_Style;
       Offset        : constant Positive :=
@@ -514,9 +513,9 @@ package body Komnenos.UI.Gtk_UI.Text is
 
    begin
 
-      if Display.Display_Grabs_Focus then
-         Text_View.Grab_Focus;
-      end if;
+--        if Display.Display_Grabs_Focus then
+--           Text_View.Grab_Focus;
+--        end if;
 
       Buffer.Get_Iter_At_Mark
         (Iter, Buffer.Get_Insert);

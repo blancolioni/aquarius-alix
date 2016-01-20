@@ -114,7 +114,7 @@ package body Komnenos.UI.Gtk_UI.Borders is
 
       Border.Draw_Border;
 
-      return True;
+      return False;
 
    end Configure_Cb;
 

@@ -47,6 +47,10 @@ package Komnenos.Fragments is
      (Fragment : Root_Fragment_Type'Class)
       return String;
 
+   function Key
+     (Fragment : Root_Fragment_Type'Class)
+      return String;
+
    function Rectangle
      (Fragment : Root_Fragment_Type'Class)
       return Layout_Rectangle;

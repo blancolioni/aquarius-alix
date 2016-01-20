@@ -23,10 +23,11 @@ private
      new Gtk.Scrolled_Window.Gtk_Scrolled_Window_Record
      and Display_Interface with
       record
-         Text : Gtk.Text_View.Gtk_Text_View;
+         Text         : Gtk.Text_View.Gtk_Text_View;
          Hover_Start  : Natural  := 0;
          Hover_Finish : Natural := 0;
          Hover_Style  : Aquarius.Styles.Aquarius_Style;
+         Fragment     : Komnenos.Fragments.Fragment_Type;
       end record;
 
 end Komnenos.UI.Gtk_UI.Text;

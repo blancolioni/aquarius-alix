@@ -34,6 +34,35 @@ package Komnenos.Layouts is
       Item   : Komnenos.Fragments.Fragment_Type)
    is abstract;
 
+   procedure Set_Full_Size
+     (Layout      : in out Root_Layout_Type;
+      Full_Width  : Natural;
+      Full_Height : Natural);
+
+   function Full_Width (Layout : Root_Layout_Type) return Natural;
+   function Full_Height (Layout : Root_Layout_Type) return Natural;
+
+   procedure Set_Visible_Area
+     (Layout        : in out Root_Layout_Type;
+      Left, Top     : Integer;
+      Width, Height : Positive);
+
+   function Visible_Left
+     (Layout : Root_Layout_Type'Class)
+      return Integer;
+
+   function Visible_Top
+     (Layout : Root_Layout_Type'Class)
+      return Integer;
+
+   function Visible_Width
+     (Layout : Root_Layout_Type'Class)
+      return Positive;
+
+   function Visible_Height
+     (Layout : Root_Layout_Type'Class)
+      return Positive;
+
    procedure Place_Item
      (Layout    : in out Root_Layout_Type'Class;
       Fragment  : Komnenos.Fragments.Fragment_Type;
@@ -72,7 +101,13 @@ private
    type Root_Layout_Type is
    abstract new Komnenos.Session_Objects.Session_Object_Interface with
       record
-         Items : Fragment_Lists.List;
+         Items          : Fragment_Lists.List;
+         Full_Width     : Natural := 1;
+         Full_Height    : Natural := 1;
+         Visible_Left   : Integer := 0;
+         Visible_Top    : Integer := 0;
+         Visible_Width  : Positive := 1;
+         Visible_Height : Positive := 1;
       end record;
 
 end Komnenos.Layouts;

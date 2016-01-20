@@ -102,6 +102,24 @@ package body Komnenos.Layouts is
       end loop;
    end From_Config;
 
+   -----------------
+   -- Full_Height --
+   -----------------
+
+   function Full_Height (Layout : Root_Layout_Type) return Natural is
+   begin
+      return Layout.Full_Height;
+   end Full_Height;
+
+   ----------------
+   -- Full_Width --
+   ----------------
+
+   function Full_Width (Layout : Root_Layout_Type) return Natural is
+   begin
+      return Layout.Full_Width;
+   end Full_Width;
+
    ---------------
    -- Move_Item --
    ---------------
@@ -201,6 +219,36 @@ package body Komnenos.Layouts is
       end loop;
    end Scan;
 
+   -------------------
+   -- Set_Full_Size --
+   -------------------
+
+   procedure Set_Full_Size
+     (Layout      : in out Root_Layout_Type;
+      Full_Width  : Natural;
+      Full_Height : Natural)
+   is
+   begin
+      Layout.Full_Width := Full_Width;
+      Layout.Full_Height := Full_Height;
+   end Set_Full_Size;
+
+   ----------------------
+   -- Set_Visible_Area --
+   ----------------------
+
+   procedure Set_Visible_Area
+     (Layout        : in out Root_Layout_Type;
+      Left, Top     : Integer;
+      Width, Height : Positive)
+   is
+   begin
+      Layout.Visible_Left := Left;
+      Layout.Visible_Top := Top;
+      Layout.Visible_Width := Width;
+      Layout.Visible_Height := Height;
+   end Set_Visible_Area;
+
    ---------------
    -- To_Config --
    ---------------
@@ -220,5 +268,53 @@ package body Komnenos.Layouts is
          end;
       end loop;
    end To_Config;
+
+   --------------------
+   -- Visible_Height --
+   --------------------
+
+   function Visible_Height
+     (Layout : Root_Layout_Type'Class)
+      return Positive
+   is
+   begin
+      return Layout.Visible_Height;
+   end Visible_Height;
+
+   ------------------
+   -- Visible_Left --
+   ------------------
+
+   function Visible_Left
+     (Layout : Root_Layout_Type'Class)
+      return Integer
+   is
+   begin
+      return Layout.Visible_Left;
+   end Visible_Left;
+
+   -----------------
+   -- Visible_Top --
+   -----------------
+
+   function Visible_Top
+     (Layout : Root_Layout_Type'Class)
+      return Integer
+   is
+   begin
+      return Layout.Visible_Top;
+   end Visible_Top;
+
+   -------------------
+   -- Visible_Width --
+   -------------------
+
+   function Visible_Width
+     (Layout : Root_Layout_Type'Class)
+      return Positive
+   is
+   begin
+      return Layout.Visible_Width;
+   end Visible_Width;
 
 end Komnenos.Layouts;
