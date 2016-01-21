@@ -63,6 +63,31 @@ package body Tagatha.Transfers is
       Assign (Item.Dst);
    end Assign_Registers;
 
+   ----------
+   -- Call --
+   ----------
+
+   function Call (Destination : Tagatha.Labels.Tagatha_Label)
+                  return Transfer
+   is
+   begin
+      return (Trans             => T_Control,
+              Reserve           => 0,
+              Label             => Tagatha.Labels.No_Label,
+              Condition         => C_Always,
+              Destination       => Destination,
+              Self              => False,
+              Call              => True,
+              Native            => Ada.Strings.Unbounded.Null_Unbounded_String,
+              Changed_Registers => Ada.Strings.Unbounded.Null_Unbounded_String,
+              Line              => 1,
+              Column            => 1,
+              Src_1             => Null_Operand,
+              Src_2             => Null_Operand,
+              Dst               => Null_Operand,
+              Op                => Op_Nop);
+   end Call;
+
    -----------------------
    -- Condition_Operand --
    -----------------------
@@ -98,6 +123,7 @@ package body Tagatha.Transfers is
               Condition         => Condition,
               Destination       => Destination,
               Self              => False,
+              Call              => False,
               Native            => Ada.Strings.Unbounded.Null_Unbounded_String,
               Changed_Registers => Ada.Strings.Unbounded.Null_Unbounded_String,
               Line              => 1,
@@ -408,6 +434,15 @@ package body Tagatha.Transfers is
       return Item.Op = T_Argument;
    end Is_Argument;
 
+   -------------
+   -- Is_Call --
+   -------------
+
+   function Is_Call    (T : Transfer) return Boolean is
+   begin
+      return T.Trans = T_Control and then T.Call;
+   end Is_Call;
+
    -----------------
    -- Is_Constant --
    -----------------
@@ -434,7 +469,7 @@ package body Tagatha.Transfers is
 
    function Is_Control (T : Transfer) return Boolean is
    begin
-      return T.Trans = T_Control;
+      return T.Trans = T_Control and then not T.Call;
    end Is_Control;
 
    -----------------
@@ -568,6 +603,7 @@ package body Tagatha.Transfers is
               Condition         => C_Always,
               Destination       => Tagatha.Labels.No_Label,
               Self              => False,
+              Call              => False,
               Native            => To_Unbounded_String (Name),
               Changed_Registers => To_Unbounded_String (Changed_Registers),
               Line              => 1,
@@ -606,6 +642,7 @@ package body Tagatha.Transfers is
               Condition         => C_Always,
               Destination       => Tagatha.Labels.No_Label,
               Self              => Same_Operand (Src_1, To),
+              Call              => False,
               Native            => Ada.Strings.Unbounded.Null_Unbounded_String,
               Changed_Registers => Ada.Strings.Unbounded.Null_Unbounded_String,
               Line              => 1,
@@ -921,6 +958,7 @@ package body Tagatha.Transfers is
               Line              => 1,
               Column            => 1,
               Self              => Same_Operand (From, To),
+              Call              => False,
               Src_1             => From,
               Src_2             => Null_Operand,
               Dst               => To,
@@ -1010,6 +1048,7 @@ package body Tagatha.Transfers is
               Line              => 1,
               Column            => 1,
               Self              => False,
+              Call              => False,
               Src_1             => Src_1,
               Src_2             => Src_2,
               Dst               => (T_Temporary, No_Modification, Dst),
