@@ -178,7 +178,11 @@ package body Aquarius.Actions.Scanner is
          Scan (Processor, Action.Program_Child ("compilation_unit"));
       elsif Action.Name = "compilation_unit" then
          Scan (Processor,
-               Action.Program_Child ("sequence_of_statements"));
+               Action.Program_Child ("sequence_of_top_level_declarations"));
+      elsif Action.Name = "sequence_of_top_level_declarations" then
+         Scan_Sequence (Processor, Action.Direct_Children);
+      elsif Action.Name = "top_level_declaration" then
+         Scan (Processor, Action.Chosen_Tree);
       elsif Action.Name = "sequence_of_statements" then
          declare
             Children : constant Array_Of_Program_Trees :=
@@ -193,7 +197,7 @@ package body Aquarius.Actions.Scanner is
          begin
             Scan (Processor, Child);
          end;
-      elsif Action.Name = "action_statement" then
+      elsif Action.Name = "action_declaration" then
          Scan_Action_Binding
            (Processor, Action.Program_Child ("action_header"),
             Action.Program_Child ("action_definition"));

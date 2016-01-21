@@ -22,20 +22,36 @@ format ':=' space_before space_after soft_new_line
 
 format 'is' new_line_after
 
-compilation_unit ::= sequence_of_statements
+compilation_unit ::= sequence_of_top_level_declarations
+
+sequence_of_top_level_declarations ::= { top_level_declaration [ ';' ] }
+
+top_level_declaration ::= with_declaration | action_declaration | function_declaration
+
+with_declaration ::= 'with' < identifier / ',' >
+
+action_declaration ::= action_header 'do' action_definition 'end'
+
+function_declaration ::= 'function' identifier arguments 'is'
+                             { local_variable_list [ ';' ] }
+                         'begin'
+                             sequence_of_statements
+                         'end' identifier
+
+arguments ::= < identifier / ',' >
+
+local_variable_list ::= < identifier / ',' >
 
 sequence_of_statements ::= { statement [ ';' ] }
 
 statement ::= for_loop_statement | case_statement | if_statement | assignment_statement
-            | procedure_call_statement | declare_statement | null_statement | action_statement
+            | procedure_call_statement | declare_statement | null_statement
 
 null_statement ::= 'null'
 
 assignment_statement ::= object_reference ':=' expression
 
 procedure_call_statement ::= object_reference
-
-action_statement ::= action_header 'do' action_definition 'end'
 
 action_header ::= action_time < action_context / 'or' >
 

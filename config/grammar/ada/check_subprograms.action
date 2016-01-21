@@ -1,3 +1,5 @@
+with Subprograms;
+
 before Compilation_Unit do
 --   IO.Put_Line ("Ada: defining subprogram names");
 end;
@@ -26,6 +28,45 @@ end;
 
 after package_spec/defining_qualified_reference do
    Komnenos.Define (parent, defining_qualified_reference.image, "package-declaration");
+end;
+
+before formal_argument_spec do
+   tree.signature := new Array;
+end;
+
+after formal_argument_spec/formal_argument do
+   for child_signature in child.signature loop
+      parent.signature.append (child.signature);
+   end loop;
+end;
+
+before formal_argument do
+   tree.signature := new Array;
+end;
+
+after formal_argument/defining_identifier_list do
+   for name in child.defined_names loop
+      tree.signature.append ((name => name));
+   end loop;
+end;
+
+before formal_argument_type do
+   formal_argument_type.type := (mode => "in");
+end;
+
+after formal_argument_type do
+end;
+
+after formal_argument_type/null_exclusion do
+   parent.type.not_null := 1;
+end;
+
+after formal_argument_type/mode do
+   parent.type.mode := child.image;
+end;
+
+after formal_argument_type/subtype_mark do
+   parent.type.type := child.type;
 end;
 
 before defining_qualified_reference do
@@ -57,3 +98,10 @@ after defining_qualified_reference/identifier do
 
 end;
 
+before defining_identifier_list do
+   tree.defined_names := new Array;
+end;
+
+after defining_identifier_list/identifier do
+   parent.defined_names.append (identifier);
+end;
