@@ -80,8 +80,25 @@ package body Aquarius.Actions.Scanner is
       Processor.External_Table.Insert
         (Name,
          (Is_Immediate => Immediate,
+          Is_Function  => False,
           External_Name => Ada.Strings.Unbounded.To_Unbounded_String (Name)));
    end Add_Global_Entry;
+
+   -------------------------
+   -- Add_Global_Function --
+   -------------------------
+
+   procedure Add_Global_Function
+     (Processor : in out Action_Processor_Interface'Class;
+      Name      : String)
+   is
+   begin
+      Processor.External_Table.Insert
+        (Name,
+         (Is_Immediate => False,
+          Is_Function  => True,
+          External_Name => Ada.Strings.Unbounded.To_Unbounded_String (Name)));
+   end Add_Global_Function;
 
    -----------------------------
    -- Current_Source_Location --
@@ -183,6 +200,17 @@ package body Aquarius.Actions.Scanner is
          Scan_Sequence (Processor, Action.Direct_Children);
       elsif Action.Name = "top_level_declaration" then
          Scan (Processor, Action.Chosen_Tree);
+      elsif Action.Name = "list_of_local_declarations" then
+         Scan_Sequence (Processor, Action.Direct_Children);
+      elsif Action.Name = "local_declaration" then
+         declare
+            List : constant Program_Tree :=
+                     Action.Program_Child ("local_variable_list");
+         begin
+            Processor.Declare_Local_Variables
+              (Names        => List.Direct_Children ("identifier"),
+               Inital_Value => Action.Program_Child ("expression"));
+         end;
       elsif Action.Name = "sequence_of_statements" then
          declare
             Children : constant Array_Of_Program_Trees :=
@@ -201,6 +229,34 @@ package body Aquarius.Actions.Scanner is
          Scan_Action_Binding
            (Processor, Action.Program_Child ("action_header"),
             Action.Program_Child ("action_definition"));
+      elsif Action.Name = "function_declaration" then
+         declare
+            Name : constant String :=
+                     Action.Program_Child ("identifier").Text;
+            Argument_Tree : constant Program_Tree :=
+                              Action.Program_Child ("arguments");
+            Arguments     : constant Array_Of_Program_Trees :=
+                              (if Argument_Tree = null
+                               then Empty_Program_Tree_Array
+                               else Argument_Tree.Direct_Children
+                                 ("identifier"));
+            Locals        : constant Program_Tree :=
+                              Action.Program_Child
+                                ("list_of_local_declarations");
+
+         begin
+            Processor.Add_Global_Function (Name);
+            Processor.Start_Function
+              (Name      => Name,
+               Arguments => Arguments,
+               Locals    => Locals.Direct_Children ("local_declaration"));
+            Scan (Processor,
+                  Action.Program_Child ("list_of_local_declarations"));
+            Scan (Processor,
+                  Action.Program_Child ("sequence_of_statements"));
+            Processor.End_Function;
+         end;
+
       elsif Action.Name = "null_statement" then
          null;
       elsif Action.Name = "procedure_call_statement" then
@@ -260,6 +316,9 @@ package body Aquarius.Actions.Scanner is
            (Processor,
             Action.Program_Child ("object_reference"),
             Destination => True);
+      elsif Action.Name = "return_statement" then
+         Scan_Expression (Processor,  Action.Program_Child ("expression"));
+         Processor.Pop_Return_Value;
       end if;
    end Scan;
 
@@ -627,9 +686,15 @@ package body Aquarius.Actions.Scanner is
                            begin
                               if Destination and then Qs'Length = 1 then
                                  pragma Assert (not Ext.Is_Immediate);
+                                 pragma Assert (not Ext.Is_Function);
                                  Processor.Pop_External_Entry
                                    (Ada.Strings.Unbounded.To_String
                                       (Ext.External_Name));
+                              elsif Ext.Is_Function then
+                                 Processor.Call_Function
+                                   (Ada.Strings.Unbounded.To_String
+                                      (Ext.External_Name),
+                                    Arguments'Length);
                               else
                                  Processor.Push_External_Entry
                                    (Ada.Strings.Unbounded.To_String
