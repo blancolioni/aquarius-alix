@@ -32,11 +32,15 @@ with_declaration ::= 'with' < identifier / ',' >
 
 action_declaration ::= action_header 'do' action_definition 'end'
 
-function_declaration ::= 'function' identifier arguments 'is'
-                             { local_variable_list [ ';' ] }
+function_declaration ::= 'function' identifier [ '(' arguments ')' ] 'is'
+                             list_of_local_declarations
                          'begin'
                              sequence_of_statements
                          'end' identifier
+
+list_of_local_declarations ::= { local_declaration [ ';' ] }
+
+local_declaration ::= local_variable_list [ ':=' expression ]
 
 arguments ::= < identifier / ',' >
 
@@ -45,9 +49,11 @@ local_variable_list ::= < identifier / ',' >
 sequence_of_statements ::= { statement [ ';' ] }
 
 statement ::= for_loop_statement | case_statement | if_statement | assignment_statement
-            | procedure_call_statement | declare_statement | null_statement
+            | procedure_call_statement | declare_statement | null_statement | return_statement
 
 null_statement ::= 'null'
+
+return_statement ::= 'return' expression
 
 assignment_statement ::= object_reference ':=' expression
 
