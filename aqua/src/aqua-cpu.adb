@@ -420,7 +420,8 @@ package body Aqua.CPU is
                Destination : constant Word := Next_Value (CPU, Word_32_Size);
                New_PC      : constant Address :=
                                Get_Address (PC)
-                               + Get_Address (Destination);
+                               + Get_Address (Destination)
+                               - 4;
             begin
                if Instruction = A_Jsr then
                   CPU.Push (PC);
