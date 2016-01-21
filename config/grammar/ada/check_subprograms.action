@@ -1,4 +1,19 @@
-with Subprograms;
+function Type_Signature_Key (Specification) is
+   Signature := Specification.Signature;
+   Return_Type := Specification.Return_Type;
+   Result    := "";
+begin
+   for Argument in Signature loop
+      if Result /= "" then
+         Result := Result & ",";
+      end if;
+      Result := Result & Argument.Name & "--" & Argument.Mode & "--" & Argument.Type_Name;
+   end loop;
+   if Return_Type then
+      Result := Result & ";return--" & Return_Type.Type_Name;
+   end if;
+   return Result;
+end Type_Signature_Key;
 
 before Compilation_Unit do
 --   IO.Put_Line ("Ada: defining subprogram names");
@@ -16,6 +31,10 @@ after function_body/function_specification do
    Komnenos.Define (parent, child.name, "function-declaration");
 end;
 
+before function_specification or procedure_specification do
+   tree.signature := new Array;
+end;
+
 after procedure_specification/defining_qualified_reference 
    or function_specification/defining_qualified_reference
 do
@@ -26,12 +45,18 @@ after function_specification/string_literal do
    parent.name := child.text;
 end;
 
-after package_spec/defining_qualified_reference do
-   Komnenos.Define (parent, defining_qualified_reference.image, "package-declaration");
+before function_specification/formal_argument_spec
+   or procedure_specification/formal_argument_spec
+do
+   child.signature := parent.signature;
 end;
 
-before formal_argument_spec do
-   tree.signature := new Array;
+after function_specification or procedure_specification do
+   tree.signature_key := type_signature_key (tree);
+end;
+
+after package_spec/defining_qualified_reference do
+   Komnenos.Define (parent, defining_qualified_reference.image, "package-declaration");
 end;
 
 after formal_argument_spec/formal_argument do
@@ -46,7 +71,7 @@ end;
 
 after formal_argument/defining_identifier_list do
    for name in child.defined_names loop
-      tree.signature.append ((name => name));
+      parent.signature.append ((name => name));
    end loop;
 end;
 
