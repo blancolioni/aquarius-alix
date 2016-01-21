@@ -128,10 +128,25 @@ package body Tagatha.Registry is
    procedure Record_Call (Register   : in out Tagatha_Registry;
                           Subroutine : in     Tagatha.Labels.Tagatha_Label)
    is
-      pragma Unreferenced (Register);
-      pragma Unreferenced (Subroutine);
    begin
-      null;
+      for Operand of Register.Stack loop
+         declare
+            Transfers : constant Tagatha.Transfers.Array_Of_Transfers :=
+                          Tagatha.Expressions.Get_Transfers
+                            (Register.Temps, Operand,
+                             Tagatha.Transfers.Stack_Operand);
+         begin
+            for I in Transfers'Range loop
+               Register.Append (Transfers (I));
+            end loop;
+         end;
+      end loop;
+
+      Register.Stack.Clear;
+
+      Register.Append
+        (Tagatha.Transfers.Call (Subroutine));
+
    end Record_Call;
 
    -----------------
