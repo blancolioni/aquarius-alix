@@ -145,7 +145,7 @@ package body Tagatha.Units is
       Label : Tagatha.Labels.Tagatha_Label;
    begin
       Tagatha.Labels.Reference_Label (Unit.Labels, Label,
-                                      Target);
+                                      Target, Import => True);
       Append (Unit, Commands.Call (Label));
    end Call;
 
