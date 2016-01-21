@@ -310,7 +310,7 @@ package body Aquarius.Plugins.Macro_32.Assemble is
       if Destination.Chosen_Tree.Name = "identifier" then
          Dest_Address :=
            Assembly.Reference_Label
-             (Destination.Chosen_Tree.Text, False);
+             (Destination.Chosen_Tree.Text, True);
       else
          declare
             Label_Tree : constant Program_Tree :=
