@@ -7,7 +7,7 @@ with Komnenos.Session_Objects;
 
 package Komnenos.Layouts is
 
-   Margin : constant := 32;
+   Margin : constant := 64;
 
    type Root_Layout_Type is
      abstract new Komnenos.Session_Objects.Session_Object_Interface
