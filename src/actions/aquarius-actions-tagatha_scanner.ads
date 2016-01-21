@@ -55,6 +55,15 @@ private
    overriding procedure End_Process
      (Processor : in out Tagatha_Scanner);
 
+   overriding procedure Start_Function
+     (Processor : in out Tagatha_Scanner;
+      Name      : in String;
+      Arguments : in Aquarius.Programs.Array_Of_Program_Trees;
+      Locals    : in Aquarius.Programs.Array_Of_Program_Trees);
+
+   overriding procedure End_Function
+     (Processor : in out Tagatha_Scanner);
+
    overriding procedure Action_Header
      (Processor : in out Tagatha_Scanner;
       Position  : Rule_Position;
@@ -110,6 +119,14 @@ private
    overriding procedure Pop_External_Entry
      (Processor  : in out Tagatha_Scanner;
       Name       : String);
+
+   overriding procedure Pop_Return_Value
+     (Processor  : in out Tagatha_Scanner);
+
+   overriding procedure Call_Function
+     (Processor      : in out Tagatha_Scanner;
+      Name           : String;
+      Argument_Count : Natural);
 
    overriding procedure Get_Property
      (Processor      : in out Tagatha_Scanner;
