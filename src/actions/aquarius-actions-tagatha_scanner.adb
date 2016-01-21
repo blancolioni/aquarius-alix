@@ -10,7 +10,7 @@ package body Aquarius.Actions.Tagatha_Scanner is
 
    Write_Listing : constant Boolean := False;
 
-   procedure External_Procedure
+   procedure External_Name
      (Processor : in out Tagatha_Scanner'Class;
       Name      : String;
       Immediate : Boolean);
@@ -83,6 +83,23 @@ package body Aquarius.Actions.Tagatha_Scanner is
          & Ada.Strings.Unbounded.To_String (Processor.Property_Name));
    end Assign;
 
+   -------------------
+   -- Call_Function --
+   -------------------
+
+   overriding procedure Call_Function
+     (Processor      : in out Tagatha_Scanner;
+      Name           : String;
+      Argument_Count : Natural)
+   is
+   begin
+      Processor.Unit.Call (Name);
+      for I in 1 .. Argument_Count loop
+         Processor.Unit.Drop;
+      end loop;
+      Processor.Unit.Push_Register ("r0");
+   end Call_Function;
+
    ------------------
    -- Clear_Result --
    ------------------
@@ -136,6 +153,17 @@ package body Aquarius.Actions.Tagatha_Scanner is
         ("set_property " & Name);
    end End_Aggregate_Element;
 
+   ------------------
+   -- End_Function --
+   ------------------
+
+   overriding procedure End_Function
+     (Processor : in out Tagatha_Scanner)
+   is
+   begin
+      Processor.Unit.End_Routine;
+   end End_Function;
+
    -----------------
    -- End_Process --
    -----------------
@@ -151,18 +179,18 @@ package body Aquarius.Actions.Tagatha_Scanner is
       end if;
    end End_Process;
 
-   ------------------------
-   -- External_Procedure --
-   ------------------------
+   -------------------
+   -- External_Name --
+   -------------------
 
-   procedure External_Procedure
+   procedure External_Name
      (Processor : in out Tagatha_Scanner'Class;
       Name      : String;
       Immediate : Boolean)
    is
    begin
       Processor.Add_Global_Entry (Name, Immediate);
-   end External_Procedure;
+   end External_Name;
 
    -----------------------------
    -- Finish_Object_Reference --
@@ -382,6 +410,9 @@ package body Aquarius.Actions.Tagatha_Scanner is
          Processor.Unit.Operate (Tagatha.Op_Add);
       elsif Name = "=" then
          Processor.Unit.Operate (Tagatha.Op_Compare);
+      elsif Name = "/=" then
+         Processor.Unit.Operate (Tagatha.Op_Compare);
+         Processor.Unit.Operate (Tagatha.Op_Not);
       elsif Name = "not" then
          Processor.Unit.Operate (Tagatha.Op_Not);
       elsif Name = "*" then
@@ -433,12 +464,23 @@ package body Aquarius.Actions.Tagatha_Scanner is
    begin
       if Offset < 0 then
          Processor.Unit.Pop_Local
-           (Tagatha.Local_Offset (abs Offset / 4));
+           (Tagatha.Local_Offset (abs Offset));
       else
          Processor.Unit.Pop_Argument
-           (Tagatha.Argument_Offset (Offset / 4));
+           (Tagatha.Argument_Offset (Offset));
       end if;
    end Pop_Frame_Entry;
+
+   ----------------------
+   -- Pop_Return_Value --
+   ----------------------
+
+   overriding procedure Pop_Return_Value
+     (Processor  : in out Tagatha_Scanner)
+   is
+   begin
+      Processor.Unit.Pop_Register ("r0");
+   end Pop_Return_Value;
 
    -------------------------
    -- Push_External_Entry --
@@ -595,6 +637,80 @@ package body Aquarius.Actions.Tagatha_Scanner is
       null;
    end Start_Aggregate_Element;
 
+   --------------------
+   -- Start_Function --
+   --------------------
+
+   overriding procedure Start_Function
+     (Processor : in out Tagatha_Scanner;
+      Name      : in String;
+      Arguments : in Aquarius.Programs.Array_Of_Program_Trees;
+      Locals    : in Aquarius.Programs.Array_Of_Program_Trees)
+   is
+      use Aquarius.Programs;
+      use type Tagatha.Local_Offset;
+      Arg_Offset   : Integer := 0;
+      Frame_Offset : Integer := 0;
+   begin
+
+      for Arg of Arguments loop
+         Arg_Offset := Arg_Offset + 1;
+         Processor.Add_Frame_Entry (Arg.Text, Arg_Offset);
+      end loop;
+
+      for Dec of Locals loop
+         declare
+            Local_List  : constant Program_Tree :=
+                            Dec.Program_Child ("local_variable_list");
+            Names       : constant Array_Of_Program_Trees :=
+                            Local_List.Direct_Children ("identifier");
+         begin
+            for Id of Names loop
+               Frame_Offset := Frame_Offset - 1;
+               Processor.Add_Frame_Entry
+                 (Id.Standard_Text, Frame_Offset);
+            end loop;
+         end;
+      end loop;
+
+      Processor.Unit.Begin_Routine
+        (Name           => Name,
+         Argument_Words => Arguments'Length,
+         Frame_Words    => 0,
+         Result_Words   => 1,
+         Global         => False);
+
+      for Dec of Locals loop
+         declare
+            Local_List  : constant Program_Tree :=
+                            Dec.Program_Child ("local_variable_list");
+            Names       : constant Array_Of_Program_Trees :=
+                            Local_List.Direct_Children ("identifier");
+            Initialiser : constant Program_Tree :=
+                            Dec.Program_Child ("expression");
+            First       : Boolean := True;
+         begin
+            for Id of Names loop
+               if First then
+                  if Initialiser = null then
+                     Processor.Literal_Null;
+                  else
+                     Processor.Scan_Expression (Initialiser);
+                  end if;
+                  if Names'Length > 1 then
+                     Processor.Unit.Pop_Register ("r1");
+                  end if;
+                  First := False;
+               end if;
+               if Names'Length > 1 then
+                  Processor.Unit.Push_Register ("r1");
+               end if;
+            end loop;
+         end;
+      end loop;
+
+   end Start_Function;
+
    ----------------------------
    -- Start_Object_Reference --
    ----------------------------
@@ -646,13 +762,13 @@ package body Aquarius.Actions.Tagatha_Scanner is
         ("project ="
          & Natural'Image (16#0100#));
 
-      External_Procedure (Processor, "map", Immediate => True);
-      External_Procedure (Processor, "array", Immediate => True);
-      External_Procedure (Processor, "io", Immediate => True);
-      External_Procedure (Processor, "aqua", Immediate => True);
-      External_Procedure (Processor, "ada", Immediate => True);
-      External_Procedure (Processor, "komnenos", Immediate => True);
-      External_Procedure (Processor, "project", Immediate => False);
+      External_Name (Processor, "map", Immediate => True);
+      External_Name (Processor, "array", Immediate => True);
+      External_Name (Processor, "io", Immediate => True);
+      External_Name (Processor, "aqua", Immediate => True);
+      External_Name (Processor, "ada", Immediate => True);
+      External_Name (Processor, "komnenos", Immediate => True);
+      External_Name (Processor, "project", Immediate => False);
    end Start_Process;
 
    -----------
