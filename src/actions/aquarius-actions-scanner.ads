@@ -50,6 +50,10 @@ package Aquarius.Actions.Scanner is
       Name      : String;
       Immediate : Boolean);
 
+   procedure Add_Global_Function
+     (Processor : in out Action_Processor_Interface'Class;
+      Name      : String);
+
    procedure Delete_Frame_Entry
      (Processor : in out Action_Processor_Interface'Class;
       Name      : String);
@@ -78,6 +82,10 @@ package Aquarius.Actions.Scanner is
       Name      : String)
    is abstract;
 
+   procedure Pop_Return_Value
+     (Processor : in out Action_Processor_Interface)
+   is abstract;
+
    procedure Push_String_Literal
      (Processor : in out Action_Processor_Interface;
       Literal   : String)
@@ -85,6 +93,12 @@ package Aquarius.Actions.Scanner is
 
    procedure Clear_Result
      (Processor : in out Action_Processor_Interface)
+   is abstract;
+
+   procedure Call_Function
+     (Processor      : in out Action_Processor_Interface;
+      Name           : String;
+      Argument_Count : Natural)
    is abstract;
 
    procedure Get_Property
@@ -137,16 +151,21 @@ package Aquarius.Actions.Scanner is
       Column         : in Natural)
    is null;
 
-   procedure Argument_Name
-     (Process   : in out Action_Processor_Interface;
-      Index     : in     Positive;
-      Name      : in     String)
+   procedure Start_Function
+     (Processor : in out Action_Processor_Interface;
+      Name      : in String;
+      Arguments : in Aquarius.Programs.Array_Of_Program_Trees;
+      Locals    : in Aquarius.Programs.Array_Of_Program_Trees)
    is null;
 
-   procedure Local_Variable_Name
-     (Process   : in out Action_Processor_Interface;
-      Index     : in     Positive;
-      Name      : in     String)
+   procedure End_Function
+     (Processor : in out Action_Processor_Interface)
+   is null;
+
+   procedure Declare_Local_Variables
+     (Process      : in out Action_Processor_Interface;
+      Names        : Aquarius.Programs.Array_Of_Program_Trees;
+      Inital_Value : Aquarius.Programs.Program_Tree)
    is null;
 
    procedure Action_Header
@@ -253,6 +272,7 @@ private
    type External_Entry is
       record
          Is_Immediate  : Boolean;
+         Is_Function   : Boolean;
          External_Name : Ada.Strings.Unbounded.Unbounded_String;
       end record;
 
