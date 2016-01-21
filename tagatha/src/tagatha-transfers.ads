@@ -86,6 +86,9 @@ package Tagatha.Transfers is
                              Changed_Registers : String)
                              return Transfer;
 
+   function Call (Destination : Tagatha.Labels.Tagatha_Label)
+                  return Transfer;
+
    function Reserve_Stack (Frame_Size : Natural) return Transfer;
    function Restore_Stack (Frame_Size : Natural) return Transfer;
 
@@ -99,6 +102,7 @@ package Tagatha.Transfers is
    function Get_Reservation (T : Transfer) return Integer;
 
    function Is_Control (T : Transfer) return Boolean;
+   function Is_Call    (T : Transfer) return Boolean;
    function Get_Condition (T : Transfer) return Tagatha_Condition;
    function Get_Destination (T : Transfer)
                             return Tagatha.Labels.Tagatha_Label;
@@ -259,6 +263,7 @@ private
          Label             : Tagatha.Labels.Tagatha_Label;
          Condition         : Tagatha_Condition;
          Destination       : Tagatha.Labels.Tagatha_Label;
+         Call              : Boolean;
          Self              : Boolean;
          Native            : Ada.Strings.Unbounded.Unbounded_String;
          Changed_Registers : Ada.Strings.Unbounded.Unbounded_String;
