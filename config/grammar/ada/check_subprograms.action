@@ -12,7 +12,7 @@ begin
    if Return_Type then
       Result := Result & ";return--" & Return_Type.Type_Name;
    end if;
-   return Result;
+   return "sig" & Result;
 end Type_Signature_Key;
 
 before Compilation_Unit do
@@ -53,6 +53,7 @@ end;
 
 after function_specification or procedure_specification do
    tree.signature_key := type_signature_key (tree);
+   --  IO.Put_Line (tree.name & ": " & tree.signature_key);
 end;
 
 after package_spec/defining_qualified_reference do
@@ -61,7 +62,7 @@ end;
 
 after formal_argument_spec/formal_argument do
    for child_signature in child.signature loop
-      parent.signature.append (child.signature);
+      parent.signature.append (child_signature);
    end loop;
 end;
 
