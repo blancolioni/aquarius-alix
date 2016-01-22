@@ -297,7 +297,7 @@ default_value_expression ::= expression
 named_number_declaration ::=
      defining_identifier_list ':' 'constant' ':=' static_expression ';'
 
-defining_identifier_list ::= < defining_identifier / ',' >
+defining_identifier_list ::= < identifier / ',' >
 
 defining_identifier ::= identifier
 
