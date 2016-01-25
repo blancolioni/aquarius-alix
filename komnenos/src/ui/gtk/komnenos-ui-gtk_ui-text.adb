@@ -24,7 +24,7 @@ with Cairo;
 with Pango.Enums;
 with Pango.Font;
 
-with Aquarius.Colours;
+with Aquarius.Colours.Gtk_Colours;
 with Aquarius.Fonts;
 with Aquarius.Themes;
 
@@ -132,11 +132,10 @@ package body Komnenos.UI.Gtk_UI.Text is
       Result.Fragment := Fragment;
       Gtk.Text_View.Gtk_New (Result.Text);
 
-      if Fragment.Background_Colour /= "" then
-         Result.Text.Override_Background_Color
-           (Gtk.Enums.Gtk_State_Flag_Normal,
-            To_RGBA (Fragment.Background_Colour));
-      end if;
+      Result.Text.Override_Background_Color
+        (Gtk.Enums.Gtk_State_Flag_Normal,
+         Aquarius.Colours.Gtk_Colours.To_Gdk_RGBA
+           (Fragment.Background_Colour));
 
       declare
          use Aquarius.Fonts;

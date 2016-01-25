@@ -5,6 +5,7 @@ private with Ada.Strings.Unbounded;
 
 with Tropos;
 
+with Aquarius.Colours;
 with Aquarius.Styles;
 with Aquarius.Themes;
 
@@ -109,15 +110,15 @@ package Komnenos.Fragments is
 
    function Background_Colour
      (Fragment : Root_Fragment_Type)
-      return String;
+      return Aquarius.Colours.Aquarius_Colour;
 
    function Border_Colour
      (Fragment : Root_Fragment_Type)
-      return String;
+      return Aquarius.Colours.Aquarius_Colour;
 
    function Foreground_Colour
      (Fragment : Root_Fragment_Type)
-      return String;
+      return Aquarius.Colours.Aquarius_Colour;
 
    function Text_Contents
      (Fragment : Root_Fragment_Type)
@@ -194,9 +195,9 @@ private
          Title             : Ada.Strings.Unbounded.Unbounded_String;
          Key               : Ada.Strings.Unbounded.Unbounded_String;
          Editable          : Boolean;
-         Background_Colour : access String;
-         Foreground_Colour : access String;
-         Border_Colour     : access String;
+         Background_Colour : Aquarius.Colours.Aquarius_Colour;
+         Foreground_Colour : Aquarius.Colours.Aquarius_Colour;
+         Border_Colour     : Aquarius.Colours.Aquarius_Colour;
          Lines             : Line_Vectors.Vector;
       end record;
 
