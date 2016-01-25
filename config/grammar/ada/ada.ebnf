@@ -617,7 +617,7 @@ atomic_expression ::= object_reference | numeric_literal | string_literal |
 parenthesised_expression ::= '(' expression ')'
                            | '(' conditional_expression ')'
 
-conditional_expression ::= 'if' expression 'then' expression 'else' expression
+conditional_expression ::= 'if' expression 'then' expression { 'elsif' expression 'then' expression } 'else' expression
 
 aggregate ::=
     '(' object_reference 'with' 'null' 'record' ')'
