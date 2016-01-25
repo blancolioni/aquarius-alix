@@ -34,7 +34,7 @@ private
       end record;
 
    overriding procedure Select_Entity
-     (Entity : Root_Source_Entity_Reference;
+     (Entity : not null access Root_Source_Entity_Reference;
       Table  : access Entity_Table_Interface'Class;
       Parent : access Entity_Visual'Class;
       Visual : access Entity_Visual'Class;

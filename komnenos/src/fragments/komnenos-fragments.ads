@@ -108,6 +108,12 @@ package Komnenos.Fragments is
      (Fragment : Root_Fragment_Type)
       return Boolean;
 
+   procedure On_Insert_Character
+     (Fragment : in out Root_Fragment_Type;
+      Offset   : Natural;
+      Value    : Character;
+      Cancel   : out Boolean);
+
    function Background_Colour
      (Fragment : Root_Fragment_Type)
       return Aquarius.Colours.Aquarius_Colour;
@@ -189,6 +195,7 @@ private
      and Komnenos.Entities.Entity_Visual
      and Komnenos.Session_Objects.Session_Object_Interface with
       record
+         Content           : Komnenos.Entities.Entity_Reference;
          Default_Style     : Aquarius.Styles.Aquarius_Style;
          Layout_Rec        : Layout_Rectangle;
          Path              : Ada.Strings.Unbounded.Unbounded_String;
@@ -212,5 +219,14 @@ private
    overriding procedure From_Config
      (Fragment : not null access Root_Fragment_Type;
       Config   : Tropos.Configuration);
+
+   overriding procedure Set_Content
+     (Fragment : in out Root_Fragment_Type;
+      Content  : access Komnenos.Entities.Root_Entity_Reference'Class);
+
+   overriding function Get_Content
+     (Fragment : Root_Fragment_Type)
+      return access Komnenos.Entities.Root_Entity_Reference'Class
+   is (Fragment.Content);
 
 end Komnenos.Fragments;
