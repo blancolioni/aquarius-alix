@@ -384,6 +384,22 @@ package body Komnenos.Fragments is
       Fragment.Lines.Append (new Line_Info);
    end New_Line;
 
+   -------------------------
+   -- On_Insert_Character --
+   -------------------------
+
+   procedure On_Insert_Character
+     (Fragment : in out Root_Fragment_Type;
+      Offset   : Natural;
+      Value    : Character;
+      Cancel   : out Boolean)
+   is
+   begin
+      Fragment.Content.Set_Cursor (Offset);
+      Fragment.Content.Insert_Text ((1 => Value));
+      Cancel := False;
+   end On_Insert_Character;
+
    ----------
    -- Path --
    ----------
@@ -451,6 +467,18 @@ package body Komnenos.Fragments is
       Komnenos.Session_Objects.Register_Session_Object
         ("fragment", New_Fragment'Access);
    end Register;
+
+   -----------------
+   -- Set_Content --
+   -----------------
+
+   overriding procedure Set_Content
+     (Fragment : in out Root_Fragment_Type;
+      Content  : access Komnenos.Entities.Root_Entity_Reference'Class)
+   is
+   begin
+      Fragment.Content := Komnenos.Entities.Entity_Reference (Content);
+   end Set_Content;
 
    -----------------------
    -- Set_Default_Style --

@@ -29,7 +29,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
    is (Entity.Top_Level);
 
    overriding procedure Select_Entity
-     (Entity : Root_Aquarius_Source_Entity;
+     (Entity : not null access Root_Aquarius_Source_Entity;
       Table  : access Entity_Table_Interface'Class;
       Parent : access Entity_Visual'Class;
       Visual : access Entity_Visual'Class;
@@ -148,7 +148,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
    -------------------
 
    overriding procedure Select_Entity
-     (Entity : Root_Aquarius_Source_Entity;
+     (Entity : not null access Root_Aquarius_Source_Entity;
       Table  : access Entity_Table_Interface'Class;
       Parent : access Entity_Visual'Class;
       Visual : access Entity_Visual'Class;
@@ -170,9 +170,8 @@ package body Komnenos.Entities.Source.Aquarius_Source is
                     then Entity.Entity_Body
                     else Entity.Entity_Spec);
    begin
-      Ada.Text_IO.Put_Line (Program.Image);
-
-      Fragment.Set_Entity_Key (Key (Entity));
+      Fragment.Set_Entity_Key (Key (Entity.all));
+      Fragment.Set_Content (Entity);
 
       if False then
          Log_Tree (Program);

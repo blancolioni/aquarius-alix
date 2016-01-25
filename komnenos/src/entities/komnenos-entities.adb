@@ -264,6 +264,18 @@ package body Komnenos.Entities is
       return Table.Map.Element (Key);
    end Get;
 
+   ----------------
+   -- Get_Cursor --
+   ----------------
+
+   function Get_Cursor
+     (Item : Root_Entity_Reference)
+      return Natural
+   is
+   begin
+      return Item.Cursor;
+   end Get_Cursor;
+
    -------------
    -- Get_Key --
    -------------
@@ -425,6 +437,18 @@ package body Komnenos.Entities is
       end loop;
       return Result;
    end References;
+
+   ----------------
+   -- Set_Cursor --
+   ----------------
+
+   procedure Set_Cursor
+     (Item : in out Root_Entity_Reference;
+      Offset : Natural)
+   is
+   begin
+      Item.Cursor := Offset;
+   end Set_Cursor;
 
    -----------------------
    -- Set_Program_Store --
