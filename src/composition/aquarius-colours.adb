@@ -1,6 +1,7 @@
-with Aquarius.Configuration;
-
 package body Aquarius.Colours is
+
+   function To_Hex (Value : Natural) return String
+     with Pre => Value < 256;
 
    -----------
    -- Black --
@@ -8,71 +9,62 @@ package body Aquarius.Colours is
 
    function Black return Aquarius_Colour is
    begin
-      return Parse_Colour ("black");
+      return From_String ("white");
    end Black;
-
-   ----------
-   -- Blue --
-   ----------
-
-   function Blue  (Colour : Aquarius_Colour) return Colour_Range is
-   begin
-      return Colour.Blue;
-   end Blue;
 
    --------------
    -- From_RGB --
    --------------
 
-   function From_RGB (R, G, B : Colour_Range) return Aquarius_Colour is
+   function From_RGB (R, G, B : Natural) return Aquarius_Colour is
    begin
-      return (R, G, B);
+      return From_RGBA (R, G, B, 255);
    end From_RGB;
 
-   -----------
-   -- Green --
-   -----------
+   ---------------
+   -- From_RGBA --
+   ---------------
 
-   function Green (Colour : Aquarius_Colour) return Colour_Range is
+   function From_RGBA
+     (R, G, B, A  : Natural)
+      return Aquarius_Colour
+   is
    begin
-      return Colour.Green;
-   end Green;
+      return From_String ("#" & To_Hex (R) & To_Hex (G)
+                          & To_Hex (B) & To_Hex (A));
+   end From_RGBA;
 
-   ----------------
-   -- Hex_Colour --
-   ----------------
+   -----------------
+   -- From_String --
+   -----------------
 
-   function Hex_Colour (Item : Colour_Range) return String is
-      Hex_Digit : constant array (Colour_Range range 0 .. 15) of Character :=
+   function From_String
+     (String_Spec : String)
+      return Aquarius_Colour
+   is
+   begin
+      return (Text => Aquarius.Names.To_Aquarius_Name (String_Spec));
+   end From_String;
+
+   ------------
+   -- To_Hex --
+   ------------
+
+   function To_Hex (Value : Natural) return String is
+      Hex_Digit : constant array (0 .. 15) of Character :=
         "0123456789ABCDEF";
 
    begin
-      return (Hex_Digit (Item / 16), Hex_Digit (Item mod 16));
-   end Hex_Colour;
+      return (Hex_Digit (Value / 16), Hex_Digit (Value mod 16));
+   end To_Hex;
 
-   ------------------
-   -- Parse_Colour --
-   ------------------
-
-   function Parse_Colour (Colour_Spec : String) return Aquarius_Colour is
-      use Aquarius.Configuration;
-      Position : constant Cursor := Get_Cursor ("/colours/" & Colour_Spec);
-      R, G, B  : Integer;
+   function To_String
+     (Colour : Aquarius_Colour)
+      return String
+   is
    begin
-      R := Get_Value (Position, "r");
-      G := Get_Value (Position, "g");
-      B := Get_Value (Position, "b");
-      return (Colour_Range (R), Colour_Range (G), Colour_Range (B));
-   end Parse_Colour;
-
-   ---------
-   -- Red --
-   ---------
-
-   function Red   (Colour : Aquarius_Colour) return Colour_Range is
-   begin
-      return Colour.Red;
-   end Red;
+      return Aquarius.Names.To_String (Colour.Text);
+   end To_String;
 
    -----------
    -- White --
@@ -80,7 +72,7 @@ package body Aquarius.Colours is
 
    function White return Aquarius_Colour is
    begin
-      return Parse_Colour ("white");
+      return From_String ("white");
    end White;
 
 end Aquarius.Colours;
