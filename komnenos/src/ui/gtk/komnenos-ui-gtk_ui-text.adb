@@ -4,11 +4,11 @@ with Glib;
 with Glib.Properties;
 with Glib.Values;
 
-with Gdk.Color;
 with Gdk.Cursor;
 with Gdk.Event;
 with Gdk.Main;
 with Gdk.Rectangle;
+with Gdk.RGBA;
 with Gdk.Window;
 
 with Gtk.Enums;
@@ -138,6 +138,29 @@ package body Komnenos.UI.Gtk_UI.Text is
             To_RGBA (Fragment.Background_Colour));
       end if;
 
+      declare
+         use Aquarius.Fonts;
+         use Pango.Font;
+         Style : constant Aquarius.Styles.Aquarius_Style :=
+                   Aquarius.Themes.Active_Theme.Default_Style;
+         Font  : constant Aquarius_Font := Style.Font;
+         Font_Name  : constant String := Name (Font);
+         Font_Size  : constant Natural := Size (Font);
+         Desc  : Pango_Font_Description :=
+                        To_Font_Description (Font_Name,
+                                             Size => Glib.Gint (Font_Size));
+      begin
+         if Is_Bold (Font) then
+            Set_Weight (Desc, Pango.Enums.Pango_Weight_Bold);
+         end if;
+         if Is_Italic (Font) then
+            Set_Style (Desc, Pango.Enums.Pango_Style_Italic);
+         end if;
+
+         Result.Text.Modify_Font (Desc);
+         Free (Desc);
+      end;
+
       Result.Text.Set_Size_Request
         (Glib.Gint (Fragment.Width - 6),
          Glib.Gint (Fragment.Height - 4));
@@ -227,11 +250,13 @@ package body Komnenos.UI.Gtk_UI.Text is
          Result := Buffer.Create_Tag (Name);
          declare
             use Pango.Font, Aquarius.Fonts;
-            Font : constant Aquarius_Font := Style.Font;
-            Desc : constant Pango_Font_Description :=
-                     To_Font_Description
-                       (Aquarius.Fonts.Name (Font),
-                        Size => Glib.Gint (Size (Font)));
+            Font       : constant Aquarius_Font := Style.Font;
+            Font_Name  : constant String := Aquarius.Fonts.Name (Font);
+            Font_Size  : constant Natural := Size (Font);
+            Desc       : constant Pango_Font_Description :=
+                           To_Font_Description
+                             (Font_Name,
+                              Size => Glib.Gint (Font_Size));
          begin
             if Is_Bold (Font) then
                Set_Weight (Desc, Pango.Enums.Pango_Weight_Bold);
@@ -261,15 +286,17 @@ package body Komnenos.UI.Gtk_UI.Text is
                   use Aquarius.Colours;
                   Colour : constant Aquarius_Colour :=
                              Get_Foreground (Font);
-                  Foreground : Gdk.Color.Gdk_Color;
+                  Foreground : Gdk.RGBA.Gdk_RGBA;
+                  Success    : Boolean;
                begin
-                  Gdk.Color.Set_Rgb
-                    (Color => Foreground,
-                     Red   => Guint16 (Red (Colour)) * 256,
-                     Green => Guint16 (Green (Colour)) * 256,
-                     Blue  => Guint16 (Blue (Colour)) * 256);
-                  Gdk.Color.Set_Property
-                    (Result, Foreground_Gdk_Property, Foreground);
+                  Gdk.RGBA.Parse
+                    (Foreground, Aquarius.Colours.To_String (Colour), Success);
+                  if not Success then
+                     Foreground := (0.0, 0.0, 0.0, 1.0);
+                  end if;
+
+                  Gdk.RGBA.Set_Property
+                    (Result, Foreground_Rgba_Property, Foreground);
                end;
             end if;
 
@@ -279,15 +306,17 @@ package body Komnenos.UI.Gtk_UI.Text is
                   use Aquarius.Colours;
                   Colour : constant Aquarius_Colour :=
                              Get_Foreground (Font);
-                  Background : Gdk.Color.Gdk_Color;
+                  Background : Gdk.RGBA.Gdk_RGBA;
+                  Success    : Boolean;
                begin
-                  Gdk.Color.Set_Rgb
-                    (Color => Background,
-                     Red   => Guint16 (Red (Colour)) * 256,
-                     Green => Guint16 (Green (Colour)) * 256,
-                     Blue  => Guint16 (Blue (Colour)) * 256);
-                  Gdk.Color.Set_Property
-                    (Result, Background_Gdk_Property, Background);
+                  Gdk.RGBA.Parse
+                    (Background, Aquarius.Colours.To_String (Colour), Success);
+                  if not Success then
+                     Background := (1.0, 1.0, 1.0, 1.0);
+                  end if;
+
+                  Gdk.RGBA.Set_Property
+                    (Result, Background_Rgba_Property, Background);
                end;
             end if;
 

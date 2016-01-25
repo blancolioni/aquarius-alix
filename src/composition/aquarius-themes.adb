@@ -10,7 +10,7 @@ package body Aquarius.Themes is
      (Config     : Aquarius.Configuration.Cursor;
       Child_Name : String;
       Default_Colour : Aquarius.Colours.Aquarius_Colour)
-      return Aquarius.Colours.Aquarius_Colour;
+      return Aquarius.Colours.Aquarius_Colour with Unreferenced;
 
    ------------------
    -- Active_Theme --
@@ -72,7 +72,7 @@ package body Aquarius.Themes is
       if not Has_Element (Child) then
          return Default_Colour;
       elsif Child_Count (Child) = 0 then
-         return Aquarius.Colours.Parse_Colour
+         return Aquarius.Colours.From_String
            (Get_Value (Config, Child_Name));
       else
          declare
@@ -80,10 +80,7 @@ package body Aquarius.Themes is
             G : constant Integer := Get_Value (Child, "g");
             B : constant Integer := Get_Value (Child, "b");
          begin
-            return Aquarius.Colours.From_RGB
-              (Aquarius.Colours.Colour_Range (R),
-               Aquarius.Colours.Colour_Range (G),
-               Aquarius.Colours.Colour_Range (B));
+            return Aquarius.Colours.From_RGB (R, G, B);
          end;
       end if;
    end Get_Colour;
@@ -124,9 +121,8 @@ package body Aquarius.Themes is
                Italic      : constant Boolean := Get_Value (Child, "italic");
                Underlined  : constant Boolean :=
                                Get_Value (Child, "underline");
-               Foreground  : constant Aquarius.Colours.Aquarius_Colour :=
-                               Get_Colour (Child, "foreground",
-                                           Aquarius.Colours.Black);
+               Foreground  : constant String :=
+                               Get_Value (Child, "foreground", "");
                Background  : constant String  :=
                                Get_Value (Child, "background", "");
                Cursor_Text : constant String :=
@@ -135,31 +131,40 @@ package body Aquarius.Themes is
                                Aquarius.Fonts.Create_Font
                                  (Name       => Font_Name,
                                   Size       => Natural'Value (Font_Size),
-                                  Foreground => Foreground,
                                   Bold       => Bold,
                                   Italic     => Italic,
                                   Underlined => Underlined);
-               Style      : constant Aquarius.Styles.Aquarius_Style :=
-                              Aquarius.Styles.Create_Style
-                                 (Name         => Class & "-" & State_Text,
-                                  Font         => Font,
-                                  Mouse_Cursor =>
-                                   Mouse_Cursor_Type'Value (Cursor_Text));
-               State       : constant Element_State :=
-                               Element_State'Value (State_Text);
             begin
+               if Foreground /= "" then
+                  Aquarius.Fonts.Set_Foreground
+                    (Font,
+                     Aquarius.Colours.From_String (Foreground));
+               end if;
+
                if Background /= "" then
                   Aquarius.Fonts.Set_Background
                     (Font,
-                     Aquarius.Colours.Parse_Colour (Background));
+                     Aquarius.Colours.From_String (Background));
                end if;
-               if Class = "default" then
-                  Result.Default_Style := Style;
-               end if;
-               Result.Entries.Append
-                 ((Class => Aquarius.Names.To_Aquarius_Name (Class),
-                   State => State,
-                   Style => Style));
+
+               declare
+                  Style       : constant Aquarius.Styles.Aquarius_Style :=
+                                  Aquarius.Styles.Create_Style
+                                    (Name         => Class & "-" & State_Text,
+                                     Font         => Font,
+                                     Mouse_Cursor =>
+                                       Mouse_Cursor_Type'Value (Cursor_Text));
+                  State       : constant Element_State :=
+                                  Element_State'Value (State_Text);
+               begin
+                  if Class = "default" then
+                     Result.Default_Style := Style;
+                  end if;
+                  Result.Entries.Append
+                    ((Class => Aquarius.Names.To_Aquarius_Name (Class),
+                      State => State,
+                      Style => Style));
+               end;
             end;
          end loop;
          Current_Active_Theme := Result;

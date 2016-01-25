@@ -1,7 +1,7 @@
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
-with Aquarius.Colours;
+with Aquarius.Colours.Html;
 with Aquarius.Fonts;
 
 package body Aquarius.Rendering.Html is
@@ -101,21 +101,14 @@ package body Aquarius.Rendering.Html is
       use Aquarius.Colours;
       use Aquarius.Fonts;
 
-      function Html_Colour (Colour : Aquarius_Colour) return String;
-
-      ------------------
-      -- Html_Colour --
-      ------------------
-
-      function Html_Colour (Colour : Aquarius_Colour) return String is
-      begin
-         return "#" & Hex_Colour (Red (Colour)) &
-           Hex_Colour (Green (Colour)) & Hex_Colour (Blue (Colour)) &
-           """";
-      end Html_Colour;
-
       use Ada.Strings.Unbounded;
       Result : Unbounded_String := To_Unbounded_String (Text);
+
+      function To_Html_Colour
+        (Colour : Aquarius_Colour)
+         return String
+         renames Aquarius.Colours.Html.To_Html_Colour;
+
    begin
       if Is_Bold (Font) then
          Result := "<b>" & Result & "</b>";
@@ -128,12 +121,15 @@ package body Aquarius.Rendering.Html is
       end if;
       Result := ">" & Result & "</font>";
       if Has_Foreground (Font) then
-         Result := " color=""" & Html_Colour (Get_Foreground (Font)) &
-           """" & Result;
+         Result := " color="""
+           & To_Html_Colour (Get_Foreground (Font))
+           & """" & Result;
       end if;
       if Has_Background (Font) then
-         Result := " bgcolor=""" & Html_Colour (Get_Background (Font)) &
-           """" & Result;
+         Result :=
+           " bgcolor="""
+           & To_Html_Colour (Get_Background (Font))
+           & """" & Result;
       end if;
       return To_String ("<font " & Result);
    end With_Font;
