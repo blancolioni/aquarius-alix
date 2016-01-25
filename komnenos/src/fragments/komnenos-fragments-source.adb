@@ -13,9 +13,9 @@ package body Komnenos.Fragments.Source is
    begin
       Result.Default_Style := Aquarius.Themes.Active_Theme.Default_Style;
       Result.Editable := True;
-      Result.Background_Colour := new String'("seashell");
-      Result.Foreground_Colour := new String'("black");
-      Result.Border_Colour     := new String'("#8C001A");
+      Result.Background_Colour := Aquarius.Colours.From_String ("seashell");
+      Result.Foreground_Colour := Aquarius.Colours.From_String ("black");
+      Result.Border_Colour     := Aquarius.Colours.From_String ("#8C001A");
       Result.Set_Position (100, 100);
       Result.Path := Ada.Strings.Unbounded.To_Unbounded_String (Path);
       Result.Title := Ada.Strings.Unbounded.To_Unbounded_String (Title);

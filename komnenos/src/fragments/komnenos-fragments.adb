@@ -27,14 +27,10 @@ package body Komnenos.Fragments is
 
    function Background_Colour
      (Fragment : Root_Fragment_Type)
-      return String
+      return Aquarius.Colours.Aquarius_Colour
    is
    begin
-      if Fragment.Background_Colour = null then
-         return "";
-      else
-         return Fragment.Background_Colour.all;
-      end if;
+      return Fragment.Background_Colour;
    end Background_Colour;
 
    -------------------
@@ -43,14 +39,10 @@ package body Komnenos.Fragments is
 
    function Border_Colour
      (Fragment : Root_Fragment_Type)
-      return String
+      return Aquarius.Colours.Aquarius_Colour
    is
    begin
-      if Fragment.Border_Colour = null then
-         return "";
-      else
-         return Fragment.Border_Colour.all;
-      end if;
+      return Fragment.Border_Colour;
    end Border_Colour;
 
    -----------
@@ -116,14 +108,10 @@ package body Komnenos.Fragments is
 
    function Foreground_Colour
      (Fragment : Root_Fragment_Type)
-      return String
+      return Aquarius.Colours.Aquarius_Colour
    is
    begin
-      if Fragment.Foreground_Colour = null then
-         return "";
-      else
-         return Fragment.Foreground_Colour.all;
-      end if;
+      return Fragment.Foreground_Colour;
    end Foreground_Colour;
 
    -----------------
@@ -149,11 +137,11 @@ package body Komnenos.Fragments is
           (String'(Config.Get ("key")));
       Fragment.Editable := Config.Get ("editable");
       Fragment.Background_Colour :=
-        new String'(Config.Get ("background"));
+        Aquarius.Colours.From_String (Config.Get ("background"));
       Fragment.Foreground_Colour :=
-        new String'(Config.Get ("foreground"));
+        Aquarius.Colours.From_String (Config.Get ("foreground"));
       Fragment.Border_Colour :=
-        new String'(Config.Get ("border"));
+        Aquarius.Colours.From_String (Config.Get ("border"));
    end From_Config;
 
    -----------------
@@ -396,6 +384,22 @@ package body Komnenos.Fragments is
       Fragment.Lines.Append (new Line_Info);
    end New_Line;
 
+   -------------------------
+   -- On_Insert_Character --
+   -------------------------
+
+   procedure On_Insert_Character
+     (Fragment : in out Root_Fragment_Type;
+      Offset   : Natural;
+      Value    : Character;
+      Cancel   : out Boolean)
+   is
+   begin
+      Fragment.Content.Set_Cursor (Offset);
+      Fragment.Content.Insert_Text ((1 => Value));
+      Cancel := False;
+   end On_Insert_Character;
+
    ----------
    -- Path --
    ----------
@@ -463,6 +467,18 @@ package body Komnenos.Fragments is
       Komnenos.Session_Objects.Register_Session_Object
         ("fragment", New_Fragment'Access);
    end Register;
+
+   -----------------
+   -- Set_Content --
+   -----------------
+
+   overriding procedure Set_Content
+     (Fragment : in out Root_Fragment_Type;
+      Content  : access Komnenos.Entities.Root_Entity_Reference'Class)
+   is
+   begin
+      Fragment.Content := Komnenos.Entities.Entity_Reference (Content);
+   end Set_Content;
 
    -----------------------
    -- Set_Default_Style --
@@ -559,9 +575,12 @@ package body Komnenos.Fragments is
       Config.Add ("path", Ada.Strings.Unbounded.To_String (Fragment.Path));
       Config.Add ("title", Ada.Strings.Unbounded.To_String (Fragment.Title));
       Config.Add ("editable", (if Fragment.Editable then "yes" else "no"));
-      Config.Add ("background", Fragment.Background_Colour.all);
-      Config.Add ("foreground", Fragment.Foreground_Colour.all);
-      Config.Add ("border", Fragment.Border_Colour.all);
+      Config.Add ("background",
+                  Aquarius.Colours.To_String (Fragment.Background_Colour));
+      Config.Add ("foreground",
+                  Aquarius.Colours.To_String (Fragment.Foreground_Colour));
+      Config.Add ("border",
+                  Aquarius.Colours.To_String (Fragment.Border_Colour));
       Config.Add ("key", Fragment.Entity_Key);
    end To_Config;
 

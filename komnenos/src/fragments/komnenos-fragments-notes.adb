@@ -11,9 +11,9 @@ package body Komnenos.Fragments.Notes is
       Result : constant Fragment_Type := new Root_Fragment_Type;
    begin
       Result.Editable := True;
-      Result.Background_Colour := new String'("seashell");
-      Result.Foreground_Colour := new String'("black");
-      Result.Border_Colour     := new String'("lightblue");
+      Result.Background_Colour := Aquarius.Colours.From_String ("seashell");
+      Result.Foreground_Colour := Aquarius.Colours.From_String ("black");
+      Result.Border_Colour     := Aquarius.Colours.From_String ("lightblue");
       if Initial_Text /= "" then
          Result.Put_Line (Initial_Text,
                           Aquarius.Themes.Active_Theme.Default_Style);

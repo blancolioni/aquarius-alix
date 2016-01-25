@@ -56,7 +56,7 @@ package body Komnenos.Entities.Source is
    -------------------
 
    overriding procedure Select_Entity
-     (Entity : Root_Source_Entity_Reference;
+     (Entity : not null access Root_Source_Entity_Reference;
       Table  : access Entity_Table_Interface'Class;
       Parent : access Entity_Visual'Class;
       Visual : access Entity_Visual'Class;
@@ -68,7 +68,7 @@ package body Komnenos.Entities.Source is
                (if Visual = null
                 then Komnenos.Fragments.Notes.New_Note_Fragment
                   (To_String (Entity.Name)
-                   & " " & Class (Entity)
+                   & " " & Class (Entity.all)
                    & " defined in "
                    & To_String (Entity.File_Name)
                    & " line"

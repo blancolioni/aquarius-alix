@@ -2,6 +2,8 @@ with Gdk.Event;
 
 with Cairo.Image_Surface;
 
+with Aquarius.Colours.Gtk_Colours;
+
 package body Komnenos.UI.Gtk_UI.Navigation is
 
    Vertical_Scale : constant := 3.0;
@@ -213,18 +215,11 @@ package body Komnenos.UI.Gtk_UI.Navigation is
          H        : constant Gdouble :=
                       Gdouble (Fragment.Height) * Scale;
 
-         Colour   : Gdk.RGBA.Gdk_RGBA;
-         Got_Colour : Boolean;
-
+         Colour   : constant Gdk.RGBA.Gdk_RGBA :=
+                      Aquarius.Colours.Gtk_Colours.To_Gdk_RGBA
+                        (Fragment.Background_Colour);
       begin
-         Gdk.RGBA.Parse (Colour, Fragment.Background_Colour, Got_Colour);
-
-         if Got_Colour then
-            Cairo.Set_Source_Rgb (Cr, Colour.Red, Colour.Green, Colour.Blue);
-         else
-            Cairo.Set_Source_Rgb (Cr, 0.0, 0.0, 0.0);
-         end if;
-
+         Cairo.Set_Source_Rgb (Cr, Colour.Red, Colour.Green, Colour.Blue);
          Cairo.Rectangle (Cr, X, Y, W, H);
          Cairo.Fill (Cr);
       end Draw_Fragment;

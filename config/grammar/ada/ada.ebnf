@@ -34,7 +34,6 @@ format boolean_operator soft_new_line
 format relational_operator soft_new_line
 format binary_adding_operator soft_new_line
 format multiplying_operator soft_new_line
-format subprogram_body new_line_before
 format array_type_definition soft_new_line
 format function_return_type soft_new_line space_after space_before
 
@@ -52,7 +51,6 @@ format '=>' soft_new_line_after
 format 'with' soft_new_line_after space_after space_before
 format 'of' soft_new_line_before space_after space_before
 format ':' space_after space_before
-format 'is' soft_new_line_before space_before space_after
 
 xref procedure_declaration defining_program_unit_name
 xref function_declaration defining_program_unit_name
@@ -617,7 +615,7 @@ atomic_expression ::= object_reference | numeric_literal | string_literal |
 parenthesised_expression ::= '(' expression ')'
                            | '(' conditional_expression ')'
 
-conditional_expression ::= 'if' expression 'then' expression 'else' expression
+conditional_expression ::= 'if' expression 'then' expression { 'elsif' expression 'then' expression } 'else' expression
 
 aggregate ::=
     '(' object_reference 'with' 'null' 'record' ')'

@@ -22,6 +22,16 @@ package Komnenos.Entities is
    type Root_Entity_Reference is
      abstract new Aqua.External_Object_Interface with private;
 
+   procedure Set_Content
+     (Visual : in out Entity_Visual;
+      Entity : access Root_Entity_Reference'Class)
+   is abstract;
+
+   function Get_Content
+     (Visual : Entity_Visual)
+      return access Root_Entity_Reference'class
+      is abstract;
+
    function Identifier
      (Item : Root_Entity_Reference'Class)
       return String;
@@ -54,12 +64,31 @@ package Komnenos.Entities is
       Display_Text : String := "";
       Description  : String := "");
 
+   procedure Set_Cursor
+     (Item : in out Root_Entity_Reference;
+      Offset : Natural);
+
+   function Get_Cursor
+     (Item : Root_Entity_Reference)
+      return Natural;
+
+   procedure Insert_Text
+     (Item : in out Root_Entity_Reference;
+      Text : String)
+   is null;
+
+   procedure Delete_Text
+     (Item  : in out Root_Entity_Reference;
+      Start : in Natural;
+      Count : in Positive)
+   is null;
+
    type Entity_Reference is access all Root_Entity_Reference'Class;
 
    type Entity_Table_Interface is interface;
 
    procedure Select_Entity
-     (Entity : Root_Entity_Reference;
+     (Entity : not null access Root_Entity_Reference;
       Table  : access Entity_Table_Interface'Class;
       Parent : access Entity_Visual'Class;
       Visual : access Entity_Visual'Class;
@@ -295,6 +324,7 @@ private
          Description  : Ada.Strings.Unbounded.Unbounded_String;
          Key          : Ada.Strings.Unbounded.Unbounded_String;
          References   : File_Location_Vectors.Vector;
+         Cursor       : Natural := 0;
       end record;
 
    overriding function Name
