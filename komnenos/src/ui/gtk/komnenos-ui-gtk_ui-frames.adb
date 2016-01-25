@@ -11,6 +11,8 @@ with Gtk.Label;
 
 with Komnenos.UI.Gtk_UI.Text;
 
+with Aquarius.Colours.Gtk_Colours;
+
 package body Komnenos.UI.Gtk_UI.Frames is
 
    type Frame_Object_Record is
@@ -47,14 +49,9 @@ package body Komnenos.UI.Gtk_UI.Frames is
      (Fragment : Root_Gtk_Frame_Record)
       return Gdk.RGBA.Gdk_RGBA
    is
-      Colour  : Gdk.RGBA.Gdk_RGBA;
-      Success : Boolean;
    begin
-      Gdk.RGBA.Parse (Colour, Fragment.Fragment.Border_Colour, Success);
-      if not Success then
-         Colour := (0.0, 0.0, 0.0, 1.0);
-      end if;
-      return Colour;
+      return Aquarius.Colours.Gtk_Colours.To_Gdk_RGBA
+        (Fragment.Fragment.Border_Colour);
    end Border_Colour;
 
    --------------
