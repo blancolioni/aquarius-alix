@@ -450,6 +450,10 @@ package body Komnenos.UI.Gtk_UI.Text is
          return;
       end if;
 
+      if Style = null then
+         return;
+      end if;
+
       case Mouse_Cursor (Style) is
          when Default =>
             Gdk.Window.Set_Cursor (Text_View.Get_Root_Window, null);
