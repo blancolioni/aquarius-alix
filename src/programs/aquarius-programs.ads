@@ -185,10 +185,17 @@ package Aquarius.Programs is
    function Find_Node_At (Top      : not null access Program_Tree_Type'Class;
                           Location : in     Aquarius.Layout.Position)
                          return Program_Tree;
+   --  Search for a node at Location within the original source file
 
    function Find_Node_At (Parent   : not null access Program_Tree_Type'Class;
                           Location : in     Aquarius.Source.Source_Position)
                          return Program_Tree;
+
+   function Find_Local_Node_At
+     (Top      : not null access Program_Tree_Type'Class;
+      Location : in     Aquarius.Layout.Position)
+      return Program_Tree;
+   --  Search for a node placed at Location in the local rendered context
 
    function Find_Node_Containing
      (Top      : not null access Program_Tree_Type'Class;

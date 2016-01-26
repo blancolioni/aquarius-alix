@@ -758,6 +758,39 @@ package body Aquarius.Programs is
       Item.Filled := True;
    end Fill;
 
+   function Find_Local_Node_At
+     (Top      : not null access Program_Tree_Type'Class;
+      Location : in     Aquarius.Layout.Position)
+      return Program_Tree
+   is
+
+      use type Aquarius.Layout.Position;
+      Last_Terminal : Program_Tree := null;
+
+      procedure Find (Node : Program_Tree);
+
+      ----------
+      -- Find --
+      ----------
+
+      procedure Find (Node : Program_Tree) is
+      begin
+         if Node.Is_Terminal then
+            if Node.Start_Position <= Location then
+               Last_Terminal := Node;
+            end if;
+         else
+            for I in 1 .. Node.Child_Count loop
+               Find (Node.Program_Child (I));
+            end loop;
+         end if;
+      end Find;
+
+   begin
+      Find (Program_Tree (Top));
+      return Last_Terminal;
+   end Find_Local_Node_At;
+
    ------------------
    -- Find_Node_At --
    ------------------
