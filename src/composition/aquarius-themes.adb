@@ -36,6 +36,10 @@ package body Aquarius.Themes is
       return Aquarius.Names.To_String (Theme.Default_Font_Name);
    end Default_Font_Name;
 
+   -----------------------
+   -- Default_Font_Size --
+   -----------------------
+
    function Default_Font_Size
      (Theme : Aquarius_Root_Theme)
       return Natural
@@ -43,6 +47,18 @@ package body Aquarius.Themes is
    begin
       return Theme.Default_Font_Size;
    end Default_Font_Size;
+
+   ------------------------
+   -- Default_Link_Style --
+   ------------------------
+
+   function Default_Link_Style
+     (Theme : Aquarius_Root_Theme)
+      return Aquarius.Styles.Aquarius_Style
+   is
+   begin
+      return Theme.Default_Link_Style;
+   end Default_Link_Style;
 
    -------------------
    -- Default_Style --
@@ -159,6 +175,10 @@ package body Aquarius.Themes is
                begin
                   if Class = "default" then
                      Result.Default_Style := Style;
+                     Result.Default_Link_Style := Style;
+                  end if;
+                  if Class = "link" then
+                     Result.Default_Link_Style := Style;
                   end if;
                   Result.Entries.Append
                     ((Class => Aquarius.Names.To_Aquarius_Name (Class),

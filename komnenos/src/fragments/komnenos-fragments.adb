@@ -423,11 +423,20 @@ package body Komnenos.Fragments is
       Link     : in     Komnenos.Entities.Entity_Reference := null)
    is
       use type Aquarius.Styles.Aquarius_Style;
+      use type Komnenos.Entities.Entity_Reference;
       Line : constant Line_Info_Access := Fragment.Lines.Last_Element;
+      Line_Style : Style_Info :=
+                     (Length    => Text'Length,
+                      Styles    => (Aquarius.Themes.Normal => Style,
+                                    others                 => null),
+                      Reference => Link);
    begin
-      Line.Styles.Append
-        ((Text'Length, (Aquarius.Themes.Normal => Style, others => null),
-         Link));
+      if Link /= null then
+         Line_Style.Styles (Aquarius.Themes.Hover) :=
+           Aquarius.Themes.Active_Theme.Default_Link_Style;
+      end if;
+
+      Line.Styles.Append (Line_Style);
       Ada.Strings.Unbounded.Append (Line.Text, Text);
    end Put;
 
@@ -479,18 +488,6 @@ package body Komnenos.Fragments is
    begin
       Fragment.Content := Komnenos.Entities.Entity_Reference (Content);
    end Set_Content;
-
-   -----------------------
-   -- Set_Default_Style --
-   -----------------------
-
-   procedure Set_Default_Style
-     (Fragment : in out Root_Fragment_Type'Class;
-      Style    : in Aquarius.Styles.Aquarius_Style)
-   is
-   begin
-      Fragment.Default_Style := Style;
-   end Set_Default_Style;
 
    --------------------
    -- Set_Entity_Key --
@@ -571,6 +568,7 @@ package body Komnenos.Fragments is
    is
    begin
       Config.Add ("default_style", Fragment.Default_Style.Name);
+      Config.Add ("link_style", Fragment.Default_Style.Name);
       Config.Add (To_Config (Fragment.Layout_Rec));
       Config.Add ("path", Ada.Strings.Unbounded.To_String (Fragment.Path));
       Config.Add ("title", Ada.Strings.Unbounded.To_String (Fragment.Title));

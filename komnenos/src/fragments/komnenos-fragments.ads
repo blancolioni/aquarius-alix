@@ -77,10 +77,6 @@ package Komnenos.Fragments is
       Width    : Natural;
       Height   : Natural);
 
-   procedure Set_Default_Style
-     (Fragment : in out Root_Fragment_Type'Class;
-      Style    : in Aquarius.Styles.Aquarius_Style);
-
    procedure Set_Entity_Key
      (Fragment : in out Root_Fragment_Type'Class;
       Key      : String);
