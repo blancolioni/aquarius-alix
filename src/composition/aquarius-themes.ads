@@ -23,6 +23,10 @@ package Aquarius.Themes is
      (Theme : Aquarius_Root_Theme)
       return Aquarius.Styles.Aquarius_Style;
 
+   function Default_Link_Style
+     (Theme : Aquarius_Root_Theme)
+      return Aquarius.Styles.Aquarius_Style;
+
    function Default_Font_Name
      (Theme : Aquarius_Root_Theme)
       return String;
@@ -47,10 +51,11 @@ private
 
    type Aquarius_Root_Theme is tagged
       record
-         Entries           : Theme_Entry_Vectors.Vector;
-         Default_Style     : Aquarius.Styles.Aquarius_Style;
-         Default_Font_Name : Aquarius.Names.Aquarius_Name;
-         Default_Font_Size : Natural;
+         Entries            : Theme_Entry_Vectors.Vector;
+         Default_Style      : Aquarius.Styles.Aquarius_Style;
+         Default_Link_Style : Aquarius.Styles.Aquarius_Style;
+         Default_Font_Name  : Aquarius.Names.Aquarius_Name;
+         Default_Font_Size  : Natural;
       end record;
 
 end Aquarius.Themes;
