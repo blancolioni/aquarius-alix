@@ -509,6 +509,7 @@ package body Komnenos.UI.Gtk_UI.Text is
       return Boolean
    is
       use type Glib.Gint;
+      use type Gdk.Types.Gdk_Modifier_Type;
       use Gtk.Text_Iter;
       Buffer : constant Gtk.Text_Buffer.Gtk_Text_Buffer :=
                  Text_View.Get_Buffer;
@@ -516,6 +517,8 @@ package body Komnenos.UI.Gtk_UI.Text is
       Start, Finish : Gtk_Text_Iter;
       Iter : Gtk_Text_Iter;
       X, Y : Glib.Gint;
+      Active : constant Boolean :=
+                 (Event.Button.State and Gdk.Types.Control_Mask) /= 0;
    begin
       Buffer.Get_Selection_Bounds (Start, Finish, Have_Selection);
       if Have_Selection
@@ -529,7 +532,9 @@ package body Komnenos.UI.Gtk_UI.Text is
          X, Y);
       Text_View.Get_Iter_At_Location (Iter, X, Y);
 
-      Follow_If_Link (Text_View, Iter);
+      if Active then
+         Follow_If_Link (Text_View, Iter);
+      end if;
 
       return False;
    end Text_View_Button_Release_Handler;
