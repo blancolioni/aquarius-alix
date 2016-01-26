@@ -1,4 +1,5 @@
 with Ada.Characters.Latin_1;
+with Ada.Text_IO;
 
 with Glib;
 with Glib.Properties;
@@ -9,6 +10,7 @@ with Gdk.Event;
 with Gdk.Main;
 with Gdk.Rectangle;
 with Gdk.RGBA;
+with Gdk.Types;
 with Gdk.Window;
 
 with Gtk.Enums;
@@ -454,15 +456,23 @@ package body Komnenos.UI.Gtk_UI.Text is
          return;
       end if;
 
-      case Mouse_Cursor (Style) is
-         when Default =>
-            Gdk.Window.Set_Cursor (Text_View.Get_Root_Window, null);
-         when Hand =>
-            Gdk.Window.Set_Cursor (Text_View.Get_Root_Window,
-                                   Gdk.Cursor.Gdk_Cursor_New
-                                     (Gdk.Cursor.Hand2));
-            Gdk.Main.Flush;
-      end case;
+      declare
+         Window : constant Gdk.Gdk_Window :=
+                    Text_View.Get_Window (Gtk.Enums.Text_Window_Text);
+      begin
+         case Mouse_Cursor (Style) is
+            when Default =>
+               Gdk.Window.Set_Cursor (Window,
+                                      Gdk.Cursor.Gdk_Cursor_New
+                                        (Gdk.Cursor.Xterm));
+            when Hand =>
+               Ada.Text_IO.Put_Line ("hand mouse cursor");
+               Gdk.Window.Set_Cursor (Window,
+                                      Gdk.Cursor.Gdk_Cursor_New
+                                        (Gdk.Cursor.Hand2));
+         end case;
+         Gdk.Main.Flush;
+      end;
 
       if Display.Hover_Start /= 0 then
          Apply_Style_To_Text
@@ -575,6 +585,7 @@ package body Komnenos.UI.Gtk_UI.Text is
       return Boolean
    is
       use type Glib.Gint;
+      use type Gdk.Types.Gdk_Modifier_Type;
       use Gtk.Text_Iter;
       Buffer : constant Gtk.Text_Buffer.Gtk_Text_Buffer :=
                  Text_View.Get_Buffer;
@@ -582,7 +593,10 @@ package body Komnenos.UI.Gtk_UI.Text is
       Start, Finish : Gtk_Text_Iter;
       Iter : Gtk_Text_Iter;
       X, Y : Glib.Gint;
+      Active : constant Boolean :=
+                 (Event.Motion.State and Gdk.Types.Control_Mask) /= 0;
    begin
+
       Buffer.Get_Selection_Bounds (Start, Finish, Have_Selection);
       if Have_Selection
         and then Get_Offset (Start) /= Get_Offset (Finish)
@@ -596,7 +610,11 @@ package body Komnenos.UI.Gtk_UI.Text is
          X, Y);
       Text_View.Get_Iter_At_Location (Iter, X, Y);
 
-      Set_Text_State (Text_View, Iter, Aquarius.Themes.Hover);
+      if Active then
+         Set_Text_State (Text_View, Iter, Aquarius.Themes.Hover);
+      else
+         Set_Text_State (Text_View, Iter, Aquarius.Themes.Normal);
+      end if;
 
       return False;
    end Text_View_Motion_Handler;
