@@ -7,9 +7,12 @@ private with Ada.Strings.Fixed.Equal_Case_Insensitive;
 private with Ada.Strings.Fixed.Hash_Case_Insensitive;
 private with Ada.Strings.Unbounded;
 
+with Komnenos.Commands;
 with Komnenos.Session_Objects;
 
+with Aquarius.Layout;
 with Aquarius.Programs;
+with Aquarius.Styles;
 
 with Aqua;
 
@@ -31,6 +34,29 @@ package Komnenos.Entities is
      (Visual : Entity_Visual)
       return access Root_Entity_Reference'class
       is abstract;
+
+   procedure Put
+     (Visual : in out Entity_Visual;
+      Text   : in     String;
+      Style  : in     Aquarius.Styles.Aquarius_Style;
+      Link   : access Root_Entity_Reference'Class := null)
+   is abstract;
+
+   procedure New_Line (Visual : in out Entity_Visual) is abstract;
+
+   procedure Clear (Visual : in out Entity_Visual) is abstract;
+
+   function Width (Visual : Entity_Visual) return Positive is abstract;
+   function Height (Visual : Entity_Visual) return Positive is abstract;
+
+   procedure Disable (Visual : in out Entity_Visual) is abstract;
+   procedure Enable (Visual : in out Entity_Visual) is abstract;
+
+   procedure Put_Line
+     (Visual : in out Entity_Visual'Class;
+      Text   : in     String;
+      Style  : in     Aquarius.Styles.Aquarius_Style;
+      Link   : access Root_Entity_Reference'Class := null);
 
    function Identifier
      (Item : Root_Entity_Reference'Class)
@@ -65,23 +91,19 @@ package Komnenos.Entities is
       Description  : String := "");
 
    procedure Set_Cursor
-     (Item : in out Root_Entity_Reference;
-      Offset : Natural);
+     (Item     : in out Root_Entity_Reference;
+      Position : Aquarius.Layout.Position);
 
    function Get_Cursor
      (Item : Root_Entity_Reference)
-      return Natural;
+      return Aquarius.Layout.Position;
 
-   procedure Insert_Text
+   procedure Execute_Command
      (Item : in out Root_Entity_Reference;
-      Text : String)
-   is null;
+      Command : Komnenos.Commands.Komnenos_Command);
 
-   procedure Delete_Text
-     (Item  : in out Root_Entity_Reference;
-      Start : in Natural;
-      Count : in Positive)
-   is null;
+   function Invalidated (Item : Root_Entity_Reference) return Boolean
+   is (False);
 
    type Entity_Reference is access all Root_Entity_Reference'Class;
 
@@ -93,6 +115,11 @@ package Komnenos.Entities is
       Parent : access Entity_Visual'Class;
       Visual : access Entity_Visual'Class;
       Offset : Natural)
+   is abstract;
+
+   procedure Render
+     (Entity : not null access Root_Entity_Reference;
+      Visual : not null access Entity_Visual'Class)
    is abstract;
 
    type Program_Store_Interface is interface
@@ -315,6 +342,8 @@ private
      new Ada.Containers.Vectors
        (Positive, Entity_Reference);
 
+   type Entity_Table_Access is access all Entity_Table_Interface'Class;
+
    type Root_Entity_Reference is
      abstract new Aqua.External_Object_Interface with
       record
@@ -324,7 +353,8 @@ private
          Description  : Ada.Strings.Unbounded.Unbounded_String;
          Key          : Ada.Strings.Unbounded.Unbounded_String;
          References   : File_Location_Vectors.Vector;
-         Cursor       : Natural := 0;
+         Cursor       : Aquarius.Layout.Position := (1, 1);
+         Table        : Entity_Table_Access;
       end record;
 
    overriding function Name

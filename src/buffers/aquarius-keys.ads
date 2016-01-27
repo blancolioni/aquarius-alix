@@ -42,6 +42,7 @@ package Aquarius.Keys is
 private
 
    type Aquarius_Key is mod 16#10_0000#;
+   subtype Real_Key is Aquarius_Key range 1 .. 16#FFFF#;
 
    Null_Key    : constant Aquarius_Key := 16#0000#;
 

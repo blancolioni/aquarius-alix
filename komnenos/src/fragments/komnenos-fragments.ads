@@ -6,11 +6,15 @@ private with Ada.Strings.Unbounded;
 with Tropos;
 
 with Aquarius.Colours;
+with Aquarius.Keys.Sequences;
+with Aquarius.Layout;
 with Aquarius.Styles;
 with Aquarius.Themes;
 
 with Komnenos.Entities;
 with Komnenos.Session_Objects;
+
+private with Komnenos.Commands.Bindings;
 
 package Komnenos.Fragments is
 
@@ -62,10 +66,12 @@ package Komnenos.Fragments is
    function Y (Fragment : Root_Fragment_Type'Class) return Integer
    is (Fragment.Rectangle.Y);
 
-   function Width (Fragment : Root_Fragment_Type'Class) return Positive
+   overriding function Width
+     (Fragment : Root_Fragment_Type) return Positive
    is (Fragment.Rectangle.Width);
 
-   function Height (Fragment : Root_Fragment_Type'Class) return Positive
+   overriding function Height
+     (Fragment : Root_Fragment_Type) return Positive
    is (Fragment.Rectangle.Height);
 
    procedure Set_Position
@@ -84,31 +90,32 @@ package Komnenos.Fragments is
    function Entity_Key (Fragment : Root_Fragment_Type'Class)
                         return String;
 
-   procedure Put
+   overriding procedure Put
      (Fragment : in out Root_Fragment_Type;
       Text     : in     String;
       Style    : in     Aquarius.Styles.Aquarius_Style;
-      Link     : in     Komnenos.Entities.Entity_Reference := null);
+      Link     : access Komnenos.Entities.Root_Entity_Reference'Class := null);
 
-   procedure Put_Line
-     (Fragment : in out Root_Fragment_Type;
-      Text     : in     String;
-      Style    : in     Aquarius.Styles.Aquarius_Style;
-      Link     : in     Komnenos.Entities.Entity_Reference := null);
+   overriding procedure New_Line (Fragment : in out Root_Fragment_Type);
 
-   procedure New_Line (Fragment : in out Root_Fragment_Type);
-
-   procedure Clear (Fragment : in out Root_Fragment_Type);
+   overriding procedure Clear (Fragment : in out Root_Fragment_Type);
 
    function Editable
      (Fragment : Root_Fragment_Type)
       return Boolean;
 
-   procedure On_Insert_Character
+   function Enabled
+     (Fragment : Root_Fragment_Type)
+      return Boolean;
+
+   procedure On_Cursor_Move
+     (Fragment : not null access Root_Fragment_Type;
+      Position : Aquarius.Layout.Position;
+      Updated  : out Boolean);
+
+   procedure On_Key_Press
      (Fragment : in out Root_Fragment_Type;
-      Offset   : Natural;
-      Value    : Character;
-      Cancel   : out Boolean);
+      Key      : Aquarius.Keys.Aquarius_Key);
 
    function Background_Colour
      (Fragment : Root_Fragment_Type)
@@ -198,9 +205,12 @@ private
          Title             : Ada.Strings.Unbounded.Unbounded_String;
          Key               : Ada.Strings.Unbounded.Unbounded_String;
          Editable          : Boolean;
+         Enabled           : Boolean;
          Background_Colour : Aquarius.Colours.Aquarius_Colour;
          Foreground_Colour : Aquarius.Colours.Aquarius_Colour;
          Border_Colour     : Aquarius.Colours.Aquarius_Colour;
+         Key_Sequence      : Aquarius.Keys.Sequences.Key_Sequence;
+         Bindings          : Komnenos.Commands.Bindings.Binding_Table;
          Lines             : Line_Vectors.Vector;
       end record;
 
@@ -224,5 +234,8 @@ private
      (Fragment : Root_Fragment_Type)
       return access Komnenos.Entities.Root_Entity_Reference'Class
    is (Fragment.Content);
+
+   overriding procedure Disable (Fragment : in out Root_Fragment_Type);
+   overriding procedure Enable (Fragment : in out Root_Fragment_Type);
 
 end Komnenos.Fragments;

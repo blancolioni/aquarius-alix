@@ -49,11 +49,20 @@ package body Komnenos.Fragments is
    -- Clear --
    -----------
 
-   procedure Clear (Fragment : in out Root_Fragment_Type) is
+   overriding procedure Clear (Fragment : in out Root_Fragment_Type) is
    begin
       Fragment.Lines.Clear;
       Fragment.Lines.Append (new Line_Info);
    end Clear;
+
+   -------------
+   -- Disable --
+   -------------
+
+   overriding procedure Disable (Fragment : in out Root_Fragment_Type) is
+   begin
+      Fragment.Enabled := False;
+   end Disable;
 
    --------------
    -- Editable --
@@ -66,6 +75,27 @@ package body Komnenos.Fragments is
    begin
       return Fragment.Editable;
    end Editable;
+
+   ------------
+   -- Enable --
+   ------------
+
+   overriding procedure Enable (Fragment : in out Root_Fragment_Type) is
+   begin
+      Fragment.Enabled := True;
+   end Enable;
+
+   -------------
+   -- Enabled --
+   -------------
+
+   function Enabled
+     (Fragment : Root_Fragment_Type)
+      return Boolean
+   is
+   begin
+      return Fragment.Enabled;
+   end Enabled;
 
    ----------------
    -- Entity_Key --
@@ -300,6 +330,7 @@ package body Komnenos.Fragments is
       Fragment.Layout_Rec := (0, 0, 350, 400);
       Fragment.Lines.Append (new Line_Info);
       Fragment.Default_Style := Aquarius.Themes.Active_Theme.Default_Style;
+      Fragment.Bindings.Default_Bindings;
    end Initialize;
 
    -------------
@@ -379,26 +410,53 @@ package body Komnenos.Fragments is
    -- New_Line --
    --------------
 
-   procedure New_Line (Fragment : in out Root_Fragment_Type) is
+   overriding procedure New_Line (Fragment : in out Root_Fragment_Type) is
    begin
       Fragment.Lines.Append (new Line_Info);
    end New_Line;
+
+   --------------------
+   -- On_Cursor_Move --
+   --------------------
+
+   procedure On_Cursor_Move
+     (Fragment : not null access Root_Fragment_Type;
+      Position : Aquarius.Layout.Position;
+      Updated  : out Boolean)
+   is
+   begin
+      Fragment.Content.Set_Cursor (Position);
+      Updated := Fragment.Content.Invalidated;
+      if Updated then
+         Fragment.Content.Render (Fragment);
+      end if;
+   end On_Cursor_Move;
 
    -------------------------
    -- On_Insert_Character --
    -------------------------
 
-   procedure On_Insert_Character
+   procedure On_Key_Press
      (Fragment : in out Root_Fragment_Type;
-      Offset   : Natural;
-      Value    : Character;
-      Cancel   : out Boolean)
+      Key      : Aquarius.Keys.Aquarius_Key)
    is
+      use Aquarius.Keys, Aquarius.Keys.Sequences;
+      Incomplete, Match : Boolean;
+      Command : Komnenos.Commands.Command_Reference;
    begin
-      Fragment.Content.Set_Cursor (Offset);
-      Fragment.Content.Insert_Text ((1 => Value));
-      Cancel := False;
-   end On_Insert_Character;
+      Add_Key (Fragment.Key_Sequence, Key);
+      Fragment.Bindings.Get_Binding
+        (Fragment.Key_Sequence, Incomplete, Match, Command);
+      if Incomplete then
+         null;
+      else
+         if Match then
+            Fragment.Content.Execute_Command
+              (Komnenos.Commands.Standard_Table.Get_Command (Command));
+         end if;
+         Clear (Fragment.Key_Sequence);
+      end if;
+   end On_Key_Press;
 
    ----------
    -- Path --
@@ -416,11 +474,11 @@ package body Komnenos.Fragments is
    -- Put --
    ---------
 
-   procedure Put
+   overriding procedure Put
      (Fragment : in out Root_Fragment_Type;
       Text     : in     String;
       Style    : in     Aquarius.Styles.Aquarius_Style;
-      Link     : in     Komnenos.Entities.Entity_Reference := null)
+      Link     : access Komnenos.Entities.Root_Entity_Reference'Class := null)
    is
       use type Aquarius.Styles.Aquarius_Style;
       use type Komnenos.Entities.Entity_Reference;
@@ -429,7 +487,7 @@ package body Komnenos.Fragments is
                      (Length    => Text'Length,
                       Styles    => (Aquarius.Themes.Normal => Style,
                                     others                 => null),
-                      Reference => Link);
+                      Reference => Komnenos.Entities.Entity_Reference (Link));
    begin
       if Link /= null then
          Line_Style.Styles (Aquarius.Themes.Hover) :=
@@ -439,21 +497,6 @@ package body Komnenos.Fragments is
       Line.Styles.Append (Line_Style);
       Ada.Strings.Unbounded.Append (Line.Text, Text);
    end Put;
-
-   --------------
-   -- Put_Line --
-   --------------
-
-   procedure Put_Line
-     (Fragment : in out Root_Fragment_Type;
-      Text     : in     String;
-      Style    : in     Aquarius.Styles.Aquarius_Style;
-      Link     : in     Komnenos.Entities.Entity_Reference := null)
-   is
-   begin
-      Root_Fragment_Type'Class (Fragment).Put (Text, Style, Link);
-      Root_Fragment_Type'Class (Fragment).New_Line;
-   end Put_Line;
 
    ---------------
    -- Rectangle --

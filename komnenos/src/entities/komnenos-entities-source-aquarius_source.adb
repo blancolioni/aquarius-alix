@@ -21,6 +21,12 @@ package body Komnenos.Entities.Source.Aquarius_Source is
          Compilation_Unit : Aquarius.Programs.Program_Tree;
          Entity_Spec      : Aquarius.Programs.Program_Tree;
          Entity_Body      : Aquarius.Programs.Program_Tree;
+         Entity_Tree      : Aquarius.Programs.Program_Tree;
+         Tree_Cursor      : Aquarius.Trees.Cursors.Cursor;
+         Edit_Tree        : Aquarius.Programs.Program_Tree;
+         Edit_Buffer      : Ada.Strings.Unbounded.Unbounded_String;
+         Buffer_Cursor    : Natural;
+         Invalidated      : Boolean := False;
       end record;
 
    overriding function Top_Level
@@ -35,13 +41,32 @@ package body Komnenos.Entities.Source.Aquarius_Source is
       Visual : access Entity_Visual'Class;
       Offset : Natural);
 
+   overriding procedure Render
+     (Entity : not null access Root_Aquarius_Source_Entity;
+      Visual : not null access Entity_Visual'Class);
+
+   overriding procedure Set_Cursor
+     (Item     : in out Root_Aquarius_Source_Entity;
+      Position : Aquarius.Layout.Position);
+
+   overriding function Invalidated
+     (Entity : Root_Aquarius_Source_Entity)
+      return Boolean
+   is (Entity.Invalidated);
+
+--     overriding procedure Insert_Character
+--       (Item    : in out Root_Aquarius_Source_Entity;
+--        Value   : Character;
+--        Updated : out Boolean);
+
    function Get_Key (File_Name : String;
                      Line      : Natural;
                      Column    : Natural;
                      Name      : String)
                      return String;
 
-   procedure Log_Tree (Tree : Aquarius.Programs.Program_Tree);
+   procedure Log_Tree (Tree : Aquarius.Programs.Program_Tree)
+     with Unreferenced;
 
    -----------------------------------
    -- Create_Aquarius_Source_Entity --
@@ -64,6 +89,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
    begin
       if not Table.Exists (Key) then
          declare
+            use type Aquarius.Programs.Program_Tree;
             Entity : Root_Aquarius_Source_Entity;
             Result : Entity_Reference;
          begin
@@ -72,6 +98,11 @@ package body Komnenos.Entities.Source.Aquarius_Source is
             Entity.Compilation_Unit := Compilation_Unit;
             Entity.Entity_Spec := Entity_Spec;
             Entity.Entity_Body := Entity_Body;
+            Entity.Entity_Tree :=
+              (if Entity_Body = null then Entity_Spec else Entity_Body);
+            Entity.Tree_Cursor :=
+              Aquarius.Trees.Cursors.Left_Of_Tree (Entity.Entity_Tree);
+            Entity.Edit_Tree := null;
             Result := new Root_Aquarius_Source_Entity'(Entity);
             Table.Add_Entity (Key, Result);
             return Result;
@@ -143,6 +174,42 @@ package body Komnenos.Entities.Source.Aquarius_Source is
       Log (Tree, 1);
    end Log_Tree;
 
+   ------------
+   -- Render --
+   ------------
+
+   overriding procedure Render
+     (Entity : not null access Root_Aquarius_Source_Entity;
+      Visual : not null access Entity_Visual'Class)
+   is
+      Renderer : constant Aquarius.Rendering.Aquarius_Renderer :=
+                   Komnenos.Fragments.Rendering.New_Fragment_Renderer
+                     (Komnenos.Fragments.Fragment_Type (Visual),
+                      Entity.Table);
+      Program  : constant Aquarius.Programs.Program_Tree := Entity.Entity_Tree;
+   begin
+      Visual.Disable;
+
+      Aquarius.Programs.Arrangements.Arrange
+        (Program,
+         Line_Length => Visual.Width / 8);
+
+      Renderer.Set_Theme (Aquarius.Themes.Active_Theme);
+
+      Visual.Clear;
+
+      Aquarius.Programs.Arrangements.Render
+        (Program   => Program,
+         Renderer  => Renderer,
+         Point     => Entity.Tree_Cursor,
+         Partial   =>
+           Ada.Strings.Unbounded.To_String
+             (Entity.Edit_Buffer));
+
+      Visual.Enable;
+
+   end Render;
+
    -------------------
    -- Select_Entity --
    -------------------
@@ -162,32 +229,12 @@ package body Komnenos.Entities.Source.Aquarius_Source is
                       (Title => To_String (Entity.Description),
                        Path  => To_String (Entity.File_Name))
                     else Komnenos.Fragments.Fragment_Type (Visual));
-      Renderer : constant Aquarius.Rendering.Aquarius_Renderer :=
-                   Komnenos.Fragments.Rendering.New_Fragment_Renderer
-                     (Fragment, Table);
-      Program  : constant Aquarius.Programs.Program_Tree :=
-                   (if Entity.Entity_Body /= null
-                    then Entity.Entity_Body
-                    else Entity.Entity_Spec);
    begin
+      Entity.Table := Entity_Table_Access (Table);
       Fragment.Set_Entity_Key (Key (Entity.all));
       Fragment.Set_Content (Entity);
 
-      if False then
-         Log_Tree (Program);
-      end if;
-
-      Aquarius.Programs.Arrangements.Arrange
-        (Program,
-         Line_Length => Fragment.Width / 8);
-
-      Renderer.Set_Theme (Aquarius.Themes.Active_Theme);
-
-      Aquarius.Programs.Arrangements.Render
-        (Program   => Program,
-         Renderer  => Renderer,
-         Point     => Aquarius.Trees.Cursors.Left_Of_Tree (Entity.Entity_Spec),
-         Partial   => "");
+      Root_Aquarius_Source_Entity'Class (Entity.all).Render (Visual);
 
       if Visual = null then
          Komnenos.UI.Current_UI.Place_Fragment
@@ -195,6 +242,41 @@ package body Komnenos.Entities.Source.Aquarius_Source is
       end if;
 
    end Select_Entity;
+
+   ----------------
+   -- Set_Cursor --
+   ----------------
+
+   overriding procedure Set_Cursor
+     (Item     : in out Root_Aquarius_Source_Entity;
+      Position : Aquarius.Layout.Position)
+   is
+      use Ada.Strings.Unbounded;
+      use Aquarius.Layout;
+      use Aquarius.Programs;
+      Terminal : constant Program_Tree :=
+                   Item.Entity_Tree.Find_Local_Node_At
+                     (Location => Position);
+   begin
+      if Terminal /= null then
+         if Terminal.Layout_End_Position < Position then
+            Item.Edit_Buffer := Null_Unbounded_String;
+            Item.Tree_Cursor :=
+              Aquarius.Trees.Cursors.Right_Of_Tree (Terminal);
+            Item.Edit_Tree := null;
+         else
+            Item.Edit_Tree   := Terminal;
+            Item.Tree_Cursor :=
+              Aquarius.Trees.Cursors.Left_Of_Tree (Terminal);
+            Item.Edit_Buffer := To_Unbounded_String (Terminal.Text);
+            Item.Buffer_Cursor :=
+              Positive (Position.Column)
+              - Positive (Terminal.Layout_Start_Position.Column);
+            Item.Invalidated := True;
+         end if;
+         Root_Entity_Reference (Item).Set_Cursor (Position);
+      end if;
+   end Set_Cursor;
 
    ---------------------
    -- Set_Entity_Body --
