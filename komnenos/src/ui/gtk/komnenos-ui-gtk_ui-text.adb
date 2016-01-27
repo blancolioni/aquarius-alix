@@ -2,6 +2,7 @@ with Ada.Characters.Latin_1;
 with Ada.Text_IO;
 
 with Glib;
+with Glib.Object;
 with Glib.Properties;
 with Glib.Values;
 
@@ -11,12 +12,11 @@ with Gdk.Main;
 with Gdk.Rectangle;
 with Gdk.RGBA;
 with Gdk.Types;
+--  with Gdk.Types.Keysyms;
 with Gdk.Window;
 
 with Gtk.Enums;
-with Gtk.Handlers;
 
-with Gtk.Text_Buffer;
 with Gtk.Text_Iter;
 with Gtk.Text_Tag;
 with Gtk.Text_Tag_Table;
@@ -28,29 +28,62 @@ with Pango.Font;
 
 with Aquarius.Colours.Gtk_Colours;
 with Aquarius.Fonts;
+with Aquarius.Layout;
 with Aquarius.Themes;
+
+with Aquarius.Keys.Gtk_Keys;
+
+with Komnenos.Commands;
 
 package body Komnenos.UI.Gtk_UI.Text is
 
    package Text_View_Event_Handler is
-     new Gtk.Handlers.Return_Callback
+     new Gtk.Handlers.User_Return_Callback
        (Widget_Type => Gtk.Text_View.Gtk_Text_View_Record,
+        User_Type   => Komnenos_Text_View,
         Return_Type => Boolean);
 
+   package Text_Buffer_Event_Handler is
+     new Gtk.Handlers.User_Callback
+       (Widget_Type => Gtk.Text_Buffer.Gtk_Text_Buffer_Record,
+        User_Type   => Komnenos_Text_View);
+
+   function Text_View_Button_Press_Handler
+     (Widget    : access Gtk.Text_View.Gtk_Text_View_Record'Class;
+      Event     : Gdk.Event.Gdk_Event;
+      Text_View : Komnenos_Text_View)
+      return Boolean;
+
    function Text_View_Button_Release_Handler
-     (Text_View : access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Event     : Gdk.Event.Gdk_Event)
+     (Widget    : access Gtk.Text_View.Gtk_Text_View_Record'Class;
+      Event     : Gdk.Event.Gdk_Event;
+      Text_View : Komnenos_Text_View)
       return Boolean;
 
    function Text_View_Motion_Handler
-     (Text_View : access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Event     : Gdk.Event.Gdk_Event)
+     (Widget    : access Gtk.Text_View.Gtk_Text_View_Record'Class;
+      Event     : Gdk.Event.Gdk_Event;
+      Text_View : Komnenos_Text_View)
       return Boolean;
 
    function Text_View_Draw_Handler
      (Widget : access Gtk.Widget.Gtk_Widget_Record'Class;
       Cr     : Cairo.Cairo_Context)
       return Boolean;
+
+   procedure Text_View_Insert_At_Cursor
+     (Self : access Glib.Object.GObject_Record'Class;
+      Text : Glib.UTF8_String) with Unreferenced;
+
+   function Text_View_Key_Press
+     (Self : access Glib.Object.GObject_Record'Class;
+      Event : Gdk.Event.Gdk_Event_Key)
+      return Boolean;
+
+   procedure Text_View_Cursor_Move
+     (Widget : access Gtk.Text_Buffer.Gtk_Text_Buffer_Record'Class;
+      Event  : Gdk.Event.Gdk_Event;
+      Text   : Komnenos_Text_View);
 
    procedure Render_Text
      (View : Gtk.Text_View.Gtk_Text_View;
@@ -62,6 +95,10 @@ package body Komnenos.UI.Gtk_UI.Text is
       return Gtk.Text_Tag.Gtk_Text_Tag;
    --  return a text tag corresponding to the given Style.  Create a new
    --  text tag if necessary.
+
+   procedure Move_Cursor
+     (Text_View : Komnenos_Text_View;
+      Updated   : out Boolean) with Unreferenced;
 
    procedure Follow_If_Link
      (Text_View : not null access Gtk.Text_View.Gtk_Text_View_Record'Class;
@@ -172,21 +209,36 @@ package body Komnenos.UI.Gtk_UI.Text is
          use Gdk.Event;
       begin
          Result.Text.Add_Events
-           (Button_Press_Mask or Button_Release_Mask or Pointer_Motion_Mask);
+           (Button_Press_Mask or Button_Release_Mask
+            or Pointer_Motion_Mask or Key_Press_Mask or Key_Release_Mask);
       end;
 
       Text_View_Event_Handler.Connect
         (Result.Text, Gtk.Widget.Signal_Button_Release_Event,
          Text_View_Event_Handler.To_Marshaller
-           (Text_View_Button_Release_Handler'Access));
+           (Text_View_Button_Release_Handler'Access),
+         Result);
+
+      Text_View_Event_Handler.Connect
+        (Result.Text, Gtk.Widget.Signal_Button_Press_Event,
+         Text_View_Event_Handler.To_Marshaller
+           (Text_View_Button_Press_Handler'Access),
+         Result);
 
       Text_View_Event_Handler.Connect
         (Result.Text, Gtk.Widget.Signal_Motion_Notify_Event,
          Text_View_Event_Handler.To_Marshaller
-           (Text_View_Motion_Handler'Access));
+           (Text_View_Motion_Handler'Access),
+         Result);
 
       Result.Text.On_Draw
         (Text_View_Draw_Handler'Access);
+
+      Result.Text.On_Key_Press_Event
+        (Text_View_Key_Press'Access,
+         Result);
+
+      Result.Buffer := Result.Text.Get_Buffer;
 
       Result.Set_Min_Content_Height (Glib.Gint (Fragment.Height));
       Result.Set_Min_Content_Width (Glib.Gint (Fragment.Width));
@@ -196,9 +248,28 @@ package body Komnenos.UI.Gtk_UI.Text is
       declare
          Start_Iter : Gtk.Text_Iter.Gtk_Text_Iter;
       begin
-         Result.Text.Get_Buffer.Get_Start_Iter (Start_Iter);
-         Result.Text.Get_Buffer.Place_Cursor (Start_Iter);
+         Result.Buffer.Get_Start_Iter (Start_Iter);
+         Result.Buffer.Place_Cursor (Start_Iter);
       end;
+
+      if False then
+         Result.Cursor_Handler_Id :=
+           Text_Buffer_Event_Handler.Connect
+             (Result.Buffer, "notify::cursor-position",
+              Text_Buffer_Event_Handler.To_Marshaller
+                (Text_View_Cursor_Move'Access),
+              Result);
+      end if;
+
+      if False then
+         Text_Buffer_Event_Handler.Connect
+           (Result.Buffer, "end-user-action",
+            Text_Buffer_Event_Handler.To_Marshaller
+              (Text_View_Cursor_Move'Access),
+            Result);
+      end if;
+
+      Result.Active := True;
 
       return Result;
 
@@ -325,6 +396,33 @@ package body Komnenos.UI.Gtk_UI.Text is
       end if;
       return Result;
    end Get_Tag_Entry;
+
+   -----------------
+   -- Move_Cursor --
+   -----------------
+
+   procedure Move_Cursor
+     (Text_View : Komnenos_Text_View;
+      Updated   : out Boolean)
+   is
+      use Glib, Gtk.Text_Buffer, Gtk.Text_Iter;
+      Iter    : Gtk_Text_Iter;
+      Line    : Gint;
+      Column  : Gint;
+   begin
+      Text_View.Buffer.Get_Iter_At_Mark
+        (Iter, Text_View.Buffer.Get_Insert);
+
+      Line := Get_Line (Iter);
+      Column := Get_Line_Offset (Iter);
+      Ada.Text_IO.Put_Line ("cursor move:" & Line'Img & Column'Img);
+
+      Text_View.Fragment.On_Cursor_Move
+        ((Aquarius.Layout.Positive_Count (Line + 1),
+         Aquarius.Layout.Positive_Count (Column + 1)),
+         Updated);
+
+   end Move_Cursor;
 
    ---------------------------
    -- Paint_Line_Background --
@@ -499,20 +597,54 @@ package body Komnenos.UI.Gtk_UI.Text is
 
    end Set_Text_State;
 
+   ------------------------------------
+   -- Text_View_Button_Press_Handler --
+   ------------------------------------
+
+   function Text_View_Button_Press_Handler
+     (Widget    : access Gtk.Text_View.Gtk_Text_View_Record'Class;
+      Event     : Gdk.Event.Gdk_Event;
+      Text_View : Komnenos_Text_View)
+      return Boolean
+   is
+      pragma Unreferenced (Widget);
+      X, Y : Glib.Gint;
+      Iter : Gtk.Text_Iter.Gtk_Text_Iter;
+      Line, Column : Glib.Gint;
+   begin
+      Text_View.Grab_Focus;
+      Text_View.Text.Window_To_Buffer_Coords
+        (Gtk.Enums.Text_Window_Widget,
+         Glib.Gint (Event.Button.X), Glib.Gint (Event.Button.Y),
+         X, Y);
+      Text_View.Text.Get_Iter_At_Location (Iter, X, Y);
+--        Text_View.Buffer.Place_Cursor (Iter);
+      Line := Gtk.Text_Iter.Get_Line (Iter);
+      Column := Gtk.Text_Iter.Get_Line_Offset (Iter);
+
+      Text_View.Fragment.Get_Content.Execute_Command
+        ((Komnenos.Commands.Set_Cursor_Command,
+         Natural (Line) + 1, Natural (Column) + 1));
+
+      return False;
+   end Text_View_Button_Press_Handler;
+
    --------------------------------------
    -- Text_View_Button_Release_Handler --
    --------------------------------------
 
    function Text_View_Button_Release_Handler
-     (Text_View : access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Event     : Gdk.Event.Gdk_Event)
+     (Widget    : access Gtk.Text_View.Gtk_Text_View_Record'Class;
+      Event     : Gdk.Event.Gdk_Event;
+      Text_View : Komnenos_Text_View)
       return Boolean
    is
+      pragma Unreferenced (Widget);
       use type Glib.Gint;
       use type Gdk.Types.Gdk_Modifier_Type;
       use Gtk.Text_Iter;
       Buffer : constant Gtk.Text_Buffer.Gtk_Text_Buffer :=
-                 Text_View.Get_Buffer;
+                 Text_View.Buffer;
       Have_Selection : Boolean;
       Start, Finish : Gtk_Text_Iter;
       Iter : Gtk_Text_Iter;
@@ -526,18 +658,63 @@ package body Komnenos.UI.Gtk_UI.Text is
       then
          return False;
       end if;
-      Text_View.Window_To_Buffer_Coords
+      Text_View.Text.Window_To_Buffer_Coords
         (Gtk.Enums.Text_Window_Widget,
          Glib.Gint (Event.Button.X), Glib.Gint (Event.Button.Y),
          X, Y);
-      Text_View.Get_Iter_At_Location (Iter, X, Y);
+
+      Text_View.Text.Get_Iter_At_Location (Iter, X, Y);
 
       if Active then
-         Follow_If_Link (Text_View, Iter);
+         Follow_If_Link (Text_View.Text, Iter);
       end if;
 
       return False;
    end Text_View_Button_Release_Handler;
+
+   ---------------------------
+   -- Text_View_Cursor_Move --
+   ---------------------------
+
+   procedure Text_View_Cursor_Move
+     (Widget : access Gtk.Text_Buffer.Gtk_Text_Buffer_Record'Class;
+      Event  : Gdk.Event.Gdk_Event;
+      Text   : Komnenos_Text_View)
+   is
+      pragma Unreferenced (Event);
+      use Glib, Gtk.Text_Buffer, Gtk.Text_Iter;
+      Iter    : Gtk_Text_Iter;
+      Line    : Gint;
+      Column  : Gint;
+      Updated : Boolean;
+   begin
+      if not Text.Active
+        or else not Text.Fragment.Enabled
+      then
+         return;
+      end if;
+
+      Text.Active := False;
+
+      Gtk.Handlers.Handler_Block (Widget, Text.Cursor_Handler_Id);
+
+      Widget.Get_Iter_At_Mark (Iter, Widget.Get_Insert);
+      Line := Get_Line (Iter);
+      Column := Get_Line_Offset (Iter);
+      Ada.Text_IO.Put_Line ("cursor move:" & Line'Img & Column'Img);
+      Text.Fragment.On_Cursor_Move
+        ((Aquarius.Layout.Positive_Count (Line + 1),
+         Aquarius.Layout.Positive_Count (Column + 1)),
+         Updated);
+      if Updated then
+         Ada.Text_IO.Put_Line ("updated");
+         Widget.Set_Text ("");
+         Render_Text (Text.Text, Text.Fragment);
+      end if;
+
+      Gtk.Handlers.Handler_Unblock (Widget, Text.Cursor_Handler_Id);
+      Text.Active := True;
+   end Text_View_Cursor_Move;
 
    ----------------------------
    -- Text_View_Draw_Handler --
@@ -580,20 +757,56 @@ package body Komnenos.UI.Gtk_UI.Text is
 
    end Text_View_Draw_Handler;
 
+   --------------------------------
+   -- Text_View_Insert_At_Cursor --
+   --------------------------------
+
+   procedure Text_View_Insert_At_Cursor
+     (Self : access Glib.Object.GObject_Record'Class;
+      Text : Glib.UTF8_String)
+   is
+      pragma Unreferenced (Self);
+   begin
+      Ada.Text_IO.Put_Line ("insert: [" & Text & "]");
+   end Text_View_Insert_At_Cursor;
+
+   -------------------------
+   -- Text_View_Key_Press --
+   -------------------------
+
+   function Text_View_Key_Press
+     (Self : access Glib.Object.GObject_Record'Class;
+      Event : Gdk.Event.Gdk_Event_Key)
+      return Boolean
+   is
+      use type Aquarius.Keys.Aquarius_Key;
+      Text : constant Komnenos_Text_View :=
+               Komnenos_Text_View (Self);
+      Key  : constant Aquarius.Keys.Aquarius_Key :=
+               Aquarius.Keys.Gtk_Keys.To_Aquarius_Key
+                 (Event.Keyval, Event.State);
+   begin
+      if Key /= Aquarius.Keys.Null_Key then
+         Text.Fragment.On_Key_Press (Key);
+      end if;
+      return True;
+   end Text_View_Key_Press;
+
    ------------------------------
    -- Text_View_Motion_Handler --
    ------------------------------
 
    function Text_View_Motion_Handler
-     (Text_View : access Gtk.Text_View.Gtk_Text_View_Record'Class;
-      Event     : Gdk.Event.Gdk_Event)
+     (Widget    : access Gtk.Text_View.Gtk_Text_View_Record'Class;
+      Event     : Gdk.Event.Gdk_Event;
+      Text_View : Komnenos_Text_View)
       return Boolean
    is
       use type Glib.Gint;
       use type Gdk.Types.Gdk_Modifier_Type;
       use Gtk.Text_Iter;
       Buffer : constant Gtk.Text_Buffer.Gtk_Text_Buffer :=
-                 Text_View.Get_Buffer;
+                 Text_View.Buffer;
       Have_Selection : Boolean;
       Start, Finish : Gtk_Text_Iter;
       Iter : Gtk_Text_Iter;
@@ -609,16 +822,16 @@ package body Komnenos.UI.Gtk_UI.Text is
          return False;
       end if;
 
-      Text_View.Window_To_Buffer_Coords
+      Widget.Window_To_Buffer_Coords
         (Gtk.Enums.Text_Window_Widget,
          Glib.Gint (Event.Button.X), Glib.Gint (Event.Button.Y),
          X, Y);
-      Text_View.Get_Iter_At_Location (Iter, X, Y);
+      Widget.Get_Iter_At_Location (Iter, X, Y);
 
       if Active then
-         Set_Text_State (Text_View, Iter, Aquarius.Themes.Hover);
+         Set_Text_State (Widget, Iter, Aquarius.Themes.Hover);
       else
-         Set_Text_State (Text_View, Iter, Aquarius.Themes.Normal);
+         Set_Text_State (Widget, Iter, Aquarius.Themes.Normal);
       end if;
 
       return False;

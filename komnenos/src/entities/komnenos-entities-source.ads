@@ -40,4 +40,8 @@ private
       Visual : access Entity_Visual'Class;
       Offset : Natural);
 
+   overriding procedure Render
+     (Entity : not null access Root_Source_Entity_Reference;
+      Visual : not null access Entity_Visual'Class);
+
 end Komnenos.Entities.Source;

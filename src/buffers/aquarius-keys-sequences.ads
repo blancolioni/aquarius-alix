@@ -6,25 +6,21 @@ package Aquarius.Keys.Sequences is
 
    function Create_Sequence (Keys : Array_Of_Keys) return Key_Sequence;
    function Create_Sequence (Key : Aquarius_Key) return Key_Sequence;
+   procedure Clear (Sequence : in out Key_Sequence);
    procedure Add_Key (Sequence : in out Key_Sequence;
                       Key      : in     Aquarius_Key);
 
    function Parse_Sequence (Text : String) return Key_Sequence;
+   function Keys (Sequence : Key_Sequence) return Array_Of_Keys;
 
 private
 
-   Max_Sequence_Length : constant := 4;
-
-   type Key_Sequence_Count is range 0 .. Max_Sequence_Length;
-   subtype Key_Sequence_Index is
-     Key_Sequence_Count range 1 .. Key_Sequence_Count'Last;
-
-   type Key_Sequence_Array is array (Key_Sequence_Index) of Aquarius_Key;
+   Max_Sequence_Length : constant := 8;
 
    type Key_Sequence is
       record
-         Length : Key_Sequence_Count := 0;
-         Keys   : Key_Sequence_Array := (others => 0);
+         Length : Natural := 0;
+         Keys   : Array_Of_Keys (1 .. Max_Sequence_Length);
       end record;
 
 end Aquarius.Keys.Sequences;

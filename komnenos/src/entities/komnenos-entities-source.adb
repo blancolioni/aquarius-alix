@@ -1,9 +1,15 @@
 with Ada.Strings.Fixed;
 
+with Aquarius.Themes;
+
 with Komnenos.Fragments.Notes;
 with Komnenos.UI;
 
 package body Komnenos.Entities.Source is
+
+   function Placeholder_Text
+     (Entity : Root_Source_Entity_Reference'Class)
+      return String;
 
    ------------
    -- Create --
@@ -51,6 +57,42 @@ package body Komnenos.Entities.Source is
       return new Root_Source_Entity_Reference'(Result);
    end New_Source_Entity;
 
+   ----------------------
+   -- Placeholder_Text --
+   ----------------------
+
+   function Placeholder_Text
+     (Entity : Root_Source_Entity_Reference'Class)
+      return String
+   is
+      use Ada.Strings.Unbounded;
+      S : constant Unbounded_String :=
+            Entity.Name
+            & " " & Class (Entity)
+            & " defined in "
+            & To_String (Entity.File_Name)
+            & " line"
+            & Natural'Image (Entity.Line)
+            & " column"
+            & Natural'Image (Entity.Column);
+   begin
+      return To_String (S);
+   end Placeholder_Text;
+
+   ------------
+   -- Render --
+   ------------
+
+   overriding procedure Render
+     (Entity : not null access Root_Source_Entity_Reference;
+      Visual : not null access Entity_Visual'Class)
+   is
+   begin
+      Visual.Clear;
+      Visual.Put_Line (Placeholder_Text (Entity.all),
+                       Aquarius.Themes.Active_Theme.Default_Style);
+   end Render;
+
    -------------------
    -- Select_Entity --
    -------------------
@@ -67,14 +109,7 @@ package body Komnenos.Entities.Source is
       Note : constant Komnenos.Fragments.Fragment_Type :=
                (if Visual = null
                 then Komnenos.Fragments.Notes.New_Note_Fragment
-                  (To_String (Entity.Name)
-                   & " " & Class (Entity.all)
-                   & " defined in "
-                   & To_String (Entity.File_Name)
-                   & " line"
-                   & Natural'Image (Entity.Line)
-                   & " column"
-                   & Natural'Image (Entity.Column))
+                  (Placeholder_Text (Entity.all))
                 else Komnenos.Fragments.Fragment_Type (Visual));
    begin
       Komnenos.UI.Current_UI.Place_Fragment

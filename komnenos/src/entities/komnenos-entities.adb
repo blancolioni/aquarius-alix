@@ -1,8 +1,7 @@
 with Ada.Characters.Handling;
 with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded.Less_Case_Insensitive;
-
-with Aquarius.Layout;
+with Ada.Text_IO;
 
 package body Komnenos.Entities is
 
@@ -191,6 +190,21 @@ package body Komnenos.Entities is
       return Ada.Strings.Unbounded.To_String (Item.Display_Text);
    end Display_Text;
 
+   ---------------------
+   -- Execute_Command --
+   ---------------------
+
+   procedure Execute_Command
+     (Item : in out Root_Entity_Reference;
+      Command : Komnenos.Commands.Komnenos_Command)
+   is
+      pragma Unreferenced (Item);
+   begin
+      Ada.Text_IO.Put_Line
+        (Komnenos.Commands.Komnenos_Command_Type'Image
+           (Command.Command));
+   end Execute_Command;
+
    ------------
    -- Exists --
    ------------
@@ -270,7 +284,7 @@ package body Komnenos.Entities is
 
    function Get_Cursor
      (Item : Root_Entity_Reference)
-      return Natural
+      return Aquarius.Layout.Position
    is
    begin
       return Item.Cursor;
@@ -419,6 +433,21 @@ package body Komnenos.Entities is
       return Ada.Strings.Unbounded.To_String (Item.Identifier);
    end Name;
 
+   --------------
+   -- Put_Line --
+   --------------
+
+   procedure Put_Line
+     (Visual : in out Entity_Visual'Class;
+      Text   : in     String;
+      Style  : in     Aquarius.Styles.Aquarius_Style;
+      Link   : access Root_Entity_Reference'Class := null)
+   is
+   begin
+      Visual.Put (Text, Style, Link);
+      Visual.New_Line;
+   end Put_Line;
+
    ----------------
    -- References --
    ----------------
@@ -443,11 +472,11 @@ package body Komnenos.Entities is
    ----------------
 
    procedure Set_Cursor
-     (Item : in out Root_Entity_Reference;
-      Offset : Natural)
+     (Item     : in out Root_Entity_Reference;
+      Position : Aquarius.Layout.Position)
    is
    begin
-      Item.Cursor := Offset;
+      Item.Cursor := Position;
    end Set_Cursor;
 
    -----------------------

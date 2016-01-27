@@ -1,5 +1,8 @@
 with Gtk.Widget;
+
+private with Gtk.Handlers;
 private with Gtk.Scrolled_Window;
+private with Gtk.Text_Buffer;
 private with Gtk.Text_View;
 private with Aquarius.Styles;
 
@@ -23,11 +26,14 @@ private
      new Gtk.Scrolled_Window.Gtk_Scrolled_Window_Record
      and Display_Interface with
       record
-         Text         : Gtk.Text_View.Gtk_Text_View;
-         Hover_Start  : Natural  := 0;
-         Hover_Finish : Natural := 0;
-         Hover_Style  : Aquarius.Styles.Aquarius_Style;
-         Fragment     : Komnenos.Fragments.Fragment_Type;
+         Text              : Gtk.Text_View.Gtk_Text_View;
+         Buffer            : Gtk.Text_Buffer.Gtk_Text_Buffer;
+         Hover_Start       : Natural  := 0;
+         Hover_Finish      : Natural := 0;
+         Hover_Style       : Aquarius.Styles.Aquarius_Style;
+         Fragment          : Komnenos.Fragments.Fragment_Type;
+         Active            : Boolean := False;
+         Cursor_Handler_Id : Gtk.Handlers.Handler_Id;
       end record;
 
 end Komnenos.UI.Gtk_UI.Text;
