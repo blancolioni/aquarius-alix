@@ -78,6 +78,14 @@ package Komnenos.Fragments is
      (Fragment : Root_Fragment_Type)
       return Boolean;
 
+   function Cursor_Moved
+     (Fragment : Root_Fragment_Type)
+      return Boolean;
+
+   function Get_Cursor
+     (Fragment : Root_Fragment_Type)
+      return Aquarius.Layout.Position;
+
    procedure Rendered
      (Fragment : in out Root_Fragment_Type);
 

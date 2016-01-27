@@ -1,6 +1,5 @@
 with Gtk.Widget;
 
-private with Gtk.Handlers;
 private with Gtk.Scrolled_Window;
 private with Gtk.Text_Buffer;
 private with Gtk.Text_View;
@@ -32,8 +31,6 @@ private
          Hover_Finish      : Natural := 0;
          Hover_Style       : Aquarius.Styles.Aquarius_Style;
          Fragment          : Komnenos.Fragments.Fragment_Type;
-         Active            : Boolean := False;
-         Cursor_Handler_Id : Gtk.Handlers.Handler_Id;
       end record;
 
 end Komnenos.UI.Gtk_UI.Text;
