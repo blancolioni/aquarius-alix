@@ -8,14 +8,13 @@ with Glib.Values;
 
 with Gdk.Cursor;
 with Gdk.Event;
-with Gdk.Main;
 with Gdk.Rectangle;
 with Gdk.RGBA;
 with Gdk.Types;
---  with Gdk.Types.Keysyms;
 with Gdk.Window;
 
 with Gtk.Enums;
+with Gtk.Handlers;
 
 with Gtk.Text_Iter;
 with Gtk.Text_Tag;
@@ -42,11 +41,6 @@ package body Komnenos.UI.Gtk_UI.Text is
        (Widget_Type => Gtk.Text_View.Gtk_Text_View_Record,
         User_Type   => Komnenos_Text_View,
         Return_Type => Boolean);
-
-   package Text_Buffer_Event_Handler is
-     new Gtk.Handlers.User_Callback
-       (Widget_Type => Gtk.Text_Buffer.Gtk_Text_Buffer_Record,
-        User_Type   => Komnenos_Text_View);
 
    function Text_View_Button_Press_Handler
      (Widget    : access Gtk.Text_View.Gtk_Text_View_Record'Class;
@@ -83,7 +77,8 @@ package body Komnenos.UI.Gtk_UI.Text is
    procedure Text_View_Cursor_Move
      (Widget : access Gtk.Text_Buffer.Gtk_Text_Buffer_Record'Class;
       Event  : Gdk.Event.Gdk_Event;
-      Text   : Komnenos_Text_View);
+      Text   : Komnenos_Text_View)
+     with Unreferenced;
 
    procedure Render_Text
      (View : Gtk.Text_View.Gtk_Text_View;
@@ -97,8 +92,10 @@ package body Komnenos.UI.Gtk_UI.Text is
    --  text tag if necessary.
 
    procedure Move_Cursor
-     (Text_View : Komnenos_Text_View;
-      Updated   : out Boolean) with Unreferenced;
+     (Text_View : Komnenos_Text_View) with Unreferenced;
+
+   procedure Update_Cursor
+     (Text_View : Komnenos_Text_View);
 
    procedure Follow_If_Link
      (Text_View : not null access Gtk.Text_View.Gtk_Text_View_Record'Class;
@@ -252,25 +249,6 @@ package body Komnenos.UI.Gtk_UI.Text is
          Result.Buffer.Place_Cursor (Start_Iter);
       end;
 
-      if False then
-         Result.Cursor_Handler_Id :=
-           Text_Buffer_Event_Handler.Connect
-             (Result.Buffer, "notify::cursor-position",
-              Text_Buffer_Event_Handler.To_Marshaller
-                (Text_View_Cursor_Move'Access),
-              Result);
-      end if;
-
-      if False then
-         Text_Buffer_Event_Handler.Connect
-           (Result.Buffer, "end-user-action",
-            Text_Buffer_Event_Handler.To_Marshaller
-              (Text_View_Cursor_Move'Access),
-            Result);
-      end if;
-
-      Result.Active := True;
-
       return Result;
 
    end Create_Text_View;
@@ -402,8 +380,7 @@ package body Komnenos.UI.Gtk_UI.Text is
    -----------------
 
    procedure Move_Cursor
-     (Text_View : Komnenos_Text_View;
-      Updated   : out Boolean)
+     (Text_View : Komnenos_Text_View)
    is
       use Glib, Gtk.Text_Buffer, Gtk.Text_Iter;
       Iter    : Gtk_Text_Iter;
@@ -419,8 +396,7 @@ package body Komnenos.UI.Gtk_UI.Text is
 
       Text_View.Fragment.On_Cursor_Move
         ((Aquarius.Layout.Positive_Count (Line + 1),
-         Aquarius.Layout.Positive_Count (Column + 1)),
-         Updated);
+         Aquarius.Layout.Positive_Count (Column + 1)));
 
    end Move_Cursor;
 
@@ -569,7 +545,7 @@ package body Komnenos.UI.Gtk_UI.Text is
                                       Gdk.Cursor.Gdk_Cursor_New
                                         (Gdk.Cursor.Hand2));
          end case;
-         Gdk.Main.Flush;
+         --  Gdk.Main.Flush;
       end;
 
       if Display.Hover_Start /= 0 then
@@ -622,9 +598,15 @@ package body Komnenos.UI.Gtk_UI.Text is
       Line := Gtk.Text_Iter.Get_Line (Iter);
       Column := Gtk.Text_Iter.Get_Line_Offset (Iter);
 
-      Text_View.Fragment.Get_Content.Execute_Command
-        ((Komnenos.Commands.Set_Cursor_Command,
-         Natural (Line) + 1, Natural (Column) + 1));
+      declare
+         use Aquarius.Layout;
+         use Glib;
+      begin
+         Text_View.Fragment.Get_Content.Execute_Command
+           ((Komnenos.Commands.Set_Cursor_Command,
+            (Positive_Count (Line + 1),
+             Positive_Count (Column + 1))));
+      end;
 
       return False;
    end Text_View_Button_Press_Handler;
@@ -686,34 +668,21 @@ package body Komnenos.UI.Gtk_UI.Text is
       Iter    : Gtk_Text_Iter;
       Line    : Gint;
       Column  : Gint;
-      Updated : Boolean;
    begin
-      if not Text.Active
-        or else not Text.Fragment.Enabled
-      then
-         return;
-      end if;
-
-      Text.Active := False;
-
-      Gtk.Handlers.Handler_Block (Widget, Text.Cursor_Handler_Id);
-
       Widget.Get_Iter_At_Mark (Iter, Widget.Get_Insert);
       Line := Get_Line (Iter);
       Column := Get_Line_Offset (Iter);
       Ada.Text_IO.Put_Line ("cursor move:" & Line'Img & Column'Img);
       Text.Fragment.On_Cursor_Move
         ((Aquarius.Layout.Positive_Count (Line + 1),
-         Aquarius.Layout.Positive_Count (Column + 1)),
-         Updated);
-      if Updated then
+         Aquarius.Layout.Positive_Count (Column + 1)));
+
+      if Text.Fragment.Needs_Render then
          Ada.Text_IO.Put_Line ("updated");
          Widget.Set_Text ("");
          Render_Text (Text.Text, Text.Fragment);
+         Text.Fragment.Rendered;
       end if;
-
-      Gtk.Handlers.Handler_Unblock (Widget, Text.Cursor_Handler_Id);
-      Text.Active := True;
    end Text_View_Cursor_Move;
 
    ----------------------------
@@ -736,10 +705,6 @@ package body Komnenos.UI.Gtk_UI.Text is
       Location     : Gdk.Rectangle.Gdk_Rectangle;
 
    begin
-
---        if Display.Display_Grabs_Focus then
---           Text_View.Grab_Focus;
---        end if;
 
       Buffer.Get_Iter_At_Mark
         (Iter, Buffer.Get_Insert);
@@ -788,6 +753,20 @@ package body Komnenos.UI.Gtk_UI.Text is
    begin
       if Key /= Aquarius.Keys.Null_Key then
          Text.Fragment.On_Key_Press (Key);
+         if Text.Fragment.Needs_Render then
+            Ada.Text_IO.Put_Line ("updated");
+            Text.Buffer.Set_Text ("");
+            Render_Text (Text.Text, Text.Fragment);
+         end if;
+
+         if Text.Fragment.Needs_Render
+           or else Text.Fragment.Cursor_Moved
+         then
+            Update_Cursor (Text);
+         end if;
+
+         Text.Fragment.Rendered;
+
       end if;
       return True;
    end Text_View_Key_Press;
@@ -836,5 +815,24 @@ package body Komnenos.UI.Gtk_UI.Text is
 
       return False;
    end Text_View_Motion_Handler;
+
+   -------------------
+   -- Update_Cursor --
+   -------------------
+
+   procedure Update_Cursor
+     (Text_View : Komnenos_Text_View)
+   is
+      use Glib;
+      use Aquarius.Layout;
+      New_Position : constant Position := Text_View.Fragment.Get_Cursor;
+      Iter : Gtk.Text_Iter.Gtk_Text_Iter;
+   begin
+      Text_View.Buffer.Get_Iter_At_Line_Offset
+        (Iter        => Iter,
+         Line_Number => Glib.Gint (New_Position.Line) - 1,
+         Char_Offset => Glib.Gint (New_Position.Column) - 1);
+      Text_View.Buffer.Place_Cursor (Iter);
+   end Update_Cursor;
 
 end Komnenos.UI.Gtk_UI.Text;

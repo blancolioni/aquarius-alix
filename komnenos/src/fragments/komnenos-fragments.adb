@@ -55,6 +55,18 @@ package body Komnenos.Fragments is
       Fragment.Lines.Append (new Line_Info);
    end Clear;
 
+   ------------------
+   -- Cursor_Moved --
+   ------------------
+
+   function Cursor_Moved
+     (Fragment : Root_Fragment_Type)
+      return Boolean
+   is
+   begin
+      return Fragment.Cursor_Moved;
+   end Cursor_Moved;
+
    --------------
    -- Editable --
    --------------
@@ -156,6 +168,18 @@ package body Komnenos.Fragments is
               Width => Config.Get ("width"),
               Height => Config.Get ("height"));
    end From_Config;
+
+   ----------------
+   -- Get_Cursor --
+   ----------------
+
+   function Get_Cursor
+     (Fragment : Root_Fragment_Type)
+      return Aquarius.Layout.Position
+   is
+   begin
+      return Fragment.New_Cursor;
+   end Get_Cursor;
 
    --------------
    -- Get_Link --
