@@ -49,8 +49,14 @@ package Komnenos.Entities is
    function Width (Visual : Entity_Visual) return Positive is abstract;
    function Height (Visual : Entity_Visual) return Positive is abstract;
 
-   procedure Disable (Visual : in out Entity_Visual) is abstract;
-   procedure Enable (Visual : in out Entity_Visual) is abstract;
+   procedure Set_Cursor
+     (Visual   : in out Entity_Visual;
+      Position : in     Aquarius.Layout.Position)
+   is abstract;
+
+   procedure Invalidate
+     (Visual   : in out Entity_Visual)
+   is abstract;
 
    procedure Put_Line
      (Visual : in out Entity_Visual'Class;
@@ -101,9 +107,6 @@ package Komnenos.Entities is
    procedure Execute_Command
      (Item : in out Root_Entity_Reference;
       Command : Komnenos.Commands.Komnenos_Command);
-
-   function Invalidated (Item : Root_Entity_Reference) return Boolean
-   is (False);
 
    type Entity_Reference is access all Root_Entity_Reference'Class;
 
