@@ -96,16 +96,8 @@ package Komnenos.Entities is
       Display_Text : String := "";
       Description  : String := "");
 
-   procedure Set_Cursor
-     (Item     : in out Root_Entity_Reference;
-      Position : Aquarius.Layout.Position);
-
-   function Get_Cursor
-     (Item : Root_Entity_Reference)
-      return Aquarius.Layout.Position;
-
    procedure Execute_Command
-     (Item : in out Root_Entity_Reference;
+     (Item    : not null access Root_Entity_Reference;
       Command : Komnenos.Commands.Komnenos_Command);
 
    type Entity_Reference is access all Root_Entity_Reference'Class;
@@ -356,7 +348,6 @@ private
          Description  : Ada.Strings.Unbounded.Unbounded_String;
          Key          : Ada.Strings.Unbounded.Unbounded_String;
          References   : File_Location_Vectors.Vector;
-         Cursor       : Aquarius.Layout.Position := (1, 1);
          Table        : Entity_Table_Access;
       end record;
 
