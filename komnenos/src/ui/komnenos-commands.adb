@@ -121,6 +121,57 @@ package body Komnenos.Commands is
       Table.Table.Map.Insert (Name, Local_Standard_Vector.Last_Index);
    end Insert_Command;
 
+   ----------
+   -- Show --
+   ----------
+
+   function Show (Command : Komnenos_Command) return String is
+      function Show (X : Integer) return String;
+      function Show (Unit : Move_Unit_Type) return String;
+
+      ----------
+      -- Show --
+      ----------
+
+      function Show (X : Integer) return String is
+      begin
+         return Ada.Strings.Fixed.Trim (Integer'Image (X), Ada.Strings.Left);
+      end Show;
+
+      ----------
+      -- Show --
+      ----------
+
+      function Show (Unit : Move_Unit_Type) return String is
+      begin
+         case Unit is
+            when By_Character =>
+               return "character";
+            when By_Token =>
+               return "token";
+            when By_Line =>
+               return "line";
+            when By_Fragment =>
+               return "fragment";
+         end case;
+      end Show;
+
+   begin
+      case Command.Command is
+         when No_Command =>
+            return "no-command";
+         when Move_Cursor_Command =>
+            return "move-cursor "
+              & Show (Command.Units)
+              & " " & Show (Command.Offset);
+         when Set_Cursor_Command =>
+            return "set-cursor " & Show (Command.Line)
+              & " " & Show (Command.Column);
+         when Insert_Character_Command =>
+            return "insert-character '" & Command.Ch & "'";
+      end case;
+   end Show;
+
    --------------------
    -- Standard_Table --
    --------------------

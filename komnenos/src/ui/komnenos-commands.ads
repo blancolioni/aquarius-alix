@@ -27,6 +27,8 @@ package Komnenos.Commands is
          end case;
       end record;
 
+   function Show (Command : Komnenos_Command) return String;
+
    type Command_Reference is private;
 
    type Command_Table is tagged private;
