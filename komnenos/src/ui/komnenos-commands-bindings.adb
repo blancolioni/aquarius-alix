@@ -35,8 +35,8 @@ package body Komnenos.Commands.Bindings is
       Table.Create;
       Bind (Aquarius.Keys.Up_Arrow, "previous-line");
       Bind (Aquarius.Keys.Down_Arrow, "next-line");
-      Bind (Aquarius.Keys.Left_Arrow, "previous-character");
-      Bind (Aquarius.Keys.Right_Arrow, "next-character");
+      Bind (Aquarius.Keys.Left_Arrow, "backward-character");
+      Bind (Aquarius.Keys.Right_Arrow, "forward-character");
    end Default_Bindings;
 
 end Komnenos.Commands.Bindings;
