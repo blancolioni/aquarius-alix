@@ -1,3 +1,5 @@
+with Aquarius.Layout;
+
 package Komnenos.Commands is
 
    type Komnenos_Command_Type is
@@ -21,7 +23,7 @@ package Komnenos.Commands is
                Offset : Integer;
                Units  : Move_Unit_Type;
             when Set_Cursor_Command =>
-               Line, Column : Positive;
+               New_Position : Aquarius.Layout.Position;
             when Insert_Character_Command =>
                Ch     : Character;
          end case;

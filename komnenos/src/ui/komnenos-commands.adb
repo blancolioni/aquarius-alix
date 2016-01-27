@@ -202,8 +202,8 @@ package body Komnenos.Commands is
               & Show (Command.Units)
               & " " & Show (Command.Offset);
          when Set_Cursor_Command =>
-            return "set-cursor " & Show (Command.Line)
-              & " " & Show (Command.Column);
+            return "set-cursor "
+              & Aquarius.Layout.Show (Command.New_Position);
          when Insert_Character_Command =>
             return "insert-character '" & Command.Ch & "'";
       end case;
