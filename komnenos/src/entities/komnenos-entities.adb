@@ -200,9 +200,7 @@ package body Komnenos.Entities is
    is
       pragma Unreferenced (Item);
    begin
-      Ada.Text_IO.Put_Line
-        (Komnenos.Commands.Komnenos_Command_Type'Image
-           (Command.Command));
+      Ada.Text_IO.Put_Line (Komnenos.Commands.Show (Command));
    end Execute_Command;
 
    ------------
