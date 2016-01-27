@@ -55,15 +55,6 @@ package body Komnenos.Fragments is
       Fragment.Lines.Append (new Line_Info);
    end Clear;
 
-   -------------
-   -- Disable --
-   -------------
-
-   overriding procedure Disable (Fragment : in out Root_Fragment_Type) is
-   begin
-      Fragment.Enabled := False;
-   end Disable;
-
    --------------
    -- Editable --
    --------------
@@ -75,27 +66,6 @@ package body Komnenos.Fragments is
    begin
       return Fragment.Editable;
    end Editable;
-
-   ------------
-   -- Enable --
-   ------------
-
-   overriding procedure Enable (Fragment : in out Root_Fragment_Type) is
-   begin
-      Fragment.Enabled := True;
-   end Enable;
-
-   -------------
-   -- Enabled --
-   -------------
-
-   function Enabled
-     (Fragment : Root_Fragment_Type)
-      return Boolean
-   is
-   begin
-      return Fragment.Enabled;
-   end Enabled;
 
    ----------------
    -- Entity_Key --
@@ -333,6 +303,15 @@ package body Komnenos.Fragments is
       Fragment.Bindings.Default_Bindings;
    end Initialize;
 
+   ----------------
+   -- Invalidate --
+   ----------------
+
+   overriding procedure Invalidate (Fragment : in out Root_Fragment_Type) is
+   begin
+      Fragment.Needs_Render := True;
+   end Invalidate;
+
    -------------
    -- Iterate --
    -------------
@@ -395,6 +374,18 @@ package body Komnenos.Fragments is
    end Key;
 
    ------------------
+   -- Needs_Render --
+   ------------------
+
+   function Needs_Render
+     (Fragment : Root_Fragment_Type)
+      return Boolean
+   is
+   begin
+      return Fragment.Needs_Render;
+   end Needs_Render;
+
+   ------------------
    -- New_Fragment --
    ------------------
 
@@ -420,21 +411,17 @@ package body Komnenos.Fragments is
    --------------------
 
    procedure On_Cursor_Move
-     (Fragment : not null access Root_Fragment_Type;
-      Position : Aquarius.Layout.Position;
-      Updated  : out Boolean)
+     (Fragment     : in out Root_Fragment_Type;
+      New_Position : Aquarius.Layout.Position)
    is
    begin
-      Fragment.Content.Set_Cursor (Position);
-      Updated := Fragment.Content.Invalidated;
-      if Updated then
-         Fragment.Content.Render (Fragment);
-      end if;
+      Fragment.Content.Execute_Command
+        ((Komnenos.Commands.Set_Cursor_Command, New_Position));
    end On_Cursor_Move;
 
-   -------------------------
-   -- On_Insert_Character --
-   -------------------------
+   ------------------
+   -- On_Key_Press --
+   ------------------
 
    procedure On_Key_Press
      (Fragment : in out Root_Fragment_Type;
@@ -442,7 +429,7 @@ package body Komnenos.Fragments is
    is
       use Aquarius.Keys, Aquarius.Keys.Sequences;
       Incomplete, Match : Boolean;
-      Command : Komnenos.Commands.Command_Reference;
+      Command           : Komnenos.Commands.Command_Reference;
    begin
       Add_Key (Fragment.Key_Sequence, Key);
       Fragment.Bindings.Get_Binding
@@ -520,6 +507,18 @@ package body Komnenos.Fragments is
         ("fragment", New_Fragment'Access);
    end Register;
 
+   --------------
+   -- Rendered --
+   --------------
+
+   procedure Rendered
+     (Fragment : in out Root_Fragment_Type)
+   is
+   begin
+      Fragment.Needs_Render := False;
+      Fragment.Cursor_Moved := False;
+   end Rendered;
+
    -----------------
    -- Set_Content --
    -----------------
@@ -531,6 +530,19 @@ package body Komnenos.Fragments is
    begin
       Fragment.Content := Komnenos.Entities.Entity_Reference (Content);
    end Set_Content;
+
+   ----------------
+   -- Set_Cursor --
+   ----------------
+
+   overriding procedure Set_Cursor
+     (Fragment : in out Root_Fragment_Type;
+      Position : Aquarius.Layout.Position)
+   is
+   begin
+      Fragment.Cursor_Moved := True;
+      Fragment.New_Cursor := Position;
+   end Set_Cursor;
 
    --------------------
    -- Set_Entity_Key --
