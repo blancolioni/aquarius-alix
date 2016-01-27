@@ -8,6 +8,7 @@ with Aquarius.Rendering;
 with Aquarius.Themes;
 with Aquarius.Trees.Cursors;
 
+with Komnenos.Entities.Visuals;
 with Komnenos.Fragments.Rendering;
 with Komnenos.Fragments.Source;
 with Komnenos.UI;
@@ -45,8 +46,12 @@ package body Komnenos.Entities.Source.Aquarius_Source is
      (Entity : not null access Root_Aquarius_Source_Entity;
       Visual : not null access Entity_Visual'Class);
 
-   overriding procedure Set_Cursor
-     (Item     : in out Root_Aquarius_Source_Entity;
+   overriding procedure Execute_Command
+     (Item    : not null access Root_Aquarius_Source_Entity;
+      Command : Komnenos.Commands.Komnenos_Command);
+
+   procedure Set_Cursor
+     (Item     : not null access Root_Aquarius_Source_Entity'Class;
       Position : Aquarius.Layout.Position);
 
 --     overriding procedure Insert_Character
@@ -106,6 +111,28 @@ package body Komnenos.Entities.Source.Aquarius_Source is
          return Table.Get (Key);
       end if;
    end Create_Aquarius_Source_Entity;
+
+   ---------------------
+   -- Execute_Command --
+   ---------------------
+
+   overriding procedure Execute_Command
+     (Item    : not null access Root_Aquarius_Source_Entity;
+      Command : Komnenos.Commands.Komnenos_Command)
+   is
+      use Komnenos.Commands;
+   begin
+      case Command.Command is
+         when No_Command =>
+            null;
+         when Move_Cursor_Command =>
+            Root_Entity_Reference (Item.all).Execute_Command (Command);
+         when Set_Cursor_Command =>
+            Set_Cursor (Item, Command.New_Position);
+         when Insert_Character_Command =>
+            Root_Entity_Reference (Item.all).Execute_Command (Command);
+      end case;
+   end Execute_Command;
 
    ----------------------------
    -- Find_Entity_Containing --
@@ -227,7 +254,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
       Fragment.Set_Entity_Key (Key (Entity.all));
       Fragment.Set_Content (Entity);
 
-      Root_Aquarius_Source_Entity'Class (Entity.all).Render (Visual);
+      Root_Aquarius_Source_Entity'Class (Entity.all).Render (Fragment);
 
       if Visual = null then
          Komnenos.UI.Current_UI.Place_Fragment
@@ -240,8 +267,8 @@ package body Komnenos.Entities.Source.Aquarius_Source is
    -- Set_Cursor --
    ----------------
 
-   overriding procedure Set_Cursor
-     (Item     : in out Root_Aquarius_Source_Entity;
+   procedure Set_Cursor
+     (Item     : not null access Root_Aquarius_Source_Entity'Class;
       Position : Aquarius.Layout.Position)
    is
       use Ada.Strings.Unbounded;
@@ -257,6 +284,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
             Item.Tree_Cursor :=
               Aquarius.Trees.Cursors.Right_Of_Tree (Terminal);
             Item.Edit_Tree := null;
+            Item.Buffer_Cursor := 0;
          else
             Item.Edit_Tree   := Terminal;
             Item.Tree_Cursor :=
@@ -265,9 +293,20 @@ package body Komnenos.Entities.Source.Aquarius_Source is
             Item.Buffer_Cursor :=
               Positive (Position.Column)
               - Positive (Terminal.Layout_Start_Position.Column);
-            Item.Invalidated := True;
          end if;
-         Root_Entity_Reference (Item).Set_Cursor (Position);
+
+         Komnenos.Entities.Visuals.Update_Cursor (Item, Position);
+
+         declare
+            Buffer : constant String := To_String (Item.Edit_Buffer);
+         begin
+            Ada.Text_IO.Put_Line
+              ("edit: ["
+               & Buffer (1 .. Item.Buffer_Cursor)
+               & "|"
+               & Buffer (Item.Buffer_Cursor + 1 .. Buffer'Last)
+               & "]");
+         end;
       end if;
    end Set_Cursor;
 
