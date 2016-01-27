@@ -49,11 +49,6 @@ package body Komnenos.Entities.Source.Aquarius_Source is
      (Item     : in out Root_Aquarius_Source_Entity;
       Position : Aquarius.Layout.Position);
 
-   overriding function Invalidated
-     (Entity : Root_Aquarius_Source_Entity)
-      return Boolean
-   is (Entity.Invalidated);
-
 --     overriding procedure Insert_Character
 --       (Item    : in out Root_Aquarius_Source_Entity;
 --        Value   : Character;
@@ -188,8 +183,6 @@ package body Komnenos.Entities.Source.Aquarius_Source is
                       Entity.Table);
       Program  : constant Aquarius.Programs.Program_Tree := Entity.Entity_Tree;
    begin
-      Visual.Disable;
-
       Aquarius.Programs.Arrangements.Arrange
         (Program,
          Line_Length => Visual.Width / 8);
@@ -206,7 +199,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
            Ada.Strings.Unbounded.To_String
              (Entity.Edit_Buffer));
 
-      Visual.Enable;
+      Visual.Invalidate;
 
    end Render;
 
