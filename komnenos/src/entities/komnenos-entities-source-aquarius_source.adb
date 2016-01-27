@@ -54,6 +54,9 @@ package body Komnenos.Entities.Source.Aquarius_Source is
    procedure Forward_Character
      (Item : not null access Root_Aquarius_Source_Entity'Class);
 
+   procedure Backward_Character
+     (Item : not null access Root_Aquarius_Source_Entity'Class);
+
    procedure Set_Cursor
      (Item     : not null access Root_Aquarius_Source_Entity'Class;
       Position : Aquarius.Layout.Position);
@@ -71,6 +74,30 @@ package body Komnenos.Entities.Source.Aquarius_Source is
 
    procedure Log_Tree (Tree : Aquarius.Programs.Program_Tree)
      with Unreferenced;
+
+   ------------------------
+   -- Backward_Character --
+   ------------------------
+
+   procedure Backward_Character
+     (Item : not null access Root_Aquarius_Source_Entity'Class)
+   is
+      use Ada.Strings.Unbounded;
+      use Aquarius.Layout;
+   begin
+      if Item.Buffer_Cursor > 0 then
+         declare
+            New_Position : Position := Item.Edit_Tree.Layout_Start_Position;
+         begin
+            Item.Buffer_Cursor := Item.Buffer_Cursor - 1;
+            New_Position.Column :=
+              New_Position.Column
+                + Aquarius.Layout.Count (Item.Buffer_Cursor);
+            Item.Set_Cursor (New_Position);
+            Komnenos.Entities.Visuals.Update_Cursor (Item, New_Position);
+         end;
+      end if;
+   end Backward_Character;
 
    -----------------------------------
    -- Create_Aquarius_Source_Entity --
@@ -136,6 +163,10 @@ package body Komnenos.Entities.Source.Aquarius_Source is
                      for I in 1 .. Command.Offset loop
                         Item.Forward_Character;
                      end loop;
+                  elsif Command.Offset < 0 then
+                     for I in 1 .. -Command.Offset loop
+                        Item.Backward_Character;
+                     end loop;
                   else
                      null;
                   end if;
@@ -181,8 +212,10 @@ package body Komnenos.Entities.Source.Aquarius_Source is
          declare
             New_Position : Position := Item.Edit_Tree.Layout_Start_Position;
          begin
+            Item.Buffer_Cursor := Item.Buffer_Cursor + 1;
             New_Position.Column :=
-              New_Position.Column + Positive_Count (Item.Buffer_Cursor + 1);
+              New_Position.Column
+                + Aquarius.Layout.Count (Item.Buffer_Cursor);
             Item.Set_Cursor (New_Position);
             Komnenos.Entities.Visuals.Update_Cursor (Item, New_Position);
          end;
