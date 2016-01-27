@@ -26,6 +26,10 @@ package body Komnenos.Commands is
 
    procedure Check_Standard_Table;
 
+   --------------------------
+   -- Check_Standard_Table --
+   --------------------------
+
    procedure Check_Standard_Table is
 
       procedure Cmd (Name    : String;
@@ -53,6 +57,13 @@ package body Komnenos.Commands is
          Cmd ("next-line", (Move_Cursor_Command, 1, By_Line));
          Cmd ("forward-character", (Move_Cursor_Command, 1, By_Character));
          Cmd ("backward-character", (Move_Cursor_Command, -1, By_Character));
+         Cmd ("insert-character", (Insert_Character_Command, Character'First));
+
+         for Ch in Character range ' ' .. '~' loop
+            Cmd ("insert-character" & Integer'Image (-Character'Pos (Ch)),
+                 (Insert_Character_Command, Ch));
+         end loop;
+
       end if;
    end Check_Standard_Table;
 
@@ -65,9 +76,35 @@ package body Komnenos.Commands is
       Name  : String)
       return Komnenos_Command
    is
+      Space_Index : constant Natural :=
+                      Ada.Strings.Fixed.Index (Name, " ");
+      Command_Name : constant String :=
+                       (if Space_Index = 0 then Name
+                        else Name (Name'First .. Space_Index - 1));
+      Argument     : constant String :=
+                       (if Space_Index = 0 then ""
+                        else Name (Space_Index + 1 .. Name'Last));
    begin
-      if Table.Table.Map.Contains (Name) then
-         return Table.Get_Command (Table.Table.Map.Element (Name));
+      if Table.Table.Map.Contains (Command_Name) then
+         declare
+            Result : Komnenos_Command :=
+                       Table.Get_Command
+                         (Table.Table.Map.Element (Command_Name));
+         begin
+            if Argument /= "" then
+               case Result.Command is
+                  when No_Command =>
+                     null;
+                  when Move_Cursor_Command =>
+                     null;
+                  when Set_Cursor_Command =>
+                     null;
+                  when Insert_Character_Command =>
+                     Result.Ch := Character'Val (Integer'Value (Argument));
+               end case;
+            end if;
+            return Result;
+         end;
       else
          return (Command => No_Command);
       end if;
