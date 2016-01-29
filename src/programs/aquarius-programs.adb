@@ -774,10 +774,20 @@ package body Aquarius.Programs is
       ----------
 
       procedure Find (Node : Program_Tree) is
+         use Aquarius.Layout;
       begin
          if Node.Is_Terminal then
             if Node.Start_Position <= Location then
-               Last_Terminal := Node;
+               if Last_Terminal /= null
+                 and then not Last_Terminal.Is_Reserved_Terminal
+                 and then Node.Is_Reserved_Terminal
+                 and then Last_Terminal.End_Position
+                   = Node.Start_Position
+               then
+                  null;   --  prefer an identifier to a keyword
+               else
+                  Last_Terminal := Node;
+               end if;
             end if;
          else
             for I in 1 .. Node.Child_Count loop
@@ -1318,6 +1328,20 @@ package body Aquarius.Programs is
    begin
       return Item.Filled;
    end Is_Filled;
+
+   --------------------------
+   -- Is_Reserved_Terminal --
+   --------------------------
+
+   function Is_Reserved_Terminal
+     (Item : Program_Tree_Type)
+      return Boolean
+   is
+   begin
+      return Item.Is_Terminal
+        and then Aquarius.Tokens.Is_Reserved
+          (Item.Syntax.Frame, Item.Syntax.Token);
+   end Is_Reserved_Terminal;
 
    ------------------
    -- Is_Separator --
