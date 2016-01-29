@@ -276,6 +276,10 @@ package Aquarius.Programs is
      (Item : Program_Tree_Type)
      return Boolean;
 
+   function Is_Reserved_Terminal
+     (Item : Program_Tree_Type)
+     return Boolean;
+
    function Is_Separator
      (Item : Program_Tree_Type)
      return Boolean;
