@@ -54,6 +54,11 @@ package Komnenos.Entities is
       Position : in     Aquarius.Layout.Position)
    is abstract;
 
+   procedure Insert_At_Cursor
+     (Visual : in out Entity_Visual;
+      Text   : String)
+   is abstract;
+
    procedure Invalidate
      (Visual   : in out Entity_Visual)
    is abstract;

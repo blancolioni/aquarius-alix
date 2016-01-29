@@ -16,4 +16,8 @@ package Komnenos.Entities.Visuals is
      (Entity : not null access Root_Entity_Reference'Class;
       Position : Aquarius.Layout.Position);
 
+   procedure Insert_At_Cursor
+     (Entity : not null access Root_Entity_Reference'Class;
+      Text   : String);
+
 end Komnenos.Entities.Visuals;
