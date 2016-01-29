@@ -10,8 +10,7 @@ with Komnenos.Fragments;
 package Komnenos.UI.Gtk_UI.Text is
 
    type Komnenos_Text_View_Record is
-     new Gtk.Widget.Gtk_Widget_Record
-     and Display_Interface with private;
+     new Gtk.Widget.Gtk_Widget_Record with private;
 
    type Komnenos_Text_View is access all Komnenos_Text_View_Record'Class;
 
@@ -22,8 +21,7 @@ package Komnenos.UI.Gtk_UI.Text is
 private
 
    type Komnenos_Text_View_Record is
-     new Gtk.Scrolled_Window.Gtk_Scrolled_Window_Record
-     and Display_Interface with
+     new Gtk.Scrolled_Window.Gtk_Scrolled_Window_Record with
       record
          Text              : Gtk.Text_View.Gtk_Text_View;
          Buffer            : Gtk.Text_Buffer.Gtk_Text_Buffer;
