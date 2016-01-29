@@ -757,6 +757,9 @@ package body Komnenos.UI.Gtk_UI.Text is
             Ada.Text_IO.Put_Line ("updated");
             Text.Buffer.Set_Text ("");
             Render_Text (Text.Text, Text.Fragment);
+         elsif Text.Fragment.Text_Inserted then
+            Text.Buffer.Insert_At_Cursor
+              (Text.Fragment.Inserted_Text);
          end if;
 
          if Text.Fragment.Needs_Render

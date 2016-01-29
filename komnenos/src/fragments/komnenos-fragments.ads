@@ -86,6 +86,14 @@ package Komnenos.Fragments is
      (Fragment : Root_Fragment_Type)
       return Aquarius.Layout.Position;
 
+   function Text_Inserted
+     (Fragment : Root_Fragment_Type)
+      return Boolean;
+
+   function Inserted_Text
+     (Fragment : Root_Fragment_Type)
+      return String;
+
    procedure Rendered
      (Fragment : in out Root_Fragment_Type);
 
@@ -223,7 +231,9 @@ private
          Lines             : Line_Vectors.Vector;
          Needs_Render      : Boolean := False;
          Cursor_Moved      : Boolean := False;
+         Text_Inserted     : Boolean := False;
          New_Cursor        : Aquarius.Layout.Position;
+         Inserted_Text     : Ada.Strings.Unbounded.Unbounded_String;
       end record;
 
    overriding procedure Initialize (Fragment : in out Root_Fragment_Type);
@@ -250,6 +260,10 @@ private
    overriding procedure Set_Cursor
      (Fragment : in out Root_Fragment_Type;
       Position : Aquarius.Layout.Position);
+
+   overriding procedure Insert_At_Cursor
+     (Fragment : in out Root_Fragment_Type;
+      Text     : String);
 
    overriding procedure Invalidate (Fragment : in out Root_Fragment_Type);
 
