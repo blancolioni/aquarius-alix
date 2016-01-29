@@ -1,6 +1,7 @@
 with Ada.Text_IO;
 
 with Aquarius.Grammars;
+with Aquarius.Tokens;
 with Aquarius.Trees.Properties;
 
 with Aquarius.Programs.Arrangements;
@@ -20,6 +21,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
       record
          Top_Level        : Boolean;
          Compilation_Unit : Aquarius.Programs.Program_Tree;
+         Grammar          : Aquarius.Grammars.Aquarius_Grammar;
          Entity_Spec      : Aquarius.Programs.Program_Tree;
          Entity_Body      : Aquarius.Programs.Program_Tree;
          Entity_Tree      : Aquarius.Programs.Program_Tree;
@@ -51,11 +53,19 @@ package body Komnenos.Entities.Source.Aquarius_Source is
      (Item    : not null access Root_Aquarius_Source_Entity;
       Command : Komnenos.Commands.Komnenos_Command);
 
+   procedure Finish_Edit
+     (Item : not null access Root_Aquarius_Source_Entity'Class)
+   is null;
+
    procedure Forward_Character
      (Item : not null access Root_Aquarius_Source_Entity'Class);
 
    procedure Backward_Character
      (Item : not null access Root_Aquarius_Source_Entity'Class);
+
+   procedure Insert_Character
+     (Item : not null access Root_Aquarius_Source_Entity'Class;
+      Ch   : Character);
 
    procedure Set_Cursor
      (Item     : not null access Root_Aquarius_Source_Entity'Class;
@@ -127,6 +137,8 @@ package body Komnenos.Entities.Source.Aquarius_Source is
             Entity.Create (Name, File_Name, Class, Line, Column);
             Entity.Top_Level := Top_Level;
             Entity.Compilation_Unit := Compilation_Unit;
+            Entity.Grammar :=
+              Aquarius.Trees.Properties.Get_Grammar (Compilation_Unit);
             Entity.Entity_Spec := Entity_Spec;
             Entity.Entity_Body := Entity_Body;
             Entity.Entity_Tree :=
@@ -181,7 +193,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
          when Set_Cursor_Command =>
             Set_Cursor (Item, Command.New_Position);
          when Insert_Character_Command =>
-            Root_Entity_Reference (Item.all).Execute_Command (Command);
+            Item.Insert_Character (Command.Ch);
       end case;
    end Execute_Command;
 
@@ -207,19 +219,48 @@ package body Komnenos.Entities.Source.Aquarius_Source is
    is
       use Ada.Strings.Unbounded;
       use Aquarius.Layout;
+      New_Position : Position :=
+                       Item.Edit_Tree.Layout_Start_Position;
+      Leaving      : Boolean := False;
    begin
-      if Item.Buffer_Cursor < Length (Item.Edit_Buffer) then
+      Item.Buffer_Cursor := Item.Buffer_Cursor + 1;
+      New_Position.Column :=
+        New_Position.Column
+          + Aquarius.Layout.Count (Item.Buffer_Cursor);
+
+      if Item.Buffer_Cursor > Length (Item.Edit_Buffer) then
+         Leaving := True;
+      elsif Item.Buffer_Cursor = Length (Item.Edit_Buffer)
+        and then Item.Edit_Tree.Is_Reserved_Terminal
+      then
+         Leaving := True;
+      end if;
+
+      if Leaving then
+         if Item.Buffer_Changed then
+            Item.Finish_Edit;
+         end if;
+
          declare
-            New_Position : Position := Item.Edit_Tree.Layout_Start_Position;
+            use Aquarius.Programs;
+            Next_Terminal : constant Program_Tree :=
+                              Item.Edit_Tree.Scan_Terminal (1);
          begin
-            Item.Buffer_Cursor := Item.Buffer_Cursor + 1;
-            New_Position.Column :=
-              New_Position.Column
-                + Aquarius.Layout.Count (Item.Buffer_Cursor);
-            Item.Set_Cursor (New_Position);
-            Komnenos.Entities.Visuals.Update_Cursor (Item, New_Position);
+
+            if Next_Terminal = null or else not Next_Terminal.Is_Terminal then
+               Item.Buffer_Cursor := Length (Item.Edit_Buffer);
+               New_Position := Item.Edit_Tree.Layout_End_Position;
+            elsif Next_Terminal.Layout_Start_Position.Line
+              > New_Position.Line
+            then
+               New_Position := Next_Terminal.Layout_Start_Position;
+            end if;
          end;
       end if;
+
+      Item.Set_Cursor (New_Position);
+      Komnenos.Entities.Visuals.Update_Cursor (Item, New_Position);
+
    end Forward_Character;
 
    -------------
@@ -237,6 +278,58 @@ package body Komnenos.Entities.Source.Aquarius_Source is
         & Integer'Image (-Column)
         & "-" & Name;
    end Get_Key;
+
+   ----------------------
+   -- Insert_Character --
+   ----------------------
+
+   procedure Insert_Character
+     (Item : not null access Root_Aquarius_Source_Entity'Class;
+      Ch   : Character)
+   is
+      Buffer         : constant String :=
+                         Ada.Strings.Unbounded.To_String (Item.Edit_Buffer);
+      New_Buffer     : constant String :=
+                         Buffer (1 .. Item.Buffer_Cursor)
+                       & Ch
+                         & Buffer (Item.Buffer_Cursor + 1 .. Buffer'Last);
+      Complete       : Boolean;
+      Have_Class     : Boolean;
+      Unique         : Boolean;
+      Class          : Aquarius.Tokens.Token_Class;
+      Tok            : Aquarius.Tokens.Token;
+      First          : Positive := 1;
+      Last           : Natural;
+   begin
+      Aquarius.Tokens.Scan
+        (Frame      => Item.Grammar.Frame,
+         Text       => New_Buffer,
+         Partial    => True,
+         Complete   => Complete,
+         Have_Class => Have_Class,
+         Unique     => Unique,
+         Class      => Class,
+         Tok        => Tok,
+         First      => First,
+         Last       => Last,
+         Token_OK   => null);
+
+      if Last = New_Buffer'Last then
+         --  we can update then current token
+         Ada.Text_IO.Put_Line
+           ("Editor: updating terminal "
+            & Item.Edit_Tree.Text);
+      end if;
+
+      Ada.Text_IO.Put_Line
+        ("edit: [" & New_Buffer & "]");
+      Item.Edit_Buffer :=
+        Ada.Strings.Unbounded.To_Unbounded_String (New_Buffer);
+      Item.Buffer_Cursor := Item.Buffer_Cursor + 1;
+      Komnenos.Entities.Visuals.Insert_At_Cursor (Item, (1 => Ch));
+      Item.Buffer_Changed := True;
+
+   end Insert_Character;
 
    --------------
    -- Log_Tree --
@@ -337,6 +430,8 @@ package body Komnenos.Entities.Source.Aquarius_Source is
            (Parent, Offset, Fragment);
       end if;
 
+      Fragment.Rendered;
+
    end Select_Entity;
 
    ----------------
@@ -354,13 +449,14 @@ package body Komnenos.Entities.Source.Aquarius_Source is
                    Item.Entity_Tree.Find_Local_Node_At
                      (Location => Position);
    begin
-      if Terminal /= null then
+      if Terminal /= null and then Terminal /= Item.Edit_Tree then
          if Terminal.Layout_End_Position < Position then
             Item.Edit_Buffer := Null_Unbounded_String;
             Item.Tree_Cursor :=
               Aquarius.Trees.Cursors.Right_Of_Tree (Terminal);
-            Item.Edit_Tree := null;
-            Item.Buffer_Cursor := 0;
+            Item.Edit_Tree := Terminal;
+            Item.Edit_Buffer := To_Unbounded_String (Terminal.Text);
+            Item.Buffer_Cursor := Length (Item.Edit_Buffer);
          else
             Item.Edit_Tree   := Terminal;
             Item.Tree_Cursor :=
@@ -370,20 +466,21 @@ package body Komnenos.Entities.Source.Aquarius_Source is
               Positive (Position.Column)
               - Positive (Terminal.Layout_Start_Position.Column);
          end if;
+      end if;
 
 --           Komnenos.Entities.Visuals.Update_Cursor (Item, Position);
 
-         declare
-            Buffer : constant String := To_String (Item.Edit_Buffer);
-         begin
-            Ada.Text_IO.Put_Line
-              ("edit: ["
-               & Buffer (1 .. Item.Buffer_Cursor)
-               & "|"
-               & Buffer (Item.Buffer_Cursor + 1 .. Buffer'Last)
-               & "]");
-         end;
-      end if;
+      declare
+         Buffer : constant String := To_String (Item.Edit_Buffer);
+      begin
+         Ada.Text_IO.Put_Line
+           ("edit: ["
+            & Buffer (1 .. Item.Buffer_Cursor)
+            & "|"
+            & Buffer (Item.Buffer_Cursor + 1 .. Buffer'Last)
+            & "]");
+      end;
+
    end Set_Cursor;
 
    ---------------------
