@@ -55,7 +55,8 @@ package body Aquarius.Programs is
       Offset_Rule          => Aquarius.Source.No_Source_Position,
       Render_Class         => null,
       Fragment             => Tagatha.Fragments.Empty_Fragment,
-      Aqua_Object          => null);
+      Aqua_Object          => null,
+      Aqua_Reference       => 0);
 
    --  After a node is changed, update any entry it references
    procedure Update_Entry
@@ -1047,6 +1048,30 @@ package body Aquarius.Programs is
       end if;
    end Get_Property;
 
+   -------------------
+   -- Get_Reference --
+   -------------------
+
+   overriding function Get_Reference
+     (Program : Program_Tree_Type)
+      return Aqua.External_Reference
+   is
+   begin
+      return Program.Aqua_Reference;
+   end Get_Reference;
+
+   -------------------
+   -- Get_Reference --
+   -------------------
+
+   overriding function Get_Reference
+     (It : Root_Program_Tree_Iterator)
+      return Aqua.External_Reference
+   is
+   begin
+      return It.Aqua_Reference;
+   end Get_Reference;
+
    ---------------
    -- Get_Token --
    ---------------
@@ -2031,6 +2056,30 @@ package body Aquarius.Programs is
       end if;
       Program.Aqua_Object.Set_Property (Name, Value);
    end Set_Property;
+
+   -------------------
+   -- Set_Reference --
+   -------------------
+
+   overriding procedure Set_Reference
+     (Program   : in out Program_Tree_Type;
+      Reference : Aqua.External_Reference)
+   is
+   begin
+      Program.Aqua_Reference := Reference;
+   end Set_Reference;
+
+   -------------------
+   -- Set_Reference --
+   -------------------
+
+   overriding procedure Set_Reference
+     (It        : in out Root_Program_Tree_Iterator;
+      Reference : Aqua.External_Reference)
+   is
+   begin
+      It.Aqua_Reference := Reference;
+   end Set_Reference;
 
    ----------------------------
    -- Set_Separator_New_Line --
