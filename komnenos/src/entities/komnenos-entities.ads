@@ -347,13 +347,14 @@ private
    type Root_Entity_Reference is
      abstract new Aqua.External_Object_Interface with
       record
-         Identifier   : Ada.Strings.Unbounded.Unbounded_String;
-         Class        : Ada.Strings.Unbounded.Unbounded_String;
-         Display_Text : Ada.Strings.Unbounded.Unbounded_String;
-         Description  : Ada.Strings.Unbounded.Unbounded_String;
-         Key          : Ada.Strings.Unbounded.Unbounded_String;
-         References   : File_Location_Vectors.Vector;
-         Table        : Entity_Table_Access;
+         Identifier     : Ada.Strings.Unbounded.Unbounded_String;
+         Class          : Ada.Strings.Unbounded.Unbounded_String;
+         Display_Text   : Ada.Strings.Unbounded.Unbounded_String;
+         Description    : Ada.Strings.Unbounded.Unbounded_String;
+         Key            : Ada.Strings.Unbounded.Unbounded_String;
+         References     : File_Location_Vectors.Vector;
+         Table          : Entity_Table_Access;
+         Aqua_Reference : Aqua.External_Reference := 0;
       end record;
 
    overriding function Name
@@ -364,6 +365,14 @@ private
 
    overriding function Show
      (Item : Root_Entity_Reference) return String;
+
+   overriding procedure Set_Reference
+     (Item : in out Root_Entity_Reference;
+      Reference : Aqua.External_Reference);
+
+   overriding function Get_Reference
+     (Item : Root_Entity_Reference)
+     return Aqua.External_Reference;
 
    package Entity_Maps is
      new Ada.Containers.Indefinite_Hashed_Maps

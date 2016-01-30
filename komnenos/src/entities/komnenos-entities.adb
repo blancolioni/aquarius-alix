@@ -318,6 +318,18 @@ package body Komnenos.Entities is
       return Table.Get (Key);
    end Get_Reference;
 
+   -------------------
+   -- Get_Reference --
+   -------------------
+
+   overriding function Get_Reference
+     (Item : Root_Entity_Reference)
+      return Aqua.External_Reference
+   is
+   begin
+      return Item.Aqua_Reference;
+   end Get_Reference;
+
    ----------------
    -- Identifier --
    ----------------
@@ -464,6 +476,18 @@ package body Komnenos.Entities is
    begin
       Table.Store := Store;
    end Set_Program_Store;
+
+   -------------------
+   -- Set_Reference --
+   -------------------
+
+   overriding procedure Set_Reference
+     (Item : in out Root_Entity_Reference;
+      Reference : Aqua.External_Reference)
+   is
+   begin
+      Item.Aqua_Reference := Reference;
+   end Set_Reference;
 
    ----------
    -- Show --

@@ -448,6 +448,7 @@ private
          Render_Class      : Aquarius.Syntax.Syntax_Tree;
          Fragment          : Tagatha.Fragments.Tagatha_Fragment;
          Aqua_Object       : Aqua_Object_Access;
+         Aqua_Reference    : Aqua.External_Reference := 0;
       end record;
 
    procedure Free (Item : in out Program_Tree);
@@ -505,6 +506,14 @@ private
       return String
    is (Program.Concatenate_Children);
 
+   overriding procedure Set_Reference
+     (Program   : in out Program_Tree_Type;
+      Reference : Aqua.External_Reference);
+
+   overriding function Get_Reference
+     (Program : Program_Tree_Type)
+      return Aqua.External_Reference;
+
    overriding function Start
      (Program : Program_Tree_Type)
       return Aqua.Iterators.Aqua_Iterator_Interface'Class;
@@ -512,8 +521,9 @@ private
    type Root_Program_Tree_Iterator is
      new Aqua.Iterators.Aqua_Iterator_Interface with
       record
-         Current    : Program_Tree;
-         Going_Down : Boolean       := True;
+         Aqua_Reference : Aqua.External_Reference := 0;
+         Current        : Program_Tree;
+         Going_Down     : Boolean       := True;
       end record;
 
    overriding function Name
@@ -530,6 +540,14 @@ private
      (It : Root_Program_Tree_Iterator)
       return String
    is ("[program-tree-iterator]");
+
+   overriding procedure Set_Reference
+     (It        : in out Root_Program_Tree_Iterator;
+      Reference : Aqua.External_Reference);
+
+   overriding function Get_Reference
+     (It : Root_Program_Tree_Iterator)
+      return Aqua.External_Reference;
 
    overriding procedure Next
      (It       : in out Root_Program_Tree_Iterator;
