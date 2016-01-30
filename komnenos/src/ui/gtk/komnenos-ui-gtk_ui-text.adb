@@ -492,6 +492,8 @@ package body Komnenos.UI.Gtk_UI.Text is
       end Put;
 
    begin
+      Fragment.Clear;
+      Fragment.Get_Content.Render (Fragment);
       Fragment.Iterate (Put'Access, New_Line'Access);
    end Render_Text;
 
