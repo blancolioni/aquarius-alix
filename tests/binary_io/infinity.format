@@ -1,0 +1,252 @@
+package Infinity is
+
+for Endien use Little;
+for Access'size use 4;
+for Word'Default_Size use 4;
+
+file Key is
+   Header : record
+      Signature        : String/4 = "KEY ";
+      Version          : String/4 = "V1  ";
+      Bif_Count        : Word;
+      Resource_Count   : Word;
+      Bif_Start        : Word;
+      Resource_Start   : Word;
+   end Header;
+   
+   Bif_Entry at Header.Bif_Start : record (Header.Bif_Count)
+      Length           : Word;
+      File_Name        : access String;
+      File_Name_Length : Word/2;
+      Flags            : Word/2;
+   end Bif_Entry;
+   
+   Resource_Entry at Header.Resource_Start : record (Header.Resource_Count)
+      Name             : String/8;
+      Resource_Type    : Word/2;
+      Resource_Locator : Word/4;
+   end Resource_Entry;
+   
+end Key;
+
+file Biff is
+   Header : record
+      Signature        : String/4 = "BIFF";
+      Version          : String/4 = "V1  ";
+      File_Entry_Count : Word;
+      Tile_Entry_Count : Word;
+      File_Entry_Start : Word;
+   end Header;
+   
+   File_Entry at Header.File_Entry_Start : record (Header.File_Entry_Count)
+      Resource_Locator     : Word;
+      Resource_Data_Offset : Word;
+      Resource_Size        : Word;
+      Resource_Data        : access Word_8 from Resource_Data_Offset, Resource_Size;
+      Resource_Type        : Word/2;
+      Padding              : Word/2;
+   end File_Entry;
+   
+end Biff;
+
+file Tlk is
+   Header : record
+      Signature       : String/4 = "TLK ";
+      Version         : String/4 = "V1  ";
+      Language_Id     : Word/2;
+      String_Refs     : Word;
+      String_Offset   : Word;
+   end Header;
+   
+   Strref_Entry at 18 : record (Header.String_Refs)
+      Entry_Type      : Word/2;
+      Sound_Resource  : String/8;
+      Volume_Variance : Word/4;
+      Pitch_Variance  : Word/4;
+      String_Offset   : Word/4;
+      String_Length   : Word/4;
+      String_Text     : access String from String_Offset, String_Length base Header.String_Offset;
+   end Strref_Entry;
+
+end Tlk;
+
+file Creature is
+   Creature : record
+      _Signature   : String/4 = "CRE ";
+      _Version     : String/4 = "V1.0";
+      Long_Name    : Word;
+      Short_Name   : Word;
+      Flags        : Word;
+      XP           : Word;
+      Power_Level  : Word;
+      Gold         : Word;
+      Status_Flags : Word;
+      Current_HP   : Word/2;
+      Max_HP       : Word/2;
+      Animation_ID : Word;
+      Metal_Colour : Word/1;
+      Minor_Colour : Word/1;
+      Major_Colour : Word/1;
+      Skin_Colour  : Word/1;
+      Leather_Colour : Word/1;
+      Armour_Colour  : Word/1;
+      Hair_Colour  : Word/1;
+      Effect_Version : Word/1;
+      Small_Portrait : String/8;
+      Large_Portrait : String/8;
+      Reputation     : Integer/1;
+      Hide_Shadows   : Integer/1;
+      Natural_AC     : Integer/2;
+      Effective_AC   : Integer/2;
+      AC_Crush_Mod   : Integer/2;
+      AC_Missile_Mod : Integer/2;
+      AC_Piercing_Mod : Integer/2;
+      AC_Slashing_Mod : Integer/2;
+      THAC0           : Word/1;
+      Num_Attacks     : Word/1;
+      Save_Death      : Word/1;
+      Save_Wands      : Word/1;
+      Save_Polymorph  : Word/1;
+      Save_Breath     : Word/1;
+      Save_Spells     : Word/1;
+      Resist_Fire     : Word/1;
+      Resist_Cold    : Word/1;
+      Resist_Elec     : Word/1;
+      Resist_Acid     : Word/1;
+      Resist_Magic     : Word/1;
+      Resist_Magic_Fire : Word/1;
+      Resist_Magic_Cold : Word/1;
+      Resist_Slashing   : Word/1;
+      Resist_Crushing   : Word/1;
+      Resist_Piercing   : Word/1;
+      Resist_Missile    : Word/1;
+      Detect_Illusion   : Word/1;
+      Set_Traps         : Word/1;
+      Lore              : Word/1;
+      Pick_Locks        : Word/1;
+      Stealth           : Word/1;
+      Find_Disarm_Traps : Word/1;
+      Pick_Pockets      : Word/1;
+      Fatigue           : Word/1;
+      Intoxication      : Word/1;
+      Luck              : Word/1;
+      Prof_Large_Sword  : Word/1;
+      Prof_Small_Sword  : Word/1;
+      Prof_Bows         : Word/1;
+      Prof_Spears       : Word/1;
+      Prof_Blunt        : Word/1;
+      Prof_Spiked       : Word/1;
+      Prof_Axe          : Word/1;
+      Prof_Missile      : Word/1;
+      _                 : 12 * Word/1;
+      Turn_Undead       : Word/1;
+      Tracking          : Word/1;
+      Tracking_Target   : String/32;
+      String_Refs       : 100 * String/4;
+      Highest_Level_1   : Word/1;
+      Highest_Level_2   : Word/1;
+      Highest_Level_3   : Word/1;
+      Gender            : Word/1;
+      Strength          : Word/1;
+      Strength_Bonus    : Word/1;
+      Intelligence      : Word/1;
+      Wisdom              : Word/1;
+      Dexterity           : Word/1;
+      Constitution        : Word/1;
+      Charisma            : Word/1;      
+      Morale              : Word/1;
+      Morale_Break        : Word/1;
+      Racial_Enemy        : Word/1;
+      Morale_Recovery     : Word/2;
+      Kit                 : Word/4;
+      Script_Override     : String/8;
+      Script_Class        : String/8;
+      Script_Race         : String/8;
+      Script_General      : String/8;
+      Script_Default      : String/8;
+      Enemy_Ally          : Word/1;
+      General             : Word/1;
+      Race                : Word/1;
+      Class               : Word/1;
+      Specific            : Word/1;
+      Gender_2            : Word/1;
+      Object_Ref          : 5 * Word/1;
+      Alignment           : Word/1;
+      Global_Actor        : Word/2;
+      Local_Actor         : Word/2;
+      Death_Variable      : 32 * Word/1;
+      Known_Spells_Offset : Word;
+      Known_Spells_Count  : Word;
+      Memorization_Offset : Word;
+      Memorization_Count  : Word;
+      Item_Slots_Offset   : Word;
+      Item_Count          : Word;
+      Effects_Offset      : Word;
+      Effects_Count       : Word;
+   end Creature;
+end Creature;
+
+file Chu is
+   Header : record
+      _Signature       : String/4 = "CHUI";
+      _Version         : String/4 = "V1  ";
+      Window_Count    : Word;
+      Controls_Offset : Word;
+      Windows_Offset  : Word;
+   end Header;
+
+   Window at Header.Windows_Offset : record (Header.Window_Count)
+      Window_Id       : Word/2;
+      _               : Word/2;
+      X               : Word/2;
+      Y               : Word/2;
+      Width           : Word/2;
+      Height          : Word/2;
+      Background_Flag : Word/2;
+      Control_Count   : Word/2;
+      Background_File : String/8;
+      First_Control   : Word/2;
+      _               : Word/2;
+   end Window;
+
+   Control_Entry at Header.Controls_Offset : record (<>)
+      Offset          : Word;
+      Length          : Word;
+   end Control_Map;
+
+   Control at Control_Entry.Offset : record
+      Id              : Word/4;
+      X               : Word/2;
+      Y               : Word/2;
+      Width           : Word/2;
+      Height          : Word/2;
+      Control_Type    : Word/1;
+      _               : Word/1;
+      case Control_Type is
+         when 0 =>    --  button
+            Button_Image       : String/8;
+            Animation_Cycle    : Word/1;
+            Text_Justification : Word/1;
+            Frame_Unpressed    : Word/1;
+            Anchor_X1          : Word/1;
+            Frame_Pressed      : Word/1;
+            Anchor_X2          : Word/1;
+            Frame_Selected     : Word/1;
+            Anchor_Y1          : Word/1;
+            Frame_Disabled     : Word/1;
+            Anchor_Y2          : Word/1;
+         when 2 =>   --  slider
+            Slider_Background  : String/8;
+            Slider_Knob        : String/8;
+            Cycle_Number       : Word/2;
+            Frame_Ungrabbed    : Word/2;
+            Frame_Grabbed      : Word/2;
+            Knob_X             : Word/2;
+            Knob_Y             : Word/2;
+            Knob_Jump_Width    : Word/2;
+            Knob_Jump_Count    : Word/2;
+      end case;
+   end Control;
+end Chu;
+
+end Infinity;
