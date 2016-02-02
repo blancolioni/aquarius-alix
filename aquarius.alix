@@ -75,3 +75,5 @@ compiler_option = "-gnatyabcefhiklmnoprstOASux"
 compiler_option = "-gnat2012"
 compiler_option = "-fstack-check"
 linker_option = "-g"
+# uncomment following line when building on Linux
+# linker_option = "-lpixman-1"
