@@ -1,7 +1,11 @@
 with Aquarius.Configuration;
 with Aquarius.File_System_Stores;
+with Aquarius.Paths;
 
 with Komnenos.Fragments;
+
+with Aqua.IO;
+with Aqua.Primitives.Init;
 
 package body Aquarius.Library is
 
@@ -30,6 +34,8 @@ package body Aquarius.Library is
    is
    begin
       Aquarius.Configuration.Load_Configuration;
+      Aqua.IO.Set_IO_Path (Aquarius.Paths.Scratch_Path);
+      Aqua.Primitives.Init.Create_Primitives;
       Local_Options (Plugins_Enabled) := Enable_Plugins;
       Local_Options (Show_Paths_In_Messages_Enabled) := Show_Paths_In_Messages;
       Aquarius.File_System_Stores.Register;
