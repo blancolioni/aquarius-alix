@@ -28,8 +28,12 @@ list_of_declarations ::= { declaration ';' }
 declaration ::= record_declaration
               | type_declaration
 
-record_declaration ::= 'record' identifier [ ':' < identifier / ',' >  ] [ 'with' list_of_attributes ]
-                         [ 'is' list_of_fields 'end' [ 'record' ] identifier ]
+record_declaration ::= 'record' identifier [ ':' base_records ] [ 'with' list_of_attributes ]
+                         [ 'is' list_of_fields 'end' [ 'record' ] matching_identifier ]
+
+base_records ::= < identifier / ',' >
+
+matching_identifier ::= identifier
 
 list_of_attributes ::= < identifier / ',' >
 
@@ -37,16 +41,15 @@ list_of_fields ::= { field ';' }
 
 field ::= data_field | compound_key_field
 
-data_field ::= [ key_spec ] identifier [ ':' type ] [ ':=' static_expression ] [ 'with' list_of_attributes ]
+data_field ::= [ key_spec ] identifier [ ':' named_type ] [ ':=' static_expression ] [ 'with' list_of_attributes ]
 
 static_expression ::= integer | string
 
-compound_key_field ::= key_spec identifier 'with'  < identifier / ',' >
+compound_key_field ::= key_spec identifier 'with' compound_key_fields
+
+compound_key_fields ::= < identifier / ',' >
 
 key_spec ::= [ 'unique' ] 'key'
-
-type ::= named_type
-       | enumeration_type
 
 named_type ::= identifier [ constraint ]
 
@@ -54,6 +57,8 @@ constraint ::= '(' integer ')'
 
 enumeration_type ::= '(' < identifier / ',' > ')'
 
-type_declaration ::= 'type' identifier 'is' type
+type_declaration ::= 'type' identifier 'is' type_spec
+
+type_spec ::= named_type | enumeration_type
 
 name ::= < identifier / '.' >
