@@ -1,0 +1,26 @@
+before database_declaration do
+   IO.put_line ("cross reference");
+end;
+
+after base_records/identifier do
+   child.entity := Komnenos.Get_Entity (identifier.text, "record-declaration");
+   if child.entity then
+      Komnenos.Cross_Reference (identifier, child.entity);
+   end if;
+end;
+
+after named_type/identifier do
+   if parent.entity then
+      Komnenos.Cross_Reference (identifier, parent.entity);
+   end if;
+end;
+
+after data_field do
+   if tree.record_type then
+      Komnenos.Cross_Reference (tree/identifier, tree.record_type);
+   end if;
+end;
+
+after database_declaration do
+   Aqua.Report_State;
+end;

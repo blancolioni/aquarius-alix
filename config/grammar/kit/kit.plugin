@@ -1,0 +1,11 @@
+plugin Kit version 0.1 is
+
+   group run_check : semantic is
+      kit_check_records;
+   end run_check;
+   
+   group cross_reference : semantic is
+       kit_cross_reference;
+   end cross_reference;
+   
+end Kit;
