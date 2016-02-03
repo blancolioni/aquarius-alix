@@ -10,7 +10,6 @@ package Komnenos.UI.Gtk_UI.Frames is
 
    type Root_Gtk_Frame_Record is
      new Gtk.Widget.Gtk_Widget_Record
-     and Display_Interface
      and Borders.UI_Fragment_Interface
    with private;
 
@@ -29,7 +28,6 @@ private
 
    type Root_Gtk_Frame_Record is
      new Gtk.Grid.Gtk_Grid_Record
-     and Display_Interface
      and Borders.UI_Fragment_Interface with
       record
          Dragging   : Boolean := False;

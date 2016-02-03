@@ -39,6 +39,27 @@ package body Komnenos.Entities.Visuals is
       end if;
    end Bind_Visual;
 
+   ----------------------
+   -- Insert_At_Cursor --
+   ----------------------
+
+   procedure Insert_At_Cursor
+     (Entity : not null access Root_Entity_Reference'Class;
+      Text   : String)
+   is
+   begin
+      if Bound_Entity_Map.Contains (Entity.Key) then
+         declare
+            List : constant List_Of_Visuals.List :=
+                     Bound_Entity_Map.Element (Entity.Key);
+         begin
+            for Visual of List loop
+               Visual.Insert_At_Cursor (Text);
+            end loop;
+         end;
+      end if;
+   end Insert_At_Cursor;
+
    ------------------------
    -- Invalidate_Visuals --
    ------------------------
