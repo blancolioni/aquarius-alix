@@ -561,6 +561,7 @@ package body Aquarius.Tokens is
       Unique := True;
       Tok := Null_Token;
       Class := Null_Token_Class;
+      Have_Class := False;
 
       while First <= Text'Last and then Text (First) = ' ' loop
          First := First + 1;
@@ -620,6 +621,7 @@ package body Aquarius.Tokens is
                            Class := Test_Class;
                            Tok   := Test_Tok;
                            Last  := Temp_Last;
+                           Complete := not Partial or else Last < Text'Last;
                         end if;
                      end;
                      Have_Class := True;
