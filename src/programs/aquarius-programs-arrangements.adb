@@ -217,10 +217,11 @@ package body Aquarius.Programs.Arrangements is
 
       if Context.Need_Soft_New_Line then
          Context.Need_New_Line := True;
-         Context.Current_Indent := Context.Current_Indent + 2;
+         Context.Soft_Indent := Context.Soft_Indent + 2;
          Logging.Log (Context, Item,
               "enter soft new line; new indent ="
-              & Context.Current_Indent'Img);
+                      & Context.Current_Indent'Img
+                      & Context.Soft_Indent'Img);
       end if;
 
       if Enabled (Rules.New_Line_Before) or else Item.New_Line_Before then
@@ -254,7 +255,8 @@ package body Aquarius.Programs.Arrangements is
          if Context.Cancel_Indent then
             Context.Cancel_Indent := False;
          else
-            Context.Current_Column   := Context.Current_Indent;
+            Context.Current_Column :=
+              Context.Current_Indent + Context.Soft_Indent;
          end if;
       else
          declare
@@ -288,10 +290,11 @@ package body Aquarius.Programs.Arrangements is
       Logging.Log (Context, Item, "start: " & Show (Item.Start_Position));
 
       if Context.Need_Soft_New_Line then
-         Context.Current_Indent := Context.Current_Indent - 2;
-         Logging.Log (Context, Item,
-              "leave soft new line; new indent ="
-              & Context.Current_Indent'Img);
+         Context.Soft_Indent := Context.Soft_Indent - 2;
+         Logging.Log
+           (Context, Item,
+            "leave soft new line; new indent ="
+            & Context.Current_Indent'Img & Context.Soft_Indent'Img);
          Context.Need_Soft_New_Line := False;
       end if;
 
@@ -426,11 +429,13 @@ package body Aquarius.Programs.Arrangements is
         > Context.Right_Margin
       then
          declare
-            Ancestor_Tree  : Aquarius.Trees.Tree;
-            Left_Ancestor  : Aquarius.Trees.Tree;
-            Right_Ancestor : Aquarius.Trees.Tree;
-            Ancestor       : Program_Tree;
+            Ancestor_Tree   : Aquarius.Trees.Tree;
+            Left_Ancestor   : Aquarius.Trees.Tree;
+            Right_Ancestor  : Aquarius.Trees.Tree;
+            Ancestor        : Program_Tree;
+            Old_Soft_Indent : constant Count := Context.Soft_Indent;
          begin
+            Context.Soft_Indent := 0;
             Aquarius.Trees.Common_Ancestor
               (Left           => Context.First_Terminal,
                Right          => Context.Previous_Terminal,
@@ -452,6 +457,7 @@ package body Aquarius.Programs.Arrangements is
 
             Logging.Log (Context, Ancestor, "after re-arrangement");
             Logging.Log (Context, Ancestor);
+            Context.Soft_Indent := Old_Soft_Indent;
          end;
       end if;
    end Check_Previous_Line_Length;
