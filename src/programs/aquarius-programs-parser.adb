@@ -1008,6 +1008,7 @@ package body Aquarius.Programs.Parser is
    is
       use Aquarius.Trees.Cursors;
       use type Aquarius.Tokens.Token;
+      use type Aquarius.Source.Source_Position;
       A : constant Ambiguity := List_Of_Ambiguities.Element (Current);
       Location : Cursor renames A.Location;
       Program : constant Program_Tree :=
@@ -1026,17 +1027,19 @@ package body Aquarius.Programs.Parser is
 
       Program.Set_Source_Position (Tok_Pos);
 
-      declare
-         use Aquarius.Layout;
-      begin
-         Program.Start_Position :=
-           (Positive_Count (Aquarius.Source.Get_Line (Tok_Pos)),
-            Positive_Count (Aquarius.Source.Get_Column (Tok_Pos)));
-         Program.File_Start := Program.Start_Position;
-         Program.End_Position := (Program.Start_Position.Line,
-                                  Program.Start_Position.Column
-                                  + Count (Tok_Text'Length));
-      end;
+      if Tok_Pos /= Aquarius.Source.No_Source_Position then
+         declare
+            use Aquarius.Layout;
+         begin
+            Program.Start_Position :=
+              (Positive_Count (Aquarius.Source.Get_Line (Tok_Pos)),
+               Positive_Count (Aquarius.Source.Get_Column (Tok_Pos)));
+            Program.File_Start := Program.Start_Position;
+            Program.End_Position := (Program.Start_Position.Line,
+                                     Program.Start_Position.Column
+                                     + Count (Tok_Text'Length));
+         end;
+      end if;
 
       if Context.Run_Actions and then not Has_Ambiguities (Context) then
 

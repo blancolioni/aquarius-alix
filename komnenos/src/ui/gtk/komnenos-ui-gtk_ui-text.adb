@@ -492,6 +492,8 @@ package body Komnenos.UI.Gtk_UI.Text is
       end Put;
 
    begin
+      Fragment.Clear;
+      Fragment.Get_Content.Render (Fragment);
       Fragment.Iterate (Put'Access, New_Line'Access);
    end Render_Text;
 
@@ -757,6 +759,9 @@ package body Komnenos.UI.Gtk_UI.Text is
             Ada.Text_IO.Put_Line ("updated");
             Text.Buffer.Set_Text ("");
             Render_Text (Text.Text, Text.Fragment);
+         elsif Text.Fragment.Text_Inserted then
+            Text.Buffer.Insert_At_Cursor
+              (Text.Fragment.Inserted_Text);
          end if;
 
          if Text.Fragment.Needs_Render
