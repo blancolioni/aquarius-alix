@@ -7,11 +7,11 @@ after database_declaration do
 end;
 
 after record_declaration/identifier do
-   Komnenos.Define (parent, child.text, "record-declaration");
+   Komnenos.Define (parent, child.text, "kit-record-declaration");
 end;
 
 after named_type/identifier do
-   parent.entity := Komnenos.Get_Entity (identifier.text, "record-declaration");
+   parent.entity := Komnenos.Get_Entity (identifier.text, "kit-record-declaration");
 end;
 
 after data_field/named_type do
@@ -20,6 +20,6 @@ end;
 
 after data_field do
    if not tree.type then
-      tree.record_type := Komnenos.Get_Entity (tree/identifier.text, "record-declaration");
+      tree.record_type := Komnenos.Get_Entity (tree/identifier.text, "kit-record-declaration");
    end if;
 end;
