@@ -108,7 +108,7 @@ function_return_type ::= 'return' type_indication
 
 list_of_aspects ::= < aspect / ',' >
 
-aspect ::= identifier '=>' expression
+aspect ::= identifier [ '=>' expression ]
 
 overriding_indication ::= ['not'] 'overriding'
 
@@ -614,8 +614,13 @@ atomic_expression ::= object_reference | numeric_literal | string_literal |
 
 parenthesised_expression ::= '(' expression ')'
                            | '(' conditional_expression ')'
+                           | '(' case_expression ')'
 
 conditional_expression ::= 'if' expression 'then' expression { 'elsif' expression 'then' expression } 'else' expression
+
+case_expression ::= 'case' expression 'is' < case_expression_alternative / ',' >
+
+case_expression_alternative ::= 'when' case_option '=>' expression
 
 aggregate ::=
     '(' object_reference 'with' 'null' 'record' ')'
@@ -638,8 +643,7 @@ selector_item ::= constant_expression
 constant_expression ::= expression
 
 exception_handler ::=
-   'when' qualified_reference '=>' sequence_of_statements
- | 'when' [ identifier ':' ] 'others' '=>' sequence_of_statements
+  'when' [ identifier ':' ] (qualified_reference | 'others') '=>' sequence_of_statements
 
 pragma_spec ::=
    'pragma' identifier [ '(' pragma_arg_list ')' ] ';'

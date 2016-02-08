@@ -327,6 +327,32 @@ package body Komnenos.Fragments is
       Fragment.Bindings.Default_Bindings;
    end Initialize;
 
+   ----------------------
+   -- Insert_At_Cursor --
+   ----------------------
+
+   overriding procedure Insert_At_Cursor
+     (Fragment : in out Root_Fragment_Type;
+      Text     : String)
+   is
+   begin
+      Fragment.Text_Inserted := True;
+      Fragment.Inserted_Text :=
+        Ada.Strings.Unbounded.To_Unbounded_String (Text);
+   end Insert_At_Cursor;
+
+   -------------------
+   -- Inserted_Text --
+   -------------------
+
+   function Inserted_Text
+     (Fragment : Root_Fragment_Type)
+      return String
+   is
+   begin
+      return Ada.Strings.Unbounded.To_String (Fragment.Inserted_Text);
+   end Inserted_Text;
+
    ----------------
    -- Invalidate --
    ----------------
@@ -541,6 +567,7 @@ package body Komnenos.Fragments is
    begin
       Fragment.Needs_Render := False;
       Fragment.Cursor_Moved := False;
+      Fragment.Text_Inserted := False;
    end Rendered;
 
    -----------------
@@ -624,6 +651,18 @@ package body Komnenos.Fragments is
       end loop;
       return To_String (Result);
    end Text_Contents;
+
+   -------------------
+   -- Text_Inserted --
+   -------------------
+
+   function Text_Inserted
+     (Fragment : Root_Fragment_Type)
+      return Boolean
+   is
+   begin
+      return Fragment.Text_Inserted;
+   end Text_Inserted;
 
    -----------
    -- Title --

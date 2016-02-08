@@ -24,6 +24,7 @@ private package Aquarius.Programs.Arrangements.Contexts is
          Current_Column     : Count               := 1;
          Current_Position   : Count               := 0;
          Current_Indent     : Positive_Count      := 1;
+         Soft_Indent        : Count               := 0;
          Right_Margin       : Positive_Count      := 72;
          Rearranging        : Boolean             := False;
          User_Text_Length   : Count               := 0;

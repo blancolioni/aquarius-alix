@@ -55,7 +55,8 @@ package body Aquarius.Programs is
       Offset_Rule          => Aquarius.Source.No_Source_Position,
       Render_Class         => null,
       Fragment             => Tagatha.Fragments.Empty_Fragment,
-      Aqua_Object          => null);
+      Aqua_Object          => null,
+      Aqua_Reference       => 0);
 
    --  After a node is changed, update any entry it references
    procedure Update_Entry
@@ -774,10 +775,20 @@ package body Aquarius.Programs is
       ----------
 
       procedure Find (Node : Program_Tree) is
+         use Aquarius.Layout;
       begin
          if Node.Is_Terminal then
             if Node.Start_Position <= Location then
-               Last_Terminal := Node;
+               if Last_Terminal /= null
+                 and then not Last_Terminal.Is_Reserved_Terminal
+                 and then Node.Is_Reserved_Terminal
+                 and then Last_Terminal.End_Position
+                   = Node.Start_Position
+               then
+                  null;   --  prefer an identifier to a keyword
+               else
+                  Last_Terminal := Node;
+               end if;
             end if;
          else
             for I in 1 .. Node.Child_Count loop
@@ -1036,6 +1047,30 @@ package body Aquarius.Programs is
          end;
       end if;
    end Get_Property;
+
+   -------------------
+   -- Get_Reference --
+   -------------------
+
+   overriding function Get_Reference
+     (Program : Program_Tree_Type)
+      return Aqua.External_Reference
+   is
+   begin
+      return Program.Aqua_Reference;
+   end Get_Reference;
+
+   -------------------
+   -- Get_Reference --
+   -------------------
+
+   overriding function Get_Reference
+     (It : Root_Program_Tree_Iterator)
+      return Aqua.External_Reference
+   is
+   begin
+      return It.Aqua_Reference;
+   end Get_Reference;
 
    ---------------
    -- Get_Token --
@@ -1318,6 +1353,20 @@ package body Aquarius.Programs is
    begin
       return Item.Filled;
    end Is_Filled;
+
+   --------------------------
+   -- Is_Reserved_Terminal --
+   --------------------------
+
+   function Is_Reserved_Terminal
+     (Item : Program_Tree_Type)
+      return Boolean
+   is
+   begin
+      return Item.Is_Terminal
+        and then Aquarius.Tokens.Is_Reserved
+          (Item.Syntax.Frame, Item.Syntax.Token);
+   end Is_Reserved_Terminal;
 
    ------------------
    -- Is_Separator --
@@ -2007,6 +2056,30 @@ package body Aquarius.Programs is
       end if;
       Program.Aqua_Object.Set_Property (Name, Value);
    end Set_Property;
+
+   -------------------
+   -- Set_Reference --
+   -------------------
+
+   overriding procedure Set_Reference
+     (Program   : in out Program_Tree_Type;
+      Reference : Aqua.External_Reference)
+   is
+   begin
+      Program.Aqua_Reference := Reference;
+   end Set_Reference;
+
+   -------------------
+   -- Set_Reference --
+   -------------------
+
+   overriding procedure Set_Reference
+     (It        : in out Root_Program_Tree_Iterator;
+      Reference : Aqua.External_Reference)
+   is
+   begin
+      It.Aqua_Reference := Reference;
+   end Set_Reference;
 
    ----------------------------
    -- Set_Separator_New_Line --
