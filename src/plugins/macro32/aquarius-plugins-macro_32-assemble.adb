@@ -265,16 +265,16 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                          Assembly_Object
                            (Op.Property
                               (Global_Plugin.Assembly)).Assembly;
+      Register_Octet : constant Aqua.Octet :=
+                         (if Register = null then 0
+                          else Aqua.Octet
+                            (Assembly.Get_Register (Register.Text)));
    begin
       Assembly.Append_Octet
         (Aqua.Architecture.Encode
            (Aqua.Architecture.Aqua_Instruction'Value
-                ("A_" & Mnemonic)));
-      if Register /= null then
-         Assembly.Append_Octet
-           (Aqua.Octet
-              (Assembly.Get_Register (Register.Text)));
-      end if;
+                ("A_" & Mnemonic),
+            Immediate => Register_Octet));
    end After_Iterator;
 
    ----------------
