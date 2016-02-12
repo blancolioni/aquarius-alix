@@ -58,8 +58,13 @@ private
          Off_Right  : Boolean;
       end record;
 
-   pragma Inline (Get_Left_Tree);
-   pragma Inline (Get_Right_Of_Parent);
-   pragma Inline (Is_At_Root);
+   pragma Inline_Always (Get_Left_Tree);
+   pragma Inline_Always (Get_Right_Of_Parent);
+   pragma Inline_Always (Is_At_Root);
 
+   pragma Inline_Always (Left_Of_Tree);
+   pragma Inline_Always (Right_Of_Tree);
+
+   pragma Inline_Always (Is_Off_Left);
+   pragma Inline_Always (Is_Off_Right);
 end Aquarius.Trees.Cursors;
