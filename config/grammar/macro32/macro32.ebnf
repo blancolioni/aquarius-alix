@@ -40,6 +40,8 @@ op ::= no_operand
      | triple_operand
      | branch
      | jump
+     | call
+     | goto
      | trap
      | property
      | iterator
@@ -59,6 +61,9 @@ branch_destination ::= identifier | temporary_label
 
 jump ::= jump_instruction jump_destination
 jump_destination ::= identifier | temporary_label
+
+call ::= 'call' integer ',' arg
+goto ::= 'goto' arg
 
 temporary_label ::= label_direction integer
 label_direction ::= '+' | '-'

@@ -89,6 +89,14 @@ package body Aquarius.Plugins.Macro_32 is
          Plugins.Macro_32.Assemble.After_Jump'Access);
 
       Plugin.Register_Action
+        ("call", Assemble, After,
+         Plugins.Macro_32.Assemble.After_Call'Access);
+
+      Plugin.Register_Action
+        ("goto", Assemble, After,
+         Plugins.Macro_32.Assemble.After_Goto'Access);
+
+      Plugin.Register_Action
         ("trap", Assemble, After,
          Plugins.Macro_32.Assemble.After_Trap'Access);
 
