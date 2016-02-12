@@ -1,5 +1,3 @@
-with Ada.Containers.Vectors;
-
 package Aquarius.Trees.Cursors is
 
    Cursor_Error : exception;
@@ -52,33 +50,12 @@ package Aquarius.Trees.Cursors is
    function Image (Item : Cursor) return String;
    function Show (Item : Cursor) return String;
 
-   procedure Set_Parents
-     (Item         : in out Cursor;
-      Derived_From : in     Cursor;
-      New_Parent   : in     Tree;
-      New_Child    : in     Tree);
-
-   procedure Copy_Parents (From  : in     Cursor;
-                           To    : in out Cursor);
-
-   procedure Collapse_Parents (Item : in out Cursor);
-
 private
-
-   type Parent_Child_Record is
-      record
-         Parent   : Tree;
-         Child    : Tree;
-      end record;
-
-   package Parent_Child_Vectors is
-      new Ada.Containers.Vectors (Positive, Parent_Child_Record);
 
    type Cursor is
       record
          Right_Tree : Tree;
          Off_Right  : Boolean;
-         Parents    : Parent_Child_Vectors.Vector;
       end record;
 
    pragma Inline (Get_Left_Tree);
