@@ -842,7 +842,7 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                     (Assembly,
                      Operand_Tree.Program_Child ("expression"));
          begin
-            if not X.Deferred and then X.Word_Value < 64 then
+            if not X.Deferred and then X.Word_Value < 32 then
                return (Literal, False, 0, Octet (X.Word_Value));
             else
                return (Autoincrement, False, Aqua.Architecture.R_PC, 0);
