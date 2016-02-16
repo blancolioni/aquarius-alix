@@ -1,7 +1,6 @@
 with Ada.Characters.Latin_1;
 with Ada.Text_IO;
 
-with Glib;
 with Glib.Object;
 with Glib.Properties;
 with Glib.Values;
@@ -276,6 +275,10 @@ package body Komnenos.UI.Gtk_UI.Text is
             Entity.Select_Entity
               (Current_UI, Display.Fragment, null,
                Natural (Location.Y) + Natural (Location.Height) / 2);
+            Display.Highlights.Append
+              ((Entity, Location.Y, Location.Height,
+               Aquarius.Colours.From_String
+                 ("rgba(220,220,220, 180)")));
          end;
       end if;
    end Follow_If_Link;
@@ -719,6 +722,17 @@ package body Komnenos.UI.Gtk_UI.Text is
          Y       => Location.Y + 1,
          Height  => Location.Height - 1,
          Colour  => (0.8, 0.5, 0.5, 0.8));
+
+      for Highlight of Display.Highlights loop
+         Paint_Line_Background
+           (View    => Text_View,
+            Context => Cr,
+            Y       => Highlight.Line_Start_Pixels + 1,
+            Height  => Highlight.Line_Height_Pixels - 1,
+            Colour  =>
+              Aquarius.Colours.Gtk_Colours.To_Gdk_RGBA
+                (Highlight.Highlight_Colour));
+      end loop;
 
       return False;
 
