@@ -3,7 +3,7 @@ private with Ada.Containers.Doubly_Linked_Lists;
 with Gtk.Widget;
 
 private with Glib;
-private with Gtk.Scrolled_Window;
+--  private with Gtk.Scrolled_Window;
 private with Gtk.Text_Buffer;
 private with Gtk.Text_View;
 private with Aquarius.Colours;
@@ -36,7 +36,7 @@ private
       new Ada.Containers.Doubly_Linked_Lists (Highlight_Line);
 
    type Komnenos_Text_View_Record is
-     new Gtk.Scrolled_Window.Gtk_Scrolled_Window_Record with
+     new Gtk.Text_View.Gtk_Text_View_Record with
       record
          Text              : Gtk.Text_View.Gtk_Text_View;
          Buffer            : Gtk.Text_Buffer.Gtk_Text_Buffer;
