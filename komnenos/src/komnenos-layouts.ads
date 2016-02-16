@@ -2,6 +2,7 @@ private with Ada.Containers.Doubly_Linked_Lists;
 
 with Tropos;
 
+with Komnenos.Connectors;
 with Komnenos.Fragments;
 with Komnenos.Session_Objects;
 
@@ -37,6 +38,11 @@ package Komnenos.Layouts is
    procedure Item_Removed
      (Layout : in out Root_Layout_Type;
       Item   : Komnenos.Fragments.Fragment_Type)
+   is abstract;
+
+   procedure Connection
+     (Layout : in out Root_Layout_Type;
+      Connector : Komnenos.Connectors.Connector_Type)
    is abstract;
 
    procedure Set_Full_Size

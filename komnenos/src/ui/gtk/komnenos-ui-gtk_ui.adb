@@ -32,6 +32,8 @@ with Cairo;
 
 package body Komnenos.UI.Gtk_UI is
 
+   Frame_Title_Height : constant := 24;
+
    package Connector_Lists is
      new Ada.Containers.Doubly_Linked_Lists
        (Komnenos.Connectors.Connector_Type,
@@ -304,13 +306,20 @@ package body Komnenos.UI.Gtk_UI is
       else
          UI.Layout.Place_Item
            (Fragment, Komnenos.Fragments.Fragment_Type (Parent), Offset);
-         UI.Connectors.Append
-           (Komnenos.Connectors.Connect
-              (Class              => Komnenos.Connectors.Arrow,
-               Source             => Parent,
-               Source_Offset      => Offset,
-               Destination        => Fragment,
-               Destination_Offset => 0));
+
+         declare
+            Connector : constant Komnenos.Connectors.Connector_Type :=
+                          Komnenos.Connectors.Connect
+                            (Class              => Komnenos.Connectors.Arrow,
+                             Source             => Parent,
+                             Source_Offset      => Offset + Frame_Title_Height,
+                             Destination        => Fragment,
+                             Destination_Offset => Frame_Title_Height);
+         begin
+            UI.Layout.Connection (Connector);
+            UI.Connectors.Append (Connector);
+         end;
+
       end if;
    end Place_Fragment;
 
