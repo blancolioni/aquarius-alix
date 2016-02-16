@@ -65,11 +65,12 @@ package body Komnenos.UI.Gtk_UI.Layout_Table is
       UI_Connector : constant Komnenos.UI.Gtk_UI.Connectors.Gtk_Connector :=
                        Komnenos.UI.Gtk_UI.Connectors.New_Connector
                          (Connector);
+      Loc : constant Layout_Point := UI_Connector.Layout_Location;
    begin
       Layout.Layout_Widget.Put
         (UI_Connector,
-         Glib.Gint (UI_Connector.Connector.Layout_Boundary.X),
-         Glib.Gint (UI_Connector.Connector.Layout_Boundary.Y));
+         Glib.Gint (Loc.X),
+         Glib.Gint (Loc.Y));
    end Connection;
 
    -------------------------

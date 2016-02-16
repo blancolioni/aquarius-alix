@@ -16,6 +16,10 @@ package Komnenos.UI.Gtk_UI.Connectors is
      (UI_Connector : Root_Gtk_Connector_Record'Class)
       return Komnenos.Connectors.Connector_Type;
 
+   function Layout_Location
+     (UI_Connector : Root_Gtk_Connector_Record'Class)
+      return Layout_Point;
+
    type Gtk_Connector is access all Root_Gtk_Connector_Record'Class;
 
    function New_Connector
@@ -32,7 +36,14 @@ private
          Surface   : Cairo.Cairo_Surface;
       end record;
 
-   procedure Update
+   overriding procedure Remove
+     (Con : in out Root_Gtk_Connector_Record)
+   is null;
+
+   overriding procedure Update
+     (Con : in out Root_Gtk_Connector_Record);
+
+   procedure Render
      (Con : in out Root_Gtk_Connector_Record'Class);
 
 end Komnenos.UI.Gtk_UI.Connectors;

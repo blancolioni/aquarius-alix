@@ -37,7 +37,8 @@ package body Komnenos.Connectors is
          Destination        => Entity_Visual_Access (Destination),
          Destination_Offset => Destination_Offset,
          Boundary           => (0, 0, 1, 1),
-         Path               => (others => (0, 0)))
+         Path               => (others => (0, 0)),
+         Display            => null)
       do
          Connector.Update;
       end return;
@@ -67,6 +68,18 @@ package body Komnenos.Connectors is
       return Connector.Destination_Offset;
    end Destination_Offset;
 
+   -------------
+   -- Display --
+   -------------
+
+   function Display
+     (Connector : Root_Connector_Type'Class)
+      return Connector_Display
+   is
+   begin
+      return Connector.Display;
+   end Display;
+
    ---------------------
    -- Layout_Boundary --
    ---------------------
@@ -90,6 +103,18 @@ package body Komnenos.Connectors is
    begin
       return Connector.Path;
    end Layout_Path;
+
+   -----------------
+   -- Set_Display --
+   -----------------
+
+   procedure Set_Display
+     (Connector : in out Root_Connector_Type'Class;
+      Display   : not null access Connector_Display_Interface'Class)
+   is
+   begin
+      Connector.Display := Connector_Display (Display);
+   end Set_Display;
 
    ------------
    -- Source --
@@ -177,6 +202,10 @@ package body Komnenos.Connectors is
 
          Connector.Boundary := (Min_X, Min_Y, Max_X - Min_X, Max_Y - Min_Y);
       end;
+
+      if Connector.Display /= null then
+         Connector.Display.Update;
+      end if;
 
    end Update;
 

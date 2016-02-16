@@ -239,6 +239,7 @@ package body Komnenos.UI.Gtk_UI.Frames is
               (X => Fragment.X + X_Offset,
                Y => Fragment.Y + Y_Offset);
             Frame.Layout.Move_Item (Frame.Fragment);
+            Current_UI.Update_Visual (Frame.Fragment);
             Frame.Start_X := Event.X_Root;
             Frame.Start_Y := Event.Y_Root;
          end;
