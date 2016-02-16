@@ -286,6 +286,38 @@ package body Komnenos.UI.Gtk_UI is
          UI.Layout.From_Config (Config.Child ("layout"));
       end if;
       UI.Layout.Scan (Attach_Entity'Access);
+      if Config.Contains ("connections") then
+         for Conn_Config of Config.Child ("connections") loop
+            declare
+               Source_Key : constant String :=
+                              Conn_Config.Get ("source");
+               Dest_Key   : constant String :=
+                              Conn_Config.Get ("destination");
+               Source_Offset : constant Natural :=
+                                 Conn_Config.Get ("source-offset");
+               Dest_Offset   : constant Natural :=
+                                 Conn_Config.Get ("destination-offset");
+               Class         : constant Komnenos.Connectors.Connector_Class :=
+                                 Komnenos.Connectors.Connector_Class'Value
+                                   (Conn_Config.Get ("class"));
+               Source        : constant Komnenos.Fragments.Fragment_Type :=
+                                 UI.Layout.Find_Fragment (Source_Key);
+               Dest          : constant Komnenos.Fragments.Fragment_Type :=
+                                 UI.Layout.Find_Fragment (Dest_Key);
+
+               Connection    : constant Komnenos.Connectors.Connector_Type :=
+                                 Komnenos.Connectors.Connect
+                                   (Class              => Class,
+                                    Source             => Source,
+                                    Source_Offset      => Source_Offset,
+                                    Destination        => Dest,
+                                    Destination_Offset => Dest_Offset);
+            begin
+               UI.Layout.Connection (Connection);
+               UI.Connectors.Append (Connection);
+            end;
+         end loop;
+      end if;
    end From_Config;
 
    --------------------
@@ -351,10 +383,23 @@ package body Komnenos.UI.Gtk_UI is
    is
       Layout_Config : Tropos.Configuration :=
                         Tropos.New_Config ("layout");
+      Connection_Config : Tropos.Configuration :=
+                            Tropos.New_Config ("connections");
    begin
       Root_Komnenos_UI (UI).To_Config (Config);
       UI.Layout.To_Config (Layout_Config);
       Config.Add (Layout_Config);
+      for Connector of UI.Connectors loop
+         declare
+            Connector_Config : Tropos.Configuration :=
+                                 Tropos.New_Config
+                                   (Connector.Config_Name);
+         begin
+            Connector.To_Config (Connector_Config);
+            Connection_Config.Add (Connector_Config);
+         end;
+      end loop;
+      Config.Add (Connection_Config);
    end To_Config;
 
    -------------

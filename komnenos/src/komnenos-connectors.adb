@@ -14,6 +14,19 @@ package body Komnenos.Connectors is
       return Connector.Class;
    end Class;
 
+   -----------------
+   -- Config_Name --
+   -----------------
+
+   overriding function Config_Name
+     (Item : Root_Connector_Type)
+      return String
+   is
+      pragma Unreferenced (Item);
+   begin
+      return "connector";
+   end Config_Name;
+
    -------------
    -- Connect --
    -------------
@@ -139,6 +152,22 @@ package body Komnenos.Connectors is
    begin
       return Connector.Source_Offset;
    end Source_Offset;
+
+   ---------------
+   -- To_Config --
+   ---------------
+
+   overriding procedure To_Config
+     (Item : Root_Connector_Type;
+      Config : in out Tropos.Configuration)
+   is
+   begin
+      Config.Add ("class", Connector_Class'Image (Item.Class));
+      Config.Add ("source", Item.Source.Get_Content.Key);
+      Config.Add ("destination", Item.Destination.Get_Content.Key);
+      Config.Add ("source-offset", Item.Source_Offset);
+      Config.Add ("destination-offset", Item.Destination_Offset);
+   end To_Config;
 
    ------------
    -- Update --

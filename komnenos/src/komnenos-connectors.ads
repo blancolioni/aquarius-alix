@@ -1,10 +1,14 @@
+private with Tropos;
+
 with Komnenos.Entities;
+with Komnenos.Session_Objects;
 
 package Komnenos.Connectors is
 
    type Connector_Class is (Arrow, Dashed_Arrow);
 
-   type Root_Connector_Type is tagged private;
+   type Root_Connector_Type is
+     new Komnenos.Session_Objects.Session_Object_Interface with private;
 
    function Class
      (Connector : Root_Connector_Type'Class)
@@ -68,7 +72,8 @@ package Komnenos.Connectors is
 
 private
 
-   type Root_Connector_Type is tagged
+   type Root_Connector_Type is
+     new Komnenos.Session_Objects.Session_Object_Interface with
       record
          Class              : Connector_Class;
          Source             : Komnenos.Entities.Entity_Visual_Access;
@@ -79,5 +84,18 @@ private
          Path               : Layout_Line (1 .. 4);
          Display            : Connector_Display;
       end record;
+
+   overriding function Config_Name
+     (Item : Root_Connector_Type)
+      return String;
+
+   overriding procedure To_Config
+     (Item : Root_Connector_Type;
+      Config : in out Tropos.Configuration);
+
+   overriding procedure From_Config
+     (Item : not null access Root_Connector_Type;
+      Config : Tropos.Configuration)
+   is null;
 
 end Komnenos.Connectors;
