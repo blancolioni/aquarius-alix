@@ -716,13 +716,6 @@ package body Komnenos.UI.Gtk_UI.Text is
       Text_View.Get_Iter_Location
         (Iter, Location);
 
-      Paint_Line_Background
-        (View    => Text_View,
-         Context => Cr,
-         Y       => Location.Y + 1,
-         Height  => Location.Height - 1,
-         Colour  => (0.8, 0.5, 0.5, 0.8));
-
       for Highlight of Display.Highlights loop
          Paint_Line_Background
            (View    => Text_View,
@@ -733,6 +726,13 @@ package body Komnenos.UI.Gtk_UI.Text is
               Aquarius.Colours.Gtk_Colours.To_Gdk_RGBA
                 (Highlight.Highlight_Colour));
       end loop;
+
+      Paint_Line_Background
+        (View    => Text_View,
+         Context => Cr,
+         Y       => Location.Y + 1,
+         Height  => Location.Height - 1,
+         Colour  => (0.8, 0.5, 0.5, 0.8));
 
       return False;
 
