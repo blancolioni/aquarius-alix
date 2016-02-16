@@ -50,6 +50,22 @@ package Komnenos.Connectors is
 
    type Connector_Display_Interface is interface;
 
+   procedure Remove (Display : in out Connector_Display_Interface)
+   is abstract;
+
+   procedure Update (Display : in out Connector_Display_Interface)
+   is abstract;
+
+   type Connector_Display is access all Connector_Display_Interface'Class;
+
+   procedure Set_Display
+     (Connector : in out Root_Connector_Type'Class;
+      Display   : not null access Connector_Display_Interface'Class);
+
+   function Display
+     (Connector : Root_Connector_Type'Class)
+      return Connector_Display;
+
 private
 
    type Root_Connector_Type is tagged
@@ -61,6 +77,7 @@ private
          Destination_Offset : Integer;
          Boundary           : Layout_Rectangle;
          Path               : Layout_Line (1 .. 4);
+         Display            : Connector_Display;
       end record;
 
 end Komnenos.Connectors;

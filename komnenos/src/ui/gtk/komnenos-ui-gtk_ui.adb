@@ -32,7 +32,7 @@ with Cairo;
 
 package body Komnenos.UI.Gtk_UI is
 
-   Frame_Title_Height : constant := 24;
+   Frame_Title_Height : constant := 32;
 
    package Connector_Lists is
      new Ada.Containers.Doubly_Linked_Lists
@@ -63,6 +63,10 @@ package body Komnenos.UI.Gtk_UI is
       Parent   : access Komnenos.Entities.Entity_Visual'Class;
       Offset   : Natural;
       Fragment : Komnenos.Fragments.Fragment_Type);
+
+   overriding procedure Update_Visual
+     (UI       : in out Root_Gtk_UI;
+      Visual   : not null access Komnenos.Entities.Entity_Visual'Class);
 
    overriding function Active_Fragment
      (UI : Root_Gtk_UI)
@@ -371,5 +375,24 @@ package body Komnenos.UI.Gtk_UI is
          return Gdk.RGBA.Null_RGBA;
       end if;
    end To_RGBA;
+
+   -------------------
+   -- Update_Visual --
+   -------------------
+
+   overriding procedure Update_Visual
+     (UI       : in out Root_Gtk_UI;
+      Visual   : not null access Komnenos.Entities.Entity_Visual'Class)
+   is
+      use Komnenos.Entities;
+      V : constant Entity_Visual_Access := Entity_Visual_Access (Visual);
+   begin
+      for Connector of UI.Connectors loop
+         if Connector.Source = V or else Connector.Destination = V then
+            Connector.Update;
+            Connector.Display.Update;
+         end if;
+      end loop;
+   end Update_Visual;
 
 end Komnenos.UI.Gtk_UI;
