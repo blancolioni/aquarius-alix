@@ -163,9 +163,10 @@ package body Komnenos.UI.Gtk_UI.Text is
       Result : constant Komnenos_Text_View :=
                  new Komnenos_Text_View_Record;
    begin
-      Gtk.Scrolled_Window.Initialize (Result);
+      Gtk.Text_View.Initialize (Result);
       Result.Fragment := Fragment;
-      Gtk.Text_View.Gtk_New (Result.Text);
+      --  Gtk.Text_View.Gtk_New (Result.Text);
+      Result.Text := Gtk.Text_View.Gtk_Text_View (Result);
 
       Result.Text.Override_Background_Color
         (Gtk.Enums.Gtk_State_Flag_Normal,
@@ -236,10 +237,10 @@ package body Komnenos.UI.Gtk_UI.Text is
 
       Result.Buffer := Result.Text.Get_Buffer;
 
-      Result.Set_Min_Content_Height (Glib.Gint (Fragment.Height));
-      Result.Set_Min_Content_Width (Glib.Gint (Fragment.Width));
+--        Result.Set_Min_Content_Height (Glib.Gint (Fragment.Height));
+--        Result.Set_Min_Content_Width (Glib.Gint (Fragment.Width));
 
-      Result.Add (Result.Text);
+--        Result.Add (Result.Text);
 
       declare
          Start_Iter : Gtk.Text_Iter.Gtk_Text_Iter;
@@ -262,7 +263,7 @@ package body Komnenos.UI.Gtk_UI.Text is
    is
       use type Komnenos.Entities.Entity_Reference;
       Display  : constant Komnenos_Text_View :=
-                   Komnenos_Text_View (Text_View.Get_Parent);
+                   Komnenos_Text_View (Text_View);
       Entity : constant Komnenos.Entities.Entity_Reference :=
                  Display.Fragment.Get_Link
                    (Natural (Gtk.Text_Iter.Get_Offset (Iter)) + 1);
@@ -512,7 +513,7 @@ package body Komnenos.UI.Gtk_UI.Text is
       use Aquarius.Styles;
 
       Display : constant Komnenos_Text_View :=
-                  Komnenos_Text_View (Text_View.Get_Parent);
+                  Komnenos_Text_View (Text_View);
       Fragment : constant Komnenos.Fragments.Fragment_Type :=
                    Display.Fragment;
       Style         : Aquarius_Style;
@@ -701,7 +702,7 @@ package body Komnenos.UI.Gtk_UI.Text is
    is
       use Glib;
       Display      : constant Komnenos_Text_View :=
-                       Komnenos_Text_View (Widget.Get_Parent);
+                       Komnenos_Text_View (Widget);
       Text_View    : constant Gtk.Text_View.Gtk_Text_View :=
                        Display.Text;
       Iter         : Gtk.Text_Iter.Gtk_Text_Iter;
