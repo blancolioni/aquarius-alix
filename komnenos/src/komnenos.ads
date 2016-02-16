@@ -5,7 +5,7 @@ package Komnenos is
    type Layout_Rectangle is
       record
          X, Y          : Integer;
-         Width, Height : Positive;
+         Width, Height : Natural;
       end record;
 
    function To_Config (Rectangle : Layout_Rectangle)
