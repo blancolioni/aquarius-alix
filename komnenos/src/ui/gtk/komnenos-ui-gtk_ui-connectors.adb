@@ -5,6 +5,8 @@ with Gdk.Window;
 
 package body Komnenos.UI.Gtk_UI.Connectors is
 
+   Frame_Title_Height : constant := 32;
+
    Arrow_Length : constant := 8.0;
    Arrow_Width  : constant := 4.0;
 
@@ -78,7 +80,7 @@ package body Komnenos.UI.Gtk_UI.Connectors is
          UI_Connector.Connector.Layout_Boundary.Y)
       do
          Loc.X := Loc.X - 8;
-         Loc.Y := Loc.Y - 16;
+         Loc.Y := Loc.Y - 16 + Frame_Title_Height;
       end return;
    end Layout_Location;
 
