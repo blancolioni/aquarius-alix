@@ -26,6 +26,16 @@ package Komnenos.Connectors is
      (Connector : Root_Connector_Type'Class)
       return Integer;
 
+   function Layout_Boundary
+     (Connector : Root_Connector_Type'Class)
+      return Layout_Rectangle;
+
+   function Layout_Path
+     (Connector : Root_Connector_Type'Class)
+      return Layout_Line;
+
+   procedure Update (Connector : in out Root_Connector_Type'Class);
+
    type Connector_Type is access all Root_Connector_Type'Class;
 
    function Connect
@@ -38,6 +48,8 @@ package Komnenos.Connectors is
       Destination_Offset : Integer)
       return Connector_Type;
 
+   type Connector_Display_Interface is interface;
+
 private
 
    type Root_Connector_Type is tagged
@@ -47,6 +59,8 @@ private
          Source_Offset      : Integer;
          Destination        : Komnenos.Entities.Entity_Visual_Access;
          Destination_Offset : Integer;
+         Boundary           : Layout_Rectangle;
+         Path               : Layout_Line (1 .. 4);
       end record;
 
 end Komnenos.Connectors;

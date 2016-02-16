@@ -15,7 +15,8 @@ package body Komnenos.Fragments.Source is
       Result.Editable := True;
       Result.Background_Colour := Aquarius.Colours.From_String ("seashell");
       Result.Foreground_Colour := Aquarius.Colours.From_String ("black");
-      Result.Border_Colour     := Aquarius.Colours.From_String ("#8C001A");
+      Result.Border_Colour     :=
+        Aquarius.Colours.From_String ("rgba(140,0,26,200)");
       Result.Set_Position (100, 100);
       Result.Path := Ada.Strings.Unbounded.To_Unbounded_String (Path);
       Result.Title := Ada.Strings.Unbounded.To_Unbounded_String (Title);

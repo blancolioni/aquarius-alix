@@ -5,6 +5,8 @@ with Gtk.Widget;
 
 with Cairo;
 
+with Komnenos.UI.Gtk_UI.Connectors;
+
 package body Komnenos.UI.Gtk_UI.Layout_Table is
 
    type Layout_Object_Record is
@@ -51,6 +53,24 @@ package body Komnenos.UI.Gtk_UI.Layout_Table is
       Layout.Navigation.On_Layout_Configured;
       Layout.Navigation.Refresh;
    end Configure;
+
+   ----------------
+   -- Connection --
+   ----------------
+
+   overriding procedure Connection
+     (Layout    : in out Root_Gtk_Layout_Table;
+      Connector : Komnenos.Connectors.Connector_Type)
+   is
+      UI_Connector : constant Komnenos.UI.Gtk_UI.Connectors.Gtk_Connector :=
+                       Komnenos.UI.Gtk_UI.Connectors.New_Connector
+                         (Connector);
+   begin
+      Layout.Layout_Widget.Put
+        (UI_Connector,
+         Glib.Gint (UI_Connector.Connector.Layout_Boundary.X),
+         Glib.Gint (UI_Connector.Connector.Layout_Boundary.Y));
+   end Connection;
 
    -------------------------
    -- Create_Layout_Table --
