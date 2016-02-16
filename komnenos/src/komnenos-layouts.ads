@@ -104,6 +104,11 @@ package Komnenos.Layouts is
       Process : not null access
         procedure (Fragment : Komnenos.Fragments.Fragment_Type));
 
+   function Find_Fragment
+     (Layout  : Root_Layout_Type'Class;
+      Key     : String)
+      return Komnenos.Fragments.Fragment_Type;
+
    type Layout_Type is access all Root_Layout_Type'Class;
 
 private
