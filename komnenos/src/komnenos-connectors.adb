@@ -225,7 +225,7 @@ package body Komnenos.Connectors is
                Min_X := Integer'Min (Min_X, X);
                Max_X := Integer'Max (Max_X, X);
                Min_Y := Integer'Min (Min_Y, Y);
-               Max_Y := Integer'Max (Max_X, X);
+               Max_Y := Integer'Max (Max_Y, Y);
             end;
          end loop;
 

@@ -10,6 +10,9 @@ package body Komnenos.UI.Gtk_UI.Connectors is
    Arrow_Length : constant := 8.0;
    Arrow_Width  : constant := 4.0;
 
+   Draw_Border_Height : constant := 16;
+   Draw_Border_Width  : constant := 0;
+
    function Configure_Connector
      (Connector : access Gtk.Widget.Gtk_Widget_Record'Class;
       Event     : Gdk.Event.Gdk_Event_Configure)
@@ -79,8 +82,8 @@ package body Komnenos.UI.Gtk_UI.Connectors is
         (UI_Connector.Connector.Layout_Boundary.X,
          UI_Connector.Connector.Layout_Boundary.Y)
       do
-         Loc.X := Loc.X - 8;
-         Loc.Y := Loc.Y - 16 + Frame_Title_Height;
+         Loc.X := Loc.X - Draw_Border_Width;
+         Loc.Y := Loc.Y - Draw_Border_Width + Frame_Title_Height;
       end return;
    end Layout_Location;
 
@@ -101,8 +104,12 @@ package body Komnenos.UI.Gtk_UI.Connectors is
       Result.Connector := From;
       Result.Surface := Cairo.Null_Surface;
       Result.Set_Size_Request
-        (Width  => Glib.Gint (From.Layout_Boundary.Width + 16),
-         Height => Glib.Gint (From.Layout_Boundary.Height + 32));
+        (Width  =>
+           Glib.Gint
+             (From.Layout_Boundary.Width + 2 * Draw_Border_Width),
+         Height =>
+           Glib.Gint
+             (From.Layout_Boundary.Height + 2 * Draw_Border_Height));
       Result.Show_All;
       return Result;
    end New_Connector;
@@ -196,8 +203,12 @@ package body Komnenos.UI.Gtk_UI.Connectors is
    is
    begin
       Con.Set_Size_Request
-        (Width  => Glib.Gint (Con.Connector.Layout_Boundary.Width + 16),
-         Height => Glib.Gint (Con.Connector.Layout_Boundary.Height + 32));
+        (Width  =>
+           Glib.Gint
+             (Con.Connector.Layout_Boundary.Width + 2 * Draw_Border_Width),
+         Height =>
+           Glib.Gint
+             (Con.Connector.Layout_Boundary.Height + 2 * Draw_Border_Height));
       Con.Show_All;
    end Update;
 
