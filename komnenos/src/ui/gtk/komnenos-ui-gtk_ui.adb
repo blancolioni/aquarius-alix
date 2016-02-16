@@ -32,8 +32,6 @@ with Cairo;
 
 package body Komnenos.UI.Gtk_UI is
 
-   Frame_Title_Height : constant := 32;
-
    package Connector_Lists is
      new Ada.Containers.Doubly_Linked_Lists
        (Komnenos.Connectors.Connector_Type,
@@ -348,9 +346,9 @@ package body Komnenos.UI.Gtk_UI is
                           Komnenos.Connectors.Connect
                             (Class              => Komnenos.Connectors.Arrow,
                              Source             => Parent,
-                             Source_Offset      => Offset + Frame_Title_Height,
+                             Source_Offset      => Offset,
                              Destination        => Fragment,
-                             Destination_Offset => Frame_Title_Height);
+                             Destination_Offset => 0);
          begin
             UI.Layout.Connection (Connector);
             UI.Connectors.Append (Connector);
