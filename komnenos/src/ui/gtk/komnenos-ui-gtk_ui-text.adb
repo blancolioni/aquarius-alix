@@ -79,6 +79,11 @@ package body Komnenos.UI.Gtk_UI.Text is
       Text   : Komnenos_Text_View)
      with Unreferenced;
 
+   function Text_View_Configure
+     (Self  : access Glib.Object.GObject_Record'Class;
+      Event : Gdk.Event.Gdk_Event_Configure)
+      return Boolean;
+
    procedure Render_Text
      (View : Gtk.Text_View.Gtk_Text_View;
       Fragment : Komnenos.Fragments.Fragment_Type);
@@ -173,6 +178,10 @@ package body Komnenos.UI.Gtk_UI.Text is
          Aquarius.Colours.Gtk_Colours.To_Gdk_RGBA
            (Fragment.Background_Colour));
 
+      Result.Text.Set_Size_Request
+        (Width  => Glib.Gint (Fragment.Width),
+         Height => Glib.Gint (Fragment.Height));
+
       declare
          use Aquarius.Fonts;
          use Pango.Font;
@@ -196,9 +205,7 @@ package body Komnenos.UI.Gtk_UI.Text is
          Free (Desc);
       end;
 
-      Result.Text.Set_Size_Request
-        (Glib.Gint (Fragment.Width - 6),
-         Glib.Gint (Fragment.Height - 4));
+      Result.Text.On_Configure_Event (Text_View_Configure'Access, Result);
 
       Render_Text (Result.Text, Fragment);
 
@@ -659,6 +666,24 @@ package body Komnenos.UI.Gtk_UI.Text is
 
       return False;
    end Text_View_Button_Release_Handler;
+
+   -------------------------
+   -- Text_View_Configure --
+   -------------------------
+
+   function Text_View_Configure
+     (Self  : access Glib.Object.GObject_Record'Class;
+      Event : Gdk.Event.Gdk_Event_Configure)
+      return Boolean
+   is
+      Text_View : constant Komnenos_Text_View :=
+                    Komnenos_Text_View (Self);
+      pragma Unreferenced (Text_View);
+   begin
+      Ada.Text_IO.Put_Line
+        ("text view resize:" & Event.Width'Img & Event.Height'Img);
+      return False;
+   end Text_View_Configure;
 
    ---------------------------
    -- Text_View_Cursor_Move --
