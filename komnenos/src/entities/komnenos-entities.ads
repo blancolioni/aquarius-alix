@@ -20,6 +20,11 @@ package Komnenos.Entities is
 
    type Entity_Visual is interface;
 
+   function X (Visual : Entity_Visual) return Integer is abstract;
+   function Y (Visual : Entity_Visual) return Integer is abstract;
+   function Width (Visual : Entity_Visual) return Positive is abstract;
+   function Height (Visual : Entity_Visual) return Positive is abstract;
+
    type Entity_Visual_Access is access all Entity_Visual'Class;
 
    type Root_Entity_Reference is
@@ -45,9 +50,6 @@ package Komnenos.Entities is
    procedure New_Line (Visual : in out Entity_Visual) is abstract;
 
    procedure Clear (Visual : in out Entity_Visual) is abstract;
-
-   function Width (Visual : Entity_Visual) return Positive is abstract;
-   function Height (Visual : Entity_Visual) return Positive is abstract;
 
    procedure Set_Cursor
      (Visual   : in out Entity_Visual;

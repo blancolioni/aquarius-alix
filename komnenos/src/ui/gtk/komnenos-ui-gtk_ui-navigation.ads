@@ -43,8 +43,12 @@ private
          Layout      : Komnenos.Layouts.Layout_Type;
          Cb_Navigate : Navigation_Callback;
          Size        : Gtk.Widget.Gtk_Allocation;
+         Scale       : Float;
          Left        : Glib.Gdouble;
          Top         : Glib.Gdouble;
       end record;
+
+   procedure Calculate_Scale
+     (Navigator : in out Root_Gtk_Navigation_Panel'Class);
 
 end Komnenos.UI.Gtk_UI.Navigation;

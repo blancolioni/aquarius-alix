@@ -153,9 +153,9 @@ package Aquarius.Trees is
    function First_Child (Item : Root_Tree_Type) return Tree;
    function Last_Child (Item : Root_Tree_Type) return Tree;
 
-   function Right_Sibling (Item : Root_Tree_Type) return Tree;
-   function Left_Sibling (Item : Root_Tree_Type) return Tree;
-   function Parent (Item : Root_Tree_Type) return Tree;
+   function Right_Sibling (Item : Root_Tree_Type'Class) return Tree;
+   function Left_Sibling (Item : Root_Tree_Type'Class) return Tree;
+   function Parent (Item : Root_Tree_Type'Class) return Tree;
    procedure Add_Right_Sibling
      (To_Tree     : not null access Root_Tree_Type;
       New_Sibling : not null access Root_Tree_Type'Class);
@@ -329,8 +329,8 @@ private
          Children            : Tree_Vectors.Vector;
       end record;
 
-   pragma Inline (Left_Sibling);
-   pragma Inline (Right_Sibling);
-   pragma Inline (Parent);
+   pragma Inline_Always (Left_Sibling);
+   pragma Inline_Always (Right_Sibling);
+   pragma Inline_Always (Parent);
 
 end Aquarius.Trees;

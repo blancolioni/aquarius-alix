@@ -18,18 +18,6 @@ private with Komnenos.Commands.Bindings;
 
 package Komnenos.Fragments is
 
-   type Layout_Rectangle is
-      record
-         X, Y          : Integer;
-         Width, Height : Positive;
-      end record;
-
-   function To_Config (Rectangle : Layout_Rectangle)
-                       return Tropos.Configuration;
-
-   function From_Config (Config : Tropos.Configuration)
-                         return Layout_Rectangle;
-
    type Root_Fragment_Type is
      new Komnenos.Entities.Entity_Visual
      and Komnenos.Session_Objects.Session_Object_Interface
@@ -60,10 +48,10 @@ package Komnenos.Fragments is
      (Fragment : Root_Fragment_Type'Class)
       return Layout_Rectangle;
 
-   function X (Fragment : Root_Fragment_Type'Class) return Integer
+   overriding function X (Fragment : Root_Fragment_Type) return Integer
    is (Fragment.Rectangle.X);
 
-   function Y (Fragment : Root_Fragment_Type'Class) return Integer
+   overriding function Y (Fragment : Root_Fragment_Type) return Integer
    is (Fragment.Rectangle.Y);
 
    overriding function Width

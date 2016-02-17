@@ -9,6 +9,8 @@ package body Komnenos.UI.Gtk_UI.Navigation is
    Vertical_Scale : constant := 3.0;
    --  three main screens fit vertical in navigator
 
+   Maximum_Widget_Dimension : constant := 32767.0;
+
    function On_Configure_Navigation
      (Object : access Glib.Object.GObject_Record'Class;
       Event  : Gdk.Event.Gdk_Event_Configure)
@@ -23,6 +25,28 @@ package body Komnenos.UI.Gtk_UI.Navigation is
      (Object : access Glib.Object.GObject_Record'Class;
       Event  : Gdk.Event.Gdk_Event_Button)
       return Boolean;
+
+   ---------------------
+   -- Calculate_Scale --
+   ---------------------
+
+   procedure Calculate_Scale
+     (Navigator : in out Root_Gtk_Navigation_Panel'Class)
+   is
+      use Glib;
+      Nav_Width     : constant Gdouble :=
+                        Gdouble (Navigator.Size.Width);
+      Nav_Height    : constant Gdouble :=
+                        Gdouble (Navigator.Size.Height);
+      Layout_Height : constant Gdouble :=
+                        Gdouble (Navigator.Layout.Visible_Height);
+      Scale         : constant Gdouble :=
+                        Gdouble'Min
+                          (Vertical_Scale * Layout_Height / Nav_Height,
+                           Maximum_Widget_Dimension / Nav_Width);
+   begin
+      Navigator.Scale := Float (Scale);
+   end Calculate_Scale;
 
    -----------------------------
    -- Create_Navigation_Panel --
@@ -70,14 +94,11 @@ package body Komnenos.UI.Gtk_UI.Navigation is
       use Glib;
       Navigator     : constant Gtk_Navigation_Panel :=
                         Gtk_Navigation_Panel (Object);
-      Nav_Height    : constant Gdouble :=
-                        Gdouble (Navigator.Size.Height);
       Layout_Width : constant Gdouble :=
                         Gdouble (Navigator.Layout.Visible_Width);
       Layout_Height : constant Gdouble :=
                         Gdouble (Navigator.Layout.Visible_Height);
-      Scale         : constant Gdouble :=
-                        Vertical_Scale * Layout_Height / Nav_Height;
+      Scale         : constant Gdouble := Gdouble (Navigator.Scale);
       Scaled_Visible_Width : constant Gdouble :=
                                Layout_Width / Scale;
       Scaled_Visible_Height : constant Gdouble :=
@@ -107,6 +128,7 @@ package body Komnenos.UI.Gtk_UI.Navigation is
       return Boolean
    is
       pragma Unreferenced (Event);
+      use Glib;
       use type Cairo.Cairo_Surface;
       use type Komnenos.Layouts.Layout_Type;
       Navigator : constant Gtk_Navigation_Panel :=
@@ -122,6 +144,8 @@ package body Komnenos.UI.Gtk_UI.Navigation is
         Cairo.Image_Surface.Create
           (Cairo.Image_Surface.Cairo_Format_ARGB32,
            Navigator.Size.Width, Navigator.Size.Height);
+
+      Navigator.Calculate_Scale;
 
       if Navigator.Layout /= null then
          Navigator.On_Layout_Configured;
@@ -156,16 +180,13 @@ package body Komnenos.UI.Gtk_UI.Navigation is
    procedure On_Layout_Configured
      (Panel : in out Root_Gtk_Navigation_Panel'Class)
    is
-      Scale : constant Long_Float :=
-                Long_Float (Panel.Layout.Visible_Height)
-                * Vertical_Scale
-                / Long_Float (Panel.Size.Height);
    begin
+      Panel.Calculate_Scale;
       Panel.Layout.Set_Full_Size
         (Full_Width  =>
-           Natural (Long_Float (Panel.Size.Width) * Scale),
+           Natural (Float (Panel.Size.Width) * Panel.Scale),
          Full_Height =>
-           Natural (Long_Float (Panel.Size.Height) * Scale));
+           Natural (Float (Panel.Size.Height) * Panel.Scale));
    end On_Layout_Configured;
 
    -----------------
@@ -191,10 +212,7 @@ package body Komnenos.UI.Gtk_UI.Navigation is
       Cr : constant Cairo.Cairo_Context :=
              Cairo.Create (Panel.Surface);
 
-      Scale : constant Gdouble :=
-                Gdouble (Panel.Size.Height)
-                / Gdouble (Panel.Layout.Visible_Height)
-                / Vertical_Scale;
+      Scale : constant Gdouble := Gdouble (1.0 / Panel.Scale);
 
       procedure Draw_Fragment
         (Fragment : Komnenos.Fragments.Fragment_Type);

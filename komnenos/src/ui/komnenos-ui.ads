@@ -32,6 +32,11 @@ package Komnenos.UI is
       Fragment : Komnenos.Fragments.Fragment_Type)
    is abstract;
 
+   procedure Update_Visual
+     (UI     : in out Root_Komnenos_UI;
+      Visual : not null access Komnenos.Entities.Entity_Visual'Class)
+   is abstract;
+
    overriding procedure Add_Entity
      (UI     : in out Root_Komnenos_UI;
       Key    : String;

@@ -1,7 +1,6 @@
 with Ada.Characters.Latin_1;
 with Ada.Text_IO;
 
-with Glib;
 with Glib.Object;
 with Glib.Properties;
 with Glib.Values;
@@ -79,6 +78,11 @@ package body Komnenos.UI.Gtk_UI.Text is
       Event  : Gdk.Event.Gdk_Event;
       Text   : Komnenos_Text_View)
      with Unreferenced;
+
+   function Text_View_Configure
+     (Self  : access Glib.Object.GObject_Record'Class;
+      Event : Gdk.Event.Gdk_Event_Configure)
+      return Boolean;
 
    procedure Render_Text
      (View : Gtk.Text_View.Gtk_Text_View;
@@ -164,14 +168,19 @@ package body Komnenos.UI.Gtk_UI.Text is
       Result : constant Komnenos_Text_View :=
                  new Komnenos_Text_View_Record;
    begin
-      Gtk.Scrolled_Window.Initialize (Result);
+      Gtk.Text_View.Initialize (Result);
       Result.Fragment := Fragment;
-      Gtk.Text_View.Gtk_New (Result.Text);
+      --  Gtk.Text_View.Gtk_New (Result.Text);
+      Result.Text := Gtk.Text_View.Gtk_Text_View (Result);
 
       Result.Text.Override_Background_Color
         (Gtk.Enums.Gtk_State_Flag_Normal,
          Aquarius.Colours.Gtk_Colours.To_Gdk_RGBA
            (Fragment.Background_Colour));
+
+      Result.Text.Set_Size_Request
+        (Width  => Glib.Gint (Fragment.Width),
+         Height => Glib.Gint (Fragment.Height));
 
       declare
          use Aquarius.Fonts;
@@ -196,9 +205,7 @@ package body Komnenos.UI.Gtk_UI.Text is
          Free (Desc);
       end;
 
-      Result.Text.Set_Size_Request
-        (Glib.Gint (Fragment.Width - 6),
-         Glib.Gint (Fragment.Height - 4));
+      Result.Text.On_Configure_Event (Text_View_Configure'Access, Result);
 
       Render_Text (Result.Text, Fragment);
 
@@ -237,10 +244,10 @@ package body Komnenos.UI.Gtk_UI.Text is
 
       Result.Buffer := Result.Text.Get_Buffer;
 
-      Result.Set_Min_Content_Height (Glib.Gint (Fragment.Height));
-      Result.Set_Min_Content_Width (Glib.Gint (Fragment.Width));
+--        Result.Set_Min_Content_Height (Glib.Gint (Fragment.Height));
+--        Result.Set_Min_Content_Width (Glib.Gint (Fragment.Width));
 
-      Result.Add (Result.Text);
+--        Result.Add (Result.Text);
 
       declare
          Start_Iter : Gtk.Text_Iter.Gtk_Text_Iter;
@@ -263,7 +270,7 @@ package body Komnenos.UI.Gtk_UI.Text is
    is
       use type Komnenos.Entities.Entity_Reference;
       Display  : constant Komnenos_Text_View :=
-                   Komnenos_Text_View (Text_View.Get_Parent);
+                   Komnenos_Text_View (Text_View);
       Entity : constant Komnenos.Entities.Entity_Reference :=
                  Display.Fragment.Get_Link
                    (Natural (Gtk.Text_Iter.Get_Offset (Iter)) + 1);
@@ -276,6 +283,10 @@ package body Komnenos.UI.Gtk_UI.Text is
             Entity.Select_Entity
               (Current_UI, Display.Fragment, null,
                Natural (Location.Y) + Natural (Location.Height) / 2);
+            Display.Highlights.Append
+              ((Entity, Location.Y, Location.Height,
+               Aquarius.Colours.From_String
+                 ("rgba(220,220,220, 180)")));
          end;
       end if;
    end Follow_If_Link;
@@ -509,7 +520,7 @@ package body Komnenos.UI.Gtk_UI.Text is
       use Aquarius.Styles;
 
       Display : constant Komnenos_Text_View :=
-                  Komnenos_Text_View (Text_View.Get_Parent);
+                  Komnenos_Text_View (Text_View);
       Fragment : constant Komnenos.Fragments.Fragment_Type :=
                    Display.Fragment;
       Style         : Aquarius_Style;
@@ -656,6 +667,24 @@ package body Komnenos.UI.Gtk_UI.Text is
       return False;
    end Text_View_Button_Release_Handler;
 
+   -------------------------
+   -- Text_View_Configure --
+   -------------------------
+
+   function Text_View_Configure
+     (Self  : access Glib.Object.GObject_Record'Class;
+      Event : Gdk.Event.Gdk_Event_Configure)
+      return Boolean
+   is
+      Text_View : constant Komnenos_Text_View :=
+                    Komnenos_Text_View (Self);
+      pragma Unreferenced (Text_View);
+   begin
+      Ada.Text_IO.Put_Line
+        ("text view resize:" & Event.Width'Img & Event.Height'Img);
+      return False;
+   end Text_View_Configure;
+
    ---------------------------
    -- Text_View_Cursor_Move --
    ---------------------------
@@ -698,7 +727,7 @@ package body Komnenos.UI.Gtk_UI.Text is
    is
       use Glib;
       Display      : constant Komnenos_Text_View :=
-                       Komnenos_Text_View (Widget.Get_Parent);
+                       Komnenos_Text_View (Widget);
       Text_View    : constant Gtk.Text_View.Gtk_Text_View :=
                        Display.Text;
       Iter         : Gtk.Text_Iter.Gtk_Text_Iter;
@@ -712,6 +741,17 @@ package body Komnenos.UI.Gtk_UI.Text is
         (Iter, Buffer.Get_Insert);
       Text_View.Get_Iter_Location
         (Iter, Location);
+
+      for Highlight of Display.Highlights loop
+         Paint_Line_Background
+           (View    => Text_View,
+            Context => Cr,
+            Y       => Highlight.Line_Start_Pixels + 1,
+            Height  => Highlight.Line_Height_Pixels - 1,
+            Colour  =>
+              Aquarius.Colours.Gtk_Colours.To_Gdk_RGBA
+                (Highlight.Highlight_Colour));
+      end loop;
 
       Paint_Line_Background
         (View    => Text_View,
