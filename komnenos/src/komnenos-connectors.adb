@@ -200,7 +200,7 @@ package body Komnenos.Connectors is
          X1 := Source.X + Boundary_Size;
          if Dest.X > Source.X then
             X4 := Dest.X + Boundary_Size;
-            X2 := X1 - 16;
+            X2 := X1 - Boundary_Size * 2;
             Y2 := Y1;
             X3 := X2;
             Y3 := Y4;
