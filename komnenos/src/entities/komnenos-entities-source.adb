@@ -1,4 +1,4 @@
-with Ada.Strings.Fixed;
+--  with Ada.Strings.Fixed;
 
 with Aquarius.Themes;
 
@@ -24,14 +24,14 @@ package body Komnenos.Entities.Source is
       Column       : Natural)
    is
       use Ada.Strings, Ada.Strings.Fixed;
-      Line_Text   : constant String := Trim (Natural'Image (Line), Both);
-      Column_Text : constant String := Trim (Natural'Image (Column), Both);
+--        Line_Text   : constant String := Trim (Natural'Image (Line), Both);
+--        Column_Text : constant String := Trim (Natural'Image (Column), Both);
    begin
       Root_Entity_Reference (Item).Create
         (Identifier   => Name,
          Class_Name   => Class,
          Display_Text => Name,
-         Description  => File_Name & ":" & Line_Text & ":" & Column_Text);
+         Description  => Name);
       Item.Name := Ada.Strings.Unbounded.To_Unbounded_String (Name);
       Item.File_Name :=
         Ada.Strings.Unbounded.To_Unbounded_String (File_Name);

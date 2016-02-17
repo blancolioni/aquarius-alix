@@ -43,10 +43,21 @@ package body Aquarius.Plugins.Macro_32.Assemble is
       Relative : Boolean;
       Size     : Aqua.Data_Size);
 
+   type Expression_Value (Deferred : Boolean) is
+      record
+         case Deferred is
+            when True =>
+               Deferred_Label : Aquarius.Programs.Program_Tree;
+            when False =>
+               Word_Value     : Aqua.Word;
+         end case;
+      end record;
+
    function Evaluate_Expression
-     (Assembly : Aqua.Assembler.Assembly;
-      Tree     : Aquarius.Programs.Program_Tree)
-      return Aqua.Word;
+     (Assembly    : Aqua.Assembler.Assembly;
+      Tree        : Aquarius.Programs.Program_Tree;
+      Deferred_OK : Boolean := True)
+      return Expression_Value;
 
    ------------------
    -- After_Branch --
@@ -116,6 +127,40 @@ package body Aquarius.Plugins.Macro_32.Assemble is
 
    end After_Branch;
 
+   ----------------
+   -- After_Call --
+   ----------------
+
+   procedure After_Call
+     (Target : not null access Aquarius.Actions.Actionable'Class)
+   is
+      use Aquarius.Programs;
+      Op       : constant Program_Tree := Program_Tree (Target);
+      Dst      : constant Program_Tree :=
+                   Op.Program_Child ("arg");
+      Dst_Op   : constant Aqua.Architecture.Operand_Type :=
+                   Get_Operand (Dst);
+      Argument_Tree  : constant Program_Tree :=
+                         Op.Program_Child ("integer");
+      Argument_Count : constant Natural :=
+                         (if Argument_Tree /= null
+                          then Natural'Value
+                            (Argument_Tree.Text)
+                          else 0);
+      Assembly : constant Aqua.Assembler.Assembly :=
+                   Assembly_Object
+                     (Op.Property
+                        (Global_Plugin.Assembly)).Assembly;
+   begin
+      Assembly.Append_Octet
+        (Aqua.Architecture.Encode
+           (Aqua.Architecture.A_Call,
+            Immediate => Aqua.Octet (Argument_Count)));
+      Assembly.Append_Octet
+        (Aqua.Architecture.Encode (Dst_Op));
+      Place_Operand (Dst, Dst_Op, Aqua.Word_32_Size);
+   end After_Call;
+
    -----------------------
    -- After_Declaration --
    -----------------------
@@ -130,11 +175,13 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                      (Dec.Property
                         (Global_Plugin.Assembly)).Assembly;
       Name     : constant String := Dec.Program_Child ("identifier").Text;
-      Value    : constant Aqua.Word :=
+      Value    : constant Expression_Value :=
                    Evaluate_Expression (Assembly,
-                                        Dec.Program_Child ("expression"));
+                                        Dec.Program_Child ("expression"),
+                                        Deferred_OK => False);
    begin
-      Assembly.Define_Value (Name, Value);
+      pragma Assert (not Value.Deferred);
+      Assembly.Define_Value (Name, Value.Word_Value);
    end After_Declaration;
 
    ---------------------
@@ -247,6 +294,31 @@ package body Aquarius.Plugins.Macro_32.Assemble is
       Place_Operand (Dst, Dst_Op, Size);
    end After_Double_Operand;
 
+   ----------------
+   -- After_Goto --
+   ----------------
+
+   procedure After_Goto
+     (Target : not null access Aquarius.Actions.Actionable'Class)
+   is
+      use Aquarius.Programs;
+      Op       : constant Program_Tree := Program_Tree (Target);
+      Dst      : constant Program_Tree :=
+                   Op.Program_Child ("arg");
+      Dst_Op   : constant Aqua.Architecture.Operand_Type :=
+                   Get_Operand (Dst);
+      Assembly : constant Aqua.Assembler.Assembly :=
+                   Assembly_Object
+                     (Op.Property
+                        (Global_Plugin.Assembly)).Assembly;
+   begin
+      Assembly.Append_Octet
+        (Aqua.Architecture.Encode (Aqua.Architecture.A_Goto));
+      Assembly.Append_Octet
+        (Aqua.Architecture.Encode (Dst_Op));
+      Place_Operand (Dst, Dst_Op, Aqua.Word_32_Size);
+   end After_Goto;
+
    --------------------
    -- After_Iterator --
    --------------------
@@ -265,16 +337,16 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                          Assembly_Object
                            (Op.Property
                               (Global_Plugin.Assembly)).Assembly;
+      Register_Octet : constant Aqua.Octet :=
+                         (if Register = null then 0
+                          else Aqua.Octet
+                            (Assembly.Get_Register (Register.Text)));
    begin
       Assembly.Append_Octet
         (Aqua.Architecture.Encode
            (Aqua.Architecture.Aqua_Instruction'Value
-                ("A_" & Mnemonic)));
-      if Register /= null then
-         Assembly.Append_Octet
-           (Aqua.Octet
-              (Assembly.Get_Register (Register.Text)));
-      end if;
+                ("A_" & Mnemonic),
+            Immediate => Register_Octet));
    end After_Iterator;
 
    ----------------
@@ -575,9 +647,10 @@ package body Aquarius.Plugins.Macro_32.Assemble is
    -------------------------
 
    function Evaluate_Expression
-     (Assembly : Aqua.Assembler.Assembly;
-      Tree     : Aquarius.Programs.Program_Tree)
-      return Aqua.Word
+     (Assembly    : Aqua.Assembler.Assembly;
+      Tree        : Aquarius.Programs.Program_Tree;
+      Deferred_OK : Boolean := True)
+      return Expression_Value
    is
       use Aquarius.Programs;
       use Aqua;
@@ -601,9 +674,16 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                if Operand.Name = "identifier" then
                   if Assembly.Is_Defined (Operand.Text) then
                      Value := Assembly.Get_Value (Operand.Text);
+                  elsif not Deferred_OK then
+                     Aquarius.Errors.Error
+                       (E, "undefined: " & Operand.Text);
+                     Value := 0;
+                  elsif Es'Length > 1 then
+                     Aquarius.Errors.Error
+                       (E, "invalid deferred expression");
+                     Value := 0;
                   else
-                     raise Constraint_Error
-                       with "undefined: " & Operand.Text;
+                     return (True, Operand);
                   end if;
                elsif Operand.Name = "integer" then
                   Value := Word'Value (Operand.Text);
@@ -640,7 +720,7 @@ package body Aquarius.Plugins.Macro_32.Assemble is
          end if;
       end loop;
 
-      return Result;
+      return (False, Result);
 
    end Evaluate_Expression;
 
@@ -757,13 +837,13 @@ package body Aquarius.Plugins.Macro_32.Assemble is
       elsif Operand_Name = "immediate" then
          declare
             use Aqua;
-            X : constant Aqua.Word :=
+            X : constant Expression_Value :=
                   Evaluate_Expression
                     (Assembly,
                      Operand_Tree.Program_Child ("expression"));
          begin
-            if X < 32 then
-               return (Literal, False, 0, Octet (X));
+            if not X.Deferred and then X.Word_Value < 32 then
+               return (Literal, False, 0, Octet (X.Word_Value));
             else
                return (Autoincrement, False, Aqua.Architecture.R_PC, 0);
             end if;
@@ -902,11 +982,22 @@ package body Aquarius.Plugins.Macro_32.Assemble is
       elsif Operand_Name = "immediate"
         or else Operand_Name = "absolute"
       then
-         Assembly.Append
-           (Evaluate_Expression
-              (Assembly,
-               Operand_Tree.Program_Child ("expression")),
-            Aqua.Word_32_Size);
+         declare
+            Value : constant Expression_Value :=
+                      Evaluate_Expression
+                        (Assembly,
+                         Operand_Tree.Program_Child ("expression"));
+         begin
+            if Value.Deferred then
+               Assembly.Append
+                 (Assembly.Reference_Label
+                    (Value.Deferred_Label.Text, Relative => False),
+                  Aqua.Word_32_Size);
+            else
+               Assembly.Append
+                 (Value.Word_Value, Aqua.Word_32_Size);
+            end if;
+         end;
       elsif Operand_Name = "string" then
          Assembly.Append
            (Assembly.Reference_String (Operand_Tree.Text), Aqua.Word_32_Size);

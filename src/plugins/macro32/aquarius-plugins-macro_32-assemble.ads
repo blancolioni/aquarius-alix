@@ -42,6 +42,12 @@ package Aquarius.Plugins.Macro_32.Assemble is
    procedure After_Jump
      (Target : not null access Aquarius.Actions.Actionable'Class);
 
+   procedure After_Call
+     (Target : not null access Aquarius.Actions.Actionable'Class);
+
+   procedure After_Goto
+     (Target : not null access Aquarius.Actions.Actionable'Class);
+
    procedure After_Trap
      (Target : not null access Aquarius.Actions.Actionable'Class);
 

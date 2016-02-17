@@ -78,6 +78,24 @@ package body Komnenos.Layouts is
       end if;
    end Clear_Space;
 
+   -------------------
+   -- Find_Fragment --
+   -------------------
+
+   function Find_Fragment
+     (Layout  : Root_Layout_Type'Class;
+      Key     : String)
+      return Komnenos.Fragments.Fragment_Type
+   is
+   begin
+      for Fragment of Layout.Items loop
+         if Fragment.Key = Key then
+            return Fragment;
+         end if;
+      end loop;
+      return null;
+   end Find_Fragment;
+
    -----------------
    -- From_Config --
    -----------------

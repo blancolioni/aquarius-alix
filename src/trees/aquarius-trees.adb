@@ -840,7 +840,7 @@ package body Aquarius.Trees is
    -- Left_Sibling --
    ------------------
 
-   function Left_Sibling (Item : Root_Tree_Type) return Tree is
+   function Left_Sibling (Item : Root_Tree_Type'Class) return Tree is
    begin
       pragma Assert (Item.Keep_Siblings);
       return Item.Left;
@@ -922,7 +922,7 @@ package body Aquarius.Trees is
    -- Parent --
    ------------
 
-   function Parent (Item : Root_Tree_Type) return Tree is
+   function Parent (Item : Root_Tree_Type'Class) return Tree is
    begin
       pragma Assert (Item.Keep_Parent);
       return Item.Parent;
@@ -1041,7 +1041,7 @@ package body Aquarius.Trees is
    -- Right_Sibling --
    -------------------
 
-   function Right_Sibling (Item : Root_Tree_Type) return Tree is
+   function Right_Sibling (Item : Root_Tree_Type'Class) return Tree is
    begin
       pragma Assert (Item.Keep_Siblings);
       return Item.Right;

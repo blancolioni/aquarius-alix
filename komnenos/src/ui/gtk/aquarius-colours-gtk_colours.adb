@@ -16,7 +16,7 @@ package body Aquarius.Colours.Gtk_Colours is
         (Result, To_String (Colour), Got_Colour);
 
       if not Got_Colour then
-         Result := (0.0, 0.0, 0.0, 1.0);
+         Result := (1.0, 0.0, 1.0, 1.0);
       end if;
 
       return Result;

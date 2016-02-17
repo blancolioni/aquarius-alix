@@ -3,7 +3,7 @@ before database_declaration do
 end;
 
 after base_records/identifier do
-   child.entity := Komnenos.Get_Entity (identifier.text, "record-declaration");
+   child.entity := Komnenos.Get_Entity (identifier.text, "kit-record-declaration");
    if child.entity then
       Komnenos.Cross_Reference (identifier, child.entity);
    end if;

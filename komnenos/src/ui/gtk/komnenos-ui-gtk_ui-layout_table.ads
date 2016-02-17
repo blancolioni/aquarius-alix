@@ -1,6 +1,7 @@
 with Gtk.Layout;
 with Gtk.Scrolled_Window;
 
+with Komnenos.Connectors;
 with Komnenos.Layouts;
 
 with Komnenos.UI.Gtk_UI.Navigation;
@@ -51,6 +52,10 @@ private
      (Layout      : in out Root_Gtk_Layout_Table;
       Full_Width  : Natural;
       Full_Height : Natural);
+
+   overriding procedure Connection
+     (Layout    : in out Root_Gtk_Layout_Table;
+      Connector : Komnenos.Connectors.Connector_Type);
 
    function Get_Frame
      (Layout   : Root_Gtk_Layout_Table'Class;

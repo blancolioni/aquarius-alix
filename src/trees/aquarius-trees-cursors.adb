@@ -1,59 +1,5 @@
 package body Aquarius.Trees.Cursors is
 
-   --  Get_Parent_From_List
-   --  Finds a parent for a node that has been temporarily removed
-   --  from a program tree to resolve an ambiguity
-   function Get_Parent_From_List (Item : Cursor)
-                                 return Tree;
-
-   --  Get_Non_Temporary_Parent_From_List
-   --  If Item currently sits at a node which has a copy in the
-   --  list of parent trees, move to that.
-   --  procedure Move_To_Non_Temporary (Item : in out Cursor);
-
-   ----------------------
-   -- Collapse_Parents --
-   ----------------------
-
-   procedure Collapse_Parents (Item : in out Cursor) is
-   begin
-      for Index in reverse 1 .. Item.Parents.Last_Index loop
-         declare
-            It : Parent_Child_Record renames Item.Parents.Element (Index);
-         begin
-            if It.Child.Temporary then
-               --  it's not really parent-child, the child is a temporary
-               --  copy of the parent, and we have to move its children
-               --  over.
-               declare
-                  Child : Aquarius.Trees.Tree := It.Child.First_Child;
-                  Next  : Tree;
-               begin
-                  while Child /= null loop
-                     Next := Child.Right_Sibling;
-                     It.Parent.Add_Child (Child);
-                     Child := Next;
-                  end loop;
-               end;
-            else
-               It.Parent.Add_Child (It.Child);
-            end if;
-         end;
-      end loop;
-      Item.Parents.Set_Length (0);
-   end Collapse_Parents;
-
-   ------------------
-   -- Copy_Parents --
-   ------------------
-
-   procedure Copy_Parents (From  : in     Cursor;
-                           To    : in out Cursor)
-   is
-   begin
-      To.Parents := From.Parents;
-   end Copy_Parents;
-
    --------------
    -- Get_Left --
    --------------
@@ -110,37 +56,6 @@ package body Aquarius.Trees.Cursors is
          return Item.Right_Tree.Left_Sibling;
       end if;
    end Get_Left_Tree;
-
-   --------------------------
-   -- Get_Parent_From_List --
-   --------------------------
-
-   function Get_Parent_From_List
-     (Item : Cursor)
-     return Tree
-   is
-      use type Tree;
-   begin
-      for I in 1 .. Item.Parents.Last_Index loop
-         declare
-            It : Parent_Child_Record renames Item.Parents.Element (I);
-         begin
-            if It.Child = Get_Left_Tree (Item) or else
-              It.Child = Get_Right_Tree (Item)
-            then
-               if It.Child.Temporary then
-                  --  the child is actually a temporary version of the parent
-                  return It.Parent.Parent;
-               else
-                  --  the child really is the child
-                  return It.Parent;
-               end if;
-            end if;
-         end;
-      end loop;
-
-      return null;
-   end Get_Parent_From_List;
 
    ---------------
    -- Get_Right --
@@ -222,11 +137,7 @@ package body Aquarius.Trees.Cursors is
    function Is_At_Root (Item : Cursor) return Boolean is
       T : constant Tree := Get_Tree (Item);
    begin
-      if T.Parent /= null or else T.Foster_Parent /= null then
-         return False;
-      else
-         return Get_Parent_From_List (Item) = null;
-      end if;
+      return T.Parent = null and then T.Foster_Parent = null;
    end Is_At_Root;
 
    -----------------
@@ -261,7 +172,6 @@ package body Aquarius.Trees.Cursors is
    is
       Result : Cursor;
    begin
-      Result.Parents.Set_Length (0);
       Result.Right_Tree := Tree (Item);
       Result.Off_Right  := False;
       return Result;
@@ -348,10 +258,6 @@ package body Aquarius.Trees.Cursors is
       end if;
 
       if Parent = null then
-         Parent := Get_Parent_From_List (Item);
-      end if;
-
-      if Parent = null then
          raise Cursor_Error with
            "attempt to move to right of null parent";
       else
@@ -392,31 +298,11 @@ package body Aquarius.Trees.Cursors is
    is
       Result : Cursor;
    begin
-      Result.Parents.Set_Length (0);
       Result.Right_Tree := Tree (Item);
       Result.Off_Right  := False;
       Move_Right (Result);
       return Result;
    end Right_Of_Tree;
-
-   -----------------
-   -- Set_Parents --
-   -----------------
-
-   procedure Set_Parents
-     (Item         : in out Cursor;
-      Derived_From : in     Cursor;
-      New_Parent   : in     Tree;
-      New_Child    : in     Tree)
-   is
-      Original_Parents : constant Parent_Child_Vectors.Vector :=
-        Item.Parents;
-   begin
-      Item.Parents :=
-        Parent_Child_Vectors.To_Vector ((New_Parent, New_Child), 1);
-      Item.Parents.Append (Derived_From.Parents);
-      Item.Parents.Append (Original_Parents);
-   end Set_Parents;
 
    -----------
    -- Show --
