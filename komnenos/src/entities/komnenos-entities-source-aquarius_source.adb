@@ -122,6 +122,32 @@ package body Komnenos.Entities.Source.Aquarius_Source is
             Item.Set_Cursor (New_Position);
             Komnenos.Entities.Visuals.Update_Cursor (Item, New_Position);
          end;
+      else
+         if Item.Buffer_Changed then
+            Item.Finish_Edit;
+         end if;
+
+         declare
+            use Aquarius.Programs;
+            New_Position  : Position := Item.Edit_Tree.Layout_Start_Position;
+            Next_Terminal : constant Program_Tree :=
+                              Item.Edit_Tree.Scan_Terminal (-1);
+         begin
+            if Next_Terminal = null or else not Next_Terminal.Is_Terminal then
+               Item.Buffer_Cursor := 0;
+               New_Position := Item.Edit_Tree.Layout_Start_Position;
+            elsif Next_Terminal.Layout_End_Position.Line
+              < New_Position.Line
+            then
+               New_Position := Next_Terminal.Layout_End_Position;
+            else
+               New_Position := Item.Edit_Tree.Layout_Start_Position;
+               New_Position.Column := New_Position.Column
+                 + Aquarius.Layout.Count (Item.Buffer_Cursor) - 1;
+            end if;
+            Item.Set_Cursor (New_Position);
+            Komnenos.Entities.Visuals.Update_Cursor (Item, New_Position);
+         end;
       end if;
    end Backward_Character;
 
