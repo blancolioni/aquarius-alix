@@ -63,4 +63,43 @@ package body Komnenos.Configuration is
 
    end Get_Colour;
 
+   ---------------------------
+   -- Get_Connector_Metrics --
+   ---------------------------
+
+   procedure Get_Connector_Metrics
+     (Class_Name   : String;
+      Colour       : out Aquarius.Colours.Aquarius_Colour;
+      Line_Width   : out Positive;
+      Arrow_Length : out Positive;
+      Arrow_Width  : out Positive)
+   is
+   begin
+      Check_Configuration;
+
+      if Komnenos_Config.Contains ("connectors") then
+         declare
+            Connector_Config : constant Tropos.Configuration :=
+                                 Komnenos_Config.Child ("connectors");
+            Config           : constant Tropos.Configuration :=
+                                 (if Connector_Config.Contains (Class_Name)
+                                  then Connector_Config.Child (Class_Name)
+                                  else Connector_Config.Child ("default"));
+         begin
+            Colour :=
+              Aquarius.Colours.From_String
+                (Config.Get ("colour", "pink"));
+            Line_Width := Config.Get ("line_width", 2);
+            Arrow_Length := Config.Get ("arrow_length", 8);
+            Arrow_Width := Config.Get ("arrow_width", 4);
+         end;
+      else
+         Colour :=
+           Aquarius.Colours.From_String ("pink");
+         Line_Width := 2;
+         Arrow_Length := 8;
+         Arrow_Width := 4;
+      end if;
+   end Get_Connector_Metrics;
+
 end Komnenos.Configuration;
