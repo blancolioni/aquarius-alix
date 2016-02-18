@@ -32,6 +32,7 @@ with Aquarius.Themes;
 with Aquarius.Keys.Gtk_Keys;
 
 with Komnenos.Commands;
+with Komnenos.Configuration;
 
 package body Komnenos.UI.Gtk_UI.Text is
 
@@ -172,6 +173,10 @@ package body Komnenos.UI.Gtk_UI.Text is
       Result.Fragment := Fragment;
       --  Gtk.Text_View.Gtk_New (Result.Text);
       Result.Text := Gtk.Text_View.Gtk_Text_View (Result);
+
+      Result.Current_Line_Highlight :=
+        Komnenos.Configuration.Get_Colour
+          ("current_line");
 
       Result.Text.Override_Background_Color
         (Gtk.Enums.Gtk_State_Flag_Normal,
@@ -734,7 +739,6 @@ package body Komnenos.UI.Gtk_UI.Text is
       Buffer       : constant Gtk.Text_Buffer.Gtk_Text_Buffer :=
                        Text_View.Get_Buffer;
       Location     : Gdk.Rectangle.Gdk_Rectangle;
-
    begin
 
       Buffer.Get_Iter_At_Mark
@@ -758,7 +762,9 @@ package body Komnenos.UI.Gtk_UI.Text is
          Context => Cr,
          Y       => Location.Y + 1,
          Height  => Location.Height - 1,
-         Colour  => (0.8, 0.5, 0.5, 0.8));
+            Colour  =>
+              Aquarius.Colours.Gtk_Colours.To_Gdk_RGBA
+             (Display.Current_Line_Highlight));
 
       return False;
 
