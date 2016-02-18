@@ -33,18 +33,19 @@ private
       end record;
 
    package List_Of_Line_Highlights is
-      new Ada.Containers.Doubly_Linked_Lists (Highlight_Line);
+     new Ada.Containers.Doubly_Linked_Lists (Highlight_Line);
 
    type Komnenos_Text_View_Record is
      new Gtk.Text_View.Gtk_Text_View_Record with
       record
-         Text              : Gtk.Text_View.Gtk_Text_View;
-         Buffer            : Gtk.Text_Buffer.Gtk_Text_Buffer;
-         Hover_Start       : Natural  := 0;
-         Hover_Finish      : Natural := 0;
-         Hover_Style       : Aquarius.Styles.Aquarius_Style;
-         Fragment          : Komnenos.Fragments.Fragment_Type;
-         Highlights        : List_Of_Line_Highlights.List;
+         Text                   : Gtk.Text_View.Gtk_Text_View;
+         Buffer                 : Gtk.Text_Buffer.Gtk_Text_Buffer;
+         Hover_Start            : Natural  := 0;
+         Hover_Finish           : Natural := 0;
+         Hover_Style            : Aquarius.Styles.Aquarius_Style;
+         Fragment               : Komnenos.Fragments.Fragment_Type;
+         Highlights             : List_Of_Line_Highlights.List;
+         Current_Line_Highlight : Aquarius.Colours.Aquarius_Colour;
       end record;
 
 end Komnenos.UI.Gtk_UI.Text;
