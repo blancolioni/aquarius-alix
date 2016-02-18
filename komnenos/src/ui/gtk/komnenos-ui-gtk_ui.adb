@@ -434,6 +434,7 @@ package body Komnenos.UI.Gtk_UI is
          if Connector.Source = V or else Connector.Destination = V then
             Connector.Update;
             Connector.Display.Update;
+            UI.Layout.Update_Connector (Connector);
          end if;
       end loop;
    end Update_Visual;

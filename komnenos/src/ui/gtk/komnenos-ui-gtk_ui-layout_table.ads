@@ -48,6 +48,10 @@ private
      (Layout : in out Root_Gtk_Layout_Table;
       Item   : Komnenos.Fragments.Fragment_Type);
 
+   overriding procedure Update_Connector
+     (Layout    : in out Root_Gtk_Layout_Table;
+      Connector : Komnenos.Connectors.Connector_Type);
+
    overriding procedure Set_Full_Size
      (Layout      : in out Root_Gtk_Layout_Table;
       Full_Width  : Natural;
