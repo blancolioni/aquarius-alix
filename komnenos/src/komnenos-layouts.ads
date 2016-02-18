@@ -45,6 +45,11 @@ package Komnenos.Layouts is
       Connector : Komnenos.Connectors.Connector_Type)
    is abstract;
 
+   procedure Update_Connector
+     (Layout    : in out Root_Layout_Type;
+      Connector : Komnenos.Connectors.Connector_Type)
+   is abstract;
+
    procedure Set_Full_Size
      (Layout      : in out Root_Layout_Type;
       Full_Width  : Natural;

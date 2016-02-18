@@ -246,4 +246,21 @@ package body Komnenos.UI.Gtk_UI.Layout_Table is
       Table.Layout_Widget.Get_Vadjustment.Set_Value (Glib.Gdouble (Y));
    end Set_Top_Left;
 
+   ----------------------
+   -- Update_Connector --
+   ----------------------
+
+   overriding procedure Update_Connector
+     (Layout    : in out Root_Gtk_Layout_Table;
+      Connector : Komnenos.Connectors.Connector_Type)
+   is
+      Conn : constant Connectors.Gtk_Connector :=
+               Connectors.Gtk_Connector (Connector.Display);
+   begin
+      Layout.Layout_Widget.Move
+        (Conn,
+         Glib.Gint (Conn.Layout_Location.X),
+         Glib.Gint (Conn.Layout_Location.Y));
+   end Update_Connector;
+
 end Komnenos.UI.Gtk_UI.Layout_Table;
