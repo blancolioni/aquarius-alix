@@ -170,7 +170,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
                     Index_Non_Blank (Entity.Edit_Buffer);
    begin
       if Start = 0 then
-         Entity.Edit_Buffer := Null_Unbounded_String;
+         --  Entity.Edit_Buffer := Null_Unbounded_String;
          Echo := True;
          return;
       end if;
