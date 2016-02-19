@@ -14,6 +14,9 @@ package body Aquarius.Keys.Gtk_Keys is
       use Gdk.Types;
       use Gdk.Types.Keysyms;
       Result : Aquarius_Key := Null_Key;
+      Shift  : constant Boolean :=
+                 (State and Gdk.Types.Shift_Mask) /= 0
+                 and then Key not in 20 .. 126;
    begin
       case Key is
          when 20 .. 126 =>
@@ -37,7 +40,7 @@ package body Aquarius.Keys.Gtk_Keys is
       end case;
 
       return Modify (Result,
-                     Shift   => (State and Gdk.Types.Shift_Mask) /= 0,
+                     Shift   => Shift,
                      Control => (State and Gdk.Types.Control_Mask) /= 0,
                      Mod1    => (State and Gdk.Types.Mod1_Mask) /= 0,
                      Mod2    => (State and Gdk.Types.Mod2_Mask) /= 0);
