@@ -103,7 +103,7 @@ package body Komnenos.UI.Gtk_UI.Frames is
          Fill    => True,
          Padding => 0);
 
-      Gtk.Button.Gtk_New (Close, "X");
+      Gtk.Button.Gtk_New (Close, "x");
       Close.Set_Name ("Frame_Close");
       Close.On_Clicked (On_Close_Frame_Clicked'Access, Object);
 
