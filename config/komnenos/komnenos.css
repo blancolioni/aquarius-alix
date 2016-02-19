@@ -4,8 +4,12 @@
 
 #Frame_Label {
     background-color: rgb(175,203,232);
+    margin: 0;
+    padding: 0;
 }
 
 #Frame_Close {
     background-color: rgb(175,203,232);
+    margin: 0;
+    padding: 0;
 }
