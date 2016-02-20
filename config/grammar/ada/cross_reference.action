@@ -3,6 +3,7 @@ before Compilation_Unit do
 end;
 
 after Compilation_Unit do
+  --  IO.Put_Line ("Ada: finished cross references");
    --  Aqua.Report_State;
 end;
 
@@ -39,3 +40,14 @@ after defining_qualified_reference/identifier do
    end if;
 end;
 
+before object_reference do
+   
+end;
+
+before object_reference/direct_name do
+
+end;
+
+after direct_name/identifier do
+
+end;

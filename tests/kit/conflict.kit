@@ -2,737 +2,741 @@ with Localisation;
 
 with Dates;
 with Names;
-
 package Conflict.Db is
 
-record Massive : Named is
-   Mass : Long_Float;
-end Massive;
-
-record Colour is
-   Red    : Natural;
-   Green  : Natural;
-   Blue   : Natural;
-end Colour;
-
-record Interstellar is
-   X      : Long_Float;
-   Y      : Long_Float;
-   Z      : Long_Float;
-end Interstellar;
-
-record Star : Named, Massive, Interstellar is
-   unique key Parent_Massive : Massive;
-   Solar_Masses  : Long_Float;
-   Spectral_Type : String (8);
-   Luminosity    : Long_Float;
-   Ecosphere     : Long_Float;
-   Age           : Long_Float;
-end Star;
-
-record Star_Distance is
-   key From : Star;
-   key To   : Star;
-   key Distance : Long_Float;
-   key Distance_From with From, Distance;
-   unique key Distance_Between with From, To;
-end Star_Distance;
-
-record Orbiting is
-   key Primary    : Massive;
-   Semimajor_Axis : Long_Float;
-   Eccentricity   : Long_Float;
-   Period         : Long_Float;
-   Offset         : Long_Float;
-end Orbiting;
-
-record Located is
-   X     : Long_Float;
-   Y     : Long_Float;
-   Z     : Long_Float;
-end Located;
-
-record Mobile : Located is
-   VX    : Long_Float;
-   VY    : Long_Float;
-   VZ    : Long_Float;
-   FX    : Long_Float;
-   FY    : Long_Float;
-   FZ    : Long_Float;
-end Mobile;
-
-record Orientable is
-   M11   : Long_Float;
-   M12   : Long_Float;
-   M13   : Long_Float;
-   M21   : Long_Float;
-   M22   : Long_Float;
-   M23   : Long_Float;
-   M31   : Long_Float;
-   M32   : Long_Float;
-   M33   : Long_Float;
-end Orientable;
-
-record Spinning : Orientable is
-   RVX   : Long_Float;
-   RVY   : Long_FLoat;
-   RVZ   : Long_Float;
-   TX    : Long_Float;
-   TY    : Long_FLoat;
-   TZ    : Long_Float;
-end Spinning;
-
-type Planet_Category is
-  (Rock, Martian, Venusian, Terrestrial, Water, Ice, Sub_Jovian, Jovian);
-
-record Planet : Named, Massive, Orbiting is
-   unique key Parent_Massive : Massive;
-   key Category          : Planet_Category;
-   Surface_Seed          : String (32);
-   Gas_Giant             : Boolean;
-   Resonant_Period       : Boolean;
-   Greenhouse_Effect     : Boolean;
-   Radius                : Long_Float;
-   Density               : Long_Float;
-   Tilt                  : Long_Float;
-   Solid_Mass            : Long_Float;
-   Gas_Mass              : Long_Float;
-   Core_Radius           : Long_Float;
-   Day_Length            : Long_Float;
-   Escape_Velocity       : Long_Float;
-   Surface_Acceleration  : Long_Float;
-   Surface_Gravity       : Long_Float;
-   RMS_Velocity          : Long_Float;
-   Min_Molecular_Weight  : Long_Float;
-   Volatile_Gas_Inv      : Long_Float;
-   Surface_Pressure      : Long_Float;
-   Water_Boiling_Point   : Long_Float;
-   Albedo                : Long_Float;
-   Exospheric_Temp       : Long_Float;
-   Surface_Temp          : Long_Float;
-   Greenhouse_Rise       : Long_Float;
-   Daytime_High          : Long_Float;
-   Nighttime_Low         : Long_Float;
-   Max_Temperature       : Long_Float;
-   Min_Temperature       : Long_Float;
-   Hydrosphere           : Long_Float;
-   Cloud_Cover           : Long_Float;
-   Ice_Cover             : Long_Float;
-   Sector_Count          : Natural;
-   Great_Circle_Sectors  : Natural;
-   Half_Circle_Sectors   : Natural;
-end Planet;
-
-record Atm_Gas : Named is
-   unique key Formula : String (5);
-   key Molecular_Weight : Long_Float;
-   Melting_Point : Long_Float;
-   Boiling_Point : Long_Float;
-   Density       : Long_Float;
-   Abundance_E   : Long_Float;
-   Abundance_S   : Long_Float;
-   Reactivity    : Long_Float;
-   Max_IPP       : Long_Float;
-end Atm_Gas;
-
-record Atmosphere is
-   key Planet;
-   Atm_Gas;
-   Percentage       : Long_Float;
-   key Planet_Atm with Planet, Percentage;
-   key Planet_Atmosphere with Planet, Atm_Gas;
-end Atmosphere;
-
-record Terrain  : Localised, Colour is
-   Id           : Positive;
-   Code         : String (8);
-   Habitability : Long_Float;
-   Is_Water     : Boolean;
-end Terrain;
-
-record Feature : Named, Colour is
-   Code : String (8);
-   Habitability : Long_Float;
-end Feature;
-
-record Feature_Terrain is
-   key Feature;
-   key Terrain;
-   unique key Feature_Terrain with Feature, Terrain;
-end Feature_Terrain;
-
-record Planet_Terrain_Map is
-   key Planet;
-   Index : Natural;
-   Terrain;
-   key Planet_Terrain with Planet, Index;
-end Planet_Terrain_Map;
-
-record Technology : Localised;
-
-record Tec_Prereq is
-   key Technology;
-   key Prereq : Technology;
-   unique key Is_Prerequisite with Technology, Prereq;
-end Tec_Prereq;
-
-record Technological is
-   key Enabled_By : Technology;
-end Technological;
-
-record Constructed : Technological;
-
-record Commodity_Class : Localised;
-
-record Commodity_Subclass : Localised;
-
-record Commodity : Localised, Technological with Vector is
-   key Commodity_Class;
-   key Commodity_Subclass;
-   Virtual       : Boolean;
-   Employee      : Boolean;
-   Service       : Boolean;
-   Power         : Boolean;
-   Base_Price    : Long_Float;
-   Mass          : Long_Float;
-   Quality       : Natural;
-   Half_Life     : Natural;
-   key Subclass_And_Quality with Commodity_Subclass, Quality;
-end Commodity;
-
-record Recipe is
-   key Output : Commodity;
-end Recipe;
-
-record Recipe_Item is
-   key Recipe;
-   key Commodity;
-   Quantity : Positive;
-end Recipe_Item;
-
-record Terrain_Resource is
-   key Terrain;
-   key Resource : Commodity;
-   Chance : Natural;
-end Terrain_Resource;
-
-record Production : Localised;
-
-record Production_Choice : Technological is
-   key Production;
-end Production_Choice;
-
-record Prod_Prereq is
-   key Production_Choice;
-end Prod_Prereq;
-
-record Pre_Commodity : Prod_Prereq is
-   key Commodity;
-   Minimum : Long_Float;
-end Pre_Commodity;
-
-record Pre_Terrain : Prod_Prereq is
-   key Terrain;
-end Pre_Terrain;
-
-record Pre_Feature : Prod_Prereq is
-   key Feature;
-end Pre_Feature;
-
-record Pre_Resource : Prod_Prereq is
-   key Concentration : Long_Float;
-end Pre_Resource;
-
-record Consumption is
-   key Production_Choice;
-   key Commodity;
-   Quantity : Long_Float;
-   Chance   : Long_Float;
-end Consumption;
-
-record Output is
-   key Production_Choice;
-   key Commodity;
-   Quantity : Long_Float;
-end Output;
-
-type Efficiency_Effect is (Habitability, Concentration);
-
-record Efficiency is
-   key Production_Choice;
-   Effect : Efficiency_Effect;
-   Value  : Long_Float;
-end Efficiency;
-
-record Stockpile with Map is
-   Maximum_Stock : Natural;
-end Stockpile;
-
-record Stock_Item is
-   key Stockpile;
-   Commodity;
-   Quantity : Natural;
-   Value    : Long_Float;
-   unique key Commodity with Stockpile, Commodity;
-end Stock_Item;
-
-record Actor_Location;
-
-record Market with Vector is
-   unique key Planet;
-end Market;
-
-record Account with Map is
-   key Guarantor   : Account;
-   key Cash        : Long_Float;
-   Daily_Start     : Long_Float;
-   key Change      : Long_Float;
-   key Income      : Long_Float;
-   key Expenses    : Long_Float;
-end Account;
-
-type Line_Entry is (Income, Expense);
-
-type Line_Entry_Class is
-   (Salary, Subsidy, Trade, Dividend, Interest, Taxation, Loan, Rent);
-   
-record Account_Line_Entry is
-   key Date;
-   key Account;
-   key Change   : Line_Entry;
-   key Class    : Line_Entry_Class;
-   key Amount   : Long_Float;
-   key Entry_Date with Date, Account;
-end Account_Line_Entry;
-
-record Account_History is
-   key Date;
-   key Account;
-   Cash            : Long_Float;
-   Change          : Long_Float;
-   Income          : Long_Float;
-   Expenses        : Long_Float;
-   key Account_History with Date, Account;
-end Account_History;
-
-record Accounted is
-   key Account;
-end Accounted;
-
-record Agent : Stockpile, Accounted with Map is
-   key Market;
-   Original  : Agent;
-   Happiness : Natural;
-   Age       : Natural;
-end Agent;
-
-record Shared : Accounted is
-   Total_Shares : Positive;
-end Shared;
-
-record Shareholder is
-   key Shared;
-   key Agent;
-   Share : Natural;
-end Shareholder;
-
-record Producer : Agent is
-   Production_Choice;
-end Producer;
-
-record Employer : Agent;
-
-record Market_Operator is
-   key Market;
-   key Agent;
-end Market_Operator;
-   
-record Agent_Production is
-   key Agent;
-   key Production;
-   unique key Agent_Production with Agent, Production;
-end Agent_Production;
-   
-record House : Named, Stockpile, Agent, Colour, Shared is
-   unique key Capital    : Planet;
-   Status : Natural;
-   unique key Colour with Red, Green, Blue;
-end House;
-
-record Planet_Latitude is
-   key Planet;
-   Latitude     : Integer;
-   Sector_Count : Natural;
-   key Planet_And_Latitude with Planet, Latitude;
-end Planet_Latitude;
-
-record Planet_Sector : Actor_Location is
-   key Planet;
-   key Planet_Latitude;
-   Terrain;
-   Feature;
-   Fertility : Float;
-   Latitude  : Integer;
-   Longitude : Natural;
-   Resource  : Commodity;
-   Concentration : Long_Float;
-   Abundance     : Long_Float;
-   key Planet_And_Latitude with Planet, Latitude;
-   unique key Planet_Sector with Planet, Latitude, Longitude;
-end Planet_Sector;
-
-record Pop_Class : Localised is
-   Salary              : Long_Float;
-   Consumption_Quality : Positive;
-   Service_Quality     : Positive;
-   key Commodity;
-end Pop_Class;
-
-record Pop_Needs is
-   key Pop_Class;
-   key Priority : Positive;
-   Commodity;
-   Quantity  : Positive;
-   Happiness : Positive;
-   unique key Class_Priority with Pop_Class, Priority;
-end Pop_Needs;
-
-record Employer_Class;
-
-record Worker_Class is
-   key Employer_Class;
-   key Pop_Class;
-   Quantity : Positive;
-   key Worker_Class with Employer_Class, Pop_Class;
-end Worker_Class;
-
-record Facility_Class : Localised;
-
-record Service_Class : Localised is
-   key Priority : Positive;
-end Service_Class;
-
-record Facility : Localised, Employer_Class, Colour is
-   key Facility_Class;
-   key Service_Class;
-   Power          : Positive;
-   Capacity       : Natural;
-   key Quality    : Natural;
-   key Commodity;
-   key Service_Quality with Service_Class, Quality;
-end Facility;
-
-record Facility_Prod is
-   key Facility;
-   key Commodity;
-end Facility_Prod;
-
-record Facility_Recipe is
-   key Facility;
-   key Recipe;
-end Facility_Recipe;
-
-record Worker is
-   key Employer;
-   key Pop_Class;
-   Quantity : Natural;
-   key Worker with Employer, Pop_Class;
-end Worker;
-
-record Population : Producer is
-   key Pop_Class;
-   key Planet;
-   key Planet_Sector;
-   key Employer;
-   Salary : Long_Float;
-   key House;
-   Size          : Natural;
-   key House_Sector_And_Class with House, Planet_Sector, Pop_Class;
-   key House_Planet_And_Class with House, Planet, Pop_Class;
-   key Employer_And_Class with Employer, Pop_Class;
-end Population;
-
-record Planet_Capital is
-   key Planet;
-   Planet_Sector;
-end Planet_Capital;
-
-record Required is
-   key Constructed;
-   key Required : Commodity;
-   Quantity : Long_Float;
-   unique key Is_Required with Constructed, Required;
-end Required;
-
-record Owned is
-   key Owner : Agent;
-end Owned;
-    
-record Loan is
-   key Lender   : Agent;
-   key Borrower : Agent;
-   Principle    : Long_Float;
-   Rate         : Long_Float;
-   Daily        : Long_Float;
-end Loan;
-
-record Sales_Tax is
-   key Market;
-   Commodity;
-   Level      : Float;
-   unique key Sales_Tax with Market, Commodity;
-end Sales_Tax;
-
-record Installation : Agent, Owned, Employer, Actor_Location, Shared is
-   key Planet;
-   key Planet_Sector;
-   Facility;
-   key Production : Commodity;
-   Size : Natural;
-   key Planet_Facility with Planet, Facility;
-   key Sector_Facility with Planet_Sector, Facility;
-end Installation;
-
-record Corporation : Agent, Owned, Employer, Named, Shared is
-   key Planet;
-end Corporation;
-
-record Agent_Need is
-   key Agent;
-   Commodity;
-   Quantity : Float;
-end Agent_Need;
-
-type Buy_Or_Sell is (Buy, Sell);
-
-record Agent_Transaction is
-   key Date;
-   key Agent;
-   key Account;
-   key Commodity;
-   Class       : Buy_Or_Sell;
-   Quantity    : Natural;
-   Price       : Long_Float;
-   Total       : Long_Float;
-   key Date_Agent with Date, Agent;
-   key Date_Agent_Commodity with Date, Agent, Commodity;
-end Agent_Transaction;
-
-record Owned_Sector is
-   key House;
-   key Planet_Sector;
-   unique key Owned_Sector with House, Planet_Sector;
-end Owned_Sector;
-
-type Gender_Type is (Female, Male);
-
-type Role_Type is
-   (Leader, General, Admiral, Spymaster, Diplomat, Chancellor, Captain, Commander, Chief_Scientist,
-    Legislator,
-    Unassigned);
-
-record Actor : Named, Agent is
-   key House;
-   key Actor_Location;
-   key Planet;
-   key Last_Name  : String (64);
-   Role           : Role_Type;
-   Military       : Natural;
-   Administration : Natural;
-   Intrigue       : Natural;
-   Combat         : Natural;
-   Charisma       : Natural;
-   Health         : Natural;
-   Intelligence   : Natural;
-   Focus          : Natural;
-   Gender         : Gender_Type;
-   Born           : Date;
-   Died           : Date;
-   unique key House_Role with House, Role;
-end Actor;
-
-record Parent_Child is
-   key Parent : Actor;
-   key Child  : Actor;
-   key Parent_Child with Parent, Child;
-end Parent_Child;
-
-record Marriage is
-   key Actor_1 : Actor;
-   key Actor_2 : Actor;
-   key Marriage with Actor_1, Actor_2;
-   Start       : Integer;
-   Finish      : Integer;
-end Marriage;
-
-record Frame;
-
-type Gadget_Shape is (Rectangular_Prism, Hexagonal_Prism, Cylinder, Cone, Sphere, Cube, Conical_Frustum);
-
-record Gadget : Named, Colour, Constructed is
-   Shape                : Gadget_Shape;
-   Density              : Long_Float;
-   Crew                 : Long_Float;
-   Nominal_Max_Output   : Long_Float;
-   Output_Size_Power    : Long_Float;
-   Input_Size_Power     : Long_Float;
-   Throttle_Step        : Long_Float;
-   Size_Throttle_Factor : Long_Float;
-   Energy_Coefficient   : Long_Float;
-
-   Energy_From_Fuel   : Boolean;
-
-   Is_Drive  : Boolean;
-   Is_Tank   : Boolean;
-   Is_Hold   : Boolean;
-   Is_Shield : Boolean;
-end Gadget;
-
-record Part : Named, Constructed is
-   key Gadget;
-end Part;
-   
-record Component : Massive, Stockpile, Orientable is
-   key Gadget;
-   key Frame;
-   Crew        : Natural;
-   Damage      : Natural;
-   Tec_Level   : Natural;
-   Length      : Natural;
-   Width       : Natural;
-   Height      : Natural;
-   Left        : Integer;
-   Low         : Integer;
-   Aft         : Integer;
-   key Frame_And_Name with Frame, Name;
-end Component;
-
-record Connection is
-   key From : Component;
-   key To   : Component;
-   FX       : Natural;
-   FY       : Natural;
-   FZ       : Natural;
-   TX       : Natural;
-   TY       : Natural;
-   TZ       : Natural;
-end Connection;
-
-record Ship : Named, Owned, Stockpile, Orbiting, Mobile, Spinning, Actor_Location, Shared is
-   unique key Frame;
-   unique key Main_Strut : Component;
-   key Owner_And_Name with Owner, Name;
-   key Captain  : Actor;
-   Tank_Size    : Long_Float;
-   Hold_Size    : Long_Float;
-   Mission      : String (16);
-   Dest_Star    : Star;
-   Dest_Planet  : Planet;
-   Dest_Orbit   : Long_Float;
-   Dest_Offset  : Long_Float;
-end Ship;
-
---  type Ship_System_Type is
---    (Drive, Hyperdrive, Hold, Tank,
---     Energy_Bank, Power,
---     Life_Support,
---     Fighter_Bay, Missile_Tube, Beam_Weapon, Cannon,
---     Shield,
---     Cloak, Scanner);
-
---  record Ship_System is
---     key Ship;
---     System_Type : Ship_System_Type;
---     Size        : Natural;
---     Crew        : Natural;
---     Damage      : Natural;
---     Tec_Level   : Natural;
---     compound key Ship_And_System is Ship, System_Type;
---    end Ship_System;
-
-record Unit_Category : Named is
-   Base_Attack  : Natural;
-   Base_Defence : Natural;
-   Base_Speed   : Natural;
-end Unit_Category;
-
-record Unit_Terrain_Mod is
-   key Unit_Category;
-   key Terrain;
-   Attack_Mod  : Integer;
-   Defence_Mod : Integer;
-   Speed_Mod   : Integer;
-end Unit_Terrain_Mod;
-
-record Unit : Named, Owned, Actor_Location is
-   Category  : Unit_Category;
-   Size      : Natural;
-   Supplies  : Natural;
-   Tec_Level : Natural;
-end Unit;
-
-record Agent_Price_Belief is
-   key Agent;
-   key Commodity;
-   Low      : Long_Float;
-   High     : Long_Float;
-   Strength : Long_Float;
-   unique key Agent_Commodity with Agent, Commodity;
-end Agent_Price_Belief;
-
-record Market_Commodity is
-   key Market;
-   key Date;
-   key Commodity;
-   Historical_Price : Long_Float;
-   Average_Price    : Long_Float;
-   Traded_Quantity  : Natural;
-   Supply           : Natural;
-   Demand           : Natural;
-   
-   key Market_Date with Date, Market;
-   key Market_Commodity with Date, Market, Commodity;
-   key Market_Commodity_Date with Market, Commodity, Date;
-end Market_Commodity;
-
-record Market_Production is
-   key Market;
-   Date;
-   Production;
-   Producer_Count   : Natural;
-   Total_Spent      : Long_Float;
-   Total_Earned     : Long_Float;
-   Total_Cash       : Long_Float;
-   key Market_Production_Date with Market, Production, Date;
-end Market_Production;
-
-type Offer_Class is (Bid_Offer, Ask_Offer);
-
-record Offer is
-   Agent;
-   Market;
-   Date;
-   Commodity;
-   Price     : Long_Float;
-   Class     : Offer_Class;
-   Quantity  : Natural;
-   Remaining : Natural;
-   key Market_Date with Date, Market;
-   key Date_Agent with Date, Agent;
-   key Offers with Date, Market, Commodity, Class;
-end Offer;
-
-record Transaction is
-   key Date;
-   key Market;
-   key Buyer   : Agent;
-   key Seller  : Agent;
-   key Commodity;
-   Quantity        : Natural;
-   Price           : Long_Float;
-   Total    : Long_Float;
-   key Market_Date with Date, Market;
-   key Market_Commodity_Date with Market, Commodity, Date;
-end Transaction;
-
+   record Massive : Named is
+      Mass : Long_Float;
+   end Massive;
+
+   record Colour is
+      Red : Natural;
+      Green : Natural;
+      Blue : Natural;
+   end Colour;
+
+   record Interstellar is
+      X : Long_Float;
+      Y : Long_Float;
+      Z : Long_Float;
+   end Interstellar;
+
+   record Star : Named, Massive, Interstellar is
+      unique key Parent_Massive : Massive;
+      Solar_Masses : Long_Float;
+      Spectral_Type : String (8);
+      Luminosity : Long_Float;
+      Ecosphere : Long_Float;
+      Age : Long_Float;
+   end Star;
+
+   record Star_Distance is
+      key From : Star;
+      key To : Star;
+      key Distance : Long_Float;
+      key Distance_From with From, Distance;
+      unique key Distance_Between with From, To;
+   end Star_Distance;
+
+   record Orbiting is
+      key Primary : Massive;
+      Semimajor_Axis : Long_Float;
+      Eccentricity : Long_Float;
+      Period : Long_Float;
+      Offset : Long_Float;
+   end Orbiting;
+
+   record Located is
+      X : Long_Float;
+      Y : Long_Float;
+      Z : Long_Float;
+   end Located;
+
+   record Mobile : Located is
+      VX : Long_Float;
+      VY : Long_Float;
+      VZ : Long_Float;
+      FX : Long_Float;
+      FY : Long_Float;
+      FZ : Long_Float;
+   end Mobile;
+
+   record Orientable is
+      M11 : Long_Float;
+      M12 : Long_Float;
+      M13 : Long_Float;
+      M21 : Long_Float;
+      M22 : Long_Float;
+      M23 : Long_Float;
+      M31 : Long_Float;
+      M32 : Long_Float;
+      M33 : Long_Float;
+   end Orientable;
+
+   record Spinning : Orientable is
+      RVX : Long_Float;
+      RVY : Long_FLoat;
+      RVZ : Long_Float;
+      TX : Long_Float;
+      TY : Long_FLoat;
+      TZ : Long_Float;
+   end Spinning;
+   type Planet_Category is (Rock,
+                            Martian,
+                            Venusian,
+                            Terrestrial,
+                            Water,
+                            Ice,
+                            Sub_Jovian,
+                            Jovian);
+   record Planet : Named, Massive, Orbiting is
+      unique key Parent_Massive : Massive;
+      key Category : Planet_Category;
+      Surface_Seed : String (32);
+      Gas_Giant : Boolean;
+      Resonant_Period : Boolean;
+      Greenhouse_Effect : Boolean;
+      Radius : Long_Float;
+      Density : Long_Float;
+      Tilt : Long_Float;
+      Solid_Mass : Long_Float;
+      Gas_Mass : Long_Float;
+      Core_Radius : Long_Float;
+      Day_Length : Long_Float;
+      Escape_Velocity : Long_Float;
+      Surface_Acceleration : Long_Float;
+      Surface_Gravity : Long_Float;
+      RMS_Velocity : Long_Float;
+      Min_Molecular_Weight : Long_Float;
+      Volatile_Gas_Inv : Long_Float;
+      Surface_Pressure : Long_Float;
+      Water_Boiling_Point : Long_Float;
+      Albedo : Long_Float;
+      Exospheric_Temp : Long_Float;
+      Surface_Temp : Long_Float;
+      Greenhouse_Rise : Long_Float;
+      Daytime_High : Long_Float;
+      Nighttime_Low : Long_Float;
+      Max_Temperature : Long_Float;
+      Min_Temperature : Long_Float;
+      Hydrosphere : Long_Float;
+      Cloud_Cover : Long_Float;
+      Ice_Cover : Long_Float;
+      Sector_Count : Natural;
+      Great_Circle_Sectors : Natural;
+      Half_Circle_Sectors : Natural;
+   end Planet;
+
+   record Atm_Gas : Named is
+      unique key Formula : String (5);
+      key Molecular_Weight : Long_Float;
+      Melting_Point : Long_Float;
+      Boiling_Point : Long_Float;
+      Density : Long_Float;
+      Abundance_E : Long_Float;
+      Abundance_S : Long_Float;
+      Reactivity : Long_Float;
+      Max_IPP : Long_Float;
+      Long_Desc : text;
+   end Atm_Gas;
+
+   record Atmosphere is
+      key Planet;
+      Atm_Gas;
+      Percentage : Long_Float;
+      key Planet_Atm with Planet, Percentage;
+      key Planet_Atmosphere with Planet, Atm_Gas;
+   end Atmosphere;
+
+   record Terrain : Localised, Colour is
+      Id : Positive;
+      Code : String (8);
+      Habitability : Long_Float;
+      Is_Water : Boolean;
+   end Terrain;
+
+   record Feature : Named, Colour is
+      Code : String (8);
+      Habitability : Long_Float;
+   end Feature;
+
+   record Feature_Terrain is
+      key Feature;
+      key Terrain;
+      unique key Feature_Terrain with Feature, Terrain;
+   end Feature_Terrain;
+
+   record Planet_Terrain_Map is
+      key Planet;
+      Index : Natural;
+      Terrain;
+      key Planet_Terrain with Planet, Index;
+   end Planet_Terrain_Map;
+
+   record Technology : Localised;
+
+   record Tec_Prereq is
+      key Technology;
+      key Prereq : Technology;
+      unique key Is_Prerequisite with Technology, Prereq;
+   end Tec_Prereq;
+
+   record Technological is
+      key Enabled_By : Technology;
+   end Technological;
+
+   record Constructed : Technological;
+
+   record Commodity_Class : Localised;
+
+   record Commodity_Subclass : Localised;
+
+   record Commodity : Localised, Technological with Vector is
+      key Commodity_Class;
+      key Commodity_Subclass;
+      Virtual : Boolean;
+      Employee : Boolean;
+      Service : Boolean;
+      Power : Boolean;
+      Base_Price : Long_Float;
+      Mass : Long_Float;
+      Quality : Natural;
+      Half_Life : Natural;
+      key Subclass_And_Quality with Commodity_Subclass, Quality;
+   end Commodity;
+
+   record Recipe is
+      key Output : Commodity;
+   end Recipe;
+
+   record Recipe_Item is
+      key Recipe;
+      key Commodity;
+      Quantity : Positive;
+   end Recipe_Item;
+
+   record Terrain_Resource is
+      key Terrain;
+      key Resource : Commodity;
+      Chance : Natural;
+   end Terrain_Resource;
+
+   record Production : Localised;
+
+   record Production_Choice : Technological is
+      key Production;
+   end Production_Choice;
+
+   record Prod_Prereq is
+      key Production_Choice;
+   end Prod_Prereq;
+
+   record Pre_Commodity : Prod_Prereq is
+      key Commodity;
+      Minimum : Long_Float;
+   end Pre_Commodity;
+
+   record Pre_Terrain : Prod_Prereq is
+      key Terrain;
+   end Pre_Terrain;
+
+   record Pre_Feature : Prod_Prereq is
+      key Feature;
+   end Pre_Feature;
+
+   record Pre_Resource : Prod_Prereq is
+      key Concentration : Long_Float;
+   end Pre_Resource;
+
+   record Consumption is
+      key Production_Choice;
+      key Commodity;
+      Quantity : Long_Float;
+      Chance : Long_Float;
+   end Consumption;
+
+   record Output is
+      key Production_Choice;
+      key Commodity;
+      Quantity : Long_Float;
+   end Output;
+
+   type Efficiency_Effect is (Habitability, Concentration);
+
+   record Efficiency is
+      key Production_Choice;
+      Effect : Efficiency_Effect;
+      Value : Long_Float;
+   end Efficiency;
+
+   record Stockpile with Map is
+      Maximum_Stock : Natural;
+   end Stockpile;
+
+   record Stock_Item is
+      key Stockpile;
+      Commodity;
+      Quantity : Natural;
+      Value : Long_Float;
+      unique key Commodity with Stockpile, Commodity;
+   end Stock_Item;
+
+   record Actor_Location;
+
+   record Market with Vector is
+      unique key Planet;
+   end Market;
+
+   record Account with Map is
+      key Guarantor : Account;
+      key Cash : Long_Float;
+      Daily_Start : Long_Float;
+      key Change : Long_Float;
+      key Income : Long_Float;
+      key Expenses : Long_Float;
+   end Account;
+
+   type Line_Entry is (Income, Expense);
+   type Line_Entry_Class is (Salary,
+                             Subsidy,
+                             Trade,
+                             Dividend,
+                             Interest,
+                             Taxation,
+                             Loan,
+                             Rent);
+   record Account_Line_Entry is
+      key Date;
+      key Account;
+      key Change : Line_Entry;
+      key Class : Line_Entry_Class;
+      key Amount : Long_Float;
+      key Entry_Date with Date, Account;
+   end Account_Line_Entry;
+
+   record Account_History is
+      key Date;
+      key Account;
+      Cash : Long_Float;
+      Change : Long_Float;
+      Income : Long_Float;
+      Expenses : Long_Float;
+      key Account_History with Date, Account;
+   end Account_History;
+
+   record Accounted is
+      key Account;
+   end Accounted;
+
+   record Agent : Stockpile, Accounted with Map is
+      key Market;
+      Original : Agent;
+      Happiness : Natural;
+      Age : Natural;
+   end Agent;
+
+   record Shared : Accounted is
+      Total_Shares : Positive;
+   end Shared;
+
+   record Shareholder is
+      key Shared;
+      key Agent;
+      Share : Natural;
+   end Shareholder;
+
+   record Producer : Agent is
+      Production_Choice;
+   end Producer;
+
+   record Employer : Agent;
+
+   record Market_Operator is
+      key Market;
+      key Agent;
+   end Market_Operator;
+   record Agent_Production is
+      key Agent;
+      key Production;
+      unique key Agent_Production with Agent, Production;
+   end Agent_Production;
+   record House : Named, Stockpile, Agent, Colour, Shared is
+      unique key Capital : Planet;
+      Status : Natural;
+      unique key Colour with Red, Green, Blue;
+   end House;
+
+   record Planet_Latitude is
+      key Planet;
+      Latitude : Integer;
+      Sector_Count : Natural;
+      key Planet_And_Latitude with Planet, Latitude;
+   end Planet_Latitude;
+
+   record Planet_Sector : Actor_Location is
+      key Planet;
+      key Planet_Latitude;
+      Terrain;
+      Feature;
+      Fertility : Float;
+      Latitude : Integer;
+      Longitude : Natural;
+      Resource : Commodity;
+      Concentration : Long_Float;
+      Abundance : Long_Float;
+      key Planet_And_Latitude with Planet, Latitude;
+      unique key Planet_Sector with Planet, Latitude, Longitude;
+   end Planet_Sector;
+
+   record Pop_Class : Localised is
+      Salary : Long_Float;
+      Consumption_Quality : Positive;
+      Service_Quality : Positive;
+      key Commodity;
+   end Pop_Class;
+
+   record Pop_Needs is
+      key Pop_Class;
+      key Priority : Positive;
+      Commodity;
+      Quantity : Positive;
+      Happiness : Positive;
+      unique key Class_Priority with Pop_Class, Priority;
+   end Pop_Needs;
+
+   record Employer_Class;
+
+   record Worker_Class is
+      key Employer_Class;
+      key Pop_Class;
+      Quantity : Positive;
+      key Worker_Class with Employer_Class, Pop_Class;
+   end Worker_Class;
+
+   record Facility_Class : Localised;
+
+   record Service_Class : Localised is
+      key Priority : Positive;
+   end Service_Class;
+
+   record Facility : Localised, Employer_Class, Colour is
+      key Facility_Class;
+      key Service_Class;
+      Power : Positive;
+      Capacity : Natural;
+      key Quality : Natural;
+      key Commodity;
+      key Service_Quality with Service_Class, Quality;
+   end Facility;
+
+   record Facility_Prod is
+      key Facility;
+      key Commodity;
+   end Facility_Prod;
+
+   record Facility_Recipe is
+      key Facility;
+      key Recipe;
+   end Facility_Recipe;
+
+   record Worker is
+      key Employer;
+      key Pop_Class;
+      Quantity : Natural;
+      key Worker with Employer, Pop_Class;
+   end Worker;
+
+   record Population : Producer is
+      key Pop_Class;
+      key Planet;
+      key Planet_Sector;
+      key Employer;
+      Salary : Long_Float;
+      key House;
+      Size : Natural;
+      key House_Sector_And_Class with House, Planet_Sector, Pop_Class;
+      key House_Planet_And_Class with House, Planet, Pop_Class;
+      key Employer_And_Class with Employer, Pop_Class;
+   end Population;
+
+   record Planet_Capital is
+      key Planet;
+      Planet_Sector;
+   end Planet_Capital;
+
+   record Required is
+      key Constructed;
+      key Required : Commodity;
+      Quantity : Long_Float;
+      unique key Is_Required with Constructed, Required;
+   end Required;
+
+   record Owned is
+      key Owner : Agent;
+   end Owned;
+   record Loan is
+      key Lender : Agent;
+      key Borrower : Agent;
+      Principle : Long_Float;
+      Rate : Long_Float;
+      Daily : Long_Float;
+   end Loan;
+
+   record Sales_Tax is
+      key Market;
+      Commodity;
+      Level : Float;
+      unique key Sales_Tax with Market, Commodity;
+   end Sales_Tax;
+
+   record Installation : Agent,
+                         Owned,
+                         Employer,
+                         Actor_Location,
+                         Shared is
+      key Planet;
+      key Planet_Sector;
+      Facility;
+      key Production : Commodity;
+      Size : Natural;
+      key Planet_Facility with Planet, Facility;
+      key Sector_Facility with Planet_Sector, Facility;
+   end Installation;
+
+   record Corporation : Agent, Owned, Employer, Named, Shared is
+      key Planet;
+   end Corporation;
+
+   record Agent_Need is
+      key Agent;
+      Commodity;
+      Quantity : Float;
+   end Agent_Need;
+
+   type Buy_Or_Sell is (Buy, Sell);
+
+   record Agent_Transaction is
+      key Date;
+      key Agent;
+      key Account;
+      key Commodity;
+      Class : Buy_Or_Sell;
+      Quantity : Natural;
+      Price : Long_Float;
+      Total : Long_Float;
+      key Date_Agent with Date, Agent;
+      key Date_Agent_Commodity with Date, Agent, Commodity;
+   end Agent_Transaction;
+
+   record Owned_Sector is
+      key House;
+      key Planet_Sector;
+      unique key Owned_Sector with House, Planet_Sector;
+   end Owned_Sector;
+
+   type Gender_Type is (Female, Male);
+   type Role_Type is (Leader,
+                      General,
+                      Admiral,
+                      Spymaster,
+                      Diplomat,
+                      Chancellor,
+                      Captain,
+                      Commander,
+                      Chief_Scientist,
+                      Legislator,
+                      Unassigned);
+   record Actor : Named, Agent is
+      key House;
+      key Actor_Location;
+      key Planet;
+      key Last_Name : String (64);
+      Role : Role_Type;
+      Military : Natural;
+      Administration : Natural;
+      Intrigue : Natural;
+      Combat : Natural;
+      Charisma : Natural;
+      Health : Natural;
+      Intelligence : Natural;
+      Focus : Natural;
+      Gender : Gender_Type;
+      Born : Date;
+      Died : Date;
+      unique key House_Role with House, Role;
+   end Actor;
+
+   record Parent_Child is
+      key Parent : Actor;
+      key Child : Actor;
+      key Parent_Child with Parent, Child;
+   end Parent_Child;
+
+   record Marriage is
+      key Actor_1 : Actor;
+      key Actor_2 : Actor;
+      key Marriage with Actor_1, Actor_2;
+      Start : Integer;
+      Finish : Integer;
+   end Marriage;
+
+   record Frame;
+   type Gadget_Shape is (Rectangular_Prism,
+                         Hexagonal_Prism,
+                         Cylinder,
+                         Cone,
+                         Sphere,
+                         Cube,
+                         Conical_Frustum);
+   record Gadget : Named, Colour, Constructed is
+      Shape : Gadget_Shape;
+      Density : Long_Float;
+      Crew : Long_Float;
+      Nominal_Max_Output : Long_Float;
+      Output_Size_Power : Long_Float;
+      Input_Size_Power : Long_Float;
+      Throttle_Step : Long_Float;
+      Size_Throttle_Factor : Long_Float;
+      Energy_Coefficient : Long_Float;
+
+      Energy_From_Fuel : Boolean;
+
+      Is_Drive : Boolean;
+      Is_Tank : Boolean;
+      Is_Hold : Boolean;
+      Is_Shield : Boolean;
+   end Gadget;
+
+   record Part : Named, Constructed is
+      key Gadget;
+   end Part;
+   record Component : Massive, Stockpile, Orientable is
+      key Gadget;
+      key Frame;
+      Crew : Natural;
+      Damage : Natural;
+      Tec_Level : Natural;
+      Length : Natural;
+      Width : Natural;
+      Height : Natural;
+      Left : Integer;
+      Low : Integer;
+      Aft : Integer;
+      key Frame_And_Name with Frame, Name;
+   end Component;
+
+   record Connection is
+      key From : Component;
+      key To : Component;
+      FX : Natural;
+      FY : Natural;
+      FZ : Natural;
+      TX : Natural;
+      TY : Natural;
+      TZ : Natural;
+   end Connection;
+
+   record Ship : Named,
+                 Owned,
+                 Stockpile,
+                 Orbiting,
+                 Mobile,
+                 Spinning,
+                 Actor_Location,
+                 Shared is
+      unique key Frame;
+      unique key Main_Strut : Component;
+      key Owner_And_Name with Owner, Name;
+      key Captain : Actor;
+      Tank_Size : Long_Float;
+      Hold_Size : Long_Float;
+      Mission : String (16);
+      Dest_Star : Star;
+      Dest_Planet : Planet;
+      Dest_Orbit : Long_Float;
+      Dest_Offset : Long_Float;
+   end Ship;
+
+   record Unit_Category : Named is
+      Base_Attack : Natural;
+      Base_Defence : Natural;
+      Base_Speed : Natural;
+   end Unit_Category;
+
+   record Unit_Terrain_Mod is
+      key Unit_Category;
+      key Terrain;
+      Attack_Mod : Integer;
+      Defence_Mod : Integer;
+      Speed_Mod : Integer;
+   end Unit_Terrain_Mod;
+
+   record Unit : Named, Owned, Actor_Location is
+      Category : Unit_Category;
+      Size : Natural;
+      Supplies : Natural;
+      Tec_Level : Natural;
+   end Unit;
+
+   record Agent_Price_Belief is
+      key Agent;
+      key Commodity;
+      Low : Long_Float;
+      High : Long_Float;
+      Strength : Long_Float;
+      unique key Agent_Commodity with Agent, Commodity;
+   end Agent_Price_Belief;
+
+   record Market_Commodity is
+      key Market;
+      key Date;
+      key Commodity;
+      Historical_Price : Long_Float;
+      Average_Price : Long_Float;
+      Traded_Quantity : Natural;
+      Supply : Natural;
+      Demand : Natural;
+      key Market_Date with Date, Market;
+      key Market_Commodity with Date, Market, Commodity;
+      key Market_Commodity_Date with Market, Commodity, Date;
+   end Market_Commodity;
+
+   record Market_Production is
+      key Market;
+      Date;
+      Production;
+      Producer_Count : Natural;
+      Total_Spent : Long_Float;
+      Total_Earned : Long_Float;
+      Total_Cash : Long_Float;
+      key Market_Production_Date with Market, Production, Date;
+   end Market_Production;
+
+   type Offer_Class is (Bid_Offer, Ask_Offer);
+
+   record Offer is
+      Agent;
+      Market;
+      Date;
+      Commodity;
+      Price : Long_Float;
+      Class : Offer_Class;
+      Quantity : Natural;
+      Remaining : Natural;
+      key Market_Date with Date, Market;
+      key Date_Agent with Date, Agent;
+      key Offers with Date, Market, Commodity, Class;
+   end Offer;
+
+   record Transaction is
+      key Date;
+      key Market;
+      key Buyer : Agent;
+      key Seller : Agent;
+      key Commodity;
+      Quantity : Natural;
+      Price : Long_Float;
+      Total : Long_Float;
+      key Market_Date with Date, Market;
+      key Market_Commodity_Date with Market, Commodity, Date;
+   end Transaction;
 end Conflict.Db;
