@@ -198,6 +198,10 @@ package body Komnenos.Entities.Aqua_Entities is
       end;
    end Handle_Define;
 
+   -----------------------
+   -- Handle_Get_Entity --
+   -----------------------
+
    function Handle_Get_Entity
      (Context   : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Aqua.Array_Of_Words)

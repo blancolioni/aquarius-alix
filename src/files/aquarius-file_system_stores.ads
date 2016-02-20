@@ -83,4 +83,13 @@ private
          Loaded_Programs : Program_Maps.Map;
       end record;
 
+   overriding procedure On_Edit
+     (Store : not null access Root_File_System_Store;
+      Program : Aquarius.Programs.Program_Tree)
+   is null;
+
+   overriding procedure Save
+     (Store : not null access Root_File_System_Store)
+   is null;
+
 end Aquarius.File_System_Stores;

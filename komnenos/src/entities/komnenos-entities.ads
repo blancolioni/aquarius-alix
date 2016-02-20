@@ -133,7 +133,16 @@ package Komnenos.Entities is
       return Aquarius.Programs.Program_Tree
       is abstract;
 
+   procedure On_Edit
+     (Store   : not null access Program_Store_Interface;
+      Program : Aquarius.Programs.Program_Tree)
+   is abstract;
+
    procedure Load
+     (Store : not null access Program_Store_Interface)
+   is abstract;
+
+   procedure Save
      (Store : not null access Program_Store_Interface)
    is abstract;
 

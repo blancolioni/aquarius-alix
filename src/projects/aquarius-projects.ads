@@ -246,4 +246,13 @@ private
       Config : Tropos.Configuration)
    is null;
 
+   overriding procedure On_Edit
+     (Project : not null access Aquarius_Project_Type;
+      Program : Aquarius.Programs.Program_Tree)
+   is null;
+
+   overriding procedure Save
+     (Project : not null access Aquarius_Project_Type)
+   is null;
+
 end Aquarius.Projects;
