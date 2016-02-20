@@ -7,33 +7,33 @@ package Aquarius.Rendering is
    type Root_Aquarius_Renderer is abstract tagged private;
 
    function Current_Position
-     (Renderer : access Root_Aquarius_Renderer'Class)
+     (Renderer : Root_Aquarius_Renderer'Class)
      return Aquarius.Layout.Position;
 
    procedure Set_Current_Position
-     (Renderer : access Root_Aquarius_Renderer'Class;
-      Position : in     Aquarius.Layout.Position);
+     (Renderer : in out Root_Aquarius_Renderer'Class;
+      Position : Aquarius.Layout.Position);
 
-   procedure Set_Text (Renderer  : access Root_Aquarius_Renderer;
-                       Terminal  : in     Aquarius.Programs.Program_Tree;
-                       Position  : in     Aquarius.Layout.Position;
-                       Class     : in     String;
-                       Text      : in     String)
+   procedure Set_Text (Renderer  : in out Root_Aquarius_Renderer;
+                       Terminal  : Aquarius.Programs.Program_Tree;
+                       Position  : Aquarius.Layout.Position;
+                       Class     : String;
+                       Text      : String)
       is abstract;
 
-   procedure Set_Theme (Renderer : access Root_Aquarius_Renderer;
-                        Theme    : in     Aquarius.Themes.Aquarius_Theme);
+   procedure Set_Theme (Renderer : in out Root_Aquarius_Renderer'Class;
+                        Theme    : Aquarius.Themes.Aquarius_Theme);
 
-   procedure Begin_Render (Renderer : access Root_Aquarius_Renderer)
+   procedure Begin_Render (Renderer : in out Root_Aquarius_Renderer)
      is null;
-   procedure End_Render (Renderer : access Root_Aquarius_Renderer)
+   procedure End_Render (Renderer : in out Root_Aquarius_Renderer)
      is null;
 
-   procedure Set_Point (Renderer : access Root_Aquarius_Renderer;
-                        Point    : in     Aquarius.Layout.Position)
+   procedure Set_Point (Renderer : in out Root_Aquarius_Renderer;
+                        Point    : Aquarius.Layout.Position)
    is null;
 
-   type Aquarius_Renderer is access all Root_Aquarius_Renderer'Class;
+   subtype Aquarius_Renderer is Root_Aquarius_Renderer'Class;
 
 private
 

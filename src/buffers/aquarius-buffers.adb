@@ -316,7 +316,6 @@ package body Aquarius.Buffers is
       Result.Grammar     := Grammar;
       Result.Buffer_Name :=
         Ada.Strings.Unbounded.To_Unbounded_String ("Untitled");
-      Result.Current_Render := null;
       return Result;
    end New_Empty_Buffer;
 
@@ -480,13 +479,10 @@ package body Aquarius.Buffers is
    procedure Render
      (Buffer  : not null access Aquarius_Buffer_Record)
    is
-      use type Aquarius.Rendering.Aquarius_Renderer;
+      Display : Aquarius.Rendering.Aquarius_Renderer :=
+                  Aquarius.Rendering.Manager.Renderer ("text");
    begin
-      if Buffer.Current_Render = null then
-         Buffer.Current_Render :=
-           Aquarius.Rendering.Manager.Load_Renderer ("text");
-      end if;
-      Buffer.Render (Buffer.Current_Render);
+      Buffer.Render (Display);
    end Render;
 
    ------------
@@ -495,8 +491,7 @@ package body Aquarius.Buffers is
 
    procedure Render
      (Buffer  : not null access Aquarius_Buffer_Record;
-      Display : not null access
-      Aquarius.Rendering.Root_Aquarius_Renderer'Class)
+      Display : in out Aquarius.Rendering.Root_Aquarius_Renderer'Class)
    is
       Cursor : constant Aquarius.Trees.Cursors.Cursor :=
         Aquarius.Programs.Parser.Get_Cursor
@@ -521,27 +516,6 @@ package body Aquarius.Buffers is
       Ada.Text_IO.Put_Line ("Finish render: " & Buffer.Name);
 
    end Render;
-
-   ------------------------
-   -- Set_Current_Render --
-   ------------------------
-
-   procedure Set_Current_Render
-     (Buffer  : not null access Aquarius_Buffer_Record;
-      Display : not null access
-      Aquarius.Rendering.Root_Aquarius_Renderer'Class)
-   is
-      use type Aquarius.Programs.Editor.Program_Editor;
-   begin
-      Buffer.Current_Render :=
-        Aquarius.Rendering.Aquarius_Renderer (Display);
-      if Buffer.Editor = null then
-         Buffer.Editor :=
-           Aquarius.Programs.Editor.Create_Editor
-             (Buffer.Contents);
-         Buffer.Editor.Add_Renderer (Buffer, Buffer.Contents);
-      end if;
-   end Set_Current_Render;
 
    ---------------
    -- Set_Point --
@@ -655,6 +629,8 @@ package body Aquarius.Buffers is
       Point   : Aquarius.Trees.Cursors.Cursor;
       Partial : String)
    is
+      Renderer : Aquarius.Rendering.Aquarius_Renderer :=
+                   Aquarius.Rendering.Manager.Renderer ("text");
    begin
       Ada.Text_IO.Put_Line ("Start update: " & Buffer.Name);
       Ada.Text_IO.Put_Line
@@ -670,7 +646,7 @@ package body Aquarius.Buffers is
 
       Aquarius.Programs.Arrangements.Render
         (Program  => Buffer.Contents,
-         Renderer => Buffer.Current_Render,
+         Renderer => Renderer,
          Point    => Point,
          Partial  => Partial);
 

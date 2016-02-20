@@ -921,13 +921,13 @@ package body Aquarius.Plugins.Plugin is
    is
       use Ada.Text_IO;
 
-      Renderer    : Aquarius.Rendering.Aquarius_Renderer;
-      File        : File_Type;
+      Renderer : Aquarius.Rendering.Aquarius_Renderer :=
+                   Aquarius.Rendering.Manager.Renderer ("text");
+      File     : File_Type;
 
    begin
 
       Aquarius.Programs.Arrangements.Arrange (P);
-      Renderer := Aquarius.Rendering.Manager.Load_Renderer ("text");
       Renderer.Set_Theme (Aquarius.Themes.Active_Theme);
 
       Ada.Text_IO.Put_Line ("Writing to: " & Path);

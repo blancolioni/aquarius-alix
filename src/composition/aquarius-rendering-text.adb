@@ -2,31 +2,22 @@ with Ada.Text_IO;
 
 package body Aquarius.Rendering.Text is
 
-   type Text_Renderer is new Root_Aquarius_Renderer
+   type Root_Text_Renderer is new Root_Aquarius_Renderer
      with null record;
 
    overriding
-   procedure Set_Text (Renderer  : access Text_Renderer;
+   procedure Set_Text (Renderer  : in out Root_Text_Renderer;
                        Terminal  : Aquarius.Programs.Program_Tree;
                        Position  : in     Aquarius.Layout.Position;
                        Class     : in     String;
                        Text      : in     String);
-
-   -----------------------
-   -- New_Text_Renderer --
-   -----------------------
-
-   function New_Text_Renderer return Aquarius_Renderer is
-   begin
-      return new Text_Renderer;
-   end New_Text_Renderer;
 
    --------------
    -- Set_Text --
    --------------
 
    overriding
-   procedure Set_Text (Renderer  : access Text_Renderer;
+   procedure Set_Text (Renderer  : in out Root_Text_Renderer;
                        Terminal  : Aquarius.Programs.Program_Tree;
                        Position  : in     Aquarius.Layout.Position;
                        Class     : in     String;
@@ -48,5 +39,16 @@ package body Aquarius.Rendering.Text is
                                       Position.Column +
                                         Aquarius.Layout.Count (Text'Length)));
    end Set_Text;
+
+   -------------------
+   -- Text_Renderer --
+   -------------------
+
+   function Text_Renderer return Aquarius_Renderer is
+   begin
+      return Result : Root_Text_Renderer do
+         null;
+      end return;
+   end Text_Renderer;
 
 end Aquarius.Rendering.Text;

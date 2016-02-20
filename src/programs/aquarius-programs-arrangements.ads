@@ -13,8 +13,12 @@ package Aquarius.Programs.Arrangements is
 
    procedure Render
      (Program     : in Program_Tree;
-      Renderer    : in Aquarius.Rendering.Aquarius_Renderer;
+      Renderer    : in out Aquarius.Rendering.Root_Aquarius_Renderer'Class;
       Point       : in Aquarius.Trees.Cursors.Cursor;
       Partial     : in String);
+
+   procedure Render
+     (Program     : in Program_Tree;
+      Renderer    : in out Aquarius.Rendering.Root_Aquarius_Renderer'Class);
 
 end Aquarius.Programs.Arrangements;

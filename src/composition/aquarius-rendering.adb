@@ -5,7 +5,7 @@ package body Aquarius.Rendering is
    ----------------------
 
    function Current_Position
-     (Renderer : access Root_Aquarius_Renderer'Class)
+     (Renderer : Root_Aquarius_Renderer'Class)
      return Aquarius.Layout.Position
    is
    begin
@@ -17,7 +17,7 @@ package body Aquarius.Rendering is
    --------------------------
 
    procedure Set_Current_Position
-     (Renderer : access Root_Aquarius_Renderer'Class;
+     (Renderer : in out Root_Aquarius_Renderer'Class;
       Position : in     Aquarius.Layout.Position)
    is
    begin
@@ -28,7 +28,7 @@ package body Aquarius.Rendering is
    -- Set_Theme --
    ---------------
 
-   procedure Set_Theme (Renderer : access Root_Aquarius_Renderer;
+   procedure Set_Theme (Renderer : in out Root_Aquarius_Renderer'Class;
                         Theme    : in     Aquarius.Themes.Aquarius_Theme)
    is
    begin

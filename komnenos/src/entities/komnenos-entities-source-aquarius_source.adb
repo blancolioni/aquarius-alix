@@ -565,8 +565,8 @@ package body Komnenos.Entities.Source.Aquarius_Source is
       Visual : not null access Entity_Visual'Class)
    is
       use type Aquarius.Programs.Program_Tree;
-      Renderer : constant Aquarius.Rendering.Aquarius_Renderer :=
-                   Komnenos.Fragments.Rendering.New_Fragment_Renderer
+      Renderer : Aquarius.Rendering.Aquarius_Renderer :=
+                   Komnenos.Fragments.Rendering.Fragment_Renderer
                      (Komnenos.Fragments.Fragment_Type (Visual),
                       Entity.Table);
       Program  : constant Aquarius.Programs.Program_Tree := Entity.Entity_Tree;
