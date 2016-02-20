@@ -20,14 +20,17 @@ before Compilation_Unit do
 end;
 
 after Compilation_Unit do
+--   IO.Put_Line ("Ada: finished defining subprogram names");
 --   Aqua.Report_State;
 end;
 
 after procedure_body/procedure_specification do
+   parent.signature := (name => child.name, arguments => child.signature, return_type => null);
    Komnenos.Define (parent, child.name, "procedure-declaration");
 end;
 
 after function_body/function_specification do
+   parent.signature := (name => child.name, arguments => child.signature, return_type => child.return_type);
    Komnenos.Define (parent, child.name, "function-declaration");
 end;
 
