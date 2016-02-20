@@ -9,7 +9,8 @@ package body Aquarius.Command_Line is
      with Pre => Short_Name /= "" or else Long_Name /= "";
 
    function Get_Argument (Short_Name : String;
-                          Long_Name  : String)
+                          Long_Name  : String;
+                          Default    : String := "")
                          return String
      with Pre => Short_Name /= "" or else Long_Name /= "";
 
@@ -91,7 +92,8 @@ package body Aquarius.Command_Line is
    ------------------
 
    function Get_Argument (Short_Name : String;
-                          Long_Name  : String)
+                          Long_Name  : String;
+                          Default    : String := "")
                          return String
    is
       Short_Argument : constant String := '-' & Short_Name;
@@ -116,7 +118,7 @@ package body Aquarius.Command_Line is
             end if;
          end;
       end loop;
-      return "";
+      return Default;
    end Get_Argument;
 
    --------------
@@ -212,7 +214,7 @@ package body Aquarius.Command_Line is
 
    function Renderer  return String is
    begin
-      return Get_Argument ("r", "render");
+      return Get_Argument ("r", "render", "text");
    end Renderer;
 
    ------------------
