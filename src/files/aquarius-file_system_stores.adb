@@ -7,6 +7,8 @@ with Aquarius.Actions;
 with Aquarius.Grammars.Manager;
 with Aquarius.Loader;
 with Aquarius.Plugins.Manager;
+with Aquarius.Programs.Arrangements;
+with Aquarius.Rendering.Files;
 with Aquarius.Trees.Properties;
 
 package body Aquarius.File_System_Stores is
@@ -58,11 +60,30 @@ package body Aquarius.File_System_Stores is
    is
    begin
       if Store.Loaded_Programs.Contains (Name) then
-         return Store.Loaded_Programs (Name);
+         return Store.Loaded_Programs (Name).Root;
       else
          return null;
       end if;
    end Get_Program;
+
+   --------------------------
+   -- Get_Program_Position --
+   --------------------------
+
+   function Get_Program_Position
+     (Store : Root_File_System_Store'Class;
+      Root  : Aquarius.Programs.Program_Tree)
+      return Program_Maps.Cursor
+   is
+      use type Aquarius.Programs.Program_Tree;
+   begin
+      for Position in Store.Loaded_Programs.Iterate loop
+         if Program_Maps.Element (Position).Root = Root then
+            return Position;
+         end if;
+      end loop;
+      return Program_Maps.No_Element;
+   end Get_Program_Position;
 
    ----------
    -- Load --
@@ -120,11 +141,15 @@ package body Aquarius.File_System_Stores is
                            use Aquarius.Programs;
                            Program : constant Program_Tree :=
                                        Load_Program (File_Name);
+                           New_Item : Program_Info;
                         begin
                            if Program /= null then
+                              New_Item.Root := Program;
+                              New_Item.Path :=
+                                Ada.Strings.Unbounded.To_Unbounded_String
+                                  (File_Name);
                               Store.Loaded_Programs.Insert
-                                (Key      => Simple_Name (File_Name),
-                                 New_Item => Program);
+                                (Simple_Name (File_Name), New_Item);
                            end if;
                         end;
                      exception
@@ -164,14 +189,14 @@ package body Aquarius.File_System_Stores is
          end loop;
       end if;
 
-      for Program of Store.Loaded_Programs loop
+      for Info of Store.Loaded_Programs loop
          declare
             Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
                         Aquarius.Trees.Properties.Get_Grammar
-                          (Program);
+                          (Info.Root);
          begin
             Grammar.Run_Action_Trigger
-              (Program, Aquarius.Actions.Project_Trigger);
+              (Info.Root, Aquarius.Actions.Project_Trigger);
          end;
       end loop;
 
@@ -209,6 +234,41 @@ package body Aquarius.File_System_Stores is
       return Result;
    end New_File_System_Store;
 
+   -------------
+   -- On_Edit --
+   -------------
+
+   overriding procedure On_Edit
+     (Store : not null access Root_File_System_Store;
+      Program : Aquarius.Programs.Program_Tree)
+   is
+      Position : constant Program_Maps.Cursor :=
+                   Store.Get_Program_Position (Program);
+      Info     : Program_Info := Program_Maps.Element (Position);
+   begin
+      if Info.Clean then
+         declare
+            File_Path : constant String :=
+                          Ada.Strings.Unbounded.To_String
+                            (Info.Path);
+            Backup_Path : constant String :=
+                            File_Path & ".aq~";
+         begin
+            if Ada.Directories.Exists (Backup_Path) then
+               Ada.Directories.Delete_File (Backup_Path);
+            end if;
+            Ada.Directories.Copy_File (File_Path, Backup_Path);
+         end;
+         Info.Clean := False;
+      end if;
+
+      Info.Changed := True;
+
+      Store.Loaded_Programs.Replace_Element
+        (Position, Info);
+
+   end On_Edit;
+
    --------------
    -- Register --
    --------------
@@ -218,6 +278,38 @@ package body Aquarius.File_System_Stores is
       Komnenos.Session_Objects.Register_Session_Object
         (File_System_Store_Name, New_File_System_Store'Access);
    end Register;
+
+   ----------
+   -- Save --
+   ----------
+
+   overriding procedure Save
+     (Store : not null access Root_File_System_Store)
+   is
+   begin
+      for Position in Store.Loaded_Programs.Iterate loop
+         declare
+            Info : Program_Info :=
+                     Program_Maps.Element (Position);
+         begin
+            if Info.Changed then
+               declare
+                  Renderer : Aquarius.Rendering.Aquarius_Renderer :=
+                               Aquarius.Rendering.Files.File_Renderer
+                                 (Ada.Strings.Unbounded.To_String
+                                    (Info.Path));
+               begin
+                  Aquarius.Programs.Arrangements.Arrange
+                    (Info.Root, 72);
+                  Aquarius.Programs.Arrangements.Render
+                    (Info.Root, Renderer);
+               end;
+               Info.Changed := False;
+               Store.Loaded_Programs.Replace_Element (Position, Info);
+            end if;
+         end;
+      end loop;
+   end Save;
 
    ---------------
    -- To_Config --
