@@ -2,6 +2,7 @@ private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Containers.Indefinite_Vectors;
 private with Ada.Strings.Fixed.Hash_Case_Insensitive;
 private with Ada.Strings.Fixed.Equal_Case_Insensitive;
+private with Ada.Strings.Unbounded;
 
 with Tropos;
 
@@ -60,13 +61,20 @@ package Aquarius.File_System_Stores is
 
 private
 
+   type Program_Info is
+      record
+         Root         : Aquarius.Programs.Program_Tree;
+         Path         : Ada.Strings.Unbounded.Unbounded_String;
+         Clean        : Boolean := True;
+         Changed      : Boolean := False;
+      end record;
+
    package Program_Maps is
      new Ada.Containers.Indefinite_Hashed_Maps
        (Key_Type        => String,
-        Element_Type    => Aquarius.Programs.Program_Tree,
+        Element_Type    => Program_Info,
         Hash            => Ada.Strings.Fixed.Hash_Case_Insensitive,
-        Equivalent_Keys => Ada.Strings.Fixed.Equal_Case_Insensitive,
-        "="             => Aquarius.Programs."=");
+        Equivalent_Keys => Ada.Strings.Fixed.Equal_Case_Insensitive);
 
    package String_Vectors is
      new Ada.Containers.Indefinite_Vectors
@@ -85,11 +93,14 @@ private
 
    overriding procedure On_Edit
      (Store : not null access Root_File_System_Store;
-      Program : Aquarius.Programs.Program_Tree)
-   is null;
+      Program : Aquarius.Programs.Program_Tree);
 
    overriding procedure Save
-     (Store : not null access Root_File_System_Store)
-   is null;
+     (Store : not null access Root_File_System_Store);
+
+   function Get_Program_Position
+     (Store : Root_File_System_Store'Class;
+      Root  : Aquarius.Programs.Program_Tree)
+     return Program_Maps.Cursor;
 
 end Aquarius.File_System_Stores;
