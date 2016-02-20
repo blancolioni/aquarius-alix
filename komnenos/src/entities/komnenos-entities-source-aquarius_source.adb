@@ -166,11 +166,11 @@ package body Komnenos.Entities.Source.Aquarius_Source is
       Tok       : Aquarius.Tokens.Token;
       Last      : Natural;
       Got_Token : Boolean := False;
-      Start     : constant Natural :=
+      Start     : Natural :=
                     Index_Non_Blank (Entity.Edit_Buffer);
    begin
       if Start = 0 then
-         --  Entity.Edit_Buffer := Null_Unbounded_String;
+--           Entity.Edit_Buffer := Null_Unbounded_String;
          Echo := True;
          return;
       end if;
@@ -187,7 +187,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
 
          declare
             use type Aquarius.Tokens.Token;
-            Text : constant String := Slice (Entity.Edit_Buffer, 1, Last);
+            Text : constant String := Slice (Entity.Edit_Buffer, Start, Last);
          begin
 
             Ada.Text_IO.Put_Line ("got token [" & Text & "]");
@@ -250,6 +250,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
             --  remove the processed text from our buffer
             Ada.Strings.Unbounded.Delete (Entity.Edit_Buffer, 1, Last);
             Entity.Buffer_Cursor := Entity.Buffer_Cursor - Last;
+            Start := 1;
          end;
       end loop;
 
@@ -520,6 +521,9 @@ package body Komnenos.Entities.Source.Aquarius_Source is
       end;
 
       Item.Buffer_Changed := True;
+
+      Komnenos.UI.Current_UI.Program_Store.On_Edit
+        (Item.Compilation_Unit);
 
    end Insert_Character;
 
