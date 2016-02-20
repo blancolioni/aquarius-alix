@@ -68,6 +68,9 @@ package body Komnenos.UI.Sessions is
       end;
 
       Tropos.Writer.Write_Config (Config, Path);
+
+      UI.Store.Save;
+
    end Save_Session;
 
 end Komnenos.UI.Sessions;
