@@ -82,14 +82,7 @@ package Aquarius.Buffers is
    not overriding
    procedure Render
      (Buffer  : not null access Aquarius_Buffer_Record;
-      Display : not null access
-      Aquarius.Rendering.Root_Aquarius_Renderer'Class);
-
-   not overriding
-   procedure Set_Current_Render
-     (Buffer  : not null access Aquarius_Buffer_Record;
-      Display : not null access
-      Aquarius.Rendering.Root_Aquarius_Renderer'Class);
+      Display : in out Aquarius.Rendering.Root_Aquarius_Renderer'Class);
 
    --  Implementation of message interface
 
@@ -171,7 +164,6 @@ private
          Buffer_Name    : Ada.Strings.Unbounded.Unbounded_String;
          Full_Path      : Ada.Strings.Unbounded.Unbounded_String;
          Contents       : Aquarius.Programs.Program_Tree;
-         Current_Render : Aquarius.Rendering.Aquarius_Renderer;
          Local_Messages : Aquarius.Messages.Message_List;
          Point_Position : Aquarius.Layout.Position;
          Parsing        : Aquarius.Programs.Parser.Parse_Context;

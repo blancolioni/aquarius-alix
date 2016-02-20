@@ -6,21 +6,21 @@ with Aquarius.Fonts;
 
 package body Aquarius.Rendering.Html is
 
-   type Html_Renderer is new Root_Aquarius_Renderer
-     with null record;
+   type Root_Html_Renderer is new Root_Aquarius_Renderer
+   with null record;
 
    overriding
-   procedure Set_Text (Renderer  : access Html_Renderer;
+   procedure Set_Text (Renderer  : in out Root_Html_Renderer;
                        Terminal  : Aquarius.Programs.Program_Tree;
                        Position  : in     Aquarius.Layout.Position;
                        Class     : in     String;
                        Text      : in     String);
 
    overriding
-   procedure Begin_Render (Renderer : access Html_Renderer);
+   procedure Begin_Render (Renderer : in out Root_Html_Renderer);
 
    overriding
-   procedure End_Render (Renderer : access Html_Renderer);
+   procedure End_Render (Renderer : in out Root_Html_Renderer);
 
    function With_Font (Font : Aquarius.Fonts.Aquarius_Font;
                        Text : String) return String;
@@ -30,7 +30,7 @@ package body Aquarius.Rendering.Html is
    ------------------
 
    overriding
-   procedure Begin_Render (Renderer : access Html_Renderer) is
+   procedure Begin_Render (Renderer : in out Root_Html_Renderer) is
       pragma Unreferenced (Renderer);
    begin
       Ada.Text_IO.Put_Line ("<font face=""courier"">");
@@ -41,7 +41,7 @@ package body Aquarius.Rendering.Html is
    ----------------
 
    overriding
-   procedure End_Render (Renderer : access Html_Renderer) is
+   procedure End_Render (Renderer : in out Root_Html_Renderer) is
       pragma Unreferenced (Renderer);
    begin
       Ada.Text_IO.Put_Line ("</font>");
@@ -51,17 +51,19 @@ package body Aquarius.Rendering.Html is
    -- New_Html_Renderer --
    -----------------------
 
-   function New_Html_Renderer return Aquarius_Renderer is
+   function Html_Renderer return Aquarius_Renderer is
    begin
-      return new Html_Renderer;
-   end New_Html_Renderer;
+      return Result : Root_Html_Renderer do
+         null;
+      end return;
+   end Html_Renderer;
 
    --------------
    -- Set_Text --
    --------------
 
    overriding
-   procedure Set_Text (Renderer  : access Html_Renderer;
+   procedure Set_Text (Renderer  : in out Root_Html_Renderer;
                        Terminal  : Aquarius.Programs.Program_Tree;
                        Position  : in     Aquarius.Layout.Position;
                        Class     : in     String;

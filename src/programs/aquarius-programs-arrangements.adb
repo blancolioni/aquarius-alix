@@ -690,7 +690,7 @@ package body Aquarius.Programs.Arrangements is
 
    procedure Render
      (Program     : in Program_Tree;
-      Renderer    : in Aquarius.Rendering.Aquarius_Renderer;
+      Renderer    : in out Aquarius.Rendering.Aquarius_Renderer;
       Point       : in Aquarius.Trees.Cursors.Cursor;
       Partial     : in String)
    is
@@ -760,6 +760,19 @@ package body Aquarius.Programs.Arrangements is
       Perform_Render (Program);
       Renderer.Set_Point (Point_Position);
       Renderer.End_Render;
+   end Render;
+
+   ------------
+   -- Render --
+   ------------
+
+   procedure Render
+     (Program     : in Program_Tree;
+      Renderer    : in out Aquarius.Rendering.Root_Aquarius_Renderer'Class)
+   is
+   begin
+      Render (Program, Renderer,
+              Aquarius.Trees.Cursors.Left_Of_Tree (Program), "");
    end Render;
 
 end Aquarius.Programs.Arrangements;

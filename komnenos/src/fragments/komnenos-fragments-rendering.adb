@@ -5,27 +5,27 @@ package body Komnenos.Fragments.Rendering is
 
    use Aquarius.Rendering;
 
-   type Fragment_Renderer is new Root_Aquarius_Renderer with
+   type Root_Fragment_Renderer is new Root_Aquarius_Renderer with
       record
          Fragment      : Fragment_Type;
          Entity_Table  : access Komnenos.Entities.Entity_Table_Interface'Class;
       end record;
 
    overriding
-   procedure Set_Text (Renderer  : access Fragment_Renderer;
+   procedure Set_Text (Renderer  : in out Root_Fragment_Renderer;
                        Terminal  : in     Aquarius.Programs.Program_Tree;
                        Position  : in     Aquarius.Layout.Position;
                        Class     : in     String;
                        Text      : in     String);
 
    overriding
-   procedure Begin_Render (Renderer : access Fragment_Renderer);
+   procedure Begin_Render (Renderer : in out Root_Fragment_Renderer);
 
    overriding
-   procedure End_Render (Renderer : access Fragment_Renderer);
+   procedure End_Render (Renderer : in out Root_Fragment_Renderer);
 
    overriding
-   procedure Set_Point (Renderer : access Fragment_Renderer;
+   procedure Set_Point (Renderer : in out Root_Fragment_Renderer;
                         Point    : in     Aquarius.Layout.Position);
 
    ------------------
@@ -33,7 +33,7 @@ package body Komnenos.Fragments.Rendering is
    ------------------
 
    overriding
-   procedure Begin_Render (Renderer : access Fragment_Renderer) is
+   procedure Begin_Render (Renderer : in out Root_Fragment_Renderer) is
    begin
       Renderer.Fragment.Clear;
       Renderer.Set_Current_Position ((1, 1));
@@ -44,7 +44,7 @@ package body Komnenos.Fragments.Rendering is
    ----------------
 
    overriding
-   procedure End_Render (Renderer : access Fragment_Renderer) is
+   procedure End_Render (Renderer : in out Root_Fragment_Renderer) is
    begin
       null;
 --        Renderer.Fragment.Display.Update;
@@ -55,24 +55,24 @@ package body Komnenos.Fragments.Rendering is
    -- New_Fragment_Renderer --
    --------------------------
 
-   function New_Fragment_Renderer
+   function Fragment_Renderer
      (Target : Fragment_Type;
       Entity_Table : access Komnenos.Entities.Entity_Table_Interface'Class)
       return Aquarius_Renderer
    is
-      Result : Fragment_Renderer;
    begin
-      Result.Fragment := Target;
-      Result.Entity_Table := Entity_Table;
-      return new Fragment_Renderer'(Result);
-   end New_Fragment_Renderer;
+      return Result : Root_Fragment_Renderer do
+         Result.Fragment := Target;
+         Result.Entity_Table := Entity_Table;
+      end return;
+   end Fragment_Renderer;
 
    ---------------
    -- Set_Point --
    ---------------
 
    overriding
-   procedure Set_Point (Renderer : access Fragment_Renderer;
+   procedure Set_Point (Renderer : in out Root_Fragment_Renderer;
                         Point    : in     Aquarius.Layout.Position)
    is
    begin
@@ -84,7 +84,7 @@ package body Komnenos.Fragments.Rendering is
    --------------
 
    overriding
-   procedure Set_Text (Renderer  : access Fragment_Renderer;
+   procedure Set_Text (Renderer  : in out Root_Fragment_Renderer;
                        Terminal  : in     Aquarius.Programs.Program_Tree;
                        Position  : in     Aquarius.Layout.Position;
                        Class     : in     String;
