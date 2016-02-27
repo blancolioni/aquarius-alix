@@ -49,8 +49,9 @@ package Tagatha.Registry is
                           Condition   : in     Tagatha_Condition;
                           Destination : in     Tagatha.Labels.Tagatha_Label);
 
-   procedure Record_Label (Register   : in out Tagatha_Registry;
-                           Label      : in     Tagatha.Labels.Tagatha_Label);
+   procedure Record_Label
+     (Register   : in out Tagatha_Registry;
+      Label      : in     Tagatha.Labels.Tagatha_Label);
 
    procedure Record_Location (Register : in out Tagatha_Registry;
                               Line     : in     Positive;
@@ -62,29 +63,36 @@ package Tagatha.Registry is
 
 private
 
+   type Expression_Record is
+      record
+         Expression     : Tagatha.Expressions.Expression;
+         Transfer_Index : Positive;
+         Label          : Tagatha.Labels.Tagatha_Label;
+      end record;
+
    package Expression_Vectors is
-      new Ada.Containers.Vectors (Positive,
-                                  Tagatha.Expressions.Expression,
-                                  Tagatha.Expressions."=");
+     new Ada.Containers.Vectors (Positive, Expression_Record);
+
+   type Transfer_Record is
+      record
+         Transfer     : Tagatha.Transfers.Transfer;
+         Source_Index : Positive;
+      end record;
 
    package Transfer_Vectors is
-     new Ada.Containers.Vectors (Positive,
-                                 Tagatha.Transfers.Transfer,
-                                 Tagatha.Transfers."=");
+     new Ada.Containers.Vectors (Positive, Transfer_Record);
 
    type Tagatha_Registry is tagged
       record
          Frame_Size  : Natural;
          Unit_Label  : Tagatha.Labels.Tagatha_Label;
          Stack       : Expression_Vectors.Vector;
-         Transfers   : Tagatha.Transfers.Transfer_Vectors.Vector;
+         Transfers   : Transfer_Vectors.Vector;
          Temps       : Tagatha.Temporaries.Temporary_Source;
          Last_Label  : Tagatha.Labels.Tagatha_Label;
          Last_Line   : Natural := 0;
          Last_Column : Natural := 0;
+         Push_Index  : Natural := 0;
       end record;
-
-   procedure Append (Register : in out Tagatha_Registry;
-                     T        : in     Tagatha.Transfers.Transfer);
 
 end Tagatha.Registry;

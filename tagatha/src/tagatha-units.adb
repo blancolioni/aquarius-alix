@@ -1,5 +1,6 @@
 with Ada.Characters.Handling;
 with Ada.Strings.Maps;
+with Ada.Text_IO;
 
 with Tagatha.Code;
 with Tagatha.Commands.Registry;
@@ -11,6 +12,8 @@ with Tagatha.Transfers.Optimiser;
 with Tagatha.Registry;
 
 package body Tagatha.Units is
+
+   Trace_Commands : constant Boolean := False;
 
    procedure Allocate_Registers
      (Unit : Tagatha_Unit;
@@ -83,6 +86,12 @@ package body Tagatha.Units is
         (Command, To_Unit.Current_Sub.Last_Line,
          To_Unit.Current_Sub.Last_Column);
       To_Unit.Current_Sub.Executable_Segment.Append (Command);
+
+      if Trace_Commands then
+         Ada.Text_IO.Put_Line
+           (Tagatha.Commands.Show (Command));
+      end if;
+
       Increment_Address (To_Unit, Executable);
    end Append;
 

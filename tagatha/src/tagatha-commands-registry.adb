@@ -16,7 +16,8 @@ package body Tagatha.Commands.Registry is
          when T_Stack =>
             case Command.Stack_Op is
                when S_Push =>
-                  Register.Record_Push (Command.Size, Command.Operand);
+                  Register.Record_Push
+                    (Command.Size, Command.Operand);
                when S_Pop =>
                   Register.Record_Pop (Command.Size, Command.Operand);
                when S_Drop =>
