@@ -1915,6 +1915,22 @@ package body Aquarius.Programs is
 
    end Run_Actions;
 
+   ---------------------
+   -- Scan_Properties --
+   ---------------------
+
+   overriding procedure Scan_Properties
+     (Program  : in Program_Tree_Type;
+      Process  : not null access
+        procedure (Property_Name : String;
+                   Property_Value : Aqua.Word))
+   is
+   begin
+      if Program.Aqua_Object /= null then
+         Program.Aqua_Object.Scan_Properties (Process);
+      end if;
+   end Scan_Properties;
+
    -------------------
    -- Scan_Terminal --
    -------------------

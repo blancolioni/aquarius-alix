@@ -501,6 +501,12 @@ private
       Name     : in String)
       return Boolean;
 
+   overriding procedure Scan_Properties
+     (Program  : in Program_Tree_Type;
+      Process  : not null access
+        procedure (Property_Name : String;
+                   Property_Value : Aqua.Word));
+
    overriding function Show
      (Program : Program_Tree_Type)
       return String
