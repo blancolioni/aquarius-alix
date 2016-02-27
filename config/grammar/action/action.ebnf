@@ -113,7 +113,7 @@ primary ::= numeric_literal | string_literal : string
           
 parenthesised_expression ::= '(' expression ')'
 
-new_expression ::= 'new' object_reference
+new_expression ::= 'new' object_reference [ actual_argument_list ]
 
 aggregate ::= '(' aggregate_element_list ')'
 

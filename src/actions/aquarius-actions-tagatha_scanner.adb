@@ -68,6 +68,23 @@ package body Aquarius.Actions.Tagatha_Scanner is
 
    end Action_Header;
 
+   --------------
+   -- Allocate --
+   --------------
+
+   overriding procedure Allocate
+     (Processor      : in out Tagatha_Scanner)
+   is
+   begin
+      Processor.Unit.Pop_Register ("op");
+      Processor.Unit.Native_Operation
+        ("allocate",
+         Input_Stack_Words  => 0,
+         Output_Stack_Words => 0,
+         Changed_Registers  => "op");
+      Processor.Unit.Push_Register ("op");
+   end Allocate;
+
    ------------
    -- Assign --
    ------------

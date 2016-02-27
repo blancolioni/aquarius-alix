@@ -179,4 +179,7 @@ private
       Identifier  : String;
       Statements  : Aquarius.Programs.Program_Tree);
 
+   overriding procedure Allocate
+     (Processor : in out Tagatha_Scanner);
+
 end Aquarius.Actions.Tagatha_Scanner;

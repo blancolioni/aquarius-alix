@@ -248,6 +248,10 @@ package Aquarius.Actions.Scanner is
       Statements  : Aquarius.Programs.Program_Tree)
    is abstract;
 
+   procedure Allocate
+     (Processor : in out Action_Processor_Interface)
+   is null;
+
 private
 
    type Frame_Entry_Type is (Stack_Offset, Register_Name);

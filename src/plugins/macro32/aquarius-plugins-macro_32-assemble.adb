@@ -59,6 +59,25 @@ package body Aquarius.Plugins.Macro_32.Assemble is
       Deferred_OK : Boolean := True)
       return Expression_Value;
 
+   ----------------------
+   -- After_Allocation --
+   ----------------------
+
+   procedure After_Allocation
+     (Target : not null access Aquarius.Actions.Actionable'Class)
+   is
+      use Aquarius.Programs;
+      Op : constant Program_Tree := Program_Tree (Target);
+      Assembly       : constant Aqua.Assembler.Assembly :=
+                         Assembly_Object
+                           (Op.Property
+                              (Global_Plugin.Assembly)).Assembly;
+   begin
+      Assembly.Append_Octet
+        (Aqua.Architecture.Encode
+           (Aqua.Architecture.A_Allocate));
+   end After_Allocation;
+
    ------------------
    -- After_Branch --
    ------------------
