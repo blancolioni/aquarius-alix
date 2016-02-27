@@ -1,7 +1,7 @@
 top_level ::= source_file
 
 end_of_line ::= !\n!
-identifier  ::= !\l\w*!
+identifier  ::= ![\l_]\w*!
 integer     ::= !\d+!
 string      ::= !\x22[^\x22]*\x22!
 delimiter   ::= delimiters ".:$#()+-@=,!"
@@ -45,6 +45,7 @@ op ::= no_operand
      | trap
      | property
      | iterator
+     | allocation
      
 no_operand ::= 'halt' | 'nop' | 'rts'
 single_operand ::= single_operand_instruction [size] arg
@@ -55,6 +56,7 @@ property ::= property_instruction operand [ ',' integer ]
 property_instruction ::= 'get_property' | 'set_property'
 iterator ::= iterator_instruction [ identifier ]
 iterator_instruction ::= 'iterator_start' | 'iterator_next'
+allocation ::= 'allocate'
 
 branch ::= branch_instruction branch_destination
 branch_destination ::= identifier | temporary_label
