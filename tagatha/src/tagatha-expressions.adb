@@ -51,7 +51,7 @@ package body Tagatha.Expressions is
                        Subexpression_Transfers (E.Left, Left_Op);
                   begin
                      return Left_Exprs &
-                       Operation_Transfer (Left_Op, Null_Operand,
+                       Operation_Transfer (Left_Op, No_Operand,
                                            E.Op, Dst);
                   end;
                else

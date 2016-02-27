@@ -346,7 +346,7 @@ package body Tagatha.Code.Pdp32 is
          Transfer_Size := Get_Size (Dest);
       end if;
 
-      if Dest = Null_Operand then
+      if Is_Null_Operand (Dest) then
          if Source = Stack_Operand then
             case Transfer_Size is
                when Size_8 | Size_16 | Size_32

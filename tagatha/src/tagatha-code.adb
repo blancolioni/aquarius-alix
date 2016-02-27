@@ -84,7 +84,7 @@ package body Tagatha.Code is
    function To_String
      (V    : Tagatha.Constants.Tagatha_Constant;
       From : Tagatha.Transfers.Transfer_Operand :=
-        Tagatha.Transfers.Null_Operand)
+        Tagatha.Transfers.No_Operand)
       return String
    is
       use Tagatha.Constants;

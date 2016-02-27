@@ -11,7 +11,11 @@ package Tagatha.Transfers is
 
    type Transfer_Operand is private;
 
-   Null_Operand : constant Transfer_Operand;
+   No_Operand : constant Transfer_Operand;
+
+   function Is_Null_Operand
+     (Operand : Transfer_Operand)
+      return Boolean;
 
    type Array_Of_Transfers is array (Positive range <>) of Transfer;
 
@@ -245,8 +249,8 @@ private
          end case;
       end record;
 
-   Null_Operand : constant Transfer_Operand :=
-     (T_No_Operand, No_Modification);
+   No_Operand : constant Transfer_Operand :=
+                  (T_No_Operand, No_Modification);
 
    type Array_Of_Operands is array (Positive range <>) of Transfer_Operand;
 

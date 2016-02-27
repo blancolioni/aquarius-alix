@@ -82,9 +82,9 @@ package body Tagatha.Transfers is
               Changed_Registers => Ada.Strings.Unbounded.Null_Unbounded_String,
               Line              => 1,
               Column            => 1,
-              Src_1             => Null_Operand,
-              Src_2             => Null_Operand,
-              Dst               => Null_Operand,
+              Src_1             => No_Operand,
+              Src_2             => No_Operand,
+              Dst               => No_Operand,
               Op                => Op_Nop);
    end Call;
 
@@ -128,9 +128,9 @@ package body Tagatha.Transfers is
               Changed_Registers => Ada.Strings.Unbounded.Null_Unbounded_String,
               Line              => 1,
               Column            => 1,
-              Src_1             => Null_Operand,
-              Src_2             => Null_Operand,
-              Dst               => Null_Operand,
+              Src_1             => No_Operand,
+              Src_2             => No_Operand,
+              Dst               => No_Operand,
               Op                => Op_Nop);
    end Control_Transfer;
 
@@ -518,6 +518,18 @@ package body Tagatha.Transfers is
       return Item.Trans = T_Native;
    end Is_Native;
 
+   ---------------------
+   -- Is_Null_Operand --
+   ---------------------
+
+   function Is_Null_Operand
+     (Operand : Transfer_Operand)
+      return Boolean
+   is
+   begin
+      return Operand.Op = T_No_Operand;
+   end Is_Null_Operand;
+
    ---------------
    -- Is_Result --
    ---------------
@@ -608,9 +620,9 @@ package body Tagatha.Transfers is
               Changed_Registers => To_Unbounded_String (Changed_Registers),
               Line              => 1,
               Column            => 1,
-              Src_1             => Null_Operand,
-              Src_2             => Null_Operand,
-              Dst               => Null_Operand,
+              Src_1             => No_Operand,
+              Src_2             => No_Operand,
+              Dst               => No_Operand,
               Op                => Op_Nop);
    end Native_Transfer;
 
@@ -805,7 +817,11 @@ package body Tagatha.Transfers is
                         Label   : in     Tagatha.Labels.Tagatha_Label)
    is
    begin
-      T.Label := Label;
+      if Tagatha.Labels.Has_Label (T.Label) then
+         Tagatha.Labels.Link_To (T.Label, Label);
+      else
+         T.Label := Label;
+      end if;
    end Set_Label;
 
    ------------------
@@ -846,17 +862,23 @@ package body Tagatha.Transfers is
    ----------
 
    function Show (Item : Transfer) return String is
+      Label_Image : constant String :=
+                      Tagatha.Labels.Show_All
+                        (Item.Label, 'L');
    begin
       case Item.Trans is
          when T_Change_Stack =>
             if Item.Reserve < 0 then
-               return "close_frame" & Integer'Image (-Item.Reserve);
+               return Label_Image
+                 & "close_frame" & Integer'Image (-Item.Reserve);
             else
-               return "open_frame" & Integer'Image (Item.Reserve);
+               return Label_Image
+                 & "open_frame" & Integer'Image (Item.Reserve);
             end if;
          when T_Control =>
-            return "jump " & Tagatha_Condition'Image (Item.Condition) &
-              " " & Tagatha.Labels.Show (Item.Destination, 'L');
+            return Label_Image
+              & "jump " & Tagatha_Condition'Image (Item.Condition)
+              & " " & Tagatha.Labels.Show (Item.Destination, 'L');
          when T_Data =>
             declare
                Dst    : constant String := Show (Item.Dst);
@@ -883,14 +905,15 @@ package body Tagatha.Transfers is
                end case;
 
                if Item.Op = Op_Nop then
-                  return Sz & ':' & Dst & " := " & Src_1;
+                  return Label_Image & Sz & ':' & Dst & " := " & Src_1;
                else
-                  return Sz & ':' & Dst & " := " &
+                  return Label_Image & Sz & ':' & Dst & " := " &
                   Src_1 & " " & Op & " " & Src_2;
                end if;
             end;
          when T_Native =>
-            return Ada.Strings.Unbounded.To_String (Item.Native);
+            return Label_Image
+              & Ada.Strings.Unbounded.To_String (Item.Native);
       end case;
    end Show;
 
@@ -960,7 +983,7 @@ package body Tagatha.Transfers is
               Self              => Same_Operand (From, To),
               Call              => False,
               Src_1             => From,
-              Src_2             => Null_Operand,
+              Src_2             => No_Operand,
               Dst               => To,
               Op                => Op_Nop);
    end Simple_Transfer;
@@ -1075,7 +1098,7 @@ package body Tagatha.Transfers is
       elsif Is_External (Op) then
          return External_Operand (Get_Name (Op), Is_Immediate (Op));
       elsif Is_Unknown (Op) then
-         return Null_Operand;
+         return No_Operand;
       elsif Is_Text (Op) then
          return Text_Operand (Get_Text (Op));
       else
