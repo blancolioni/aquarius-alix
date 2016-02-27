@@ -8,6 +8,8 @@ package body Aquarius.Actions.Scanner is
 
    use Aquarius.Programs;
 
+   No_Arguments : Array_Of_Program_Trees (1 .. 0);
+
    package String_Lists is
      new Ada.Containers.Indefinite_Doubly_Linked_Lists (String);
 
@@ -514,7 +516,22 @@ package body Aquarius.Actions.Scanner is
             elsif Child.Name = "new_expression" then
                Scan_Object_Reference
                  (Processor, Child.Program_Child ("object_reference"));
-               Processor.Get_Property ("new", 0);
+               Processor.Allocate;
+
+               declare
+                  Arg_Tree : constant Program_Tree :=
+                               Child.Program_Child ("actual_argument_list");
+                  Arguments : constant Array_Of_Program_Trees :=
+                                (if Arg_Tree = null then No_Arguments
+                                 else Arg_Tree.Direct_Children ("expression"));
+               begin
+                  if Arguments'Length > 0 then
+                     for Arg of reverse Arguments loop
+                        Processor.Scan_Expression (Arg);
+                     end loop;
+                     Processor.Get_Property ("__init__", Arguments'Length);
+                  end if;
+               end;
             elsif Child.Name = "if_expression" then
                declare
                   Children         : constant Array_Of_Program_Trees :=
@@ -561,7 +578,6 @@ package body Aquarius.Actions.Scanner is
              Reference.Direct_Children ("name_qualifier");
       Ops : constant Array_Of_Program_Trees :=
               Reference.Direct_Children ("object_operator");
-      No_Arguments : Array_Of_Program_Trees (1 .. 0);
 --        Q            : Program_Tree := Qs (Qs'First);
 --        Id           : Program_Tree := Q.Program_Child ("identifier");
       Start_Index  : Positive := 1;
