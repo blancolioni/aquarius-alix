@@ -139,6 +139,20 @@ package body Komnenos.UI.Gtk_UI.Layout_Table is
       return Layout.Frame_Map.Element (Fragment.Key);
    end Get_Frame;
 
+   --------------------
+   -- Hide_Connector --
+   --------------------
+
+   overriding procedure Hide_Connector
+     (Layout    : in out Root_Gtk_Layout_Table;
+      Connector : Komnenos.Connectors.Connector_Type)
+   is
+      Conn : constant Connectors.Gtk_Connector :=
+               Connectors.Gtk_Connector (Connector.Display);
+   begin
+      Layout.Layout_Widget.Remove (Conn);
+   end Hide_Connector;
+
    ----------------
    -- Item_Moved --
    ----------------
@@ -184,6 +198,7 @@ package body Komnenos.UI.Gtk_UI.Layout_Table is
       Frame : constant Komnenos.UI.Gtk_UI.Frames.Gtk_Frame :=
                 Layout.Frame_Map.Element (Item.Key);
    begin
+      Komnenos.Layouts.Root_Layout_Type (Layout).Item_Removed (Item);
       Layout.Layout_Widget.Remove (Frame);
       Layout.Frame_Map.Delete (Item.Key);
       Current_UI.Remove_Fragment (Item);

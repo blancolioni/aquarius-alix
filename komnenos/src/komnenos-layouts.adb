@@ -197,8 +197,22 @@ package body Komnenos.Layouts is
      (Layout : in out Root_Layout_Type;
       Item   : Komnenos.Fragments.Fragment_Type)
    is
+      use Connector_Lists;
+      Position : Cursor := Layout.Connectors.First;
    begin
-      null;
+      while Has_Element (Position) loop
+         declare
+            Connector : constant Komnenos.Connectors.Connector_Type :=
+                          Element (Position);
+         begin
+            if Connector.Connects (Item) then
+               Root_Layout_Type'Class (Layout).Hide_Connector (Connector);
+               Layout.Connectors.Delete (Position);
+            else
+               Next (Position);
+            end if;
+         end;
+      end loop;
    end Item_Removed;
 
    ---------------
