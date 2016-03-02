@@ -56,6 +56,10 @@ private
      (Layout    : in out Root_Gtk_Layout_Table;
       Connector : Komnenos.Connectors.Connector_Type);
 
+   overriding procedure Hide_Connector
+     (Layout    : in out Root_Gtk_Layout_Table;
+      Connector : Komnenos.Connectors.Connector_Type);
+
    overriding procedure Set_Full_Size
      (Layout      : in out Root_Gtk_Layout_Table;
       Full_Width  : Natural;
