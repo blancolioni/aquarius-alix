@@ -34,6 +34,25 @@ package body Komnenos.UI.Gtk_UI.Layout_Table is
    procedure Configure
      (Layout : Gtk_Layout_Table);
 
+   ---------------------------
+   -- Add_Connection_Widget --
+   ---------------------------
+
+   procedure Add_Connection_Widget
+     (Layout : in out Root_Gtk_Layout_Table'Class;
+      Connector : Komnenos.Connectors.Connector_Type)
+   is
+      UI_Connector : constant Komnenos.UI.Gtk_UI.Connectors.Gtk_Connector :=
+                       Komnenos.UI.Gtk_UI.Connectors.New_Connector
+                         (Connector);
+      Loc : constant Layout_Point := UI_Connector.Layout_Location;
+   begin
+      Layout.Layout_Widget.Put
+        (UI_Connector,
+         Glib.Gint (Loc.X),
+         Glib.Gint (Loc.Y));
+   end Add_Connection_Widget;
+
    ---------------
    -- Configure --
    ---------------
@@ -62,15 +81,9 @@ package body Komnenos.UI.Gtk_UI.Layout_Table is
      (Layout    : in out Root_Gtk_Layout_Table;
       Connector : Komnenos.Connectors.Connector_Type)
    is
-      UI_Connector : constant Komnenos.UI.Gtk_UI.Connectors.Gtk_Connector :=
-                       Komnenos.UI.Gtk_UI.Connectors.New_Connector
-                         (Connector);
-      Loc : constant Layout_Point := UI_Connector.Layout_Location;
    begin
-      Layout.Layout_Widget.Put
-        (UI_Connector,
-         Glib.Gint (Loc.X),
-         Glib.Gint (Loc.Y));
+      Layout.Add_Connection_Widget (Connector);
+      Komnenos.Layouts.Root_Layout_Type (Layout).Connection (Connector);
    end Connection;
 
    -------------------------
@@ -139,6 +152,7 @@ package body Komnenos.UI.Gtk_UI.Layout_Table is
    begin
       Layout.Layout_Widget.Move
         (Frame, Glib.Gint (Item.X), Glib.Gint (Item.Y));
+      Komnenos.Layouts.Root_Layout_Type (Layout).Item_Moved (Item);
    end Item_Moved;
 
    -----------------
@@ -172,6 +186,7 @@ package body Komnenos.UI.Gtk_UI.Layout_Table is
    begin
       Layout.Layout_Widget.Remove (Frame);
       Layout.Frame_Map.Delete (Item.Key);
+      Current_UI.Remove_Fragment (Item);
    end Item_Removed;
 
    -------------------------

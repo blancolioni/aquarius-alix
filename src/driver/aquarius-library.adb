@@ -2,6 +2,7 @@ with Aquarius.Configuration;
 with Aquarius.File_System_Stores;
 with Aquarius.Paths;
 
+with Komnenos.Connectors;
 with Komnenos.Fragments;
 
 with Aqua.IO;
@@ -40,6 +41,7 @@ package body Aquarius.Library is
       Local_Options (Show_Paths_In_Messages_Enabled) := Show_Paths_In_Messages;
       Aquarius.File_System_Stores.Register;
       Komnenos.Fragments.Register;
+      Komnenos.Connectors.Register;
    end Initialise;
 
    ---------------------

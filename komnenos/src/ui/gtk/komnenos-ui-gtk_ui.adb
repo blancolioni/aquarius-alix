@@ -1,6 +1,4 @@
-with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Numerics;
---  with Ada.Text_IO;
 
 with Tropos;
 
@@ -32,11 +30,6 @@ with Cairo;
 
 package body Komnenos.UI.Gtk_UI is
 
-   package Connector_Lists is
-     new Ada.Containers.Doubly_Linked_Lists
-       (Komnenos.Connectors.Connector_Type,
-        Komnenos.Connectors."=");
-
    type Root_Gtk_UI is
      new Root_Komnenos_UI with
       record
@@ -45,7 +38,6 @@ package body Komnenos.UI.Gtk_UI is
          Entity_Filter   : Gtk.GEntry.Gtk_Entry;
          Navigation      : Komnenos.UI.Gtk_UI.Navigation.Gtk_Navigation_Panel;
          Layout          : Komnenos.UI.Gtk_UI.Layout_Table.Gtk_Layout_Table;
-         Connectors      : Connector_Lists.List;
          Active          : Komnenos.Fragments.Fragment_Type := null;
       end record;
 
@@ -62,9 +54,15 @@ package body Komnenos.UI.Gtk_UI is
       Offset   : Natural;
       Fragment : Komnenos.Fragments.Fragment_Type);
 
+   overriding procedure Remove_Fragment
+     (UI       : in out Root_Gtk_UI;
+      Fragment : Komnenos.Fragments.Fragment_Type)
+   is null;
+
    overriding procedure Update_Visual
      (UI       : in out Root_Gtk_UI;
-      Visual   : not null access Komnenos.Entities.Entity_Visual'Class);
+      Visual   : not null access Komnenos.Entities.Entity_Visual'Class)
+   is null;
 
    overriding function Active_Fragment
      (UI : Root_Gtk_UI)
@@ -78,6 +76,13 @@ package body Komnenos.UI.Gtk_UI is
    overriding procedure From_Config
      (UI : not null access Root_Gtk_UI;
       Config : Tropos.Configuration);
+
+   overriding function Get_Visual
+     (UI  : Root_Gtk_UI;
+      Key : String)
+      return Komnenos.Entities.Entity_Visual_Access
+   is (Komnenos.Entities.Entity_Visual_Access
+         (UI.Layout.Find_Fragment (Key)));
 
    package Window_Callback is
       new Gtk.Handlers.Callback (Gtk.Window.Gtk_Window_Record);
@@ -252,8 +257,23 @@ package body Komnenos.UI.Gtk_UI is
      (UI : not null access Root_Gtk_UI;
       Config : Tropos.Configuration)
    is
+      procedure Attach_Connection
+        (Connection : Komnenos.Connectors.Connector_Type);
+
       procedure Attach_Entity
         (Fragment : Komnenos.Fragments.Fragment_Type);
+
+      -----------------------
+      -- Attach_Connection --
+      -----------------------
+
+      procedure Attach_Connection
+        (Connection : Komnenos.Connectors.Connector_Type)
+      is
+      begin
+         Connection.Update;
+         UI.Layout.Add_Connection_Widget (Connection);
+      end Attach_Connection;
 
       -------------------
       -- Attach_Entity --
@@ -284,6 +304,8 @@ package body Komnenos.UI.Gtk_UI is
          UI.Layout.From_Config (Config.Child ("layout"));
       end if;
       UI.Layout.Scan (Attach_Entity'Access);
+      UI.Layout.Scan_Connections (Attach_Connection'Access);
+
       if Config.Contains ("connections") then
          for Conn_Config of Config.Child ("connections") loop
             declare
@@ -312,7 +334,6 @@ package body Komnenos.UI.Gtk_UI is
                                     Destination_Offset => Dest_Offset);
             begin
                UI.Layout.Connection (Connection);
-               UI.Connectors.Append (Connection);
             end;
          end loop;
       end if;
@@ -351,7 +372,6 @@ package body Komnenos.UI.Gtk_UI is
                              Destination_Offset => 0);
          begin
             UI.Layout.Connection (Connector);
-            UI.Connectors.Append (Connector);
          end;
 
       end if;
@@ -381,23 +401,10 @@ package body Komnenos.UI.Gtk_UI is
    is
       Layout_Config : Tropos.Configuration :=
                         Tropos.New_Config ("layout");
-      Connection_Config : Tropos.Configuration :=
-                            Tropos.New_Config ("connections");
    begin
       Root_Komnenos_UI (UI).To_Config (Config);
       UI.Layout.To_Config (Layout_Config);
       Config.Add (Layout_Config);
-      for Connector of UI.Connectors loop
-         declare
-            Connector_Config : Tropos.Configuration :=
-                                 Tropos.New_Config
-                                   (Connector.Config_Name);
-         begin
-            Connector.To_Config (Connector_Config);
-            Connection_Config.Add (Connector_Config);
-         end;
-      end loop;
-      Config.Add (Connection_Config);
    end To_Config;
 
    -------------
@@ -423,20 +430,20 @@ package body Komnenos.UI.Gtk_UI is
    -- Update_Visual --
    -------------------
 
-   overriding procedure Update_Visual
-     (UI       : in out Root_Gtk_UI;
-      Visual   : not null access Komnenos.Entities.Entity_Visual'Class)
-   is
-      use Komnenos.Entities;
-      V : constant Entity_Visual_Access := Entity_Visual_Access (Visual);
-   begin
-      for Connector of UI.Connectors loop
-         if Connector.Source = V or else Connector.Destination = V then
-            Connector.Update;
-            Connector.Display.Update;
-            UI.Layout.Update_Connector (Connector);
-         end if;
-      end loop;
-   end Update_Visual;
+--     overriding procedure Update_Visual
+--       (UI       : in out Root_Gtk_UI;
+--        Visual   : not null access Komnenos.Entities.Entity_Visual'Class)
+--     is
+--        use Komnenos.Entities;
+--        V : constant Entity_Visual_Access := Entity_Visual_Access (Visual);
+--     begin
+--        for Connector of UI.Connectors loop
+--           if Connector.Source = V or else Connector.Destination = V then
+--              Connector.Update;
+--              Connector.Display.Update;
+--              UI.Layout.Update_Connector (Connector);
+--           end if;
+--        end loop;
+--     end Update_Visual;
 
 end Komnenos.UI.Gtk_UI;

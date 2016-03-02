@@ -27,8 +27,7 @@ package Komnenos.Layouts is
 
    procedure Item_Moved
      (Layout : in out Root_Layout_Type;
-      Item   : Komnenos.Fragments.Fragment_Type)
-   is abstract;
+      Item   : Komnenos.Fragments.Fragment_Type);
 
    procedure Item_Placed
      (Layout : in out Root_Layout_Type;
@@ -37,13 +36,11 @@ package Komnenos.Layouts is
 
    procedure Item_Removed
      (Layout : in out Root_Layout_Type;
-      Item   : Komnenos.Fragments.Fragment_Type)
-   is abstract;
+      Item   : Komnenos.Fragments.Fragment_Type);
 
    procedure Connection
      (Layout : in out Root_Layout_Type;
-      Connector : Komnenos.Connectors.Connector_Type)
-   is abstract;
+      Connector : Komnenos.Connectors.Connector_Type);
 
    procedure Update_Connector
      (Layout    : in out Root_Layout_Type;
@@ -109,6 +106,11 @@ package Komnenos.Layouts is
       Process : not null access
         procedure (Fragment : Komnenos.Fragments.Fragment_Type));
 
+   procedure Scan_Connections
+     (Layout  : Root_Layout_Type'Class;
+      Process : not null access
+        procedure (Connection : Komnenos.Connectors.Connector_Type));
+
    function Find_Fragment
      (Layout  : Root_Layout_Type'Class;
       Key     : String)
@@ -123,10 +125,16 @@ private
        (Komnenos.Fragments.Fragment_Type,
         Komnenos.Fragments."=");
 
+   package Connector_Lists is
+     new Ada.Containers.Doubly_Linked_Lists
+       (Komnenos.Connectors.Connector_Type,
+        Komnenos.Connectors."=");
+
    type Root_Layout_Type is
    abstract new Komnenos.Session_Objects.Session_Object_Interface with
       record
          Items          : Fragment_Lists.List;
+         Connectors     : Connector_Lists.List;
          Full_Width     : Natural := 1;
          Full_Height    : Natural := 1;
          Visible_Left   : Integer := 0;

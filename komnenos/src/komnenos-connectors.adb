@@ -1,6 +1,11 @@
+with Komnenos.UI;
+
 package body Komnenos.Connectors is
 
    Boundary_Size : constant := 16;
+
+   function New_Connector
+     return access Komnenos.Session_Objects.Session_Object_Interface'Class;
 
    -----------
    -- Class --
@@ -57,6 +62,23 @@ package body Komnenos.Connectors is
       end return;
    end Connect;
 
+   --------------
+   -- Connects --
+   --------------
+
+   function Connects
+     (Connector : Root_Connector_Type'Class;
+      Visual    : not null access Komnenos.Entities.Entity_Visual'Class)
+      return Boolean
+   is
+      use Komnenos.Entities;
+      V : constant Entity_Visual_Access :=
+            Entity_Visual_Access (Visual);
+   begin
+      return V = Connector.Source
+        or else V = Connector.Destination;
+   end Connects;
+
    -----------------
    -- Destination --
    -----------------
@@ -93,6 +115,29 @@ package body Komnenos.Connectors is
       return Connector.Display;
    end Display;
 
+   -----------------
+   -- From_Config --
+   -----------------
+
+   overriding procedure From_Config
+     (Item : not null access Root_Connector_Type;
+      Config : Tropos.Configuration)
+   is
+   begin
+      Item.Class :=
+        Connector_Class'Value (Config.Get ("class", "arrow"));
+      Item.Source :=
+        Komnenos.UI.Current_UI.Get_Visual
+          (Config.Get ("source"));
+      Item.Destination :=
+        Komnenos.UI.Current_UI.Get_Visual
+          (Config.Get ("destination"));
+      Item.Source_Offset :=
+        Config.Get ("source-offset");
+      Item.Destination_Offset :=
+        Config.Get ("destination-offset");
+   end From_Config;
+
    ---------------------
    -- Layout_Boundary --
    ---------------------
@@ -116,6 +161,29 @@ package body Komnenos.Connectors is
    begin
       return Connector.Path;
    end Layout_Path;
+
+   -------------------
+   -- New_Connector --
+   -------------------
+
+   function New_Connector
+     return access Komnenos.Session_Objects.Session_Object_Interface'Class
+   is
+      Result : constant Connector_Type :=
+                 new Root_Connector_Type;
+   begin
+      return Result;
+   end New_Connector;
+
+   --------------
+   -- Register --
+   --------------
+
+   procedure Register is
+   begin
+      Komnenos.Session_Objects.Register_Session_Object
+        ("connector", New_Connector'Access);
+   end Register;
 
    -----------------
    -- Set_Display --

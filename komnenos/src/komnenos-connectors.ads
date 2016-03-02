@@ -40,6 +40,11 @@ package Komnenos.Connectors is
 
    procedure Update (Connector : in out Root_Connector_Type'Class);
 
+   function Connects
+     (Connector : Root_Connector_Type'Class;
+      Visual    : not null access Komnenos.Entities.Entity_Visual'Class)
+      return Boolean;
+
    type Connector_Type is access all Root_Connector_Type'Class;
 
    function Connect
@@ -70,6 +75,8 @@ package Komnenos.Connectors is
      (Connector : Root_Connector_Type'Class)
       return Connector_Display;
 
+   procedure Register;
+
 private
 
    type Root_Connector_Type is
@@ -95,7 +102,6 @@ private
 
    overriding procedure From_Config
      (Item : not null access Root_Connector_Type;
-      Config : Tropos.Configuration)
-   is null;
+      Config : Tropos.Configuration);
 
 end Komnenos.Connectors;
