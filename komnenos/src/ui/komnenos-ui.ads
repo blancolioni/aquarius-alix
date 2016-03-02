@@ -32,6 +32,11 @@ package Komnenos.UI is
       Fragment : Komnenos.Fragments.Fragment_Type)
    is abstract;
 
+   procedure Remove_Fragment
+     (UI       : in out Root_Komnenos_UI;
+      Fragment : Komnenos.Fragments.Fragment_Type)
+   is abstract;
+
    procedure Update_Visual
      (UI     : in out Root_Komnenos_UI;
       Visual : not null access Komnenos.Entities.Entity_Visual'Class)
@@ -111,6 +116,12 @@ package Komnenos.UI is
    overriding procedure Set_Program_Store
      (UI    : in out Root_Komnenos_UI;
       Store : access Komnenos.Entities.Program_Store_Interface'Class);
+
+   function Get_Visual
+     (UI  : Root_Komnenos_UI;
+      Key : String)
+      return Komnenos.Entities.Entity_Visual_Access
+      is abstract;
 
    type Komnenos_UI is access all Root_Komnenos_UI'Class;
 

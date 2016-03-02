@@ -78,6 +78,18 @@ package body Komnenos.Layouts is
       end if;
    end Clear_Space;
 
+   ----------------
+   -- Connection --
+   ----------------
+
+   procedure Connection
+     (Layout : in out Root_Layout_Type;
+      Connector : Komnenos.Connectors.Connector_Type)
+   is
+   begin
+      Layout.Connectors.Append (Connector);
+   end Connection;
+
    -------------------
    -- Find_Fragment --
    -------------------
@@ -109,16 +121,33 @@ package body Komnenos.Layouts is
          declare
             subtype Base is
               Komnenos.Session_Objects.Session_Object_Interface'Class;
-            Session_Fragment : constant access Base :=
-                                 Komnenos.Session_Objects.Read_Config
-                                   (Child_Config);
-            Fragment         : constant Komnenos.Fragments.Fragment_Type :=
-                                 Komnenos.Fragments.Fragment_Type
-                                   (Session_Fragment);
+            Object : constant access Base :=
+                       Komnenos.Session_Objects.Read_Config (Child_Config);
          begin
-            Layout.Items.Append (Fragment);
-            if False then
-               Root_Layout_Type'Class (Layout.all).Item_Placed (Fragment);
+            if Object.all in
+              Komnenos.Fragments.Root_Fragment_Type'Class
+            then
+               declare
+                  Fragment : constant Komnenos.Fragments.Fragment_Type :=
+                               Komnenos.Fragments.Fragment_Type
+                                 (Object);
+               begin
+                  Layout.Items.Append (Fragment);
+               end;
+            elsif Object.all in
+              Komnenos.Connectors.Root_Connector_Type'Class
+            then
+               declare
+                  Connector : constant Komnenos.Connectors.Connector_Type :=
+                                Komnenos.Connectors.Connector_Type
+                                  (Object);
+               begin
+                  Layout.Connectors.Append (Connector);
+               end;
+            else
+               raise Constraint_Error with
+                 "unknown layout object: "
+                 & Child_Config.Config_Name;
             end if;
          end;
       end loop;
@@ -141,6 +170,36 @@ package body Komnenos.Layouts is
    begin
       return Layout.Full_Width;
    end Full_Width;
+
+   ----------------
+   -- Item_Moved --
+   ----------------
+
+   procedure Item_Moved
+     (Layout : in out Root_Layout_Type;
+      Item   : Komnenos.Fragments.Fragment_Type)
+   is
+   begin
+      for Connector of Layout.Connectors loop
+         if Connector.Connects (Item) then
+            Connector.Update;
+            Connector.Display.Update;
+            Root_Layout_Type'Class (Layout).Update_Connector (Connector);
+         end if;
+      end loop;
+   end Item_Moved;
+
+   ------------------
+   -- Item_Removed --
+   ------------------
+
+   procedure Item_Removed
+     (Layout : in out Root_Layout_Type;
+      Item   : Komnenos.Fragments.Fragment_Type)
+   is
+   begin
+      null;
+   end Item_Removed;
 
    ---------------
    -- Move_Item --
@@ -261,6 +320,21 @@ package body Komnenos.Layouts is
       end loop;
    end Scan;
 
+   ----------------------
+   -- Scan_Connections --
+   ----------------------
+
+   procedure Scan_Connections
+     (Layout  : Root_Layout_Type'Class;
+      Process : not null access
+        procedure (Connection : Komnenos.Connectors.Connector_Type))
+   is
+   begin
+      for Connector of Layout.Connectors loop
+         Process (Connector);
+      end loop;
+   end Scan_Connections;
+
    -------------------
    -- Set_Full_Size --
    -------------------
@@ -307,6 +381,16 @@ package body Komnenos.Layouts is
          begin
             Fragment.To_Config (Fragment_Config);
             Config.Add (Fragment_Config);
+         end;
+      end loop;
+      for Connector of Layout.Connectors loop
+         declare
+            Connector_Config : Tropos.Configuration :=
+                                 Tropos.New_Config
+                                   (Connector.Config_Name);
+         begin
+            Connector.To_Config (Connector_Config);
+            Config.Add (Connector_Config);
          end;
       end loop;
    end To_Config;

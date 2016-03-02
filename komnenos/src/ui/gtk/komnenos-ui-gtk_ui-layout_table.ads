@@ -25,6 +25,10 @@ package Komnenos.UI.Gtk_UI.Layout_Table is
       Main_Layout   : Gtk.Layout.Gtk_Layout)
       return Gtk_Layout_Table;
 
+   procedure Add_Connection_Widget
+     (Layout : in out Root_Gtk_Layout_Table'Class;
+      Connector : Komnenos.Connectors.Connector_Type);
+
 private
 
    type Root_Gtk_Layout_Table is
