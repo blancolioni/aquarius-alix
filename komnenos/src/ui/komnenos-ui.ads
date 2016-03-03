@@ -50,6 +50,7 @@ package Komnenos.UI is
    overriding procedure Add_Cross_Reference
      (UI           : in out Root_Komnenos_UI;
       Item         : Komnenos.Entities.Entity_Reference;
+      Referrer     : Komnenos.Entities.Entity_Reference;
       File_Name    : String;
       Line, Column : Natural;
       Ref_Type     : String);
@@ -64,7 +65,7 @@ package Komnenos.UI is
    overriding function References
      (UI     : Root_Komnenos_UI;
       Entity : Komnenos.Entities.Entity_Reference)
-      return Komnenos.Entities.File_Location_Array;
+      return Komnenos.Entities.Reference_Record_Array;
 
    overriding function Exists
      (UI  : Root_Komnenos_UI;
@@ -82,9 +83,9 @@ package Komnenos.UI is
       Class_Name : String)
       return Komnenos.Entities.Entity_Reference;
 
-   overriding function Location_File_Name
-     (UI       : Root_Komnenos_UI;
-      Location : Komnenos.Entities.File_Location)
+   overriding function Reference_File_Name
+     (UI        : Root_Komnenos_UI;
+      Reference : Komnenos.Entities.Reference_Record)
       return String;
 
    function Active_Fragment

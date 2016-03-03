@@ -11,13 +11,14 @@ package body Komnenos.UI is
    overriding procedure Add_Cross_Reference
      (UI           : in out Root_Komnenos_UI;
       Item         : Komnenos.Entities.Entity_Reference;
+      Referrer     : Komnenos.Entities.Entity_Reference;
       File_Name    : String;
       Line, Column : Natural;
       Ref_Type     : String)
    is
    begin
       UI.Entities.Add_Cross_Reference
-        (Item, File_Name, Line, Column, Ref_Type);
+        (Item, Referrer, File_Name, Line, Column, Ref_Type);
    end Add_Cross_Reference;
 
    --------------------------
@@ -141,19 +142,6 @@ package body Komnenos.UI is
       UI.Entities.Iterate (Filter, Process, Top_Level_Only);
    end Iterate;
 
-   ------------------------
-   -- Location_File_Name --
-   ------------------------
-
-   overriding function Location_File_Name
-     (UI       : Root_Komnenos_UI;
-      Location : Komnenos.Entities.File_Location)
-      return String
-   is
-   begin
-      return UI.Entities.Location_File_Name (Location);
-   end Location_File_Name;
-
    -------------------
    -- Program_Store --
    -------------------
@@ -166,6 +154,19 @@ package body Komnenos.UI is
       return UI.Store;
    end Program_Store;
 
+   -------------------------
+   -- Reference_File_Name --
+   -------------------------
+
+   overriding function Reference_File_Name
+     (UI        : Root_Komnenos_UI;
+      Reference : Komnenos.Entities.Reference_Record)
+      return String
+   is
+   begin
+      return UI.Entities.Reference_File_Name (Reference);
+   end Reference_File_Name;
+
    ----------------
    -- References --
    ----------------
@@ -173,7 +174,7 @@ package body Komnenos.UI is
    overriding function References
      (UI     : Root_Komnenos_UI;
       Entity : Komnenos.Entities.Entity_Reference)
-      return Komnenos.Entities.File_Location_Array
+      return Komnenos.Entities.Reference_Record_Array
    is
    begin
       return UI.Entities.References (Entity);

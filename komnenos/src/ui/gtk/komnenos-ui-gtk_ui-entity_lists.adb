@@ -40,7 +40,7 @@ package body Komnenos.UI.Gtk_UI.Entity_Lists is
    package Context_Menu_Reference_Callback is
      new Gtk.Handlers.User_Callback
        (Widget_Type => Gtk.Menu_Item.Gtk_Menu_Item_Record,
-        User_Type   => Komnenos.Entities.File_Location);
+        User_Type   => Komnenos.Entities.Reference_Record);
 
    package Context_Menu_Entity_Callback is
      new Gtk.Handlers.User_Callback
@@ -61,7 +61,7 @@ package body Komnenos.UI.Gtk_UI.Entity_Lists is
 
    procedure On_Context_Menu_Item_Selected
      (Widget : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class;
-      Location : Komnenos.Entities.File_Location);
+      Reference : Komnenos.Entities.Reference_Record);
 
    procedure On_Show_Syntax
      (Widget : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class;
@@ -75,7 +75,7 @@ package body Komnenos.UI.Gtk_UI.Entity_Lists is
      (Tree_View  : Gtk.Tree_View.Gtk_Tree_View;
       Event      : Gdk.Event.Gdk_Event_Button;
       Target     : Komnenos.Entities.Entity_Reference;
-      References : Komnenos.Entities.File_Location_Array);
+      References : Komnenos.Entities.Reference_Record_Array);
 
    procedure Show_Entities
      (Tree_View : Gtk.Tree_View.Gtk_Tree_View;
@@ -167,12 +167,12 @@ package body Komnenos.UI.Gtk_UI.Entity_Lists is
 
    procedure On_Context_Menu_Item_Selected
      (Widget : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class;
-      Location : Komnenos.Entities.File_Location)
+      Reference : Komnenos.Entities.Reference_Record)
    is
       use Komnenos.Entities, Komnenos.Entities.Source.Aquarius_Source;
       pragma Unreferenced (Widget);
       Entity : constant Entity_Reference :=
-                 Find_Entity_Containing (Current_UI, Location);
+                 Komnenos.Entities.Get_Referrer (Reference);
    begin
       if Entity /= null then
          Entity.Select_Entity (Current_UI, null, null, 0);
@@ -274,7 +274,7 @@ package body Komnenos.UI.Gtk_UI.Entity_Lists is
          declare
             Entity : constant Komnenos.Entities.Entity_Reference :=
                        Get_Selected_Entity (Tree_View);
-            References : constant Komnenos.Entities.File_Location_Array :=
+            References : constant Komnenos.Entities.Reference_Record_Array :=
                            Current_UI.References (Entity);
 
          begin
@@ -295,7 +295,7 @@ package body Komnenos.UI.Gtk_UI.Entity_Lists is
      (Tree_View  : Gtk.Tree_View.Gtk_Tree_View;
       Event      : Gdk.Event.Gdk_Event_Button;
       Target     : Komnenos.Entities.Entity_Reference;
-      References : Komnenos.Entities.File_Location_Array)
+      References : Komnenos.Entities.Reference_Record_Array)
    is
       pragma Unreferenced (Tree_View);
    begin

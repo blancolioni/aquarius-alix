@@ -5,19 +5,19 @@ end;
 after base_records/identifier do
    child.entity := Komnenos.Get_Entity (identifier.text, "kit-record-declaration");
    if child.entity then
-      Komnenos.Cross_Reference (identifier, child.entity);
+      Komnenos.Cross_Reference (identifier, child.entity, parent^record_declaration.entity);
    end if;
 end;
 
 after named_type/identifier do
    if parent.entity then
-      Komnenos.Cross_Reference (identifier, parent.entity);
+      Komnenos.Cross_Reference (identifier, parent.entity, parent^record_declaration.entity);
    end if;
 end;
 
 after data_field do
    if tree.record_type then
-      Komnenos.Cross_Reference (tree/identifier, tree.record_type);
+      Komnenos.Cross_Reference (tree/identifier, tree.record_type, tree^record_declaration.entity);
    end if;
 end;
 

@@ -119,14 +119,19 @@ package body Komnenos.Entities.Aqua_Entities is
          Source_Ext  : constant access Aqua.External_Object_Interface'Class :=
                          Context.To_External_Object (Arguments (2));
          Source      : constant Program_Tree := Program_Tree (Source_Ext);
-         Ref_Ext     : constant access Aqua.External_Object_Interface'Class :=
-                         Context.To_External_Object (Arguments (3));
-         Ref         : constant Entity_Reference :=
+         Ref_Ext      : constant access Aqua.External_Object_Interface'Class :=
+                          Context.To_External_Object (Arguments (3));
+         Ref          : constant Entity_Reference :=
                          Entity_Reference (Ref_Ext);
+         Referrer_Ext : constant access Aqua.External_Object_Interface'Class :=
+                         Context.To_External_Object (Arguments (4));
+         Referrer     : constant Entity_Reference :=
+                         Entity_Reference (Referrer_Ext);
       begin
          Add_Cross_Reference
            (Table     => Aqua_Object.Table.all,
             Item      => Ref,
+            Referrer  => Referrer,
             File_Name => Source.Source_File_Name,
             Line      => Source.Location_Line,
             Column    => Source.Location_Column,
