@@ -9,7 +9,7 @@ with Komnenos.Configuration;
 
 package body Komnenos.UI.Gtk_UI.Connectors is
 
-   Frame_Title_Height : constant := 32;
+   Frame_Title_Height : constant := 16;
 
    Draw_Border_Height : constant := 16;
    Draw_Border_Width  : constant := 8;
