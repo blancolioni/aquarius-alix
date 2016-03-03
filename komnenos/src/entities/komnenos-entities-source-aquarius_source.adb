@@ -366,14 +366,14 @@ package body Komnenos.Entities.Source.Aquarius_Source is
    -- Find_Entity_Containing --
    ----------------------------
 
-   function Find_Entity_Containing
-     (Table     : not null access Entity_Table_Interface'Class;
-      Location  : File_Location)
-      return Entity_Reference
-   is
-   begin
-      return Table.Get_Reference (Location);
-   end Find_Entity_Containing;
+--     function Find_Entity_Containing
+--       (Table     : not null access Entity_Table_Interface'Class;
+--        Location  : File_Location)
+--        return Entity_Reference
+--     is
+--     begin
+--        return Table.Get_Reference (Location);
+--     end Find_Entity_Containing;
 
    -----------------------
    -- Forward_Character --

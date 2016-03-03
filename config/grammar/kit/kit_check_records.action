@@ -7,7 +7,8 @@ after database_declaration do
 end;
 
 after record_declaration/identifier do
-   Komnenos.Define (parent, child.text, "kit-record-declaration");
+   parent.entity :=
+     Komnenos.Define (parent, child.text, "kit-record-declaration");
 end;
 
 after named_type/identifier do

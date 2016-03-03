@@ -293,12 +293,31 @@ package body Aquarius.Grammars.EBNF is
          if Tree.Name = "identifier"
            and then Map.Contains (Tree.Text)
          then
-            UI.Add_Cross_Reference
-              (Item      => Map (Tree.Text),
-               File_Name => Path,
-               Line      => Tree.Location_Line,
-               Column    => Tree.Location_Column,
-               Ref_Type  => "reference");
+            declare
+               use type Aquarius.Trees.Tree;
+               Rule : Aquarius.Trees.Tree := Tree;
+               Entity : Komnenos.Entities.Entity_Reference;
+            begin
+               while Rule /= null
+                 and then Rule.Name /= "rule-definition"
+               loop
+                  Rule := Rule.Parent;
+               end loop;
+
+               if Rule = null then
+                  Entity := null;
+               else
+                  Entity := Map (Rule.First_Child.First_Child.Text);
+               end if;
+
+               UI.Add_Cross_Reference
+                 (Item      => Map (Tree.Text),
+                  Referrer  => Entity,
+                  File_Name => Path,
+                  Line      => Tree.Location_Line,
+                  Column    => Tree.Location_Column,
+                  Ref_Type  => "reference");
+            end;
          end if;
       end Add_Cross_Reference;
 

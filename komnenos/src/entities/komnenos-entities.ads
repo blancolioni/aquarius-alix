@@ -190,6 +190,7 @@ package Komnenos.Entities is
    procedure Add_Cross_Reference
      (Table        : in out Entity_Table_Interface;
       Item         : Entity_Reference;
+      Referrer     : Entity_Reference;
       File_Name    : String;
       Line, Column : Natural;
       Ref_Type     : String)
@@ -203,19 +204,19 @@ package Komnenos.Entities is
       return Array_Of_Entities
       is abstract;
 
-   type File_Location is private;
+   type Reference_Record is private;
 
-   function Get_Reference
-     (Table    : Entity_Table_Interface'Class;
-      Location : File_Location)
+   function Get_Referrer
+     (Reference : Reference_Record)
       return Entity_Reference;
 
-   type File_Location_Array is array (Positive range <>) of File_Location;
+   type Reference_Record_Array is
+     array (Positive range <>) of Reference_Record;
 
    function References
      (Table  : Entity_Table_Interface;
       Entity : Entity_Reference)
-      return File_Location_Array
+      return Reference_Record_Array
       is abstract;
 
    function Exists
@@ -242,27 +243,27 @@ package Komnenos.Entities is
       Top_Level_Only : Boolean := True)
    is abstract;
 
-   function Location_File_Name
-     (Table : Entity_Table_Interface;
-      Location : File_Location)
+   function Reference_File_Name
+     (Table     : Entity_Table_Interface;
+      Reference : Reference_Record)
       return String
       is abstract;
 
    function To_String
-     (Table : Entity_Table_Interface'Class;
-      Location : File_Location)
+     (Table     : Entity_Table_Interface'Class;
+      Reference : Reference_Record)
       return String;
 
    function File_Line
-     (Location : File_Location)
+     (Reference : Reference_Record)
       return Natural;
 
    function File_Column
-     (Location : File_Location)
+     (Reference : Reference_Record)
       return Natural;
 
    function Location_Reference_Type
-     (Location : File_Location)
+     (Reference : Reference_Record)
       return String;
 
    type Entity_Table is new Entity_Table_Interface with private;
@@ -291,6 +292,7 @@ package Komnenos.Entities is
    overriding procedure Add_Cross_Reference
      (Table        : in out Entity_Table;
       Item         : Entity_Reference;
+      Referrer     : Entity_Reference;
       File_Name    : String;
       Line, Column : Natural;
       Ref_Type     : String);
@@ -305,7 +307,7 @@ package Komnenos.Entities is
    overriding function References
      (Table  : Entity_Table;
       Entity : Entity_Reference)
-      return File_Location_Array;
+      return Reference_Record_Array;
 
    overriding procedure Sort
      (Table   : in out Entity_Table);
@@ -317,27 +319,28 @@ package Komnenos.Entities is
         procedure (Item : Entity_Reference);
       Top_Level_Only : Boolean := True);
 
-   overriding function Location_File_Name
-     (Table : Entity_Table;
-      Location : File_Location)
+   overriding function Reference_File_Name
+     (Table     : Entity_Table;
+      Reference : Reference_Record)
       return String;
 
 private
 
    type File_Id is new Positive;
 
-   type File_Location is
+   type Reference_Record is
       record
+         Referrer : Komnenos.Entities.Entity_Reference;
          File     : File_Id;
          Ref_Type : Ada.Strings.Unbounded.Unbounded_String;
          Line     : Natural;
          Column   : Natural;
       end record;
 
-   package File_Location_Vectors is
+   package Reference_Vectors is
      new Ada.Containers.Vectors
        (Index_Type   => File_Id,
-        Element_Type => File_Location);
+        Element_Type => Reference_Record);
 
    package File_Name_Maps is
      new Ada.Containers.Indefinite_Hashed_Maps
@@ -363,7 +366,7 @@ private
          Display_Text   : Ada.Strings.Unbounded.Unbounded_String;
          Description    : Ada.Strings.Unbounded.Unbounded_String;
          Key            : Ada.Strings.Unbounded.Unbounded_String;
-         References     : File_Location_Vectors.Vector;
+         References     : Reference_Vectors.Vector;
          Table          : Entity_Table_Access;
          Aqua_Reference : Aqua.External_Reference := 0;
       end record;

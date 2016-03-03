@@ -27,6 +27,7 @@ package body Komnenos.Entities is
    overriding procedure Add_Cross_Reference
      (Table        : in out Entity_Table;
       Item         : Entity_Reference;
+      Referrer     : Entity_Reference;
       File_Name    : String;
       Line, Column : Natural;
       Ref_Type     : String)
@@ -53,7 +54,7 @@ package body Komnenos.Entities is
       end if;
 
       Item.References.Append
-        ((Table.File_Map (File_Name), Ref_Store, Line, Column));
+        ((Referrer, Table.File_Map (File_Name),  Ref_Store, Line, Column));
 
    end Add_Cross_Reference;
 
@@ -221,11 +222,11 @@ package body Komnenos.Entities is
    -----------------
 
    function File_Column
-     (Location : File_Location)
+     (Reference : Reference_Record)
       return Natural
    is
    begin
-      return Location.Column;
+      return Reference.Column;
    end File_Column;
 
    ---------------
@@ -233,11 +234,11 @@ package body Komnenos.Entities is
    ---------------
 
    function File_Line
-     (Location : File_Location)
+     (Reference : Reference_Record)
       return Natural
    is
    begin
-      return Location.Line;
+      return Reference.Line;
    end File_Line;
 
    ----------
@@ -294,34 +295,6 @@ package body Komnenos.Entities is
    -- Get_Reference --
    -------------------
 
-   function Get_Reference
-     (Table    : Entity_Table_Interface'Class;
-      Location : File_Location)
-      return Entity_Reference
-   is
-      use type Aquarius.Programs.Program_Tree;
-      File_Name : constant String :=
-                    Table.Location_File_Name (Location);
-      Program   : constant Aquarius.Programs.Program_Tree :=
-                    Table.Program_Store.Get_Program (File_Name);
-      Child     : constant Aquarius.Programs.Program_Tree :=
-                    Program.Find_Node_At
-                      ((Aquarius.Layout.Count (Location.Line),
-                       Aquarius.Layout.Count (Location.Column)));
-      Declaration : constant Aquarius.Programs.Program_Tree :=
-                      Child.Declaration_Parent;
-      Key       : constant String :=
-                     Get_Key (File_Name,
-                              Declaration.Location_Line,
-                              Declaration.Location_Column);
-   begin
-      return Table.Get (Key);
-   end Get_Reference;
-
-   -------------------
-   -- Get_Reference --
-   -------------------
-
    overriding function Get_Reference
      (Item : Root_Entity_Reference)
       return Aqua.External_Reference
@@ -329,6 +302,18 @@ package body Komnenos.Entities is
    begin
       return Item.Aqua_Reference;
    end Get_Reference;
+
+   ------------------
+   -- Get_Referrer --
+   ------------------
+
+   function Get_Referrer
+     (Reference : Reference_Record)
+      return Entity_Reference
+   is
+   begin
+      return Reference.Referrer;
+   end Get_Referrer;
 
    ----------------
    -- Identifier --
@@ -395,29 +380,16 @@ package body Komnenos.Entities is
       return Ada.Strings.Unbounded.To_String (Item.Key);
    end Key;
 
-   ------------------------
-   -- Location_File_Name --
-   ------------------------
-
-   overriding function Location_File_Name
-     (Table : Entity_Table;
-      Location : File_Location)
-      return String
-   is
-   begin
-      return Table.File_Vector (Location.File);
-   end Location_File_Name;
-
    -----------------------------
    -- Location_Reference_Type --
    -----------------------------
 
    function Location_Reference_Type
-     (Location : File_Location)
+     (Reference : Reference_Record)
       return String
    is
    begin
-      return Ada.Strings.Unbounded.To_String (Location.Ref_Type);
+      return Ada.Strings.Unbounded.To_String (Reference.Ref_Type);
    end Location_Reference_Type;
 
    ----------
@@ -446,6 +418,19 @@ package body Komnenos.Entities is
       Visual.New_Line;
    end Put_Line;
 
+   -------------------------
+   -- Reference_File_Name --
+   -------------------------
+
+   overriding function Reference_File_Name
+     (Table : Entity_Table;
+      Reference : Reference_Record)
+      return String
+   is
+   begin
+      return Table.File_Vector (Reference.File);
+   end Reference_File_Name;
+
    ----------------
    -- References --
    ----------------
@@ -453,10 +438,10 @@ package body Komnenos.Entities is
    overriding function References
      (Table  : Entity_Table;
       Entity : Entity_Reference)
-      return File_Location_Array
+      return Reference_Record_Array
    is
       pragma Unreferenced (Table);
-      Result : File_Location_Array
+      Result : Reference_Record_Array
         (1 .. Natural (Entity.References.Last_Index));
    begin
       for I in Result'Range loop
@@ -527,16 +512,18 @@ package body Komnenos.Entities is
    ---------------
 
    function To_String
-     (Table : Entity_Table_Interface'Class;
-      Location : File_Location)
+     (Table     : Entity_Table_Interface'Class;
+      Reference : Reference_Record)
       return String
    is
+      pragma Unreferenced (Table);
       use Ada.Strings, Ada.Strings.Fixed;
    begin
-      return Table.Location_File_Name (Location)
-        & ":" & Trim (Natural'Image (Location.Line), Left)
-        & ":" & Trim (Natural'Image (Location.Column), Left)
-        & " [" & Ada.Strings.Unbounded.To_String (Location.Ref_Type) & "]";
+      return Reference.Referrer.Name
+--        return Table.Reference_File_Name (Reference)
+--          & ":" & Trim (Natural'Image (Reference.Line), Left)
+--          & ":" & Trim (Natural'Image (Reference.Column), Left)
+        & " [" & Ada.Strings.Unbounded.To_String (Reference.Ref_Type) & "]";
    end To_String;
 
 end Komnenos.Entities;
