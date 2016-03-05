@@ -5,8 +5,6 @@ with Ada.Text_IO;
 with Aquarius.Library;
 
 with Aquarius.Plugins.EBNF;
-with Aquarius.Plugins.Klein;
---  with Aquarius.Plugins.Macro_11;
 with Aquarius.Plugins.Macro_32;
 with Aquarius.Plugins.Plugin;
 with Aquarius.Plugins.Script_Plugin;
@@ -15,9 +13,7 @@ with Aquarius.Configuration;
 with Aquarius.Grammars.Manager;
 with Aquarius.Loader;
 
-with Ada_Plugin;
 with Project_Plugin;
-with Haskell;
 
 package body Aquarius.Plugins.Manager is
 
@@ -32,11 +28,7 @@ package body Aquarius.Plugins.Manager is
    Loaded_Plugins : Plugin_Map.Map;
 
    Local_EBNF_Plugin     : Aquarius_Plugin;
-   Local_Klein_Plugin    : Aquarius_Plugin;
-   Local_Ada_Plugin      : Aquarius_Plugin;
    Local_Project_Plugin  : Aquarius_Plugin;
-   Local_Haskell_Plugin  : Aquarius_Plugin;
---     Local_Macro_11_Plugin : Aquarius_Plugin;
    Local_Macro_32_Plugin : Aquarius_Plugin;
    Local_Plugin_Plugin   : Aquarius_Plugin;
    Local_Script_Plugin   : Aquarius_Plugin;
@@ -58,16 +50,8 @@ package body Aquarius.Plugins.Manager is
          return Local_EBNF_Plugin;
       elsif Name = "plugin" then
          return Local_Plugin_Plugin;
-      elsif False and then Name = "klein" then
-         return Local_Klein_Plugin;
-      elsif False and then Name = "ada" then
-         return Local_Ada_Plugin;
       elsif Name = "project" then
-         return Local_Ada_Plugin;
-      elsif Name = "haskell" then
-         return Local_Haskell_Plugin;
---        elsif Name = "macro11" then
---           return Local_Macro_11_Plugin;
+         return Local_Project_Plugin;
       elsif Name = "macro32" then
          return Local_Macro_32_Plugin;
       elsif Name = "script" then
@@ -110,16 +94,6 @@ package body Aquarius.Plugins.Manager is
             Local_Plugin_Plugin := new Aquarius.Plugins.Plugin.Plugin_Plugin;
          end if;
          Plugin := Local_Plugin_Plugin;
-      elsif False and then Name = "klein" then
-         if Local_Klein_Plugin = null then
-            Local_Klein_Plugin := new Aquarius.Plugins.Klein.Klein_Plugin;
-         end if;
-         Plugin := Local_Klein_Plugin;
-      elsif False and then Name = "ada" then
-         if Local_Ada_Plugin = null then
-            Local_Ada_Plugin := new Ada_Plugin.Ada_Plugin_Type;
-         end if;
-         Plugin := Local_Ada_Plugin;
       elsif Name = "project" then
          if Local_Project_Plugin = null then
             Local_Project_Plugin := new Project_Plugin.Project_Plugin_Type;
@@ -130,21 +104,11 @@ package body Aquarius.Plugins.Manager is
             Local_Script_Plugin := new Script_Plugin.Script_Plugin_Type;
          end if;
          Plugin := Local_Script_Plugin;
---        elsif Name = "macro11" then
---           if Local_Macro_11_Plugin = null then
---              Local_Macro_11_Plugin := new Macro_11.Macro_11_Plugin;
---           end if;
---           Plugin := Local_Macro_11_Plugin;
       elsif Name = "macro32" then
          if Local_Macro_32_Plugin = null then
             Local_Macro_32_Plugin := new Macro_32.Macro_32_Plugin;
          end if;
          Plugin := Local_Macro_32_Plugin;
-      elsif Name = "haskell" then
-         if Local_Haskell_Plugin = null then
-            Local_Haskell_Plugin := new Haskell.Haskell_Plugin_Type;
-         end if;
-         Plugin := Local_Haskell_Plugin;
       else
          declare
             Path : constant String :=
