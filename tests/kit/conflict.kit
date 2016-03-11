@@ -4,6 +4,31 @@ with Dates;
 with Names;
 package Conflict.Db is
 
+record Date is
+   unique key Date : Integer is display;
+   key Today       : Boolean;
+end Date;
+
+record Named is
+   key Name : String (64) is display;
+end Named;
+
+record Last_Name : Named is
+   unique key Index : Positive;
+end Last_Name;
+
+record Localised is
+   key Tag : String (32) is display;
+end Localised;
+
+record Language : Localised;
+
+record Local_Text : Localised is
+   key Language;
+   Local_Text : Text;
+   unique key Tag_And_Language with Tag, Language;
+end Local_Text;
+
    record Massive : Named is
       Mass : Long_Float;
    end Massive;
