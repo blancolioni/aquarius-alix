@@ -14,7 +14,7 @@ with Aquarius.Layout;
 with Aquarius.Programs;
 with Aquarius.Styles;
 
-with Aqua;
+with Aqua.Objects;
 
 package Komnenos.Entities is
 
@@ -28,7 +28,7 @@ package Komnenos.Entities is
    type Entity_Visual_Access is access all Entity_Visual'Class;
 
    type Root_Entity_Reference is
-     abstract new Aqua.External_Object_Interface with private;
+     abstract new Aqua.Objects.Root_Object_Type with private;
 
    procedure Set_Content
      (Visual : in out Entity_Visual;
@@ -359,7 +359,7 @@ private
    type Entity_Table_Access is access all Entity_Table_Interface'Class;
 
    type Root_Entity_Reference is
-     abstract new Aqua.External_Object_Interface with
+     abstract new Aqua.Objects.Root_Object_Type with
       record
          Identifier     : Ada.Strings.Unbounded.Unbounded_String;
          Class          : Ada.Strings.Unbounded.Unbounded_String;
@@ -368,7 +368,6 @@ private
          Key            : Ada.Strings.Unbounded.Unbounded_String;
          References     : Reference_Vectors.Vector;
          Table          : Entity_Table_Access;
-         Aqua_Reference : Aqua.External_Reference := 0;
       end record;
 
    overriding function Name
@@ -379,14 +378,6 @@ private
 
    overriding function Show
      (Item : Root_Entity_Reference) return String;
-
-   overriding procedure Set_Reference
-     (Item : in out Root_Entity_Reference;
-      Reference : Aqua.External_Reference);
-
-   overriding function Get_Reference
-     (Item : Root_Entity_Reference)
-     return Aqua.External_Reference;
 
    package Entity_Maps is
      new Ada.Containers.Indefinite_Hashed_Maps
