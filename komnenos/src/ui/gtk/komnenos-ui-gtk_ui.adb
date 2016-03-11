@@ -1,4 +1,5 @@
 with Ada.Numerics;
+with Ada.Text_IO;
 
 with Tropos;
 
@@ -138,6 +139,8 @@ package body Komnenos.UI.Gtk_UI is
 
       Gtk.Builder.Gtk_New (Builder);
 
+      Ada.Text_IO.Put_Line ("komnenos: loading UI");
+
       declare
          use type Glib.Guint;
          Path  : constant String :=
@@ -155,6 +158,7 @@ package body Komnenos.UI.Gtk_UI is
          end if;
       end;
 
+      Ada.Text_IO.Put_Line ("komnenos: creating main window");
       declare
          Main_Window : constant Gtk.Window.Gtk_Window :=
                          Gtk.Window.Gtk_Window
@@ -387,6 +391,8 @@ package body Komnenos.UI.Gtk_UI is
       Entity_Lists.Create (UI.Entity_Tree, UI.Entity_Filter);
 
       UI.Top_Level.Show_All;
+
+      Ada.Text_IO.Put_Line ("komnenos: showing UI");
 
       Gtk.Main.Main;
    end Start;
