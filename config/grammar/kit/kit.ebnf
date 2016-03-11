@@ -41,7 +41,7 @@ list_of_fields ::= { field ';' }
 
 field ::= data_field | compound_key_field
 
-data_field ::= [ key_spec ] identifier [ ':' named_type ] [ ':=' static_expression ] [ 'with' list_of_attributes ]
+data_field ::= [ key_spec ] identifier [ ':' named_type ] [ ':=' static_expression ] [ 'is' list_of_attributes ]
 
 static_expression ::= integer | string
 
