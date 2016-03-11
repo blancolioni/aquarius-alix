@@ -170,6 +170,20 @@ package body Tagatha.Code.Pdp32 is
 
    end Encode;
 
+   -------------------
+   -- File_Preamble --
+   -------------------
+
+   overriding procedure File_Preamble
+     (T                : in out Pdp32_Translator;
+      Asm              : in out Assembly'Class;
+      Source_File_Name : in     String)
+   is
+      pragma Unreferenced (T);
+   begin
+      Asm.Put_Line (".source_file """ & Source_File_Name & """");
+   end File_Preamble;
+
    ------------
    -- Finish --
    ------------
