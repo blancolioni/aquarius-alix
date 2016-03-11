@@ -54,6 +54,7 @@ depend = { project = lith version = any }
 depend = { project = wlib version = any }
 main_unit = aquarius-driver
 exec_name = aquarius
+post_install = "{exec_path}/aquarius --clear-cache"
 config_dir = config
 path_unit = { unit = Aquarius.Config_Paths
               path = src/environment/aquarius-config_paths.ads }
