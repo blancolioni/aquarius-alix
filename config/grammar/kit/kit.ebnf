@@ -23,13 +23,13 @@ database_declaration ::=
 
 context_clause ::= 'with' identifier ';'
 
-list_of_declarations ::= { declaration ';' }
+list_of_declarations ::= { declaration }
 
 declaration ::= record_declaration
               | type_declaration
 
 record_declaration ::= 'record' identifier [ ':' base_records ] [ 'with' list_of_attributes ]
-                         [ 'is' list_of_fields 'end' [ 'record' ] matching_identifier ]
+                         [ 'is' list_of_fields 'end' [ 'record' ] matching_identifier ] ';'
 
 base_records ::= < identifier / ',' >
 
@@ -57,7 +57,7 @@ constraint ::= '(' integer ')'
 
 enumeration_type ::= '(' < identifier / ',' > ')'
 
-type_declaration ::= 'type' identifier 'is' type_spec
+type_declaration ::= 'type' identifier 'is' type_spec ';'
 
 type_spec ::= named_type | enumeration_type
 
