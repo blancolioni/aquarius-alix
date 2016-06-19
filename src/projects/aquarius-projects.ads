@@ -104,6 +104,11 @@ package Aquarius.Projects is
    --  load the file, which is important because this project is used
    --  to load files which have no project themselves.
 
+   procedure Write_Session_File
+     (Project : Aquarius_Project_Type'Class;
+      Path    : String);
+   --  Write a session file for the given project
+
    type Root_Project_View is
      abstract new Root_Aquarius_Object with private;
 
