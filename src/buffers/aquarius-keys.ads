@@ -25,19 +25,20 @@ package Aquarius.Keys is
 
    function Raw_Key (Key : Aquarius_Key) return Aquarius_Key;
 
-   Null_Key    : constant Aquarius_Key;
-   Tab         : constant Aquarius_Key;
-   Left_Tab    : constant Aquarius_Key;
-   Up_Arrow    : constant Aquarius_Key;
-   Down_Arrow  : constant Aquarius_Key;
-   Left_Arrow  : constant Aquarius_Key;
-   Right_Arrow : constant Aquarius_Key;
-   Page_Up     : constant Aquarius_Key;
-   Page_Down   : constant Aquarius_Key;
-   Home_Key    : constant Aquarius_Key;
-   End_Key     : constant Aquarius_Key;
-   Back_Space  : constant Aquarius_Key;
-   Line_Feed   : constant Aquarius_Key;
+   Null_Key        : constant Aquarius_Key;
+   Tab             : constant Aquarius_Key;
+   Left_Tab        : constant Aquarius_Key;
+   Up_Arrow        : constant Aquarius_Key;
+   Down_Arrow      : constant Aquarius_Key;
+   Left_Arrow      : constant Aquarius_Key;
+   Right_Arrow     : constant Aquarius_Key;
+   Page_Up         : constant Aquarius_Key;
+   Page_Down       : constant Aquarius_Key;
+   Home_Key        : constant Aquarius_Key;
+   End_Key         : constant Aquarius_Key;
+   Back_Space      : constant Aquarius_Key;
+   Line_Feed       : constant Aquarius_Key;
+   Carriage_Return : constant Aquarius_Key;
 
 private
 
@@ -46,18 +47,19 @@ private
 
    Null_Key    : constant Aquarius_Key := 16#0000#;
 
-   Tab         : constant Aquarius_Key := 16#F000#;
-   Left_Tab    : constant Aquarius_Key := 16#F001#;
-   Up_Arrow    : constant Aquarius_Key := 16#F002#;
-   Down_Arrow  : constant Aquarius_Key := 16#F003#;
-   Left_Arrow  : constant Aquarius_Key := 16#F004#;
-   Right_Arrow : constant Aquarius_Key := 16#F005#;
-   Page_Up     : constant Aquarius_Key := 16#F006#;
-   Page_Down   : constant Aquarius_Key := 16#F007#;
-   Home_Key    : constant Aquarius_Key := 16#F008#;
-   End_Key     : constant Aquarius_Key := 16#F009#;
-   Back_Space  : constant Aquarius_Key := 16#F00A#;
-   Line_Feed   : constant Aquarius_Key := 16#F00B#;
+   Tab             : constant Aquarius_Key := 16#F000#;
+   Left_Tab        : constant Aquarius_Key := 16#F001#;
+   Up_Arrow        : constant Aquarius_Key := 16#F002#;
+   Down_Arrow      : constant Aquarius_Key := 16#F003#;
+   Left_Arrow      : constant Aquarius_Key := 16#F004#;
+   Right_Arrow     : constant Aquarius_Key := 16#F005#;
+   Page_Up         : constant Aquarius_Key := 16#F006#;
+   Page_Down       : constant Aquarius_Key := 16#F007#;
+   Home_Key        : constant Aquarius_Key := 16#F00B#;
+   End_Key         : constant Aquarius_Key := 16#F009#;
+   Back_Space      : constant Aquarius_Key := 16#F008#;
+   Line_Feed       : constant Aquarius_Key := 16#F00A#;
+   Carriage_Return : constant Aquarius_Key := 16#F00D#;
 
    subtype Function_Keys is Aquarius_Key range 16#F100# .. 16#F1FF#;
 
