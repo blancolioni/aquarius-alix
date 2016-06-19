@@ -10,3 +10,6 @@ src/environment/aquarius-config_paths.ads
 config/scratch/*
 aquarius.gpr
 .aquarius-session
+aqua-custom-vm
+arrangement.log
+tests/kit/temp
