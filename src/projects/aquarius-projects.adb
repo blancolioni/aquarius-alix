@@ -405,14 +405,21 @@ package body Aquarius.Projects is
             declare
                use Ada.Strings.Unbounded;
                use type Aquarius.Trees.Tree;
+               use type Aquarius.Programs.Program_Tree;
                Name_Child : constant Aquarius.Programs.Program_Tree :=
                               P.Cross_Reference_Name;
                Last : constant Aquarius.Trees.Tree :=
-                        Name_Child.Last_Leaf;
+                        (if Name_Child = null then null
+                         else Name_Child.Last_Leaf);
                Id : Unbounded_String := Null_Unbounded_String;
                Std : Unbounded_String := Null_Unbounded_String;
-               It : Aquarius.Trees.Tree := Name_Child.First_Leaf;
+               It : Aquarius.Trees.Tree :=
+                      (if Name_Child = null then null
+                       else Name_Child.First_Leaf);
             begin
+               if Name_Child = null then
+                  return;
+               end if;
                loop
                   Id := Id & It.Text;
                   Std := Std & It.Standard_Text;
@@ -655,5 +662,30 @@ package body Aquarius.Projects is
       end if;
       return Project.Views.Last_Index;
    end View_Count;
+
+   ------------------------
+   -- Write_Session_File --
+   ------------------------
+
+   procedure Write_Session_File
+     (Project : Aquarius_Project_Type'Class;
+      Path    : String)
+   is
+      use Ada.Text_IO;
+      File : File_Type;
+   begin
+      Create (File, Out_File, Path);
+      Put_Line (File, "program_stores = {");
+      Put_Line (File, "  file_system_store = {");
+      Put_Line (File,
+                "    base_path = """
+                & Aquarius.Names.To_String (Project.Full_Path)
+                & """");
+      Put_Line (File,
+                "    extensions = { ads adb }");
+      Put_Line (File, "    }");
+      Put_Line (File, "  }");
+      Close (File);
+   end Write_Session_File;
 
 end Aquarius.Projects;

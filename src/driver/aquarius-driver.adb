@@ -13,6 +13,7 @@ with Aquarius.Loader;
 with Aquarius.Messages.Console;
 with Aquarius.Names;
 with Aquarius.Programs.Arrangements;
+with Aquarius.Projects.Files;
 with Aquarius.Rendering.Manager;
 with Aquarius.Target.Manager;
 with Aquarius.Themes;
@@ -328,6 +329,17 @@ begin
       begin
 
          Komnenos.Entities.Aqua_Entities.Create_Aqua_Object (UI);
+
+         if Command_Line.Project_Name /= "" then
+            declare
+               Project : constant Aquarius.Projects.Aquarius_Project :=
+                           Aquarius.Projects.Files.Load_Project_From_File
+                             (Command_Line.Project_Name);
+            begin
+               Project.Write_Session_File
+                 (".aquarius-session");
+            end;
+         end if;
 
          if Command_Line.Session_File /= "" then
             Komnenos.UI.Sessions.Load_Session
