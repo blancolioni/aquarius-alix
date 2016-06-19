@@ -83,6 +83,9 @@ package body Komnenos.Entities.Source.Aquarius_Source is
      (Item : not null access Root_Aquarius_Source_Entity'Class;
       Ch   : Character);
 
+   procedure Insert_New_Line
+     (Item : not null access Root_Aquarius_Source_Entity'Class);
+
    procedure Set_Cursor
      (Item     : not null access Root_Aquarius_Source_Entity'Class;
       Position : Aquarius.Layout.Position);
@@ -357,8 +360,13 @@ package body Komnenos.Entities.Source.Aquarius_Source is
 
          when Set_Cursor_Command =>
             Set_Cursor (Item, Command.New_Position);
+
          when Insert_Character_Command =>
             Item.Insert_Character (Command.Ch);
+
+         when New_Line_Command =>
+            Item.Insert_New_Line;
+
       end case;
    end Execute_Command;
 
@@ -506,7 +514,11 @@ package body Komnenos.Entities.Source.Aquarius_Source is
       end if;
 
       Ada.Text_IO.Put_Line
-        ("edit: [" & New_Buffer & "]");
+        ("edit: [" & New_Buffer & "] at "
+         & Aquarius.Trees.Cursors.Image
+           (Aquarius.Programs.Parser.Get_Cursor
+                (Item.Parse_Context)));
+
       Item.Edit_Buffer :=
         Ada.Strings.Unbounded.To_Unbounded_String (New_Buffer);
       Item.Buffer_Cursor := Item.Buffer_Cursor + 1;
@@ -526,6 +538,32 @@ package body Komnenos.Entities.Source.Aquarius_Source is
         (Item.Compilation_Unit);
 
    end Insert_Character;
+
+   ---------------------
+   -- Insert_New_Line --
+   ---------------------
+
+   procedure Insert_New_Line
+     (Item : not null access Root_Aquarius_Source_Entity'Class)
+   is
+   begin
+      Item.Insert_Character (' ');
+
+      declare
+         Cursor : constant Aquarius.Trees.Cursors.Cursor :=
+                    Aquarius.Programs.Parser.Get_Cursor
+                      (Item.Parse_Context);
+         Program : Aquarius.Programs.Program_Tree;
+      begin
+         if not Aquarius.Trees.Cursors.Is_Off_Right (Cursor) then
+            Program :=
+              Aquarius.Programs.Program_Tree
+                (Aquarius.Trees.Cursors.Get_Right_Tree (Cursor));
+            Program.Set_Vertical_Gap_Before (1);
+            Komnenos.Entities.Visuals.Invalidate_Visuals (Item);
+         end if;
+      end;
+   end Insert_New_Line;
 
    --------------
    -- Log_Tree --
