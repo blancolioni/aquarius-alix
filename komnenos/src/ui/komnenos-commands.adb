@@ -58,6 +58,7 @@ package body Komnenos.Commands is
          Cmd ("forward-character", (Move_Cursor_Command, 1, By_Character));
          Cmd ("backward-character", (Move_Cursor_Command, -1, By_Character));
          Cmd ("insert-character", (Insert_Character_Command, Character'First));
+         Cmd ("new-line", (Command => New_Line_Command));
 
          for Ch in Character range ' ' .. '~' loop
             Cmd ("insert-character" & Integer'Image (-Character'Pos (Ch)),
@@ -101,6 +102,8 @@ package body Komnenos.Commands is
                      null;
                   when Insert_Character_Command =>
                      Result.Ch := Character'Val (Integer'Value (Argument));
+                  when New_Line_Command =>
+                     null;
                end case;
             end if;
             return Result;
@@ -206,6 +209,8 @@ package body Komnenos.Commands is
               & Aquarius.Layout.Show (Command.New_Position);
          when Insert_Character_Command =>
             return "insert-character '" & Command.Ch & "'";
+         when New_Line_Command =>
+            return "new-line";
       end case;
    end Show;
 
