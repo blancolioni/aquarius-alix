@@ -252,7 +252,6 @@ package body Komnenos.UI.Gtk_UI.Entity_Lists is
                   Column : Gtk.Tree_View_Column.Gtk_Tree_View_Column;
                   pragma Unreferenced (Cell_X);
                   pragma Unreferenced (Cell_Y);
-                  pragma Unreferenced (Column);
                begin
                   Tree_View.Get_Path_At_Pos
                     (X         => Gint (Event.X),
