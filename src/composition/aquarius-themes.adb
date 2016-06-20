@@ -122,9 +122,9 @@ package body Aquarius.Themes is
                Child       : constant Cursor  := Get_Child (Classes, I);
                Class       : constant String  := Get_Name (Child);
                Font_Name   : constant String :=
-                               Get_Value (Child, "font_name",
+                               Get_Value (Child, "font_family",
                                           Get_Value
-                                            (Fixed_Font, "font_name",
+                                            (Fixed_Font, "font_family",
                                              "courier"));
                Font_Size   : constant String :=
                                Get_Value (Child, "font_size",
