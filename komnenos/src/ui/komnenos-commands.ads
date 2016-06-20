@@ -6,7 +6,8 @@ package Komnenos.Commands is
      (No_Command,
       Move_Cursor_Command,
       Set_Cursor_Command,
-      Insert_Character_Command);
+      Insert_Character_Command,
+      New_Line_Command);
 
    type Move_Unit_Type is
      (By_Character,
@@ -25,7 +26,9 @@ package Komnenos.Commands is
             when Set_Cursor_Command =>
                New_Position : Aquarius.Layout.Position;
             when Insert_Character_Command =>
-               Ch     : Character;
+               Ch           : Character;
+            when New_Line_Command =>
+               null;
          end case;
       end record;
 

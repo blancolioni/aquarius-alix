@@ -1195,14 +1195,16 @@ package body Aquarius.Programs.Parser is
         Aquarius.Source.Get_Column (Tok_Pos);
 
       procedure Parse_Into_New_Repeater
-        (Repeater  : in     Program_Tree);
+        (Repeater   : in     Program_Tree;
+         Right_Tree : Program_Tree := null);
 
       -----------------------------
       -- Parse_Into_New_Repeater --
       -----------------------------
 
       procedure Parse_Into_New_Repeater
-        (Repeater  : in     Program_Tree)
+        (Repeater   : in     Program_Tree;
+         Right_Tree : Program_Tree := null)
       is
          Syn    : constant Syntax_Tree := Repeater.Syntax;
       begin
@@ -1233,7 +1235,12 @@ package body Aquarius.Programs.Parser is
                New_Repeater : constant Program_Tree :=
                  New_Program_Tree (Syntax_Tree (Syn.First_Child));
             begin
-               Add_Child (Repeater, New_Repeater);
+               if Right_Tree = null then
+                  Add_Child (Repeater, New_Repeater);
+               else
+                  Right_Tree.Add_Left_Sibling (New_Repeater);
+               end if;
+
                New_Repeater.Expand;
                Location := Left_Of_Tree (New_Repeater);
                Parse_Token (Item, Tok_Text, Current, Context);
@@ -1424,16 +1431,20 @@ package body Aquarius.Programs.Parser is
                         else
                            --  Since Token_OK was true, we must be in an
                            --  unbounded repeat node.
+                           if Syn.Repeatable then
+                              Parse_Into_New_Repeater
+                                (Repeater   => Program,
+                                 Right_Tree => Program.First_Program_Child);
 
-                           --  FIXME: implement this
-
-                           raise Program_Error with
-                             "Can't parse token '" & Tok_Text &
-                             "' into what we assume " &
-                             "is an unbounded repeat node" &
-                             " (" &
-                             Aquarius.Trees.Cursors.Image
-                             (Get_Cursor (Context)) & ")";
+                           else
+                              raise Program_Error with
+                                "Can't parse token '" & Tok_Text &
+                                "' into what was not " &
+                                "an unbounded repeat node" &
+                                " (" &
+                                Aquarius.Trees.Cursors.Image
+                                (Get_Cursor (Context)) & ")";
+                           end if;
                         end if;
                   end case;
                end if;
