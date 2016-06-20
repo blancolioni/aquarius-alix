@@ -169,6 +169,15 @@ package body Aquarius.Programs.Parser is
       Context.Errors.Append (Error);
    end Add_Error;
 
+   --------------------
+   -- Clear_Comments --
+   --------------------
+
+   procedure Clear_Comments (Context  : in out Parse_Context) is
+   begin
+      Context.Comments.Clear;
+   end Clear_Comments;
+
    ------------------
    -- Finish_Parse --
    ------------------
@@ -1580,6 +1589,11 @@ package body Aquarius.Programs.Parser is
       Right_Ancestor : Aquarius.Trees.Tree;
       A : constant Ambiguity := List_Of_Ambiguities.Element (Current);
    begin
+      if Context.Vertical_Space > 0 then
+         At_Tree.Set_Vertical_Gap_Before
+           (Aquarius.Layout.Count (Context.Vertical_Space));
+      end if;
+
       if A.Last_Parse = null then
          Ancestor := Tree (At_Tree);
          while Ancestor.Parent /= null loop
@@ -1598,18 +1612,13 @@ package body Aquarius.Programs.Parser is
       end if;
 
       if Right_Ancestor /= null then
-         if Context.Vertical_Space > 0 then
-            Program_Tree (Right_Ancestor).Set_Vertical_Gap_Before
-              (Aquarius.Layout.Count (Context.Vertical_Space));
-         end if;
-
          for I in 1 .. Context.Comments.Last_Index loop
             Right_Ancestor.Add_Left_Sibling (Context.Comments.Element (I));
          end loop;
       end if;
 
-      Context.Vertical_Space := 0;
-      Context.Comments.Clear;
+--        Context.Vertical_Space := 0;
+--        Context.Comments.Clear;
 
    end Set_User_Whitespace;
 

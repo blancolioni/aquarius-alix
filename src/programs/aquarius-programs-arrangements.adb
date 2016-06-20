@@ -141,13 +141,6 @@ package body Aquarius.Programs.Arrangements is
                         Indent (Format, After);
    begin
 
-      if not Context.Rearranging
-        and then Item.Vertical_Gap_Before > 0
-      then
-         Context.Vertical_Gap :=
-           Context.Vertical_Gap + Item.Vertical_Gap_Before;
-      end if;
-
       if Enabled (Rules.New_Line_Before) then
          Context.Need_New_Line := True;
       end if;
@@ -190,26 +183,20 @@ package body Aquarius.Programs.Arrangements is
    is
       Format    : constant Aquarius_Format := Item.Syntax.Get_Format;
       Rules     : constant Immediate_Rules := Formats.Rules (Format);
+      Vertical_Gap : constant Aquarius.Layout.Count :=
+                       Item.Vertical_Gap_Before;
    begin
 
-      if not Context.Rearranging
-        and then Context.Previous_Terminal /= null
-      then
-         declare
-            Skip_Lines : constant Aquarius.Layout.Count :=
-                           Item.Start_Position.Line
-                             - Context.Previous_Terminal.Start_Position.Line;
-         begin
-            if Skip_Lines > 1 then
-               Logging.Log (Context, Item, "vertical gap before ="
-                            & Aquarius.Layout.Count'Image (Skip_Lines - 1));
-               Context.Current_Line :=
-                 Context.Current_Line + Skip_Lines - 1;
-               Context.Current_Column := 1;
-               Context.Need_Space    := False;
-               Context.First_On_Line := True;
-            end if;
-         end;
+      if not Context.Rearranging and then Vertical_Gap > 0 then
+
+         Logging.Log (Context, Item, "vertical gap before ="
+                      & Aquarius.Layout.Count'Image (Vertical_Gap));
+
+         Context.Current_Line :=
+           Context.Current_Line + Vertical_Gap;
+         Context.Current_Column := 1;
+         Context.Need_Space    := False;
+         Context.First_On_Line := True;
       end if;
 
       if Enabled (Rules.New_Line_Before) then

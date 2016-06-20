@@ -29,6 +29,8 @@ package Aquarius.Programs.Parser is
                           Position : Aquarius.Source.Source_Position;
                           Comment  : in     Program_Tree);
 
+   procedure Clear_Comments (Context  : in out Parse_Context);
+
    procedure Add_Error (Context : in out Parse_Context;
                         Error   : in     Program_Tree);
 
