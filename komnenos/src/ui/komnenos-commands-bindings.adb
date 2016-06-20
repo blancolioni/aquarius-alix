@@ -38,6 +38,9 @@ package body Komnenos.Commands.Bindings is
       Bind (Aquarius.Keys.Left_Arrow, "backward-character");
       Bind (Aquarius.Keys.Right_Arrow, "forward-character");
 
+      Bind (Aquarius.Keys.Line_Feed, "new-line");
+      Bind (Aquarius.Keys.Carriage_Return, "new-line");
+
       for Ch in Character range ' ' .. '~' loop
          Bind (Aquarius.Keys.Character_Key (Ch),
                "insert-character" & Integer'Image (-Character'Pos (Ch)));

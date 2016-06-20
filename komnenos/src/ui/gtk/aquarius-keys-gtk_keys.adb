@@ -25,6 +25,8 @@ package body Aquarius.Keys.Gtk_Keys is
             Result := Back_Space;
          when GDK_Linefeed =>
             Result := Line_Feed;
+         when GDK_Return =>
+            Result := Carriage_Return;
          when GDK_Tab =>
             Result := Tab;
          when GDK_Up =>

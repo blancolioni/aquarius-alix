@@ -193,18 +193,23 @@ package body Aquarius.Programs.Arrangements is
    begin
 
       if not Context.Rearranging
-        and then Context.Vertical_Gap > 0
+        and then Context.Previous_Terminal /= null
       then
-         --  we already added all the vertical gaps when we first
-         --  arranged this sub tree
-         Logging.Log (Context, Item, "vertical gap before ="
-              & Aquarius.Layout.Count'Image (Context.Vertical_Gap));
-         Context.Current_Line :=
-           Context.Current_Line + Context.Vertical_Gap;
-         Context.Current_Column := 1;
-         Context.Need_Space    := False;
-         Context.First_On_Line := True;
-         Context.Vertical_Gap  := 0;
+         declare
+            Skip_Lines : constant Aquarius.Layout.Count :=
+                           Item.Start_Position.Line
+                             - Context.Previous_Terminal.Start_Position.Line;
+         begin
+            if Skip_Lines > 1 then
+               Logging.Log (Context, Item, "vertical gap before ="
+                            & Aquarius.Layout.Count'Image (Skip_Lines - 1));
+               Context.Current_Line :=
+                 Context.Current_Line + Skip_Lines - 1;
+               Context.Current_Column := 1;
+               Context.Need_Space    := False;
+               Context.First_On_Line := True;
+            end if;
+         end;
       end if;
 
       if Enabled (Rules.New_Line_Before) then
