@@ -67,8 +67,16 @@ package body Aquarius.Loader is
             Line        => Line,
             Last        => Line_Last);
 
-         exit when Line_Last > 0 or else
-           Aquarius.Source.End_Of_File (Position);
+         declare
+            Trimmed_Line : constant String :=
+                             Ada.Strings.Fixed.Trim
+                               (Line (Line'First .. Line_Last),
+                                Ada.Strings.Both);
+         begin
+            exit when Trimmed_Line'Length > 0
+              or else Aquarius.Source.End_Of_File (Position);
+         end;
+
          Aquarius.Source.Skip_Line (Position);
          Vertical_Space := Vertical_Space + 1;
       end loop;
@@ -300,6 +308,12 @@ package body Aquarius.Loader is
                         Recovering := True;
                      end if;
                   end if;
+
+                  Aquarius.Programs.Parser.Set_Vertical_Space
+                    (Context, 0);
+                  Aquarius.Programs.Parser.Clear_Comments
+                    (Context);
+
                else
                   Have_Error := True;
 --                    Ada.Text_IO.Put_Line

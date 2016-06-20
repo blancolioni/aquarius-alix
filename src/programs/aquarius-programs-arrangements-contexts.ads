@@ -7,7 +7,6 @@ private package Aquarius.Programs.Arrangements.Contexts is
       record
          Need_New_Line      : Boolean             := False;
          Need_Soft_New_Line : Boolean             := False;
-         Vertical_Gap       : Count               := 0;
          New_Line_Priority  : Rule_Priority       := 1;
          Got_New_Line       : Boolean             := False;
          First_On_Line      : Boolean             := True;
