@@ -743,8 +743,16 @@ package body Komnenos.Entities.Source.Aquarius_Source is
             Cursor :=
               Aquarius.Trees.Cursors.Right_Of_Tree (Terminal);
             Item.Edit_Tree := Terminal;
-            Item.Edit_Buffer := To_Unbounded_String (Terminal.Text);
-            Item.Buffer_Cursor := Length (Item.Edit_Buffer);
+            if Terminal.Layout_End_Position.Line = Position.Line
+              and then Position.Column > 1
+              and then Terminal.Layout_End_Position.Column
+                = Position.Column - 1
+            then
+               Item.Edit_Buffer := To_Unbounded_String (Terminal.Text);
+               Item.Buffer_Cursor := Length (Item.Edit_Buffer);
+            else
+               Item.Buffer_Cursor := 0;
+            end if;
          else
             Item.Edit_Tree   := Terminal;
             Cursor :=
