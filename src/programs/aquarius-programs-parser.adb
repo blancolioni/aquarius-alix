@@ -1,3 +1,5 @@
+--  with Ada.Text_IO;
+
 with Aquarius.Errors;
 with Aquarius.Properties;
 with Aquarius.Syntax.Checks;
@@ -52,8 +54,17 @@ package body Aquarius.Programs.Parser is
 
    function Token_OK
      (Item           : in Parseable;
+      Location       : in Aquarius.Trees.Cursors.Cursor;
+      Top            : Program_Tree)
+      return Boolean;
+   --  Never move above Top when looking for
+   --  a good tree.  If Top = null, search will continue to the root
+
+   function Token_OK
+     (Item           : in Parseable;
       Location       : in Aquarius.Trees.Cursors.Cursor)
-     return Boolean;
+      return Boolean
+   is (Token_OK (Item, Location, null));
 
    procedure Parse_Token
      (Item           : in     Parseable;
@@ -1023,7 +1034,6 @@ package body Aquarius.Programs.Parser is
       Program : constant Program_Tree :=
         Program_Tree (Get_Right_Tree (Location));
    begin
-
       pragma Assert (not Program.Is_Filled);
       pragma Assert (Program.Syntax.Token = Tok);
       if Tok_Text /= "" then
@@ -1350,6 +1360,7 @@ package body Aquarius.Programs.Parser is
                Parse_Into_New_Repeater (Program);
 
             else
+
                Move_To_Right_Of_Parent (Context, Current);
 
                Parse_Token (Item, Tok_Text, Current, Context);
@@ -1369,6 +1380,7 @@ package body Aquarius.Programs.Parser is
             then
                --  node must be nullable, since Token_OK
                Move_Right (Location);
+
                Parse_Token (Item, Tok_Text,
                             Current, Context);
             else
@@ -1390,6 +1402,20 @@ package body Aquarius.Programs.Parser is
                      Location := Right_Of_Tree (Item.Subtree);
 
                   end;
+               elsif Program.Program_Parent /= null
+                 and then Program.Program_Parent.Syntax.Repeatable
+                 and then Program.Has_Children
+                 and then not Token_OK (Item,
+                                        Get_Left_Of_First_Child
+                                          (Location),
+                                        Top => Program)
+               then
+                  --  Insert a new repeater between the two trees at location
+                  --  FIXME: should also check token ok for right tree
+
+                  Parse_Into_New_Repeater
+                    (Program.Program_Parent, Right_Tree => Program);
+
                elsif Syn.Syntax_Class = Terminal then
 
                   Parse_Terminal (Tok, Tok_Pos, Tok_Text, Current, Context);
@@ -1430,7 +1456,8 @@ package body Aquarius.Programs.Parser is
 
                         if Token_OK (Item,
                                      Get_Left_Of_First_Child
-                                       (Location))
+                                       (Location),
+                                     Top => Program)
                         then
 
                            Move_To_Left_Of_First_Child (Context, Current);
@@ -1446,13 +1473,17 @@ package body Aquarius.Programs.Parser is
                                  Right_Tree => Program.First_Program_Child);
 
                            else
+--                                Ada.Text_IO.Put_Line
+--                                  ("Can't parse token '" & Tok_Text &
+--                                     "' into what was not " &
+--                                     "an unbounded repeat node" &
+--                                     " (" &
+--                                     Aquarius.Trees.Cursors.Image
+--                                     (Get_Cursor (Context)) & ")");
                               raise Program_Error with
                                 "Can't parse token '" & Tok_Text &
                                 "' into what was not " &
-                                "an unbounded repeat node" &
-                                " (" &
-                                Aquarius.Trees.Cursors.Image
-                                (Get_Cursor (Context)) & ")";
+                                "an unbounded repeat node";
                            end if;
                         end if;
                   end case;
@@ -1659,8 +1690,9 @@ package body Aquarius.Programs.Parser is
 
    function Token_OK
      (Item           : in Parseable;
-      Location       : in Aquarius.Trees.Cursors.Cursor)
-     return Boolean
+      Location       : in Aquarius.Trees.Cursors.Cursor;
+      Top            : Program_Tree)
+      return Boolean
    is
       use Aquarius.Syntax;
       use Aquarius.Trees.Cursors;
@@ -1679,7 +1711,7 @@ package body Aquarius.Programs.Parser is
 
       if not Is_Off_Right (Location) then
          if Right_Tree.Is_Comment then
-            return Token_OK (Item,  Get_Right (Location));
+            return Token_OK (Item,  Get_Right (Location), Top);
          end if;
       end if;
 
@@ -1699,7 +1731,7 @@ package body Aquarius.Programs.Parser is
                if not Program.Has_Children and then
                  Aquarius.Syntax.Checks.Nullable (Syn)
                then
-                  Result := Token_OK (Item, Get_Right (Location));
+                  Result := Token_OK (Item, Get_Right (Location), Top);
                else
                   Result := False;
                end if;
@@ -1721,7 +1753,7 @@ package body Aquarius.Programs.Parser is
                      Result := False;
                   end if;
                elsif Aquarius.Syntax.Checks.Nullable (Syn) then
-                  Result := Token_OK (Item, Get_Right (Location));
+                  Result := Token_OK (Item, Get_Right (Location), Top);
                else
                   Result := False;
                end if;
@@ -1734,12 +1766,14 @@ package body Aquarius.Programs.Parser is
 
                   when Choice =>
                      Result := Token_OK (Item,
-                                          Get_Left_Of_First_Child (Location));
+                                         Get_Left_Of_First_Child (Location),
+                                         Top);
 
                   when Non_Terminal =>
 
                      if Token_OK (Item,
-                                   Get_Left_Of_First_Child (Location))
+                                  Get_Left_Of_First_Child (Location),
+                                  Top)
                      then
                         Result := True;
                      elsif Syn.Repeatable then
@@ -1779,7 +1813,8 @@ package body Aquarius.Programs.Parser is
                   Result := False;
                else
                   Result := Token_OK (Item,
-                                       Get_Right_Of_Parent (Location));
+                                      Get_Right_Of_Parent (Location),
+                                      Top);
                end if;
             end if;
 
@@ -1792,11 +1827,15 @@ package body Aquarius.Programs.Parser is
               Program_Tree (Get_Tree (Location).Parent);
          begin
             while Tree /= null loop
+               if Tree = Top then
+                  exit;
+               end if;
+
                declare
                   Syn : constant Syntax_Tree := Tree.Syntax;
                begin
                   if Syn.Repeatable and then
-                    Column < Tree.Minimum_Indent and then
+                    Column >= Tree.Minimum_Indent and then
                     Aquarius.Syntax.Checks.Begins (Tok, Syn)
                   then
                      Result := True;
@@ -1828,7 +1867,8 @@ package body Aquarius.Programs.Parser is
       while Has_Element (It) loop
          if Element (It).Active then
             if Element (It).Active and then
-              Token_OK (Make_Parseable (Tok, Tok_Pos), Element (It).Location)
+              Token_OK (Make_Parseable (Tok, Tok_Pos),
+                        Element (It).Location)
             then
                return True;
             end if;
