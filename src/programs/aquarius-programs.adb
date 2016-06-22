@@ -271,6 +271,10 @@ package body Aquarius.Programs is
       Message : constant String :=
                   Context.To_String (Arguments (2));
    begin
+      Ada.Text_IO.Put_Line
+        (Ada.Text_IO.Standard_Error,
+         Tree.Location_Name & ": " & Message);
+
       Aquarius.Errors.Error (Tree, Message);
       return 0;
    end Aqua_Tree_Error;
