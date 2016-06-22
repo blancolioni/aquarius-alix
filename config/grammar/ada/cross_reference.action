@@ -28,6 +28,14 @@ after withed_unit_name/identifier do
    end if;
 end;
 
+before defining_qualified_reference do
+   tree.defined_entity :=
+      tree^subprogram_declaration.defined_entity;
+   if not tree.defined_entity then
+      tree.error ("no defined entity for " & tree.image)
+   end if;
+end;
+
 after defining_qualified_reference/identifier do
    if child.last then
       null;
@@ -35,7 +43,9 @@ after defining_qualified_reference/identifier do
       child.entity := Komnenos.Get_Entity (child.full_name, "package-declaration");
       if child.entity then
          Komnenos.Cross_Reference
-           (child, child.entity);
+           (child, child.entity, parent.defined_entity);
+      else
+	     child.error("unknown package: " & child.text)
       end if;
    end if;
 end;
