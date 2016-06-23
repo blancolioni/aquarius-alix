@@ -76,8 +76,13 @@ package body Aquarius.Programs is
       Arguments : Aqua.Array_Of_Words)
       return Aqua.Word;
 
-   function Aqua_Tree_Text
+   function Aqua_Tree_Concatenated_Image
      (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
+   function Aqua_Tree_Text
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Aqua.Array_Of_Words)
       return Aqua.Word;
 
@@ -256,6 +261,22 @@ package body Aquarius.Programs is
       return Context.To_Word (Tree.Chosen_Tree);
    end Aqua_Tree_Choice;
 
+   ----------------------------------
+   -- Aqua_Tree_Concatenated_Image --
+   ----------------------------------
+
+   function Aqua_Tree_Concatenated_Image
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      Tree : constant Program_Tree :=
+               Program_Tree
+                 (Context.To_External_Object (Arguments (1)));
+   begin
+      return Context.To_String_Word (Tree.Concatenate_Children);
+   end Aqua_Tree_Concatenated_Image;
+
    ---------------------
    -- Aqua_Tree_Error --
    ---------------------
@@ -375,6 +396,11 @@ package body Aquarius.Programs is
         (Name           => "tree__tree_ancestor",
          Argument_Count => 2,
          Handler        => Aqua_Tree_Ancestor'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__concatenated_image",
+         Argument_Count => 1,
+         Handler        => Aqua_Tree_Concatenated_Image'Access);
 
       Aqua.Primitives.New_Primitive_Function
         (Name           => "tree__text",
