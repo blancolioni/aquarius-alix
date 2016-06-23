@@ -85,7 +85,7 @@ end;
 
 after package_spec/defining_qualified_reference do
    parent^subprogram_declaration.defined_entity :=
-      Komnenos.Define (parent, defining_qualified_reference.image, "package-declaration");
+      Komnenos.Define (parent, defining_qualified_reference.concatenated_image, "package-declaration");
 end;
 
 after formal_argument_spec/formal_argument do
@@ -116,7 +116,7 @@ after formal_argument_type/null_exclusion do
 end;
 
 after formal_argument_type/mode do
-   parent.type.mode := child.image;
+   parent.type.mode := child.concatenated_image;
 end;
 
 after formal_argument_type/subtype_mark do
@@ -136,7 +136,7 @@ after defining_qualified_reference/identifier do
    
    child.last := 1;
    parent.Last_Child := child;
-   parent.Name := identifier.Image;
+   parent.Name := identifier.text;
    if parent.Last_Identifier then
       if parent.Qualifier then
          parent.Qualifier :=
@@ -175,13 +175,13 @@ end;
 
 after variable_declaration/variable_type do
    for name in parent.object_names loop
-      top.current_symbol_table.set (name.text, (type => child.type));
+      top.current_symbol_table.set (name.text, (type => child.type, name => name.text, declaration => name));
    end loop;
 end;
 
 after variable_declaration/exception do
    for name in parent.object_names loop
-      top.current_symbol_table.set (name, (exception => 1));
+      top.current_symbol_table.set (name.text, (exception => 1, declaration => name, name => name.text));
    end loop;
 end;
 
@@ -203,7 +203,7 @@ end;
 
 after subtype_mark/object_reference do
    if child.object then
-      parent.type := child.object.type;
+      parent.type := child.object;
    else
       parent.type := top.current_symbol_table.integer;
    end if;
