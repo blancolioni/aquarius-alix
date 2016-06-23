@@ -15,8 +15,22 @@ begin
    return "sig" & Result;
 end Type_Signature_Key;
 
+function Find_Object (Table, name) is
+begin
+   if Table.get (name) then
+      return Table.get (name);
+   elsif Table.parent then
+      return find_Object (Table.parent, name);
+   else
+      return (error => "undefined: " & name);
+   end if;
+end Find_Object;
+	  
 before Compilation_Unit do
 --   IO.Put_Line ("Ada: defining subprogram names");
+   top.current_symbol_table := new Map;
+   top.current_symbol_table.integer := (name => "Integer", standard_name => "integer", class => "type", type => "integral");
+   top.current_symbol_table.natural := (name => "Natural", standard_name => "natural", class => "type", type => "integral", low => 0);
 end;
 
 after Compilation_Unit do
@@ -26,14 +40,18 @@ end;
 
 after procedure_body/procedure_specification do
    parent.signature := (name => child.name, arguments => child.signature, return_type => null);
-   parent^subprogram_declaration.defined_entity :=
+   parent.defined_entity := 
       Komnenos.Define (parent, child.name, "procedure-declaration");
+   top.current_symbol_table.set (child.name, (class => "procedure", entity => parent.defined_entity, signature => parent.signature));
+   parent^subprogram_declaration.defined_entity := parent.defined_entity;
 end;
 
 after function_body/function_specification do
    parent.signature := (name => child.name, arguments => child.signature, return_type => child.return_type);
-   parent^subprogram_declaration.defined_entity :=
+   parent.defined_entity := 
       Komnenos.Define (parent, child.name, "function-declaration");
+   top.current_symbol_table.set (child.name, (class => "function", entity => parent.defined_entity, signature => parent.signature));
+   parent^subprogram_declaration.defined_entity := parent.defined_entity;
 end;
 
 before function_specification or procedure_specification 
@@ -134,10 +152,67 @@ after defining_qualified_reference/identifier do
 
 end;
 
+before block do
+   tree.symbol_table := (table => new Map, parent => top.current_symbol_table);
+   top.current_symbol_table := tree.symbol_table;
+end;
+
+after block do
+   top.current_symbol_table := tree.symbol_table.parent;
+end;
+
 before defining_identifier_list do
    tree.defined_names := new Array;
 end;
 
 after defining_identifier_list/identifier do
    parent.defined_names.append (identifier);
+end;
+
+after variable_declaration/defining_identifier_list do
+   parent.object_names := child.defined_names;
+end;
+
+after variable_declaration/variable_type do
+   for name in parent.object_names loop
+      top.current_symbol_table.set (name.text, (type => child.type));
+   end loop;
+end;
+
+after variable_declaration/exception do
+   for name in parent.object_names loop
+      top.current_symbol_table.set (name, (exception => 1));
+   end loop;
+end;
+
+after variable_type/type_indication do
+   parent.type := child.type;
+end;
+
+after type_indication/direct_type_indication do
+   parent.type := child.type;
+end;
+
+after direct_type_indication/subtype_indication do
+   parent.type := child.type;
+end;
+
+after subtype_indication/subtype_mark do
+   parent.type := child.type;
+end;
+
+after subtype_mark/object_reference do
+   if child.object then
+      parent.type := child.object.type;
+   else
+      parent.type := top.current_symbol_table.integer;
+   end if;
+end;
+
+after object_reference/direct_name do
+   parent.object := find_object (top.current_symbol_table, direct_name/identifier.text);
+   if parent.object.error then
+      direct_name.error (parent.object.error)
+	  parent.object := null;
+   end if;
 end;
