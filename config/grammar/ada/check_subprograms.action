@@ -31,6 +31,9 @@ before Compilation_Unit do
    top.current_symbol_table := new Map;
    top.current_symbol_table.integer := (name => "Integer", standard_name => "integer", class => "type", type => "integral");
    top.current_symbol_table.natural := (name => "Natural", standard_name => "natural", class => "type", type => "integral", low => 0);
+   top.current_symbol_table.float := (name => "Float", standard_name => "float", class => "type", type => "float");
+   top.current_symbol_table.character := (name => "Character", standard_name => "character", class => "type", type => "enumeration", literals => new Array);
+   top.current_symbol_table.boolean := (name => "Boolean", standard_name => "boolean", class => "type", type => "enumeration", literals => (false => 0, true => 1));
 end;
 
 after Compilation_Unit do
@@ -175,13 +178,13 @@ end;
 
 after variable_declaration/variable_type do
    for name in parent.object_names loop
-      top.current_symbol_table.set (name.text, (type => child.type, name => name.text, declaration => name));
+      top.current_symbol_table.set (name.text, (class => "object", type => child.type, name => name.text, declaration => name));
    end loop;
 end;
 
 after variable_declaration/exception do
    for name in parent.object_names loop
-      top.current_symbol_table.set (name.text, (exception => 1, declaration => name, name => name.text));
+      top.current_symbol_table.set (name.text, (class => "exception", declaration => name, name => name.text));
    end loop;
 end;
 
