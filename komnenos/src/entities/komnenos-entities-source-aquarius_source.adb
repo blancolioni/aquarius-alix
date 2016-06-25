@@ -54,9 +54,55 @@ package body Komnenos.Entities.Source.Aquarius_Source is
      (Entity : not null access Root_Aquarius_Source_Entity;
       Visual : not null access Entity_Visual'Class);
 
-   overriding procedure Execute_Command
-     (Item    : not null access Root_Aquarius_Source_Entity;
-      Command : Komnenos.Commands.Komnenos_Command);
+   overriding procedure Set_Cursor
+     (Item     : in out Root_Aquarius_Source_Entity;
+      Position : Aquarius.Layout.Position);
+
+   overriding procedure Move_Cursor
+     (Item     : in out Root_Aquarius_Source_Entity;
+      Movement : Cursor_Movement_Type;
+      Offset   : Aquarius.Layout.Character_Offset);
+
+   overriding procedure Insert_Text
+     (Item     : in out Root_Aquarius_Source_Entity;
+      Position : Aquarius.Layout.Position;
+      Text     : String);
+
+   overriding procedure Delete_Text
+     (Item     : in out Root_Aquarius_Source_Entity;
+      Start    : Aquarius.Layout.Position;
+      Finish   : Aquarius.Layout.Position)
+   is null;
+
+   overriding function Get_Text
+     (Entity    : Root_Aquarius_Source_Entity;
+      Selection : Aquarius.Layout.Selection)
+      return String
+   is ("");
+
+   overriding function Get_Position
+     (Entity : Root_Aquarius_Source_Entity;
+      Start  : Aquarius.Layout.Position;
+      Offset : Aquarius.Layout.Character_Offset)
+      return Aquarius.Layout.Position
+   is (Start);
+
+   procedure Forward_Character
+     (Item : in out Root_Aquarius_Source_Entity'Class);
+
+   procedure Backward_Character
+     (Item : in out Root_Aquarius_Source_Entity'Class);
+
+   procedure Insert_Character
+     (Item : in out Root_Aquarius_Source_Entity'Class;
+      Ch   : Character);
+
+   procedure Insert_New_Line
+     (Item : in out Root_Aquarius_Source_Entity'Class);
+
+   --     overriding procedure Execute_Command
+--       (Item    : not null access Root_Aquarius_Source_Entity;
+--        Command : Komnenos.Commands.Komnenos_Command);
 
    procedure Finish_Edit
      (Item : not null access Root_Aquarius_Source_Entity'Class)
@@ -72,23 +118,6 @@ package body Komnenos.Entities.Source.Aquarius_Source is
       Force  : in     Boolean;
       Length :    out Natural;
       Tok    :    out Aquarius.Tokens.Token);
-
-   procedure Forward_Character
-     (Item : not null access Root_Aquarius_Source_Entity'Class);
-
-   procedure Backward_Character
-     (Item : not null access Root_Aquarius_Source_Entity'Class);
-
-   procedure Insert_Character
-     (Item : not null access Root_Aquarius_Source_Entity'Class;
-      Ch   : Character);
-
-   procedure Insert_New_Line
-     (Item : not null access Root_Aquarius_Source_Entity'Class);
-
-   procedure Set_Cursor
-     (Item     : not null access Root_Aquarius_Source_Entity'Class;
-      Position : Aquarius.Layout.Position);
 
 --     overriding procedure Insert_Character
 --       (Item    : in out Root_Aquarius_Source_Entity;
@@ -109,7 +138,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
    ------------------------
 
    procedure Backward_Character
-     (Item : not null access Root_Aquarius_Source_Entity'Class)
+     (Item : in out Root_Aquarius_Source_Entity'Class)
    is
       use Ada.Strings.Unbounded;
       use Aquarius.Layout;
@@ -181,10 +210,6 @@ package body Komnenos.Entities.Source.Aquarius_Source is
       Echo := True;
 
       while Length (Entity.Edit_Buffer) > 0 loop
-         Ada.Text_IO.Put_Line
-           ("Check_Token ["
-            & To_String (Entity.Edit_Buffer)
-            & "]");
          Scan_Token (Entity, Force, Last, Tok);
          exit when Last = 0;
 
@@ -192,8 +217,6 @@ package body Komnenos.Entities.Source.Aquarius_Source is
             use type Aquarius.Tokens.Token;
             Text : constant String := Slice (Entity.Edit_Buffer, Start, Last);
          begin
-
-            Ada.Text_IO.Put_Line ("got token [" & Text & "]");
 
             if Entity.Update_Tree /= null then
                if Tok = Entity.Update_Tree.Get_Token then
@@ -261,10 +284,8 @@ package body Komnenos.Entities.Source.Aquarius_Source is
         not Aquarius.Programs.Parser.Is_Ambiguous
           (Entity.Parse_Context)
       then
-         Komnenos.Entities.Visuals.Invalidate_Visuals (Entity);
+         Komnenos.Entities.Visuals.Invalidate_Visuals (Entity.all);
          Echo := False;
-      else
-         Echo := True;
       end if;
 
    end Check_Token;
@@ -327,48 +348,48 @@ package body Komnenos.Entities.Source.Aquarius_Source is
    -- Execute_Command --
    ---------------------
 
-   overriding procedure Execute_Command
-     (Item    : not null access Root_Aquarius_Source_Entity;
-      Command : Komnenos.Commands.Komnenos_Command)
-   is
-      use Komnenos.Commands;
-   begin
-      case Command.Command is
-         when No_Command =>
-            null;
-         when Move_Cursor_Command =>
-            case Command.Units is
-               when By_Character =>
-                  if Command.Offset > 0 then
-                     for I in 1 .. Command.Offset loop
-                        Item.Forward_Character;
-                     end loop;
-                  elsif Command.Offset < 0 then
-                     for I in 1 .. -Command.Offset loop
-                        Item.Backward_Character;
-                     end loop;
-                  else
-                     null;
-                  end if;
-               when By_Token =>
-                  null;
-               when By_Line =>
-                  null;
-               when By_Fragment =>
-                  null;
-            end case;
-
-         when Set_Cursor_Command =>
-            Set_Cursor (Item, Command.New_Position);
-
-         when Insert_Character_Command =>
-            Item.Insert_Character (Command.Ch);
-
-         when New_Line_Command =>
-            Item.Insert_New_Line;
-
-      end case;
-   end Execute_Command;
+--     overriding procedure Execute_Command
+--       (Item    : not null access Root_Aquarius_Source_Entity;
+--        Command : Komnenos.Commands.Komnenos_Command)
+--     is
+--        use Komnenos.Commands;
+--     begin
+--        case Command.Command is
+--           when No_Command =>
+--              null;
+--           when Move_Cursor_Command =>
+--              case Command.Units is
+--                 when By_Character =>
+--                    if Command.Offset > 0 then
+--                       for I in 1 .. Command.Offset loop
+--                          Item.Forward_Character;
+--                       end loop;
+--                    elsif Command.Offset < 0 then
+--                       for I in 1 .. -Command.Offset loop
+--                          Item.Backward_Character;
+--                       end loop;
+--                    else
+--                       null;
+--                    end if;
+--                 when By_Token =>
+--                    null;
+--                 when By_Line =>
+--                    null;
+--                 when By_Fragment =>
+--                    null;
+--              end case;
+--
+--           when Set_Cursor_Command =>
+--              Set_Cursor (Item, Command.New_Position);
+--
+--           when Insert_Character_Command =>
+--              Item.Insert_Character (Command.Ch);
+--
+--           when New_Line_Command =>
+--              Item.Insert_New_Line;
+--
+--        end case;
+--     end Execute_Command;
 
    ----------------------------
    -- Find_Entity_Containing --
@@ -388,7 +409,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
    -----------------------
 
    procedure Forward_Character
-     (Item : not null access Root_Aquarius_Source_Entity'Class)
+     (Item : in out Root_Aquarius_Source_Entity'Class)
    is
       use Ada.Strings.Unbounded;
       use Aquarius.Layout;
@@ -457,7 +478,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
    ----------------------
 
    procedure Insert_Character
-     (Item : not null access Root_Aquarius_Source_Entity'Class;
+     (Item : in out Root_Aquarius_Source_Entity'Class;
       Ch   : Character)
    is
       Buffer         : constant String :=
@@ -513,11 +534,11 @@ package body Komnenos.Entities.Source.Aquarius_Source is
          end if;
       end if;
 
-      Ada.Text_IO.Put_Line
-        ("edit: [" & New_Buffer & "] at "
-         & Aquarius.Trees.Cursors.Image
-           (Aquarius.Programs.Parser.Get_Cursor
-                (Item.Parse_Context)));
+--        Ada.Text_IO.Put_Line
+--          ("edit: [" & New_Buffer & "] at "
+--           & Aquarius.Trees.Cursors.Image
+--             (Aquarius.Programs.Parser.Get_Cursor
+--                  (Item.Parse_Context)));
 
       Item.Edit_Buffer :=
         Ada.Strings.Unbounded.To_Unbounded_String (New_Buffer);
@@ -544,7 +565,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
    ---------------------
 
    procedure Insert_New_Line
-     (Item : not null access Root_Aquarius_Source_Entity'Class)
+     (Item : in out Root_Aquarius_Source_Entity'Class)
    is
    begin
       Item.Insert_Character (' ');
@@ -564,6 +585,26 @@ package body Komnenos.Entities.Source.Aquarius_Source is
          end if;
       end;
    end Insert_New_Line;
+
+   -----------------
+   -- Insert_Text --
+   -----------------
+
+   overriding procedure Insert_Text
+     (Item     : in out Root_Aquarius_Source_Entity;
+      Position : Aquarius.Layout.Position;
+      Text     : String)
+   is
+      pragma Unreferenced (Position);
+   begin
+      for Ch of Text loop
+         if Character'Pos (Ch) = 10 then
+            Item.Insert_New_Line;
+         else
+            Root_Aquarius_Source_Entity'Class (Item).Insert_Character (Ch);
+         end if;
+      end loop;
+   end Insert_Text;
 
    --------------
    -- Log_Tree --
@@ -597,6 +638,38 @@ package body Komnenos.Entities.Source.Aquarius_Source is
    begin
       Log (Tree, 1);
    end Log_Tree;
+
+   -----------------
+   -- Move_Cursor --
+   -----------------
+
+   overriding procedure Move_Cursor
+     (Item     : in out Root_Aquarius_Source_Entity;
+      Movement : Cursor_Movement_Type;
+      Offset   : Aquarius.Layout.Character_Offset)
+   is
+      use Aquarius.Layout;
+      Forward : constant Boolean := Offset >= 0;
+      Count   : constant Aquarius.Layout.Count :=
+                  Aquarius.Layout.Count (abs Offset);
+   begin
+      case Movement is
+         when By_Character =>
+            for I in 1 .. Count loop
+               if Forward then
+                  Item.Forward_Character;
+               else
+                  Item.Backward_Character;
+               end if;
+            end loop;
+         when By_Word =>
+            null;
+         when By_Line =>
+            null;
+         when By_Page =>
+            null;
+      end case;
+   end Move_Cursor;
 
    ------------
    -- Render --
@@ -725,8 +798,8 @@ package body Komnenos.Entities.Source.Aquarius_Source is
    -- Set_Cursor --
    ----------------
 
-   procedure Set_Cursor
-     (Item     : not null access Root_Aquarius_Source_Entity'Class;
+   overriding procedure Set_Cursor
+     (Item     : in out Root_Aquarius_Source_Entity;
       Position : Aquarius.Layout.Position)
    is
       use Ada.Strings.Unbounded;

@@ -1,7 +1,6 @@
 with Ada.Characters.Handling;
 with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded.Less_Case_Insensitive;
-with Ada.Text_IO;
 
 package body Komnenos.Entities is
 
@@ -195,14 +194,14 @@ package body Komnenos.Entities is
    -- Execute_Command --
    ---------------------
 
-   procedure Execute_Command
-     (Item    : not null access Root_Entity_Reference;
-      Command : Komnenos.Commands.Komnenos_Command)
-   is
-      pragma Unreferenced (Item);
-   begin
-      Ada.Text_IO.Put_Line (Komnenos.Commands.Show (Command));
-   end Execute_Command;
+--     procedure Execute_Command
+--       (Item    : not null access Root_Entity_Reference;
+--        Command : Komnenos.Commands.Komnenos_Command)
+--     is
+--        pragma Unreferenced (Item);
+--     begin
+--        Ada.Text_IO.Put_Line (Komnenos.Commands.Show (Command));
+--     end Execute_Command;
 
    ------------
    -- Exists --

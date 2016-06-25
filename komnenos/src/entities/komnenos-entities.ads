@@ -7,7 +7,7 @@ private with Ada.Strings.Fixed.Equal_Case_Insensitive;
 private with Ada.Strings.Fixed.Hash_Case_Insensitive;
 private with Ada.Strings.Unbounded;
 
-with Komnenos.Commands;
+--  with Komnenos.Commands;
 with Komnenos.Session_Objects;
 
 with Aquarius.Layout;
@@ -96,6 +96,53 @@ package Komnenos.Entities is
       return Boolean
    is (True);
 
+   function Get_Cursor
+     (Item : Root_Entity_Reference)
+      return Aquarius.Layout.Position
+   is (1, 1);
+
+   procedure Set_Cursor
+     (Item : in out Root_Entity_Reference;
+      New_Position : Aquarius.Layout.Position)
+   is null;
+
+   type Cursor_Movement_Type is
+     (By_Character,
+      By_Word,
+      By_Line,
+      By_Page);
+
+   procedure Move_Cursor
+     (Item     : in out Root_Entity_Reference;
+      Movement : Cursor_Movement_Type;
+      Offset   : Aquarius.Layout.Character_Offset)
+   is null;
+
+   function Get_Position
+     (Item   : Root_Entity_Reference;
+      Start  : Aquarius.Layout.Position;
+      Offset : Aquarius.Layout.Character_Offset)
+      return Aquarius.Layout.Position
+      is abstract;
+
+   procedure Insert_Text
+     (Item     : in out Root_Entity_Reference;
+      Position : Aquarius.Layout.Position;
+      Text     : String)
+   is null;
+
+   procedure Delete_Text
+     (Item   : in out Root_Entity_Reference;
+      Start  : Aquarius.Layout.Position;
+      Finish : Aquarius.Layout.Position)
+   is null;
+
+   function Get_Text
+     (Item : Root_Entity_Reference;
+      Selection : Aquarius.Layout.Selection)
+      return String
+      is abstract;
+
    procedure Create
      (Item         : in out Root_Entity_Reference'Class;
       Identifier   : String;
@@ -103,9 +150,9 @@ package Komnenos.Entities is
       Display_Text : String := "";
       Description  : String := "");
 
-   procedure Execute_Command
-     (Item    : not null access Root_Entity_Reference;
-      Command : Komnenos.Commands.Komnenos_Command);
+--     procedure Execute_Command
+--       (Item    : not null access Root_Entity_Reference;
+--        Command : Komnenos.Commands.Komnenos_Command);
 
    type Entity_Reference is access all Root_Entity_Reference'Class;
 

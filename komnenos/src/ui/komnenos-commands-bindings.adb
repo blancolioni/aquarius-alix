@@ -1,5 +1,7 @@
 with Aquarius.Keys.Sequences;
 
+with Komnenos.Commands.Standard_Commands;
+
 package body Komnenos.Commands.Bindings is
 
    ----------------------
@@ -24,11 +26,14 @@ package body Komnenos.Commands.Bindings is
          Name : String)
       is
          Sequence : Aquarius.Keys.Sequences.Key_Sequence;
+         Base_Command : constant Root_Komnenos_Command'Class :=
+                          Standard_Commands.Standard_Table.Get_Command (Name);
+         Command      : constant Komnenos_Command :=
+                          new Root_Komnenos_Command'Class'(Base_Command);
       begin
          Aquarius.Keys.Sequences.Add_Key (Sequence, Key);
          Table.Add_Binding
-           (Sequence,
-            Standard_Table.Get_Reference (Name));
+           (Sequence, Command);
       end Bind;
 
    begin
@@ -40,6 +45,7 @@ package body Komnenos.Commands.Bindings is
 
       Bind (Aquarius.Keys.Line_Feed, "new-line");
       Bind (Aquarius.Keys.Carriage_Return, "new-line");
+      Bind (Aquarius.Keys.Back_Space, "delete-character-backward");
 
       for Ch in Character range ' ' .. '~' loop
          Bind (Aquarius.Keys.Character_Key (Ch),

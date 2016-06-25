@@ -31,7 +31,7 @@ with Aquarius.Themes;
 
 with Aquarius.Keys.Gtk_Keys;
 
-with Komnenos.Commands;
+with Komnenos.Commands.Cursor_Movement;
 with Komnenos.Configuration;
 
 package body Komnenos.UI.Gtk_UI.Text is
@@ -604,7 +604,6 @@ package body Komnenos.UI.Gtk_UI.Text is
       pragma Unreferenced (Widget);
       X, Y : Glib.Gint;
       Iter : Gtk.Text_Iter.Gtk_Text_Iter;
-      Line, Column : Glib.Gint;
    begin
       Text_View.Grab_Focus;
       Text_View.Text.Window_To_Buffer_Coords
@@ -612,18 +611,20 @@ package body Komnenos.UI.Gtk_UI.Text is
          Glib.Gint (Event.Button.X), Glib.Gint (Event.Button.Y),
          X, Y);
       Text_View.Text.Get_Iter_At_Location (Iter, X, Y);
---        Text_View.Buffer.Place_Cursor (Iter);
-      Line := Gtk.Text_Iter.Get_Line (Iter);
-      Column := Gtk.Text_Iter.Get_Line_Offset (Iter);
+      --        Text_View.Buffer.Place_Cursor (Iter);
 
       declare
          use Aquarius.Layout;
-         use Glib;
+         Gtk_Line : constant Glib.Gint := Gtk.Text_Iter.Get_Line (Iter);
+         Gtk_Col  : constant Glib.Gint :=
+                      Gtk.Text_Iter.Get_Line_Offset (Iter);
+         New_Position : constant Position :=
+                          (Count (Gtk_Line) + 1, Count (Gtk_Col) + 1);
+         Command      : Komnenos.Commands.Root_Komnenos_Command'Class :=
+                          Commands.Cursor_Movement.Move_To_Position_Command
+                            (New_Position);
       begin
-         Text_View.Fragment.Get_Content.Execute_Command
-           ((Komnenos.Commands.Set_Cursor_Command,
-            (Positive_Count (Line + 1),
-             Positive_Count (Column + 1))));
+         Text_View.Fragment.Execute (Command);
       end;
 
       return False;

@@ -14,6 +14,7 @@ with Aquarius.Themes;
 with Komnenos.Entities;
 with Komnenos.Session_Objects;
 
+with Komnenos.Commands.Manager;
 private with Komnenos.Commands.Bindings;
 
 package Komnenos.Fragments is
@@ -81,6 +82,10 @@ package Komnenos.Fragments is
    function Inserted_Text
      (Fragment : Root_Fragment_Type)
       return String;
+
+   procedure Execute
+     (Fragment : in out Root_Fragment_Type'Class;
+      Command  : in out Komnenos.Commands.Root_Komnenos_Command'Class);
 
    procedure Rendered
      (Fragment : in out Root_Fragment_Type);
@@ -205,6 +210,7 @@ private
      and Komnenos.Session_Objects.Session_Object_Interface with
       record
          Content           : Komnenos.Entities.Entity_Reference;
+         Commands          : Komnenos.Commands.Manager.Command_Manager;
          Default_Style     : Aquarius.Styles.Aquarius_Style;
          Layout_Rec        : Layout_Rectangle;
          Path              : Ada.Strings.Unbounded.Unbounded_String;

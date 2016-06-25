@@ -44,7 +44,7 @@ package body Komnenos.Entities.Visuals is
    ----------------------
 
    procedure Insert_At_Cursor
-     (Entity : not null access Root_Entity_Reference'Class;
+     (Entity : in out Root_Entity_Reference'Class;
       Text   : String)
    is
    begin
@@ -65,7 +65,7 @@ package body Komnenos.Entities.Visuals is
    ------------------------
 
    procedure Invalidate_Visuals
-     (Entity : not null access Root_Entity_Reference'Class)
+     (Entity : in out Root_Entity_Reference'Class)
    is
    begin
       if Bound_Entity_Map.Contains (Entity.Key) then
@@ -117,7 +117,7 @@ package body Komnenos.Entities.Visuals is
    -------------------
 
    procedure Update_Cursor
-     (Entity : not null access Root_Entity_Reference'Class;
+     (Entity : in out Root_Entity_Reference'Class;
       Position : Aquarius.Layout.Position)
    is
    begin

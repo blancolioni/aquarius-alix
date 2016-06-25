@@ -29,9 +29,17 @@ package Aquarius.Layout is
                   Width   : Positive;
                   Justify : Boolean)
                   return String;
-
    --  Fill: split the text into lines so that it fills the given
    --  width.  If Justify is true, the right margin will be
    --  justified.
+
+   type Selection is
+      record
+         Start  : Position;
+         Finish : Position;
+      end record;
+
+   type Line_Offset is new Integer;
+   type Character_Offset is new Integer;
 
 end Aquarius.Layout;
