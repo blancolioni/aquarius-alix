@@ -3,7 +3,7 @@ with Aquarius.Keys.Bindings;
 package Komnenos.Commands.Bindings is
 
    package Komnenos_Command_Bindings is
-     new Aquarius.Keys.Bindings (Command_Reference);
+     new Aquarius.Keys.Bindings (Komnenos_Command);
 
    type Binding_Table is
      new Komnenos_Command_Bindings.Binding_Table with null record;

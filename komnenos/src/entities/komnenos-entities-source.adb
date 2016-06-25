@@ -43,19 +43,19 @@ package body Komnenos.Entities.Source is
    -- New_Source_Entity --
    -----------------------
 
-   function New_Source_Entity
-     (Name         : String;
-      File_Name    : String;
-      Class        : String;
-      Line         : Natural;
-      Column       : Natural)
-      return Entity_Reference
-   is
-      Result : Root_Source_Entity_Reference;
-   begin
-      Result.Create (Name, File_Name, Class, Line, Column);
-      return new Root_Source_Entity_Reference'(Result);
-   end New_Source_Entity;
+--     function New_Source_Entity
+--       (Name         : String;
+--        File_Name    : String;
+--        Class        : String;
+--        Line         : Natural;
+--        Column       : Natural)
+--        return Entity_Reference
+--     is
+--        Result : Root_Source_Entity_Reference;
+--     begin
+--        Result.Create (Name, File_Name, Class, Line, Column);
+--        return new Root_Source_Entity_Reference'(Result);
+--     end New_Source_Entity;
 
    ----------------------
    -- Placeholder_Text --

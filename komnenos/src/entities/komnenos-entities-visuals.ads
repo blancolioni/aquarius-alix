@@ -10,14 +10,14 @@ package Komnenos.Entities.Visuals is
      (Visual : not null access Entity_Visual'Class);
 
    procedure Invalidate_Visuals
-     (Entity : not null access Root_Entity_Reference'Class);
+     (Entity : in out Root_Entity_Reference'Class);
 
    procedure Update_Cursor
-     (Entity : not null access Root_Entity_Reference'Class;
+     (Entity : in out Root_Entity_Reference'Class;
       Position : Aquarius.Layout.Position);
 
    procedure Insert_At_Cursor
-     (Entity : not null access Root_Entity_Reference'Class;
+     (Entity : in out Root_Entity_Reference'Class;
       Text   : String);
 
 end Komnenos.Entities.Visuals;

@@ -1,6 +1,8 @@
 with Ada.Characters.Latin_1;
 with Ada.Directories;
 
+with Komnenos.Commands.Cursor_Movement;
+
 package body Komnenos.Fragments is
 
    function Get_Style_Info
@@ -89,6 +91,19 @@ package body Komnenos.Fragments is
    begin
       return Ada.Strings.Unbounded.To_String (Fragment.Key);
    end Entity_Key;
+
+   -------------
+   -- Execute --
+   -------------
+
+   procedure Execute
+     (Fragment : in out Root_Fragment_Type'Class;
+      Command  : in out Komnenos.Commands.Root_Komnenos_Command'Class)
+   is
+   begin
+      Fragment.Commands.Execute
+        (Command, Fragment.Content);
+   end Execute;
 
    ---------------
    -- File_Name --
@@ -451,9 +466,11 @@ package body Komnenos.Fragments is
      (Fragment     : in out Root_Fragment_Type;
       New_Position : Aquarius.Layout.Position)
    is
+      Move : Komnenos.Commands.Root_Komnenos_Command'Class :=
+               Komnenos.Commands.Cursor_Movement.Move_To_Position_Command
+                 (New_Position);
    begin
-      Fragment.Content.Execute_Command
-        ((Komnenos.Commands.Set_Cursor_Command, New_Position));
+      Fragment.Commands.Execute (Move, Fragment.Content);
    end On_Cursor_Move;
 
    ------------------
@@ -466,7 +483,7 @@ package body Komnenos.Fragments is
    is
       use Aquarius.Keys, Aquarius.Keys.Sequences;
       Incomplete, Match : Boolean;
-      Command           : Komnenos.Commands.Command_Reference;
+      Command           : Komnenos.Commands.Komnenos_Command;
    begin
       Add_Key (Fragment.Key_Sequence, Key);
       Fragment.Bindings.Get_Binding
@@ -475,8 +492,8 @@ package body Komnenos.Fragments is
          null;
       else
          if Match then
-            Fragment.Content.Execute_Command
-              (Komnenos.Commands.Standard_Table.Get_Command (Command));
+            Fragment.Commands.Execute
+              (Command.all, Fragment.Content);
          end if;
          Clear (Fragment.Key_Sequence);
       end if;
