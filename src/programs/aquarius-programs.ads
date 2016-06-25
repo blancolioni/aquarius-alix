@@ -510,7 +510,7 @@ private
    overriding function Show
      (Program : Program_Tree_Type)
       return String
-   is (Program.Concatenate_Children);
+   is (Program_Tree_Type'Class (Program).Image);
 
    overriding procedure Set_Reference
      (Program   : in out Program_Tree_Type;

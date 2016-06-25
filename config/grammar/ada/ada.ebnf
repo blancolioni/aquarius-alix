@@ -300,11 +300,12 @@ discriminant_list ::= identifier ':' type_indication [ ':=' static_expression ]
 type_qualifiers ::= ['abstract'] ['tagged'] ['limited']
 
 variable_declaration ::=
-   defining_identifier_list ':' (variable_type | exception) ';'
-
-exception ::= 'exception' [ renaming ]
+   defining_identifier_list ':' variable_type ';'
+ | defining_identifier_list ':' exception ';'
 
 variable_type ::= type_indication [ ( default_value | renaming ) ]
+
+exception ::= 'exception' [ renaming ]
 
 default_value ::= ':=' default_value_expression
 renaming ::= 'renames' object_reference
