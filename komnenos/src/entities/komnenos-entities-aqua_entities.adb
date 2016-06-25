@@ -50,7 +50,7 @@ package body Komnenos.Entities.Aqua_Entities is
          Handler        => Handle_Define'Access);
       Aqua.Primitives.New_Primitive_Function
         (Name           => "komnenos__cross_reference",
-         Argument_Count => 3,
+         Argument_Count => 4,
          Handler        => Handle_Cross_Reference'Access);
       Aqua.Primitives.New_Primitive_Function
         (Name           => "komnenos__get_entity",
