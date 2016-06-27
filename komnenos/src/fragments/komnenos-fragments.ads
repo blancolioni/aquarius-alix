@@ -253,10 +253,12 @@ private
 
    overriding procedure Set_Cursor
      (Fragment : in out Root_Fragment_Type;
+      Cursor   : Komnenos.Entities.Cursor_Type;
       Position : Aquarius.Layout.Position);
 
    overriding procedure Insert_At_Cursor
      (Fragment : in out Root_Fragment_Type;
+      Cursor   : Komnenos.Entities.Cursor_Type;
       Text     : String);
 
    overriding procedure Invalidate (Fragment : in out Root_Fragment_Type);

@@ -13,11 +13,13 @@ package Komnenos.Entities.Visuals is
      (Entity : in out Root_Entity_Reference'Class);
 
    procedure Update_Cursor
-     (Entity : in out Root_Entity_Reference'Class;
+     (Entity   : in out Root_Entity_Reference'Class;
+      Cursor   : Cursor_Type;
       Position : Aquarius.Layout.Position);
 
    procedure Insert_At_Cursor
      (Entity : in out Root_Entity_Reference'Class;
+      Cursor : Cursor_Type;
       Text   : String);
 
 end Komnenos.Entities.Visuals;

@@ -335,8 +335,10 @@ package body Komnenos.Fragments is
 
    overriding procedure Insert_At_Cursor
      (Fragment : in out Root_Fragment_Type;
+      Cursor   : Komnenos.Entities.Cursor_Type;
       Text     : String)
    is
+      pragma Unreferenced (Cursor);
    begin
       Fragment.Text_Inserted := True;
       Fragment.Inserted_Text :=
@@ -592,8 +594,10 @@ package body Komnenos.Fragments is
 
    overriding procedure Set_Cursor
      (Fragment : in out Root_Fragment_Type;
+      Cursor   : Komnenos.Entities.Cursor_Type;
       Position : Aquarius.Layout.Position)
    is
+      pragma Unreferenced (Cursor);
    begin
       Fragment.Cursor_Moved := True;
       Fragment.New_Cursor := Position;
