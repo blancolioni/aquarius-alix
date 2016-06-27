@@ -109,18 +109,24 @@ package body Aquarius.Programs.Arrangements is
    -- Arrange --
    -------------
 
-   procedure Arrange (Item           : in Program_Tree;
-                      Point          : in Aquarius.Trees.Cursors.Cursor;
-                      Partial_Length : in Natural;
-                      Line_Length    : in Positive      := 72)
+   procedure Arrange (Item             : in Program_Tree;
+                      Point            : in Aquarius.Trees.Cursors.Cursor;
+                      Partial_Length   : in Natural;
+                      New_Line_Partial : in Boolean;
+                      Partial_Start    : out Aquarius.Layout.Position;
+                      Line_Length      : in Positive      := 72)
    is
       Context : Arrangement_Context;
    begin
       Context.Right_Margin := Positive_Count (Line_Length);
       Context.User_Text_Length := Count (Partial_Length);
       Context.User_Cursor := Point;
+      Context.User_New_Line := New_Line_Partial;
       Arrange (Item, Context);
       Check_Previous_Line_Length (Context);
+      Partial_Start := Context.User_Text_Start;
+      Aquarius.Messages.Files.Save_Messages
+        ("arrangement.log", Context.Logging);
    end Arrange;
 
    --------------------------
@@ -328,11 +334,36 @@ package body Aquarius.Programs.Arrangements is
          end;
       end if;
 
+      Context.Current_Column :=
+        Context.Current_Column + Item.Layout_Length;
+      Context.Current_Position :=
+        Context.Current_Position + Item.Layout_Length;
+
       if Context.User_Text_Length > 0 and then
         Before_Point (Item, Context.User_Cursor)
       then
-         Context.Current_Column :=
-           Context.Current_Column + Context.User_Text_Length;
+         if Context.User_New_Line then
+            Logging.Log (Context, Item,
+                         "got a user new line after");
+
+            Context.Current_Line := Context.Current_Line + 1;
+            Context.Current_Column :=
+              Context.Current_Indent + Context.User_Text_Length;
+            Logging.Log (Context, Item,
+                         "finished user new line processing");
+
+         else
+            Context.Current_Column :=
+              Context.Current_Column + Context.User_Text_Length;
+         end if;
+         Context.User_Text_Start :=
+           (Context.Current_Line,
+            Context.Current_Column - Context.User_Text_Length);
+         Logging.Log (Context, Item,
+                      "Calculate user edit start at "
+                      & Aquarius.Layout.Show (Context.User_Text_Start)
+                      & "with length"
+                      & Count'Image (Context.User_Text_Length));
       end if;
 
       if Item.Separator_New_Line then
@@ -359,11 +390,6 @@ package body Aquarius.Programs.Arrangements is
          Context.First_On_Line := True;
          Context.Cancel_Indent := True;
       else
-         Context.Current_Column :=
-           Context.Current_Column + Item.Layout_Length;
-         Context.Current_Position :=
-           Context.Current_Position + Item.Layout_Length;
-
          Context.First_On_Line := False;
          Context.Got_New_Line  := False;
 
@@ -681,15 +707,12 @@ package body Aquarius.Programs.Arrangements is
    ------------
 
    procedure Render
-     (Program     : in Program_Tree;
-      Renderer    : in out Aquarius.Rendering.Aquarius_Renderer;
-      Point       : in Aquarius.Trees.Cursors.Cursor;
-      Partial     : in String)
+     (Program          : in Program_Tree;
+      Renderer         : in out Rendering.Root_Aquarius_Renderer'Class;
+      Point            : in Aquarius.Trees.Cursors.Cursor;
+      Partial          : in String;
+      Partial_Start    : in Aquarius.Layout.Position)
    is
-
-      Point_Position : Aquarius.Layout.Position :=
-        (1, 1 + Aquarius.Layout.Count (Partial'Length));
-
       procedure Perform_Render (P : Program_Tree);
       procedure Render_Terminal (Terminal : Program_Tree);
 
@@ -739,10 +762,7 @@ package body Aquarius.Programs.Arrangements is
          end if;
 
          if Before_Point (Terminal, Point) then
-            Point_Position := Terminal.Layout_End_Position;
-            Renderer.Set_Text (Terminal, Point_Position, "normal", Partial);
-            Point_Position.Column :=
-              Point_Position.Column + Partial'Length;
+            Renderer.Set_Text (Terminal, Partial_Start, "normal", Partial);
          end if;
 
       end Render_Terminal;
@@ -750,7 +770,7 @@ package body Aquarius.Programs.Arrangements is
    begin
       Renderer.Begin_Render;
       Perform_Render (Program);
-      Renderer.Set_Point (Point_Position);
+      Renderer.Set_Point (Partial_Start);
       Renderer.End_Render;
    end Render;
 
@@ -764,7 +784,7 @@ package body Aquarius.Programs.Arrangements is
    is
    begin
       Render (Program, Renderer,
-              Aquarius.Trees.Cursors.Left_Of_Tree (Program), "");
+              Aquarius.Trees.Cursors.Left_Of_Tree (Program), "", (1, 1));
    end Render;
 
 end Aquarius.Programs.Arrangements;

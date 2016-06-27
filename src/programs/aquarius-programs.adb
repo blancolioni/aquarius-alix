@@ -2197,7 +2197,7 @@ package body Aquarius.Programs is
    -----------------------------
 
    procedure Set_Vertical_Gap_Before
-     (Item  : not null access Program_Tree_Type;
+     (Item  : in out Program_Tree_Type'Class;
       Gap   : in Aquarius.Layout.Count)
    is
    begin
@@ -2368,8 +2368,9 @@ package body Aquarius.Programs is
    -- Vertical_Gap_Before --
    -------------------------
 
-   function Vertical_Gap_Before (Item : not null access Program_Tree_Type)
-                                return Aquarius.Layout.Count
+   function Vertical_Gap_Before
+     (Item : Program_Tree_Type'Class)
+      return Aquarius.Layout.Count
    is
    begin
       return Item.Vertical_Gap;

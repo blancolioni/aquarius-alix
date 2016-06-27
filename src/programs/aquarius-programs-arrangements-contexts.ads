@@ -26,8 +26,10 @@ private package Aquarius.Programs.Arrangements.Contexts is
          Soft_Indent        : Count               := 0;
          Right_Margin       : Positive_Count      := 72;
          Rearranging        : Boolean             := False;
+         User_New_Line      : Boolean             := False;
          User_Text_Length   : Count               := 0;
          User_Cursor        : Aquarius.Trees.Cursors.Cursor;
+         User_Text_Start    : Aquarius.Layout.Position;
          Logging            : Aquarius.Messages.Message_List;
          Stop_Tree          : Program_Tree        := null;
          Stopped            : Boolean             := False;

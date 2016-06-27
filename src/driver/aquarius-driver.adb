@@ -287,10 +287,12 @@ begin
                   end if;
 
                   Aquarius.Programs.Arrangements.Render
-                    (Program   => Input,
-                     Renderer  => Renderer,
-                     Point     => Aquarius.Trees.Cursors.Left_Of_Tree (Input),
-                     Partial   => "");
+                    (Program          => Input,
+                     Renderer         => Renderer,
+                     Point            =>
+                       Aquarius.Trees.Cursors.Left_Of_Tree (Input),
+                     Partial          => "",
+                     Partial_Start    => (1, 1));
 
                   if Using_File then
                      Close (File);

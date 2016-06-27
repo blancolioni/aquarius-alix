@@ -936,10 +936,11 @@ package body Aquarius.Plugins.Plugin is
       Set_Output (File);
 
       Aquarius.Programs.Arrangements.Render
-        (Program   => P,
-         Renderer  => Renderer,
-         Point     => Aquarius.Trees.Cursors.Left_Of_Tree (P),
-         Partial   => "");
+        (Program          => P,
+         Renderer         => Renderer,
+         Point            => Aquarius.Trees.Cursors.Left_Of_Tree (P),
+         Partial          => "",
+         Partial_Start    => (1, 1));
 
       New_Line;
 

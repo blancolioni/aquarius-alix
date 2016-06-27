@@ -204,12 +204,13 @@ package Aquarius.Programs is
    --  Find a child of Top which contains the given Location and return it.
    --  Return null if no such child exists.
 
-   function Vertical_Gap_Before (Item : not null access Program_Tree_Type)
-                                return Aquarius.Layout.Count;
-
    procedure Set_Vertical_Gap_Before
-     (Item  : not null access Program_Tree_Type;
+     (Item  : in out Program_Tree_Type'Class;
       Gap   : in Aquarius.Layout.Count);
+
+   function Vertical_Gap_Before
+     (Item : Program_Tree_Type'Class)
+      return Aquarius.Layout.Count;
 
    function Separator_New_Line (Item : Program_Tree_Type'Class)
                                return Boolean;
