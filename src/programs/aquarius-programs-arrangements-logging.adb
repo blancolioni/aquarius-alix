@@ -37,36 +37,10 @@ package body Aquarius.Programs.Arrangements.Logging is
      (Context  : in out Contexts.Arrangement_Context;
       Program  : Program_Tree)
    is
---        use Ada.Characters.Handling;
       use Ada.Strings, Ada.Strings.Fixed;
---        function To_String (B : Boolean) return String
---        is (To_Lower (Boolean'Image (B)));
       function To_String (I : Integer) return String
       is (Trim (Integer'Image (I), Left));
 
---           Need_New_Line     : Boolean             := False;
---           New_Line_Priority : Rule_Priority       := 1;
---           Got_New_Line      : Boolean             := False;
---           First_On_Line     : Boolean             := True;
---           First_Terminal    : Program_Tree;
---           Previous_Terminal : Program_Tree;
---           Need_Space        : Boolean             := False;
---           No_Space          : Boolean             := False;
---           Cancel_Indent     : Boolean             := False;
---           Message_Level     : Aquarius.Messages.Message_Level :=
---             Aquarius.Messages.No_Message;
---           Space_Priority    : Rule_Priority       := 1;
---           Current_Line      : Count               := 1;
---           Current_Column    : Count               := 1;
---           Current_Position  : Count               := 0;
---           Current_Indent    : Count               := 1;
---           Right_Margin      : Positive_Count      := 72;
---           Overflow          : Boolean             := False;
---           Overflow_Line     : Count               := 0;
---           Rearranging       : Boolean             := False;
---           User_Text_Length  : Count               := 0;
---           User_Cursor       : Aquarius.Trees.Cursors.Cursor;
---           Logging           : Aquarius.Messages.Message_List;
    begin
       Logging.Log (Context, Program,
            (if Context.Need_New_Line then "[need-nl]" else "")

@@ -22,20 +22,21 @@ package body Komnenos.Entities.Source.Aquarius_Source is
    type Root_Aquarius_Source_Entity is
      new Root_Source_Entity_Reference with
       record
-         Top_Level        : Boolean;
-         Changed          : Boolean;
-         Compilation_Unit : Aquarius.Programs.Program_Tree;
-         Grammar          : Aquarius.Grammars.Aquarius_Grammar;
-         Entity_Spec      : Aquarius.Programs.Program_Tree;
-         Entity_Body      : Aquarius.Programs.Program_Tree;
-         Entity_Tree      : Aquarius.Programs.Program_Tree;
-         Edit_Tree        : Aquarius.Programs.Program_Tree;
-         Update_Tree      : Aquarius.Programs.Program_Tree;
-         Edit_Buffer      : Ada.Strings.Unbounded.Unbounded_String;
-         Parse_Context    : Aquarius.Programs.Parser.Parse_Context;
-         Buffer_Cursor    : Natural;
-         Buffer_Changed   : Boolean := False;
-         Invalidated      : Boolean := False;
+         Top_Level              : Boolean;
+         Changed                : Boolean;
+         Compilation_Unit       : Aquarius.Programs.Program_Tree;
+         Grammar                : Aquarius.Grammars.Aquarius_Grammar;
+         Entity_Spec            : Aquarius.Programs.Program_Tree;
+         Entity_Body            : Aquarius.Programs.Program_Tree;
+         Entity_Tree            : Aquarius.Programs.Program_Tree;
+         Edit_Tree              : Aquarius.Programs.Program_Tree;
+         Update_Tree            : Aquarius.Programs.Program_Tree;
+         Edit_Buffer            : Ada.Strings.Unbounded.Unbounded_String;
+         Parse_Context          : Aquarius.Programs.Parser.Parse_Context;
+         Buffer_Cursor          : Natural;
+         Buffer_Changed         : Boolean := False;
+         Invalidated            : Boolean := False;
+         New_Line_Before_Buffer : Boolean := False;
       end record;
 
    overriding function Top_Level
@@ -238,11 +239,11 @@ package body Komnenos.Entities.Source.Aquarius_Source is
             else
                --  creating a new token
 
-               Ada.Text_IO.Put_Line
-                 ("Parsing into: "
-                  & Aquarius.Trees.Cursors.Image
-                    (Aquarius.Programs.Parser.Get_Cursor
-                       (Entity.Parse_Context)));
+--                 Ada.Text_IO.Put_Line
+--                   ("Parsing into: "
+--                    & Aquarius.Trees.Cursors.Image
+--                      (Aquarius.Programs.Parser.Get_Cursor
+--                         (Entity.Parse_Context)));
 
                if Token_OK
                  (Tok, Aquarius.Source.No_Source_Position,
@@ -261,6 +262,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
                       (Aquarius.Trees.Cursors.Get_Left_Tree
                          (Aquarius.Programs.Parser.Get_Cursor
                             (Entity.Parse_Context)));
+                  Entity.New_Line_Before_Buffer := False;
                   Got_Token := True;
                else
                   Ada.Text_IO.Put_Line ("parse failed");
@@ -567,23 +569,28 @@ package body Komnenos.Entities.Source.Aquarius_Source is
    procedure Insert_New_Line
      (Item : in out Root_Aquarius_Source_Entity'Class)
    is
+      Echo : Boolean;
+      pragma Unreferenced (Echo);
    begin
-      Item.Insert_Character (' ');
 
-      declare
-         Cursor : constant Aquarius.Trees.Cursors.Cursor :=
-                    Aquarius.Programs.Parser.Get_Cursor
-                      (Item.Parse_Context);
-         Program : Aquarius.Programs.Program_Tree;
-      begin
-         if not Aquarius.Trees.Cursors.Is_Off_Right (Cursor) then
-            Program :=
-              Aquarius.Programs.Program_Tree
-                (Aquarius.Trees.Cursors.Get_Right_Tree (Cursor));
-            Program.Set_Vertical_Gap_Before (1);
-            Komnenos.Entities.Visuals.Invalidate_Visuals (Item);
-         end if;
-      end;
+      Item.Insert_Character (' ');
+      Item.New_Line_Before_Buffer := True;
+      Komnenos.Entities.Visuals.Invalidate_Visuals (Item);
+
+--        declare
+--           Cursor : constant Aquarius.Trees.Cursors.Cursor :=
+--                      Aquarius.Programs.Parser.Get_Cursor
+--                        (Item.Parse_Context);
+--           Program : Aquarius.Programs.Program_Tree;
+--        begin
+--           if not Aquarius.Trees.Cursors.Is_Off_Right (Cursor) then
+--              Program :=
+--                Aquarius.Programs.Program_Tree
+--                  (Aquarius.Trees.Cursors.Get_Right_Tree (Cursor));
+--              Program.Set_Vertical_Gap_Before (1);
+--              Komnenos.Entities.Visuals.Invalidate_Visuals (Item);
+--           end if;
+--        end;
    end Insert_New_Line;
 
    -----------------
@@ -685,29 +692,34 @@ package body Komnenos.Entities.Source.Aquarius_Source is
                      (Komnenos.Fragments.Fragment_Type (Visual),
                       Entity.Table);
       Program  : constant Aquarius.Programs.Program_Tree := Entity.Entity_Tree;
+      Point    : constant Aquarius.Trees.Cursors.Cursor :=
+                   Aquarius.Programs.Parser.Get_Cursor (Entity.Parse_Context);
+      Cursor   : Aquarius.Layout.Position;
+      Partial  : constant String :=
+                   Ada.Strings.Unbounded.To_String (Entity.Edit_Buffer);
    begin
       Aquarius.Programs.Arrangements.Arrange
-        (Program,
-         Line_Length => Visual.Width / 8);
+        (Item             => Program,
+         Point            => Point,
+         Partial_Length   => Partial'Length,
+         New_Line_Partial => Entity.New_Line_Before_Buffer,
+         Partial_Start    => Cursor,
+         Line_Length      => Visual.Width / 8);
 
       Renderer.Set_Theme (Aquarius.Themes.Active_Theme);
 
       Visual.Clear;
 
       Aquarius.Programs.Arrangements.Render
-        (Program   => Program,
-         Renderer  => Renderer,
-         Point     =>
-           Aquarius.Programs.Parser.Get_Cursor (Entity.Parse_Context),
-         Partial   =>
-           Ada.Strings.Unbounded.To_String
-             (Entity.Edit_Buffer));
+        (Program          => Program,
+         Renderer         => Renderer,
+         Point            => Point,
+         Partial          => Partial,
+         Partial_Start    => Cursor);
 
       if Entity.Edit_Tree /= null then
          declare
             use type Aquarius.Layout.Count;
-            Cursor : Aquarius.Layout.Position :=
-                       Entity.Edit_Tree.Layout_End_Position;
          begin
             Cursor.Column :=
               Cursor.Column + Aquarius.Layout.Count (Entity.Buffer_Cursor);

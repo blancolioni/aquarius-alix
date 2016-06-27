@@ -495,22 +495,23 @@ package body Aquarius.Buffers is
    is
       Cursor : constant Aquarius.Trees.Cursors.Cursor :=
         Aquarius.Programs.Parser.Get_Cursor
-        (Buffer.Parsing);
+                   (Buffer.Parsing);
+      Cursor_Position : Aquarius.Layout.Position;
    begin
 
       Ada.Text_IO.Put_Line ("Start render: " & Buffer.Name);
 
       Buffer.Rendering := True;
 
-      Aquarius.Programs.Arrangements.Arrange (Buffer.Contents,
-                                              Cursor,
-                                              0);
+      Aquarius.Programs.Arrangements.Arrange
+        (Buffer.Contents,
+         Cursor, 0, False, Cursor_Position);
 
       Aquarius.Programs.Arrangements.Render
         (Buffer.Contents,
          Aquarius.Rendering.Aquarius_Renderer (Display),
          Cursor,
-         "");
+         "", Cursor_Position);
 
       Buffer.Rendering := False;
       Ada.Text_IO.Put_Line ("Finish render: " & Buffer.Name);
@@ -631,6 +632,7 @@ package body Aquarius.Buffers is
    is
       Renderer : Aquarius.Rendering.Aquarius_Renderer :=
                    Aquarius.Rendering.Manager.Renderer ("text");
+      Cursor   : Aquarius.Layout.Position;
    begin
       Ada.Text_IO.Put_Line ("Start update: " & Buffer.Name);
       Ada.Text_IO.Put_Line
@@ -640,15 +642,18 @@ package body Aquarius.Buffers is
       Buffer.Rendering := True;
 
       Aquarius.Programs.Arrangements.Arrange
-        (Item           => Buffer.Contents,
-         Point          => Point,
-         Partial_Length => Partial'Length);
+        (Item             => Buffer.Contents,
+         Point            => Point,
+         Partial_Length   => Partial'Length,
+         Partial_Start    => Cursor,
+         New_Line_Partial => False);
 
       Aquarius.Programs.Arrangements.Render
-        (Program  => Buffer.Contents,
-         Renderer => Renderer,
-         Point    => Point,
-         Partial  => Partial);
+        (Program          => Buffer.Contents,
+         Renderer         => Renderer,
+         Point            => Point,
+         Partial          => Partial,
+         Partial_Start    => Cursor);
 
       Buffer.Rendering := False;
       Ada.Text_IO.Put_Line ("Finish update: " & Buffer.Name);
