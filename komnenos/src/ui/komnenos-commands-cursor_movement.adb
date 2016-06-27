@@ -55,7 +55,7 @@ package body Komnenos.Commands.Cursor_Movement is
    is
    begin
       Command.Entity.Move_Cursor
-        (Command.Movement, Command.Offset);
+        (Komnenos.Entities.Point, Command.Movement, Command.Offset);
    end Execute;
 
    -------------
@@ -66,7 +66,8 @@ package body Komnenos.Commands.Cursor_Movement is
      (Command : in out Move_Cursor_Absolute_Command)
    is
    begin
-      Command.Entity.Set_Cursor (Command.New_Position);
+      Command.Entity.Set_Cursor (Komnenos.Entities.Point,
+                                 Command.New_Position);
    end Execute;
 
    -------------------------------
@@ -133,7 +134,8 @@ package body Komnenos.Commands.Cursor_Movement is
      (Command : in out Root_Move_Cursor_Command)
    is
    begin
-      Command.Entity.Set_Cursor (Command.Old_Position);
+      Command.Entity.Set_Cursor
+        (Komnenos.Entities.Point, Command.Old_Position);
    end Undo;
 
 end Komnenos.Commands.Cursor_Movement;

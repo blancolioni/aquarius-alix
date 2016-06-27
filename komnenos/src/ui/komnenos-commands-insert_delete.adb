@@ -89,7 +89,7 @@ package body Komnenos.Commands.Insert_Delete is
       use Ada.Strings.Unbounded;
    begin
       Command.Entity.Insert_Text
-        (Command.Entity.Get_Cursor, To_String (Command.Text));
+        (To_String (Command.Text));
    end Execute;
 
    ------------------------------

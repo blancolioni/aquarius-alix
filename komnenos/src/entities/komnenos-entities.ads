@@ -18,6 +18,14 @@ with Aqua.Objects;
 
 package Komnenos.Entities is
 
+   type Cursor_Type is (Point, Mark, Selection_Start, Selection_End);
+
+   type Cursor_Movement_Type is
+     (By_Character,
+      By_Word,
+      By_Line,
+      By_Page);
+
    type Entity_Visual is interface;
 
    function X (Visual : Entity_Visual) return Integer is abstract;
@@ -53,11 +61,13 @@ package Komnenos.Entities is
 
    procedure Set_Cursor
      (Visual   : in out Entity_Visual;
+      Cursor   : Cursor_Type;
       Position : in     Aquarius.Layout.Position)
    is abstract;
 
    procedure Insert_At_Cursor
      (Visual : in out Entity_Visual;
+      Cursor : Cursor_Type;
       Text   : String)
    is abstract;
 
@@ -97,23 +107,20 @@ package Komnenos.Entities is
    is (True);
 
    function Get_Cursor
-     (Item : Root_Entity_Reference)
+     (Entity : Root_Entity_Reference;
+      Cursor : Cursor_Type)
       return Aquarius.Layout.Position
    is (1, 1);
 
    procedure Set_Cursor
-     (Item : in out Root_Entity_Reference;
+     (Entity       : in out Root_Entity_Reference;
+      Cursor       : Cursor_Type;
       New_Position : Aquarius.Layout.Position)
    is null;
 
-   type Cursor_Movement_Type is
-     (By_Character,
-      By_Word,
-      By_Line,
-      By_Page);
-
    procedure Move_Cursor
      (Item     : in out Root_Entity_Reference;
+      Cursor   : Cursor_Type;
       Movement : Cursor_Movement_Type;
       Offset   : Aquarius.Layout.Character_Offset)
    is null;
@@ -127,19 +134,17 @@ package Komnenos.Entities is
 
    procedure Insert_Text
      (Item     : in out Root_Entity_Reference;
-      Position : Aquarius.Layout.Position;
       Text     : String)
    is null;
 
-   procedure Delete_Text
-     (Item   : in out Root_Entity_Reference;
-      Start  : Aquarius.Layout.Position;
-      Finish : Aquarius.Layout.Position)
+   procedure Delete_Region
+     (Item   : in out Root_Entity_Reference)
    is null;
 
-   function Get_Text
-     (Item : Root_Entity_Reference;
-      Selection : Aquarius.Layout.Selection)
+   function Get_Region_Text
+     (Item  : Root_Entity_Reference;
+      End_1 : Cursor_Type;
+      End_2 : Cursor_Type)
       return String
       is abstract;
 

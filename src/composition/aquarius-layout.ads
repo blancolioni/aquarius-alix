@@ -33,11 +33,11 @@ package Aquarius.Layout is
    --  width.  If Justify is true, the right margin will be
    --  justified.
 
-   type Selection is
-      record
-         Start  : Position;
-         Finish : Position;
-      end record;
+--     type Region is
+--        record
+--           Start  : Position;
+--           Finish : Position;
+--        end record;
 
    type Line_Offset is new Integer;
    type Character_Offset is new Integer;

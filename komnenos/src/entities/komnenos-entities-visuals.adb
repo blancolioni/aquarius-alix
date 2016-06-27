@@ -45,6 +45,7 @@ package body Komnenos.Entities.Visuals is
 
    procedure Insert_At_Cursor
      (Entity : in out Root_Entity_Reference'Class;
+      Cursor : Cursor_Type;
       Text   : String)
    is
    begin
@@ -54,7 +55,7 @@ package body Komnenos.Entities.Visuals is
                      Bound_Entity_Map.Element (Entity.Key);
          begin
             for Visual of List loop
-               Visual.Insert_At_Cursor (Text);
+               Visual.Insert_At_Cursor (Cursor, Text);
             end loop;
          end;
       end if;
@@ -117,7 +118,8 @@ package body Komnenos.Entities.Visuals is
    -------------------
 
    procedure Update_Cursor
-     (Entity : in out Root_Entity_Reference'Class;
+     (Entity   : in out Root_Entity_Reference'Class;
+      Cursor   : Cursor_Type;
       Position : Aquarius.Layout.Position)
    is
    begin
@@ -127,7 +129,7 @@ package body Komnenos.Entities.Visuals is
                      Bound_Entity_Map.Element (Entity.Key);
          begin
             for Visual of List loop
-               Visual.Set_Cursor (Position);
+               Visual.Set_Cursor (Cursor, Position);
             end loop;
          end;
       end if;
