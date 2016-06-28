@@ -111,7 +111,7 @@ package body Aquarius.Buffers is
    -- Grammar --
    -------------
 
-   function Grammar (Buffer : not null access Aquarius_Buffer_Record'Class)
+   function Grammar (Buffer : Aquarius_Buffer_Record'Class)
                      return Aquarius.Grammars.Aquarius_Grammar
    is
    begin
@@ -177,8 +177,11 @@ package body Aquarius.Buffers is
    function Location_Column (Location : Aquarius_Buffer_Record)
                             return Natural
    is
+      Terminal : constant Aquarius.Programs.Program_Tree :=
+                   Location.Program.Find_Node_At
+                     (Location.Point_Position);
    begin
-      return Positive (Location.Point_Position.Column);
+      return Natural (Terminal.Layout_Start_Column);
    end Location_Column;
 
    -------------------
@@ -189,8 +192,11 @@ package body Aquarius.Buffers is
    function Location_Line (Location : Aquarius_Buffer_Record)
                           return Natural
    is
+      Terminal : constant Aquarius.Programs.Program_Tree :=
+                   Location.Program.Find_Node_At
+                     (Location.Point_Position);
    begin
-      return Positive (Location.Point_Position.Line);
+      return Natural (Terminal.Layout_Line);
    end Location_Line;
 
    -------------------
@@ -465,7 +471,7 @@ package body Aquarius.Buffers is
    -- Program --
    -------------
 
-   function Program (Buffer : not null access Aquarius_Buffer_Record'Class)
+   function Program (Buffer : Aquarius_Buffer_Record'Class)
                     return Aquarius.Programs.Program_Tree
    is
    begin
@@ -493,10 +499,11 @@ package body Aquarius.Buffers is
      (Buffer  : not null access Aquarius_Buffer_Record;
       Display : in out Aquarius.Rendering.Root_Aquarius_Renderer'Class)
    is
-      Cursor : constant Aquarius.Trees.Cursors.Cursor :=
-        Aquarius.Programs.Parser.Get_Cursor
-                   (Buffer.Parsing);
-      Cursor_Position : Aquarius.Layout.Position;
+      Cursor        : constant Aquarius.Trees.Cursors.Cursor :=
+                        Aquarius.Programs.Parser.Get_Cursor
+                          (Buffer.Parsing);
+      Cursor_Line   : Aquarius.Layout.Line_Number;
+      Cursor_Column : Aquarius.Layout.Column_Number;
    begin
 
       Ada.Text_IO.Put_Line ("Start render: " & Buffer.Name);
@@ -505,13 +512,13 @@ package body Aquarius.Buffers is
 
       Aquarius.Programs.Arrangements.Arrange
         (Buffer.Contents,
-         Cursor, 0, False, Cursor_Position);
+         Cursor, 0, False, Cursor_Line, Cursor_Column);
 
       Aquarius.Programs.Arrangements.Render
         (Buffer.Contents,
          Aquarius.Rendering.Aquarius_Renderer (Display),
          Cursor,
-         "", Cursor_Position);
+         "", Cursor_Line, Cursor_Column);
 
       Buffer.Rendering := False;
       Ada.Text_IO.Put_Line ("Finish render: " & Buffer.Name);
@@ -577,7 +584,7 @@ package body Aquarius.Buffers is
         Aquarius.Programs.Program_Tree (Program);
       Aquarius.Trees.Properties.Set_Grammar (Buffer.Contents.all,
                                              Buffer.Grammar);
-      Buffer.Point_Position := (1, 1);
+      Buffer.Point_Position := 1;
       Aquarius.Programs.Parser.Initialise_Parse_Context
         (Context      => Buffer.Parsing,
          Grammar      => Buffer.Grammar,
@@ -630,9 +637,10 @@ package body Aquarius.Buffers is
       Point   : Aquarius.Trees.Cursors.Cursor;
       Partial : String)
    is
-      Renderer : Aquarius.Rendering.Aquarius_Renderer :=
-                   Aquarius.Rendering.Manager.Renderer ("text");
-      Cursor   : Aquarius.Layout.Position;
+      Renderer      : Aquarius.Rendering.Aquarius_Renderer :=
+                        Aquarius.Rendering.Manager.Renderer ("text");
+      Cursor_Line   : Aquarius.Layout.Line_Number;
+      Cursor_Column : Aquarius.Layout.Column_Number;
    begin
       Ada.Text_IO.Put_Line ("Start update: " & Buffer.Name);
       Ada.Text_IO.Put_Line
@@ -642,18 +650,12 @@ package body Aquarius.Buffers is
       Buffer.Rendering := True;
 
       Aquarius.Programs.Arrangements.Arrange
-        (Item             => Buffer.Contents,
-         Point            => Point,
-         Partial_Length   => Partial'Length,
-         Partial_Start    => Cursor,
-         New_Line_Partial => False);
+        (Buffer.Contents, Point,
+         Partial'Length, False, Cursor_Line, Cursor_Column);
 
       Aquarius.Programs.Arrangements.Render
-        (Program          => Buffer.Contents,
-         Renderer         => Renderer,
-         Point            => Point,
-         Partial          => Partial,
-         Partial_Start    => Cursor);
+        (Buffer.Contents, Renderer, Point, Partial,
+         Cursor_Line, Cursor_Column);
 
       Buffer.Rendering := False;
       Ada.Text_IO.Put_Line ("Finish update: " & Buffer.Name);

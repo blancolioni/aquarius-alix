@@ -110,7 +110,25 @@ package Komnenos.Entities is
      (Entity : Root_Entity_Reference;
       Cursor : Cursor_Type)
       return Aquarius.Layout.Position
-   is (1, 1);
+   is abstract;
+
+   function Get_Line
+     (Entity : Root_Entity_Reference;
+      Position : Aquarius.Layout.Position)
+      return Aquarius.Layout.Line_Number
+   is abstract;
+
+   function Get_Column
+     (Entity   : Root_Entity_Reference;
+      Position : Aquarius.Layout.Position)
+      return Aquarius.Layout.Column_Number
+   is abstract;
+
+   function Get_Start_Of_Line
+     (Entity : Root_Entity_Reference;
+      Line   : Aquarius.Layout.Line_Number)
+      return Aquarius.Layout.Position
+   is abstract;
 
    procedure Set_Cursor
      (Entity       : in out Root_Entity_Reference;
@@ -122,15 +140,8 @@ package Komnenos.Entities is
      (Item     : in out Root_Entity_Reference;
       Cursor   : Cursor_Type;
       Movement : Cursor_Movement_Type;
-      Offset   : Aquarius.Layout.Character_Offset)
+      Offset   : Aquarius.Layout.Position_Offset)
    is null;
-
-   function Get_Position
-     (Item   : Root_Entity_Reference;
-      Start  : Aquarius.Layout.Position;
-      Offset : Aquarius.Layout.Character_Offset)
-      return Aquarius.Layout.Position
-      is abstract;
 
    procedure Insert_Text
      (Item     : in out Root_Entity_Reference;

@@ -9,12 +9,13 @@ package body Aquarius.Rendering.Html is
    type Root_Html_Renderer is new Root_Aquarius_Renderer
    with null record;
 
-   overriding
-   procedure Set_Text (Renderer  : in out Root_Html_Renderer;
-                       Terminal  : Aquarius.Programs.Program_Tree;
-                       Position  : in     Aquarius.Layout.Position;
-                       Class     : in     String;
-                       Text      : in     String);
+   overriding procedure Set_Text
+     (Renderer  : in out Root_Html_Renderer;
+      Terminal  : Aquarius.Programs.Program_Tree;
+      Line      : Aquarius.Layout.Line_Number;
+      Column    : Aquarius.Layout.Column_Number;
+      Class     : String;
+      Text      : String);
 
    overriding
    procedure Begin_Render (Renderer : in out Root_Html_Renderer);
@@ -63,34 +64,37 @@ package body Aquarius.Rendering.Html is
    --------------
 
    overriding
-   procedure Set_Text (Renderer  : in out Root_Html_Renderer;
-                       Terminal  : Aquarius.Programs.Program_Tree;
-                       Position  : in     Aquarius.Layout.Position;
-                       Class     : in     String;
-                       Text      : in     String)
+   procedure Set_Text
+     (Renderer  : in out Root_Html_Renderer;
+      Terminal  : Aquarius.Programs.Program_Tree;
+      Line      : Aquarius.Layout.Line_Number;
+      Column    : Aquarius.Layout.Column_Number;
+      Class     : String;
+      Text      : String)
    is
       pragma Unreferenced (Terminal);
       use Ada.Text_IO;
-      use type Aquarius.Layout.Positive_Count;
+      use Aquarius.Layout;
       Font : constant Aquarius.Fonts.Aquarius_Font :=
         Renderer.Theme.Style (Class).Font;
-      Render_Pos : constant Aquarius.Layout.Position :=
-        Renderer.Current_Position;
    begin
-      if Render_Pos.Line < Position.Line then
-         for I in Render_Pos.Line .. Position.Line - 1 loop
+      if Renderer.Line < Line then
+         for I in Renderer.Line .. Line - 1 loop
             Put_Line ("<br>");
          end loop;
-      elsif Render_Pos.Column < Position.Column then
-         for I in Render_Pos.Line .. Position.Line - 1 loop
+         Renderer.Set_Current_Position (Line, 1);
+      end if;
+
+      if Renderer.Column < Column then
+         for I in Renderer.Column .. Column - 1 loop
             Put ("&nbsp;");
          end loop;
       end if;
 
       Put (With_Font (Font, Text));
-      Renderer.Set_Current_Position ((Position.Line,
-                                      Position.Column +
-                                        Aquarius.Layout.Count (Text'Length)));
+
+      Renderer.Set_Current_Position
+        (Line, Column + Column_Offset (Text'Length));
    end Set_Text;
 
    ---------------

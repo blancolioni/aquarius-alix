@@ -147,20 +147,10 @@ package body Aquarius.Programs.Parser is
                           Position : Aquarius.Source.Source_Position;
                           Comment  : in     Program_Tree)
    is
+      pragma Unreferenced (Position);
    begin
 
-      declare
-         use Aquarius.Layout;
-      begin
-         Comment.Start_Position :=
-           (Positive_Count (Aquarius.Source.Get_Line (Position)),
-            Positive_Count (Aquarius.Source.Get_Column (Position)));
-         Comment.End_Position := (Comment.Start_Position.Line,
-                                  Comment.Start_Position.Column
-                                  + Count (Comment.Text'Length));
-         Comment.File_Start := Comment.Start_Position;
-      end;
-
+      --  Comment.File_Start := Position;
       Context.Comments.Append (Comment);
       if Context.Vertical_Space > 0 then
          Comment.Set_Vertical_Gap_Before
@@ -1046,19 +1036,19 @@ package body Aquarius.Programs.Parser is
 
       Program.Set_Source_Position (Tok_Pos);
 
-      if Tok_Pos /= Aquarius.Source.No_Source_Position then
-         declare
-            use Aquarius.Layout;
-         begin
-            Program.Start_Position :=
-              (Positive_Count (Aquarius.Source.Get_Line (Tok_Pos)),
-               Positive_Count (Aquarius.Source.Get_Column (Tok_Pos)));
-            Program.File_Start := Program.Start_Position;
-            Program.End_Position := (Program.Start_Position.Line,
-                                     Program.Start_Position.Column
-                                     + Count (Tok_Text'Length));
-         end;
-      end if;
+--        if Tok_Pos /= Aquarius.Source.No_Source_Position then
+--           declare
+--              use Aquarius.Layout;
+--           begin
+--              Program.Start_Position :=
+--                (Positive_Count (Aquarius.Source.Get_Line (Tok_Pos)),
+--                 Positive_Count (Aquarius.Source.Get_Column (Tok_Pos)));
+--              Program.File_Start := Program.Start_Position;
+--              Program.End_Position := (Program.Start_Position.Line,
+--                                       Program.Start_Position.Column
+--                                       + Count (Tok_Text'Length));
+--           end;
+--        end if;
 
       if Context.Run_Actions and then not Has_Ambiguities (Context) then
 

@@ -156,15 +156,22 @@ package Aquarius.Programs is
    function Layout_End_Position (Item : Program_Tree_Type)
                                 return Aquarius.Layout.Position;
    function Layout_Start_Column (Item : Program_Tree_Type)
-                                  return Aquarius.Layout.Count;
+                                  return Aquarius.Layout.Column_Number;
    function Layout_End_Column (Item : Program_Tree_Type)
-                               return Aquarius.Layout.Count;
+                               return Aquarius.Layout.Column_Number;
+
+   function Layout_Line (Item : Program_Tree_Type)
+                         return Aquarius.Layout.Line_Number;
+
    function Contains_Position (Item : Program_Tree_Type;
                                Position : Aquarius.Layout.Position)
                                return Boolean;
 
-   procedure Set_Layout_Position (Item : in out Program_Tree_Type;
-                                  Pos  : in     Aquarius.Layout.Position);
+   procedure Set_Layout_Position
+     (Item : in out Program_Tree_Type;
+      Pos  : in     Aquarius.Layout.Position;
+      Line : in     Aquarius.Layout.Line_Number;
+      Col  : in     Aquarius.Layout.Column_Number);
 
    function Layout_Length (Item : Program_Tree_Type)
                           return Aquarius.Layout.Count;
@@ -182,20 +189,27 @@ package Aquarius.Programs is
    --  return the full path to the directory in which the source file
    --  for this program tree was found
 
-   function Find_Node_At (Top      : not null access Program_Tree_Type'Class;
-                          Location : in     Aquarius.Layout.Position)
-                         return Program_Tree;
+   function Find_Node_At
+     (Top      : not null access Program_Tree_Type'Class;
+      Location : in     Aquarius.Layout.Position)
+      return Program_Tree;
    --  Search for a node at Location within the original source file
 
-   function Find_Node_At (Parent   : not null access Program_Tree_Type'Class;
-                          Location : in     Aquarius.Source.Source_Position)
-                         return Program_Tree;
+   function Find_Node_At
+     (Parent   : not null access Program_Tree_Type'Class;
+      Location : in     Aquarius.Source.Source_Position)
+      return Program_Tree;
 
    function Find_Local_Node_At
      (Top      : not null access Program_Tree_Type'Class;
       Location : in     Aquarius.Layout.Position)
       return Program_Tree;
    --  Search for a node placed at Location in the local rendered context
+
+   function Find_Local_First_Node_At_Line
+     (Top  : not null access Program_Tree_Type'Class;
+      Line : Aquarius.Layout.Line_Number)
+      return Program_Tree;
 
    function Find_Node_Containing
      (Top      : not null access Program_Tree_Type'Class;
@@ -441,9 +455,13 @@ private
          Vertical_Gap      : Aquarius.Layout.Count;
          Syntax            : Aquarius.Syntax.Syntax_Tree;
          Fill_Text         : Aquarius.Tokens.Token_Text;
-         File_Start        : Aquarius.Layout.Position;
+         Local_Start       : Aquarius.Layout.Position;
          Start_Position    : Aquarius.Layout.Position;
          End_Position      : Aquarius.Layout.Position;
+         Start_Line        : Aquarius.Layout.Line_Number;
+         End_Line          : Aquarius.Layout.Line_Number;
+         Start_Column      : Aquarius.Layout.Column_Number;
+         End_Column        : Aquarius.Layout.Column_Number;
          Indent_Rule       : Boolean;
          Offset_Rule       : Aquarius.Source.Source_Position;
          Render_Class      : Aquarius.Syntax.Syntax_Tree;

@@ -3,60 +3,6 @@ with Ada.Strings.Unbounded;
 
 package body Aquarius.Layout is
 
-   -------
-   -- + --
-   -------
-
-   function "+" (Pos     : Position;
-                 Columns : Count)
-                return Position
-   is
-   begin
-      return (Pos.Line, Pos.Column + Columns);
-   end "+";
-
-   ---------
-   -- "<" --
-   ---------
-
-   function "<" (Left, Right : Position) return Boolean is
-   begin
-      if Left.Line < Right.Line then
-         return True;
-      elsif Left.Line = Right.Line then
-         return Left.Column < Right.Column;
-      else
-         return False;
-      end if;
-   end "<";
-
-   --------
-   -- <= --
-   --------
-
-   function "<=" (Left, Right : Position) return Boolean is
-   begin
-      return Left < Right or else Left = Right;
-   end "<=";
-
-   -------
-   -- > --
-   -------
-
-   function ">" (Left, Right : Position) return Boolean is
-   begin
-      return not (Left <= Right);
-   end ">";
-
-   --------
-   -- >= --
-   --------
-
-   function ">=" (Left, Right : Position) return Boolean is
-   begin
-      return not (Left < Right);
-   end ">=";
-
    ----------
    -- Fill --
    ----------
@@ -97,23 +43,12 @@ package body Aquarius.Layout is
    end Fill;
 
    ----------
-   -- Next --
-   ----------
-
-   procedure Next (Pos : in out Position) is
-   begin
-      Pos.Column := Pos.Column + 1;
-   end Next;
-
-   ----------
    -- Show --
    ----------
 
    function Show (Pos : Position) return String is
    begin
-      return "(" & Ada.Strings.Fixed.Trim (Pos.Line'Img, Ada.Strings.Both) &
-        "," & Ada.Strings.Fixed.Trim (Pos.Column'Img, Ada.Strings.Both) &
-        ")";
+      return Ada.Strings.Fixed.Trim (Position'Image (Pos), Ada.Strings.Both);
    end Show;
 
 end Aquarius.Layout;

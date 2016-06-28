@@ -12,10 +12,11 @@ package body Aquarius.Rendering.Files is
 
    overriding procedure Set_Text
      (Renderer  : in out Root_File_Renderer;
-      Terminal  : Aquarius.Programs.Program_Tree;
-      Position  : in     Aquarius.Layout.Position;
-      Class     : in     String;
-      Text      : in     String);
+      Terminal    : Aquarius.Programs.Program_Tree;
+      Line        : in     Aquarius.Layout.Line_Number;
+      Column      : in     Aquarius.Layout.Column_Number;
+      Class       : in     String;
+      Text        : in     String);
 
    overriding procedure Begin_Render
      (Renderer : in out Root_File_Renderer);
@@ -67,28 +68,28 @@ package body Aquarius.Rendering.Files is
 
    overriding procedure Set_Text
      (Renderer  : in out Root_File_Renderer;
-      Terminal  : Aquarius.Programs.Program_Tree;
-      Position  : in     Aquarius.Layout.Position;
-      Class     : in     String;
-      Text      : in     String)
+      Terminal    : Aquarius.Programs.Program_Tree;
+      Line        : in     Aquarius.Layout.Line_Number;
+      Column      : in     Aquarius.Layout.Column_Number;
+      Class       : in     String;
+      Text        : in     String)
    is
       pragma Unreferenced (Terminal);
       pragma Unreferenced (Class);
 
       use Ada.Text_IO;
-      use type Aquarius.Layout.Positive_Count;
-      Render_Pos : constant Aquarius.Layout.Position :=
-        Renderer.Current_Position;
+      use Aquarius.Layout;
    begin
-      if Render_Pos.Line < Position.Line then
+      if Renderer.Line < Line then
          New_Line (Renderer.File.all,
-                   Positive_Count (Position.Line - Render_Pos.Line));
+                   Ada.Text_IO.Positive_Count (Line - Renderer.Line));
+         Renderer.Set_Current_Position (Line, 1);
       end if;
-      Set_Col (Renderer.File.all, Positive_Count (Position.Column));
+
+      Set_Col (Renderer.File.all, Ada.Text_IO.Positive_Count (Column));
+
       Put (Renderer.File.all, Text);
-      Renderer.Set_Current_Position
-        ((Position.Line,
-         Position.Column + Aquarius.Layout.Count (Text'Length)));
+
    end Set_Text;
 
 end Aquarius.Rendering.Files;

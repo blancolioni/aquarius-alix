@@ -11,7 +11,7 @@ package body Komnenos.Commands.Insert_Delete is
    type Delete_From_Cursor_Command is
      new Root_Delete_Command with
       record
-         Offset : Aquarius.Layout.Character_Offset;
+         Offset : Aquarius.Layout.Position_Offset;
       end record;
 
    overriding procedure Execute
@@ -57,9 +57,9 @@ package body Komnenos.Commands.Insert_Delete is
    begin
       return Result : Delete_From_Cursor_Command do
          if Forward then
-            Result.Offset := Character_Offset (Count);
+            Result.Offset := Position_Offset (Count);
          else
-            Result.Offset := -Character_Offset (Count);
+            Result.Offset := -Position_Offset (Count);
          end if;
       end return;
    end Delete_Text_At_Cursor;

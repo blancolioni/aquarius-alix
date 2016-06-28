@@ -7,7 +7,7 @@ package Komnenos.Commands.Cursor_Movement is
       return Root_Komnenos_Command'Class;
 
    function Move_By_Character_Command
-     (Offset : Aquarius.Layout.Character_Offset)
+     (Offset : Aquarius.Layout.Position_Offset)
       return Root_Komnenos_Command'Class;
 
    function Move_To_Position_Command

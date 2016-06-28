@@ -1,16 +1,28 @@
 package body Aquarius.Rendering is
 
-   ----------------------
-   -- Current_Position --
-   ----------------------
+   --------------------
+   -- Current_Column --
+   --------------------
 
-   function Current_Position
+   function Current_Column
      (Renderer : Root_Aquarius_Renderer'Class)
-     return Aquarius.Layout.Position
+      return Aquarius.Layout.Column_Number
    is
    begin
-      return Renderer.Pos;
-   end Current_Position;
+      return Renderer.Column;
+   end Current_Column;
+
+   ------------------
+   -- Current_Line --
+   ------------------
+
+   function Current_Line
+     (Renderer : Root_Aquarius_Renderer'Class)
+      return Aquarius.Layout.Line_Number
+   is
+   begin
+      return Renderer.Line;
+   end Current_Line;
 
    --------------------------
    -- Set_Current_Position --
@@ -18,10 +30,12 @@ package body Aquarius.Rendering is
 
    procedure Set_Current_Position
      (Renderer : in out Root_Aquarius_Renderer'Class;
-      Position : in     Aquarius.Layout.Position)
+      Line     : Aquarius.Layout.Line_Number;
+      Column   : Aquarius.Layout.Column_Number)
    is
    begin
-      Renderer.Pos := Position;
+      Renderer.Line := Line;
+      Renderer.Column := Column;
    end Set_Current_Position;
 
    ---------------

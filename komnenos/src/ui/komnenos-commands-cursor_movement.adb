@@ -18,7 +18,7 @@ package body Komnenos.Commands.Cursor_Movement is
      new Root_Move_Cursor_Command with
       record
          Movement : Komnenos.Entities.Cursor_Movement_Type;
-         Offset   : Aquarius.Layout.Character_Offset;
+         Offset   : Aquarius.Layout.Position_Offset;
       end record;
 
    overriding procedure Execute
@@ -43,7 +43,7 @@ package body Komnenos.Commands.Cursor_Movement is
 
    function Move_Command
      (Movement : Komnenos.Entities.Cursor_Movement_Type;
-      Offset   : Aquarius.Layout.Character_Offset)
+      Offset   : Aquarius.Layout.Position_Offset)
       return Root_Komnenos_Command'Class;
 
    -------------
@@ -75,7 +75,7 @@ package body Komnenos.Commands.Cursor_Movement is
    -------------------------------
 
    function Move_By_Character_Command
-     (Offset : Aquarius.Layout.Character_Offset)
+     (Offset : Aquarius.Layout.Position_Offset)
       return Root_Komnenos_Command'Class
    is
    begin
@@ -93,7 +93,7 @@ package body Komnenos.Commands.Cursor_Movement is
    begin
       return Move_Command
         (Komnenos.Entities.By_Line,
-         Aquarius.Layout.Character_Offset (Offset));
+         Aquarius.Layout.Position_Offset (Offset));
    end Move_By_Line_Command;
 
    ------------------
@@ -102,7 +102,7 @@ package body Komnenos.Commands.Cursor_Movement is
 
    function Move_Command
      (Movement : Komnenos.Entities.Cursor_Movement_Type;
-      Offset   : Aquarius.Layout.Character_Offset)
+      Offset   : Aquarius.Layout.Position_Offset)
       return Root_Komnenos_Command'Class
    is
    begin

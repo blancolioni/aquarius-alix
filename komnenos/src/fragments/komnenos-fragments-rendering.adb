@@ -1,5 +1,6 @@
 with Aquarius.Layout;
 with Aquarius.Programs;
+with Ada.Text_IO;
 
 package body Komnenos.Fragments.Rendering is
 
@@ -11,12 +12,13 @@ package body Komnenos.Fragments.Rendering is
          Entity_Table  : access Komnenos.Entities.Entity_Table_Interface'Class;
       end record;
 
-   overriding
-   procedure Set_Text (Renderer  : in out Root_Fragment_Renderer;
-                       Terminal  : in     Aquarius.Programs.Program_Tree;
-                       Position  : in     Aquarius.Layout.Position;
-                       Class     : in     String;
-                       Text      : in     String);
+   overriding procedure Set_Text
+     (Renderer  : in out Root_Fragment_Renderer;
+      Terminal  : in     Aquarius.Programs.Program_Tree;
+      Line      : in     Aquarius.Layout.Line_Number;
+      Column    : in     Aquarius.Layout.Column_Number;
+      Class     : in     String;
+      Text      : in     String);
 
    overriding
    procedure Begin_Render (Renderer : in out Root_Fragment_Renderer);
@@ -26,7 +28,8 @@ package body Komnenos.Fragments.Rendering is
 
    overriding
    procedure Set_Point (Renderer : in out Root_Fragment_Renderer;
-                        Point    : in     Aquarius.Layout.Position);
+                        Line      : in     Aquarius.Layout.Line_Number;
+                        Column    : in     Aquarius.Layout.Column_Number);
 
    ------------------
    -- Begin_Render --
@@ -36,7 +39,7 @@ package body Komnenos.Fragments.Rendering is
    procedure Begin_Render (Renderer : in out Root_Fragment_Renderer) is
    begin
       Renderer.Fragment.Clear;
-      Renderer.Set_Current_Position ((1, 1));
+      Renderer.Set_Current_Position (1, 1);
    end Begin_Render;
 
    ----------------
@@ -72,44 +75,51 @@ package body Komnenos.Fragments.Rendering is
    ---------------
 
    overriding
-   procedure Set_Point (Renderer : in out Root_Fragment_Renderer;
-                        Point    : in     Aquarius.Layout.Position)
+   procedure Set_Point (Renderer  : in out Root_Fragment_Renderer;
+                        Line      : in     Aquarius.Layout.Line_Number;
+                        Column    : in     Aquarius.Layout.Column_Number)
    is
    begin
-      Renderer.Set_Current_Position (Point);
+      Renderer.Set_Current_Position (Line, Column);
    end Set_Point;
 
    --------------
    -- Set_Text --
    --------------
 
-   overriding
-   procedure Set_Text (Renderer  : in out Root_Fragment_Renderer;
-                       Terminal  : in     Aquarius.Programs.Program_Tree;
-                       Position  : in     Aquarius.Layout.Position;
-                       Class     : in     String;
-                       Text      : in     String)
+   overriding procedure Set_Text
+     (Renderer  : in out Root_Fragment_Renderer;
+      Terminal  : in     Aquarius.Programs.Program_Tree;
+      Line      : in     Aquarius.Layout.Line_Number;
+      Column    : in     Aquarius.Layout.Column_Number;
+      Class     : in     String;
+      Text      : in     String)
    is
+      use Aquarius.Layout;
       use Aquarius.Styles;
       Style : constant Aquarius_Style :=
                 Aquarius.Themes.Active_Theme.Style
                   (Class, Aquarius.Themes.Normal);
-      use type Aquarius.Layout.Positive_Count;
-      Render_Pos : Aquarius.Layout.Position :=
-                     Renderer.Current_Position;
       Reference  : Komnenos.Entities.Entity_Reference := null;
+      Current_Line : Line_Number := Renderer.Current_Line;
+      Current_Col  : Column_Number := Renderer.Current_Column;
    begin
-      while Position.Column < Render_Pos.Column
-        or else Render_Pos.Line < Position.Line
+
+      Ada.Text_IO.Put_Line
+        (Position'Image (Terminal.Layout_Start_Position)
+         & Line'Img & Column'Img & " " & Text);
+
+      while Current_Line < Line
+        or else Current_Col > Column
       loop
          Renderer.Fragment.New_Line;
-         Render_Pos.Line := Render_Pos.Line + 1;
-         Render_Pos.Column := 1;
+         Current_Line := Current_Line + 1;
+         Current_Col := 1;
       end loop;
 
       declare
          Space_Count : constant Natural :=
-                         Natural (Position.Column - Render_Pos.Column);
+                         Natural (Column - Current_Col);
          Spaces      : constant String (1 .. Space_Count) :=
                          (others => ' ');
       begin
@@ -140,9 +150,8 @@ package body Komnenos.Fragments.Rendering is
       end if;
 
       Renderer.Fragment.Put (Text, Style, Reference);
-      Renderer.Set_Current_Position ((Position.Line,
-                                      Position.Column +
-                                        Aquarius.Layout.Count (Text'Length)));
+      Renderer.Set_Current_Position
+        (Line, Column + Column_Offset (Text'Length));
    end Set_Text;
 
 end Komnenos.Fragments.Rendering;

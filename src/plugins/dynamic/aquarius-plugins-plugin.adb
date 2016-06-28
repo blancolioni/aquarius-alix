@@ -10,7 +10,7 @@ with Aquarius.Rendering.Manager;
 with Aquarius.Source;
 with Aquarius.Themes;
 with Aquarius.Tokens;
-with Aquarius.Trees.Cursors;
+with Aquarius.Trees;
 
 package body Aquarius.Plugins.Plugin is
 
@@ -935,12 +935,7 @@ package body Aquarius.Plugins.Plugin is
       Create (File, Out_File, Path);
       Set_Output (File);
 
-      Aquarius.Programs.Arrangements.Render
-        (Program          => P,
-         Renderer         => Renderer,
-         Point            => Aquarius.Trees.Cursors.Left_Of_Tree (P),
-         Partial          => "",
-         Partial_Start    => (1, 1));
+      Aquarius.Programs.Arrangements.Render (P, Renderer);
 
       New_Line;
 

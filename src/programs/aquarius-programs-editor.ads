@@ -52,7 +52,7 @@ private
    type Input_Buffer (Size : Positive) is
       record
          Buffer   : String (1 .. Size) := (others => ' ');
-         Start    : Aquarius.Layout.Position := (1, 1);
+         Start    : Aquarius.Layout.Position := 1;
          Length   : Natural := 0;
          Cursor   : Natural := 0;
          Changed  : Boolean := False;

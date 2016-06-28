@@ -142,10 +142,10 @@ package Aquarius.Buffers is
                     Key    : in     Aquarius.Keys.Aquarius_Key)
                    return Boolean;
 
-   function Program (Buffer : not null access Aquarius_Buffer_Record'Class)
+   function Program (Buffer : Aquarius_Buffer_Record'Class)
                     return Aquarius.Programs.Program_Tree;
 
-   function Grammar (Buffer : not null access Aquarius_Buffer_Record'Class)
+   function Grammar (Buffer : Aquarius_Buffer_Record'Class)
                      return Aquarius.Grammars.Aquarius_Grammar;
 
 private
