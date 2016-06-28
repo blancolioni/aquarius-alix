@@ -5,39 +5,42 @@ package body Aquarius.Rendering.Text is
    type Root_Text_Renderer is new Root_Aquarius_Renderer
      with null record;
 
-   overriding
-   procedure Set_Text (Renderer  : in out Root_Text_Renderer;
-                       Terminal  : Aquarius.Programs.Program_Tree;
-                       Position  : in     Aquarius.Layout.Position;
-                       Class     : in     String;
-                       Text      : in     String);
+   overriding procedure Set_Text
+     (Renderer    : in out Root_Text_Renderer;
+      Terminal    : Aquarius.Programs.Program_Tree;
+      Line        : in     Aquarius.Layout.Line_Number;
+      Column      : in     Aquarius.Layout.Column_Number;
+      Class       : in     String;
+      Text        : in     String);
 
    --------------
    -- Set_Text --
    --------------
 
-   overriding
-   procedure Set_Text (Renderer  : in out Root_Text_Renderer;
-                       Terminal  : Aquarius.Programs.Program_Tree;
-                       Position  : in     Aquarius.Layout.Position;
-                       Class     : in     String;
-                       Text      : in     String)
+   overriding procedure Set_Text
+     (Renderer    : in out Root_Text_Renderer;
+      Terminal    : Aquarius.Programs.Program_Tree;
+      Line        : in     Aquarius.Layout.Line_Number;
+      Column      : in     Aquarius.Layout.Column_Number;
+      Class       : in     String;
+      Text        : in     String)
    is
       pragma Unreferenced (Terminal);
       pragma Unreferenced (Class);
       use Ada.Text_IO;
-      use type Aquarius.Layout.Positive_Count;
-      Render_Pos : constant Aquarius.Layout.Position :=
-        Renderer.Current_Position;
+      use Aquarius.Layout;
    begin
-      if Render_Pos.Line < Position.Line then
-         New_Line (Positive_Count (Position.Line - Render_Pos.Line));
+      if Renderer.Line < Line then
+         New_Line (Ada.Text_IO.Positive_Count (Line - Renderer.Line));
+         Renderer.Set_Current_Position (Line, 1);
       end if;
-      Set_Col (Positive_Count (Position.Column));
+
+      Set_Col (Ada.Text_IO.Positive_Count (Column));
+
       Put (Text);
-      Renderer.Set_Current_Position ((Position.Line,
-                                      Position.Column +
-                                        Aquarius.Layout.Count (Text'Length)));
+
+      Renderer.Set_Current_Position
+        (Line, Column + Column_Offset (Text'Length));
    end Set_Text;
 
    -------------------

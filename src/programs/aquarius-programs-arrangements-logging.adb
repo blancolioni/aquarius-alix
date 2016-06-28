@@ -1,3 +1,5 @@
+with Ada.Strings.Fixed;
+
 with Aquarius.Messages;
 
 package body Aquarius.Programs.Arrangements.Logging is
@@ -11,14 +13,21 @@ package body Aquarius.Programs.Arrangements.Logging is
       Program  : Aquarius.Programs.Program_Tree;
       Text     : String)
    is
+      use Ada.Strings, Ada.Strings.Fixed;
       Current : constant String :=
-                  (if Program.Name = ""
-                   then "(" & Program.Parent.Name & ")"
-                   else Program.Name
-                   & (if Program.Name /= Program.Text
+                  Trim (Context.Current_Position'Img, Left)
+                & ":"
+                  & Trim (Context.Current_Line'Img, Left)
+                & ":"
+                  & Trim (Context.Current_Column'Img, Left)
+                & ": "
+                  & (if Program.Name = ""
+                     then "(" & Program.Parent.Name & ")"
+                     else Program.Name)
+                  & (if Program.Name /= Program.Text
                      then "[" & Program.Text & "]"
-                     else ""))
-                   & ": ";
+                     else "")
+                  & ": ";
 
       Message : constant Aquarius.Messages.Message :=
                   Aquarius.Messages.New_Message

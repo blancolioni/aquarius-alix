@@ -48,9 +48,13 @@ package body Aquarius.Programs is
       Vertical_Gap         => 0,
       Syntax               => null,
       Fill_Text            => Aquarius.Tokens.To_Token_Text (""),
-      File_Start           => (1, 1),
-      Start_Position       => (1, 1),
-      End_Position         => (1, 1),
+      Local_Start          => 1,
+      Start_Position       => 1,
+      End_Position         => 1,
+      Start_Line           => 1,
+      End_Line             => 1,
+      Start_Column         => 1,
+      End_Column           => 1,
       Indent_Rule          => False,
       Offset_Rule          => Aquarius.Source.No_Source_Position,
       Render_Class         => null,
@@ -555,12 +559,10 @@ package body Aquarius.Programs is
                                Position : Aquarius.Layout.Position)
                                return Boolean
    is
+      use type Aquarius.Layout.Position;
    begin
-      return Position.Line in
-        Item.Layout_Start_Position.Line .. Item.Layout_End_Position.Line
-        and then
-          Position.Column in
-            Item.Layout_Start_Column .. Item.Layout_End_Column;
+      return Position in
+        Item.Layout_Start_Position .. Item.Layout_End_Position;
    end Contains_Position;
 
    -------------------------
@@ -789,6 +791,60 @@ package body Aquarius.Programs is
       Item.Filled := True;
    end Fill;
 
+   -----------------------------------
+   -- Find_Local_First_Node_At_Line --
+   -----------------------------------
+
+   function Find_Local_First_Node_At_Line
+     (Top  : not null access Program_Tree_Type'Class;
+      Line : Aquarius.Layout.Line_Number)
+      return Program_Tree
+   is
+      use type Aquarius.Layout.Position;
+      Last_Terminal : Program_Tree := null;
+      Stop : Boolean := False;
+
+      procedure Find
+        (Node : not null access Program_Tree_Type'Class);
+
+      ----------
+      -- Find --
+      ----------
+
+      procedure Find
+        (Node : not null access Program_Tree_Type'Class)
+      is
+         use Aquarius.Layout;
+      begin
+         if Node.Is_Terminal then
+            if Node.Start_Line < Line then
+               Last_Terminal := Program_Tree (Node);
+            elsif Node.Start_Line = Line
+              and then (Last_Terminal = null
+                        or else Last_Terminal.Start_Line < Line)
+            then
+               Last_Terminal := Program_Tree (Node);
+               Stop := True;
+            else
+               Stop := True;
+            end if;
+         else
+            for I in 1 .. Node.Child_Count loop
+               Find (Node.Program_Child (I));
+               exit when Stop;
+            end loop;
+         end if;
+      end Find;
+
+   begin
+      Find (Top);
+      return Last_Terminal;
+   end Find_Local_First_Node_At_Line;
+
+   ------------------------
+   -- Find_Local_Node_At --
+   ------------------------
+
    function Find_Local_Node_At
      (Top      : not null access Program_Tree_Type'Class;
       Location : in     Aquarius.Layout.Position)
@@ -798,13 +854,16 @@ package body Aquarius.Programs is
       use type Aquarius.Layout.Position;
       Last_Terminal : Program_Tree := null;
 
-      procedure Find (Node : Program_Tree);
+      procedure Find
+        (Node : not null access Program_Tree_Type'Class);
 
       ----------
       -- Find --
       ----------
 
-      procedure Find (Node : Program_Tree) is
+      procedure Find
+        (Node : not null access Program_Tree_Type'Class)
+      is
          use Aquarius.Layout;
       begin
          if Node.Is_Terminal then
@@ -817,7 +876,7 @@ package body Aquarius.Programs is
                then
                   null;   --  prefer an identifier to a keyword
                else
-                  Last_Terminal := Node;
+                  Last_Terminal := Program_Tree (Node);
                end if;
             end if;
          else
@@ -828,7 +887,7 @@ package body Aquarius.Programs is
       end Find;
 
    begin
-      Find (Program_Tree (Top));
+      Find (Top);
       return Last_Terminal;
    end Find_Local_Node_At;
 
@@ -836,14 +895,16 @@ package body Aquarius.Programs is
    -- Find_Node_At --
    ------------------
 
-   function Find_Node_At (Top      : not null access Program_Tree_Type'Class;
-                          Location : in     Aquarius.Layout.Position)
-                         return Program_Tree
+   function Find_Node_At
+     (Top      : not null access Program_Tree_Type'Class;
+      Location : in     Aquarius.Layout.Position)
+      return Program_Tree
    is
       use type Aquarius.Layout.Position;
       Last_Terminal : Program_Tree := null;
 
-      procedure Find (Current : not null access Program_Tree_Type'Class);
+      procedure Find
+        (Current : not null access Program_Tree_Type'Class);
 
       ----------
       -- Find --
@@ -854,7 +915,7 @@ package body Aquarius.Programs is
       is
       begin
          if Current.Is_Terminal then
-            if Current.File_Start <= Location then
+            if Current.Local_Start <= Location then
                Last_Terminal := Program_Tree (Current);
             else
                return;
@@ -875,9 +936,10 @@ package body Aquarius.Programs is
    -- Find_Node_At --
    ------------------
 
-   function Find_Node_At (Parent   : not null access Program_Tree_Type'Class;
-                          Location : in     Aquarius.Source.Source_Position)
-                         return Program_Tree
+   function Find_Node_At
+     (Parent   : not null access Program_Tree_Type'Class;
+      Location : in     Aquarius.Source.Source_Position)
+      return Program_Tree
    is
       use Aquarius.Source;
       Loc : constant Source_Position := Parent.Get_Location;
@@ -1421,19 +1483,21 @@ package body Aquarius.Programs is
    -- Layout_End_Column --
    -----------------------
 
-   function Layout_End_Column (Item : Program_Tree_Type)
-                              return Aquarius.Layout.Count
+   function Layout_End_Column
+     (Item : Program_Tree_Type)
+      return Aquarius.Layout.Column_Number
    is
    begin
-      return Item.End_Position.Column;
+      return Item.End_Column;
    end Layout_End_Column;
 
    -------------------------
    -- Layout_End_Position --
    -------------------------
 
-   function Layout_End_Position (Item : Program_Tree_Type)
-                                return Aquarius.Layout.Position
+   function Layout_End_Position
+     (Item : Program_Tree_Type)
+      return Aquarius.Layout.Position
    is
    begin
       return Item.End_Position;
@@ -1459,15 +1523,27 @@ package body Aquarius.Programs is
       end if;
    end Layout_Length;
 
+   -----------------
+   -- Layout_Line --
+   -----------------
+
+   function Layout_Line (Item : Program_Tree_Type)
+                         return Aquarius.Layout.Line_Number
+   is
+   begin
+      return Item.Start_Line;
+   end Layout_Line;
+
    -------------------------
    -- Layout_Start_Column --
    -------------------------
 
-   function Layout_Start_Column (Item : Program_Tree_Type)
-                                return Aquarius.Layout.Count
+   function Layout_Start_Column
+     (Item : Program_Tree_Type)
+      return Aquarius.Layout.Column_Number
    is
    begin
-      return Item.Start_Position.Column;
+      return Item.Start_Column;
    end Layout_Start_Column;
 
    ---------------------------
@@ -2067,11 +2143,25 @@ package body Aquarius.Programs is
    -- Set_Layout_Position --
    -------------------------
 
-   procedure Set_Layout_Position (Item : in out Program_Tree_Type;
-                                  Pos  : in     Aquarius.Layout.Position)
+   procedure Set_Layout_Position
+     (Item : in out Program_Tree_Type;
+      Pos  : in     Aquarius.Layout.Position;
+      Line : in     Aquarius.Layout.Line_Number;
+      Col  : in     Aquarius.Layout.Column_Number)
    is
+      use Aquarius.Layout;
    begin
       Item.Start_Position := Pos;
+      Item.Start_Line := Line;
+      Item.Start_Column := Col;
+
+      Item.End_Position :=
+        Item.Start_Position
+          + Position_Offset (Item.Layout_Length) - 1;
+      Item.End_Line := Line;
+      Item.End_Column :=
+        Item.Start_Column
+          + Column_Offset (Item.Layout_Length) - 1;
    end Set_Layout_Position;
 
    -------------------------

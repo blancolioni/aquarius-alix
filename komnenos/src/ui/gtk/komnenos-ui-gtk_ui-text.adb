@@ -398,21 +398,16 @@ package body Komnenos.UI.Gtk_UI.Text is
    procedure Move_Cursor
      (Text_View : Komnenos_Text_View)
    is
-      use Glib, Gtk.Text_Buffer, Gtk.Text_Iter;
-      Iter    : Gtk_Text_Iter;
-      Line    : Gint;
-      Column  : Gint;
+      Iter    : Gtk.Text_Iter.Gtk_Text_Iter;
+      Offset  : Glib.Gint;
    begin
       Text_View.Buffer.Get_Iter_At_Mark
         (Iter, Text_View.Buffer.Get_Insert);
 
-      Line := Get_Line (Iter);
-      Column := Get_Line_Offset (Iter);
-      Ada.Text_IO.Put_Line ("cursor move:" & Line'Img & Column'Img);
+      Offset := Gtk.Text_Iter.Get_Offset (Iter);
 
       Text_View.Fragment.On_Cursor_Move
-        ((Aquarius.Layout.Positive_Count (Line + 1),
-         Aquarius.Layout.Positive_Count (Column + 1)));
+        (Aquarius.Layout.Position (Offset));
 
    end Move_Cursor;
 
@@ -614,12 +609,10 @@ package body Komnenos.UI.Gtk_UI.Text is
       --        Text_View.Buffer.Place_Cursor (Iter);
 
       declare
-         use Aquarius.Layout;
-         Gtk_Line : constant Glib.Gint := Gtk.Text_Iter.Get_Line (Iter);
-         Gtk_Col  : constant Glib.Gint :=
-                      Gtk.Text_Iter.Get_Line_Offset (Iter);
-         New_Position : constant Position :=
-                          (Count (Gtk_Line) + 1, Count (Gtk_Col) + 1);
+         Gtk_Pos  : constant Glib.Gint :=
+                      Gtk.Text_Iter.Get_Offset (Iter);
+         New_Position : constant Aquarius.Layout.Position :=
+                          Aquarius.Layout.Position (Gtk_Pos);
          Command      : Komnenos.Commands.Root_Komnenos_Command'Class :=
                           Commands.Cursor_Movement.Move_To_Position_Command
                             (New_Position);
@@ -703,16 +696,10 @@ package body Komnenos.UI.Gtk_UI.Text is
       pragma Unreferenced (Event);
       use Glib, Gtk.Text_Buffer, Gtk.Text_Iter;
       Iter    : Gtk_Text_Iter;
-      Line    : Gint;
-      Column  : Gint;
    begin
       Widget.Get_Iter_At_Mark (Iter, Widget.Get_Insert);
-      Line := Get_Line (Iter);
-      Column := Get_Line_Offset (Iter);
-      Ada.Text_IO.Put_Line ("cursor move:" & Line'Img & Column'Img);
       Text.Fragment.On_Cursor_Move
-        ((Aquarius.Layout.Positive_Count (Line + 1),
-         Aquarius.Layout.Positive_Count (Column + 1)));
+        (Aquarius.Layout.Position (Get_Offset (Iter)));
 
       if Text.Fragment.Needs_Render then
          Ada.Text_IO.Put_Line ("updated");
@@ -880,10 +867,9 @@ package body Komnenos.UI.Gtk_UI.Text is
       New_Position : constant Position := Text_View.Fragment.Get_Cursor;
       Iter : Gtk.Text_Iter.Gtk_Text_Iter;
    begin
-      Text_View.Buffer.Get_Iter_At_Line_Offset
+      Text_View.Buffer.Get_Iter_At_Offset
         (Iter        => Iter,
-         Line_Number => Glib.Gint (New_Position.Line) - 1,
-         Char_Offset => Glib.Gint (New_Position.Column) - 1);
+         Char_Offset => Glib.Gint (New_Position));
       Text_View.Buffer.Place_Cursor (Iter);
    end Update_Cursor;
 

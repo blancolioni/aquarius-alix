@@ -102,13 +102,13 @@ package body Aquarius.Programs.Editor is
          Scan_Token (Editor, Force, Length, Tok);
          exit when Length = 0;
 
-         declare
-            use Aquarius.Source;
-         begin
-            Set_Position (Editor.Source_Pos,
-                          Line_Number (Editor.Position.Line),
-                          Column_Number (Editor.Position.Column));
-         end;
+--           declare
+--              use Aquarius.Source;
+--           begin
+--              Set_Position (Editor.Source_Pos,
+--                            Line_Number (Editor.Position.Line),
+--                            Column_Number (Editor.Position.Column));
+--           end;
 
          declare
             use type Aquarius.Tokens.Token;
@@ -192,19 +192,14 @@ package body Aquarius.Programs.Editor is
    -----------------------
 
    function Contains_Position
-     (Input : Input_Buffer;
+     (Input    : Input_Buffer;
       Position : Aquarius.Layout.Position)
       return Boolean
    is
-      use type Aquarius.Layout.Count;
-      Start_Column : constant Aquarius.Layout.Positive_Count :=
-                       Input.Start.Column;
-      End_Column   : constant Aquarius.Layout.Count :=
-                       Input.Start.Column
-                         + Aquarius.Layout.Count (Input.Length);
+      use type Aquarius.Layout.Position;
    begin
-      return Input.Start.Line = Position.Line
-        and then Position.Column in Start_Column .. End_Column;
+      return Input.Start in
+        Position .. Position + Aquarius.Layout.Position_Offset (Input.Length);
    end Contains_Position;
 
    -------------------
@@ -420,12 +415,13 @@ package body Aquarius.Programs.Editor is
    procedure Set_Cursor
      (Input        : in out Input_Buffer;
       From_Position : Aquarius.Layout.Position)
-   is
-   begin
-      Input.Cursor :=
-        Positive (From_Position.Column)
-        - Positive (Input.Start.Column);
-   end Set_Cursor;
+   is null;
+
+--     begin
+--        Input.Cursor :=
+--          Positive (From_Position.Column)
+--          - Positive (Input.Start.Column);
+--     end Set_Cursor;
 
    ---------------
    -- Set_Point --
