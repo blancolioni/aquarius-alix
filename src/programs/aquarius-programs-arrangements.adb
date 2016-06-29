@@ -811,7 +811,7 @@ package body Aquarius.Programs.Arrangements is
    begin
       Renderer.Begin_Render;
       Perform_Render (Program);
-      Renderer.Set_Point (Partial_Line, Partial_Column);
+--      Renderer.Set_Point (Partial_Line, Partial_Column);
       Renderer.End_Render;
    end Render;
 
