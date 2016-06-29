@@ -319,6 +319,16 @@ package Aquarius.Programs is
    --  (if Count < 0).  If Count = 0 then Start will be returned
    --  Start must be a terminal
 
+   function Start_Of_Line
+     (Tree   : not null access Program_Tree_Type'Class)
+      return Aquarius.Programs.Program_Tree;
+   --  Return the first terminal on the same line as Tree
+
+   function End_Of_Line
+     (Tree   : not null access Program_Tree_Type'Class)
+      return Aquarius.Programs.Program_Tree;
+   --  Return the last terminal on the same line as Tree
+
    function Has_Space_After
      (Item : Program_Tree_Type)
       return Boolean;

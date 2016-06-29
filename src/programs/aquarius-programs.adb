@@ -689,6 +689,27 @@ package body Aquarius.Programs is
       return Result (Result'First .. Result'First + Count - 1);
    end Direct_Children;
 
+   -----------------
+   -- End_Of_Line --
+   -----------------
+
+   function End_Of_Line
+     (Tree   : not null access Program_Tree_Type'Class)
+      return Program_Tree
+   is
+      use type Aquarius.Layout.Line_Number;
+      Result : Program_Tree := Program_Tree (Tree);
+      Next   : Program_Tree := Result.Scan_Terminal (1);
+   begin
+      while Next /= null
+        and then Next.Layout_Line = Tree.Layout_Line
+      loop
+         Result := Next;
+         Next := Next.Scan_Terminal (1);
+      end loop;
+      return Result;
+   end End_Of_Line;
+
    ---------------------------
    -- Execute_Single_Action --
    ---------------------------
@@ -2362,6 +2383,27 @@ package body Aquarius.Programs is
          Result.Current := Program.Self;
       end return;
    end Start;
+
+   -------------------
+   -- Start_Of_Line --
+   -------------------
+
+   function Start_Of_Line
+     (Tree   : not null access Program_Tree_Type'Class)
+      return Program_Tree
+   is
+      use type Aquarius.Layout.Line_Number;
+      Result : Program_Tree := Program_Tree (Tree);
+      Next   : Program_Tree := Result.Scan_Terminal (-1);
+   begin
+      while Next /= null
+        and then Next.Layout_Line = Tree.Layout_Line
+      loop
+         Result := Next;
+         Next := Next.Scan_Terminal (-1);
+      end loop;
+      return Result;
+   end Start_Of_Line;
 
    ------------------
    -- Symbol_Table --
