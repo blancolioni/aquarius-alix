@@ -1,6 +1,6 @@
 with Aquarius.Layout;
 with Aquarius.Programs;
-with Ada.Text_IO;
+--  with Ada.Text_IO;
 
 package body Komnenos.Fragments.Rendering is
 
@@ -105,9 +105,9 @@ package body Komnenos.Fragments.Rendering is
       Current_Col  : Column_Number := Renderer.Current_Column;
    begin
 
-      Ada.Text_IO.Put_Line
-        (Position'Image (Terminal.Layout_Start_Position)
-         & Line'Img & Column'Img & " " & Text);
+--        Ada.Text_IO.Put_Line
+--          (Position'Image (Terminal.Layout_Start_Position)
+--           & Line'Img & Column'Img & " " & Text);
 
       while Current_Line < Line
         or else Current_Col > Column
@@ -124,7 +124,8 @@ package body Komnenos.Fragments.Rendering is
                          (others => ' ');
       begin
          if Space_Count > 0 then
-            Renderer.Fragment.Put (Spaces, Style);
+            Renderer.Fragment.Put
+              (Spaces, Aquarius.Themes.Active_Theme.Default_Style);
          end if;
       end;
 
