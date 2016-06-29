@@ -702,7 +702,6 @@ package body Komnenos.UI.Gtk_UI.Text is
         (Aquarius.Layout.Position (Get_Offset (Iter)));
 
       if Text.Fragment.Needs_Render then
-         Ada.Text_IO.Put_Line ("updated");
          Widget.Set_Text ("");
          Render_Text (Text.Text, Text.Fragment);
          Text.Fragment.Rendered;
@@ -790,7 +789,6 @@ package body Komnenos.UI.Gtk_UI.Text is
       if Key /= Aquarius.Keys.Null_Key then
          Text.Fragment.On_Key_Press (Key);
          if Text.Fragment.Needs_Render then
-            Ada.Text_IO.Put_Line ("updated");
             Text.Buffer.Set_Text ("");
             Render_Text (Text.Text, Text.Fragment);
          elsif Text.Fragment.Text_Inserted then
