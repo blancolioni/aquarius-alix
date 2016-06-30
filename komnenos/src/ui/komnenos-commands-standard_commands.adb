@@ -63,6 +63,10 @@ package body Komnenos.Commands.Standard_Commands is
          Cmd ("forward-character",
               Cursor_Movement.Move_By_Character_Command (1));
 
+         Cmd ("delete-backward-character",
+              Insert_Delete.Delete_Text_At_Cursor
+                (False, 1));
+
          Cmd ("new-line",
               Insert_Delete.Insert_Character_Command
                 (Character'Val (10)));

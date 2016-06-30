@@ -15,7 +15,7 @@ package body Komnenos.Commands.Insert_Delete is
       end record;
 
    overriding procedure Execute
-     (Command : in out Delete_From_Cursor_Command) is null;
+     (Command : in out Delete_From_Cursor_Command);
 
    overriding procedure Undo
      (Command : in out Delete_From_Cursor_Command) is null;
@@ -78,6 +78,26 @@ package body Komnenos.Commands.Insert_Delete is
          Result.To := To;
       end return;
    end Delete_Text_Command;
+
+   -------------
+   -- Execute --
+   -------------
+
+   overriding procedure Execute
+     (Command : in out Delete_From_Cursor_Command)
+   is
+      use Aquarius.Layout;
+      use Komnenos.Entities;
+      Old_Mark : constant Position := Command.Entity.Get_Cursor (Mark);
+      New_Mark : constant Position :=
+                   Position_Offset'Max
+                     (Command.Entity.Get_Cursor (Point) + Command.Offset,
+                      0);
+   begin
+      Command.Entity.Set_Cursor (Mark, New_Mark);
+      Command.Entity.Delete_Region;
+      Command.Entity.Set_Cursor (Mark, Old_Mark);
+   end Execute;
 
    -------------
    -- Execute --

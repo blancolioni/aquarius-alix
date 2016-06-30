@@ -45,7 +45,7 @@ package body Komnenos.Commands.Bindings is
 
       Bind (Aquarius.Keys.Line_Feed, "new-line");
       Bind (Aquarius.Keys.Carriage_Return, "new-line");
-      Bind (Aquarius.Keys.Back_Space, "delete-character-backward");
+      Bind (Aquarius.Keys.Back_Space, "delete-backward-character");
 
       for Ch in Character range ' ' .. '~' loop
          Bind (Aquarius.Keys.Character_Key (Ch),

@@ -22,4 +22,9 @@ package Komnenos.Entities.Visuals is
       Cursor : Cursor_Type;
       Text   : String);
 
+   procedure Delete_At_Cursor
+     (Entity : in out Root_Entity_Reference'Class;
+      Cursor : Cursor_Type;
+      Offset : Aquarius.Layout.Position_Offset);
+
 end Komnenos.Entities.Visuals;

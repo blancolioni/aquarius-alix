@@ -67,12 +67,16 @@ package Komnenos.Entities is
 
    procedure Insert_At_Cursor
      (Visual : in out Entity_Visual;
-      Cursor : Cursor_Type;
       Text   : String)
    is abstract;
 
+   procedure Delete_From_Cursor
+     (Visual    : in out Entity_Visual;
+      Offset    : Aquarius.Layout.Position_Offset)
+   is abstract;
+
    procedure Invalidate
-     (Visual   : in out Entity_Visual)
+     (Visual   : not null access Entity_Visual)
    is abstract;
 
    procedure Put_Line
@@ -158,6 +162,14 @@ package Komnenos.Entities is
       End_2 : Cursor_Type)
       return String
       is abstract;
+
+--     function Get_Offset_Position
+--       (Item     : in out Root_Entity_Reference;
+--        Cursor   : Cursor_Type;
+--        Movement : Cursor_Movement_Type;
+--        Offset   : Aquarius.Layout.Position_Offset)
+--        return Aquarius.Layout.Position
+--        is abstract;
 
    procedure Create
      (Item         : in out Root_Entity_Reference'Class;

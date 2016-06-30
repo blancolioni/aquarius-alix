@@ -40,6 +40,29 @@ package body Komnenos.Entities.Visuals is
    end Bind_Visual;
 
    ----------------------
+   -- Delete_At_Cursor --
+   ----------------------
+
+   procedure Delete_At_Cursor
+     (Entity : in out Root_Entity_Reference'Class;
+      Cursor : Cursor_Type;
+      Offset : Aquarius.Layout.Position_Offset)
+   is
+      pragma Unreferenced (Cursor);
+   begin
+      if Bound_Entity_Map.Contains (Entity.Key) then
+         declare
+            List : constant List_Of_Visuals.List :=
+                     Bound_Entity_Map.Element (Entity.Key);
+         begin
+            for Visual of List loop
+               Visual.Delete_From_Cursor (Offset);
+            end loop;
+         end;
+      end if;
+   end Delete_At_Cursor;
+
+   ----------------------
    -- Insert_At_Cursor --
    ----------------------
 
@@ -48,6 +71,7 @@ package body Komnenos.Entities.Visuals is
       Cursor : Cursor_Type;
       Text   : String)
    is
+      pragma Unreferenced (Cursor);
    begin
       if Bound_Entity_Map.Contains (Entity.Key) then
          declare
@@ -55,7 +79,7 @@ package body Komnenos.Entities.Visuals is
                      Bound_Entity_Map.Element (Entity.Key);
          begin
             for Visual of List loop
-               Visual.Insert_At_Cursor (Cursor, Text);
+               Visual.Insert_At_Cursor (Text);
             end loop;
          end;
       end if;
