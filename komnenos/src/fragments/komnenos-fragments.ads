@@ -19,10 +19,37 @@ private with Komnenos.Commands.Bindings;
 
 package Komnenos.Fragments is
 
+   type Text_Editor_Display is interface;
+
+   procedure Insert_At_Cursor
+     (Editor : in out Text_Editor_Display;
+      Text   : in     String)
+   is abstract;
+
+   procedure Delete_From_Cursor
+     (Editor : in out Text_Editor_Display;
+      Offset : in     Aquarius.Layout.Position_Offset)
+   is abstract;
+
+   procedure Set_Cursor
+     (Editor       : in out Text_Editor_Display;
+      New_Position : Aquarius.Layout.Position)
+   is abstract;
+
+   procedure Set_Content
+     (Editor       : in out Text_Editor_Display;
+      New_Content  : String)
+   is abstract;
+
    type Root_Fragment_Type is
      new Komnenos.Entities.Entity_Visual
      and Komnenos.Session_Objects.Session_Object_Interface
    with private;
+
+   procedure Render_Fragment
+     (Editor : in out Text_Editor_Display;
+      Fragment : not null access Root_Fragment_Type'Class)
+   is abstract;
 
    overriding function Config_Name
      (Fragment : Root_Fragment_Type)
@@ -63,25 +90,9 @@ package Komnenos.Fragments is
      (Fragment : Root_Fragment_Type) return Positive
    is (Fragment.Rectangle.Height);
 
-   function Needs_Render
-     (Fragment : Root_Fragment_Type)
-      return Boolean;
-
-   function Cursor_Moved
-     (Fragment : Root_Fragment_Type)
-      return Boolean;
-
-   function Get_Cursor
-     (Fragment : Root_Fragment_Type)
-      return Aquarius.Layout.Position;
-
-   function Text_Inserted
-     (Fragment : Root_Fragment_Type)
-      return Boolean;
-
-   function Inserted_Text
-     (Fragment : Root_Fragment_Type)
-      return String;
+   procedure Set_Text_Display
+     (Fragment : in out Root_Fragment_Type;
+      Display  : access Text_Editor_Display'Class);
 
    procedure Execute
      (Fragment : in out Root_Fragment_Type'Class;
@@ -210,6 +221,7 @@ private
      and Komnenos.Session_Objects.Session_Object_Interface with
       record
          Content           : Komnenos.Entities.Entity_Reference;
+         Display           : access Text_Editor_Display'Class;
          Commands          : Komnenos.Commands.Manager.Command_Manager;
          Default_Style     : Aquarius.Styles.Aquarius_Style;
          Layout_Rec        : Layout_Rectangle;
@@ -224,10 +236,6 @@ private
          Bindings          : Komnenos.Commands.Bindings.Binding_Table;
          Lines             : Line_Vectors.Vector;
          Needs_Render      : Boolean := False;
-         Cursor_Moved      : Boolean := False;
-         Text_Inserted     : Boolean := False;
-         New_Cursor        : Aquarius.Layout.Position;
-         Inserted_Text     : Ada.Strings.Unbounded.Unbounded_String;
       end record;
 
    overriding procedure Initialize (Fragment : in out Root_Fragment_Type);
@@ -258,9 +266,17 @@ private
 
    overriding procedure Insert_At_Cursor
      (Fragment : in out Root_Fragment_Type;
-      Cursor   : Komnenos.Entities.Cursor_Type;
       Text     : String);
 
-   overriding procedure Invalidate (Fragment : in out Root_Fragment_Type);
+   overriding procedure Delete_From_Cursor
+     (Fragment  : in out Root_Fragment_Type;
+      Offset    : Aquarius.Layout.Position_Offset);
+
+   overriding procedure Invalidate
+     (Fragment : not null access Root_Fragment_Type);
+
+   function Needs_Render
+     (Fragment : Root_Fragment_Type)
+      return Boolean;
 
 end Komnenos.Fragments;
