@@ -786,6 +786,11 @@ package body Aquarius.Programs.Arrangements is
               (Terminal, Line, Column,
                Level_Name (Msg_Level),
                Terminal.Text);
+         elsif not Terminal.Is_Filled then
+            Renderer.Set_Text
+              (Terminal, Line, Column,
+               "implied_token",
+               Terminal.Text);
          elsif not Aquarius.Syntax.Is_Empty (Terminal.Render_Class) then
             Renderer.Set_Text (Terminal, Line, Column,
                                Terminal.Render_Class.Render_Class,
