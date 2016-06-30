@@ -26,7 +26,6 @@ with Pango.Font;
 
 with Aquarius.Colours.Gtk_Colours;
 with Aquarius.Fonts;
-with Aquarius.Layout;
 with Aquarius.Themes;
 
 with Aquarius.Keys.Gtk_Keys;
@@ -85,10 +84,6 @@ package body Komnenos.UI.Gtk_UI.Text is
       Event : Gdk.Event.Gdk_Event_Configure)
       return Boolean;
 
-   procedure Render_Text
-     (View : Gtk.Text_View.Gtk_Text_View;
-      Fragment : Komnenos.Fragments.Fragment_Type);
-
    function Get_Tag_Entry
      (Buffer : Gtk.Text_Buffer.Gtk_Text_Buffer;
       Style  : Aquarius.Styles.Aquarius_Style)
@@ -98,9 +93,6 @@ package body Komnenos.UI.Gtk_UI.Text is
 
    procedure Move_Cursor
      (Text_View : Komnenos_Text_View) with Unreferenced;
-
-   procedure Update_Cursor
-     (Text_View : Komnenos_Text_View);
 
    procedure Follow_If_Link
      (Text_View : not null access Gtk.Text_View.Gtk_Text_View_Record'Class;
@@ -211,8 +203,7 @@ package body Komnenos.UI.Gtk_UI.Text is
       end;
 
       Result.Text.On_Configure_Event (Text_View_Configure'Access, Result);
-
-      Render_Text (Result.Text, Fragment);
+      Result.Render_Fragment (Fragment);
 
       declare
          use Gdk.Event;
@@ -264,6 +255,28 @@ package body Komnenos.UI.Gtk_UI.Text is
       return Result;
 
    end Create_Text_View;
+
+   ------------------------
+   -- Delete_From_Cursor --
+   ------------------------
+
+   overriding procedure Delete_From_Cursor
+     (Text_View : in out Komnenos_Text_View_Record;
+      Offset    : in     Aquarius.Layout.Position_Offset)
+   is
+      use Glib;
+      Start_Iter, End_Iter : Gtk.Text_Iter.Gtk_Text_Iter;
+      End_Offset           : Gint;
+   begin
+      Text_View.Buffer.Get_Iter_At_Mark
+        (Start_Iter, Text_View.Buffer.Get_Insert);
+
+      End_Offset := Gtk.Text_Iter.Get_Offset (Start_Iter);
+      End_Offset := End_Offset + Gint (Offset);
+      Text_View.Buffer.Get_Iter_At_Offset (End_Iter, End_Offset);
+
+      Text_View.Buffer.Delete (Start_Iter, End_Iter);
+   end Delete_From_Cursor;
 
    --------------------
    -- Follow_If_Link --
@@ -391,6 +404,18 @@ package body Komnenos.UI.Gtk_UI.Text is
       return Result;
    end Get_Tag_Entry;
 
+   ----------------------
+   -- Insert_At_Cursor --
+   ----------------------
+
+   overriding procedure Insert_At_Cursor
+     (Text_View : in out Komnenos_Text_View_Record;
+      Text      : in     String)
+   is
+   begin
+      Text_View.Buffer.Insert_At_Cursor (Text);
+   end Insert_At_Cursor;
+
    -----------------
    -- Move_Cursor --
    -----------------
@@ -458,15 +483,16 @@ package body Komnenos.UI.Gtk_UI.Text is
       Cairo.Fill (Context);
    end Paint_Line_Background;
 
-   -----------------
-   -- Render_Text --
-   -----------------
+   ---------------------
+   -- Render_Fragment --
+   ---------------------
 
-   procedure Render_Text
-     (View : Gtk.Text_View.Gtk_Text_View;
-      Fragment : Komnenos.Fragments.Fragment_Type)
+   overriding procedure Render_Fragment
+     (Text_View    : in out Komnenos_Text_View_Record;
+      Fragment     : not null access Fragments.Root_Fragment_Type'Class)
    is
-      Buffer : constant Gtk.Text_Buffer.Gtk_Text_Buffer := View.Get_Buffer;
+      Buffer : constant Gtk.Text_Buffer.Gtk_Text_Buffer :=
+                 Text_View.Get_Buffer;
 
       procedure New_Line;
       procedure Put
@@ -506,7 +532,37 @@ package body Komnenos.UI.Gtk_UI.Text is
       Fragment.Clear;
       Fragment.Get_Content.Render (Fragment);
       Fragment.Iterate (Put'Access, New_Line'Access);
-   end Render_Text;
+   end Render_Fragment;
+
+   -----------------
+   -- Set_Content --
+   -----------------
+
+   overriding procedure Set_Content
+     (Text_View    : in out Komnenos_Text_View_Record;
+      New_Content  : in String)
+   is
+   begin
+      Text_View.Buffer.Set_Text (New_Content);
+   end Set_Content;
+
+   ----------------
+   -- Set_Cursor --
+   ----------------
+
+   overriding procedure Set_Cursor
+     (Text_View    : in out Komnenos_Text_View_Record;
+      New_Position : Aquarius.Layout.Position)
+   is
+      use Glib;
+      use Aquarius.Layout;
+      Iter : Gtk.Text_Iter.Gtk_Text_Iter;
+   begin
+      Text_View.Buffer.Get_Iter_At_Offset
+        (Iter        => Iter,
+         Char_Offset => Glib.Gint (New_Position));
+      Text_View.Buffer.Place_Cursor (Iter);
+   end Set_Cursor;
 
    --------------------
    -- Set_Text_State --
@@ -697,14 +753,12 @@ package body Komnenos.UI.Gtk_UI.Text is
       use Glib, Gtk.Text_Buffer, Gtk.Text_Iter;
       Iter    : Gtk_Text_Iter;
    begin
-      Widget.Get_Iter_At_Mark (Iter, Widget.Get_Insert);
-      Text.Fragment.On_Cursor_Move
-        (Aquarius.Layout.Position (Get_Offset (Iter)));
-
-      if Text.Fragment.Needs_Render then
-         Widget.Set_Text ("");
-         Render_Text (Text.Text, Text.Fragment);
-         Text.Fragment.Rendered;
+      if not Text.Updating_Cursor then
+         Text.Updating_Cursor := True;
+         Widget.Get_Iter_At_Mark (Iter, Widget.Get_Insert);
+         Text.Fragment.On_Cursor_Move
+           (Aquarius.Layout.Position (Get_Offset (Iter)));
+         Text.Updating_Cursor := False;
       end if;
    end Text_View_Cursor_Move;
 
@@ -788,22 +842,6 @@ package body Komnenos.UI.Gtk_UI.Text is
    begin
       if Key /= Aquarius.Keys.Null_Key then
          Text.Fragment.On_Key_Press (Key);
-         if Text.Fragment.Needs_Render then
-            Text.Buffer.Set_Text ("");
-            Render_Text (Text.Text, Text.Fragment);
-         elsif Text.Fragment.Text_Inserted then
-            Text.Buffer.Insert_At_Cursor
-              (Text.Fragment.Inserted_Text);
-         end if;
-
-         if Text.Fragment.Needs_Render
-           or else Text.Fragment.Cursor_Moved
-         then
-            Update_Cursor (Text);
-         end if;
-
-         Text.Fragment.Rendered;
-
       end if;
       return True;
    end Text_View_Key_Press;
@@ -852,23 +890,5 @@ package body Komnenos.UI.Gtk_UI.Text is
 
       return False;
    end Text_View_Motion_Handler;
-
-   -------------------
-   -- Update_Cursor --
-   -------------------
-
-   procedure Update_Cursor
-     (Text_View : Komnenos_Text_View)
-   is
-      use Glib;
-      use Aquarius.Layout;
-      New_Position : constant Position := Text_View.Fragment.Get_Cursor;
-      Iter : Gtk.Text_Iter.Gtk_Text_Iter;
-   begin
-      Text_View.Buffer.Get_Iter_At_Offset
-        (Iter        => Iter,
-         Char_Offset => Glib.Gint (New_Position));
-      Text_View.Buffer.Place_Cursor (Iter);
-   end Update_Cursor;
 
 end Komnenos.UI.Gtk_UI.Text;

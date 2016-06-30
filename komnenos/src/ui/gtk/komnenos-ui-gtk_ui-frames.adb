@@ -146,6 +146,8 @@ package body Komnenos.UI.Gtk_UI.Frames is
 
       Grid.Show_All;
 
+      Fragment.Set_Text_Display (Text);
+
       return Grid;
 
    end New_Frame;

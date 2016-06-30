@@ -5,6 +5,36 @@ with Komnenos.Commands.Cursor_Movement;
 
 package body Komnenos.Fragments is
 
+   type Null_Text_Display is
+     new Text_Editor_Display with null record;
+
+   overriding procedure Insert_At_Cursor
+     (Null_Display : in out Null_Text_Display;
+      Text         : in     String)
+   is null;
+
+   overriding procedure Delete_From_Cursor
+     (Null_Display : in out Null_Text_Display;
+      Offset       : in     Aquarius.Layout.Position_Offset)
+   is null;
+
+   overriding procedure Set_Cursor
+     (Null_Display : in out Null_Text_Display;
+      New_Position : Aquarius.Layout.Position)
+   is null;
+
+   overriding procedure Set_Content
+     (Null_Display : in out Null_Text_Display;
+      New_Content  : String)
+   is null;
+
+   overriding procedure Render_Fragment
+     (Null_Display : in out Null_Text_Display;
+      Fragment     : not null access Fragments.Root_Fragment_Type'Class)
+   is null;
+
+   Local_Null_Text_Display : aliased Null_Text_Display;
+
    function Get_Style_Info
      (Fragment : Root_Fragment_Type;
       Offset   : Positive)
@@ -54,20 +84,21 @@ package body Komnenos.Fragments is
    overriding procedure Clear (Fragment : in out Root_Fragment_Type) is
    begin
       Fragment.Lines.Clear;
+      Fragment.Display.Set_Content ("");
       Fragment.Lines.Append (new Line_Info);
    end Clear;
 
-   ------------------
-   -- Cursor_Moved --
-   ------------------
+   ------------------------
+   -- Delete_From_Cursor --
+   ------------------------
 
-   function Cursor_Moved
-     (Fragment : Root_Fragment_Type)
-      return Boolean
+   overriding procedure Delete_From_Cursor
+     (Fragment  : in out Root_Fragment_Type;
+      Offset    : Aquarius.Layout.Position_Offset)
    is
    begin
-      return Fragment.Cursor_Moved;
-   end Cursor_Moved;
+      Fragment.Display.Delete_From_Cursor (Offset);
+   end Delete_From_Cursor;
 
    --------------
    -- Editable --
@@ -170,18 +201,6 @@ package body Komnenos.Fragments is
       Fragment.Border_Colour :=
         Aquarius.Colours.From_String (Config.Get ("border"));
    end From_Config;
-
-   ----------------
-   -- Get_Cursor --
-   ----------------
-
-   function Get_Cursor
-     (Fragment : Root_Fragment_Type)
-      return Aquarius.Layout.Position
-   is
-   begin
-      return Fragment.New_Cursor;
-   end Get_Cursor;
 
    --------------
    -- Get_Link --
@@ -323,6 +342,7 @@ package body Komnenos.Fragments is
 
    overriding procedure Initialize (Fragment : in out Root_Fragment_Type) is
    begin
+      Fragment.Display := Local_Null_Text_Display'Access;
       Fragment.Layout_Rec := (0, 0, 350, 400);
       Fragment.Lines.Append (new Line_Info);
       Fragment.Default_Style := Aquarius.Themes.Active_Theme.Default_Style;
@@ -335,35 +355,21 @@ package body Komnenos.Fragments is
 
    overriding procedure Insert_At_Cursor
      (Fragment : in out Root_Fragment_Type;
-      Cursor   : Komnenos.Entities.Cursor_Type;
       Text     : String)
    is
-      pragma Unreferenced (Cursor);
    begin
-      Fragment.Text_Inserted := True;
-      Fragment.Inserted_Text :=
-        Ada.Strings.Unbounded.To_Unbounded_String (Text);
+      Fragment.Display.Insert_At_Cursor (Text);
    end Insert_At_Cursor;
-
-   -------------------
-   -- Inserted_Text --
-   -------------------
-
-   function Inserted_Text
-     (Fragment : Root_Fragment_Type)
-      return String
-   is
-   begin
-      return Ada.Strings.Unbounded.To_String (Fragment.Inserted_Text);
-   end Inserted_Text;
 
    ----------------
    -- Invalidate --
    ----------------
 
-   overriding procedure Invalidate (Fragment : in out Root_Fragment_Type) is
+   overriding procedure Invalidate
+     (Fragment : not null access Root_Fragment_Type)
+   is
    begin
-      Fragment.Needs_Render := True;
+      Fragment.Display.Render_Fragment (Fragment);
    end Invalidate;
 
    -------------
@@ -572,8 +578,6 @@ package body Komnenos.Fragments is
    is
    begin
       Fragment.Needs_Render := False;
-      Fragment.Cursor_Moved := False;
-      Fragment.Text_Inserted := False;
    end Rendered;
 
    -----------------
@@ -597,10 +601,18 @@ package body Komnenos.Fragments is
       Cursor   : Komnenos.Entities.Cursor_Type;
       Position : Aquarius.Layout.Position)
    is
-      pragma Unreferenced (Cursor);
+      use all type Komnenos.Entities.Cursor_Type;
    begin
-      Fragment.Cursor_Moved := True;
-      Fragment.New_Cursor := Position;
+      case Cursor is
+         when Point =>
+            Fragment.Display.Set_Cursor (Position);
+         when Mark =>
+            null;
+         when Selection_Start =>
+            null;
+         when Selection_End =>
+            null;
+      end case;
    end Set_Cursor;
 
    --------------------
@@ -642,6 +654,22 @@ package body Komnenos.Fragments is
       Fragment.Layout_Rec.Height := Height;
    end Set_Size;
 
+   ----------------------
+   -- Set_Text_Display --
+   ----------------------
+
+   procedure Set_Text_Display
+     (Fragment : in out Root_Fragment_Type;
+      Display  : access Text_Editor_Display'Class)
+   is
+   begin
+      if Display = null then
+         Fragment.Display := Local_Null_Text_Display'Access;
+      else
+         Fragment.Display := Display;
+      end if;
+   end Set_Text_Display;
+
    -------------------
    -- Text_Contents --
    -------------------
@@ -659,18 +687,6 @@ package body Komnenos.Fragments is
       end loop;
       return To_String (Result);
    end Text_Contents;
-
-   -------------------
-   -- Text_Inserted --
-   -------------------
-
-   function Text_Inserted
-     (Fragment : Root_Fragment_Type)
-      return Boolean
-   is
-   begin
-      return Fragment.Text_Inserted;
-   end Text_Inserted;
 
    -----------
    -- Title --
