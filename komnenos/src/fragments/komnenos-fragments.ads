@@ -222,6 +222,7 @@ private
       record
          Content           : Komnenos.Entities.Entity_Reference;
          Display           : access Text_Editor_Display'Class;
+         Point             : Aquarius.Layout.Position := 0;
          Commands          : Komnenos.Commands.Manager.Command_Manager;
          Default_Style     : Aquarius.Styles.Aquarius_Style;
          Layout_Rec        : Layout_Rectangle;

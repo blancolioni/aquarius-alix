@@ -370,6 +370,7 @@ package body Komnenos.Fragments is
    is
    begin
       Fragment.Display.Render_Fragment (Fragment);
+      Fragment.Display.Set_Cursor (Fragment.Point);
    end Invalidate;
 
    -------------
@@ -605,7 +606,7 @@ package body Komnenos.Fragments is
    begin
       case Cursor is
          when Point =>
-            Fragment.Display.Set_Cursor (Position);
+            Fragment.Point := Position;
          when Mark =>
             null;
          when Selection_Start =>
