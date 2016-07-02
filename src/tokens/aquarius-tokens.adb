@@ -562,6 +562,7 @@ package body Aquarius.Tokens is
       Tok := Null_Token;
       Class := Null_Token_Class;
       Have_Class := False;
+      Last := 0;
 
       while First <= Text'Last and then Text (First) = ' ' loop
          First := First + 1;
@@ -595,8 +596,9 @@ package body Aquarius.Tokens is
                        Text (First .. Text'Last)) - 1;
 
                   if Temp_Last >= First and then
-                    (Temp_Last < Text'Last or else
-                       (Temp_Last >= Text'Last and then not Partial))
+                    (Temp_Last < Text'Last
+                     or else (Temp_Last >= Text'Last and then not Partial)
+                     or else Class_Info.Delimiter)
                   then
                      if Have_Class then
                         Have_Class := Token_OK = null or else Token_OK (Tok);
@@ -621,7 +623,9 @@ package body Aquarius.Tokens is
                            Class := Test_Class;
                            Tok   := Test_Tok;
                            Last  := Temp_Last;
-                           Complete := not Partial or else Last < Text'Last;
+                           Complete := not Partial
+                             or else Last < Text'Last
+                             or else Class_Info.Delimiter;
                         end if;
                      end;
                      Have_Class := True;
