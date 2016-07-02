@@ -422,6 +422,8 @@ package Aquarius.Programs is
      (Allocated_Tree_Count : out Natural;
       Free_Tree_Count      : out Natural);
 
+   procedure Free (Item : in out Program_Tree);
+
 private
 
    type Aquarius_Object_Access is access all Root_Aquarius_Object'Class;
@@ -479,8 +481,6 @@ private
          Aqua_Object       : Aqua_Object_Access;
          Aqua_Reference    : Aqua.External_Reference := 0;
       end record;
-
-   procedure Free (Item : in out Program_Tree);
 
    --  override of Add_Child so that properties get copied from
    --  parent to child.
