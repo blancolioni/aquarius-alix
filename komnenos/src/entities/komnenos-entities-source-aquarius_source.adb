@@ -371,13 +371,12 @@ package body Komnenos.Entities.Source.Aquarius_Source is
                         Entity.Get_Cursor (Mark);
       Point_Position : constant Position :=
                          Entity.Get_Cursor (Point);
-      Offset         : Position_Offset renames
-                         Entity.Buffer_Offset;
       Start          : constant Position :=
                          Position'Min (Mark_Position, Point_Position);
       Finish         : constant Position :=
                          Position'Max (Mark_Position, Point_Position);
-      Length         : constant Position_Offset := Finish - Start;
+      Length         : constant Position := Finish - Start;
+      Remaining      : Position := Length;
       Backward       : constant Boolean := Mark_Position < Point_Position;
    begin
 
@@ -392,23 +391,73 @@ package body Komnenos.Entities.Source.Aquarius_Source is
          & Entity.Show_Buffer);
 
       if Backward then
-         if Length <= Offset then
+
+         while Remaining > 0
+           and then Remaining >= Entity.Buffer_Offset
+         loop
+            declare
+               use Aquarius.Programs;
+               New_Edit_Tree : constant Program_Tree :=
+                                 Entity.Edit_Tree.Scan_Terminal (-1);
+               New_Offset    : constant Position_Offset :=
+                                 Entity.Edit_Tree.Layout_Start_Position
+                                   - New_Edit_Tree.Layout_Start_Position;
+               Ancestor      : Aquarius.Trees.Tree;
+               Left, Right   : Aquarius.Trees.Tree;
+               Deleted_Tree  : Program_Tree;
+            begin
+               New_Edit_Tree.Common_Ancestor
+                 (Right          => Entity.Edit_Tree,
+                  Ancestor       => Ancestor,
+                  Left_Ancestor  => Left,
+                  Right_Ancestor => Right);
+               Deleted_Tree := Program_Tree (Right);
+               Ada.Text_IO.Put_Line ("Deleting: " & Deleted_Tree.Image);
+               Ancestor.Remove_Child (Right);
+               Remaining := Remaining - Entity.Buffer_Offset;
+               Entity.Edit_Tree := New_Edit_Tree;
+               Entity.Buffer_Offset := New_Offset;
+               declare
+                  New_Buffer : constant String :=
+                                 Entity.Edit_Tree.Text;
+                  Missing    : constant Natural :=
+                                 Natural (Entity.Buffer_Offset)
+                                 - New_Buffer'Length;
+                  Spaces     : constant String (1 .. Missing) :=
+                                 (others => ' ');
+               begin
+                  Entity.Edit_Buffer :=
+                    Ada.Strings.Unbounded.To_Unbounded_String
+                      (New_Buffer & Spaces);
+               end;
+
+               Aquarius.Programs.Parser.Set_Cursor
+                 (Entity.Parse_Context,
+                  Aquarius.Trees.Cursors.Right_Of_Tree
+                    (Entity.Edit_Tree));
+
+               Free (Deleted_Tree);
+            end;
+         end loop;
+
+         if Remaining > 0 then
 
             Ada.Strings.Unbounded.Delete
               (Entity.Edit_Buffer,
-               Positive (Offset - Length + 1), Natural (Offset));
-            Offset := Offset - Length;
+               Positive (Entity.Buffer_Offset - Remaining + 1),
+               Natural (Entity.Buffer_Offset));
+            Entity.Buffer_Offset := Entity.Buffer_Offset - Remaining;
 
             Entity.Buffer_Changed := True;
 
             Ada.Text_IO.Put_Line
               ("after delete: "
                & Entity.Show_Buffer);
-
-            Komnenos.Entities.Visuals.Delete_At_Cursor
-              (Entity, Point, -Length);
-
          end if;
+
+         Komnenos.Entities.Visuals.Delete_At_Cursor
+           (Entity, Point, -Length);
+
       end if;
    end Delete_Region;
 
