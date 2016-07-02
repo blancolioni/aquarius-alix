@@ -339,9 +339,7 @@ package body Aquarius.Programs.Arrangements is
 
       Skip (Context, Natural (Item.Layout_Length));
 
-      if Context.User_Text_Length > 0 and then
-        Before_Point (Item, Context.User_Cursor)
-      then
+      if Before_Point (Item, Context.User_Cursor) then
          if Context.User_New_Line then
             Logging.Log (Context, Item,
                          "got a user new line after");
