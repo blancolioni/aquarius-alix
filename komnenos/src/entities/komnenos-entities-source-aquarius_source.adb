@@ -967,7 +967,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
 
       if (Force and then Next > 0) or else
         (Have_Class and then Complete
-         and then Next < Ada.Strings.Unbounded.Length (Entity.Edit_Buffer))
+         and then Next <= Ada.Strings.Unbounded.Length (Entity.Edit_Buffer))
       then
          Length := Next;
       else
