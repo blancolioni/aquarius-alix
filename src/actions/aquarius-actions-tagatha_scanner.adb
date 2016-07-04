@@ -179,6 +179,7 @@ package body Aquarius.Actions.Tagatha_Scanner is
    is
    begin
       Processor.Unit.End_Routine;
+      Processor.Delete_Frame;
    end End_Function;
 
    -----------------
