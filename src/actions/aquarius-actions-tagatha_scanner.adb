@@ -163,11 +163,18 @@ package body Aquarius.Actions.Tagatha_Scanner is
       Name      : in     String)
    is
    begin
-      Processor.Unit.Pop_Register ("pv");
-      Processor.Unit.Push_Register ("agg");
-      Processor.Unit.Pop_Register ("op");
-      Processor.Unit.Native_Operation
-        ("set_property " & Name);
+      if Name = "" then
+         Processor.Unit.Push_Register ("agg");
+         Processor.Unit.Pop_Register ("op");
+         Processor.Unit.Native_Operation
+           ("get_property append, 1", Input_Stack_Words => 1);
+      else
+         Processor.Unit.Pop_Register ("pv");
+         Processor.Unit.Push_Register ("agg");
+         Processor.Unit.Pop_Register ("op");
+         Processor.Unit.Native_Operation
+           ("set_property " & Name);
+      end if;
    end End_Aggregate_Element;
 
    ------------------
@@ -623,7 +630,8 @@ package body Aquarius.Actions.Tagatha_Scanner is
    ---------------------
 
    overriding procedure Start_Aggregate
-     (Processor : in out Tagatha_Scanner)
+     (Processor  : in out Tagatha_Scanner;
+      Class_Name : String)
    is
    begin
       if Processor.Nested_Aggregates > 0 then
@@ -631,12 +639,15 @@ package body Aquarius.Actions.Tagatha_Scanner is
       end if;
       Processor.Nested_Aggregates := Processor.Nested_Aggregates + 1;
       Processor.Unit.Push_Operand
-        (Tagatha.Operands.External_Operand ("map", True),
+        (Tagatha.Operands.External_Operand (Class_Name, True),
          Tagatha.Default_Size);
       Processor.Unit.Pop_Register ("op");
       Processor.Unit.Native_Operation
-        ("get_property new", Changed_Registers => "pv");
-      Processor.Unit.Push_Register ("pv");
+        ("allocate",
+         Input_Stack_Words  => 0,
+         Output_Stack_Words => 0,
+         Changed_Registers  => "op");
+      Processor.Unit.Push_Register ("op");
       Processor.Unit.Pop_Register ("agg");
       Processor.Unit.Push_Register ("agg");
    end Start_Aggregate;

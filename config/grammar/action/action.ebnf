@@ -108,7 +108,7 @@ primary ::= numeric_literal | string_literal : string
           | object_reference
           | 'null' | parenthesised_expression
           | if_expression
-          | aggregate
+          | aggregate | array_aggregate
           | new_expression
           
 parenthesised_expression ::= '(' expression ')'
@@ -120,6 +120,10 @@ aggregate ::= '(' aggregate_element_list ')'
 aggregate_element_list ::= < aggregate_element / ',' >
 
 aggregate_element ::= identifier '=>' expression
+
+array_aggregate ::= '(' expression ',' expression_list ')'
+
+expression_list ::= < expression / ',' >
 
 if_expression ::=
   '(' 'if' expression 'then' expression { 'elsif' expression 'then' expression } 'else' expression ')'

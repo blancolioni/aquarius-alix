@@ -1,5 +1,6 @@
 with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Directories;
+with Ada.Exceptions;
 
 with Aquarius.Errors;
 with Aquarius.Source;
@@ -22,6 +23,10 @@ package body Aquarius.Actions.Scanner is
       Sequence  : in Aquarius.Programs.Array_Of_Program_Trees);
 
    procedure Scan_Aggregate
+     (Processor : in out Action_Processor_Interface'Class;
+      Elements  : in Aquarius.Programs.Array_Of_Program_Trees);
+
+   procedure Scan_Array_Aggregate
      (Processor : in out Action_Processor_Interface'Class;
       Elements  : in Aquarius.Programs.Array_Of_Program_Trees);
 
@@ -51,6 +56,11 @@ package body Aquarius.Actions.Scanner is
    begin
       Processor.Frame_Table.Insert
         (Name, (Stack_Offset, Offset));
+   exception
+      when E : others =>
+         raise Constraint_Error with
+           "unabled to add " & Name & " to frame table: "
+             & Ada.Exceptions.Exception_Message (E);
    end Add_Frame_Entry;
 
    ---------------------
@@ -67,6 +77,11 @@ package body Aquarius.Actions.Scanner is
         (Name,
          (Register_Name,
           Ada.Strings.Unbounded.To_Unbounded_String (Internal_Name)));
+   exception
+      when E : others =>
+         raise Constraint_Error with
+           "unabled to add " & Name & " to frame table: "
+           & Ada.Exceptions.Exception_Message (E);
    end Add_Frame_Entry;
 
    ----------------------
@@ -412,7 +427,7 @@ package body Aquarius.Actions.Scanner is
       Elements  : in Aquarius.Programs.Array_Of_Program_Trees)
    is
    begin
-      Processor.Start_Aggregate;
+      Processor.Start_Aggregate ("map");
       for E of Elements loop
          declare
             Name : constant String :=
@@ -425,6 +440,24 @@ package body Aquarius.Actions.Scanner is
       end loop;
       Processor.End_Aggregate;
    end Scan_Aggregate;
+
+   --------------------------
+   -- Scan_Array_Aggregate --
+   --------------------------
+
+   procedure Scan_Array_Aggregate
+     (Processor : in out Action_Processor_Interface'Class;
+      Elements  : in Aquarius.Programs.Array_Of_Program_Trees)
+   is
+   begin
+      Processor.Start_Aggregate ("array");
+      for E of Elements loop
+         Processor.Start_Aggregate_Element ("");
+            Scan_Expression (Processor, E);
+         Processor.End_Aggregate_Element ("");
+      end loop;
+      Processor.End_Aggregate;
+   end Scan_Array_Aggregate;
 
    ---------------------
    -- Scan_Expression --
@@ -513,6 +546,13 @@ package body Aquarius.Actions.Scanner is
                   Child.Program_Child
                     ("aggregate_element_list").Direct_Children
                       ("aggregate_element"));
+            elsif Child.Name = "array_aggregate" then
+               Scan_Array_Aggregate
+                 (Processor,
+                  Child.Program_Child ("expression")
+                  & Child.Program_Child
+                    ("expression_list").Direct_Children
+                      ("expression"));
             elsif Child.Name = "new_expression" then
                Scan_Object_Reference
                  (Processor, Child.Program_Child ("object_reference"));

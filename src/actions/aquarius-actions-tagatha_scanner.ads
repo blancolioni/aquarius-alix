@@ -86,7 +86,8 @@ private
      (Processor : in out Tagatha_Scanner);
 
    overriding procedure Start_Aggregate
-     (Processor : in out Tagatha_Scanner);
+     (Processor  : in out Tagatha_Scanner;
+      Class_Name : String);
 
    overriding procedure Start_Aggregate_Element
      (Processor : in out Tagatha_Scanner;
