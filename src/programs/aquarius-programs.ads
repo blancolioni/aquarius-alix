@@ -537,7 +537,9 @@ private
                    Property_Value : Aqua.Word));
 
    overriding function Show
-     (Program : Program_Tree_Type)
+     (Program        : Program_Tree_Type;
+      Recursive_Show : access
+        function (Value : Aqua.Word) return String)
       return String
    is (Program_Tree_Type'Class (Program).Image);
 
@@ -572,7 +574,9 @@ private
    is ("[program-tree-iterator]");
 
    overriding function Show
-     (It : Root_Program_Tree_Iterator)
+     (It             : Root_Program_Tree_Iterator;
+      Recursive_Show : access
+        function (Value : Aqua.Word) return String)
       return String
    is ("[program-tree-iterator]");
 

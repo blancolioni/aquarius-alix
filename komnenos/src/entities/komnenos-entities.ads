@@ -452,7 +452,9 @@ private
      (Item : Root_Entity_Reference) return String;
 
    overriding function Show
-     (Item : Root_Entity_Reference) return String;
+     (Item           : Root_Entity_Reference;
+      Recursive_Show : access
+        function (Value : Aqua.Word) return String) return String;
 
    package Entity_Maps is
      new Ada.Containers.Indefinite_Hashed_Maps
