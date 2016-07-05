@@ -195,7 +195,8 @@ package Aquarius.Actions.Scanner is
    is abstract;
 
    procedure Start_Aggregate
-     (Processor : in out Action_Processor_Interface)
+     (Processor  : in out Action_Processor_Interface;
+      Class_Name : String)
    is abstract;
 
    procedure Start_Aggregate_Element
