@@ -25,15 +25,34 @@ begin
       return (error => "undefined: " & name);
    end if;
 end Find_Object;
+
+function New_Named_Object(table, name, standard_name, object_class) is
+begin
+   table.set(name, (name => name, standard_name => standard_name, class => object_class));
+   return table.get (name);
+end New_Named_Object;
 	  
+function New_Type(table, name, standard_name, object_type) is
+   Result := New_Named_Object (table, name, standard_name, "type");
+begin
+   Result.type := object_type;
+   return Result;
+end New_Type;
+
 before Compilation_Unit do
 --   IO.Put_Line ("Ada: defining subprogram names");
    top.current_symbol_table := new Map;
-   top.current_symbol_table.integer := (name => "Integer", standard_name => "integer", class => "type", type => "integral");
-   top.current_symbol_table.natural := (name => "Natural", standard_name => "natural", class => "type", type => "integral", low => 0);
+   top.standard_integer := New_Type (top.current_symbol_table, "Integer", "integer", (type => (type_class => "integral")));
+   top.standard_natural := New_Type (top.current_symbol_table, "Natural", "natural", (type => (base_type => top.standard_integer, range => (low => 0))));
+   top.standard_positive := New_Type (top.current_symbol_table, "Positive", "positive", (type => (base_type => top.standard_integer, range => (low => 1))));
    top.current_symbol_table.float := (name => "Float", standard_name => "float", class => "type", type => "float");
    top.current_symbol_table.character := (name => "Character", standard_name => "character", class => "type", type => "enumeration", literals => new Array);
    top.current_symbol_table.boolean := (name => "Boolean", standard_name => "boolean", class => "type", type => "enumeration", literals => (false => 0, true => 1));
+   top.current_symbol_table.false := (name => "False", standard_name => "false", class => "function", formals => new Array, return_type => top.current_symbol_table.boolean, enumeration_literal => 1, literal_value => 0);
+   top.current_symbol_table.true := (name => "True", standard_name => "true", class => "function", formals => new Array, return_type => top.current_symbol_table.boolean, enumeration_literal => 1, literal_value => 0);   
+   
+   top.string_object := New_Type (top.current_symbol_table, "String", "string", (type_class => "array", range_type => top.current_symbol_table.positive, component_type => top.current_symbol_table.character));
+   
 end;
 
 after Compilation_Unit do

@@ -1,0 +1,7 @@
+after assignment_statement/object_reference do
+   parent.type := child.object.type;
+end;
+
+before assignment_statement/expression do
+   child.expected_type := parent.type;
+end;

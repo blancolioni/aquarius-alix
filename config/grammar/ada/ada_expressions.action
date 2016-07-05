@@ -1,0 +1,81 @@
+after assignment_statement/object_reference do
+   parent.type := child.object.type;
+end;
+
+before assignment_statement/expression do
+   child.expected_type := parent.type;
+end;
+
+before expression/relation 
+    or relation/simple_expression
+	or simple_expression/term
+	or term/factor
+	or factor/primary
+do
+   child.expected_type := parent.expected_type;
+end;
+
+after primary/object_reference do
+   parent.inferred_type := child.object.type;
+end;
+
+before primary/aggregate do
+   child.target := parent.expected_type;
+   child.expected_type := parent.expected_type;
+end;
+
+before aggregate do
+   if tree.target.type.type_class = "array" then
+      tree.remaining_type := tree.target.type.component_type;
+   elsif tree.target.type.type_class = "record" then
+      tree.agg_types := new Array;
+      for component in tree.target.type.components loop
+	     tree.agg_types.append (component);
+	  end loop;
+	  tree.next_component := 0;
+   else
+      tree.error ("invalid type for aggregate: " & tree.target.image)
+   end if;
+end;
+
+before aggregate/selector do
+   child.target := parent.target;
+   child.agg_types := parent.agg_types;
+end;
+
+before aggregate/selector_expression do
+   child.target := parent.target;
+   child.agg_types := parent.agg_types;
+end;
+
+before selector_expression/selector do
+   child.target := parent.target;
+   child.agg_types := parent.agg_types;
+end;
+
+before selector_expression/expression do
+   parent.aggregate := parent^aggregate;
+   if parent.aggregate.agg_types then
+      parent.aggregate.next_component := parent.aggregate.next_component + 1;
+	  child.expected_type := parent.agg_types.get (parent.aggregate.next_component).type;
+   end if;
+end;
+
+before selector/list_of_selector_items do
+   child.target := parent.target;
+   child.agg_types := parent.agg_types;
+end;
+
+before list_of_selector_items/selector_item do
+   child.target := parent.target;
+   child.agg_types := parent.agg_types;
+end;
+
+before selector_item/constant_expression do
+   parent.saved_symbol_table := top.current_symbol_table;
+   top.current_symbol_table := parent.target.type.component_table;
+end;
+
+after selector_item/constant_expression do
+   top.current_symbol_table := parent.saved_symbol_table;
+end;
