@@ -23,7 +23,9 @@ package Komnenos.Entities.Aqua_Entities is
    is ("[UI]");
 
    overriding function Show
-     (Object : Root_Aqua_Object)
+     (Object         : Root_Aqua_Object;
+      Recursive_Show : access
+        function (Value : Aqua.Word) return String)
       return String
    is ("[UI]");
 

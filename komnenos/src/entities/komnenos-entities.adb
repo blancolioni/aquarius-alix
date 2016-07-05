@@ -478,8 +478,12 @@ package body Komnenos.Entities is
    ----------
 
    overriding function Show
-     (Item : Root_Entity_Reference) return String
+     (Item           : Root_Entity_Reference;
+      Recursive_Show : access
+        function (Value : Aqua.Word) return String)
+      return String
    is
+      pragma Unreferenced (Recursive_Show);
    begin
       return Ada.Strings.Unbounded.To_String (Item.Description);
    end Show;
