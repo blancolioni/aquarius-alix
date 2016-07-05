@@ -1,0 +1,63 @@
+function Create_Named_Object(table, name, standard_name, object_class) is
+begin
+   table.set(name, (name => name, standard_name => standard_name, class => object_class));
+   return table.get (name);
+end Create_Named_Object;
+	  
+function Create_Type(table, name, standard_name, object_type) is
+   Result := Create_Named_Object (table, name, standard_name, "type");
+begin
+   Result.type := object_type;
+   return Result;
+end Create_Type;
+
+after type_declaration/type_header do
+   parent.declared_name := type_header.name;
+end;
+
+after type_declaration/type_definition do
+   parent.type_definition := child.type_definition;
+end;
+
+after type_definition/record_type_definition do
+   parent.type_definition := child.type_definition;
+end;
+
+before record_type_definition do
+   tree.type_definition := (type_class => "record", components => new Array, component_table => new Map);
+end;
+
+before record_type_definition/record_component_list do
+   child.type_definition := parent.type_definition;
+end;
+
+after record_component_list/component_declaration do
+   for component in child.components loop
+      parent.type_definition.components.append (component);
+      parent.type_definition.component_table.set (component.name, component);
+   end loop;
+end;
+
+after component_declaration/defining_identifier_list do
+   parent.names := child.defined_names;
+end;
+
+after component_declaration/type_indication do
+   parent.components := new Array;
+   for name in parent.names loop
+      parent.components.append ((name => name.text, class => "object", type => child.type, declaration => name));
+   end loop;
+end;
+
+after type_declaration do
+   tree.defined_type :=
+     Create_Type (top.current_symbol_table, tree.declared_name, tree.declared_name.to_lower, tree.type_definition);
+end;
+
+after type_header/defining_type_name do
+   parent.name := child.name;
+end;
+
+after defining_type_name/identifier do
+   parent.name := child.text;
+end;
