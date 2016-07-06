@@ -1053,10 +1053,18 @@ package body Komnenos.Entities.Source.Aquarius_Source is
       Unique      : Boolean;
       Class       : Aquarius.Tokens.Token_Class;
       First, Next : Natural := 1;
+      Buffer      : String :=
+                      To_String (Entity.Edit_Buffer);
    begin
+      for I in Buffer'Range loop
+         if Buffer (I) = Character'Val (10) then
+            Buffer (I) := ' ';
+         end if;
+      end loop;
+
       Aquarius.Tokens.Scan
         (Frame      => Entity.Grammar.Frame,
-         Text       => To_String (Entity.Edit_Buffer),
+         Text       => Buffer,
          Partial    => True,
          Complete   => Complete,
          Have_Class => Have_Class,
