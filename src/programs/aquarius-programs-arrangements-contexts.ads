@@ -1,3 +1,5 @@
+with Ada.Strings.Unbounded;
+
 with Aquarius.Layout;                  use Aquarius.Layout;
 with Aquarius.Formats;                 use Aquarius.Formats;
 
@@ -26,7 +28,9 @@ private package Aquarius.Programs.Arrangements.Contexts is
          Soft_Indent        : Column_Offset       := 0;
          Right_Margin       : Column_Number       := 72;
          Rearranging        : Boolean             := False;
-         User_New_Line      : Boolean             := False;
+         Updating           : Boolean             := False;
+         Skip_Terminal      : Boolean             := False;
+         User_Text          : Ada.Strings.Unbounded.Unbounded_String;
          User_Text_Length   : Count               := 0;
          User_Cursor        : Aquarius.Trees.Cursors.Cursor;
          User_Text_Line     : Aquarius.Layout.Line_Number;
