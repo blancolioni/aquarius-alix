@@ -378,6 +378,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
       Length         : constant Position := Finish - Start;
       Remaining      : Position := Length;
       Backward       : constant Boolean := Mark_Position < Point_Position;
+      Needs_Render   : Boolean := False;
    begin
 
       Ada.Text_IO.Put_Line
@@ -415,15 +416,16 @@ package body Komnenos.Entities.Source.Aquarius_Source is
                Ada.Text_IO.Put_Line ("Deleting: " & Deleted_Tree.Image);
                Ancestor.Remove_Child (Right);
                Remaining := Remaining - Entity.Buffer_Offset;
-               Entity.Edit_Tree := New_Edit_Tree;
-               Entity.Buffer_Offset := New_Offset;
+
                declare
                   New_Buffer : constant String :=
-                                 Entity.Edit_Tree.Text;
-                  Missing    : constant Natural :=
-                                 Natural (Entity.Buffer_Offset)
-                                 - New_Buffer'Length;
-                  Spaces     : constant String (1 .. Missing) :=
+                                 New_Edit_Tree.Text;
+                  Num_Spaces : constant Natural :=
+                                 Natural
+                                   (Entity.Edit_Tree.Layout_Start_Position
+                                    - New_Edit_Tree.Layout_End_Position
+                                    - 1);
+                  Spaces     : constant String (1 .. Num_Spaces) :=
                                  (others => ' ');
                begin
                   Entity.Edit_Buffer :=
@@ -431,12 +433,21 @@ package body Komnenos.Entities.Source.Aquarius_Source is
                       (New_Buffer & Spaces);
                end;
 
+               Entity.Edit_Tree := New_Edit_Tree;
+               Entity.Update_Tree := Entity.Edit_Tree;
+               Entity.Buffer_Offset := New_Offset;
+
                Aquarius.Programs.Parser.Set_Cursor
                  (Entity.Parse_Context,
                   Aquarius.Trees.Cursors.Right_Of_Tree
                     (Entity.Edit_Tree));
 
+               Ada.Text_IO.Put_Line
+                 ("new buffer: " & Show_Buffer (Entity));
+
                Free (Deleted_Tree);
+
+               Needs_Render := True;
             end;
          end loop;
 
@@ -447,6 +458,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
                Positive (Entity.Buffer_Offset - Remaining + 1),
                Natural (Entity.Buffer_Offset));
             Entity.Buffer_Offset := Entity.Buffer_Offset - Remaining;
+            Entity.Update_Tree := Entity.Edit_Tree;
 
             Entity.Buffer_Changed := True;
 
@@ -455,8 +467,15 @@ package body Komnenos.Entities.Source.Aquarius_Source is
                & Entity.Show_Buffer);
          end if;
 
-         Komnenos.Entities.Visuals.Delete_At_Cursor
-           (Entity, Point, -Length);
+         Entity.Cursors (Point) :=
+           Entity.Cursors (Point) - Length;
+
+         if Needs_Render then
+            Komnenos.Entities.Visuals.Invalidate_Visuals (Entity);
+         else
+            Komnenos.Entities.Visuals.Delete_At_Cursor
+              (Entity, Point, -Length);
+         end if;
 
       end if;
    end Delete_Region;
@@ -746,6 +765,39 @@ package body Komnenos.Entities.Source.Aquarius_Source is
          if Echo then
             Komnenos.Entities.Visuals.Insert_At_Cursor
               (Entity, Point, (1 => Ch));
+
+            if Ch = Character'Val (10) then
+               declare
+                  use Aquarius.Programs;
+                  use Ada.Strings.Unbounded;
+                  Edit_Tree     : constant Aquarius.Programs.Program_Tree :=
+                                    Entity.Edit_Tree;
+                  Start_Line    : constant Program_Tree :=
+                                    Edit_Tree.Start_Of_Line;
+                  Next_Line     : constant Program_Tree :=
+                                    Edit_Tree.Scan_Terminal (1);
+                  Before_Indent : constant Column_Number :=
+                                    Start_Line.Layout_Start_Column;
+                  After_Indent  : constant Column_Number :=
+                                    Next_Line.Layout_Start_Column;
+                  New_Indent    : constant Column_Number :=
+                                    Column_Number'Max
+                                      (Before_Indent, After_Indent);
+                  Spaces                           : constant String
+                    (1 .. Positive (New_Indent) - 1) :=
+                                                       (others => ' ');
+               begin
+                  Ada.Text_IO.Put_Line
+                    ("NL: before indent =" & Before_Indent'Img
+                     & "; after indent =" & After_Indent'Img);
+
+                  Entity.Buffer_Offset := Position_Offset (New_Indent);
+                  Entity.Edit_Buffer :=
+                    Entity.Edit_Buffer & Spaces;
+                  Komnenos.Entities.Visuals.Insert_At_Cursor
+                    (Entity, Point, Spaces);
+               end;
+            end if;
          end if;
       end;
 
@@ -944,8 +996,8 @@ package body Komnenos.Entities.Source.Aquarius_Source is
       Aquarius.Programs.Arrangements.Arrange
         (Item             => Program,
          Point            => Tree_Cursor,
-         Partial_Length   => Partial'Length,
-         New_Line_Partial => Entity.New_Line_Before_Buffer,
+         Partial          => Partial,
+         Updating         => Entity.Update_Tree /= null,
          Partial_Line     => Edit_Line,
          Partial_Column   => Edit_Column,
          Line_Length      => Visual.Width / 8);
@@ -959,6 +1011,7 @@ package body Komnenos.Entities.Source.Aquarius_Source is
          Renderer         => Renderer,
          Point            => Tree_Cursor,
          Partial          => Partial,
+         Updating         => Entity.Update_Tree /= null,
          Partial_Line     => Edit_Line,
          Partial_Column   => Edit_Column);
 
