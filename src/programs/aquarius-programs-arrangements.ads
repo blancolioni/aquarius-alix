@@ -9,8 +9,8 @@ package Aquarius.Programs.Arrangements is
    procedure Arrange
      (Item             : in Program_Tree;
       Point            : in Aquarius.Trees.Cursors.Cursor;
-      Partial_Length   : in Natural;
-      New_Line_Partial : in Boolean;
+      Partial          : in String;
+      Updating         : in Boolean;
       Partial_Line     : out Aquarius.Layout.Line_Number;
       Partial_Column   : out Aquarius.Layout.Column_Number;
       Line_Length      : in Positive      := 72);
@@ -20,6 +20,7 @@ package Aquarius.Programs.Arrangements is
       Renderer       : in out Rendering.Root_Aquarius_Renderer'Class;
       Point          : in Aquarius.Trees.Cursors.Cursor;
       Partial        : in String;
+      Updating       : in Boolean;
       Partial_Line   : in Aquarius.Layout.Line_Number;
       Partial_Column : in Aquarius.Layout.Column_Number);
 
