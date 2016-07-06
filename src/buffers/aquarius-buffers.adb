@@ -499,26 +499,17 @@ package body Aquarius.Buffers is
      (Buffer  : not null access Aquarius_Buffer_Record;
       Display : in out Aquarius.Rendering.Root_Aquarius_Renderer'Class)
    is
-      Cursor        : constant Aquarius.Trees.Cursors.Cursor :=
-                        Aquarius.Programs.Parser.Get_Cursor
-                          (Buffer.Parsing);
-      Cursor_Line   : Aquarius.Layout.Line_Number;
-      Cursor_Column : Aquarius.Layout.Column_Number;
    begin
 
       Ada.Text_IO.Put_Line ("Start render: " & Buffer.Name);
 
       Buffer.Rendering := True;
 
-      Aquarius.Programs.Arrangements.Arrange
-        (Buffer.Contents,
-         Cursor, 0, False, Cursor_Line, Cursor_Column);
+      Aquarius.Programs.Arrangements.Arrange (Buffer.Contents);
 
       Aquarius.Programs.Arrangements.Render
         (Buffer.Contents,
-         Aquarius.Rendering.Aquarius_Renderer (Display),
-         Cursor,
-         "", Cursor_Line, Cursor_Column);
+         Aquarius.Rendering.Aquarius_Renderer (Display));
 
       Buffer.Rendering := False;
       Ada.Text_IO.Put_Line ("Finish render: " & Buffer.Name);
@@ -637,10 +628,9 @@ package body Aquarius.Buffers is
       Point   : Aquarius.Trees.Cursors.Cursor;
       Partial : String)
    is
+      pragma Unreferenced (Partial);
       Renderer      : Aquarius.Rendering.Aquarius_Renderer :=
                         Aquarius.Rendering.Manager.Renderer ("text");
-      Cursor_Line   : Aquarius.Layout.Line_Number;
-      Cursor_Column : Aquarius.Layout.Column_Number;
    begin
       Ada.Text_IO.Put_Line ("Start update: " & Buffer.Name);
       Ada.Text_IO.Put_Line
@@ -649,13 +639,10 @@ package body Aquarius.Buffers is
 
       Buffer.Rendering := True;
 
-      Aquarius.Programs.Arrangements.Arrange
-        (Buffer.Contents, Point,
-         Partial'Length, False, Cursor_Line, Cursor_Column);
+      Aquarius.Programs.Arrangements.Arrange (Buffer.Contents);
 
       Aquarius.Programs.Arrangements.Render
-        (Buffer.Contents, Renderer, Point, Partial,
-         Cursor_Line, Cursor_Column);
+        (Buffer.Contents, Renderer);
 
       Buffer.Rendering := False;
       Ada.Text_IO.Put_Line ("Finish update: " & Buffer.Name);

@@ -1,4 +1,5 @@
 with Ada.Exceptions;
+with Ada.Strings.Unbounded;
 
 with Aquarius.Formats;
 with Aquarius.Layout;
@@ -79,7 +80,12 @@ package body Aquarius.Programs.Arrangements is
       Item.Set_Inherited_Message_Level (Context.Message_Level);
 
       if Item.Is_Terminal then
-         Arrange_Terminal (Item, Context);
+         if Context.Skip_Terminal then
+            Logging.Log (Context, Item, "skipping update terminal");
+            Context.Skip_Terminal := False;
+         else
+            Arrange_Terminal (Item, Context);
+         end if;
       else
          Arrange_Non_Terminal (Item, Context);
       end if;
@@ -123,8 +129,8 @@ package body Aquarius.Programs.Arrangements is
    procedure Arrange
      (Item             : in Program_Tree;
       Point            : in Aquarius.Trees.Cursors.Cursor;
-      Partial_Length   : in Natural;
-      New_Line_Partial : in Boolean;
+      Partial          : in String;
+      Updating         : in Boolean;
       Partial_Line     : out Aquarius.Layout.Line_Number;
       Partial_Column   : out Aquarius.Layout.Column_Number;
       Line_Length      : in Positive      := 72)
@@ -133,10 +139,10 @@ package body Aquarius.Programs.Arrangements is
    begin
       Context.Right_Margin :=
         Aquarius.Layout.Column_Number (Line_Length);
-      Context.User_Text_Length :=
-        Aquarius.Layout.Count (Partial_Length);
+      Context.User_Text :=
+        Ada.Strings.Unbounded.To_Unbounded_String (Partial);
+      Context.Updating := Updating;
       Context.User_Cursor := Point;
-      Context.User_New_Line := New_Line_Partial;
       Arrange (Item, Context);
       Check_Previous_Line_Length (Context);
       Partial_Line := Context.User_Text_Line;
@@ -337,20 +343,34 @@ package body Aquarius.Programs.Arrangements is
          end;
       end if;
 
-      Skip (Context, Natural (Item.Layout_Length));
+      if Before_Point (Item, Context.User_Cursor)
+        and then Context.Updating
+      then
+         null;
+      else
+         Skip (Context, Natural (Item.Layout_Length));
+      end if;
 
       if Before_Point (Item, Context.User_Cursor) then
-         if Context.User_New_Line then
-            Logging.Log (Context, Item,
-                         "got a user new line after");
-            New_Line (Context);
-            Indent (Context);
-            Logging.Log (Context, Item,
-                         "finished user new line processing");
-         end if;
 
          Context.User_Text_Line := Context.Current_Line;
          Context.User_Text_Column := Context.Current_Column;
+
+         declare
+            Text : constant String :=
+                     Ada.Strings.Unbounded.To_String (Context.User_Text);
+         begin
+            for Ch of Text loop
+               if Ch = Character'Val (10) then
+                  Logging.Log (Context, Item,
+                               "got a user new line after");
+                  New_Line (Context);
+               else
+                  Skip (Context);
+               end if;
+            end loop;
+
+         end;
 
          Logging.Log (Context, Item,
                       "Calculate user edit start at "
@@ -358,8 +378,6 @@ package body Aquarius.Programs.Arrangements is
                       & Context.User_Text_Column'Img
                       & "with length"
                       & Count'Image (Context.User_Text_Length));
-
-         Skip (Context, Natural (Context.User_Text_Length));
 
       end if;
 
@@ -745,9 +763,11 @@ package body Aquarius.Programs.Arrangements is
       Renderer       : in out Rendering.Root_Aquarius_Renderer'Class;
       Point          : in Aquarius.Trees.Cursors.Cursor;
       Partial        : in String;
+      Updating       : in Boolean;
       Partial_Line   : in Aquarius.Layout.Line_Number;
       Partial_Column : in Aquarius.Layout.Column_Number)
    is
+
       procedure Perform_Render (P : Program_Tree);
       procedure Render_Terminal (Terminal : Program_Tree);
 
@@ -777,9 +797,13 @@ package body Aquarius.Programs.Arrangements is
          Column : constant Aquarius.Layout.Column_Number :=
                     Terminal.Layout_Start_Column;
          Msg_Level       : constant Message_Level :=
-           Terminal.Get_Inherited_Message_Level;
+                             Terminal.Get_Inherited_Message_Level;
+         At_Point        : constant Boolean :=
+                             Before_Point (Terminal, Point);
       begin
-         if Msg_Level > No_Message then
+         if At_Point and then Updating then
+            null;
+         elsif Msg_Level > No_Message then
             Renderer.Set_Text
               (Terminal, Line, Column,
                Level_Name (Msg_Level),
@@ -804,7 +828,7 @@ package body Aquarius.Programs.Arrangements is
                                "normal", Terminal.Text);
          end if;
 
-         if Before_Point (Terminal, Point) then
+         if At_Point then
             Renderer.Set_Text
               (Terminal, Partial_Line, Partial_Column, "normal", Partial);
          end if;
@@ -812,6 +836,7 @@ package body Aquarius.Programs.Arrangements is
       end Render_Terminal;
 
    begin
+
       Renderer.Begin_Render;
       Perform_Render (Program);
 --      Renderer.Set_Point (Partial_Line, Partial_Column);
@@ -828,7 +853,8 @@ package body Aquarius.Programs.Arrangements is
    is
    begin
       Render (Program, Renderer,
-              Aquarius.Trees.Cursors.Left_Of_Tree (Program), "", 1, 1);
+              Aquarius.Trees.Cursors.Left_Of_Tree (Program),
+              "", False, 1, 1);
    end Render;
 
    ----------
