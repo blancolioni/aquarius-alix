@@ -564,9 +564,7 @@ package body Aquarius.Tokens is
       Have_Class := False;
       Last := 0;
 
-      while First <= Text'Last and then
-        (Text (First) = ' ' or else Character'Pos (Text (First)) = 10)
-      loop
+      while First <= Text'Last and then Text (First) = ' ' loop
          First := First + 1;
       end loop;
 
