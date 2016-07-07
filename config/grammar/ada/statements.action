@@ -3,5 +3,6 @@ after assignment_statement/object_reference do
 end;
 
 before assignment_statement/expression do
-   child.expected_type := parent.type;
+   child.expected_type := new Array;
+   child.expected_type.append (parent.type);
 end;
