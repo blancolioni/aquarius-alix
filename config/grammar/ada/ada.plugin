@@ -3,6 +3,7 @@ plugin Ada version 0.1 is
    group run_check : semantic is
       check_types;
 	  statements;
+	  declarations;
 	  ada_expressions;
       check_subprograms;
    end run_check;
