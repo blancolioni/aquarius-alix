@@ -1,3 +1,14 @@
+function Find_Object (Table, name) is
+begin
+   if Table.get (name) then
+      return Table.get (name);
+   elsif Table.parent then
+      return find_Object (Table.parent, name);
+   else
+      return (error => "undefined: " & name);
+   end if;
+end Find_Object;
+
 after assignment_statement/object_reference do
    parent.type := child.object.type;
 end;
@@ -78,4 +89,12 @@ end;
 
 after selector_item/constant_expression do
    top.current_symbol_table := parent.saved_symbol_table;
+end;
+
+after object_reference/direct_name do
+   parent.object := find_object (top.current_symbol_table, direct_name/identifier.text);
+   if parent.object.error then
+      direct_name.error (parent.object.error)
+	  parent.object := null;
+   end if;
 end;
