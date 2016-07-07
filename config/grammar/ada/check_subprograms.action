@@ -30,10 +30,16 @@ end New_Type;
 
 before Compilation_Unit do
 --   IO.Put_Line ("Ada: defining subprogram names");
+   top.universal_integer := (universal => 1);
+   top.universal_integer.set ("type", (type_class => "integral"));
+   top.universal_integer.set ("name", "an integer type");
+   
+   --  IO.put_line ("Universal-integer: " & top.universal_integer.image)
+   
    top.current_symbol_table := new Map;
-   top.standard_integer := New_Type (top.current_symbol_table, "Integer", "integer", (type => (type_class => "integral")));
-   top.standard_natural := New_Type (top.current_symbol_table, "Natural", "natural", (type => (base_type => top.standard_integer, range => (low => 0))));
-   top.standard_positive := New_Type (top.current_symbol_table, "Positive", "positive", (type => (base_type => top.standard_integer, range => (low => 1))));
+   top.standard_integer := New_Type (top.current_symbol_table, "Integer", "integer", (type_class => "integral"));
+   top.standard_natural := New_Type (top.current_symbol_table, "Natural", "natural", (subtype_of => top.standard_integer, range => (low => 0)));
+   top.standard_positive := New_Type (top.current_symbol_table, "Positive", "positive", (subtype_of => top.standard_integer, range => (low => 1)));
    top.current_symbol_table.float := (name => "Float", standard_name => "float", class => "type", type => "float");
    top.current_symbol_table.character := (name => "Character", standard_name => "character", class => "type", type => "enumeration", literals => new Array);
    top.current_symbol_table.boolean := (name => "Boolean", standard_name => "boolean", class => "type", type => "enumeration", literals => (false => 0, true => 1));
