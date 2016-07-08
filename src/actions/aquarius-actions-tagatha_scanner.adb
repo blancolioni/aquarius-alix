@@ -275,7 +275,7 @@ package body Aquarius.Actions.Tagatha_Scanner is
             L1 := Processor.Unit.Next_Label;
          end if;
          Scanner.Scan_Expression (Processor, Expressions (I));
-         Processor.Unit.Operate (Tagatha.Op_Test);
+         --  Processor.Unit.Operate (Tagatha.Op_Test);
          Processor.Unit.Jump (L1, Tagatha.C_Equal);
          Scanner.Scan_Action (Processor, Statements (I));
          Processor.Unit.Jump (Exit_Label);
@@ -535,7 +535,7 @@ package body Aquarius.Actions.Tagatha_Scanner is
          Processor.Unit.Push_Local
            (Tagatha.Local_Offset (abs Offset));
       else
-         if Offset < 20 then
+         if Offset < 100 then
             Processor.Unit.Push_Argument
               (Tagatha.Argument_Offset (Offset));
          else
