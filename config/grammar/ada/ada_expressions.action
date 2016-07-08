@@ -50,7 +50,7 @@ end Type_Error;
 function Check_Expected_Types(tree, expected, found) is
    OK := 0;
 begin   
-   if expected /= 0 then
+   if expected then
       tree.found_types := [];
       for possible in expected loop
 	     OK := Conforms (found, possible);
