@@ -121,6 +121,18 @@ package body Aquarius.Messages is
       return List.Messages.Element (Index);
    end Get_Message;
 
+   ----------------------
+   -- Get_Message_Text --
+   ----------------------
+
+   function Get_Message_Text
+     (Item : Message)
+      return String
+   is
+   begin
+      return Item.Text.all;
+   end Get_Message_Text;
+
    -------------------
    -- Highest_Level --
    -------------------

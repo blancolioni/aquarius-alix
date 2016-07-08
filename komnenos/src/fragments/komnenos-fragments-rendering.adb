@@ -1,6 +1,6 @@
 with Aquarius.Layout;
+with Aquarius.Messages;
 with Aquarius.Programs;
---  with Ada.Text_IO;
 
 package body Komnenos.Fragments.Rendering is
 
@@ -31,6 +31,10 @@ package body Komnenos.Fragments.Rendering is
                         Line      : in     Aquarius.Layout.Line_Number;
                         Column    : in     Aquarius.Layout.Column_Number);
 
+   function Get_Tooltip
+     (Terminal : Aquarius.Programs.Program_Tree)
+      return String;
+
    ------------------
    -- Begin_Render --
    ------------------
@@ -54,9 +58,9 @@ package body Komnenos.Fragments.Rendering is
 --        Renderer.Fragment.Display.Set_Point (Renderer.Pos);
    end End_Render;
 
-   --------------------------
-   -- New_Fragment_Renderer --
-   --------------------------
+   -----------------------
+   -- Fragment_Renderer --
+   -----------------------
 
    function Fragment_Renderer
      (Target : Fragment_Type;
@@ -69,6 +73,43 @@ package body Komnenos.Fragments.Rendering is
          Result.Entity_Table := Entity_Table;
       end return;
    end Fragment_Renderer;
+
+   -----------------
+   -- Get_Tooltip --
+   -----------------
+
+   function Get_Tooltip
+     (Terminal : Aquarius.Programs.Program_Tree)
+      return String
+   is
+      use Ada.Strings.Unbounded;
+      use Aquarius.Messages;
+      Msg_List : Aquarius.Messages.Message_List;
+      Result   : Unbounded_String;
+   begin
+      if Terminal.Get_Inherited_Message_Level > No_Message then
+         declare
+            use Aquarius.Programs;
+            T : Program_Tree := Terminal;
+         begin
+            while T /= null and then not T.Has_Messages loop
+               T := T.Program_Parent;
+            end loop;
+
+            if T = null then
+               return "no message";
+            else
+               T.Get_Messages (Msg_List);
+               for I in 1 .. Message_Count (Msg_List) loop
+                  Result := Result
+                    & Get_Message_Text (Get_Message (Msg_List, I))
+                    & Character'Val (10);
+               end loop;
+            end if;
+         end;
+      end if;
+      return To_String (Result);
+   end Get_Tooltip;
 
    ---------------
    -- Set_Point --
@@ -125,7 +166,8 @@ package body Komnenos.Fragments.Rendering is
       begin
          if Space_Count > 0 then
             Renderer.Fragment.Put
-              (Spaces, Aquarius.Themes.Active_Theme.Default_Style);
+              (Spaces, Aquarius.Themes.Active_Theme.Default_Style,
+               "", null);
          end if;
       end;
 
@@ -142,15 +184,12 @@ package body Komnenos.Fragments.Rendering is
          begin
             if References'Length > 0 then
                Reference := References (References'First);
---                 Styles (Hover) := Find_Style ("entity_reference_hover");
---                 Ada.Text_IO.Put_Line
---                   (Terminal.Show_Location & " references "
---                      & Reference.Display_Text);
             end if;
          end;
       end if;
 
-      Renderer.Fragment.Put (Text, Style, Reference);
+      Renderer.Fragment.Put (Text, Style, Get_Tooltip (Terminal), Reference);
+
       Renderer.Set_Current_Position
         (Line, Column + Column_Offset (Text'Length));
    end Set_Text;

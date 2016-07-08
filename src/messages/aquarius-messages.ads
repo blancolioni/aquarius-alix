@@ -63,6 +63,10 @@ package Aquarius.Messages is
    function Get_Location (Item : Message)
                          return access Message_Location'Class;
 
+   function Get_Message_Text
+     (Item : Message)
+      return String;
+
    --  Message_Location abstract interface
 
    function Show_Location (Location : Message_Location'Class)

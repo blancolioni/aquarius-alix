@@ -333,8 +333,23 @@ package body Komnenos.Fragments is
          end;
       end if;
 
-      return (0, (others => Fragment.Default_Style), null);
+      return (0, (others => Fragment.Default_Style), null,
+              Ada.Strings.Unbounded.Null_Unbounded_String);
    end Get_Style_Info;
+
+   ------------------
+   -- Get_Tool_Tip --
+   ------------------
+
+   function Get_Tool_Tip
+     (Fragment : Root_Fragment_Type;
+      Position : Aquarius.Layout.Position)
+      return String
+   is
+   begin
+      return Ada.Strings.Unbounded.To_String
+        (Get_Style_Info (Fragment, Natural (Position) + 1).Tool_Tip);
+   end Get_Tool_Tip;
 
    ----------------
    -- Initialize --
@@ -382,6 +397,7 @@ package body Komnenos.Fragments is
       Put      : not null access
         procedure (Text : String;
                    Style : Aquarius.Styles.Aquarius_Style;
+                   Tool_Tip : String;
                    Link  : Komnenos.Entities.Entity_Reference);
       New_Line : not null access procedure)
    is
@@ -401,13 +417,16 @@ package body Komnenos.Fragments is
                                  (if Normal_Style = Null_Style
                                   then Fragment.Default_Style
                                   else Normal_Style);
+                  This_Tool_Tip : constant String :=
+                                    Ada.Strings.Unbounded.To_String
+                                      (Style.Tool_Tip);
                   This_Link  : constant Komnenos.Entities.Entity_Reference :=
                                  Style.Reference;
                   This_Text  : constant String :=
                                  Slice (Line.Text, Current,
                                         Current + Style.Length - 1);
                begin
-                  Put (This_Text, This_Style, This_Link);
+                  Put (This_Text, This_Style, This_Tool_Tip, This_Link);
                   Current := Current + Style.Length;
                end;
             end loop;
@@ -415,7 +434,7 @@ package body Komnenos.Fragments is
             if Current <= Length (Line.Text) then
                Put
                  (Slice (Line.Text, Current, Length (Line.Text)),
-                  Fragment.Default_Style, null);
+                  Fragment.Default_Style, "", null);
             end if;
          end;
          New_Line.all;
@@ -528,7 +547,8 @@ package body Komnenos.Fragments is
      (Fragment : in out Root_Fragment_Type;
       Text     : in     String;
       Style    : in     Aquarius.Styles.Aquarius_Style;
-      Link     : access Komnenos.Entities.Root_Entity_Reference'Class := null)
+      Tool_Tip : in     String;
+      Link     : access Komnenos.Entities.Root_Entity_Reference'Class)
    is
       use type Aquarius.Styles.Aquarius_Style;
       use type Komnenos.Entities.Entity_Reference;
@@ -537,6 +557,9 @@ package body Komnenos.Fragments is
                      (Length    => Text'Length,
                       Styles    => (Aquarius.Themes.Normal => Style,
                                     others                 => null),
+                      Tool_Tip  =>
+                        Ada.Strings.Unbounded.To_Unbounded_String
+                          (Tool_Tip),
                       Reference => Komnenos.Entities.Entity_Reference (Link));
    begin
       if Link /= null then

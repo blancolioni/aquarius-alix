@@ -1,4 +1,5 @@
 private with Ada.Containers.Doubly_Linked_Lists;
+private with Ada.Strings.Unbounded;
 
 with Gtk.Widget;
 
@@ -53,6 +54,7 @@ private
          Initialising           : Boolean := True;
          Updating_Cursor        : Boolean := False;
          Updating_Text          : Boolean := False;
+         Tool_Tip               : Ada.Strings.Unbounded.Unbounded_String;
       end record;
 
    overriding procedure Insert_At_Cursor
