@@ -371,6 +371,8 @@ package body Tagatha.Code.Pdp32 is
                   Asm.Put_Line ("    add #8, sp");
             end case;
          end if;
+      elsif Is_Condition_Operand (Dest) then
+         Instruction (Asm, "tst", Transfer_Size, To_Src (Source));
       else
          Instruction (Asm, "mov", Transfer_Size,
                       To_Src (Source),
@@ -481,13 +483,23 @@ package body Tagatha.Code.Pdp32 is
          return;
       end if;
 
-      declare
-         Src      : constant String := To_Src (Source);
-         Dst      : constant String := To_Dst (Dest);
-         Mnemonic : constant String := Get_Mnemonic (Op);
-      begin
-         Instruction (Asm, Mnemonic, Get_Size (Dest), Src, Dst);
-      end;
+      if Is_Condition_Operand (Dest) then
+         declare
+            Src      : constant String := To_Src (Source);
+            Mnemonic : constant String := Get_Mnemonic (Op);
+         begin
+            Instruction (Asm, Mnemonic, Get_Size (Source), Src);
+         end;
+      else
+         declare
+            Src      : constant String := To_Src (Source);
+            Dst      : constant String := To_Dst (Dest);
+            Mnemonic : constant String := Get_Mnemonic (Op);
+         begin
+            Instruction (Asm, Mnemonic, Get_Size (Dest), Src, Dst);
+         end;
+      end if;
+
    end Operate;
 
    -------------
