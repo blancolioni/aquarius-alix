@@ -80,6 +80,14 @@ package body Tagatha.Transfers.Optimiser is
                From := Transfers (From_Index + 2);
                From.Condition := Negate (From.Condition);
                From_Index := From_Index + 2;
+            elsif From_Index < Transfers.Last_Index
+              and then Transfers (From_Index).Op = Op_Not
+              and then Transfers (From_Index + 1).Trans = T_Control
+              and then Transfers (From_Index + 1).Condition /= C_Always
+            then
+               From := Transfers (From_Index + 1);
+               From.Condition := Negate (From.Condition);
+               From_Index := From_Index + 1;
             elsif From.Trans = T_Data
               and then From.Op = Op_Nop
               and then Same_Operand (From.Src_1, From.Dst)

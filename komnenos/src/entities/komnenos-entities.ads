@@ -49,10 +49,11 @@ package Komnenos.Entities is
       is abstract;
 
    procedure Put
-     (Visual : in out Entity_Visual;
-      Text   : in     String;
-      Style  : in     Aquarius.Styles.Aquarius_Style;
-      Link   : access Root_Entity_Reference'Class := null)
+     (Visual   : in out Entity_Visual;
+      Text     : in     String;
+      Style    : in     Aquarius.Styles.Aquarius_Style;
+      Tool_Tip : in     String;
+      Link     : access Root_Entity_Reference'Class)
    is abstract;
 
    procedure New_Line (Visual : in out Entity_Visual) is abstract;
@@ -80,10 +81,11 @@ package Komnenos.Entities is
    is abstract;
 
    procedure Put_Line
-     (Visual : in out Entity_Visual'Class;
-      Text   : in     String;
-      Style  : in     Aquarius.Styles.Aquarius_Style;
-      Link   : access Root_Entity_Reference'Class := null);
+     (Visual   : in out Entity_Visual'Class;
+      Text     : in     String;
+      Style    : in     Aquarius.Styles.Aquarius_Style;
+      Tool_Tip : in     String := "";
+      Link     : access Root_Entity_Reference'Class := null);
 
    function Identifier
      (Item : Root_Entity_Reference'Class)

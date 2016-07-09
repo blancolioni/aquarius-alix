@@ -121,7 +121,8 @@ package Komnenos.Fragments is
      (Fragment : in out Root_Fragment_Type;
       Text     : in     String;
       Style    : in     Aquarius.Styles.Aquarius_Style;
-      Link     : access Komnenos.Entities.Root_Entity_Reference'Class := null);
+      Tool_Tip : in     String;
+      Link     : access Komnenos.Entities.Root_Entity_Reference'Class);
 
    overriding procedure New_Line (Fragment : in out Root_Fragment_Type);
 
@@ -162,6 +163,13 @@ package Komnenos.Fragments is
    --  If the text at the given offset has an associated reference, return it
    --  otherwise, return null.
 
+   function Get_Tool_Tip
+     (Fragment : Root_Fragment_Type;
+      Position : Aquarius.Layout.Position)
+      return String;
+   --  Return the tool tip (if any) at the given position.
+   --  If there is no tool tip, return ""
+
    procedure Get_Style
      (Fragment : Root_Fragment_Type;
       State    : Aquarius.Themes.Element_State;
@@ -179,8 +187,9 @@ package Komnenos.Fragments is
    procedure Iterate
      (Fragment : Root_Fragment_Type;
       Put      : not null access
-        procedure (Text  : String;
+        procedure (Text : String;
                    Style : Aquarius.Styles.Aquarius_Style;
+                   Tool_Tip : String;
                    Link  : Komnenos.Entities.Entity_Reference);
       New_Line : not null access procedure);
 
@@ -198,6 +207,7 @@ private
          Length    : Natural;
          Styles    : Style_Collection;
          Reference : Komnenos.Entities.Entity_Reference;
+         Tool_Tip  : Ada.Strings.Unbounded.Unbounded_String;
       end record;
 
    package Style_Lists is

@@ -453,7 +453,7 @@ package body Aquarius.Actions.Scanner is
       Processor.Start_Aggregate ("array");
       for E of Elements loop
          Processor.Start_Aggregate_Element ("");
-            Scan_Expression (Processor, E);
+         Scan_Expression (Processor, E);
          Processor.End_Aggregate_Element ("");
       end loop;
       Processor.End_Aggregate;
@@ -549,8 +549,7 @@ package body Aquarius.Actions.Scanner is
             elsif Child.Name = "array_aggregate" then
                Scan_Array_Aggregate
                  (Processor,
-                  Child.Program_Child ("expression")
-                  & Child.Program_Child
+                  Child.Program_Child
                     ("expression_list").Direct_Children
                       ("expression"));
             elsif Child.Name = "new_expression" then

@@ -407,13 +407,14 @@ package body Komnenos.Entities is
    --------------
 
    procedure Put_Line
-     (Visual : in out Entity_Visual'Class;
-      Text   : in     String;
-      Style  : in     Aquarius.Styles.Aquarius_Style;
-      Link   : access Root_Entity_Reference'Class := null)
+     (Visual   : in out Entity_Visual'Class;
+      Text     : in     String;
+      Style    : in     Aquarius.Styles.Aquarius_Style;
+      Tool_Tip : in     String := "";
+      Link     : access Root_Entity_Reference'Class := null)
    is
    begin
-      Visual.Put (Text, Style, Link);
+      Visual.Put (Text, Style, Tool_Tip, Link);
       Visual.New_Line;
    end Put_Line;
 

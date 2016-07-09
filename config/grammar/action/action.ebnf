@@ -121,9 +121,9 @@ aggregate_element_list ::= < aggregate_element / ',' >
 
 aggregate_element ::= identifier '=>' expression
 
-array_aggregate ::= '(' expression ',' expression_list ')'
+array_aggregate ::= '[' expression_list ']'
 
-expression_list ::= < expression / ',' >
+expression_list ::= { expression / ',' }
 
 if_expression ::=
   '(' 'if' expression 'then' expression { 'elsif' expression 'then' expression } 'else' expression ')'
