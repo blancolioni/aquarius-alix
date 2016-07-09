@@ -443,6 +443,18 @@ package body Tagatha.Transfers is
       return T.Trans = T_Control and then T.Call;
    end Is_Call;
 
+   --------------------------
+   -- Is_Condition_Operand --
+   --------------------------
+
+   function Is_Condition_Operand
+     (Operand : Transfer_Operand)
+      return Boolean
+   is
+   begin
+      return Operand.Op = T_Condition;
+   end Is_Condition_Operand;
+
    -----------------
    -- Is_Constant --
    -----------------

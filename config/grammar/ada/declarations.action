@@ -1,0 +1,49 @@
+before defining_identifier_list do
+   tree.defined_names := new Array;
+end;
+
+after defining_identifier_list/identifier do
+   parent.defined_names.append (identifier);
+end;
+
+after variable_declaration/defining_identifier_list do
+   parent.object_names := child.defined_names;
+end;
+
+after variable_declaration/variable_type do
+   for name in parent.object_names loop
+      top.current_symbol_table.set (name.text, (class => "object", type => child.type, name => name.text, declaration => name));
+   end loop;
+end;
+
+after variable_declaration/exception do
+   for name in parent.object_names loop
+      top.current_symbol_table.set (name.text, (class => "exception", declaration => name, name => name.text));
+   end loop;
+end;
+
+after variable_type/type_indication do
+   parent.type := child.type;
+end;
+
+after type_indication/direct_type_indication do
+   parent.type := child.type;
+end;
+
+after direct_type_indication/subtype_indication do
+   parent.type := child.type;
+end;
+
+after subtype_indication/subtype_mark do
+   parent.type := child.type;
+end;
+
+after subtype_mark/object_reference do
+   if child.object then
+      parent.type := child.object;
+   else
+      parent.error ("undeclared type: " & child.concatenated_image);
+      parent.type := top.current_symbol_table.integer;
+   end if;
+end;
+

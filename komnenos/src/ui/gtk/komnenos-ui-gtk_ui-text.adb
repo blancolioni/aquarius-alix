@@ -496,9 +496,10 @@ package body Komnenos.UI.Gtk_UI.Text is
 
       procedure New_Line;
       procedure Put
-        (Text  : String;
-         Style : Aquarius.Styles.Aquarius_Style;
-         Link  : Komnenos.Entities.Entity_Reference);
+        (Text     : String;
+         Style    : Aquarius.Styles.Aquarius_Style;
+         Tool_Tip : String;
+         Link     : Komnenos.Entities.Entity_Reference);
 
       --------------
       -- New_Line --
@@ -514,11 +515,13 @@ package body Komnenos.UI.Gtk_UI.Text is
       ---------
 
       procedure Put
-        (Text  : String;
-         Style : Aquarius.Styles.Aquarius_Style;
-         Link  : Komnenos.Entities.Entity_Reference)
+        (Text     : String;
+         Style    : Aquarius.Styles.Aquarius_Style;
+         Tool_Tip : String;
+         Link     : Komnenos.Entities.Entity_Reference)
       is
          pragma Unreferenced (Link);
+         pragma Unreferenced (Tool_Tip);
          Tag : constant Gtk.Text_Tag.Gtk_Text_Tag :=
                  Get_Tag_Entry (Buffer, Style);
          Iter : Gtk.Text_Iter.Gtk_Text_Iter;
@@ -887,6 +890,20 @@ package body Komnenos.UI.Gtk_UI.Text is
       else
          Set_Text_State (Widget, Iter, Aquarius.Themes.Normal);
       end if;
+
+      declare
+         use Ada.Strings.Unbounded;
+         Tool_Tip : constant String :=
+                      Text_View.Fragment.Get_Tool_Tip
+                        (Aquarius.Layout.Position
+                           (Get_Offset (Iter)));
+      begin
+         if Tool_Tip /= Text_View.Tool_Tip then
+            Text_View.Tool_Tip :=
+              To_Unbounded_String (Tool_Tip);
+            Widget.Set_Tooltip_Text (Tool_Tip);
+         end if;
+      end;
 
       return False;
    end Text_View_Motion_Handler;

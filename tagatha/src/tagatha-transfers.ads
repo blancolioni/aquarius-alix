@@ -17,6 +17,10 @@ package Tagatha.Transfers is
      (Operand : Transfer_Operand)
       return Boolean;
 
+   function Is_Condition_Operand
+     (Operand : Transfer_Operand)
+      return Boolean;
+
    type Array_Of_Transfers is array (Positive range <>) of Transfer;
 
    function No_Transfers return Array_Of_Transfers;

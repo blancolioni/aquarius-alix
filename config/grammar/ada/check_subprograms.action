@@ -15,20 +15,9 @@ begin
    return "sig" & Result;
 end Type_Signature_Key;
 
-function Find_Object (Table, name) is
-begin
-   if Table.get (name) then
-      return Table.get (name);
-   elsif Table.parent then
-      return find_Object (Table.parent, name);
-   else
-      return (error => "undefined: " & name);
-   end if;
-end Find_Object;
-
 function New_Named_Object(table, name, standard_name, object_class) is
 begin
-   table.set(name, (name => name, standard_name => standard_name, class => object_class));
+   table.set(standard_name, (name => name, standard_name => standard_name, class => object_class));
    return table.get (name);
 end New_Named_Object;
 	  
@@ -41,10 +30,16 @@ end New_Type;
 
 before Compilation_Unit do
 --   IO.Put_Line ("Ada: defining subprogram names");
+   top.universal_integer := (universal => 1);
+   top.universal_integer.set ("type", (type_class => "integral"));
+   top.universal_integer.set ("name", "an integer type");
+   
+   --  IO.put_line ("Universal-integer: " & top.universal_integer.image)
+   
    top.current_symbol_table := new Map;
-   top.standard_integer := New_Type (top.current_symbol_table, "Integer", "integer", (type => (type_class => "integral")));
-   top.standard_natural := New_Type (top.current_symbol_table, "Natural", "natural", (type => (base_type => top.standard_integer, range => (low => 0))));
-   top.standard_positive := New_Type (top.current_symbol_table, "Positive", "positive", (type => (base_type => top.standard_integer, range => (low => 1))));
+   top.standard_integer := New_Type (top.current_symbol_table, "Integer", "integer", (type_class => "integral"));
+   top.standard_natural := New_Type (top.current_symbol_table, "Natural", "natural", (subtype_of => top.standard_integer, range => (low => 0)));
+   top.standard_positive := New_Type (top.current_symbol_table, "Positive", "positive", (subtype_of => top.standard_integer, range => (low => 1)));
    top.current_symbol_table.float := (name => "Float", standard_name => "float", class => "type", type => "float");
    top.current_symbol_table.character := (name => "Character", standard_name => "character", class => "type", type => "enumeration", literals => new Array);
    top.current_symbol_table.boolean := (name => "Boolean", standard_name => "boolean", class => "type", type => "enumeration", literals => (false => 0, true => 1));
@@ -58,6 +53,13 @@ end;
 after Compilation_Unit do
 --   IO.Put_Line ("Ada: finished defining subprogram names");
 --   Aqua.Report_State;
+end;
+
+
+before procedure_body/procedure_specification 
+    or function_body/function_specification
+do
+   child.body := 1;
 end;
 
 after procedure_body/procedure_specification do
@@ -120,29 +122,39 @@ before formal_argument do
    tree.signature := new Array;
 end;
 
+after formal_argument/formal_argument_type do
+   for name in parent.object_names loop
+      top.current_symbol_table.set
+     	  (name.text, (class => "object", formal_argument => 1,
+		               type => child.formal.type, name => name.text, declaration => name,
+					   mode => child.formal.mode, not_null => child.formal.not_null));
+   end loop;
+end;
+
 after formal_argument/defining_identifier_list do
    for name in child.defined_names loop
       parent.signature.append ((name => name));
    end loop;
+   parent.object_names := child.defined_names;
 end;
 
 before formal_argument_type do
-   formal_argument_type.type := (mode => "in");
+   tree.formal := (mode => "in");
 end;
 
 after formal_argument_type do
 end;
 
 after formal_argument_type/null_exclusion do
-   parent.type.not_null := 1;
+   parent.formal.not_null := 1;
 end;
 
 after formal_argument_type/mode do
-   parent.type.mode := child.concatenated_image;
+   parent.formal.mode := child.concatenated_image;
 end;
 
 after formal_argument_type/subtype_mark do
-   parent.type.type := child.type;
+   parent.formal.type := child.type;
 end;
 
 before defining_qualified_reference do
@@ -181,60 +193,4 @@ end;
 
 after block do
    top.current_symbol_table := tree.symbol_table.parent;
-end;
-
-before defining_identifier_list do
-   tree.defined_names := new Array;
-end;
-
-after defining_identifier_list/identifier do
-   parent.defined_names.append (identifier);
-end;
-
-after variable_declaration/defining_identifier_list do
-   parent.object_names := child.defined_names;
-end;
-
-after variable_declaration/variable_type do
-   for name in parent.object_names loop
-      top.current_symbol_table.set (name.text, (class => "object", type => child.type, name => name.text, declaration => name));
-   end loop;
-end;
-
-after variable_declaration/exception do
-   for name in parent.object_names loop
-      top.current_symbol_table.set (name.text, (class => "exception", declaration => name, name => name.text));
-   end loop;
-end;
-
-after variable_type/type_indication do
-   parent.type := child.type;
-end;
-
-after type_indication/direct_type_indication do
-   parent.type := child.type;
-end;
-
-after direct_type_indication/subtype_indication do
-   parent.type := child.type;
-end;
-
-after subtype_indication/subtype_mark do
-   parent.type := child.type;
-end;
-
-after subtype_mark/object_reference do
-   if child.object then
-      parent.type := child.object;
-   else
-      parent.type := top.current_symbol_table.integer;
-   end if;
-end;
-
-after object_reference/direct_name do
-   parent.object := find_object (top.current_symbol_table, direct_name/identifier.text);
-   if parent.object.error then
-      direct_name.error (parent.object.error)
-	  parent.object := null;
-   end if;
 end;

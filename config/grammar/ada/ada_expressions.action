@@ -1,10 +1,69 @@
-after assignment_statement/object_reference do
-   parent.type := child.object.type;
-end;
+function Conforms (type_1, type_2) is
+begin
+   if type_1.name = type_2.name then
+      return 1;
+   elsif type_1.universal then
+      if type_1.type.type_class = type_2.type.type_class then
+	     return 1;
+      else
+	     return 0;
+      end if;
+   elsif type_2.universal then
+      if type_1.type.type_class = type_2.type.type_class then
+	     return 1;
+      else
+	     return 0;
+      end if;
+   else
+      return 0;
+   end if;
+end Conforms;
 
-before assignment_statement/expression do
-   child.expected_type := parent.type;
-end;
+function Find_Object (Table, name) is
+begin
+   if Table.get (name) then
+      return Table.get (name);
+   elsif Table.parent then
+      return find_Object (Table.parent, name);
+   else
+      return (error => "undefined: " & name);
+   end if;
+end Find_Object;
+
+function Type_Error (tree, expected, found) is
+begin
+   if expected.length = 0 then
+      tree.error ("no expected types");
+   elsif expected.length = 1 then
+      if found /= 0 then
+	     tree.error ("expected " & expected.get (1).name & " but found " & found.name);
+      else
+	     tree.error ("expected " & expected.get (1).name);
+	  end if;
+   elsif found then
+      tree.error ("no interpretation of " & tree.concatenated_image & " matches type " & found.name);
+   else
+      tree.error ("type error");
+   end if;
+end Type_Error;
+
+function Check_Expected_Types(tree, expected, found) is
+   OK := 0;
+begin   
+   if expected then
+      tree.found_types := [];
+      for possible in expected loop
+	     OK := Conforms (found, possible);
+	     if OK then
+		    tree.found_types.append (possible)
+		 end if;
+	  end loop;
+
+	  if tree.found_types.length = 0 then
+	     Type_Error (tree, expected, found);
+	  end if;
+   end if;
+end Check_Expected_Types;
 
 before expression/relation 
     or relation/simple_expression
@@ -19,8 +78,14 @@ after primary/object_reference do
    parent.inferred_type := child.object.type;
 end;
 
+after primary/numeric_literal do
+   if parent.expected_type then
+      Check_Expected_Types(primary, primary.expected_type, top.universal_integer);
+   end if;
+end;
+
 before primary/aggregate do
-   child.target := parent.expected_type;
+   child.target := parent.expected_type.get (1);
    child.expected_type := parent.expected_type;
 end;
 
@@ -57,7 +122,7 @@ before selector_expression/expression do
    parent.aggregate := parent^aggregate;
    if parent.aggregate.agg_types then
       parent.aggregate.next_component := parent.aggregate.next_component + 1;
-	  child.expected_type := parent.agg_types.get (parent.aggregate.next_component).type;
+	  child.expected_type := [parent.agg_types.get (parent.aggregate.next_component).type];
    end if;
 end;
 
@@ -78,4 +143,14 @@ end;
 
 after selector_item/constant_expression do
    top.current_symbol_table := parent.saved_symbol_table;
+end;
+
+after object_reference/direct_name do
+   parent.object := find_object (top.current_symbol_table, direct_name/identifier.text);
+   if parent.object.error then
+      direct_name.error (parent.object.error)
+	  parent.object := null;
+   elsif parent.expected_type then
+      Check_Expected_Types(direct_name, parent.expected_type, parent.object.type);
+   end if;
 end;
