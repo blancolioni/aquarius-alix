@@ -51,7 +51,7 @@ end;
 
 after type_declaration do
    tree.defined_type :=
-     Create_Type (top.current_symbol_table, tree.declared_name, tree.declared_name.to_lower, tree.type_definition);
+     Create_Type (tree|symbol_table, tree.declared_name, tree.declared_name.to_lower, tree.type_definition);
 end;
 
 after type_header/defining_type_name do

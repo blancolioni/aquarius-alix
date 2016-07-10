@@ -12,13 +12,13 @@ end;
 
 after variable_declaration/variable_type do
    for name in parent.object_names loop
-      top.current_symbol_table.set (name.text, (class => "object", type => child.type, name => name.text, declaration => name));
+      parent|symbol_table.set (name.text, (class => "object", type => child.type, name => name.text, declaration => name));
    end loop;
 end;
 
 after variable_declaration/exception do
    for name in parent.object_names loop
-      top.current_symbol_table.set (name.text, (class => "exception", declaration => name, name => name.text));
+      parent|symbol_table.set (name.text, (class => "exception", declaration => name, name => name.text));
    end loop;
 end;
 
@@ -43,7 +43,7 @@ after subtype_mark/object_reference do
       parent.type := child.object;
    else
       parent.error ("undeclared type: " & child.concatenated_image);
-      parent.type := top.current_symbol_table.integer;
+      parent.type := parent|symbol_table.integer;
    end if;
 end;
 

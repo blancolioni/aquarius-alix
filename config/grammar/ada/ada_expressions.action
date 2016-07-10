@@ -137,16 +137,14 @@ before list_of_selector_items/selector_item do
 end;
 
 before selector_item/constant_expression do
-   parent.saved_symbol_table := top.current_symbol_table;
-   top.current_symbol_table := parent.target.type.component_table;
+   child.symbol_table := parent.target.type.component_table;
 end;
 
 after selector_item/constant_expression do
-   top.current_symbol_table := parent.saved_symbol_table;
 end;
 
 after object_reference/direct_name do
-   parent.object := find_object (top.current_symbol_table, direct_name/identifier.text);
+   parent.object := find_object (parent|symbol_table, direct_name/identifier.text);
    if parent.object.error then
       direct_name.error (parent.object.error)
 	  parent.object := null;
