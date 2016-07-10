@@ -145,6 +145,6 @@ object_reference ::= < name_qualifier / object_operator >
 
 name_qualifier ::= identifier [ actual_argument_list ]
 
-object_operator ::= '.' | '/' | '^'
+object_operator ::= '.' | '/' | '^' | '|'
 
 actual_argument_list ::= '(' < expression / ','> ')'
