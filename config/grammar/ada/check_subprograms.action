@@ -36,17 +36,17 @@ before Compilation_Unit do
    
    --  IO.put_line ("Universal-integer: " & top.universal_integer.image)
    
-   top.current_symbol_table := new Map;
-   top.standard_integer := New_Type (top.current_symbol_table, "Integer", "integer", (type_class => "integral"));
-   top.standard_natural := New_Type (top.current_symbol_table, "Natural", "natural", (subtype_of => top.standard_integer, range => (low => 0)));
-   top.standard_positive := New_Type (top.current_symbol_table, "Positive", "positive", (subtype_of => top.standard_integer, range => (low => 1)));
-   top.current_symbol_table.float := (name => "Float", standard_name => "float", class => "type", type => "float");
-   top.current_symbol_table.character := (name => "Character", standard_name => "character", class => "type", type => "enumeration", literals => new Array);
-   top.current_symbol_table.boolean := (name => "Boolean", standard_name => "boolean", class => "type", type => "enumeration", literals => (false => 0, true => 1));
-   top.current_symbol_table.false := (name => "False", standard_name => "false", class => "function", formals => new Array, return_type => top.current_symbol_table.boolean, enumeration_literal => 1, literal_value => 0);
-   top.current_symbol_table.true := (name => "True", standard_name => "true", class => "function", formals => new Array, return_type => top.current_symbol_table.boolean, enumeration_literal => 1, literal_value => 0);   
+   top.symbol_table := new Map;
+   top.standard_integer := New_Type (top.symbol_table, "Integer", "integer", (type_class => "integral"));
+   top.standard_natural := New_Type (top.symbol_table, "Natural", "natural", (subtype_of => top.standard_integer, range => (low => 0)));
+   top.standard_positive := New_Type (top.symbol_table, "Positive", "positive", (subtype_of => top.standard_integer, range => (low => 1)));
+   top.symbol_table.float := (name => "Float", standard_name => "float", class => "type", type => "float");
+   top.symbol_table.character := (name => "Character", standard_name => "character", class => "type", type => "enumeration", literals => new Array);
+   top.symbol_table.boolean := (name => "Boolean", standard_name => "boolean", class => "type", type => "enumeration", literals => (false => 0, true => 1));
+   top.symbol_table.false := (name => "False", standard_name => "false", class => "function", formals => new Array, return_type => top.symbol_table.boolean, enumeration_literal => 1, literal_value => 0);
+   top.symbol_table.true := (name => "True", standard_name => "true", class => "function", formals => new Array, return_type => top.symbol_table.boolean, enumeration_literal => 1, literal_value => 0);   
    
-   top.string_object := New_Type (top.current_symbol_table, "String", "string", (type_class => "array", range_type => top.current_symbol_table.positive, component_type => top.current_symbol_table.character));
+   top.string_object := New_Type (top.symbol_table, "String", "string", (type_class => "array", range_type => top.symbol_table.positive, component_type => top.symbol_table.character));
    
 end;
 
@@ -66,7 +66,7 @@ after procedure_body/procedure_specification do
    parent.signature := (name => child.name, arguments => child.signature, return_type => null);
    parent.defined_entity := 
       Komnenos.Define (parent, child.name, "procedure-declaration");
-   top.current_symbol_table.set (child.name, (class => "procedure", entity => parent.defined_entity, signature => parent.signature));
+   parent|symbol_table.set (child.name, (class => "procedure", entity => parent.defined_entity, signature => parent.signature));
    parent^subprogram_declaration.defined_entity := parent.defined_entity;
 end;
 
@@ -74,7 +74,7 @@ after function_body/function_specification do
    parent.signature := (name => child.name, arguments => child.signature, return_type => child.return_type);
    parent.defined_entity := 
       Komnenos.Define (parent, child.name, "function-declaration");
-   top.current_symbol_table.set (child.name, (class => "function", entity => parent.defined_entity, signature => parent.signature));
+   parent|symbol_table.set (child.name, (class => "function", entity => parent.defined_entity, signature => parent.signature));
    parent^subprogram_declaration.defined_entity := parent.defined_entity;
 end;
 
@@ -124,7 +124,7 @@ end;
 
 after formal_argument/formal_argument_type do
    for name in parent.object_names loop
-      top.current_symbol_table.set
+      parent|symbol_table.set
      	  (name.text, (class => "object", formal_argument => 1,
 		               type => child.formal.type, name => name.text, declaration => name,
 					   mode => child.formal.mode, not_null => child.formal.not_null));
@@ -187,10 +187,8 @@ after defining_qualified_reference/identifier do
 end;
 
 before block do
-   tree.symbol_table := (table => new Map, parent => top.current_symbol_table);
-   top.current_symbol_table := tree.symbol_table;
+   tree.symbol_table := (table => new Map, parent => tree|symbol_table);
 end;
 
 after block do
-   top.current_symbol_table := tree.symbol_table.parent;
 end;
