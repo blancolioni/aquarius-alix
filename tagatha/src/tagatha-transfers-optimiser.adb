@@ -67,7 +67,9 @@ package body Tagatha.Transfers.Optimiser is
             From : Transfer := Transfers (From_Index);
             Copy : Boolean  := True;
          begin
-            if Tagatha.Labels.Has_Label (From.Label) then
+            if Tagatha.Labels.Has_Label (From.Label)
+              or else From.Call
+            then
                Known_Values.Clear;
             end if;
 
