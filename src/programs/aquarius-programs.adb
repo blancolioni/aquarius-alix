@@ -85,6 +85,11 @@ package body Aquarius.Programs is
       Arguments : Aqua.Array_Of_Words)
       return Aqua.Word;
 
+   function Aqua_Tree_Inherited_Property
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
    function Aqua_Tree_Text
      (Context   : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Aqua.Array_Of_Words)
@@ -304,6 +309,33 @@ package body Aquarius.Programs is
       return 0;
    end Aqua_Tree_Error;
 
+   function Aqua_Tree_Inherited_Property
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      Tree   : constant Program_Tree :=
+                 Program_Tree
+                   (Context.To_External_Object (Arguments (1)));
+      Name   : constant String :=
+                 Context.To_String (Arguments (2));
+      It     : Program_Tree := Tree.Program_Parent;
+   begin
+
+      while It /= null
+        and then not It.Has_Property (Name)
+      loop
+         It := It.Program_Parent;
+      end loop;
+
+      if It = null then
+         return 0;
+      else
+         return It.Get_Property (Name);
+      end if;
+
+   end Aqua_Tree_Inherited_Property;
+
    ----------------------------
    -- Aqua_Tree_Left_Sibling --
    ----------------------------
@@ -400,6 +432,11 @@ package body Aquarius.Programs is
         (Name           => "tree__tree_ancestor",
          Argument_Count => 2,
          Handler        => Aqua_Tree_Ancestor'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__tree_inherited_property",
+         Argument_Count => 2,
+         Handler        => Aqua_Tree_Inherited_Property'Access);
 
       Aqua.Primitives.New_Primitive_Function
         (Name           => "tree__concatenated_image",

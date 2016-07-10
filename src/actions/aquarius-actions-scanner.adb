@@ -665,7 +665,7 @@ package body Aquarius.Actions.Scanner is
                   end loop;
                elsif Op = "." then
                   null;
-               elsif Op = "/" or else Op = "^" then
+               elsif Op = "/" or else Op = "^" or else Op = "|" then
                   Processor.Push_String_Literal
                     (Component_Name (Q));
                elsif not First or else Op /= "" then
@@ -783,6 +783,9 @@ package body Aquarius.Actions.Scanner is
                               Processor.Get_Property ("tree_child", 1);
                            elsif Op = "^" then
                               Processor.Get_Property ("tree_ancestor", 1);
+                           elsif Op = "|" then
+                              Processor.Get_Property
+                                ("tree_inherited_property", 1);
                            else
                               raise Constraint_Error with
                                 "cannot process qualifier: " & Op;
