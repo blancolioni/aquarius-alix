@@ -1,15 +1,26 @@
-function Conforms (type_1, type_2) is
+function Base_Type (of_type) is
 begin
-   if type_1.name = type_2.name then
+   if of_type.type.subtype_of then
+      return Base_type (of_type.type.subtype_of);
+   else
+      return of_type;
+   end if;
+end Base_Type;
+
+function Conforms (type_1, type_2) is
+   base_type_1 := Base_Type (type_1);
+   base_type_2 := Base_Type (type_2);
+begin
+   if base_type_1 = base_type_2 then
       return 1;
    elsif type_1.universal then
-      if type_1.type.type_class = type_2.type.type_class then
+      if type_1.type.type_class = base_type_2.type.type_class then
 	     return 1;
       else
 	     return 0;
       end if;
    elsif type_2.universal then
-      if type_1.type.type_class = type_2.type.type_class then
+      if base_type_1.type.type_class = type_2.type.type_class then
 	     return 1;
       else
 	     return 0;
