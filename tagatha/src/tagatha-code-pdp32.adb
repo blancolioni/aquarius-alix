@@ -551,7 +551,7 @@ package body Tagatha.Code.Pdp32 is
       pragma Unreferenced (T);
    begin
       if Global then
-         Asm.Put_Line (".globl " & Name);
+         Asm.Put_Line (".export " & Name);
       end if;
       Asm.Put_Line (Name & ":");
       Asm.Put_Line ("    mov fp, -(sp)");
