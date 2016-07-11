@@ -129,7 +129,11 @@ private
       Name           : String;
       Argument_Count : Natural);
 
-   overriding procedure Get_Property
+   overriding procedure Declare_External_Function
+     (Processor      : in out Tagatha_Scanner;
+      Name           : String);
+
+      overriding procedure Get_Property
      (Processor      : in out Tagatha_Scanner;
       Name           : String;
       Argument_Count : Natural);
