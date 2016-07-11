@@ -214,11 +214,13 @@ package body Aquarius.Actions.Scanner is
          Scan (Processor,
                Action.Program_Child ("sequence_of_top_level_declarations"));
       elsif Action.Name = "sequence_of_top_level_declarations" then
-         Scan_Sequence (Processor, Action.Direct_Children);
+         Scan_Sequence
+           (Processor, Action.Direct_Children ("top_level_declaration"));
       elsif Action.Name = "top_level_declaration" then
          Scan (Processor, Action.Chosen_Tree);
       elsif Action.Name = "list_of_local_declarations" then
-         Scan_Sequence (Processor, Action.Direct_Children);
+         Scan_Sequence
+           (Processor, Action.Direct_Children ("local_declaration"));
       elsif Action.Name = "local_declaration" then
          declare
             List : constant Program_Tree :=
@@ -231,7 +233,7 @@ package body Aquarius.Actions.Scanner is
       elsif Action.Name = "sequence_of_statements" then
          declare
             Children : constant Array_Of_Program_Trees :=
-                         Action.Direct_Children;
+                         Action.Direct_Children ("statement");
          begin
             Scan_Sequence (Processor, Children);
          end;
@@ -336,6 +338,10 @@ package body Aquarius.Actions.Scanner is
       elsif Action.Name = "return_statement" then
          Scan_Expression (Processor,  Action.Program_Child ("expression"));
          Processor.Pop_Return_Value;
+      else
+         raise Constraint_Error with
+           "unable to understand action: " & Action.Name
+           & ": " & Action.Image;
       end if;
    end Scan;
 
@@ -389,7 +395,8 @@ package body Aquarius.Actions.Scanner is
       end loop;
 
       Processor.Start_Action_Body;
-      Scan_Sequence (Processor, Action_Binding.Direct_Children);
+      Scan_Sequence
+        (Processor, Action_Binding.Direct_Children ("statement"));
       Processor.End_Action_Body;
       Processor.Frame_Table.Clear;
 
