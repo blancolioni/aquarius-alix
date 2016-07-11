@@ -101,6 +101,11 @@ package Aquarius.Actions.Scanner is
       Argument_Count : Natural)
    is abstract;
 
+   procedure Declare_External_Function
+     (Processor : in out Action_Processor_Interface;
+      Name      : String)
+   is abstract;
+
    procedure Get_Property
      (Processor      : in out Action_Processor_Interface;
       Name           : String;

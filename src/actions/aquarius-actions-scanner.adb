@@ -2,7 +2,7 @@ with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Directories;
 with Ada.Exceptions;
 
-with Aquarius.Errors;
+--  with Aquarius.Errors;
 with Aquarius.Source;
 
 package body Aquarius.Actions.Scanner is
@@ -44,6 +44,11 @@ package body Aquarius.Actions.Scanner is
      (Processor  : in out Action_Processor_Interface'Class;
       Action     : Aquarius.Programs.Program_Tree);
 
+   procedure With_Package
+     (Processor  : in out Action_Processor_Interface'Class;
+      Name       : String)
+   is null;
+
    ---------------------
    -- Add_Frame_Entry --
    ---------------------
@@ -59,7 +64,7 @@ package body Aquarius.Actions.Scanner is
    exception
       when E : others =>
          raise Constraint_Error with
-           "unabled to add " & Name & " to frame table: "
+           "unable to add " & Name & " to frame table: "
              & Ada.Exceptions.Exception_Message (E);
    end Add_Frame_Entry;
 
@@ -218,6 +223,15 @@ package body Aquarius.Actions.Scanner is
            (Processor, Action.Direct_Children ("top_level_declaration"));
       elsif Action.Name = "top_level_declaration" then
          Scan (Processor, Action.Chosen_Tree);
+      elsif Action.Name = "with_declaration" then
+         declare
+            Packages : constant Array_Of_Program_Trees :=
+                         Action.Direct_Children ("identifier");
+         begin
+            for Package_Terminal of Packages loop
+               With_Package (Processor, Package_Terminal.Text);
+            end loop;
+         end;
       elsif Action.Name = "list_of_local_declarations" then
          Scan_Sequence
            (Processor, Action.Direct_Children ("local_declaration"));
@@ -738,9 +752,21 @@ package body Aquarius.Actions.Scanner is
                                  end case;
                               end if;
                            end;
-                        elsif Processor.External_Table.Contains
-                          (Component)
-                        then
+                        else
+                           if not Processor.External_Table.Contains
+                             (Component)
+                           then
+                              Processor.Declare_External_Function
+                                (Component);
+                              Processor.External_Table.Insert
+                                (Component,
+                                 (Is_Immediate => False,
+                                  Is_Function  => True,
+                                  External_Name =>
+                                    Ada.Strings.Unbounded.To_Unbounded_String
+                                      (Component)));
+                           end if;
+
                            declare
                               Ext : constant External_Entry :=
                                       Processor.External_Table.Element
@@ -764,10 +790,6 @@ package body Aquarius.Actions.Scanner is
                                     Immediate => Ext.Is_Immediate);
                               end if;
                            end;
-                        else
-                           Aquarius.Errors.Error
-                             (Reference,
-                              "undefined: " & Component);
                         end if;
 
                      else
