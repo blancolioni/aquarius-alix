@@ -128,6 +128,18 @@ package body Aquarius.Actions.Tagatha_Scanner is
       Processor.Unit.Drop;
    end Clear_Result;
 
+   -------------------------------
+   -- Declare_External_Function --
+   -------------------------------
+
+   overriding procedure Declare_External_Function
+     (Processor      : in out Tagatha_Scanner;
+      Name           : String)
+   is
+   begin
+      Processor.Unit.Directive (".extern " & Name);
+   end Declare_External_Function;
+
    ---------------------
    -- End_Action_Body --
    ---------------------
@@ -707,7 +719,7 @@ package body Aquarius.Actions.Tagatha_Scanner is
          Argument_Words => Arguments'Length,
          Frame_Words    => 0,
          Result_Words   => 1,
-         Global         => False);
+         Global         => True);
 
       for Dec of Locals loop
          declare
