@@ -1,0 +1,132 @@
+function New_Named_Object(table, name, standard_name, object_class) is
+begin
+   table.set(standard_name, (name => name, standard_name => standard_name, class => object_class));
+   return table.get (name);
+end New_Named_Object;
+	  
+function New_Type(table, name, standard_name, object_type) is
+   Result := New_Named_Object (table, name, standard_name, "type");
+begin
+   Result.type := object_type;
+   return Result;
+end New_Type;
+
+function New_Function(table, name, standard_name, arguments, return_Type) is
+   Result := New_Named_Object (table, name, standard_name, "function");
+begin
+   Result.arguments := arguments;
+   Result.return_Type := return_Type;
+   return Result;
+end New_Function;
+
+function New_Literal(table, name, standard_name, enumeration, literal_value) is
+   Result := New_Function (table, name, standard_name, new array, enumeration);
+begin
+   Result.literal_value := literal_value
+   return Result;
+end New_Literal;
+
+
+function Standard_Symbol_Table is
+   standard := new Map;
+begin
+   standard.universal_integer := (universal => 1);
+   standard.universal_integer.set ("type", (type_class => "integral"));
+   standard.universal_integer.set ("name", "an integer type");
+   
+   standard.table := new Map;
+   standard.standard_integer := New_Type (standard.table, "Integer", "integer", (type_class => "integral"));
+   standard.standard_natural := New_Type (standard.table, "Natural", "natural", (subtype_of => standard.standard_integer, range => (low => 0)));
+   standard.standard_positive := New_Type (standard.table, "Positive", "positive", (subtype_of => standard.standard_integer, range => (low => 1)));
+   standard.standard_float := New_Type (standard.table, "Float", "float", (type_class => "floating_point"));
+   standard.standard_double := New_Type (standard.table, "Double", "double", (type_class => "floating_point"));
+   
+   standard.standard_boolean := New_Type (standard.table, "Boolean", "boolean", (type_class => "enumeration", literals => (false => 0, true => 1)));
+   standard.standard_false := New_Literal (standard.table, "False", "false", standard.standard_boolean, 0);
+   standard.standard_true := New_Literal (standard.table, "True", "true", standard.standard_boolean, 1);
+
+   standard.standard_string := New_Type (standard.table, "String", "string", (type_class => "string"));
+   
+   standard.texture := 
+     New_type 
+       (standard.table, "Texture", "texture",
+        (type_class => "primitive",
+         discriminants => (Image_Name => standard.standard_string)));
+
+   standard.vector := 
+     New_Type 
+       (standard.table, "Vector", "vector",
+        (type_class => "array", array_index_type => standard.standard_positive, array_component_type => standard.standard_float, indefinite_type => 1));
+
+   standard.matrix := 
+     New_Type 
+       (standard.table, "Matrix", "Matrix",
+        (type_class => "array", component_type => standard.standard_float, discriminants => (Size => standard.positive),
+         array_indices => [(index_type => standard.standard_positive, low => 1, high => (discriminant => "size")),
+                          (index_type => standard.standard_positive, low => 1, high => (discriminant => "size"))]));
+                          
+   standard.sampler := 
+     New_type 
+       (standard.table, "Sampler", "sampler",
+        (type_class => "primitive",
+         discriminants => (Domain => standard.vector, Range => standard.vector)));
+
+   standard.matrix_4 :=
+      New_Type
+       (standard.table, "Matrix_4", "matrix_4",
+        (type_class => "subtype", subtype_of => standard.vertex, constraint => (size => 4)));
+        
+   standard.model_matrix :=
+      New_Type
+       (standard.table, "Model_Matrix", "model_matrix",
+        (type_class => "newtype", derived_from => standard.matrix));
+        
+   standard.view_matrix :=
+      New_Type
+       (standard.table, "View_Matrix", "view_matrix",
+        (type_class => "newtype", derived_from => standard.matrix));
+        
+   standard.projection_matrix :=
+      New_Type
+       (standard.table, "Projection_Matrix", "projection_matrix",
+        (type_class => "newtype", derived_from => standard.matrix));
+        
+   standard.model_view_matrix :=
+      New_Type
+       (standard.table, "Model_View_Matrix", "model_view_matrix",
+        (type_class => "newtype", derived_from => standard.matrix));
+        
+   standard.model_view_projection_matrix :=
+      New_Type
+       (standard.table, "Model_View_Projection_Matrix", "model_view_projection_matrix",
+        (type_class => "newtype", derived_from => standard.matrix));
+        
+   standard.vertex :=
+     New_Type
+       (standard.table, "Vertex", "vertex",
+        (type_class => "newtype", derived_from => standard.vector));
+        
+   standard.vertex_4 :=
+      New_Type
+       (standard.table, "Vertex_4", "vertex_4",
+        (type_class => "subtype", subtype_of => standard.vertex, constraint => 4));
+        
+   standard.Texture_Coordinate :=
+     New_Type
+       (standard.table, "Texture_Coordinate", "texture_coordinate",
+        (type_class => "newtype", derived_from => standard.vector, constraint => 2));
+        
+   standard.vertex :=
+     New_Type
+       (standard.table, "Vertex", "vertex",
+        (type_class => "newtype", derived_from => standard.vector));
+        
+   standard.rgba :=
+      New_Type
+       (standard.table, "RGBA", "RGBA",
+        (type_class => "record",
+         table => (r => standard.float, g => standard.float, b => standard.float)));
+        
+   return standard;
+end Standard_Symbol_Table;
+

@@ -1,0 +1,42 @@
+before material_declaration/defining_material_name do
+  IO.set_output (defining_material_name.concatenated_image.to_lower & ".material");
+end;
+
+after aspect/identifier do
+  IO.put (identifier.text.to_lower);
+end;
+
+before aspect/expression do
+  child.write := 1;
+  IO.put (" = ");
+end;
+
+after aspect/expression do
+  child.write := 0;
+  IO.New_Line;
+end;
+
+before aggregate do
+  if tree|write then
+     IO.put ("{");
+  end if;
+end;
+
+after aggregate do
+  if tree|write then
+     IO.put (" }");
+  end if;
+end;
+
+before primary/numeric_literal do
+  if tree|write then
+     IO.put (" " & child.text);
+  end if;
+end;
+
+after aspect do
+   IO.new_line;
+end;
+
+after material_declaration do
+end;

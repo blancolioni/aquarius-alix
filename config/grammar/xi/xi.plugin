@@ -1,0 +1,12 @@
+plugin Xi version 0.1 is
+
+   group run_check : semantic is
+      xi_scan_symbols;
+      xi_symbol_table;
+   end run_check;
+   
+   group generate : code is
+      xi_write_material_definition;
+   end generate;
+   
+end Xi;

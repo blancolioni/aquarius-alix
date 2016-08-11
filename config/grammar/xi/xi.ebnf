@@ -1,0 +1,250 @@
+top_level ::= compilation_unit
+case_sensitive = false
+
+identifier         ::= standard ada_identifier
+numeric_literal    ::= standard ada_numeric_literal
+character_literal  ::= standard ada_character_literal
+string_literal     ::= standard ada_string_literal
+delimiter          ::= delimiters "&()+,;|"
+symbol             ::= standard ada_symbol
+
+line_comment       = "--"
+
+format list_of_package_level_declarations indented_child
+format list_of_declarations indented_child
+format sequence_of_statements indented_child
+format sequence_of_techniques indented_child
+format sequence_of_passes indented_child
+
+format ';' no_space_before no_space_after new_line_after
+format '.' no_space_before no_space_after
+format '(' space_before no_space_after
+format ')' no_space_before space_after
+format ',' no_space_before space_after
+format ''' no_space_before no_space_after
+format '=>' soft_new_line_after
+
+format 'is' closing space_after space_before
+
+defining_material_name ::= identifier
+matching_procedure_identifier ::= identifier
+
+compilation_unit ::= { context_clause } package_declaration
+
+context_clause ::= 'with' package_reference ';'
+                 | 'use' package_reference ';'
+
+package_reference ::= < identifier / '.' >
+
+package_declaration ::= 
+   'package' defining_package_name 'is'
+       list_of_package_level_declarations
+   'end' matching_package_identifier ';'
+
+defining_package_name ::= qualified_identifier
+
+matching_package_identifier ::= qualified_identifier
+                 
+list_of_package_level_declarations ::= { package_level_declaration }
+
+package_level_declaration ::= object_declaration
+                            | material_declaration
+                            | generic_material_declaration
+                            
+object_declaration ::= identifier ':' type_indication [ ':=' expression ] ';'
+
+type_indication ::= direct_type_indication [ type_qualifiers ]
+
+direct_type_indication ::= subtype_indication
+
+subtype_indication ::= qualified_identifier [ type_qualifiers ]
+
+type_qualifiers ::= '(' < type_qualifier / ',' ')'
+
+type_qualifier ::= identifier '=>' expression
+                 | expression
+
+generic_material_declaration ::= 'generic' list_of_generic_arguments
+
+list_of_generic_arguments ::= { generic_formal_argument }
+
+generic_formal_argument ::= generic_object_declaration
+
+generic_object_declaration ::= object_declaration
+
+material_declaration ::= [ generic_material_declaration ] 'material' defining_material_name [ material_body ] ';'
+
+material_body ::=
+    short_material_body
+  | derived_material_body
+  | full_material_body
+  
+ 
+short_material_body ::=
+   'with' list_of_aspects ';'
+  
+derived_material_body ::=
+   'is' generic_instantiation [ 'with' list_of_aspects ] ';'
+  
+generic_instantiation ::= 'new' qualified_identifier [ generic_actual_arguments ]
+
+generic_actual_arguments ::= '(' < generic_actual_argument > ')'
+
+generic_actual_argument ::= identifier '=>' expression
+                          | expression
+                          
+full_material_body ::=  
+     'is'
+          list_of_material_level_declarations
+     'begin'
+          material_render_definition
+     'end' matching_end_identifier
+
+list_of_aspects ::= < aspect / ',' >
+
+aspect ::= identifier [ '=>' expression ]
+
+material_render_definition ::=
+    sequence_of_techniques
+  | sequence_of_passes
+  | sequence_of_material_attributes
+  
+sequence_of_material_attributes ::= < material_attribute >
+
+list_of_material_level_declarations ::= { material_level_declaration }
+
+material_level_declaration ::= procedure_declaration
+
+procedure_declaration ::= procedure_spec procedure_body ';'
+
+procedure_body ::= separate_body | inline_body
+
+separate_body ::= 'is' 'separate'
+
+inline_body ::= 'is' procedure_block
+
+procedure_block ::= block matching_procedure_identifier
+
+procedure_spec ::= 'procedure' identifier : function_name
+                      [ formal_argument_list ]
+
+formal_argument_list ::= '(' < formal_argument / ';' > ')'
+
+formal_argument ::= defining_identifier_list ':' argument_mode type_indication
+
+argument_mode ::= 'in' | 'out' | 'in' 'out' | 'uniform' | 'custom' 
+
+block ::= list_of_declarations 'begin' sequence_of_statements 'end'
+
+list_of_declarations ::= { declaration }
+
+declaration ::= type_declaration | object_declaration
+
+defining_identifier_list ::= < identifier : variable_name / ',' >
+
+type_declaration ::= 'type' identifier : type_name 'is' type_definition
+
+type_definition ::= named_type
+                  | access_type
+                  | record_type
+
+named_type ::= qualified_identifier : type_name
+
+access_type ::= 'access' named_type
+
+record_type ::= 'record' record_component_list 'end' 'record'
+              | 'null' 'record'
+
+record_component_list ::= < component_definition ';' >
+
+component_definition ::= defining_identifier_list ':' named_type
+
+sequence_of_techniques ::= < technique >
+
+technique ::= 'technique' [ identifier ] 'is' sequence_of_passes 'end' 'technique' ';'
+
+sequence_of_passes ::= < pass >
+
+pass ::= 'pass' [ identifier ] 'is' { material_attribute } 'end' 'pass' ';'
+
+material_attribute ::= identifier [ '=>' expression ] ';'
+                     | identifier 'with' list_of_aspects ';'
+
+sequence_of_statements ::= { statement }
+
+statement ::= null_statement
+            | procedure_call_statement
+            | assignment_statement
+            | if_statement
+
+null_statement ::= 'null' ';'
+
+assignment_statement ::= object_reference ':=' expression ';'
+
+procedure_call_statement ::= object_reference ';'
+
+object_reference ::= direct_name { name_qualifier }
+
+direct_name ::= identifier
+
+name_qualifier ::= component_name
+                 | expanded_name 
+                 | actual_argument_list
+
+component_name       ::= '.' ('all' when access | identifier)
+expanded_name        ::= '.' (identifier | operator_name)
+actual_argument_list ::= '(' < expression / ','> ')'
+
+operator_name ::= string_literal
+
+if_statement ::= 'if' expression 'then' sequence_of_statements
+                 { 'elsif' expression 'then' sequence_of_statements }
+                 [ 'else' sequence_of_statements ]
+                 'end' 'if'
+
+expression ::= relation [ boolean_operator relation ]
+
+boolean_operator ::= 'and' [ 'then' ]
+                   | 'or' ['else']
+                   | 'xor'
+
+relation ::=
+     simple_expression [relational_operator simple_expression]
+
+relational_operator ::= '=' | '/=' | '<' | '<=' | '>' | '>='
+
+simple_expression ::= [unary_adding_operator] term {binary_adding_operator term}
+
+unary_adding_operator ::= '-' | '+'
+
+binary_adding_operator ::= '+' | '-' | '&'
+
+term ::= factor {multiplying_operator factor}
+
+multiplying_operator ::= '*' | '/' | 'mod' | 'rem'
+
+factor ::= primary ['**' primary] | 'abs' primary | 'not' primary
+
+primary ::= numeric_literal
+          | character_literal
+          | string_literal : string
+          | object_reference
+          | aggregate
+          | '(' expression ')'
+
+aggregate ::=
+    '(' selector '=>' expression ')'
+  | '(' selector_expression ',' < selector_expression / ',' > ')'
+
+selector_expression ::= selector '=>' expression
+                      | expression
+
+selector ::= list_of_selector_items | 'others'
+
+list_of_selector_items ::= < selector_item [ '..' selector_item] / '|' >
+
+selector_item ::= identifier
+          
+qualified_identifier ::= < identifier / '.' >
+
+matching_end_identifier ::= < identifier / '.' >
