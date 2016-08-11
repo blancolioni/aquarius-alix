@@ -2,7 +2,7 @@ with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Directories;
 with Ada.Exceptions;
 
---  with Aquarius.Errors;
+with Aquarius.Errors;
 with Aquarius.Source;
 
 package body Aquarius.Actions.Scanner is
@@ -773,11 +773,19 @@ package body Aquarius.Actions.Scanner is
                                         (Component);
                            begin
                               if Destination and then Qs'Length = 1 then
-                                 pragma Assert (not Ext.Is_Immediate);
-                                 pragma Assert (not Ext.Is_Function);
-                                 Processor.Pop_External_Entry
-                                   (Ada.Strings.Unbounded.To_String
-                                      (Ext.External_Name));
+                                 if Ext.Is_Immediate then
+                                    Aquarius.Errors.Error
+                                      (Qs (J),
+                                       "cannot assign to immediate");
+                                 elsif Ext.Is_Function then
+                                    Aquarius.Errors.Error
+                                      (Qs (J),
+                                       "cannot assign to function");
+                                 else
+                                    Processor.Pop_External_Entry
+                                      (Ada.Strings.Unbounded.To_String
+                                         (Ext.External_Name));
+                                 end if;
                               elsif Ext.Is_Function then
                                  Processor.Call_Function
                                    (Ada.Strings.Unbounded.To_String
