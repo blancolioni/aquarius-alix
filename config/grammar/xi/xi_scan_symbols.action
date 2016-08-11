@@ -1,0 +1,76 @@
+before Compilation_Unit do
+   top.symbol_table := standard_symbol_table;   
+end;
+
+after Compilation_Unit do
+   --  Aqua.Report_State;
+end;
+
+after package_declaration/defining_package_name do
+   parent.defined_entity :=
+     Komnenos.Define (parent, child.concatenated_image, "package-declaration");
+   parent|symbol_table.set (child.concatenated_image, (class => "package", entity => parent.defined_entity));
+end;
+
+before defining_identifier_list do
+   tree.defined_names := new Array;
+end;
+
+after defining_identifier_list/identifier do
+   parent.defined_names.append (identifier);
+end;
+
+after type_indication/direct_type_indication do
+   parent.type := child.type;
+end;
+
+after direct_type_indication/subtype_indication do
+   parent.type := child.type;
+end;
+
+after subtype_indication/qualified_identifier do
+   if child.object then
+      parent.type := child.object;
+   else
+      parent.error ("undeclared type: " & child.concatenated_image);
+      parent.type := parent|symbol_table.integer;
+   end if;
+end;
+
+before qualified_identifier do
+   tree.Qualifier := null;
+   tree.Last_Identifier := null;
+   tree.Last_Child := null;
+   tree.current_table := 0;
+   tree.object := 0;
+end;
+
+after qualified_identifier/identifier do
+   if parent.last_child then
+      parent.Last_Child.last := 0;
+   end if;
+   
+   child.last := 1;
+   parent.Last_Child := child;
+   parent.Name := identifier.text;
+   if parent.Last_Identifier then
+      if parent.Qualifier then
+         parent.Qualifier :=
+           parent.Qualifier & "." & parent.Last_Identifier.Image;
+      else
+         parent.Qualifier := parent.Last_Identifier.Image;
+      end if;      
+      identifier.full_name := parent.qualifier & "." & identifier.text;
+   else
+      identifier.full_name := identifier.text;
+   end if;
+   parent.Last_Identifier := identifier;
+
+   if parent.object then
+      parent.object := parent.object.table.get (identifier.text);
+   else
+      parent.object := parent|symbol_table.table.get (identifier.text);
+   end if;
+   
+end;
+
