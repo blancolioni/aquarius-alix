@@ -67,6 +67,8 @@ package body Aquarius.Programs.Arrangements is
          return;
       end if;
 
+      Item.Has_Position := False;
+
       if Item.Name /= "" then
          Logging.Log (Context, Item);
       end if;
@@ -182,16 +184,34 @@ package body Aquarius.Programs.Arrangements is
           (Indentation_Offset (Context.Current_Indent)
            + Child_Indent + Before_Indent);
 
-      Item.Start_Position := Context.Current_Position;
-      Item.Start_Line := Context.Current_Line;
-      Item.Start_Column := Context.Current_Column;
-
       for I in 1 .. Item.Child_Count loop
          Arrange (Item.Program_Child (I), Context);
+
+         if not Item.Has_Position
+           and then Item.Program_Child (I).Has_Position
+         then
+            Item.Start_Position := Item.Program_Child (I).Start_Position;
+            Item.Start_Line := Item.Program_Child (I).Start_Line;
+            Item.Start_Column := Item.Program_Child (I).Start_Column;
+            Item.Has_Position := True;
+            if Item.Name /= "" then
+               Logging.Log (Context, Item,
+                            "update position from child");
+            end if;
+         end if;
+
          exit when Context.Stopped;
       end loop;
 
-      Item.End_Position := Context.Current_Position;
+      if Item.Has_Position then
+         for I in reverse 1 .. Item.Child_Count loop
+            if Item.Program_Child (I).Has_Position then
+               Item.End_Position := Item.Program_Child (I).End_Position;
+               exit;
+            end if;
+         end loop;
+      end if;
+
       Item.End_Line := Context.Current_Line;
       Item.End_Column := Context.Current_Column;
 
@@ -258,7 +278,8 @@ package body Aquarius.Programs.Arrangements is
             Context.Got_New_Line  := True;
             Context.Need_Space    := False;
             Context.First_On_Line := True;
-            Logging.Log (Context, Item, "got new line because need new line");
+            Logging.Log
+              (Context, Item, "got new line because need new line");
          end if;
       end if;
 
@@ -306,6 +327,7 @@ package body Aquarius.Programs.Arrangements is
       Item.Set_Layout_Position
         (Context.Current_Position,
          Context.Current_Line, Context.Current_Column);
+      Item.Has_Position := True;
 
       Logging.Log (Context, Item,
                    "start: " & Aquarius.Layout.Show (Item.Start_Position));
@@ -318,29 +340,6 @@ package body Aquarius.Programs.Arrangements is
             "leave soft new line; new indent ="
             & Context.Current_Indent'Img & Context.Soft_Indent'Img);
          Context.Need_Soft_New_Line := False;
-      end if;
-
-      if Item.Program_Left = null then
-         declare
-            It : Program_Tree := Item.Program_Parent;
-         begin
-            while It /= null and then It.Program_Left = null loop
-               It.Start_Position := Item.Start_Position;
-               --  It.Set_Location (Item.Get_Location);
-               It := It.Program_Parent;
-            end loop;
-         end;
-      end if;
-
-      if Item.Program_Right = null then
-         declare
-            It : Program_Tree := Item.Program_Parent;
-         begin
-            while It /= null and then It.Program_Right = null loop
-               It.End_Position := Item.Start_Position;
-               It := It.Program_Parent;
-            end loop;
-         end;
       end if;
 
       if Before_Point (Item, Context.User_Cursor)
@@ -737,6 +736,9 @@ package body Aquarius.Programs.Arrangements is
       Context.Rearranging := True;
       Context.Stop_Tree := Finish;
       Context.Stopped   := False;
+
+      Logging.Log (Context, Item, "starting re-arrangement");
+
       Arrange (Item, Context);
       Context.Rearranging := False;
       Context.Stop_Tree := null;

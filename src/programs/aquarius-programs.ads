@@ -460,6 +460,7 @@ private
          Overflow_Checked  : Boolean;
          Have_Symbol_Table : Boolean;
          Is_Declaration    : Boolean;
+         Has_Position      : Boolean;
          Self              : Program_Tree;
          Source_File       : Aquarius.Source.Source_File;
          Source_File_Name  : Aquarius.Names.Aquarius_Name;

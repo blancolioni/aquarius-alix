@@ -41,6 +41,7 @@ package body Aquarius.Programs is
       Overflow_Checked     => False,
       Have_Symbol_Table    => False,
       Is_Declaration       => False,
+      Has_Position         => False,
       Self                 => null,
       Source_File          => Aquarius.Source.No_Source_File,
       Source_File_Name     => Aquarius.Names.Null_Aquarius_Name,
