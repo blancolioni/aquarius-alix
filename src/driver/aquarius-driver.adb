@@ -234,8 +234,38 @@ begin
 
          if Command_Line.Action /= "" then
             if Command_Line.Action = "grammar-gen" then
+
+               for I in 1 .. 3 loop
+                  begin
+                     if not Ada.Directories.Exists
+                       ("generated-grammar")
+                     then
+                        Ada.Directories.Create_Directory
+                          ("generated-grammar");
+                     end if;
+                     if Ada.Directories.Exists
+                       ("generated-grammar/" & Grammar.Name)
+                     then
+                        Ada.Directories.Delete_Tree
+                          ("generated-grammar/" & Grammar.Name);
+                     end if;
+
+                     Ada.Directories.Create_Directory
+                       ("generated-grammar/" & Grammar.Name);
+
+                     Ada.Directories.Create_Directory
+                       ("generated-grammar/" & Grammar.Name & "/syntax");
+
+                     exit;
+
+                  exception
+                     when others =>
+                        delay 0.5;
+                  end;
+               end loop;
+
                Aquarius.Grammars.Aqua_Gen.Generate
-                 (Grammar, ".");
+                 (Grammar, "generated-grammar/" & Grammar.Name & "/syntax");
             else
                Grammar.Run_Actions (Command_Line.Action, Input);
             end if;
