@@ -4,8 +4,9 @@ with Ada.Text_IO;
 package body Aquarius.Grammars.Aqua_Gen is
 
    procedure Generate_Class
-     (Syntax : Aquarius.Syntax.Syntax_Tree;
-      Path   : String);
+     (Language_Name : String;
+      Syntax        : Aquarius.Syntax.Syntax_Tree;
+      Path          : String);
 
    function To_Mixed_Case (Name : String) return String;
 
@@ -19,7 +20,7 @@ package body Aquarius.Grammars.Aqua_Gen is
    is
    begin
       for Syntax of Grammar.Non_Terminals loop
-         Generate_Class (Syntax, Path);
+         Generate_Class (Grammar.Name, Syntax, Path);
       end loop;
    end Generate;
 
@@ -28,8 +29,9 @@ package body Aquarius.Grammars.Aqua_Gen is
    --------------------
 
    procedure Generate_Class
-     (Syntax : Aquarius.Syntax.Syntax_Tree;
-      Path   : String)
+     (Language_Name : String;
+      Syntax        : Aquarius.Syntax.Syntax_Tree;
+      Path          : String)
    is
       use Ada.Characters.Handling;
       use Ada.Text_IO;
@@ -84,7 +86,10 @@ package body Aquarius.Grammars.Aqua_Gen is
               & "_node"
               & ".aqua");
       Set_Output (File);
-      Put_Line ("class " & To_Mixed_Case (Syntax.Name & "_Node"));
+      Put_Line ("class "
+                & To_Mixed_Case (Language_Name)
+                & ".Syntax."
+                & To_Mixed_Case (Syntax.Name & "_Node"));
       New_Line;
       Put_Line ("inherit");
       Put_Line ("   Program_Node");
