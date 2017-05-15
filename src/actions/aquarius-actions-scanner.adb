@@ -1,6 +1,7 @@
 with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Directories;
 with Ada.Exceptions;
+with Ada.Text_IO;
 
 with Aquarius.Errors;
 with Aquarius.Source;
@@ -357,6 +358,14 @@ package body Aquarius.Actions.Scanner is
            "unable to understand action: " & Action.Name
            & ": " & Action.Image;
       end if;
+
+   exception
+      when E : others =>
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            Action.Show_Location & ": " & Ada.Exceptions.Exception_Name (E)
+            & " " & Ada.Exceptions.Exception_Message (E));
+         raise;
    end Scan;
 
    -----------------
