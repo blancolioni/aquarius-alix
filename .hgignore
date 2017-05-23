@@ -13,3 +13,5 @@ aquarius.gpr
 aqua-custom-vm
 arrangement.log
 tests/kit/temp
+trace.txt
+aquarius.log
