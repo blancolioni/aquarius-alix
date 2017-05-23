@@ -5,6 +5,8 @@ with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
+with Tropos.Reader;
+
 with Aquarius.Grammars;
 with Aquarius.Grammars.Manager;
 with Aquarius.Loader;
@@ -19,6 +21,9 @@ with Aquarius.UI.Console;
 with Aquarius.Config_Paths;
 
 package body Aquarius.Configuration is
+
+   Local_Theme_Configuration : Tropos.Configuration;
+   Have_Theme_Configuration  : Boolean := False;
 
    function Config_Folder_Path return String;
 
@@ -461,6 +466,34 @@ package body Aquarius.Configuration is
    begin
       Set_Value (Position, Value_Name, Boolean'Image (Value));
    end Set_Value;
+
+   -------------------------
+   -- Theme_Configuration --
+   -------------------------
+
+   function Theme_Configuration return Tropos.Configuration is
+   begin
+      if not Have_Theme_Configuration then
+         declare
+            Path : constant String :=
+                     Aquarius.Config_Paths.Config_File
+                       ("themes");
+         begin
+            if not Ada.Directories.Exists
+              (Path & "/default.config")
+            then
+               Error ("missing default theme");
+            else
+               Local_Theme_Configuration :=
+                 Tropos.Reader.Read_Config
+                   (Path      => Path,
+                    Extension => "config");
+            end if;
+            Have_Theme_Configuration := True;
+         end;
+      end if;
+      return Local_Theme_Configuration;
+   end Theme_Configuration;
 
    -------------
    -- Warning --

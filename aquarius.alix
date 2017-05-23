@@ -37,12 +37,8 @@ source_dir = src/values
 source_dir = src/version
 source_dir = src/vm
 source_dir = src/watchers
-source_dir = komnenos/src
-source_dir = komnenos/src/entities
-source_dir = komnenos/src/fragments
-source_dir = komnenos/src/ui
-source_dir = komnenos/src/ui/gtk
 depend = { project = gtkada external = yes }
+depend = { project = komnenos version = any }
 depend = { project = tagatha version = any }
 depend = { project = aqua version = any }
 depend = { project = tropos version = any }
@@ -54,17 +50,5 @@ post_install = "aquarius --clear-cache"
 config_dir = config
 path_unit = { unit = Aquarius.Config_Paths
               path = src/environment/aquarius-config_paths.ads }
-builder_option = "-g"
-builder_option = "-k"
-builder_option = "-s"
-builder_option = "-j4"
-compiler_option = "-g"
-compiler_option = "-gnatwea"
-compiler_option = "-gnata"
-compiler_option = "-gnato"
-compiler_option = "-gnatyabcefhiklmnoprstOASux"
-compiler_option = "-gnat2012"
-compiler_option = "-fstack-check"
-linker_option = "-g"
 # uncomment following line when building on Linux
 # linker_option = "-lpixman-1"

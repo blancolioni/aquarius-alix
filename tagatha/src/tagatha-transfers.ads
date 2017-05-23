@@ -176,8 +176,11 @@ package Tagatha.Transfers is
    function Get_Source_2 (Item : Transfer) return Transfer_Operand;
    function Get_Operator (Item : Transfer) return Tagatha_Operator;
 
-   function Get_Line (Item : Transfer) return Positive;
-   function Get_Column (Item : Transfer) return Positive;
+   function Has_Location (Item : Transfer) return Boolean;
+   function Get_Line (Item : Transfer) return Positive
+     with Pre => Has_Location (Item);
+   function Get_Column (Item : Transfer) return Positive
+     with Pre => Has_Location (Item);
 
    procedure Reference_Temporaries
      (Item    : in out Transfer;
@@ -275,8 +278,8 @@ private
          Self              : Boolean;
          Native            : Ada.Strings.Unbounded.Unbounded_String;
          Changed_Registers : Ada.Strings.Unbounded.Unbounded_String;
-         Line              : Positive := 1;
-         Column            : Positive := 1;
+         Line              : Natural := 0;
+         Column            : Natural := 0;
          Src_1             : Transfer_Operand;
          Src_2             : Transfer_Operand;
          Dst               : Transfer_Operand;

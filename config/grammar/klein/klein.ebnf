@@ -24,16 +24,15 @@ context_clause ::= 'with' package_reference ';'
 package_reference ::= < identifier / '.' >
 
 subprogram ::= procedure_declaration
-             | package_spec when spec
-             | package_body when body
+             | package_declaration
 
-package_spec ::= 'package' defining_package_name : function_name 'is'
-                    list_of_definitions
-                 'end' matching_end_identifier : function_name
+package_declaration ::= 'package' defining_package_name [ export_list ] 'is'
+                            list_of_definitions
+                        'end' matching_end_identifier : function_name
 
-package_body ::= 'package' 'body' defining_package_name : function_name 'is'
-                    list_of_declarations
-                 'end' matching_end_identifier : function_name
+export_list ::= 'export' list_of_identifiers
+
+list_of_identifiers ::= < identifier / ',' >
 
 defining_package_name ::= identifier
 
@@ -41,18 +40,17 @@ list_of_definitions ::= { definition ';' }
 
 list_of_declarations ::= { declaration ';' }
 
-definition ::= variable_declaration | type_declaration | procedure_definition
-
-procedure_definition ::= 'procedure' identifier : function_name
-                                [ formal_argument_list ]
+definition ::= variable_declaration | type_declaration | procedure_declaration
 
 formal_argument_list ::= '(' < formal_argument / ';' > ')'
 
 formal_argument ::= defining_identifier_list ':' named_type
 
-procedure_declaration ::= procedure_definition [ 'is'
+procedure_declaration ::= 'procedure' identifier : function_name
+                                [ formal_argument_list ]
+                          'is'
                                 block
-                          'end' matching_end_identifier : function_name ]
+                          'end' matching_end_identifier : function_name
 
 block ::= list_of_declarations 'begin' sequence_of_statements
 

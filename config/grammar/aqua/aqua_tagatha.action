@@ -2,91 +2,32 @@ before class_declaration do
    IO.put_line ("generating: " & tree.class.name)
    tree.begin_unit (tree.class.name)
    tree.strings := (list => new Array, table => new Map)
-end
+end;
 
-before routine do
-   tree.code_segment
-   tree.procedure
-      (tree^class_declaration.class.name & "__" & tree.feature.standard_name,
-       tree.feature.formal_arguments.list.length,
-       tree.feature.local.list.length,
-       (if tree.feature.function then 1 else 0),
-       1)
-end
-
-after routine do
-   tree.return
-end
+after class_declaration/class_header do
+   IO.put_line ("  - generating class header");
+   parent.begin_routine(parent.class.name & "$new", 0, 0, 1);
+   parent.push_external ("map", 1);
+   parent.pop_register ("op");
+   parent.native_operation ("allocate", 0, 0, "op");
+   parent.push_register ("op");
+   parent.pop_register ("agg");
+   parent.push_register ("agg");
+   parent.pop_register ("r0");
+   parent.end_routine;
+   
+   for feature in parent.class.features.list loop
+      if feature.attribute then
+         parent.begin_routine(parent.class.name & "__" & feature.name & "$get", 1, 0, 1);
+         
+         parent.end_routine;
+         parent.begin_routine(parent.class.name & "__" & feature.name & "$set", 2, 0, 0);
+         parent.end_routine;
+      end if;
+   end loop;
+end;
 
 after class_declaration do
-
-   if not tree.class.deferred then
-      tree.code_segment
-      tree.procedure (tree.class.name & "$new", 0, 0, 1);
-      tree.alloc (tree.class.size);
-      tree.return
-   end if
-   
-   for feature in tree.class.features.list loop
-      if feature.attribute then
-         null
-      else
-      end if
-   end loop
-
-   tree.text_segment
-   tree.label (tree.class.name & "$vt");
-   for class in tree.class.ancestors.list loop
-      tree.data (tree.class.name & "$vt");
-      for feature in class.features.list loop
-         if feature.attribute then
-            null
-         elsif feature.redefined then
-            null
-         elsif tree.class.features.table.get (feature.standard_name) then
-            tree.data (tree.class.name & "__" & feature.standard_name);
-         else
-            tree.data (class.name & "__" & feature.standard_name);
-         end if
-      end loop;
-   end loop;
-   tree.code_segment
    tree.end_unit;
-end
-
-after primary do
-   tree.push
-   tree.apply_fragment
-end
-
-after manifest_constant/manifest_value do
-   parent.join_fragment (child)
-end
-
-after constant/manifest_constant do
-   parent.join_fragment (child)
-end
-
-after primary/manifest_constant do
-   parent.join_fragment (child)
-end
-
-after manifest_value/integer_constant do
-   parent.integer_constant (child.image)
-end
-
-after manifest_value/boolean_constant do
-   parent.integer_constant ((if child.image.to_lower = "false" then 0 else 1))
-end
-
-after manifest_value/string_literal do
-   parent.string_value := child.image
-   parent.strings := parent^class_declaration.strings
-   if parent.strings.table.get (parent.string_value) then
-   else
-      parent.strings.list.append (parent.string_value)
-      parent.strings.table.set (parent.string_value, parent.strings.list.length)
-   end if
-
-   parent.string_constant ("__string_lit_" & parent.strings.table.get (parent.string_value))
-end
+   tree.code_unit ("pdp32");
+end;

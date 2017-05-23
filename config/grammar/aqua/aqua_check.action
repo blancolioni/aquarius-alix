@@ -1,7 +1,9 @@
 before class_declaration do
+   IO.put_Line ("checking class");
 end;
 
 after class_declaration do
+   IO.put_Line ("done checking class");
 end;
 
 after class_declaration/class_header do
@@ -34,17 +36,25 @@ after class_header/header_mark do
    end if;
 end;
 
+before class_name do
+   tree.link_name := "";
+end;
+
+after class_name/identifier do
+  if parent.link_name /= "" then
+     parent.link_name := parent.link_name & "__" & identifier.text.to_lower;
+  else
+     parent.link_name := identifier.text.to_lower;
+  end if;
+end;
+
 after class_header/class_name do
-   parent.class.name := class_name.image.to_lower;
+   parent.class.name := class_name.link_name
 end;
 
 after class_header/formal_generics do
    parent.class.generic := 1;
    parent.class.generic_parameters := formal_generics;
-end;
-
-after class_declaration/class_header do
-   parent.class := class_header.class;
 end;
 
 before inheritance do
@@ -75,9 +85,21 @@ end
 after redefine/feature_list do
 end
 
-after feature_list/feature_name do
-   parent.features.list.append (feature_name.image.to_lower)
-   parent.features.table.set (feature_name.image.to_lower, 1)
+after feature_name/identifier do
+   parent.feature_name := identifier.text;
+end;
+
+after extended_feature_name/feature_name do
+   parent.feature_name := child.feature_name;
+end;
+   
+after new_feature/extended_feature_name do
+   parent.feature_name := child.feature_name;
+end;
+
+after new_feature_list/new_feature do
+   IO.put_line ("new feature: " & child.feature_name);
+   parent.names.append (child.feature_name.to_lower)
 end
 
 before features do
@@ -86,6 +108,10 @@ end;
 before feature_declaration do
    tree.new_feature_names := new Array;
    tree.feature_body := new Map;
+end;
+
+before feature_declaration/new_feature_list do
+   child.names := tree.new_feature_names;
 end;
 
 after feature_declaration/declaration_body do
@@ -103,6 +129,7 @@ after feature_declaration/declaration_body do
          end if;
       end if;
    end if;
+   
    if child.value then
       tree.feature_body.routine := 1
       tree.feature_body.local := child.value.local
@@ -121,6 +148,7 @@ after feature_declaration do
       tree.new_feature := tree.feature_body.clone;
       tree.new_feature.name := name
       tree.new_feature.standard_name := name.to_lower
+      IO.put_line ("adding: " & tree.new_feature.name);
       tree^features.features.list.append (tree.new_feature);
       tree^features.features.table.set (tree.new_feature.standard_name, tree.new_feature);
    end loop;
@@ -165,18 +193,6 @@ end
 after feature_body/deferred do
    parent.deferred := 1
 end
-
-after new_feature_list/new_feature do
-   parent^feature_declaration.new_feature_names.append (child.name);
-end;
-
-after new_feature/extended_feature_name do
-   parent.name := child.name;
-end;
-
-after extended_feature_name/feature_name do
-   parent.name := feature_name.image;
-end;
 
 after type_mark/type do
    parent.type := child.type;

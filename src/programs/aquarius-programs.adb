@@ -1001,7 +1001,7 @@ package body Aquarius.Programs is
       return Program_Tree
    is
       use Aquarius.Source;
-      Loc : constant Source_Position := Parent.Get_Location;
+      Loc : constant Aquarius.Source.Source_Position := Parent.Get_Location;
    begin
       if Parent.Child_Count = 0 then
          if Get_Line (Loc) = Get_Line (Loc) then
@@ -2392,7 +2392,10 @@ package body Aquarius.Programs is
    -- Source_File_Name --
    ----------------------
 
-   function Source_File_Name (Item : Program_Tree_Type'Class) return String is
+   overriding function Source_File_Name
+     (Item : Program_Tree_Type)
+      return String
+   is
    begin
       return Ada.Directories.Simple_Name
         (Aquarius.Names.To_String (Item.Program_Root_Node.Source_File_Name));

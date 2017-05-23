@@ -48,6 +48,8 @@ before Compilation_Unit do
    
    top.string_object := New_Type (top.symbol_table, "String", "string", (type_class => "array", range_type => top.symbol_table.positive, component_type => top.symbol_table.character));
    
+   top.Withs := new Array;
+   top.top_level := 1;
 end;
 
 after Compilation_Unit do
@@ -55,6 +57,28 @@ after Compilation_Unit do
 --   Aqua.Report_State;
 end;
 
+before withed_unit_name do
+   tree.withed_package := 0;
+end;
+
+after withed_unit_name/identifier do
+   if parent.withed_package then
+      parent.withed_package := parent.withed_package & "." & identifier.text;
+      parent.withed_file_name := parent.withed_file_name & "-" & to_lower (identifier.text);
+   else
+      parent.withed_package := identifier.text;
+      parent.withed_file_name := identifier.text.to_lower;
+   end if;
+   
+   IO.Put_Line ("with " & parent.withed_package & "/" & parent.withed_file_name);
+   
+   child.entity := Komnenos.Get_Entity (tree.withed_package, "package-declaration");
+   
+   if child.entity then
+     parent.Entity := child.entity;
+     top.withs.append ((tree => child, entity => child.entity, withed => Load (Top.Containing_Directory & "/" & parent.withed_file_name & ".ads")));
+   end if;
+end;
 
 before procedure_body/procedure_specification 
     or function_body/function_specification
@@ -108,8 +132,16 @@ after function_specification or procedure_specification do
 end;
 
 after package_spec/defining_qualified_reference do
-   parent^subprogram_declaration.defined_entity :=
+   tree.entity :=
       Komnenos.Define (parent, defining_qualified_reference.concatenated_image, "package-declaration");
+   parent^subprogram_declaration.defined_entity := tree.entity;
+   if top.top_level then
+      top.top_level := 0;
+      for item in top.withs loop     
+        Komnenos.Cross_Reference 
+          (item.tree, item.entity, tree.entity);
+      end loop;
+   end if;
 end;
 
 after formal_argument_spec/formal_argument do

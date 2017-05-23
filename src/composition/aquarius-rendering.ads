@@ -1,6 +1,7 @@
 with Aquarius.Layout;
 with Aquarius.Programs;
-with Aquarius.Themes;
+
+with Komnenos.Themes;
 
 package Aquarius.Rendering is
 
@@ -27,8 +28,9 @@ package Aquarius.Rendering is
                        Text      : String)
       is abstract;
 
-   procedure Set_Theme (Renderer : in out Root_Aquarius_Renderer'Class;
-                        Theme    : Aquarius.Themes.Aquarius_Theme);
+   procedure Set_Theme
+     (Renderer : in out Root_Aquarius_Renderer'Class;
+      Theme    : Komnenos.Themes.Komnenos_Theme);
 
    procedure Begin_Render (Renderer : in out Root_Aquarius_Renderer)
      is null;
@@ -47,9 +49,9 @@ private
 
    type Root_Aquarius_Renderer is abstract tagged
       record
-         Line    : Aquarius.Layout.Line_Number := 1;
-         Column  : Aquarius.Layout.Column_Number := 1;
-         Theme   : Aquarius.Themes.Aquarius_Theme    := null;
+         Line    : Aquarius.Layout.Line_Number    := 1;
+         Column  : Aquarius.Layout.Column_Number  := 1;
+         Theme   : Komnenos.Themes.Komnenos_Theme := null;
       end record;
 
 end Aquarius.Rendering;

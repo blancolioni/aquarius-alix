@@ -1,3 +1,5 @@
+with Tropos;
+
 package Aquarius.Configuration is
 
    Configuration_Error : exception;
@@ -52,6 +54,8 @@ package Aquarius.Configuration is
 
    procedure Error (Message : String);
    procedure Warning (Message : String);
+
+   function Theme_Configuration return Tropos.Configuration;
 
 private
 

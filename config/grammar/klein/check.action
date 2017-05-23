@@ -40,7 +40,7 @@ after variable_declaration/defining_identifier_list do
       parent^block.frame_offset := parent^block.frame_offset + 1;
       parent^block.table.set 
         (current.image, 
-         (k => Komnenos.Define (variable_declaration, current, "variable-declaration", 0),
+         (k => Komnenos.Define (variable_declaration, current, "variable-declaration"),
           frame_offset => parent^block.frame_offset));
    end loop;
 end;

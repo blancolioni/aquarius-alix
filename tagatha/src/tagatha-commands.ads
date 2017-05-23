@@ -79,8 +79,8 @@ private
       record
          Size   : Tagatha_Size;
          Label  : Tagatha.Labels.Tagatha_Label;
-         Line   : Positive := 1;
-         Column : Positive := 1;
+         Line   : Natural := 0;
+         Column : Natural := 0;
          Negate : Boolean;
          case Instruction is
             when T_Stack =>

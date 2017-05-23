@@ -10,6 +10,8 @@ private with Aquarius.Names.Sets;
 with Aquarius.Programs;
 
 with Komnenos.Entities;
+with Komnenos.Source;
+
 with Komnenos.Session_Objects;
 
 package Aquarius.File_System_Stores is
@@ -29,6 +31,10 @@ package Aquarius.File_System_Stores is
 
    overriding procedure Load
      (Store : not null access Root_File_System_Store);
+
+   overriding procedure On_Edit
+     (Store : in out Root_File_System_Store;
+      Item  : not null access Komnenos.Source.Source_Tree_Interface'Class);
 
    overriding function Config_Name
      (Store  : Root_File_System_Store)
@@ -90,10 +96,6 @@ private
          Extensions      : Aquarius.Names.Sets.Name_Set;
          Loaded_Programs : Program_Maps.Map;
       end record;
-
-   overriding procedure On_Edit
-     (Store : not null access Root_File_System_Store;
-      Program : Aquarius.Programs.Program_Tree);
 
    overriding procedure Save
      (Store : not null access Root_File_System_Store);

@@ -256,8 +256,8 @@ private
          Frame_Words        : Natural;
          Result_Words       : Natural;
          Last_Label         : Tagatha.Labels.Tagatha_Label;
-         Last_Line          : Positive := 1;
-         Last_Column        : Positive := 1;
+         Last_Line          : Natural := 0;
+         Last_Column        : Natural := 0;
          Global             : Boolean := True;
          Executable_Segment : Tagatha.Commands.Command_Vectors.Vector;
          Read_Only_Segment  : Data_Vector.Vector;

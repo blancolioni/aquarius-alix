@@ -2,6 +2,8 @@ with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Text_IO;
 
+with Tropos;
+
 with Aquarius.Actions;
 with Aquarius.Command_Line;
 with Aquarius.Config_Paths;
@@ -16,7 +18,7 @@ with Aquarius.Programs.Arrangements;
 with Aquarius.Projects.Files;
 with Aquarius.Rendering.Manager;
 with Aquarius.Target.Manager;
-with Aquarius.Themes;
+with Komnenos.Themes;
 with Aquarius.Trace;
 
 with Aquarius.Version;
@@ -25,8 +27,8 @@ with Komnenos.Logging;
 with Komnenos.UI;
 with Komnenos.UI.Sessions;
 
-with Komnenos.Entities.Source.Aquarius_Source;
-with Komnenos.Entities.Aqua_Entities;
+--  with Komnenos.Entities.Source.Aquarius_Source;
+--  with Komnenos.Entities.Aqua_Entities;
 
 procedure Aquarius.Driver is
 
@@ -144,7 +146,7 @@ begin
 
    Aquarius.Library.Initialise
      (Enable_Plugins => Aquarius.Command_Line.Enable_Plugins,
-      Show_Paths_In_Messages => True);
+      Show_Paths_In_Messages => False);
 
    if Command_Line.Version then
 
@@ -174,14 +176,14 @@ begin
          return;
       end if;
 
-      Komnenos.Entities.Aqua_Entities.Create_Aqua_Object (null);
+--      Komnenos.Entities.Aqua_Entities.Create_Aqua_Object (null);
 
       declare
          use type Aquarius.Grammars.Aquarius_Grammar;
          use type Aquarius.Programs.Program_Tree;
          Grammar     : Aquarius.Grammars.Aquarius_Grammar;
          Input       : Aquarius.Programs.Program_Tree;
-         Theme       : Aquarius.Themes.Aquarius_Theme;
+         Theme       : Komnenos.Themes.Komnenos_Theme;
       begin
          if Command_Line.Grammar = "" then
             Grammar :=
@@ -297,9 +299,24 @@ begin
                                  (Render_Name);
             begin
                if Command_Line.Theme = "" then
-                  Theme := Aquarius.Themes.Active_Theme;
+                  Theme := Komnenos.Themes.Active_Theme;
                else
-                  Theme := Aquarius.Themes.Load_Theme (Command_Line.Theme);
+                  declare
+                     Config : constant Tropos.Configuration :=
+                                Aquarius.Configuration.Theme_Configuration;
+                  begin
+                     if Config.Contains (Command_Line.Theme) then
+                        Theme :=
+                          Komnenos.Themes.Load_Theme
+                            (Config.Child (Command_Line.Theme));
+                     else
+                        Ada.Text_IO.Put_Line
+                          (Ada.Text_IO.Standard_Error,
+                           Command_Line.Theme
+                           & ": unknown theme; using default");
+                        Theme := Komnenos.Themes.Active_Theme;
+                     end if;
+                  end;
                end if;
 
                Renderer.Set_Theme (Theme);
@@ -350,12 +367,10 @@ begin
 
       declare
          UI   : constant Komnenos.UI.Komnenos_UI :=
-                  Komnenos.UI.Create_UI
-                    (Aquarius.Config_Paths.Config_Path
-                     & "/komnenos");
+                  Komnenos.UI.Create_UI;
       begin
 
-         Komnenos.Entities.Aqua_Entities.Create_Aqua_Object (UI);
+--         Komnenos.Entities.Aqua_Entities.Create_Aqua_Object (UI);
 
          if Command_Line.Project_Name /= "" then
             declare
@@ -379,7 +394,6 @@ begin
            or else Command_Line.Extra_Arguments /= ""
          then
             declare
-               use Komnenos.Entities.Source.Aquarius_Source;
                Path : constant String :=
                         (if Command_Line.Input_File /= ""
                          then Command_Line.Input_File
@@ -390,29 +404,10 @@ begin
                Input : constant Aquarius.Programs.Program_Tree :=
                          Aquarius.Loader.Load_From_File
                              (Grammar, Path);
-               Entity  : constant Komnenos.Entities.Entity_Reference :=
-                           Create_Aquarius_Source_Entity
-                             (Table            => UI,
-                              Name             =>
-                                Ada.Directories.Simple_Name
-                                  (Path),
-                              File_Name        => Path,
-                              Class            => "declaration",
-                              Line             => 1,
-                              Column           => 1,
-                              Top_Level        => True,
-                              Compilation_Unit => Input,
-                              Entity_Spec      => Input,
-                              Entity_Body      => null);
-               pragma Unreferenced (Entity);
             begin
                Grammar.Run_Action_Trigger
                  (Input,
                   Aquarius.Actions.Semantic_Trigger);
-
---                 UI.Add_Entity
---                   (Ada.Directories.Simple_Name (Command_Line.Input_File),
---                    Entity);
             end;
          end if;
 
