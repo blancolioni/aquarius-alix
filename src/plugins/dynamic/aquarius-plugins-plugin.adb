@@ -3,12 +3,13 @@ with Ada.Characters.Latin_1;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
+with Komnenos.Themes;
+
 with Aquarius.Grammars.Manager;
 with Aquarius.Names;
 with Aquarius.Programs.Arrangements;
 with Aquarius.Rendering.Manager;
 with Aquarius.Source;
-with Aquarius.Themes;
 with Aquarius.Tokens;
 with Aquarius.Trees;
 
@@ -928,7 +929,7 @@ package body Aquarius.Plugins.Plugin is
    begin
 
       Aquarius.Programs.Arrangements.Arrange (P);
-      Renderer.Set_Theme (Aquarius.Themes.Active_Theme);
+      Renderer.Set_Theme (Komnenos.Themes.Active_Theme);
 
       Ada.Text_IO.Put_Line ("Writing to: " & Path);
 

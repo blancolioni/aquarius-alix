@@ -42,8 +42,9 @@ package body Aquarius.Rendering is
    -- Set_Theme --
    ---------------
 
-   procedure Set_Theme (Renderer : in out Root_Aquarius_Renderer'Class;
-                        Theme    : in     Aquarius.Themes.Aquarius_Theme)
+   procedure Set_Theme
+     (Renderer : in out Root_Aquarius_Renderer'Class;
+      Theme    : Komnenos.Themes.Komnenos_Theme)
    is
    begin
       Renderer.Theme := Theme;

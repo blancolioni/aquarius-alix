@@ -399,6 +399,15 @@ package body Tagatha.Transfers is
    end Get_Value;
 
    ------------------
+   -- Has_Location --
+   ------------------
+
+   function Has_Location (Item : Transfer) return Boolean is
+   begin
+      return Item.Line > 0 and then Item.Column > 0;
+   end Has_Location;
+
+   ------------------
    -- Has_Operator --
    ------------------
 

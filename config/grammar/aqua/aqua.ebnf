@@ -14,7 +14,7 @@ format ']' no_space_before space_after
 format '(' space_before no_space_after
 format ')' no_space_before space_after
 format ';' no_space_before new_line_after
-format ':' no_space_before space_after
+format ':' space_before space_after
 format ',' no_space_before space_after
 format '.' no_space_before no_space_after
 
@@ -32,6 +32,8 @@ format local_entity_declaration_list indented_child
 format compound indented_child
 format instruction new_line_before
 format until_expression indented_child
+
+format feature_declaration new_line_before
 
 class_declaration ::=
    [ notes ]

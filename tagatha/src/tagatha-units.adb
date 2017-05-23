@@ -82,9 +82,12 @@ package body Tagatha.Units is
             To_Unit.Last_Label (Executable) := Tagatha.Labels.No_Label;
          end;
       end if;
-      Commands.Set_Source_Reference
-        (Command, To_Unit.Current_Sub.Last_Line,
-         To_Unit.Current_Sub.Last_Column);
+      if To_Unit.Current_Sub.Last_Line > 0 then
+         Commands.Set_Source_Reference
+           (Command, To_Unit.Current_Sub.Last_Line,
+            To_Unit.Current_Sub.Last_Column);
+      end if;
+
       To_Unit.Current_Sub.Executable_Segment.Append (Command);
 
       if Trace_Commands then
@@ -865,7 +868,9 @@ package body Tagatha.Units is
 
       for Sub of Unit.Subprograms loop
 
-         if Sub.Transfers.Last_Index > 0 then
+         if Sub.Transfers.Last_Index > 0
+           and then Transfers.Has_Location (Sub.Transfers (1))
+         then
             declare
                Line : constant Positive :=
                         Transfers.Get_Line (Sub.Transfers (1));
@@ -902,21 +907,23 @@ package body Tagatha.Units is
 
             for I in 1 .. Sub.Transfers.Last_Index loop
 
-               declare
-                  Line   : constant Positive :=
-                             Transfers.Get_Line (Sub.Transfers (I));
-                  Column : constant Positive :=
-                             Transfers.Get_Column (Sub.Transfers (I));
-               begin
-                  if Line /= Current_Line
-                    or else Column /= Current_Column
-                  then
-                     Target.Set_Location
-                       (File_Assembly_Type'Class (File), Line, Column);
-                     Current_Line := Line;
-                     Current_Column := Column;
-                  end if;
-               end;
+               if Transfers.Has_Location (Sub.Transfers (I)) then
+                  declare
+                     Line   : constant Positive :=
+                                Transfers.Get_Line (Sub.Transfers (I));
+                     Column : constant Positive :=
+                                Transfers.Get_Column (Sub.Transfers (I));
+                  begin
+                     if Line /= Current_Line
+                       or else Column /= Current_Column
+                     then
+                        Target.Set_Location
+                          (File_Assembly_Type'Class (File), Line, Column);
+                        Current_Line := Line;
+                        Current_Column := Column;
+                     end if;
+                  end;
+               end if;
 
                while Has_Element (Directive)
                  and then Element (Directive).Index <= I

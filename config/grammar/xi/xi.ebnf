@@ -11,10 +11,16 @@ symbol             ::= standard ada_symbol
 line_comment       = "--"
 
 format list_of_package_level_declarations indented_child
+format list_of_material_level_declarations indented_child
 format list_of_declarations indented_child
+format list_of_generic_arguments indented_child
 format sequence_of_statements indented_child
 format sequence_of_techniques indented_child
 format sequence_of_passes indented_child
+format type_indication soft_new_line_after
+format formal_argument_list indented_child
+format short_material_body indented_child
+format list_of_aspects indented_child
 
 format ';' no_space_before no_space_after new_line_after
 format '.' no_space_before no_space_after
@@ -25,6 +31,7 @@ format ''' no_space_before no_space_after
 format '=>' soft_new_line_after
 
 format 'is' closing space_after space_before
+-- format 'generic' new_line_after
 
 defining_material_name ::= identifier
 matching_procedure_identifier ::= identifier
@@ -64,7 +71,7 @@ type_qualifiers ::= '(' < type_qualifier / ',' ')'
 type_qualifier ::= identifier '=>' expression
                  | expression
 
-generic_material_declaration ::= 'generic' list_of_generic_arguments
+generic_material_declaration ::= 'generic' list_of_generic_arguments material_declaration
 
 list_of_generic_arguments ::= { generic_formal_argument }
 
@@ -72,7 +79,7 @@ generic_formal_argument ::= generic_object_declaration
 
 generic_object_declaration ::= object_declaration
 
-material_declaration ::= [ generic_material_declaration ] 'material' defining_material_name [ material_body ] ';'
+material_declaration ::= 'material' defining_material_name material_body
 
 material_body ::=
     short_material_body
@@ -86,7 +93,7 @@ short_material_body ::=
 derived_material_body ::=
    'is' generic_instantiation [ 'with' list_of_aspects ] ';'
   
-generic_instantiation ::= 'new' qualified_identifier [ generic_actual_arguments ]
+generic_instantiation ::= 'new' qualified_identifier [ generic_actual_arguments ] ';'
 
 generic_actual_arguments ::= '(' < generic_actual_argument > ')'
 
@@ -98,7 +105,7 @@ full_material_body ::=
           list_of_material_level_declarations
      'begin'
           material_render_definition
-     'end' matching_end_identifier
+     'end' matching_end_identifier ';'
 
 list_of_aspects ::= < aspect / ',' >
 

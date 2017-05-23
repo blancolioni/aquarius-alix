@@ -3,7 +3,8 @@ class Program_Node
 feature { NONE }  -- tree structure
 
    Parent : Program_Node
-   Left, Right : Program_Node
+   Left   : Program_Node
+   Right  : Program_Node
    
 feature  -- action handlers
 

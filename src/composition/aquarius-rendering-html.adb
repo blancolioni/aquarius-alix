@@ -1,8 +1,8 @@
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
-with Aquarius.Colours.Html;
-with Aquarius.Fonts;
+with Komnenos.Colours.Html;
+with Komnenos.Fonts;
 
 package body Aquarius.Rendering.Html is
 
@@ -23,7 +23,7 @@ package body Aquarius.Rendering.Html is
    overriding
    procedure End_Render (Renderer : in out Root_Html_Renderer);
 
-   function With_Font (Font : Aquarius.Fonts.Aquarius_Font;
+   function With_Font (Font : Komnenos.Fonts.Komnenos_Font;
                        Text : String) return String;
 
    ------------------
@@ -75,7 +75,7 @@ package body Aquarius.Rendering.Html is
       pragma Unreferenced (Terminal);
       use Ada.Text_IO;
       use Aquarius.Layout;
-      Font : constant Aquarius.Fonts.Aquarius_Font :=
+      Font : constant Komnenos.Fonts.Komnenos_Font :=
         Renderer.Theme.Style (Class).Font;
    begin
       if Renderer.Line < Line then
@@ -101,40 +101,40 @@ package body Aquarius.Rendering.Html is
    -- With_Font --
    ---------------
 
-   function With_Font (Font : Aquarius.Fonts.Aquarius_Font;
+   function With_Font (Font : Komnenos.Fonts.Komnenos_Font;
                        Text : String) return String
    is
-      use Aquarius.Colours;
-      use Aquarius.Fonts;
+      use Komnenos.Colours;
+      use Komnenos.Fonts;
 
       use Ada.Strings.Unbounded;
       Result : Unbounded_String := To_Unbounded_String (Text);
 
       function To_Html_Colour
-        (Colour : Aquarius_Colour)
+        (Colour : Komnenos_Colour)
          return String
-         renames Aquarius.Colours.Html.To_Html_Colour;
+         renames Komnenos.Colours.Html.To_Html_Colour;
 
    begin
-      if Is_Bold (Font) then
+      if Font.Is_Bold then
          Result := "<b>" & Result & "</b>";
       end if;
-      if Is_Italic (Font) then
+      if Font.Is_Italic then
          Result := "<i>" & Result & "</i>";
       end if;
-      if Is_Underlined (Font) then
+      if Font.Is_Underlined then
          Result := "<ul>" & Result & "</ul>";
       end if;
       Result := ">" & Result & "</font>";
-      if Has_Foreground (Font) then
+      if Font.Has_Foreground_Color then
          Result := " color="""
-           & To_Html_Colour (Get_Foreground (Font))
+           & To_Html_Colour (Font.Foreground_Color)
            & """" & Result;
       end if;
-      if Has_Background (Font) then
+      if Font.Has_Background_Color then
          Result :=
            " bgcolor="""
-           & To_Html_Colour (Get_Background (Font))
+           & To_Html_Colour (Font.Background_Color)
            & """" & Result;
       end if;
       return To_String ("<font " & Result);

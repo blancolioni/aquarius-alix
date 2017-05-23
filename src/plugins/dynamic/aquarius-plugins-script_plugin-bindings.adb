@@ -19,7 +19,7 @@ with Aquarius.Actions.Tagatha_Scanner;
 
 with Aqua.Images;
 
-with Komnenos.Entities.Aqua_Entities;
+--  with Komnenos.Entities.Aqua_Entities;
 
 package body Aquarius.Plugins.Script_Plugin.Bindings is
 
@@ -175,9 +175,9 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Item     : not null access Aquarius.Actions.Actionable'Class)
    is
       Tree    : constant Program_Tree := Program_Tree (Item);
-      Komnenos_Arg : constant Aqua.Word :=
-                       Executor.Plugin.Executor.To_Word
-                         (Komnenos.Entities.Aqua_Entities.Get_Aqua_Object);
+      Komnenos_Arg : constant Aqua.Word := 0;
+--                         Executor.Plugin.Executor.To_Word
+--                         (Komnenos.Entities.Aqua_Entities.Get_Aqua_Object);
       Top_Arg     : constant Aqua.Word :=
                       Executor.Plugin.Executor.To_Word (Tree.Program_Root);
       Tree_Arg  : constant Aqua.Word :=
@@ -209,9 +209,9 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
    is
       Parent_Tree : constant Program_Tree := Program_Tree (Parent);
       Child_Tree  : constant Program_Tree := Program_Tree (Child);
-      Komnenos_Arg : constant Aqua.Word :=
-                       Executor.Plugin.Executor.To_Word
-                         (Komnenos.Entities.Aqua_Entities.Get_Aqua_Object);
+      Komnenos_Arg : constant Aqua.Word := 0;
+--                     Executor.Plugin.Executor.To_Word
+--                       (Komnenos.Entities.Aqua_Entities.Get_Aqua_Object);
       Top_Arg     : constant Aqua.Word :=
                       Executor.Plugin.Executor.To_Word
                         (Parent_Tree.Program_Root);

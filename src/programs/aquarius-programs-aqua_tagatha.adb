@@ -1,6 +1,7 @@
 with Ada.Characters.Handling;
 
 with Aqua.Primitives;
+with Tagatha.Operands;
 with Tagatha.Units;
 with Tagatha.Units.Listing;
 
@@ -79,6 +80,23 @@ package body Aquarius.Programs.Aqua_Tagatha is
       Arguments : Aqua.Array_Of_Words)
       return Aqua.Word;
 
+   type Procedure_Tree_String_Boolean is access
+     procedure (Tree  : Program_Tree;
+                Text  : String;
+                Flag  : Boolean);
+
+   type Handle_Procedure_Tree_String_Boolean is
+     new Root_Tree_Handler with
+      record
+         Handler : Procedure_Tree_String_Boolean;
+      end record;
+
+   overriding function Handle
+     (Primitive : Handle_Procedure_Tree_String_Boolean;
+      Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
    procedure Tagatha_Integer_Constant
      (Tree  : Program_Tree;
       Value : Tagatha.Tagatha_Integer);
@@ -98,11 +116,29 @@ package body Aquarius.Programs.Aqua_Tagatha is
    procedure Tagatha_Pop
      (Tree  : Program_Tree);
 
+   procedure Tagatha_Pop_Register
+     (Tree : Program_Tree;
+      Name : String);
+
    procedure Tagatha_Push
      (Tree  : Program_Tree);
 
+   procedure Tagatha_Push_External
+     (Tree      : Program_Tree;
+      Name      : String;
+      Immediate : Boolean);
+
+   procedure Tagatha_Push_Register
+     (Tree : Program_Tree;
+      Name : String);
+
    procedure Tagatha_Join_Fragment
      (Parent, Child : Program_Tree);
+
+   function Handle_Native_Operation
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
 
    ------------------
    -- Add_Handlers --
@@ -146,11 +182,32 @@ package body Aquarius.Programs.Aqua_Tagatha is
              (Handler => Tagatha_Pop'Access));
 
       Aqua.Primitives.New_Primitive_Handler
+        (Name           => "tree__pop_register",
+         Argument_Count => 2,
+         Handler        =>
+           Handle_Procedure_Tree_String'
+             (Handler => Tagatha_Pop_Register'Access));
+
+      Aqua.Primitives.New_Primitive_Handler
         (Name           => "tree__push",
          Argument_Count => 1,
          Handler        =>
            Handle_Procedure_Tree'
              (Handler => Tagatha_Push'Access));
+
+      Aqua.Primitives.New_Primitive_Handler
+        (Name           => "tree__push_external",
+         Argument_Count => 3,
+         Handler        =>
+           Handle_Procedure_Tree_String_Boolean'
+             (Handler => Tagatha_Push_External'Access));
+
+      Aqua.Primitives.New_Primitive_Handler
+        (Name           => "tree__push_register",
+         Argument_Count => 2,
+         Handler        =>
+           Handle_Procedure_Tree_String'
+             (Handler => Tagatha_Push_Register'Access));
 
       Aqua.Primitives.New_Primitive_Handler
         (Name           => "tree__join_fragment",
@@ -163,6 +220,11 @@ package body Aquarius.Programs.Aqua_Tagatha is
         (Name           => "tree__branch",
          Argument_Count => 3,
          Handler        => Tagatha_Branch'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__native_operation",
+         Argument_Count => 5,
+         Handler        => Handle_Native_Operation'Access);
 
    end Add_Handlers;
 
@@ -322,6 +384,63 @@ package body Aquarius.Programs.Aqua_Tagatha is
       return 0;
 
    end Handle;
+
+   ------------
+   -- Handle --
+   ------------
+
+   overriding function Handle
+     (Primitive : Handle_Procedure_Tree_String_Boolean;
+      Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      Tree : constant Program_Tree := Primitive.Get_Tree (Context, Arguments);
+   begin
+
+      if Aqua.Is_String_Reference (Arguments (2)) then
+         declare
+            use type Aqua.Aqua_Integer;
+            S   : constant String :=
+                    Context.To_String (Arguments (2));
+         begin
+            Primitive.Handler (Tree, S,
+                               Context.To_Integer (Arguments (3)) /= 0);
+         end;
+      else
+         raise Constraint_Error with
+           "second argument must be a string; found "
+           & Context.To_String (Arguments (2));
+      end if;
+
+      return 0;
+
+   end Handle;
+
+   -----------------------------
+   -- Handle_Native_Operation --
+   -----------------------------
+
+   function Handle_Native_Operation
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      Op : constant String := Context.To_String (Arguments (2));
+      Inputs : constant Natural :=
+                 Natural (Context.To_Integer (Arguments (3)));
+      Outputs : constant Natural :=
+                  Natural (Context.To_Integer (Arguments (4)));
+      Changed : constant String :=
+                  Context.To_String (Arguments (5));
+   begin
+      Current_Unit.Native_Operation
+        (Name               => Op,
+         Input_Stack_Words  => Inputs,
+         Output_Stack_Words => Outputs,
+         Changed_Registers  => Changed);
+      return 0;
+   end Handle_Native_Operation;
 
    ----------------------
    -- Tagatha_Allocate --
@@ -659,6 +778,19 @@ package body Aquarius.Programs.Aqua_Tagatha is
          Tagatha.Fragments.Pop);
    end Tagatha_Pop;
 
+   --------------------------
+   -- Tagatha_Pop_Register --
+   --------------------------
+
+   procedure Tagatha_Pop_Register
+     (Tree : Program_Tree;
+      Name : String)
+   is
+      pragma Unreferenced (Tree);
+   begin
+      Current_Unit.Pop_Register (Name);
+   end Tagatha_Pop_Register;
+
    ------------------
    -- Tagatha_Push --
    ------------------
@@ -671,6 +803,37 @@ package body Aquarius.Programs.Aqua_Tagatha is
         (Tree.Fragment,
          Tagatha.Fragments.Push);
    end Tagatha_Push;
+
+   ---------------------------
+   -- Tagatha_Push_External --
+   ---------------------------
+
+   procedure Tagatha_Push_External
+     (Tree      : Program_Tree;
+      Name      : String;
+      Immediate : Boolean)
+   is
+      pragma Unreferenced (Tree);
+   begin
+      Current_Unit.Push_Operand
+        (Tagatha.Operands.External_Operand
+           (Name      => Name,
+            Immediate => Immediate),
+         Size => Tagatha.Default_Size);
+   end Tagatha_Push_External;
+
+   ---------------------------
+   -- Tagatha_Push_Register --
+   ---------------------------
+
+   procedure Tagatha_Push_Register
+     (Tree : Program_Tree;
+      Name : String)
+   is
+      pragma Unreferenced (Tree);
+   begin
+      Current_Unit.Push_Register (Name);
+   end Tagatha_Push_Register;
 
    --------------------
    -- Tagatha_Return --

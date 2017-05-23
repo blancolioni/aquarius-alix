@@ -20,8 +20,8 @@ after procedure_Declaration do
    end if;
 end;
 
-before procedure_declaration/procedure_definition do
-   parent.begin_routine (child/identifier.text, 0, parent/block.frame_offset, 0);
+before procedure_declaration/identifier do
+   parent.begin_routine (identifier.text, 0, parent/block.frame_offset, 0);
 end;
 
 after procedure_declaration/block do

@@ -2,6 +2,8 @@ private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Strings.Fixed.Hash;
 private with Aqua.Iterators;
 
+with Komnenos.Source;
+
 with Aquarius.Actions;
 with Aquarius.Entries;
 with Aquarius.Formats;
@@ -27,6 +29,7 @@ package Aquarius.Programs is
      and Aquarius.Actions.Actionable
      and Aquarius.Entries.Entry_Property_Interface
      and Aquarius.Types.Type_Property_Interface
+     and Komnenos.Source.Source_Tree_Interface
      and Aqua.External_Object_Interface
      and Aqua.Objects.Object_Interface
      with private;
@@ -179,9 +182,26 @@ package Aquarius.Programs is
    function Source (Item : Program_Tree_Type'Class)
                    return Aquarius.Source.Source_File;
 
-   function Source_File_Name (Item : Program_Tree_Type'Class) return String;
+   overriding function Source_File_Name
+     (Item : Program_Tree_Type)
+      return String;
    --  return the name (only) of the source file from which this program
    --  tree was read
+
+   overriding function Source_Line
+     (Source : Program_Tree_Type)
+      return Komnenos.Line_Number
+   is (Komnenos.Line_Number (Source.Layout_Line));
+
+   overriding function Source_Column
+     (Source : Program_Tree_Type)
+      return Komnenos.Column_Number
+   is (Komnenos.Column_Number (Source.Layout_Start_Column));
+
+   overriding function Source_Position
+     (Source : Program_Tree_Type)
+      return Komnenos.Text_Position
+   is (Komnenos.Text_Position (Source.Layout_Start_Position));
 
    function Source_Directory
      (Item : Program_Tree_Type'Class)
@@ -443,6 +463,7 @@ private
      and Aquarius.Actions.Actionable
      and Aquarius.Entries.Entry_Property_Interface
      and Aquarius.Types.Type_Property_Interface
+     and Komnenos.Source.Source_Tree_Interface
      and Aqua.External_Object_Interface
      and Aqua.Objects.Object_Interface
    with
@@ -555,6 +576,11 @@ private
    overriding function Start
      (Program : Program_Tree_Type)
       return Aqua.Iterators.Aqua_Iterator_Interface'Class;
+
+   overriding function Source_Root
+     (Source : not null access Program_Tree_Type)
+      return access Komnenos.Source.Source_Tree_Interface'Class
+   is (Source.Program_Root);
 
    type Root_Program_Tree_Iterator is
      new Aqua.Iterators.Aqua_Iterator_Interface with

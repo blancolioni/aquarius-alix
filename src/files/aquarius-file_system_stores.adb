@@ -239,9 +239,11 @@ package body Aquarius.File_System_Stores is
    -------------
 
    overriding procedure On_Edit
-     (Store : not null access Root_File_System_Store;
-      Program : Aquarius.Programs.Program_Tree)
+     (Store : in out Root_File_System_Store;
+      Item  : not null access Komnenos.Source.Source_Tree_Interface'Class)
    is
+      Program  : constant Aquarius.Programs.Program_Tree :=
+                   Aquarius.Programs.Program_Tree (Item);
       Position : constant Program_Maps.Cursor :=
                    Store.Get_Program_Position (Program);
       Info     : Program_Info := Program_Maps.Element (Position);

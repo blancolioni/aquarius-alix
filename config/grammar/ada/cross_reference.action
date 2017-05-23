@@ -7,27 +7,6 @@ after Compilation_Unit do
    --  Aqua.Report_State;
 end;
 
-before withed_unit_name do
-   tree.withed_package := 0;
-end;
-
-after withed_unit_name/identifier do
-   if parent.withed_package then
-      parent.withed_package := parent.withed_package & "." & identifier.text;
-   else
-      parent.withed_package := identifier.text;
-   end if;
-   
-   child.entity := Komnenos.Get_Entity (tree.withed_package, "package-declaration");
-   
-   if child.entity then
-     parent.Entity := child.entity;
-   
-     Komnenos.Cross_Reference 
-        (child, child.entity);
-   end if;
-end;
-
 before defining_qualified_reference do
    tree.defined_entity :=
       tree^subprogram_declaration.defined_entity;

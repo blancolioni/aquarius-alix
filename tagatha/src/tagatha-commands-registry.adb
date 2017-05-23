@@ -10,7 +10,10 @@ package body Tagatha.Commands.Registry is
    is
    begin
       Register.Record_Label (Get_Label (Command));
-      Register.Record_Location (Command.Line, Command.Column);
+
+      if Command.Line > 0 then
+         Register.Record_Location (Command.Line, Command.Column);
+      end if;
 
       case Command.Instruction is
          when T_Stack =>

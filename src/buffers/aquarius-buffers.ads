@@ -2,7 +2,6 @@ with Ada.Strings.Unbounded;
 
 with Aquarius.Grammars;
 with Aquarius.Interaction;
-with Aquarius.Keys;
 with Aquarius.Layout;
 with Aquarius.Messages;
 with Aquarius.Programs;
@@ -136,11 +135,6 @@ package Aquarius.Buffers is
    --  Basic buffer operations
    procedure Set_Point (Buffer : not null access Aquarius_Buffer_Record'Class;
                         Point  : in     Aquarius.Layout.Position);
-
-   --  On_Key returns True if the key has been handled
-   function On_Key (Buffer : not null access Aquarius_Buffer_Record'Class;
-                    Key    : in     Aquarius.Keys.Aquarius_Key)
-                   return Boolean;
 
    function Program (Buffer : Aquarius_Buffer_Record'Class)
                     return Aquarius.Programs.Program_Tree;
