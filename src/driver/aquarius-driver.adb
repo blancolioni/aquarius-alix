@@ -2,7 +2,7 @@ with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Text_IO;
 
-with Tropos;
+with Tropos.Reader;
 
 with Aquarius.Actions;
 with Aquarius.Command_Line;
@@ -23,7 +23,10 @@ with Aquarius.Trace;
 
 with Aquarius.Version;
 
+with Aquarius.Grammars.UI;
+
 with Komnenos.Logging;
+with Komnenos.Paths;
 with Komnenos.UI;
 with Komnenos.UI.Sessions;
 
@@ -166,6 +169,10 @@ begin
       Ada.Text_IO.Put_Line ("Finished clearing cache");
       return;
    end if;
+
+   Komnenos.Themes.Load_Theme
+     (Tropos.Reader.Read_Config
+        (Komnenos.Paths.Config_File ("themes/default.theme")));
 
    Aquarius.Target.Manager.Set_Target (Aquarius.Command_Line.Target);
 
@@ -368,6 +375,7 @@ begin
       declare
          UI   : constant Komnenos.UI.Komnenos_UI :=
                   Komnenos.UI.Create_UI;
+         Load_Session : Boolean := True;
       begin
 
 --         Komnenos.Entities.Aqua_Entities.Create_Aqua_Object (UI);
@@ -381,12 +389,25 @@ begin
                Project.Write_Session_File
                  (".aquarius-session");
             end;
+         elsif Command_Line.Plugin_Name /= "" then
+            declare
+               Name : constant String := Command_Line.Plugin_Name;
+               Grammar   : constant Aquarius.Grammars.Aquarius_Grammar :=
+                             Aquarius.Grammars.Manager.Get_Grammar
+                               (Name);
+            begin
+               Aquarius.Grammars.UI.Load_Grammar
+                 (Grammar, UI);
+               Load_Session := False;
+            end;
          end if;
 
          if Command_Line.Session_File /= "" then
             Komnenos.UI.Sessions.Load_Session
               (UI, Command_Line.Session_File);
-         elsif Ada.Directories.Exists (".aquarius-session") then
+         elsif Load_Session
+           and then Ada.Directories.Exists (".aquarius-session")
+         then
             Komnenos.UI.Sessions.Load_Session (UI, ".aquarius-session");
          end if;
 
@@ -417,7 +438,9 @@ begin
 
          Show_Allocations;
 
-         Komnenos.UI.Sessions.Save_Session (UI, ".aquarius-session");
+         if Load_Session then
+            Komnenos.UI.Sessions.Save_Session (UI, ".aquarius-session");
+         end if;
 
       end;
 

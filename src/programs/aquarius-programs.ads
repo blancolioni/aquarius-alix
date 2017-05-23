@@ -191,12 +191,12 @@ package Aquarius.Programs is
    overriding function Source_Line
      (Source : Program_Tree_Type)
       return Komnenos.Line_Number
-   is (Komnenos.Line_Number (Source.Layout_Line));
+   is (Komnenos.Line_Number (Source.Location_Line));
 
    overriding function Source_Column
      (Source : Program_Tree_Type)
       return Komnenos.Column_Number
-   is (Komnenos.Column_Number (Source.Layout_Start_Column));
+   is (Komnenos.Column_Number (Source.Location_Column));
 
    overriding function Source_Position
      (Source : Program_Tree_Type)

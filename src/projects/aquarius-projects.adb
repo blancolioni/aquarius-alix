@@ -2,6 +2,8 @@ with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
+with Aquarius.Config_Paths;
+
 with Aquarius.Configuration;
 with Aquarius.Errors;
 with Aquarius.Grammars.Manager;
@@ -12,6 +14,9 @@ with Aquarius.Projects.File_View;
 with Aquarius.Projects.Package_View;
 
 with Aquarius.UI.Console;
+
+with Aquarius.Loader;
+with Aquarius.Trees.Properties;
 
 --  with Aquarius.Tasks;
 
@@ -520,6 +525,45 @@ package body Aquarius.Projects is
    begin
       return New_Project ("Default", ".", UI);
    end New_Empty_Project;
+
+   ------------------------
+   -- New_Plugin_Project --
+   ------------------------
+
+   function New_Plugin_Project
+     (Name : String)
+      return Aquarius_Project
+   is
+      use type Aquarius.Grammars.Aquarius_Grammar;
+      use type Aquarius.Programs.Program_Tree;
+      Path : constant String :=
+               Aquarius.Config_Paths.Config_File
+                 ("grammar/" & Name & "/" & Name & ".ebnf");
+      Grammar     : constant Aquarius.Grammars.Aquarius_Grammar :=
+                      Aquarius.Grammars.Manager.Get_Grammar_For_File
+                        (Path);
+      Input       : Aquarius.Programs.Program_Tree;
+   begin
+
+      if Grammar = null or else Grammar.Has_Errors then
+         Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error,
+                               "grammar file contains errors; exiting");
+         return null;
+      end if;
+
+      Input :=
+        Aquarius.Loader.Load_From_File (Grammar, Path);
+
+      if Input = null then
+         Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error,
+                               "Cannot load '" & Path &
+                                 "'");
+         return null;
+      end if;
+
+      return Aquarius.Trees.Properties.Get_Project (Input.all);
+
+   end New_Plugin_Project;
 
    -----------------
    -- New_Project --

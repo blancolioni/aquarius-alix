@@ -104,6 +104,12 @@ package Aquarius.Projects is
    --  load the file, which is important because this project is used
    --  to load files which have no project themselves.
 
+   function New_Plugin_Project
+     (Name : String)
+      return Aquarius_Project;
+   --  Create and return a project for developing the indicated plugin.
+   --  EBNF and action files will be made available
+
    procedure Write_Session_File
      (Project : Aquarius_Project_Type'Class;
       Path    : String);

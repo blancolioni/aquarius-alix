@@ -199,6 +199,15 @@ package body Aquarius.Command_Line is
       return Get_Argument ("o", "output");
    end Output_File;
 
+   -----------------
+   -- Plugin_Name --
+   -----------------
+
+   function Plugin_Name  return String is
+   begin
+      return Get_Argument ("", "plugin");
+   end Plugin_Name;
+
    ------------------
    -- Project_Name --
    ------------------
