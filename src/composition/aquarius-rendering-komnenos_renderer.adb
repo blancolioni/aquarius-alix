@@ -183,7 +183,8 @@ package body Aquarius.Rendering.Komnenos_Renderer is
                              (Renderer.Fragment.File_Name,
                               Komnenos.Line_Number (Terminal.Location_Line),
                               Komnenos.Column_Number
-                                (Terminal.Location_Column));
+                                (Terminal.Location_Column),
+                              Enabled => "all");
          begin
             if References'Length > 0 then
                Reference := References (References'First);

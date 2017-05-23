@@ -331,6 +331,7 @@ package body Aquarius.Programs.Komnenos_Entities is
       Entity_Body      : access Program_Tree_Type'Class)
       return Komnenos.Entities.Entity_Reference
    is
+      pragma Unreferenced (Class);
       Key : constant String :=
               Get_Key (File_Name,
                        Defining_Name.Source_Line,
@@ -343,7 +344,13 @@ package body Aquarius.Programs.Komnenos_Entities is
             Entity : Root_Aquarius_Source_Entity;
             Result : Komnenos.Entities.Entity_Reference;
          begin
-            Entity.Create (Name, File_Name, Class);
+            Entity.Create
+              (Identifier   => Name,
+               Class_Name   => "aquarius-entity",
+               Path         => File_Name,
+               Display_Text => Name,
+               Description  => File_Name);
+
             Entity.Top_Level := Top_Level;
             Entity.Defining_Name := Program_Tree (Defining_Name);
             Entity.Compilation_Unit := Program_Tree (Compilation_Unit);
