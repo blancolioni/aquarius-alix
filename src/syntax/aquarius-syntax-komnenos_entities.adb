@@ -178,6 +178,11 @@ package body Aquarius.Syntax.Komnenos_Entities is
       begin
          if Syntax.Syntax_Class = Choice then
             Context.Indent := Context.Col;
+            if Context.Indent > 10 then
+               Context.Indent := 1;
+               New_Line (Context);
+            end if;
+
             for I in 1 .. Syntax.Child_Count loop
                declare
                   Child : constant Syntax_Tree :=
@@ -191,9 +196,7 @@ package body Aquarius.Syntax.Komnenos_Entities is
                      end if;
                   else
                      New_Line (Context);
-                     if Context.Indent > 1 then
-                        Put (Context, "| ", Punctuation_Style);
-                     end if;
+                     Put (Context, "| ", Punctuation_Style);
                   end if;
 
                   if Child.Text /= "" then
