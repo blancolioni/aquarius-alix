@@ -220,7 +220,11 @@ package body Aquarius.Syntax.Komnenos_Entities is
             Context.Indent := Old_Indent;
 
          elsif Syntax.Syntax_Class = Terminal then
-            Put (Context, Syntax.Text, Keyword_Style);
+            if Aquarius.Tokens.Is_Reserved (Syntax.Frame, Syntax.Token) then
+               Put (Context, Syntax.Text, Keyword_Style);
+            else
+               Put (Context, Syntax.Text, Non_Terminal_Style);
+            end if;
             Context.Need_Space := True;
          else
             Render_Children (Context, Syntax);
