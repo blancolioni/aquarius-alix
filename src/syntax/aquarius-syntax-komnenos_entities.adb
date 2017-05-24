@@ -176,7 +176,18 @@ package body Aquarius.Syntax.Komnenos_Entities is
       is
          Old_Indent : constant Positive := Context.Indent;
       begin
-         if Syntax.Syntax_Class = Choice then
+         if Syntax /= Entity.Syntax
+           and then Syntax.Syntax_Class /= Terminal
+           and then Syntax.Name /= ""
+         then
+            Put (Context, Syntax.Name, Non_Terminal_Style,
+                 Komnenos.UI.Current_UI.Get
+                   (Get_Key
+                      (Aquarius.Names.To_String (Entity.Grammar_Name),
+                       Syntax.Name)));
+            Context.Need_Space := True;
+
+         elsif Syntax.Syntax_Class = Choice then
             Context.Indent := Context.Col;
             if Context.Indent > 10 then
                Context.Indent := 1;
@@ -208,25 +219,9 @@ package body Aquarius.Syntax.Komnenos_Entities is
             end loop;
             Context.Indent := Old_Indent;
 
-         elsif Syntax /= Entity.Syntax
-           or else Syntax.Syntax_Class not in Terminal | Non_Terminal
-         then
-            if Syntax.Syntax_Class = Terminal then
-               Put (Context, Syntax.Text, Keyword_Style);
-               Context.Need_Space := True;
-
-            elsif Syntax.Syntax_Class = Non_Terminal
-              and then Syntax.Text /= ""
-            then
-               Put (Context, Syntax.Name, Non_Terminal_Style,
-                    Komnenos.UI.Current_UI.Get
-                      (Get_Key
-                         (Aquarius.Names.To_String (Entity.Grammar_Name),
-                          Syntax.Text)));
-               Context.Need_Space := True;
-            else
-               Render_Children (Context, Syntax);
-            end if;
+         elsif Syntax.Syntax_Class = Terminal then
+            Put (Context, Syntax.Text, Keyword_Style);
+            Context.Need_Space := True;
          else
             Render_Children (Context, Syntax);
          end if;
