@@ -299,16 +299,31 @@ package body Aquarius.Syntax.Komnenos_Entities is
 
    begin
       Visual.Clear;
-      Render (Context, Entity.Syntax);
+
       Visual.Put_Node
         (Key         => "in",
          X           => 1,
          Y           => 1,
          Style       => Small_Circle,
          Label_Text  => "",
-         Label_Style => null,
+         Label_Style => Default_Style,
          Tool_Tip    => "",
          Link        => null);
+      Context.X := 2;
+      Context.Next_X := 2;
+
+      Render (Context, Entity.Syntax);
+
+      Visual.Put_Node
+        (Key         => "out",
+         X           => Context.Next_X + 1,
+         Y           => 1,
+         Style       => Small_Circle,
+         Label_Text  => "",
+         Label_Style => Default_Style,
+         Tool_Tip    => "",
+         Link        => null);
+
    end Render_Diagram;
 
    -----------------
