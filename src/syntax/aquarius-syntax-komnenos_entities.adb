@@ -82,6 +82,10 @@ package body Aquarius.Syntax.Komnenos_Entities is
    is
       use Komnenos;
 
+      Text_Visual        : constant access
+        Komnenos.Entities.Text_Entity_Visual'Class :=
+          Komnenos.Entities.Text_Entity_Visual'Class (Visual.all)'Access;
+
       Default_Style      : constant Komnenos.Styles.Komnenos_Style :=
                              Komnenos.Themes.Active_Theme.Default_Style;
       Keyword_Style      : constant Komnenos.Styles.Komnenos_Style :=
@@ -127,7 +131,7 @@ package body Aquarius.Syntax.Komnenos_Entities is
         (Context : in out Context_Type)
       is
       begin
-         Visual.New_Line;
+         Text_Visual.New_Line;
          Context.Need_Space := False;
          Context.Col := Context.Indent;
          if Context.Indent > 1 then
@@ -158,11 +162,11 @@ package body Aquarius.Syntax.Komnenos_Entities is
            and then Text /= ""
            and then Text (Text'First) /= ' '
          then
-            Visual.Put (" ", Style, "", null);
+            Text_Visual.Put (" ", Style, "", null);
             Context.Col := Context.Col + 1;
          end if;
          Context.Need_Space := False;
-         Visual.Put (Text, Style, "", Reference);
+         Text_Visual.Put (Text, Style, "", Reference);
          Context.Col := Context.Col + Text'Length;
       end Put;
 
@@ -300,7 +304,7 @@ package body Aquarius.Syntax.Komnenos_Entities is
    is
       Fragment : constant Komnenos.Fragments.Fragment_Type :=
                    (if Visual = null
-                    then Komnenos.Fragments.New_Fragment (Entity)
+                    then Komnenos.Fragments.New_Text_Fragment (Entity)
                     else Komnenos.Fragments.Fragment_Type (Visual));
       pragma Unreferenced (Table);
    begin

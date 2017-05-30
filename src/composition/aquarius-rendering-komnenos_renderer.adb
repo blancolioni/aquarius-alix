@@ -10,7 +10,7 @@ package body Aquarius.Rendering.Komnenos_Renderer is
 
    type Root_Fragment_Renderer is new Root_Aquarius_Renderer with
       record
-         Fragment      : Komnenos.Fragments.Fragment_Type;
+         Fragment      : Komnenos.Fragments.Text_Fragment;
          Entity_Table  : access Komnenos.Entities.Entity_Table_Interface'Class;
       end record;
 
@@ -65,7 +65,7 @@ package body Aquarius.Rendering.Komnenos_Renderer is
    -----------------------
 
    function Fragment_Renderer
-     (Target : Komnenos.Fragments.Fragment_Type;
+     (Target       : Komnenos.Fragments.Text_Fragment;
       Entity_Table : access Komnenos.Entities.Entity_Table_Interface'Class)
       return Aquarius_Renderer
    is

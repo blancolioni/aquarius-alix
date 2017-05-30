@@ -1005,7 +1005,7 @@ package body Aquarius.Programs.Komnenos_Entities is
       use type Aquarius.Programs.Program_Tree;
       Renderer : Aquarius.Rendering.Aquarius_Renderer :=
                    Aquarius.Rendering.Komnenos_Renderer.Fragment_Renderer
-                     (Komnenos.Fragments.Fragment_Type (Visual),
+                     (Komnenos.Fragments.Text_Fragment (Visual),
                       Komnenos.UI.Current_UI);
       Program  : constant Aquarius.Programs.Program_Tree := Entity.Entity_Tree;
       Tree_Cursor : constant Aquarius.Trees.Cursors.Cursor :=
@@ -1065,7 +1065,8 @@ package body Aquarius.Programs.Komnenos_Entities is
                               else Edit_Tree.Layout_End_Position
                               + 1 + New_Offset);
          begin
-            Visual.Set_Cursor (Point, Text_Position (New_Position));
+            Komnenos.Entities.Text_Entity_Visual'Class (Visual.all)
+              .Set_Cursor (Point, Text_Position (New_Position));
          end;
       end if;
 
@@ -1135,7 +1136,7 @@ package body Aquarius.Programs.Komnenos_Entities is
       use type Aquarius.Programs.Program_Tree;
       Fragment : constant Komnenos.Fragments.Fragment_Type :=
                    (if Visual = null
-                    then Komnenos.Fragments.New_Fragment (Entity)
+                    then Komnenos.Fragments.New_Text_Fragment (Entity)
                     else Komnenos.Fragments.Fragment_Type (Visual));
       pragma Unreferenced (Table);
    begin
