@@ -1,3 +1,5 @@
+with Ada.Strings.Unbounded;
+
 with Komnenos.Entities.Visuals;
 with Komnenos.Entities.Visual_Manager;
 with Komnenos.Fragments;
@@ -112,8 +114,9 @@ package body Aquarius.Syntax.Komnenos_Entities is
      (Entity : not null access Aquarius_Syntax_Entity'Class;
       Visual : in out Komnenos.Entities.Visuals.Diagram_Visual'Class)
    is
+      use Ada.Strings.Unbounded;
       use Komnenos;
-      use all type Komnenos.Entities.Visuals.Node_Style;
+      use Komnenos.Entities.Visuals;
 
       Default_Style      : constant Komnenos.Styles.Komnenos_Style :=
                              Komnenos.Themes.Active_Theme.Default_Style;
@@ -126,10 +129,29 @@ package body Aquarius.Syntax.Komnenos_Entities is
 
       type Context_Type is
          record
-            X, Y   : Positive := 1;
-            Next_X : Positive := 1;
-            Next_Y : Positive := 1;
+            X, Y        : Positive := 1;
+            Next_X      : Positive := 1;
+            Next_Y      : Positive := 1;
+            Next_Intern : Positive := 1;
+            Prev_Intern : Natural := 0;
+            Prev_Key    : Unbounded_String;
+            First       : Boolean := True;
          end record;
+
+      function Get_Key (Name : String) return String
+      is (Get_Key
+          (Aquarius.Names.To_String (Entity.Grammar_Name),
+           Name));
+
+      procedure Put_Node
+        (Context     : in out Context_Type;
+         Name        : String;
+         Shape       : Node_Style;
+         Label_Text  : String := "";
+         Label_Style : Komnenos.Styles.Komnenos_Style := Default_Style;
+         Tool_Tip    : String := "";
+         Link        : access Komnenos.Entities.Root_Entity_Reference'Class
+         := null);
 
       procedure Put_Non_Terminal
         (Context   : in out Context_Type;
@@ -139,6 +161,19 @@ package body Aquarius.Syntax.Komnenos_Entities is
         (Context  : in out Context_Type;
          Terminal : Aquarius.Tokens.Token);
 
+      function Anchor_Name (Index : Positive) return String
+      is ("intern" & Integer'Image (-Index));
+
+      function Anchor_Key (Index : Positive) return String
+      is (Get_Key (Anchor_Name (Index)));
+
+      function Put_Anchor
+        (Context  : in out Context_Type)
+         return Positive;
+
+      procedure Connect
+        (From_Anchor, To_Anchor : Positive);
+
       procedure Render
         (Context : in out Context_Type;
          Syntax  : Syntax_Tree);
@@ -146,6 +181,84 @@ package body Aquarius.Syntax.Komnenos_Entities is
       procedure Render_Children
         (Context : in out Context_Type;
          Syntax  : Syntax_Tree);
+
+      -------------
+      -- Connect --
+      -------------
+
+      procedure Connect
+        (From_Anchor, To_Anchor : Positive)
+      is
+         From_Key : constant String := Anchor_Key (From_Anchor);
+         To_Key   : constant String := Anchor_Key (To_Anchor);
+      begin
+         Visual.Connect_Nodes
+           (From_Key  => From_Key,
+            From_Edge => Right,
+            To_Key    => To_Key,
+            To_Edge   => Left);
+      end Connect;
+
+      ----------------
+      -- Put_Anchor --
+      ----------------
+
+      function Put_Anchor
+        (Context  : in out Context_Type)
+         return Positive
+      is
+      begin
+         Put_Node (Context, Anchor_Name (Context.Next_Intern),
+                   Shape       => Internal);
+         Context.X := Context.X + 1;
+         Context.Next_Intern :=
+           Context.Next_Intern + 1;
+         return Context.Next_Intern - 1;
+      end Put_Anchor;
+
+      --------------
+      -- Put_Node --
+      --------------
+
+      procedure Put_Node
+        (Context     : in out Context_Type;
+         Name        : String;
+         Shape       : Node_Style;
+         Label_Text  : String := "";
+         Label_Style : Komnenos.Styles.Komnenos_Style := Default_Style;
+         Tool_Tip    : String := "";
+         Link        : access Komnenos.Entities.Root_Entity_Reference'Class
+         := null)
+      is
+         Key : constant String := Get_Key (Name);
+      begin
+         Visual.Put_Node
+           (Key         => Key,
+            X           => Context.X,
+            Y           => Context.Y,
+            Style       => Shape,
+            Label_Text  => Label_Text,
+            Label_Style => Label_Style,
+            Tool_Tip    => Tool_Tip,
+            Link        => Link);
+
+         if Context.First then
+            Visual.Connect_Nodes
+              ("in", Right, Key, Left);
+            Context.First := False;
+         end if;
+
+         Context.Next_X := Positive'Max (Context.Next_X, Context.X + 1);
+         Context.Next_Y := Positive'Max (Context.Next_Y, Context.Y + 1);
+
+         if Context.Prev_Key /= Null_Unbounded_String then
+            Visual.Connect_Nodes
+              (To_String (Context.Prev_Key), Right,
+               Key, Left);
+         end if;
+
+         Context.Prev_Key := To_Unbounded_String (Key);
+      end Put_Node;
 
       ----------------------
       -- Put_Non_Terminal --
@@ -155,22 +268,11 @@ package body Aquarius.Syntax.Komnenos_Entities is
         (Context   : in out Context_Type;
          Name      : String)
       is
-         Key : constant String :=
-                 Get_Key
-                   (Aquarius.Names.To_String (Entity.Grammar_Name),
-                    Name);
       begin
-         Visual.Put_Node
-           (Key         => Key,
-            X           => Context.X,
-            Y           => Context.Y,
-            Style       => Box,
-            Label_Text  => Name,
-            Label_Style => Non_Terminal_Style,
-            Tool_Tip    => "",
-            Link        => null);
-         Context.Next_X := Positive'Max (Context.Next_X, Context.X + 1);
-         Context.Next_Y := Positive'Max (Context.Next_Y, Context.Y + 1);
+         Put_Node (Context, Name,
+                   Shape       => Box,
+                   Label_Text  => Name,
+                   Label_Style => Non_Terminal_Style);
       end Put_Non_Terminal;
 
       ------------------
@@ -185,24 +287,15 @@ package body Aquarius.Syntax.Komnenos_Entities is
                    Aquarius.Tokens.Get_Name
                      (Entity.Syntax.Frame,
                       Terminal);
-         Key   : constant String :=
-                   Get_Key
-                     (Aquarius.Names.To_String (Entity.Grammar_Name),
-                      Label);
       begin
-         Visual.Put_Node
-           (Key         => Key,
-            X           => Context.X,
-            Y           => Context.Y,
-            Style       => Rounded_Box,
-            Label_Text  => Label,
-            Label_Style =>
-              (if Aquarius.Tokens.Is_Reserved
-                   (Entity.Syntax.Frame, Terminal)
-               then Keyword_Style
-               else Default_Style),
-            Tool_Tip    => "",
-            Link        => null);
+         Put_Node (Context, Label,
+                   Shape       => Rounded_Box,
+                   Label_Text  => Label,
+                   Label_Style =>
+                     (if Aquarius.Tokens.Is_Reserved
+                        (Entity.Syntax.Frame, Terminal)
+                      then Keyword_Style
+                      else Default_Style));
       end Put_Terminal;
 
       ------------
@@ -214,6 +307,7 @@ package body Aquarius.Syntax.Komnenos_Entities is
          Syntax  : Syntax_Tree)
       is
          Old_Context : constant Context_Type := Context;
+         Out_Node    : Natural := 0;
       begin
          if Syntax /= Entity.Syntax
            and then Syntax.Syntax_Class /= Terminal
@@ -221,7 +315,10 @@ package body Aquarius.Syntax.Komnenos_Entities is
          then
             Put_Non_Terminal (Context, Syntax.Name);
          elsif Syntax.Syntax_Class = Choice then
+
             for I in 1 .. Syntax.Child_Count loop
+
+               Context.Prev_Key := Old_Context.Prev_Key;
                declare
                   Child : constant Syntax_Tree :=
                             Syntax.Syntax_Child (I);
@@ -232,9 +329,21 @@ package body Aquarius.Syntax.Komnenos_Entities is
                      Render (Context, Child);
                   end if;
                end;
-               Context.Y := Context.Next_Y;
+
+               if I = 1 then
+                  Out_Node := Put_Anchor (Context);
+               end if;
+
+               Context.Y := Context.Next_Y + 1;
                Context.X := Old_Context.X;
+
+               Visual.Connect_Nodes
+                 (To_String (Context.Prev_Key), Right,
+                  Anchor_Key (Out_Node), Left);
+
             end loop;
+
+            Context.Prev_Key := To_Unbounded_String (Anchor_Key (Out_Node));
 
          elsif Syntax.Syntax_Class = Terminal then
             Put_Terminal (Context, Syntax.Token);
@@ -256,24 +365,29 @@ package body Aquarius.Syntax.Komnenos_Entities is
       begin
          for I in 1 .. Syntax.Child_Count loop
             declare
-               Child : constant Syntax_Tree :=
-                         Syntax.Syntax_Child (I);
+               Child    : constant Syntax_Tree :=
+                            Syntax.Syntax_Child (I);
+               In_Node  : Natural := 0;
+               Out_Node : Natural := 0;
             begin
---                 if Child.Optional then
---                    if Child.Repeatable then
---                       Put (Context, " {", Punctuation_Style);
---                    else
---                       Put (Context, " [", Punctuation_Style);
---                    end if;
---                    Context.Need_Space := True;
---                 elsif Child.Repeatable then
---                    Put (Context, " <", Punctuation_Style);
---                    Context.Need_Space := True;
---                 end if;
+               if Child.Optional or else Child.Repeatable then
+                  In_Node := Put_Anchor (Context);
+               end if;
 
                Render (Context, Child);
+
                Context.X := Context.Next_X;
                Context.Y := Start_Context.Y;
+
+               if Child.Optional or else Child.Repeatable then
+                  Out_Node := Put_Anchor (Context);
+                  if Child.Optional then
+                     Connect (In_Node, Out_Node);
+                  end if;
+                  if Child.Repeatable then
+                     Connect (Out_Node, In_Node);
+                  end if;
+               end if;
 
 --                 if Child.Has_Separator then
 --                    Put (Context, " / " & Child.Separator.Text,
@@ -304,7 +418,7 @@ package body Aquarius.Syntax.Komnenos_Entities is
         (Key         => "in",
          X           => 1,
          Y           => 1,
-         Style       => Small_Circle,
+         Style       => Circle,
          Label_Text  => "",
          Label_Style => Default_Style,
          Tool_Tip    => "",
@@ -318,12 +432,15 @@ package body Aquarius.Syntax.Komnenos_Entities is
         (Key         => "out",
          X           => Context.Next_X + 1,
          Y           => 1,
-         Style       => Small_Circle,
+         Style       => Circle,
          Label_Text  => "",
          Label_Style => Default_Style,
          Tool_Tip    => "",
          Link        => null);
 
+      Visual.Connect_Nodes
+        (To_String (Context.Prev_Key), Right,
+         "out", Left);
    end Render_Diagram;
 
    -----------------
