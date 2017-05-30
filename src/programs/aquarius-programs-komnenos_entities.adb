@@ -12,7 +12,7 @@ with Aquarius.Programs.Parser;
 with Aquarius.Rendering.Komnenos_Renderer;
 with Aquarius.Trees.Cursors;
 
-with Komnenos.Entities.Visuals;
+with Komnenos.Entities.Visual_Manager;
 with Komnenos.Fragments;
 with Komnenos.Themes;
 with Komnenos.UI;
@@ -306,7 +306,7 @@ package body Aquarius.Programs.Komnenos_Entities is
         not Aquarius.Programs.Parser.Is_Ambiguous
           (Entity.Parse_Context)
       then
-         Komnenos.Entities.Visuals.Invalidate_Visuals (Entity.all);
+         Komnenos.Entities.Visual_Manager.Invalidate_Visuals (Entity.all);
          Echo := False;
          Ada.Text_IO.Put_Line ("after check_token: " & Entity.Show_Buffer);
 
@@ -493,9 +493,9 @@ package body Aquarius.Programs.Komnenos_Entities is
            Entity.Cursors (Point) - Length;
 
          if Needs_Render then
-            Komnenos.Entities.Visuals.Invalidate_Visuals (Entity);
+            Komnenos.Entities.Visual_Manager.Invalidate_Visuals (Entity);
          else
-            Komnenos.Entities.Visuals.Delete_At_Cursor
+            Komnenos.Entities.Visual_Manager.Delete_At_Cursor
               (Entity, Point, -Length);
          end if;
 
@@ -789,7 +789,7 @@ package body Aquarius.Programs.Komnenos_Entities is
       begin
          Entity.Check_Token (False, Echo);
          if Echo then
-            Komnenos.Entities.Visuals.Insert_At_Cursor
+            Komnenos.Entities.Visual_Manager.Insert_At_Cursor
               (Entity, Komnenos.Point, (1 => Ch));
 
             if Ch = Character'Val (10) then
@@ -820,7 +820,7 @@ package body Aquarius.Programs.Komnenos_Entities is
                   Entity.Buffer_Offset := Text_Offset (New_Indent);
                   Entity.Edit_Buffer :=
                     Entity.Edit_Buffer & Spaces;
-                  Komnenos.Entities.Visuals.Insert_At_Cursor
+                  Komnenos.Entities.Visual_Manager.Insert_At_Cursor
                     (Entity, Point, Spaces);
                end;
             end if;
@@ -879,7 +879,7 @@ package body Aquarius.Programs.Komnenos_Entities is
          Entity.Edit_Buffer :=
            Ada.Strings.Unbounded.To_Unbounded_String
              (' ' & Spaces);
-         Komnenos.Entities.Visuals.Insert_At_Cursor
+         Komnenos.Entities.Visual_Manager.Insert_At_Cursor
            (Entity, Komnenos.Point, Character'Val (10) & Spaces);
       end;
 
@@ -894,7 +894,7 @@ package body Aquarius.Programs.Komnenos_Entities is
 --                Aquarius.Programs.Program_Tree
 --                  (Aquarius.Trees.Cursors.Get_Right_Tree (Cursor));
 --              Program.Set_Vertical_Gap_Before (1);
---              Komnenos.Entities.Visuals.Invalidate_Visuals (Item);
+--              Komnenos.Entities.Visual_Manager.Invalidate_Visuals (Item);
 --           end if;
 --        end;
    end Insert_New_Line;
@@ -1143,7 +1143,7 @@ package body Aquarius.Programs.Komnenos_Entities is
 --      Entity.Table := Entity_Table_Access (Table);
 --        Fragment.Set_Entity_Key (Key (Entity.all));
 --        Fragment.Set_Content (Entity);
-      Komnenos.Entities.Visuals.Bind_Visual (Fragment, Entity);
+      Komnenos.Entities.Visual_Manager.Bind_Visual (Fragment, Entity);
 
       Root_Aquarius_Source_Entity'Class (Entity.all).Render (Fragment);
 
