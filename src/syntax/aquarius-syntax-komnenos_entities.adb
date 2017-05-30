@@ -1,5 +1,7 @@
 with Komnenos.Entities.Visuals;
+with Komnenos.Entities.Visual_Manager;
 with Komnenos.Fragments;
+with Komnenos.Fragments.Diagrams;
 with Komnenos.Styles;
 with Komnenos.Themes;
 with Komnenos.UI;
@@ -43,6 +45,14 @@ package body Aquarius.Syntax.Komnenos_Entities is
      (Entity : not null access Aquarius_Syntax_Entity;
       Visual : not null access Komnenos.Entities.Entity_Visual'Class);
 
+   procedure Render_Text
+     (Entity : not null access Aquarius_Syntax_Entity'Class;
+      Visual : in out Komnenos.Entities.Text_Entity_Visual'Class);
+
+   procedure Render_Diagram
+     (Entity : not null access Aquarius_Syntax_Entity'Class;
+      Visual : in out Komnenos.Entities.Visuals.Diagram_Visual'Class);
+
    -----------------------------------
    -- Create_Aquarius_Syntax_Entity --
    -----------------------------------
@@ -80,11 +90,233 @@ package body Aquarius.Syntax.Komnenos_Entities is
      (Entity : not null access Aquarius_Syntax_Entity;
       Visual : not null access Komnenos.Entities.Entity_Visual'Class)
    is
-      use Komnenos;
+   begin
+      if Visual.all in Komnenos.Entities.Text_Entity_Visual'Class then
+         Render_Text
+           (Entity,
+            Komnenos.Entities.Text_Entity_Visual'Class (Visual.all));
+      elsif Visual.all in
+        Komnenos.Entities.Visuals.Diagram_Visual'Class
+      then
+         Render_Diagram
+           (Entity,
+            Komnenos.Entities.Visuals.Diagram_Visual (Visual.all));
+      end if;
+   end Render;
 
-      Text_Visual        : constant access
-        Komnenos.Entities.Text_Entity_Visual'Class :=
-          Komnenos.Entities.Text_Entity_Visual'Class (Visual.all)'Access;
+   --------------------
+   -- Render_Diagram --
+   --------------------
+
+   procedure Render_Diagram
+     (Entity : not null access Aquarius_Syntax_Entity'Class;
+      Visual : in out Komnenos.Entities.Visuals.Diagram_Visual'Class)
+   is
+      use Komnenos;
+      use all type Komnenos.Entities.Visuals.Node_Style;
+
+      Default_Style      : constant Komnenos.Styles.Komnenos_Style :=
+                             Komnenos.Themes.Active_Theme.Default_Style;
+      Keyword_Style      : constant Komnenos.Styles.Komnenos_Style :=
+                             Komnenos.Themes.Active_Theme.Style
+                               ("reserved_identifier");
+      Non_Terminal_Style : constant Komnenos.Styles.Komnenos_Style :=
+                             Komnenos.Themes.Active_Theme.Style
+                               ("italic");
+
+      type Context_Type is
+         record
+            X, Y   : Positive := 1;
+            Next_X : Positive := 1;
+            Next_Y : Positive := 1;
+         end record;
+
+      procedure Put_Non_Terminal
+        (Context   : in out Context_Type;
+         Name      : String);
+
+      procedure Put_Terminal
+        (Context  : in out Context_Type;
+         Terminal : Aquarius.Tokens.Token);
+
+      procedure Render
+        (Context : in out Context_Type;
+         Syntax  : Syntax_Tree);
+
+      procedure Render_Children
+        (Context : in out Context_Type;
+         Syntax  : Syntax_Tree);
+
+      ----------------------
+      -- Put_Non_Terminal --
+      ----------------------
+
+      procedure Put_Non_Terminal
+        (Context   : in out Context_Type;
+         Name      : String)
+      is
+         Key : constant String :=
+                 Get_Key
+                   (Aquarius.Names.To_String (Entity.Grammar_Name),
+                    Name);
+      begin
+         Visual.Put_Node
+           (Key         => Key,
+            X           => Context.X,
+            Y           => Context.Y,
+            Style       => Box,
+            Label_Text  => Name,
+            Label_Style => Non_Terminal_Style,
+            Tool_Tip    => "",
+            Link        => null);
+         Context.Next_X := Positive'Max (Context.Next_X, Context.X + 1);
+         Context.Next_Y := Positive'Max (Context.Next_Y, Context.Y + 1);
+      end Put_Non_Terminal;
+
+      ------------------
+      -- Put_Terminal --
+      ------------------
+
+      procedure Put_Terminal
+        (Context  : in out Context_Type;
+         Terminal : Aquarius.Tokens.Token)
+      is
+         Label : constant String :=
+                   Aquarius.Tokens.Get_Name
+                     (Entity.Syntax.Frame,
+                      Terminal);
+         Key   : constant String :=
+                   Get_Key
+                     (Aquarius.Names.To_String (Entity.Grammar_Name),
+                      Label);
+      begin
+         Visual.Put_Node
+           (Key         => Key,
+            X           => Context.X,
+            Y           => Context.Y,
+            Style       => Rounded_Box,
+            Label_Text  => Label,
+            Label_Style =>
+              (if Aquarius.Tokens.Is_Reserved
+                   (Entity.Syntax.Frame, Terminal)
+               then Keyword_Style
+               else Default_Style),
+            Tool_Tip    => "",
+            Link        => null);
+      end Put_Terminal;
+
+      ------------
+      -- Render --
+      ------------
+
+      procedure Render
+        (Context : in out Context_Type;
+         Syntax  : Syntax_Tree)
+      is
+         Old_Context : constant Context_Type := Context;
+      begin
+         if Syntax /= Entity.Syntax
+           and then Syntax.Syntax_Class /= Terminal
+           and then Syntax.Name /= ""
+         then
+            Put_Non_Terminal (Context, Syntax.Name);
+         elsif Syntax.Syntax_Class = Choice then
+            for I in 1 .. Syntax.Child_Count loop
+               declare
+                  Child : constant Syntax_Tree :=
+                            Syntax.Syntax_Child (I);
+               begin
+                  if Child.Text /= "" then
+                     Put_Non_Terminal (Context, Child.Text);
+                  else
+                     Render (Context, Child);
+                  end if;
+               end;
+               Context.Y := Context.Next_Y;
+               Context.X := Old_Context.X;
+            end loop;
+
+         elsif Syntax.Syntax_Class = Terminal then
+            Put_Terminal (Context, Syntax.Token);
+         else
+            Render_Children (Context, Syntax);
+         end if;
+
+      end Render;
+
+      ---------------------
+      -- Render_Children --
+      ---------------------
+
+      procedure Render_Children
+        (Context : in out Context_Type;
+         Syntax  : Syntax_Tree)
+      is
+      begin
+         for I in 1 .. Syntax.Child_Count loop
+            declare
+               Child : constant Syntax_Tree :=
+                         Syntax.Syntax_Child (I);
+            begin
+--                 if Child.Optional then
+--                    if Child.Repeatable then
+--                       Put (Context, " {", Punctuation_Style);
+--                    else
+--                       Put (Context, " [", Punctuation_Style);
+--                    end if;
+--                    Context.Need_Space := True;
+--                 elsif Child.Repeatable then
+--                    Put (Context, " <", Punctuation_Style);
+--                    Context.Need_Space := True;
+--                 end if;
+
+               Render (Context, Child);
+
+--                 if Child.Has_Separator then
+--                    Put (Context, " / " & Child.Separator.Text,
+--                         Punctuation_Style);
+--                 end if;
+--
+--                 if Child.Optional then
+--                    if Child.Repeatable then
+--                       Put (Context, " }", Punctuation_Style);
+--                    else
+--                       Put (Context, " ]", Punctuation_Style);
+--                    end if;
+--                    Context.Need_Space := True;
+--                 elsif Child.Repeatable then
+--                    Put (Context, " >", Punctuation_Style);
+--                    Context.Need_Space := True;
+--                 end if;
+            end;
+         end loop;
+      end Render_Children;
+
+      Context : Context_Type;
+
+   begin
+      Visual.Clear;
+      Render (Context, Entity.Syntax);
+      Visual.Put_Node
+        (Key         => "in",
+         X           => 1,
+         Y           => 1,
+         Style       => Small_Circle,
+         Label_Text  => "",
+         Label_Style => null,
+         Tool_Tip    => "",
+         Link        => null);
+   end Render_Diagram;
+
+   -----------------
+   -- Render_Text --
+   -----------------
+
+   procedure Render_Text
+     (Entity : not null access Aquarius_Syntax_Entity'Class;
+      Visual : in out Komnenos.Entities.Text_Entity_Visual'Class)
+   is
+      use Komnenos;
 
       Default_Style      : constant Komnenos.Styles.Komnenos_Style :=
                              Komnenos.Themes.Active_Theme.Default_Style;
@@ -131,7 +363,7 @@ package body Aquarius.Syntax.Komnenos_Entities is
         (Context : in out Context_Type)
       is
       begin
-         Text_Visual.New_Line;
+         Visual.New_Line;
          Context.Need_Space := False;
          Context.Col := Context.Indent;
          if Context.Indent > 1 then
@@ -162,11 +394,11 @@ package body Aquarius.Syntax.Komnenos_Entities is
            and then Text /= ""
            and then Text (Text'First) /= ' '
          then
-            Text_Visual.Put (" ", Style, "", null);
+            Visual.Put (" ", Style, "", null);
             Context.Col := Context.Col + 1;
          end if;
          Context.Need_Space := False;
-         Text_Visual.Put (Text, Style, "", Reference);
+         Visual.Put (Text, Style, "", Reference);
          Context.Col := Context.Col + Text'Length;
       end Put;
 
@@ -289,7 +521,7 @@ package body Aquarius.Syntax.Komnenos_Entities is
    begin
       Visual.Clear;
       Render (Context, Entity.Syntax);
-   end Render;
+   end Render_Text;
 
    -------------------
    -- Select_Entity --
@@ -304,11 +536,13 @@ package body Aquarius.Syntax.Komnenos_Entities is
    is
       Fragment : constant Komnenos.Fragments.Fragment_Type :=
                    (if Visual = null
-                    then Komnenos.Fragments.New_Text_Fragment (Entity)
+                    then Komnenos.Fragments.Fragment_Type
+                      (Komnenos.Fragments.Diagrams.New_Diagram
+                         (Entity))
                     else Komnenos.Fragments.Fragment_Type (Visual));
       pragma Unreferenced (Table);
    begin
-      Komnenos.Entities.Visuals.Bind_Visual (Fragment, Entity);
+      Komnenos.Entities.Visual_Manager.Bind_Visual (Fragment, Entity);
       Entity.Render (Fragment);
 
       if Visual = null then
