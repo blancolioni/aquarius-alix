@@ -252,6 +252,7 @@ package body Aquarius.Syntax.Komnenos_Entities is
         (Context : in out Context_Type;
          Syntax  : Syntax_Tree)
       is
+         Start_Context : constant Context_Type := Context;
       begin
          for I in 1 .. Syntax.Child_Count loop
             declare
@@ -271,6 +272,8 @@ package body Aquarius.Syntax.Komnenos_Entities is
 --                 end if;
 
                Render (Context, Child);
+               Context.X := Context.Next_X;
+               Context.Y := Start_Context.Y;
 
 --                 if Child.Has_Separator then
 --                    Put (Context, " / " & Child.Separator.Text,
