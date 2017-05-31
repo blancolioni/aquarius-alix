@@ -425,6 +425,8 @@ package body Aquarius.Syntax.Komnenos_Entities is
          Link        => null);
       Context.X := 2;
       Context.Next_X := 2;
+      Context.Prev_Key :=
+        Ada.Strings.Unbounded.To_Unbounded_String ("in");
 
       Render (Context, Entity.Syntax);
 
