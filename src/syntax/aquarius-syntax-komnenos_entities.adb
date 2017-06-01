@@ -331,11 +331,15 @@ package body Aquarius.Syntax.Komnenos_Entities is
             declare
                Child    : constant Syntax_Tree :=
                             Syntax.Syntax_Child (I);
-               In_Node  : Node_Reference;
-               Out_Node : Node_Reference;
+               Optional_In, Optional_Out : Node_Reference;
+               Repeat_In, Repeat_Out     : Node_Reference;
             begin
-               if Child.Optional or else Child.Repeatable then
-                  In_Node := Put_Anchor (Context);
+               if Child.Optional then
+                  Optional_In := Put_Anchor (Context);
+               end if;
+
+               if Child.Repeatable then
+                  Repeat_In := Put_Anchor (Context);
                end if;
 
                Render (Context, Child);
@@ -343,14 +347,14 @@ package body Aquarius.Syntax.Komnenos_Entities is
                Context.X := Context.Next_X;
                Context.Y := Start_Context.Y;
 
-               if Child.Optional or else Child.Repeatable then
-                  Out_Node := Put_Anchor (Context);
-                  if Child.Optional then
-                     Connect (In_Node, Out_Node);
-                  end if;
-                  if Child.Repeatable then
-                     Connect (Out_Node, In_Node);
-                  end if;
+               if Child.Repeatable then
+                  Repeat_Out := Put_Anchor (Context);
+                  Connect (Repeat_Out, Repeat_In);
+               end if;
+
+               if Child.Optional then
+                  Optional_Out := Put_Anchor (Context);
+                  Connect (Optional_In, Optional_Out);
                end if;
 
 --                 if Child.Has_Separator then
