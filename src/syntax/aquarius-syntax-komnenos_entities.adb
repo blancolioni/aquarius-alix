@@ -237,7 +237,12 @@ package body Aquarius.Syntax.Komnenos_Entities is
          Put_Node (Context,
                    Shape       => Box,
                    Label_Text  => Name,
-                   Label_Style => Non_Terminal_Style);
+                   Label_Style => Non_Terminal_Style,
+                   Link        =>
+                     Komnenos.UI.Current_UI.Get
+                       (Get_Key
+                          (Aquarius.Names.To_String (Entity.Grammar_Name),
+                           Name)));
       end Put_Non_Terminal;
 
       ------------------
