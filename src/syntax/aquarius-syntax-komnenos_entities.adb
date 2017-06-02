@@ -297,13 +297,13 @@ package body Aquarius.Syntax.Komnenos_Entities is
 
                if I = 1 then
                   Out_Node := Put_Anchor (Context);
+               else
+                  Visual.Connect_Nodes
+                    (Context.Prev_Node, Right, Out_Node, Left);
                end if;
 
                Context.Y := Context.Next_Y + 1;
                Context.X := Old_Context.X;
-
-               Visual.Connect_Nodes
-                 (Context.Prev_Node, Right, Out_Node, Left);
 
             end loop;
 
