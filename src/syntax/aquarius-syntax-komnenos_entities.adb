@@ -132,6 +132,7 @@ package body Aquarius.Syntax.Komnenos_Entities is
             In_Node     : Node_Reference;
             Prev_Node   : Node_Reference;
             Out_Node    : Node_Reference;
+            Tree        : Syntax_Tree;
          end record;
 
       procedure Put_Node

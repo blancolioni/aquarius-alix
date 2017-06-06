@@ -323,7 +323,6 @@ package body Aquarius.Programs.Komnenos_Entities is
         Komnenos.Entities.Entity_Table_Interface'Class;
       Name             : String;
       File_Name        : String;
-      Class            : String;
       Top_Level        : Boolean;
       Compilation_Unit : not null access Program_Tree_Type'Class;
       Defining_Name    : not null access Program_Tree_Type'Class;
@@ -331,7 +330,6 @@ package body Aquarius.Programs.Komnenos_Entities is
       Entity_Body      : access Program_Tree_Type'Class)
       return Komnenos.Entities.Entity_Reference
    is
-      pragma Unreferenced (Class);
       Key : constant String :=
               Get_Key (File_Name,
                        Defining_Name.Source_Line,
@@ -1273,7 +1271,6 @@ package body Aquarius.Programs.Komnenos_Entities is
          Name             => Grammar.Name,
          File_Name        =>
            Aquarius.Names.To_String (Syntax.Source_File_Name),
-         Class            => "syntax",
          Top_Level        => False,
          Compilation_Unit => Syntax,
          Defining_Name    => Syntax,
