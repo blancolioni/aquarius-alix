@@ -15,12 +15,16 @@ format actual_argument_list soft_new_line
 
 format ';' no_space_before
 format '.' no_space_before no_space_after
-format '(' space_before no_space_after
+format '(' space_before no_space_after soft_new_line_before
 format ')' no_space_before space_after
 format ',' no_space_before space_after
 format ':=' space_before space_after soft_new_line
+format '/' no_space_before no_space_after
+format '^' no_space_before no_space_after
 
 format 'is' new_line_after
+
+format statement new_line_before
 
 compilation_unit ::= sequence_of_top_level_declarations
 
