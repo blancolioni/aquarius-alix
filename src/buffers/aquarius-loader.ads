@@ -23,6 +23,12 @@ package Aquarius.Loader is
    --     UI - console
 
    function Load_From_File
+     (Path       : in     String)
+      return Aquarius.Programs.Program_Tree;
+   --  Load file using default project, interactor and UI.
+   --  Infer grammar from path extension
+
+   function Load_From_File
      (Grammar    : in     Aquarius.Grammars.Aquarius_Grammar;
       Project    : not null access Programs.Root_Program_Tree_Store'Class;
       UI         : Aquarius.UI.Aquarius_UI;

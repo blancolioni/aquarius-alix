@@ -6,6 +6,7 @@ with Ada.Text_IO;
 
 with Aquarius.Config_Paths;
 with Aquarius.Errors;
+with Aquarius.Grammars.Manager;
 with Aquarius.Programs.Parser;
 with Aquarius.Projects;
 with Aquarius.Source;
@@ -460,6 +461,19 @@ package body Aquarius.Loader is
          Interactor => Interaction.Console.Console_Interactor,
          UI         => UI,
          Path       => Path);
+   end Load_From_File;
+
+   --------------------
+   -- Load_From_File --
+   --------------------
+
+   function Load_From_File
+     (Path       : in     String)
+      return Aquarius.Programs.Program_Tree
+   is
+   begin
+      return Load_From_File
+        (Aquarius.Grammars.Manager.Get_Grammar_For_File (Path), Path);
    end Load_From_File;
 
 end Aquarius.Loader;
