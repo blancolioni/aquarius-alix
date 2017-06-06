@@ -102,7 +102,6 @@ package body Aquarius.Grammars.UI is
       end Get_Action_Name;
 
    begin
-      pragma Unreferenced (Grammar);
       for Action_Tree of Actions loop
          declare
             use Aquarius.Programs;
@@ -130,6 +129,8 @@ package body Aquarius.Grammars.UI is
          begin
             Ada.Text_IO.Put_Line ("action: " & Entity.Name
                                   & " [" & Key & "]");
+            Grammar.Action_Entities.Insert
+              (Key, Entity);
          end;
       end loop;
    end Bind_Action_File;

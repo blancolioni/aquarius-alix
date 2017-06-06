@@ -1,3 +1,5 @@
+with Ada.Text_IO;
+
 with Komnenos.Entities.Visuals;
 with Komnenos.Entities.Visual_Manager;
 with Komnenos.Fragments;
@@ -7,6 +9,8 @@ with Komnenos.Themes;
 with Komnenos.UI;
 
 with Aquarius.Config_Paths;
+with Aquarius.Grammars;
+with Aquarius.Grammars.Manager;
 
 package body Aquarius.Syntax.Komnenos_Entities is
 
@@ -19,8 +23,8 @@ package body Aquarius.Syntax.Komnenos_Entities is
    type Aquarius_Syntax_Entity is
      new Komnenos.Entities.Root_Entity_Reference with
       record
-         Grammar_Name : Aquarius.Names.Aquarius_Name;
-         Syntax       : Syntax_Tree;
+         Grammar : Aquarius.Grammars.Aquarius_Grammar;
+         Syntax  : Syntax_Tree;
       end record;
 
    overriding function Top_Level
@@ -31,7 +35,7 @@ package body Aquarius.Syntax.Komnenos_Entities is
    overriding function Key
      (Item : Aquarius_Syntax_Entity)
       return String
-   is (Get_Key (Aquarius.Names.To_String (Item.Grammar_Name),
+   is (Get_Key (Item.Grammar.Name,
                 Item.Syntax.Name));
 
    overriding procedure Select_Entity
@@ -76,7 +80,9 @@ package body Aquarius.Syntax.Komnenos_Entities is
          Display_Text => Tree.Name,
          Description  => Path);
 
-      Entity.Grammar_Name := Aquarius.Names.To_Aquarius_Name (Grammar_Name);
+      Entity.Grammar :=
+        Aquarius.Grammars.Manager.Get_Grammar
+          (Grammar_Name);
       Entity.Syntax := Tree;
       Table.Add_Entity
         (Entity.Key, new Aquarius_Syntax_Entity'(Entity));
@@ -132,6 +138,8 @@ package body Aquarius.Syntax.Komnenos_Entities is
             In_Node     : Node_Reference;
             Prev_Node   : Node_Reference;
             Out_Node    : Node_Reference;
+            Before_Node : Node_Reference;
+            After_Node  : Node_Reference;
             Tree        : Syntax_Tree;
          end record;
 
@@ -242,7 +250,7 @@ package body Aquarius.Syntax.Komnenos_Entities is
                    Link        =>
                      Komnenos.UI.Current_UI.Get
                        (Get_Key
-                          (Aquarius.Names.To_String (Entity.Grammar_Name),
+                          (Entity.Grammar.Name,
                            Name)));
       end Put_Non_Terminal;
 
@@ -408,6 +416,46 @@ package body Aquarius.Syntax.Komnenos_Entities is
            Tool_Tip    => "",
            Link        => null);
 
+      declare
+
+         procedure Render_Top_Actions
+           (Group : Aquarius.Actions.Action_Group);
+
+         ------------------------
+         -- Render_Top_Actions --
+         ------------------------
+
+         procedure Render_Top_Actions
+           (Group : Aquarius.Actions.Action_Group)
+         is
+            use type Komnenos.Entities.Entity_Reference;
+            Before : constant Komnenos.Entities.Entity_Reference :=
+                       Entity.Grammar.Action_Entity
+                         (Group       => Group,
+                          Position    => Aquarius.Actions.Before_Node,
+                          Parent_Name => Entity.Syntax.Name);
+         begin
+            if Before /= null then
+               Ada.Text_IO.Put_Line
+                 ("render: before node: " & Entity.Name);
+               Context.Before_Node :=
+                 Visual.Put_Sub_Node
+                   (Parent      => Context.In_Node,
+                    Anchor      => Left,
+                    Visibility  => Always_Visible,
+                    Style       => Box,
+                    Label_Text  => "",
+                    Label_Style => null,
+                    Tool_Tip    => "",
+                    Link        => Before);
+            end if;
+         end Render_Top_Actions;
+
+      begin
+         Entity.Grammar.Scan_Action_Groups
+           (Render_Top_Actions'Access);
+      end;
+
       Context.X := 2;
       Context.Next_X := 2;
       Context.Prev_Node := Context.In_Node;
@@ -532,7 +580,7 @@ package body Aquarius.Syntax.Komnenos_Entities is
             Put (Context, Syntax.Name, Non_Terminal_Style,
                  Komnenos.UI.Current_UI.Get
                    (Get_Key
-                      (Aquarius.Names.To_String (Entity.Grammar_Name),
+                      (Entity.Grammar.Name,
                        Syntax.Name)));
             Context.Need_Space := True;
 
