@@ -131,11 +131,19 @@ after relation/relational_operator do
    parent.current_op := child.choice;
 end;
 
-after primary/name
-   or factor/primary
-   or simple_expression/term
-   or expression/relation
-do
+after primary/name do
+   tree.join_fragment (child);
+end;
+
+after factor/primary do
+   tree.join_fragment (child);
+end;
+
+after simple_expression/term do
+   tree.join_fragment (child);
+end;
+
+after expression/relation do
    tree.join_fragment (child);
 end;
 
