@@ -140,6 +140,11 @@ package Aquarius.Grammars is
    --  action group always runs in isolation and to completion on the
    --  entire tree before the next one the in trigger set starts.
 
+   procedure Scan_Action_Groups
+     (Grammar : Aquarius_Grammar_Record'Class;
+      Process : not null access
+        procedure (Group : Aquarius.Actions.Action_Group));
+
    function Significant_End_Of_Line
      (Grammar : Aquarius_Grammar_Record)
       return Boolean;
@@ -167,7 +172,7 @@ package Aquarius.Grammars is
       Group       : Aquarius.Actions.Action_Group;
       Position    : Aquarius.Actions.Action_Position;
       Parent_Name : String;
-      Child_Name  : String)
+      Child_Name  : String := "")
       return Komnenos.Entities.Entity_Reference;
 
    not overriding

@@ -15,7 +15,7 @@ package body  Aquarius.Grammars is
       Group       : Aquarius.Actions.Action_Group;
       Position    : Aquarius.Actions.Action_Position;
       Parent_Name : String;
-      Child_Name  : String)
+      Child_Name  : String := "")
       return Komnenos.Entities.Entity_Reference
    is
       Key : constant String :=
@@ -24,10 +24,11 @@ package body  Aquarius.Grammars is
                    Aquarius.Actions.Action_Group_Name
                    (Group),
                  Position_Name =>
-                   Aquarius.Actions.Show (Position),
+                   Aquarius.Actions.Key (Position),
                  Parent_Name   => Parent_Name,
                  Child_Name    => Child_Name);
    begin
+      Ada.Text_IO.Put_Line ("action entity: " & Key);
       if Grammar.Action_Entities.Contains (Key) then
          return Grammar.Action_Entities.Element (Key);
       else
@@ -849,6 +850,22 @@ package body  Aquarius.Grammars is
         (Grammar.Action_Groups, Aquarius.Actions.Parse_Trigger,
          Run_Group_Actions'Access);
    end Run_Parse_Actions;
+
+   ------------------------
+   -- Scan_Action_Groups --
+   ------------------------
+
+   procedure Scan_Action_Groups
+     (Grammar : Aquarius_Grammar_Record'Class;
+      Process : not null access
+        procedure (Group : Aquarius.Actions.Action_Group))
+   is
+   begin
+      for Trigger in Aquarius.Actions.Action_Execution_Trigger loop
+         Aquarius.Actions.Iterate
+           (Grammar.Action_Groups, Trigger, Process);
+      end loop;
+   end Scan_Action_Groups;
 
    -----------------------------
    -- Significant_End_Of_Line --

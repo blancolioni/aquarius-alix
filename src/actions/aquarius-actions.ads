@@ -58,6 +58,7 @@ package Aquarius.Actions is
    function Before_Node return Action_Position;
    function After_Node return Action_Position;
    function Show (Position : Action_Position) return String;
+   function Key (Position : Action_Position) return String;
 
    type Action_Group is private;
 
@@ -229,5 +230,10 @@ private
    type Action_Source_Access is access all Action_Source'Class;
 
    type Action_Context is array (Positive range <>) of Action_Source_Access;
+
+   function Key (Position : Action_Position) return String
+   is (case Position.Pos_Type is
+          when Before => "before",
+          when After => "after");
 
 end Aquarius.Actions;
