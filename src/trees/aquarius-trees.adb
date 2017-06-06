@@ -348,6 +348,20 @@ package body Aquarius.Trees is
       return Item.Children.Element (Index);
    end Child;
 
+   -----------
+   -- Child --
+   -----------
+
+   function Child
+     (Top  : not null access Root_Tree_Type'Class;
+      Path : String)
+      return Tree
+   is
+      Cs : constant Array_Of_Trees := Children (Top, Path);
+   begin
+      return Cs (Cs'First);
+   end Child;
+
    -----------------
    -- Child_Count --
    -----------------
@@ -356,6 +370,127 @@ package body Aquarius.Trees is
    begin
       return Item.Children.Last_Index;
    end Child_Count;
+
+   --------------
+   -- Children --
+   --------------
+
+   function Children
+     (Top  : not null access Root_Tree_Type'Class;
+      Path : String)
+      return Array_Of_Trees
+   is
+      use Ada.Strings.Fixed;
+      Start   : Natural := Path'First;
+      Current : Tree_Vectors.Vector;
+      Empty   : Array_Of_Trees (1 .. 0);
+
+      function Find_Named_Children
+        (T    : Tree;
+         Name : String)
+         return Array_Of_Trees;
+
+      -------------------------
+      -- Find_Named_Children --
+      -------------------------
+
+      function Find_Named_Children
+        (T    : Tree;
+         Name : String)
+         return Array_Of_Trees
+      is
+
+         function Find_Children
+           (T     : Tree;
+            Index : Positive)
+         return Array_Of_Trees;
+
+         -------------------
+         -- Find_Children --
+         -------------------
+
+         function Find_Children
+           (T     : Tree;
+            Index : Positive)
+         return Array_Of_Trees
+         is
+         begin
+            if Index > T.Child_Count then
+               return Empty;
+            else
+               return Find_Named_Children (T.Child (Index), Name)
+                 & Find_Children (T, Index + 1);
+            end if;
+         end Find_Children;
+
+         Tree_Name : constant String := T.Name;
+
+      begin
+         if Tree_Name = "" then
+            return Find_Children (T, 1);
+         elsif Tree_Name = Name then
+            return (1 => T);
+         else
+            return Empty;
+         end if;
+      end Find_Named_Children;
+
+   begin
+
+      for I in 1 .. Top.Child_Count loop
+         Current.Append (Top.Child (I));
+      end loop;
+
+      while Start > 0 loop
+         declare
+            Next         : constant Natural :=
+                             Index (Path, "/", Start);
+            Element      : constant String :=
+                             (if Next = 0
+                              then Path (Start .. Path'Last)
+                              else Path (Start .. Next - 1));
+            Next_Current : Tree_Vectors.Vector;
+         begin
+            Start := (if Next = 0 then 0 else Next + 1);
+
+            if Element'Length > 0 then
+               for T of Current loop
+                  declare
+                     Cs : constant Array_Of_Trees :=
+                            Find_Named_Children (T, Element);
+                  begin
+                     for Match of Cs loop
+                        if Next = 0 then
+                           Next_Current.Append (Match);
+                        else
+                           for I in 1 .. Match.Child_Count loop
+                              if not Next_Current.Contains
+                                (Match.Child (I))
+                              then
+                                 Next_Current.Append (Match.Child (I));
+                              end if;
+                           end loop;
+                        end if;
+                     end loop;
+                  end;
+               end loop;
+               Current := Next_Current;
+            end if;
+
+            Start := (if Next = 0 then 0 else Next + 1);
+
+            exit when Current.Is_Empty;
+
+         end;
+      end loop;
+
+      return Result : Array_Of_Trees (1 .. Current.Last_Index) do
+         for I in Result'Range loop
+            Result (I) := Current.Element (I);
+         end loop;
+      end return;
+
+   end Children;
 
    --------------------
    -- Clear_Messages --

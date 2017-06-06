@@ -255,7 +255,17 @@ package Aquarius.Trees is
      (Top   : Root_Tree_Type)
      return Array_Of_Trees;
 
---     overriding
+   function Children
+     (Top  : not null access Root_Tree_Type'Class;
+      Path : String)
+      return Array_Of_Trees;
+
+   function Child
+     (Top  : not null access Root_Tree_Type'Class;
+      Path : String)
+      return Tree;
+
+   --     overriding
 --     function Parent_Actionable
 --       (Child    : not null access Root_Tree_Type;
 --        Parent   : not null access Aquarius.Actions.Action_Source'Class)
