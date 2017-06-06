@@ -344,7 +344,6 @@ package body Aquarius.Grammars.EBNF is
                                   (Table            => UI,
                                    Name             => Name,
                                    File_Name        => Path,
-                                   Class            => "declaration",
                                    Top_Level        => True,
                                    Compilation_Unit => Definition.Program_Root,
                                    Defining_Name    => Defined_Name,

@@ -7,7 +7,6 @@ package Aquarius.Programs.Komnenos_Entities is
         Komnenos.Entities.Entity_Table_Interface'Class;
       Name             : String;
       File_Name        : String;
-      Class            : String;
       Top_Level        : Boolean;
       Compilation_Unit : not null access Program_Tree_Type'Class;
       Defining_Name    : not null access Program_Tree_Type'Class;

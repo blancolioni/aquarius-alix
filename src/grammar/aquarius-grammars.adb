@@ -6,6 +6,35 @@ with Aquarius.Trees.Properties;
 
 package body  Aquarius.Grammars is
 
+   -------------------
+   -- Action_Entity --
+   -------------------
+
+   function Action_Entity
+     (Grammar     : Aquarius_Grammar_Record'Class;
+      Group       : Aquarius.Actions.Action_Group;
+      Position    : Aquarius.Actions.Action_Position;
+      Parent_Name : String;
+      Child_Name  : String)
+      return Komnenos.Entities.Entity_Reference
+   is
+      Key : constant String :=
+              Action_Entity_Key
+                (Group_Name    =>
+                   Aquarius.Actions.Action_Group_Name
+                   (Group),
+                 Position_Name =>
+                   Aquarius.Actions.Show (Position),
+                 Parent_Name   => Parent_Name,
+                 Child_Name    => Child_Name);
+   begin
+      if Grammar.Action_Entities.Contains (Key) then
+         return Grammar.Action_Entities.Element (Key);
+      else
+         return null;
+      end if;
+   end Action_Entity;
+
    ----------------------
    -- Add_Action_Group --
    ----------------------
@@ -17,8 +46,8 @@ package body  Aquarius.Grammars is
       Group   :    out Aquarius.Actions.Action_Group)
    is
    begin
-      Aquarius.Actions.Create_Action_Group (Grammar.Actions, Name,
-                                            Trigger, Group);
+      Aquarius.Actions.Create_Action_Group
+        (Grammar.Action_Groups, Name, Trigger, Group);
    end Add_Action_Group;
 
    ------------------------
@@ -382,7 +411,7 @@ package body  Aquarius.Grammars is
       return Aquarius.Actions.Action_Group
    is
    begin
-      return Aquarius.Actions.Get_Group (Grammar.Actions, Name);
+      return Aquarius.Actions.Get_Group (Grammar.Action_Groups, Name);
    end Group;
 
    ----------------
@@ -560,7 +589,8 @@ package body  Aquarius.Grammars is
                      Top_Level_Syntax    => null,
                      Non_Terminals       => Syntax_Map.Empty_Map,
                      Terminals           => Syntax_Map.Empty_Map,
-                     Actions             => Empty_Action_Group_List,
+                     Action_Groups       => Empty_Action_Group_List,
+                     Action_Entities     => <>,
                      Case_Sensitive      => False,
                      Match_EOL           => False,
                      Continuation        => Character'Val (0),
@@ -707,7 +737,7 @@ package body  Aquarius.Grammars is
 
    begin
       Aquarius.Actions.Iterate
-        (Grammar.Actions, Trigger, Run_Group_Actions'Access);
+        (Grammar.Action_Groups, Trigger, Run_Group_Actions'Access);
    end Run_Action_Trigger;
 
    ------------------------
@@ -734,7 +764,7 @@ package body  Aquarius.Grammars is
    begin
 
       Aquarius.Actions.Iterate
-        (Grammar.Actions, Trigger, Run_Group_Actions'Access);
+        (Grammar.Action_Groups, Trigger, Run_Group_Actions'Access);
 
    exception
       when others =>
@@ -765,11 +795,12 @@ package body  Aquarius.Grammars is
    begin
 
       if Aquarius.Actions.Have_Group
-        (Grammar.Actions, Group_Name)
+        (Grammar.Action_Groups, Group_Name)
       then
          declare
             Group : constant Aquarius.Actions.Action_Group :=
-                      Aquarius.Actions.Get_Group (Grammar.Actions, Group_Name);
+                      Aquarius.Actions.Get_Group
+                        (Grammar.Action_Groups, Group_Name);
          begin
             Start.Run_Actions (Group);
          end;
@@ -815,7 +846,7 @@ package body  Aquarius.Grammars is
    begin
 
       Aquarius.Actions.Iterate
-        (Grammar.Actions, Aquarius.Actions.Parse_Trigger,
+        (Grammar.Action_Groups, Aquarius.Actions.Parse_Trigger,
          Run_Group_Actions'Access);
    end Run_Parse_Actions;
 

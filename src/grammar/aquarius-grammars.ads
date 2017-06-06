@@ -2,6 +2,8 @@ private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Strings.Hash_Case_Insensitive;
 private with Ada.Strings.Equal_Case_Insensitive;
 
+with Komnenos.Entities;
+
 with Aquarius.Actions;
 with Aquarius.Lexers;
 with Aquarius.Names;
@@ -160,6 +162,14 @@ package Aquarius.Grammars is
       Name    : String)
       return Aquarius.Actions.Action_Group;
 
+   function Action_Entity
+     (Grammar     : Aquarius_Grammar_Record'Class;
+      Group       : Aquarius.Actions.Action_Group;
+      Position    : Aquarius.Actions.Action_Position;
+      Parent_Name : String;
+      Child_Name  : String)
+      return Komnenos.Entities.Entity_Reference;
+
    not overriding
    procedure Run_Actions
      (Grammar      : in Aquarius_Grammar_Record;
@@ -252,12 +262,30 @@ package Aquarius.Grammars is
 
 private
 
-   package Syntax_Map is new Ada.Containers.Indefinite_Hashed_Maps
-     (Key_Type        => String,
-      Element_Type    => Aquarius.Syntax.Syntax_Tree,
-      Hash            => Ada.Strings.Hash_Case_Insensitive,
-      Equivalent_Keys => Ada.Strings.Equal_Case_Insensitive,
-      "="             => Aquarius.Syntax."=");
+   package Syntax_Map is
+     new Ada.Containers.Indefinite_Hashed_Maps
+       (Key_Type        => String,
+        Element_Type    => Aquarius.Syntax.Syntax_Tree,
+        Hash            => Ada.Strings.Hash_Case_Insensitive,
+        Equivalent_Keys => Ada.Strings.Equal_Case_Insensitive,
+        "="             => Aquarius.Syntax."=");
+
+   package Action_Entity_Map is
+     new Ada.Containers.Indefinite_Hashed_Maps
+       (Key_Type        => String,
+        Element_Type    => Komnenos.Entities.Entity_Reference,
+        Hash            => Ada.Strings.Hash_Case_Insensitive,
+        Equivalent_Keys => Ada.Strings.Equal_Case_Insensitive,
+        "="             => Komnenos.Entities."=");
+
+   function Action_Entity_Key
+     (Group_Name    : String;
+      Position_Name : String;
+      Parent_Name   : String;
+      Child_Name    : String)
+      return String
+   is (Group_Name & "-" & Position_Name & "-"
+       & Parent_Name & (if Child_Name = "" then "" else "/" & Child_Name));
 
    type Aquarius_Grammar_Record is
      new Root_Aquarius_Object and
@@ -267,7 +295,8 @@ private
          Frame               : Aquarius.Tokens.Token_Frame;
          Definition          : Aquarius.Programs.Program_Tree;
          Top_Level_Syntax    : Aquarius.Syntax.Syntax_Tree;
-         Actions             : Aquarius.Actions.Action_Group_List;
+         Action_Groups       : Aquarius.Actions.Action_Group_List;
+         Action_Entities     : Action_Entity_Map.Map;
          Case_Sensitive      : Boolean;
          Match_EOL           : Boolean := False;
          Continuation        : Character := Character'Val (0);
