@@ -28,7 +28,6 @@ package body  Aquarius.Grammars is
                  Parent_Name   => Parent_Name,
                  Child_Name    => Child_Name);
    begin
-      Ada.Text_IO.Put_Line ("action entity: " & Key);
       if Grammar.Action_Entities.Contains (Key) then
          return Grammar.Action_Entities.Element (Key);
       else
@@ -50,6 +49,19 @@ package body  Aquarius.Grammars is
       Aquarius.Actions.Create_Action_Group
         (Grammar.Action_Groups, Name, Trigger, Group);
    end Add_Action_Group;
+
+   ------------------------
+   -- Add_Action_Program --
+   ------------------------
+
+   procedure Add_Action_Program
+     (Grammar : in out Aquarius_Grammar_Record'Class;
+      Group   : Aquarius.Actions.Action_Group;
+      Program : Aquarius.Programs.Program_Tree)
+   is
+   begin
+      Grammar.Action_Programs.Append ((Group, Program));
+   end Add_Action_Program;
 
    ------------------------
    -- Add_Class_Terminal --
@@ -591,6 +603,7 @@ package body  Aquarius.Grammars is
                      Non_Terminals       => Syntax_Map.Empty_Map,
                      Terminals           => Syntax_Map.Empty_Map,
                      Action_Groups       => Empty_Action_Group_List,
+                     Action_Programs     => <>,
                      Action_Entities     => <>,
                      Case_Sensitive      => False,
                      Match_EOL           => False,
@@ -845,7 +858,6 @@ package body  Aquarius.Grammars is
       end Run_Group_Actions;
 
    begin
-
       Aquarius.Actions.Iterate
         (Grammar.Action_Groups, Aquarius.Actions.Parse_Trigger,
          Run_Group_Actions'Access);
@@ -866,6 +878,22 @@ package body  Aquarius.Grammars is
            (Grammar.Action_Groups, Trigger, Process);
       end loop;
    end Scan_Action_Groups;
+
+   --------------------------
+   -- Scan_Action_Programs --
+   --------------------------
+
+   procedure Scan_Action_Programs
+     (Grammar : Aquarius_Grammar_Record'Class;
+      Process : not null access
+        procedure (Group : Aquarius.Actions.Action_Group;
+                   Program : Aquarius.Programs.Program_Tree))
+   is
+   begin
+      for Action_Group of Grammar.Action_Programs loop
+         Process (Action_Group.Group, Action_Group.Program);
+      end loop;
+   end Scan_Action_Programs;
 
    -----------------------------
    -- Significant_End_Of_Line --
