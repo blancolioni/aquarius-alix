@@ -32,12 +32,6 @@ package body Aquarius.Syntax.Komnenos_Entities is
       return Boolean
    is (True);
 
-   overriding function Key
-     (Item : Aquarius_Syntax_Entity)
-      return String
-   is (Get_Key (Item.Grammar.Name,
-                Item.Syntax.Name));
-
    overriding procedure Select_Entity
      (Entity : not null access Aquarius_Syntax_Entity;
       Table  : access Komnenos.Entities.Entity_Table_Interface'Class;
@@ -74,7 +68,8 @@ package body Aquarius.Syntax.Komnenos_Entities is
                     & "/" & Grammar_Name & ".ebnf");
    begin
       Entity.Create
-        (Identifier   => Tree.Name,
+        (Key          => Get_Key (Grammar_Name, Tree.Name),
+         Identifier   => Tree.Name,
          Class_Name   => "aquarius-syntax-entity",
          Path         => Path,
          Display_Text => Tree.Name,
@@ -371,22 +366,6 @@ package body Aquarius.Syntax.Komnenos_Entities is
                   Connect (Optional_In, Optional_Out);
                end if;
 
---                 if Child.Has_Separator then
---                    Put (Context, " / " & Child.Separator.Text,
---                         Punctuation_Style);
---                 end if;
---
---                 if Child.Optional then
---                    if Child.Repeatable then
---                       Put (Context, " }", Punctuation_Style);
---                    else
---                       Put (Context, " ]", Punctuation_Style);
---                    end if;
---                    Context.Need_Space := True;
---                 elsif Child.Repeatable then
---                    Put (Context, " >", Punctuation_Style);
---                    Context.Need_Space := True;
---                 end if;
             end;
          end loop;
       end Render_Children;
@@ -434,10 +413,16 @@ package body Aquarius.Syntax.Komnenos_Entities is
                          (Group       => Group,
                           Position    => Aquarius.Actions.Before_Node,
                           Parent_Name => Entity.Syntax.Name);
+            After : constant Komnenos.Entities.Entity_Reference :=
+                      Entity.Grammar.Action_Entity
+                        (Group       => Group,
+                         Position    => Aquarius.Actions.After_Node,
+                         Parent_Name => Entity.Syntax.Name);
          begin
             if Before /= null then
                Ada.Text_IO.Put_Line
-                 ("render: before node: " & Entity.Name);
+                 ("render: " & Aquarius.Actions.Action_Group_Name (Group)
+                  & ": before node: " & Entity.Name & ": " & Before.Name);
                Context.Before_Node :=
                  Visual.Put_Sub_Node
                    (Parent      => Context.In_Node,
@@ -448,6 +433,21 @@ package body Aquarius.Syntax.Komnenos_Entities is
                     Label_Style => null,
                     Tool_Tip    => "",
                     Link        => Before);
+            end if;
+            if After /= null then
+               Ada.Text_IO.Put_Line
+                 ("render: " & Aquarius.Actions.Action_Group_Name (Group)
+                  & ": after node: " & Entity.Name & ": " & After.Name);
+               Context.After_Node :=
+                 Visual.Put_Sub_Node
+                   (Parent      => Context.Out_Node,
+                    Anchor      => Right,
+                    Visibility  => Always_Visible,
+                    Style       => Box,
+                    Label_Text  => "",
+                    Label_Style => null,
+                    Tool_Tip    => "",
+                    Link        => After);
             end if;
          end Render_Top_Actions;
 
