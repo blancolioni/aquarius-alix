@@ -127,8 +127,8 @@ package body Aquarius.Grammars.UI is
                               Entity_Spec      => Definition,
                               Entity_Body      => null);
          begin
-            Ada.Text_IO.Put_Line ("action: " & Entity.Name
-                                  & " [" & Key & "]");
+--              Ada.Text_IO.Put_Line ("action: " & Entity.Name
+--                                    & " [" & Key & "]");
             Grammar.Action_Entities.Insert
               (Key, Entity);
          end;
@@ -184,7 +184,6 @@ package body Aquarius.Grammars.UI is
           ("source_file/plugin_declaration/list_of_declarations/declaration/"
            & "group_declaration")
       loop
-         Ada.Text_IO.Put_Line ("binding: " & Tree.Image);
          Bind (Aquarius.Programs.Program_Tree (Tree));
       end loop;
 
@@ -198,33 +197,10 @@ package body Aquarius.Grammars.UI is
      (Grammar : Aquarius_Grammar;
       Target  : Komnenos.UI.Komnenos_UI)
    is
-
-      procedure Create_Action_Entities
-        (Group : Aquarius.Actions.Action_Group);
-
-      ----------------------------
-      -- Create_Action_Entities --
-      ----------------------------
-
-      procedure Create_Action_Entities
-        (Group : Aquarius.Actions.Action_Group)
-      is
-      begin
-         Ada.Text_IO.Put_Line
-           ("action group: " & Aquarius.Actions.Action_Group_Name (Group));
-      end Create_Action_Entities;
-
    begin
       for Non_Terminal of Grammar.Non_Terminals loop
          Aquarius.Syntax.Komnenos_Entities.Create_Aquarius_Syntax_Entity
            (Target, Grammar.Name, Non_Terminal);
-      end loop;
-
-      for Trigger in Aquarius.Actions.Action_Execution_Trigger loop
-         Aquarius.Actions.Iterate
-           (List    => Grammar.Action_Groups,
-            Trigger => Trigger,
-            Process => Create_Action_Entities'Access);
       end loop;
 
       declare
