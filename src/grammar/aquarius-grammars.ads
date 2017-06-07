@@ -1,3 +1,4 @@
+private with Ada.Containers.Doubly_Linked_Lists;
 private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Strings.Hash_Case_Insensitive;
 private with Ada.Strings.Equal_Case_Insensitive;
@@ -144,6 +145,17 @@ package Aquarius.Grammars is
      (Grammar : Aquarius_Grammar_Record'Class;
       Process : not null access
         procedure (Group : Aquarius.Actions.Action_Group));
+
+   procedure Add_Action_Program
+     (Grammar : in out Aquarius_Grammar_Record'Class;
+      Group   : Aquarius.Actions.Action_Group;
+      Program : Aquarius.Programs.Program_Tree);
+
+   procedure Scan_Action_Programs
+     (Grammar : Aquarius_Grammar_Record'Class;
+      Process : not null access
+        procedure (Group : Aquarius.Actions.Action_Group;
+                   Program : Aquarius.Programs.Program_Tree));
 
    function Significant_End_Of_Line
      (Grammar : Aquarius_Grammar_Record)
@@ -292,6 +304,15 @@ private
    is (Group_Name & "-" & Position_Name & "-"
        & Parent_Name & (if Child_Name = "" then "" else "/" & Child_Name));
 
+   type Action_Program_Entry is
+      record
+         Group   : Aquarius.Actions.Action_Group;
+         Program : Aquarius.Programs.Program_Tree;
+      end record;
+
+   package Action_Program_Lists is
+      new Ada.Containers.Doubly_Linked_Lists (Action_Program_Entry);
+
    type Aquarius_Grammar_Record is
      new Root_Aquarius_Object and
      Aquarius.Properties.Property_Pool with
@@ -302,6 +323,7 @@ private
          Top_Level_Syntax    : Aquarius.Syntax.Syntax_Tree;
          Action_Groups       : Aquarius.Actions.Action_Group_List;
          Action_Entities     : Action_Entity_Map.Map;
+         Action_Programs     : Action_Program_Lists.List;
          Case_Sensitive      : Boolean;
          Match_EOL           : Boolean := False;
          Continuation        : Character := Character'Val (0);
