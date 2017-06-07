@@ -54,14 +54,6 @@ package body Aquarius.Programs.Komnenos_Entities is
       return Boolean
    is (Entity.Top_Level);
 
-   overriding function Key
-     (Item : Root_Aquarius_Source_Entity)
-      return String
-   is (Get_Key (Aquarius.Names.To_String (Item.Entity_Spec.Source_File_Name),
-                Item.Entity_Spec.Source_Line,
-                Item.Entity_Spec.Source_Column,
-                Item.Name));
-
    overriding procedure Select_Entity
      (Entity : not null access Root_Aquarius_Source_Entity;
       Table  : access Komnenos.Entities.Entity_Table_Interface'Class;
@@ -331,10 +323,11 @@ package body Aquarius.Programs.Komnenos_Entities is
       return Komnenos.Entities.Entity_Reference
    is
       Key : constant String :=
-              Get_Key (File_Name,
-                       Defining_Name.Source_Line,
-                       Defining_Name.Source_Column,
-                       Name);
+              Get_Key
+                (File_Name => File_Name,
+                 Line      => Defining_Name.Source_Line,
+                 Column    => Defining_Name.Source_Column,
+                 Name      => Name);
    begin
       if not Table.Exists (Key) then
          declare
@@ -343,7 +336,8 @@ package body Aquarius.Programs.Komnenos_Entities is
             Result : Komnenos.Entities.Entity_Reference;
          begin
             Entity.Create
-              (Identifier   => Name,
+              (Key          => Key,
+               Identifier   => Name,
                Class_Name   => "aquarius-entity",
                Path         => File_Name,
                Display_Text => Name,
