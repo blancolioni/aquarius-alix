@@ -75,7 +75,12 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                          Item.Property (Plugin.Property_Group_Name).Name;
       Group          : constant Aquarius.Actions.Action_Group :=
                          Get_Plugin (Item).Grammar.Group (Group_Name);
+      Target_Plugin  : constant Dynamic.Dynamic_Plugin :=
+                         Dynamic.Dynamic_Plugin (Get_Plugin (Item));
    begin
+
+      Target_Plugin.Grammar.Add_Action_Program
+        (Group, Action_Program);
 
       if Aquarius.Paths.Is_Newer (Action_Path, Assembly_Path) then
          declare
@@ -98,8 +103,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
          Process_Compiled_Plugin (Base_Name);
       end if;
 
-      Dynamic.Dynamic_Plugin (Get_Plugin (Item)).Image.Load
-        (Base_Name & ".o32");
+      Target_Plugin.Image.Load (Base_Name & ".o32");
 
    end After_Action_File_Reference;
 
