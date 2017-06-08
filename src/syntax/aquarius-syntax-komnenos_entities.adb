@@ -121,6 +121,9 @@ package body Aquarius.Syntax.Komnenos_Entities is
       Keyword_Style      : constant Komnenos.Styles.Komnenos_Style :=
                              Komnenos.Themes.Active_Theme.Style
                                ("reserved_identifier");
+      Action_Group_Style : constant Komnenos.Styles.Komnenos_Style :=
+                             Komnenos.Themes.Active_Theme.Style
+                               ("small");
       Non_Terminal_Style : constant Komnenos.Styles.Komnenos_Style :=
                              Komnenos.Themes.Active_Theme.Style
                                ("italic");
@@ -427,10 +430,10 @@ package body Aquarius.Syntax.Komnenos_Entities is
                  Visual.Put_Sub_Node
                    (Parent      => Context.In_Node,
                     Anchor      => Left,
-                    Visibility  => Always_Visible,
+                    Visibility  => Show_On_Parent_Selected,
                     Style       => Box,
-                    Label_Text  => "",
-                    Label_Style => null,
+                    Label_Text  => Aquarius.Actions.Action_Group_Name (Group),
+                    Label_Style => Action_Group_Style,
                     Tool_Tip    => "",
                     Link        => Before);
             end if;
@@ -442,10 +445,10 @@ package body Aquarius.Syntax.Komnenos_Entities is
                  Visual.Put_Sub_Node
                    (Parent      => Context.Out_Node,
                     Anchor      => Right,
-                    Visibility  => Always_Visible,
+                    Visibility  => Show_On_Parent_Selected,
                     Style       => Box,
-                    Label_Text  => "",
-                    Label_Style => null,
+                    Label_Text  => Aquarius.Actions.Action_Group_Name (Group),
+                    Label_Style => Action_Group_Style,
                     Tool_Tip    => "",
                     Link        => After);
             end if;
