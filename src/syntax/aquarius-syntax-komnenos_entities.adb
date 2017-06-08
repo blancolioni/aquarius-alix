@@ -230,6 +230,78 @@ package body Aquarius.Syntax.Komnenos_Entities is
 
          Context.Prev_Node := Reference;
 
+         if Label_Text /= "" then
+            declare
+               procedure Render_Actions
+                 (Group : Aquarius.Actions.Action_Group);
+
+               --------------------
+               -- Render_Actions --
+               --------------------
+
+               procedure Render_Actions
+                 (Group : Aquarius.Actions.Action_Group)
+               is
+                  use type Komnenos.Entities.Entity_Reference;
+                  Before : constant Komnenos.Entities.Entity_Reference :=
+                             Entity.Grammar.Action_Entity
+                               (Group       => Group,
+                                Position    => Aquarius.Actions.Before_Node,
+                                Parent_Name => Entity.Syntax.Name,
+                                Child_Name  => Label_Text);
+                  After : constant Komnenos.Entities.Entity_Reference :=
+                            Entity.Grammar.Action_Entity
+                              (Group       => Group,
+                               Position    => Aquarius.Actions.After_Node,
+                               Parent_Name => Entity.Syntax.Name,
+                               Child_Name  => Label_Text);
+               begin
+                  if Before /= null then
+                     Ada.Text_IO.Put_Line
+                       ("render: "
+                        & Aquarius.Actions.Action_Group_Name (Group)
+                        & ": before node: "
+                        & Entity.Name & "/" & Label_Text
+                        & ": " & Before.Name);
+                     Context.Before_Node :=
+                       Visual.Put_Sub_Node
+                         (Parent      => Reference,
+                          Anchor      => Left,
+                          Visibility  => Show_On_Parent_Selected,
+                          Style       => Box,
+                          Label_Text  =>
+                            Aquarius.Actions.Action_Group_Name (Group),
+                          Label_Style => Action_Group_Style,
+                          Tool_Tip    => "",
+                          Link        => Before);
+                  end if;
+                  if After /= null then
+                     Ada.Text_IO.Put_Line
+                       ("render: "
+                        & Aquarius.Actions.Action_Group_Name (Group)
+                        & ": after node: "
+                        & Entity.Name & "/" & Label_Text
+                        & ": " & After.Name);
+                     Context.After_Node :=
+                       Visual.Put_Sub_Node
+                         (Parent      => Reference,
+                          Anchor      => Right,
+                          Visibility  => Show_On_Parent_Selected,
+                          Style       => Box,
+                          Label_Text  =>
+                            Aquarius.Actions.Action_Group_Name (Group),
+                          Label_Style => Action_Group_Style,
+                          Tool_Tip    => "",
+                          Link        => After);
+                  end if;
+               end Render_Actions;
+
+            begin
+               Entity.Grammar.Scan_Action_Groups
+                 (Render_Actions'Access);
+            end;
+         end if;
+
       end Put_Node;
 
       ----------------------
