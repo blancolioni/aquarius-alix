@@ -67,15 +67,20 @@ package body Aquarius.Grammars.UI is
       is
          Ids : constant Aquarius.Trees.Array_Of_Trees :=
                  Header.Children ("action_context/identifier");
+         Prefix : constant String :=
+                    Aquarius.Actions.Action_Group_Name (Group)
+                    & ": ";
       begin
          if Ids'Length = 0 then
             raise Constraint_Error with
               "action has no context: " & Header.Concatenate_Children;
          elsif Ids'Length = 1 then
-            return Header.Program_Child ("action_time").Concatenate_Children
+            return Prefix
+              & Header.Program_Child ("action_time").Concatenate_Children
               & " " & Ids (Ids'First).Text;
          elsif Ids'Length = 2 then
-            return Ids (Ids'First).Text
+            return Prefix
+              & Ids (Ids'First).Text
               & " "
               & Header.Program_Child ("action_time").Concatenate_Children
               & " " & Ids (Ids'Last).Text;
