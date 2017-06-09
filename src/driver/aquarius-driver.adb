@@ -378,6 +378,10 @@ begin
          Load_Session : Boolean := True;
       begin
 
+         UI.Load_Style_Sheet
+           (Aquarius.Config_Paths.Config_File
+              ("styles/default.css"));
+
 --         Komnenos.Entities.Aqua_Entities.Create_Aqua_Object (UI);
 
          if Command_Line.Project_Name /= "" then

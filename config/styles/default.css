@@ -1,0 +1,78 @@
+text-fragment
+{
+    font-family: consolas;
+    font-size: 12;
+    font-color: black;
+}
+
+diagram-fragment
+{
+    font-family: "Segoe UI";
+    font-size: 12;
+}
+
+.small
+{
+    font-size: 8;
+}
+
+.italic
+{
+    font-style: italic;
+}
+
+.reserved_identifier
+{
+    font-color: blue;
+}
+
+.implied_token
+{
+    font-color: lightgrey;
+}
+
+.link
+{
+    font-color: blue;
+    text-decoration-line: underline;
+}
+
+.comment
+{
+    font-color: grey;
+}
+
+.string
+{
+    font-color: rosybrown;
+}
+
+.package_name
+{
+    font-color: rgb(166,0,217);
+}
+
+.function_name
+{
+    font-color: rgb(166,0,217);
+}
+
+.variable_name
+{
+    font-color: darkgoldenrod;
+}
+
+.type_name
+{
+    font-color: forestgreen;
+}
+
+.warning
+{
+    text-decoration-line: underline;
+}
+
+.error
+{
+    text-decoration: wavy red underline;
+}
