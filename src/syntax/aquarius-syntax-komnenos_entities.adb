@@ -267,6 +267,7 @@ package body Aquarius.Syntax.Komnenos_Entities is
                        Visual.Put_Sub_Node
                          (Parent      => Reference,
                           Anchor      => Left,
+                          Interior    => False,
                           Visibility  => Show_On_Parent_Selected,
                           Style       => Box,
                           Label_Text  =>
@@ -286,6 +287,7 @@ package body Aquarius.Syntax.Komnenos_Entities is
                        Visual.Put_Sub_Node
                          (Parent      => Reference,
                           Anchor      => Right,
+                          Interior    => False,
                           Visibility  => Show_On_Parent_Selected,
                           Style       => Box,
                           Label_Text  =>
@@ -502,6 +504,7 @@ package body Aquarius.Syntax.Komnenos_Entities is
                  Visual.Put_Sub_Node
                    (Parent      => Context.In_Node,
                     Anchor      => Left,
+                    Interior    => False,
                     Visibility  => Show_On_Parent_Selected,
                     Style       => Box,
                     Label_Text  => Aquarius.Actions.Action_Group_Name (Group),
@@ -517,6 +520,7 @@ package body Aquarius.Syntax.Komnenos_Entities is
                  Visual.Put_Sub_Node
                    (Parent      => Context.Out_Node,
                     Anchor      => Right,
+                    Interior    => False,
                     Visibility  => Show_On_Parent_Selected,
                     Style       => Box,
                     Label_Text  => Aquarius.Actions.Action_Group_Name (Group),
