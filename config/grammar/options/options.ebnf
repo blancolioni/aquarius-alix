@@ -23,7 +23,7 @@ list_of_declarations ::= { declaration ';' }
 
 declaration ::= option_declaration
 
-option_declaration ::= identifier ':' type [ 'with' list_of_aspects ]
+option_declaration ::= identifier ':' type [ ':=' numeric_literal ] [ 'with' list_of_aspects ]
 
 type ::= identifier
 
