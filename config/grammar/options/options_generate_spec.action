@@ -1,0 +1,14 @@
+before compilation_unit do
+   IO.set_output (tree.file_name & ".ads");
+   IO.put_line ("package " & tree.package_name & " is");
+end;
+
+before option_declaration do
+   IO.put_line
+     ("   function " & tree/identifier.text & " return " & tree/type/identifier.text & ";");
+end;
+
+after compilation_unit do
+   IO.put_line ("end " & tree.package_name & ";");
+   IO.Set_Output ("");
+end;
