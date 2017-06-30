@@ -1,0 +1,50 @@
+before compilation_unit do
+   tree.options := new Array;
+end;
+
+after aspect/string_literal do
+  tree.option_length := child.text.length - 2;
+  parent^option_declaration.long_option := child.text.slice(2, tree.option_length);
+end;
+
+after aspect/character_literal do
+  parent^option_declaration.short_option := child.text.slice (2, 1);
+end;
+
+after option_declaration do
+  tree.option :=
+    (name => option_declaration/identifier.text,
+     type => option_declaration/type/identifier.text,
+     short_option => tree.short_option,
+     long_option  => tree.long_option);
+  if tree.option.long_option then
+     null;
+  else
+     tree.option.long_option := 
+       tree.option.name.replace ("_", "-").to_lower;
+  end if;
+  top.options.append (tree.option);
+end;
+      
+before qualified_identifier do
+  tree.current_context := 0;
+  tree.last_identifier := 0;
+end;
+
+after qualified_identifier/identifier do
+  parent.last_identifier := identifier.text;
+end;
+
+after qualified_identifier do
+  tree.qid := Tree.Concatenated_Image;
+end;
+
+after package_declaration/qualified_identifier do
+   parent.package_name := child.qid;
+   parent.file_name := parent.package_name.to_lower.replace (".", "-");
+end;
+
+after compilation_unit/package_declaration do
+   parent.package_name := child.package_name;
+   parent.file_name := child.file_name;
+end;

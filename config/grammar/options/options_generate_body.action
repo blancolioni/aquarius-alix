@@ -1,0 +1,66 @@
+@!aquarius:actionscript
+@after compilation_unit do
+@IO.Set_output (tree.file_Name & ".adb");
+with Ada.Command_Line;
+
+package body [tree.package_name] is
+
+   pragma Style_Checks (Off);
+   
+   function Find_Option
+     (Long_Name  : String;
+      Short_Name : Character)
+     return Boolean;
+     
+   -----------------
+   -- Find_Option --
+   -----------------
+   
+   function Find_Option
+     (Long_Name  : String;
+      Short_Name : Character)
+     return Boolean
+   is
+   begin
+      for I in 1 .. Ada.Command_Line.Argument_Count loop
+         declare
+            Argument : constant String := 
+              Ada.Command_Line.Argument (I);
+         begin
+            if Argument = "--" & Long_Name then
+               return True;
+            elsif Argument = "--no-" & Long_Name then
+               return False;
+            elsif Argument'Length >= 2
+              and then Short_Name /= ' '
+              and then Argument (Argument'First) = '-'
+              and then Argument (Argument'First + 1) /= '-'
+            then
+               for Item of Argument loop
+                  if Item /= '-' and then Item = Short_Name then
+                     return True;
+                  end if;
+               end loop;
+            end if;
+         end;
+      end loop;
+      return False;
+   end Find_Option;
+     
+@for option in tree.options loop
+
+   function [option.name] return [option.type] is
+   begin
+@IO.put ("      return Find_Option (""" & option.long_option & """, '");
+@if option.short_option then
+@   IO.put (option.short_option);
+@else
+@   IO.put (" ");
+@end if;
+@IO.put_line ("');");
+   end [option.name];
+@end loop;
+
+end [tree.package_name];
+@IO.Set_Output ("");
+@end;
