@@ -11,6 +11,9 @@ after aspect/character_literal do
   parent^option_declaration.short_option := child.text.slice (2, 1);
 end;
 
+after option_declaration/numeric_literal do
+  parent.default_value := numeric_literal.text;
+  
 after option_declaration do
   tree.option :=
     (name => option_declaration/identifier.text,
@@ -23,6 +26,10 @@ after option_declaration do
      tree.option.long_option := 
        tree.option.name.replace ("_", "-").to_lower;
   end if;
+  if tree.default_value then
+     tree.option.default_value := tree.default_value;
+  end if;
+  
   top.options.append (tree.option);
 end;
       

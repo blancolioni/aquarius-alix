@@ -2,6 +2,7 @@
 @after compilation_unit do
 @IO.Set_output (tree.file_Name & ".adb");
 with Ada.Command_Line;
+with Ada.Strings.Fixed;
 
 package body [tree.package_name] is
 
@@ -11,6 +12,51 @@ package body [tree.package_name] is
      (Long_Name  : String;
       Short_Name : Character)
      return Boolean;
+     
+   function Find_Option
+     (Long_Name  : String;
+      Short_Name : Character)
+     return String;
+     
+   function Find_Option
+     (Long_Name  : String;
+      Short_Name : Character;
+      Default    : Integer)
+     return Integer;
+     
+   -----------------
+   -- Find_Option --
+   -----------------
+   
+   function Find_Option
+     (Long_Name  : String;
+      Short_Name : Character)
+     return String
+   is
+   begin
+      for I in 1 .. Ada.Command_Line.Argument_Count loop
+         declare
+            Argument : constant String := 
+              Ada.Command_Line.Argument (I);
+            Separator_Index : constant Natural :=
+              Ada.Strings.Fixed.Index (Argument, "=");
+         begin
+            if Short_Name /= ' ' and then Argument = ('-', Short_Name) then
+               if I < Ada.Command_Line.Argument_Count then
+                  return Ada.Command_Line.Argument (I + 1);
+               else
+                  return "";
+               end if;
+            elsif Argument'Length > 3 and then Separator_Index > 0
+              and then Argument (1 .. 2) = "--"
+              and then Argument (3 .. Separator_Index - 1) = Long_Name
+            then
+               return Argument (Separator_Index + 1 .. Argument'Last);
+            end if;
+         end;
+      end loop;
+      return "";
+   end Find_Option;
      
    -----------------
    -- Find_Option --
@@ -47,6 +93,28 @@ package body [tree.package_name] is
       return False;
    end Find_Option;
      
+   -----------------
+   -- Find_Option --
+   -----------------
+   
+   function Find_Option
+     (Long_Name  : String;
+      Short_Name : Character;
+      Default    : Integer)
+     return Integer
+   is
+      Value : constant String := Find_Option (Long_Name, Short_Name);
+   begin
+      if Value = "" then
+         return Default;
+      else
+         return Integer'Value (Value);
+      end if;
+   exception
+      when Constraint_Error =>
+         return Default;
+   end Find_Option;
+      
 @for option in tree.options loop
 
    function [option.name] return [option.type] is
@@ -57,7 +125,11 @@ package body [tree.package_name] is
 @else
 @   IO.put (" ");
 @end if;
-@IO.put_line ("');");
+@IO.put ("'");
+@if option.default_value then
+@IO.put (", " & option.default_value);
+@end if;
+@IO.put_line (");");
    end [option.name];
 @end loop;
 
