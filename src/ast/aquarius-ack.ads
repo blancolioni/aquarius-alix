@@ -167,6 +167,15 @@ package Aquarius.Ack is
    function Class_Name (N : Node_Id) return Node_Id
      with Pre => Kind (N) in N_Class_Header | N_Class_Type;
 
+   function Inheritance (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Class_Declaration;
+
+   function Inherits (N : Node_Id) return List_Id
+     with Pre => Kind (N) = N_Inheritance;
+
+   function Inherit_Class_Type (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Inherited;
+
    function Identifiers (N : Node_Id) return List_Id
      with Pre => Kind (N) in N_Class_Name | N_Entity_Declaration_Group;
 
@@ -361,7 +370,16 @@ private
    is (Node_Table.Element (N).Field (2));
 
    function Class_Name (N : Node_Id) return Node_Id
-   is (Node_Table.Element (N).Field (2));
+   is (Field_2 (N));
+
+   function Inheritance (N : Node_Id) return Node_Id
+   is (Field_3 (N));
+
+   function Inherits (N : Node_Id) return List_Id
+   is (Node_Table (N).List);
+
+   function Inherit_Class_Type (N : Node_Id) return Node_Id
+   is (Field_1 (N));
 
    function Identifiers (N : Node_Id) return List_Id
    is (Node_Table.Element (N).List);
