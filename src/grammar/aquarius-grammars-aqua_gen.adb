@@ -9,6 +9,11 @@ package body Aquarius.Grammars.Aqua_Gen is
      (Language_Name : String;
       Syntax        : Aquarius.Syntax.Syntax_Tree);
 
+   procedure Generate_Empty_Class
+     (Language_Name : String;
+      Class_Name    : String;
+      File_Name     : String);
+
    function To_Mixed_Case (Name : String) return String;
 
    --------------
@@ -19,6 +24,11 @@ package body Aquarius.Grammars.Aqua_Gen is
      (Grammar : Aquarius_Grammar)
    is
    begin
+      Generate_Empty_Class (Grammar.Name, Grammar.Name, Grammar.Name);
+      Generate_Empty_Class
+        (Grammar.Name,
+         Grammar.Name & ".Syntax", Grammar.Name & "-syntax");
+
       for Syntax of Grammar.Non_Terminals loop
          Generate_Class (Grammar.Name, Syntax);
       end loop;
@@ -190,6 +200,36 @@ package body Aquarius.Grammars.Aqua_Gen is
       Set_Output (Standard_Output);
       Close (File);
    end Generate_Class;
+
+   --------------------------
+   -- Generate_Empty_Class --
+   --------------------------
+
+   procedure Generate_Empty_Class
+     (Language_Name : String;
+      Class_Name    : String;
+      File_Name     : String)
+   is
+      pragma Unreferenced (Language_Name);
+      use Ada.Characters.Handling;
+      use Ada.Text_IO;
+
+      File : File_Type;
+
+   begin
+      Create (File, Out_File,
+              Aquarius.Config_Paths.Config_File
+                ("aqua/generated/"
+                 & To_Lower (File_Name)
+                 & ".aqua"));
+
+      Set_Output (File);
+      Put_Line ("class " & To_Mixed_Case (Class_Name));
+      New_Line;
+      Put_Line ("end " & To_Mixed_Case (Class_Name));
+      Set_Output (Standard_Output);
+      Close (File);
+   end Generate_Empty_Class;
 
    -------------------
    -- To_Mixed_Case --
