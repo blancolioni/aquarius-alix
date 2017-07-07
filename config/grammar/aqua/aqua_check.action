@@ -1,9 +1,7 @@
 before class_declaration do
-   IO.put_Line ("checking class");
 end;
 
 after class_declaration do
-   IO.put_Line ("done checking class");
 end;
 
 after class_declaration/class_header do
@@ -12,6 +10,7 @@ after class_declaration/class_header do
    parent.class.clients := (list => new Array, table => new Map);
    parent.class.inheritance := (list => new Array, table => new Map, full_list => new Array);
    parent.class.features := (list => new Array, table => new Map);
+   parent.class.events   := (list => new Array, table => new Map);
 end;
 
 before class_declaration/inheritance do
@@ -27,29 +26,29 @@ before class_header do
 end;
 
 after class_header/header_mark do
-   if child.image = "deferred" then
+   if child.text = "deferred" then
       parent.class.deferred := 1;
-   elsif child.image = "expanded" then
+   elsif child.text = "expanded" then
       parent.class.expanded := 1;
-   elsif child.image = "frozen" then
+   elsif child.text = "frozen" then
       parent.class.frozen := 1;
    end if;
 end;
 
-before class_name do
-   tree.link_name := "";
+after class_name do
+   tree.full_name := class_name.concatenated_image.to_lower;
+   tree.name := (full_name => tree.full_name,
+                 link_name => tree.full_name.replace (".", "__"),
+                 file_name => tree.full_name.replace (".", "/") & ".aqua",
+                 local_name => tree.local_name);
 end;
 
 after class_name/identifier do
-  if parent.link_name /= "" then
-     parent.link_name := parent.link_name & "__" & identifier.text.to_lower;
-  else
-     parent.link_name := identifier.text.to_lower;
-  end if;
+  parent.local_name := identifier.text;
 end;
 
 after class_header/class_name do
-   parent.class.name := class_name.link_name
+   class_header.class.name := class_Name.name;
 end;
 
 after class_header/formal_generics do
@@ -62,11 +61,13 @@ end;
 
 after inherit_list/inherited do
    parent^inheritance.inheritance.list.append (child.inherit);
-   parent^inheritance.inheritance.table.set (child.inherit.name, child.inherit);
+   parent^inheritance.inheritance.table.set (child.inherit.name.full_Name, child.inherit);
 end;
 
 after inherited/class_type do
-   parent.inherit := (name => class_type.name)
+   parent.inherit := (name => class_type.name,
+                      class => parent.load_file (class_type.name.file_name));
+   IO.put_line ("inherit: " & parent.inherit.name.full_name);
 end;
 
 before inherited/feature_adaptation do
@@ -89,16 +90,11 @@ after feature_name/identifier do
    parent.feature_name := identifier.text;
 end;
 
-after extended_feature_name/feature_name do
-   parent.feature_name := child.feature_name;
-end;
-   
-after new_feature/extended_feature_name do
+after new_feature/feature_name do
    parent.feature_name := child.feature_name;
 end;
 
 after new_feature_list/new_feature do
-   IO.put_line ("new feature: " & child.feature_name);
    parent.names.append (child.feature_name.to_lower)
 end
 
@@ -122,10 +118,10 @@ after feature_declaration/declaration_body do
 
    if child.type then
       if child.type.class_name then
-         tree.client_info := (name => child.type.class_name);
-         if not parent^class_declaration.class.clients.table.get (tree.client_info.name) then
+         tree.client_info := child.type.class_name;
+         if not parent^class_declaration.class.clients.table.get (tree.client_info.full_name) then
             parent^class_declaration.class.clients.list.append (tree.client_info);
-            parent^class_declaration.class.clients.table.set (tree.client_info.name, tree.client_info);
+            parent^class_declaration.class.clients.table.set (tree.client_info.full_name, tree.client_info);
          end if;
       end if;
    end if;
@@ -148,7 +144,6 @@ after feature_declaration do
       tree.new_feature := tree.feature_body.clone;
       tree.new_feature.name := name
       tree.new_feature.standard_name := name.to_lower
-      IO.put_line ("adding: " & tree.new_feature.name);
       tree^features.features.list.append (tree.new_feature);
       tree^features.features.table.set (tree.new_feature.standard_name, tree.new_feature);
    end loop;
@@ -177,13 +172,13 @@ after feature_value/explicit_value do
    parent.value := (constant_feature => child)
 end
 
+before feature_value/routine do
+   child.feature := parent^feature_declaration.feature_body
+end
+
 after feature_value/routine do
    parent.value := (routine => child, local => (list => new Array, table => new Map))
    parent.deferred := child.deferred
-end
-
-before routine do
-   tree.feature := tree^feature_declaration.feature_body
 end
 
 after routine/feature_body do
@@ -207,5 +202,5 @@ after type/class_type do
 end;
 
 after class_type/class_name do
-   parent.name := class_name.image.to_lower;
+   parent.name := class_name.name;
 end;

@@ -79,7 +79,9 @@ record_component_list ::= < component_definition ';' >
 
 component_definition ::= defining_identifier_list ':' named_type
 
-sequence_of_statements ::= { [ label ] statement ';' }
+sequence_of_statements ::= { labeled_statement }
+
+labeled_statement ::= [ label ] statement ';'
 
 label ::= '<<' identifier '>>'
 

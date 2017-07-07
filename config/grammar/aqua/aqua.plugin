@@ -1,14 +1,14 @@
 plugin Aqua version 0.1 is
 
-   source_path = (".", "/", "/standard", "/binary", "/standard/generated");
+   source_path = (".", "/", "/generated", "/standard");
    
    group run_check : semantic is
-      aqua_check;
+--      aqua_check;
    end run_check;
 
-   group tagatha : code is
+   group generate : code is
       aqua_tagatha;
       --  aqua_generate;
-   end tagatha;
+   end generate;
    
 end Aqua;

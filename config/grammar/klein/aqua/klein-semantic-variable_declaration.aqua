@@ -1,0 +1,8 @@
+class Klein.Semantic.Variable_Declaration
+
+after Self do
+begin
+   for Id of Defining_Identifier_List.Ids loop
+      Current_Table.Insert (Id, Named_Type.Type);
+   end loop;
+end Self;

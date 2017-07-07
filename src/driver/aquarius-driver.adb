@@ -8,25 +8,31 @@ with Aquarius.Actions;
 with Aquarius.Command_Line;
 with Aquarius.Config_Paths;
 with Aquarius.Configuration;
+with Aquarius.Errors;
 with Aquarius.Grammars.Aqua_Gen;
 with Aquarius.Grammars.Manager;
 with Aquarius.Library;
 with Aquarius.Loader;
 with Aquarius.Messages.Console;
 with Aquarius.Names;
+with Aquarius.Plugins.Manager;
 with Aquarius.Programs.Arrangements;
 with Aquarius.Projects.Files;
 with Aquarius.Rendering.Manager;
 with Aquarius.Target.Manager;
-with Komnenos.Themes;
 with Aquarius.Trace;
 
 with Aquarius.Version;
 
 with Aquarius.Grammars.UI;
 
+with Aquarius.Ack.IO;
+with Aquarius.Ack.Parser;
+with Aquarius.Ack.Semantic;
+
 with Komnenos.Logging;
 with Komnenos.Paths;
+with Komnenos.Themes;
 with Komnenos.UI;
 with Komnenos.UI.Sessions;
 
@@ -244,37 +250,77 @@ begin
          if Command_Line.Action /= "" then
             if Command_Line.Action = "grammar-gen" then
 
-               for I in 1 .. 3 loop
+               Aquarius.Grammars.Aqua_Gen.Generate (Grammar);
+
+            elsif Command_Line.Action = "import-aqua" then
+               declare
+                  Node : constant Aquarius.Ack.Node_Id :=
+                           Aquarius.Ack.Parser.Import
+                             (Input);
+               begin
+
+                  if False then
+                     Aquarius.Ack.IO.Put_Line (Node);
+                  end if;
+
+                  Ada.Text_IO.Put_Line
+                    ("analysing: " & Input.Source_File_Name);
+
+                  Aquarius.Ack.Semantic.Analyse_Class_Declaration (Node);
+
+                  declare
+                     procedure Set_Error
+                       (Node : Aquarius.Ack.Node_Id;
+                        Error : Aquarius.Ack.Error_Kind);
+
+                     ---------------
+                     -- Set_Error --
+                     ---------------
+
+                     procedure Set_Error
+                       (Node  : Aquarius.Ack.Node_Id;
+                        Error : Aquarius.Ack.Error_Kind)
+                     is
+                        use Aquarius.Ack;
+                        Program : constant Aquarius.Programs.Program_Tree :=
+                                    Get_Program (Node);
+                        Message : constant String :=
+                                    (case Error is
+                                        when E_No_Error =>
+                                           raise Constraint_Error with
+                                             "scan_errors sent no error",
+                                        when E_Undeclared_Name =>
+                                           "undeclared: "
+                                     & To_String (Get_Name (Node)),
+                                        when E_No_Child        =>
+                                           "child class not found",
+                                        when E_No_Component    =>
+                                           "invalid prefix in selected "
+                                     & "component",
+                                        when E_Id_List_With_Arguments =>
+                                           "arguments cannot appear here",
+                                        when E_Id_List_With_No_Type   =>
+                                           "declaration group "
+                                     & "requires a type",
+                                        when E_Id_List_With_Routine   =>
+                                           "routine can have only one name",
+                                        when E_Type_Error             =>
+                                           "expected type derived from "
+                                     & To_String
+                                       (Get_Name (Get_Error_Entity (Node)))
+                                     & " but found "
+                                     & To_String
+                                       (Get_Name
+                                          (Get_Type (Get_Entity (Node)))));
+                     begin
+                        Aquarius.Errors.Error (Program, Message);
+                     end Set_Error;
+
                   begin
-                     if not Ada.Directories.Exists
-                       ("generated-grammar")
-                     then
-                        Ada.Directories.Create_Directory
-                          ("generated-grammar");
-                     end if;
-                     if Ada.Directories.Exists
-                       ("generated-grammar/" & Grammar.Name)
-                     then
-                        Ada.Directories.Delete_Tree
-                          ("generated-grammar/" & Grammar.Name);
-                     end if;
-
-                     Ada.Directories.Create_Directory
-                       ("generated-grammar/" & Grammar.Name);
-
-                     Ada.Directories.Create_Directory
-                       ("generated-grammar/" & Grammar.Name & "/syntax");
-
-                     exit;
-
-                  exception
-                     when others =>
-                        delay 0.5;
+                     Aquarius.Ack.Scan_Errors
+                       (Node, Set_Error'Access);
                   end;
-               end loop;
-
-               Aquarius.Grammars.Aqua_Gen.Generate
-                 (Grammar, "generated-grammar/" & Grammar.Name & "/syntax");
+               end;
             else
                Grammar.Run_Actions (Command_Line.Action, Input);
             end if;
@@ -355,6 +401,7 @@ begin
             Aquarius.Trace.End_Trace;
          end if;
 
+         Aquarius.Plugins.Manager.Loaded_Plugin_Report;
          Show_Allocations;
 
       exception

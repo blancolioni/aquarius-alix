@@ -1,0 +1,15 @@
+class Klein.Semantic.Variable_Declaration_Node
+
+inherit
+   Klein.Syntax.Variable_Declaration_Node
+      redefine After_Matching_End_Identifier end
+
+feature
+
+   After_Matching_End_Identifier (Child : Matching_End_Identifier_Node)
+   do
+      if Child.Identifier /= Identifier then
+         Child.Error ("expected '" & Identifier & "'");
+      end
+   end
+   

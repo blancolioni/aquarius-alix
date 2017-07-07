@@ -1,0 +1,43 @@
+class Klein.Semantic.Qualified_Identifier
+inherit
+   Klein.Syntax.Qualified_Identifier_Node
+
+feature
+
+Named_Object : Klein.Entries.Entry
+Qualifiers   : List[Klein.Entries.Entry]
+
+Before_Node
+do
+   create Qualifiers
+end Before_Node
+
+Before_Identifier (Identifier : String)
+local
+   Local_Table   : Symbol_Table := Self.Table
+   Standard_Name : String := Identifier.Standard_Text;
+do
+   if not Named_Object.null then
+      if not Named_Object in Symbol_Table then
+         Identifier.Error ("invalid prefix in selected component '" & Identifier.Text & "'")
+      else
+         Qualifiers.Append (Named_Object)
+         Local_Table := Named_Object
+      end if
+   end if
+   
+   if not Local_Table.Has_Element (Standard_Name) then
+      if Local_Table = Self.Table then
+         Identifier.Error ("undefined: " & Identifier.Text);
+         if Local_Table.Has_Similar_Element (Standard_Name) then
+            Identifier.Error ("possible misspelling of '" & Local_Table.Similar_Element (Standard_Name).Declared_Name);            
+         end if;
+      else
+         Identifier.Error ("No such feature '" & Identifier.Text & " for " & Local_Table.Declared_Name);      
+      end if;
+   else
+      Named_Object := Local_Table.Element (Standard_Name);
+   end if
+end Before_Identifier;
+
+end Klein.Semantic.Qualified_Identifier

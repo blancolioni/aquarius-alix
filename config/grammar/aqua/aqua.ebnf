@@ -19,6 +19,7 @@ format ',' no_space_before space_after
 format '.' no_space_before no_space_after
 
 format 'end' new_line_before
+format 'local' new_line_before
 
 format note_list indented_child
 format inherit_list indented_child
@@ -28,7 +29,7 @@ format new_export_list indented_child
 format attribute indented_child
 format deferred new_line_after
 format assertion_clause indented_child
-format local_entity_declaration_list indented_child
+format entity_declaration_list indented_child
 format compound indented_child
 format instruction new_line_before
 format until_expression indented_child
@@ -42,9 +43,9 @@ class_declaration ::=
    [ creators ]
    [ features ]
    [ invariant ]
-   'end' matching_class_name
+   'end' matching_class_name [ ';' ]
 
-matching_class_name ::= identifier
+matching_class_name ::= class_name
 
 notes ::= 'note' note_list
 
@@ -66,17 +67,17 @@ header_mark ::=
       |  'expanded'
       |  'frozen'
 
-class_name ::= identifier
+class_name ::= < identifier / '.' >
 
 features ::=
          < feature_clause >
 	 
 feature_clause ::=
          'feature' [ clients ] feature_declaration_list
-	 
+         
 feature_declaration_list ::=
    < feature_declaration [';'] >
-   
+
 feature_declaration ::=
          new_feature_list declaration_body
 	 
@@ -95,10 +96,12 @@ new_feature_list ::=
          < new_feature / ',' >
 	 
 new_feature ::=
-         [ 'frozen' ] extended_feature_name
+         [ 'frozen' ] feature_name
 	 
 routine ::=
-         [ precondition ] [ local_declarations ] feature_body [ postcondition ] [ rescue ] 'end'
+         [ precondition ] [ local_declarations ] feature_body [ postcondition ] [ rescue ] 'end' matching_routine_name
+         
+matching_routine_name ::= identifier
 
 feature_body ::=
          deferred
@@ -159,7 +162,7 @@ entity_declaration_list ::=
          < entity_declaration_group [ ';' ] >
 	 
 entity_declaration_group ::=
-         identifier_list type_mark
+         identifier_list type_mark [ ':=' expression ]
 	 
 identifier_list ::=
          < identifier / ',' >
@@ -168,9 +171,6 @@ deferred ::=
          'deferred'
 	 
 effective_routine ::=
-         internal
-
-internal ::=
          routine_mark compound
 	 
 routine_mark ::=
@@ -183,7 +183,7 @@ key_list ::=
          < string_literal / ',' >
 	 
 local_declarations ::=
-         'local' [ local_entity_declaration_list ]
+         'local' [ entity_declaration_list ]
 
 local_entity_declaration_list ::= entity_declaration_list
 
@@ -197,6 +197,7 @@ instruction ::=
       |  conditional
       |  multi_branch
       |  loop
+      |  iteration
       |  debug
       |  precursor
       |  check
@@ -235,14 +236,17 @@ only ::=
          'only' [ feature_list ]
 	 
 check ::=
-         'check' assertion [ notes ] 'end'
+         'check' assertion [ notes ] 'end' 'check'
 	 
 variant ::=
          'variant' [ tag_mark ] expression
 	 
 precursor ::=
-         < identifier [ parent_qualification ] [ actuals ] / '.' >
+         < precursor_element / '.' >
 	 
+precursor_element ::= 
+        identifier [ parent_qualification ] [ actuals ] 
+        
 parent_qualification ::=
          '{' class_name '}'
 	 
@@ -315,27 +319,28 @@ select ::=
 	 
 conditional ::=
    'if' boolean_expression 'then' compound
-      { 'elseif' boolean_expression 'then' compound }
+      { 'elsif' boolean_expression 'then' compound }
       [ 'else' compound ]
-   'end'
+   'end' 'if'
 
 multi_branch ::=
-         'inspect' expression [ when_part_list ] [ 'else' compound ] 'end'
+         'case' expression [ when_part_list ] 'end' 'case'
 	 
 when_part_list ::=
          < when_part >
 	 
 when_part ::=
-         'when' choices 'then' compound
+         'when' choices '=>' compound
 	 
 choices ::=
-         < choice / ',' >
+         < choice / '|' >
 	 
 choice ::=
          constant
       |  manifest_type
       |  constant_interval
       |  type_interval
+      | 'others'
       
 constant_interval ::=
          constant '..' constant
@@ -344,7 +349,7 @@ type_interval ::=
          manifest_type '..' manifest_type
 	 
 loop ::=
-         initialization [ invariant ] exit_condition loop_body [ variant ] 'end'
+         initialization [ invariant ] exit_condition loop_body [ variant ] 'end' 'loop'
 	 
 initialization ::=
          'from' compound
@@ -355,20 +360,16 @@ until_expression ::= boolean_expression
 
 loop_body ::=
          'loop' compound
+         
+iteration ::= 'for' identifier 'of' expression 'loop' compound 'end' 'loop'
+
 debug ::=
-         'debug' [ '(' key_list ')' ] compound 'end'
+         'debug' [ '(' key_list ')' ] compound 'end' 'debug'
 
 attribute ::=
          'attribute' compound
 
-variable ::=
-         variable_attribute
-      |  local
-variable_attribute ::=
-         feature_name
-local ::=
-         identifier
-      |  'Result'
+variable ::= identifier
       
 creators ::=
          < creation_clause >
@@ -411,6 +412,9 @@ retry ::=
          'retry'
 expression ::=
     relation { boolean_operator relation }
+   | relation member_of class_name
+   
+member_of ::= 'in' | 'not' 'in'
 
 relation ::=
 	simple_expression [ relational_operator simple_expression ]
@@ -424,8 +428,8 @@ factor ::= [ unary_primary_operator ] primary
 
 primary ::= manifest_constant
          | precursor
-	 | '(' expression ')'
-	 | old
+	     | '(' expression ')'
+	     | old
          | object_test
 	 
 boolean_operator ::=

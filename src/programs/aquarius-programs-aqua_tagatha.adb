@@ -120,8 +120,16 @@ package body Aquarius.Programs.Aqua_Tagatha is
      (Tree : Program_Tree;
       Name : String);
 
+   procedure Tagatha_Pop_Argument
+     (Tree  : Program_Tree;
+      Index : Tagatha.Tagatha_Integer);
+
    procedure Tagatha_Push
      (Tree  : Program_Tree);
+
+   procedure Tagatha_Push_Argument
+     (Tree  : Program_Tree;
+      Index : Tagatha.Tagatha_Integer);
 
    procedure Tagatha_Push_External
      (Tree      : Program_Tree;
@@ -189,11 +197,25 @@ package body Aquarius.Programs.Aqua_Tagatha is
              (Handler => Tagatha_Pop_Register'Access));
 
       Aqua.Primitives.New_Primitive_Handler
+        (Name           => "tree__pop_argument",
+         Argument_Count => 2,
+         Handler        =>
+           Handle_Procedure_Tree_Integer'
+             (Handler => Tagatha_Pop_Argument'Access));
+
+      Aqua.Primitives.New_Primitive_Handler
         (Name           => "tree__push",
          Argument_Count => 1,
          Handler        =>
            Handle_Procedure_Tree'
              (Handler => Tagatha_Push'Access));
+
+      Aqua.Primitives.New_Primitive_Handler
+        (Name           => "tree__push_argument",
+         Argument_Count => 2,
+         Handler        =>
+           Handle_Procedure_Tree_Integer'
+             (Handler => Tagatha_Push_Argument'Access));
 
       Aqua.Primitives.New_Primitive_Handler
         (Name           => "tree__push_external",
@@ -779,6 +801,21 @@ package body Aquarius.Programs.Aqua_Tagatha is
    end Tagatha_Pop;
 
    --------------------------
+   -- Tagatha_Pop_Argument --
+   --------------------------
+
+   procedure Tagatha_Pop_Argument
+     (Tree      : Program_Tree;
+      Index     : Tagatha.Tagatha_Integer)
+   is
+      pragma Unreferenced (Tree);
+   begin
+      Current_Unit.Pop_Argument
+        (Tagatha.Argument_Offset (Index),
+         Size => Tagatha.Default_Size);
+   end Tagatha_Pop_Argument;
+
+   --------------------------
    -- Tagatha_Pop_Register --
    --------------------------
 
@@ -803,6 +840,22 @@ package body Aquarius.Programs.Aqua_Tagatha is
         (Tree.Fragment,
          Tagatha.Fragments.Push);
    end Tagatha_Push;
+
+   ---------------------------
+   -- Tagatha_Push_Argument --
+   ---------------------------
+
+   procedure Tagatha_Push_Argument
+     (Tree      : Program_Tree;
+      Index     : Tagatha.Tagatha_Integer)
+   is
+      pragma Unreferenced (Tree);
+   begin
+      Current_Unit.Push_Operand
+        (Tagatha.Operands.Argument_Operand
+           (Offset => Tagatha.Argument_Offset (Index)),
+         Size => Tagatha.Default_Size);
+   end Tagatha_Push_Argument;
 
    ---------------------------
    -- Tagatha_Push_External --

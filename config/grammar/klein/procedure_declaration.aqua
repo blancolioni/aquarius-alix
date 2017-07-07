@@ -1,0 +1,14 @@
+class Klein.Semantic.Procedure_Declaration
+   inherit Klein.Semantic.Defining_Node redefine Entry end
+   
+Entry : Klein.Table.Procedure_Entry;
+
+after Identifier do
+   Entry := new Klein.Table.Procedure_Entry (Child);
+end Identifier;
+
+after Matching_End_Identifier do
+   if Child.Identifier /= Identifier then
+      Child.Error ("expected '" & Identifier & "'");
+   end if;
+end Matching_End_Identifier;

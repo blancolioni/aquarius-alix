@@ -1,12 +1,17 @@
+function get_named_object(m) is
+begin
+   return m.named_object;
+end get_named_object;
+
 before class_declaration do
    IO.put_line ("generating: " & tree.class.name)
-   tree.begin_unit (tree.class.name)
+   tree.begin_unit (tree.class.name.link_name)
    tree.strings := (list => new Array, table => new Map)
 end;
 
 after class_declaration/class_header do
    IO.put_line ("  - generating class header");
-   parent.begin_routine(parent.class.name & "$new", 0, 0, 1);
+   parent.begin_routine(parent.class.name.link_name & "$create", 0, 0, 1);
    parent.push_external ("map", 1);
    parent.pop_register ("op");
    parent.native_operation ("allocate", 0, 0, "op");
@@ -18,10 +23,14 @@ after class_declaration/class_header do
    
    for feature in parent.class.features.list loop
       if feature.attribute then
-         parent.begin_routine(parent.class.name & "__" & feature.name & "$get", 1, 0, 1);
-         
+         parent.begin_routine(parent.class.name.link_name & "__" & feature.name & "$get", 1, 0, 1);
+         parent.push_argument (1);
+         parent.pop_register("op");
+         parent.native_operation("get_property " & feature.name, 0, 0, "pv");
+         parent.push_register("pv");
+         parent.pop_register("r0");
          parent.end_routine;
-         parent.begin_routine(parent.class.name & "__" & feature.name & "$set", 2, 0, 0);
+         parent.begin_routine(parent.class.name.link_name & "__" & feature.name & "$set", 2, 0, 0);
          parent.end_routine;
       end if;
    end loop;

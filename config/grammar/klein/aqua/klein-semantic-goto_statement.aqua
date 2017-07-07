@@ -1,0 +1,11 @@
+class Klein.Semantic.Goto_Statement is
+
+Destination : Klein.Syntax.Statement
+
+before Identifier do
+   if Has_Element (Identifier.Text) then
+      Destination := Element (Identifier.Text);
+   else
+      Identifier.Error ("undefined label: " & Identifier.Text);
+   end if;
+end Identifier;
