@@ -4,8 +4,6 @@ with Aquarius.Ack.Classes;
 with Aquarius.Ack.Files;
 with Aquarius.Ack.Parser;
 
-with Aquarius.Ack.IO;
-
 package body Aquarius.Ack.Semantic is
 
    function Load_Entity
@@ -26,6 +24,14 @@ package body Aquarius.Ack.Semantic is
    procedure Analyse_Features
      (Class    : Node_Id;
       Features : Node_Id);
+
+   procedure Analyse_Inheritance
+     (Class       : Node_Id;
+      Inheritance : Node_Id);
+
+   procedure Analyse_Inherit
+     (Class   : Node_Id;
+      Inherit : Node_Id);
 
    procedure Analyse_Feature_Clause
      (Class  : Node_Id;
@@ -118,9 +124,13 @@ package body Aquarius.Ack.Semantic is
      (Class  : Node_Id;
       Header : Node_Id)
    is
+      Inheritance_Node : constant Node_Id := Inheritance (Class);
    begin
       Analyse_Class_Name (Class, Class_Name (Header),
                           Defining_Name => True);
+      if Inheritance_Node /= No_Node then
+         Analyse_Inheritance (Class, Inheritance_Node);
+      end if;
    end Analyse_Class_Header;
 
    ------------------------
@@ -435,6 +445,45 @@ package body Aquarius.Ack.Semantic is
       end loop;
    end Analyse_Features;
 
+   ---------------------
+   -- Analyse_Inherit --
+   ---------------------
+
+   procedure Analyse_Inherit
+     (Class   : Node_Id;
+      Inherit : Node_Id)
+   is
+      Class_Type : constant Node_Id := Inherit_Class_Type (Inherit);
+      Class_Node : constant Node_Id := Class_Name (Class_Type);
+   begin
+      Analyse_Class_Name (Class, Class_Node,
+                          Defining_Name => False);
+      Set_Entity (Inherit, Get_Entity (Class_Node));
+   end Analyse_Inherit;
+
+   -------------------------
+   -- Analyse_Inheritance --
+   -------------------------
+
+   procedure Analyse_Inheritance
+     (Class       : Node_Id;
+      Inheritance : Node_Id)
+   is
+      procedure Analyse (Node : Node_Id);
+
+      -------------
+      -- Analyse --
+      -------------
+
+      procedure Analyse (Node : Node_Id) is
+      begin
+         Analyse_Inherit (Class, Node);
+      end Analyse;
+
+   begin
+      Scan (Inherits (Inheritance), Analyse'Access);
+   end Analyse_Inheritance;
+
    -----------------------
    -- Analyse_Precursor --
    -----------------------
@@ -474,8 +523,6 @@ package body Aquarius.Ack.Semantic is
       end Process;
 
    begin
-
-      Aquarius.Ack.IO.Put_Line (Precursor);
 
       Scan (List, Process'Access);
 

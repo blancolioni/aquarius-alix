@@ -603,7 +603,10 @@ package body Aquarius.Ack.Parser is
       return Node_Id
    is
    begin
-      return New_Node (N_Inherited, From);
+      return New_Node (N_Inherited, From,
+                       Field_1 =>
+                         Import_Class_Type
+                           (From.Program_Child ("class_Type")));
    end Import_Inherited;
 
    ------------------------
