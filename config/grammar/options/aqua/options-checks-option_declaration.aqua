@@ -1,0 +1,9 @@
+class Options.Checks.Option_Declaration
+   inherit Options.Syntax.Option_Declaration
+     --  redefine end
+     
+feature
+
+   Option_Entry : Options.Entry
+   
+end Options.Checks.Option_Declaration
