@@ -1,0 +1,14 @@
+class Klein.Entries.Entry
+
+feature
+   Declared_Name : String
+   Standard_Name : String
+   Entry_Type    : Klein.Types.Type
+
+   Initialize (Name : String)
+   do
+      Declared_Name := Name;
+      Standard_Name := Name.To_Lower;
+   end Initialize;
+   
+end Klein.Entries.Entry;

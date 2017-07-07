@@ -1,0 +1,2 @@
+class Klein.Semantic.Block
+   inherit Symbol_Table

@@ -1,0 +1,13 @@
+class Klein.Semantic.Named_Type
+
+Entry : Type_Entry
+
+after Self do
+   Entry := Qualified_Identifier.Named_Object
+   if Entry not in Type_Entry then
+      Qualified_Identifier.Error ("expected a type")
+   end if
+end Self
+
+   
+

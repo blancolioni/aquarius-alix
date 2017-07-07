@@ -1,0 +1,7 @@
+class Aqua.Containers.Table
+
+feature
+
+   Get (Key : String) : Aqua.Entries.Entry
+   
+end Aqua.Containers.Table;

@@ -1,10 +1,15 @@
 with Aquarius.Configuration;
 with Aquarius.File_System_Stores;
+with Aquarius.Grammars;
 with Aquarius.Paths;
+with Aquarius.Plugins.Manager;
+with Aquarius.Programs;
+with Aquarius.Trees.Properties;
 
 with Komnenos.Connectors;
 with Komnenos.Fragments;
 
+with Aqua.Execution;
 with Aqua.IO;
 with Aqua.Primitives.Init;
 
@@ -15,6 +20,11 @@ package body Aquarius.Library is
    Local_Options : array (Option_Type) of Boolean :=
                      (Plugins_Enabled => True,
                       Show_Paths_In_Messages_Enabled => False);
+
+   function Load_File
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
 
    --------------------
    -- Enable_Plugins --
@@ -42,7 +52,38 @@ package body Aquarius.Library is
       Aquarius.File_System_Stores.Register;
       Komnenos.Fragments.Register;
       Komnenos.Connectors.Register;
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__load_file",
+         Argument_Count => 2,
+         Handler        => Load_File'Access);
+
    end Initialise;
+
+   ---------------
+   -- Load_File --
+   ---------------
+
+   function Load_File
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      Path    : constant String :=
+                  Context.To_String (Arguments (2));
+      Program : constant Aquarius.Programs.Program_Tree :=
+                  Aquarius.Programs.Program_Tree
+                    (Context.To_External_Object (Arguments (1)));
+      Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
+                  Aquarius.Trees.Properties.Get_Grammar (Program);
+      Plugin  : constant Aquarius.Plugins.Aquarius_Plugin :=
+                  Aquarius.Plugins.Manager.Get_Plugin
+                    (Grammar.Name);
+      Tree    : constant Aquarius.Programs.Program_Tree :=
+                  Plugin.Get_Program (Path);
+   begin
+      return Context.To_Word (Tree);
+   end Load_File;
 
    ---------------------
    -- Plugins_Enabled --

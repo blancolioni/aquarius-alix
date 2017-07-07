@@ -1,0 +1,11 @@
+class Klein.Semantic.Sequence_Of_Statements
+   inherit Symbol_Table
+
+before Self do
+   for Item of Labeled_Statement loop
+      if not Item.Label_Text.Void then
+         Insert (Item.Label_Text, Item.Statement);
+      end if;
+   end loop;
+end Self;
+    

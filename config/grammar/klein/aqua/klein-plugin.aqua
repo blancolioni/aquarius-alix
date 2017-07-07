@@ -1,0 +1,11 @@
+class Klein.Plugin
+   inherit Aqua.Plugin
+   
+Version = "0.1"
+
+Annotate : Action
+Semantic : Action
+Generate : Action
+
+Semantic_Group = (Annotate, Semantic)
+Code_Group     = (Generate)
