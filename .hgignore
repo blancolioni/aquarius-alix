@@ -15,3 +15,4 @@ arrangement.log
 tests/kit/temp
 trace.txt
 aquarius.log
+config/aqua/generated/*
