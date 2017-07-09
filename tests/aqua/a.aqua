@@ -17,9 +17,17 @@ feature
 end A
 
 --  A__vm:
+--     .word A__e
 --     .word A__f
+--     .word A__g
 --
---  A__f:
+--  A__e:
 --     mov 1, r0
+--     rts
+--  A__f:
+--     mov 2, r0
+--     rts
+--  A__g:
+--     mov 3, r0
 --     rts
 

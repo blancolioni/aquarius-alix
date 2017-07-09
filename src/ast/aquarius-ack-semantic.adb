@@ -48,10 +48,10 @@ package body Aquarius.Ack.Semantic is
       Feature : Node_Id);
 
    procedure Analyse_Entity_Declaration_Groups
-     (Class  : Node_Id;
-      Table  : Entity_Id;
-      Groups : List_Id;
-      Kind   : Local_Entity_Kind);
+     (Class      : Node_Id;
+      Table      : Entity_Id;
+      Group_List : Node_Id;
+      Kind       : Local_Entity_Kind);
 
    procedure Analyse_Routine
      (Class  : Node_Id;
@@ -255,11 +255,14 @@ package body Aquarius.Ack.Semantic is
    ---------------------------------------
 
    procedure Analyse_Entity_Declaration_Groups
-     (Class  : Node_Id;
-      Table  : Entity_Id;
-      Groups : List_Id;
-      Kind   : Local_Entity_Kind)
+     (Class      : Node_Id;
+      Table      : Entity_Id;
+      Group_List : Node_Id;
+      Kind       : Local_Entity_Kind)
    is
+
+      Count : Natural := 0;
+
       procedure Insert_Group (Group_Node : Node_Id);
 
       ------------------
@@ -291,6 +294,7 @@ package body Aquarius.Ack.Semantic is
                           Entity_Type => Type_Entity);
          begin
             Set_Entity (Id_Node, Entity);
+            Count := Count + 1;
          end Insert_Id;
 
       begin
@@ -305,7 +309,8 @@ package body Aquarius.Ack.Semantic is
       end Insert_Group;
 
    begin
-      Scan (Groups, Insert_Group'Access);
+      Scan (Node_Table (Group_List).List, Insert_Group'Access);
+      Node_Table (Group_List).Integer_Value := Count;
    end Analyse_Entity_Declaration_Groups;
 
    ------------------------
@@ -420,7 +425,7 @@ package body Aquarius.Ack.Semantic is
 
       if Single and then Arg_Node /= No_Node then
          Analyse_Entity_Declaration_Groups
-           (Class, Local_Table, Entity_Declaration_Groups (Arg_Node),
+           (Class, Local_Table, Entity_Declaration_Group_List (Arg_Node),
             Kind => Argument_Entity);
          Set_Entity (Feature, Local_Table);
       end if;
@@ -442,7 +447,7 @@ package body Aquarius.Ack.Semantic is
                          (Name        => Get_Name (Feature_Name (Node)),
                           Kind        => Feature_Entity,
                           Context     => Get_Entity (Class),
-                          Declaration => Node,
+                          Declaration => Feature,
                           Entity_Type => Type_Entity);
          begin
 --              Ada.Text_IO.Put_Line

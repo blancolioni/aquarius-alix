@@ -27,9 +27,11 @@ with Aquarius.Grammars.UI;
 
 with Aquarius.Ack.Errors;
 with Aquarius.Ack.IO;
-with Aquarius.Ack.Parser;
 with Aquarius.Ack.Primitives;
+
+with Aquarius.Ack.Parser;
 with Aquarius.Ack.Semantic;
+with Aquarius.Ack.Generate;
 
 with Komnenos.Logging;
 with Komnenos.Paths;
@@ -272,6 +274,19 @@ begin
 
                   Aquarius.Ack.Semantic.Analyse_Class_Declaration (Node);
                   Aquarius.Ack.Errors.Record_Errors (Node);
+
+                  declare
+                     use Aquarius.Messages;
+                     List : Message_List;
+                  begin
+                     Input.Get_Messages (List);
+                     if Message_Count (List) = 0 or else
+                       Highest_Level (List) <= Warning
+                     then
+                        Aquarius.Ack.Generate.Generate_Class_Declaration
+                          (Node);
+                     end if;
+                  end;
 
                end;
             else

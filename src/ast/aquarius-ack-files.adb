@@ -37,6 +37,15 @@ package body Aquarius.Ack.Files is
       end if;
    end Base_File_Name;
 
+   --------------------
+   -- Base_File_Name --
+   --------------------
+
+   function Base_File_Name (Class : Entity_Id) return String is
+   begin
+      return Base_File_Name (Get_Context (Class), Get_Name (Class));
+   end Base_File_Name;
+
    ---------------------
    -- Find_Class_File --
    ---------------------
