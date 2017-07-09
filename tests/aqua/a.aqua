@@ -1,0 +1,25 @@
+class A
+
+feature
+
+  e : Integer do
+    Result := 1
+  end e
+  
+  f : Integer do
+    Result := 2
+  end f
+
+  g : Integer do
+    Result := 3
+  end g
+  
+end A
+
+--  A__vm:
+--     .word A__f
+--
+--  A__f:
+--     mov 1, r0
+--     rts
+
