@@ -19,6 +19,24 @@ package body Aquarius.Ack is
       List_Table (List).List.Append (Node);
    end Append;
 
+   -------------------
+   -- Contains_Name --
+   -------------------
+
+   function Contains_Name
+     (List : List_Id;
+      Name : Name_Id)
+      return Boolean
+   is
+   begin
+      for Item of List_Table (List).List loop
+         if Get_Name (Item) = Name then
+            return True;
+         end if;
+      end loop;
+      return False;
+   end Contains_Name;
+
    ----------------------
    -- Depth_First_Scan --
    ----------------------
@@ -78,6 +96,26 @@ package body Aquarius.Ack is
       Name    : Name_Id)
       return Entity_Id
    is
+      Result : constant Entity_Id := Find_Local_Entity (Context, Name);
+   begin
+      if Result = Undeclared_Entity
+        and then Context /= No_Entity
+      then
+         return Find_Entity (Entity_Table (Context).Context, Name);
+      else
+         return Result;
+      end if;
+   end Find_Entity;
+
+   -----------------------
+   -- Find_Local_Entity --
+   -----------------------
+
+   function Find_Local_Entity
+     (Context : Entity_Id;
+      Name    : Name_Id)
+      return Entity_Id
+   is
    begin
       if Context = No_Entity then
          declare
@@ -99,14 +137,10 @@ package body Aquarius.Ack is
                   return Item;
                end if;
             end loop;
-
-            if Entity_Rec.Context /= No_Entity then
-               return Find_Entity (Entity_Rec.Context, Name);
-            end if;
          end;
          return Undeclared_Entity;
       end if;
-   end Find_Entity;
+   end Find_Local_Entity;
 
    ------------------
    -- Find_Name_Id --
@@ -142,6 +176,30 @@ package body Aquarius.Ack is
       end if;
    end Get_Name_Id;
 
+   --------------------
+   -- Inherit_Entity --
+   --------------------
+
+   procedure Inherit_Entity
+     (Entity        : Entity_Id;
+      Derived_Class : Entity_Id;
+      Declaration   : Node_Id;
+      Redefine      : Boolean;
+      Rename        : Name_Id)
+   is
+      Result : constant Entity_Id :=
+                 New_Entity
+                   (Name        => (if Rename = No_Name
+                                    then Get_Name (Entity)
+                                    else Rename),
+                    Kind        => Get_Kind (Entity),
+                    Context     => Derived_Class,
+                    Declaration => Declaration,
+                    Entity_Type => Get_Type (Entity));
+   begin
+      Entity_Table  (Result).Redefine := Redefine;
+   end Inherit_Entity;
+
    ----------------
    -- New_Entity --
    ----------------
@@ -154,16 +212,39 @@ package body Aquarius.Ack is
       Entity_Type : Entity_Id)
       return Entity_Id
    is
+      Existing : constant Entity_Id :=
+                   Find_Local_Entity (Context, Name);
    begin
+
+      if Existing /= No_Entity and then Existing /= Undeclared_Entity then
+         if Entity_Table.Element (Existing).Redefine then
+            if Get_Type (Existing) /= Entity_Type then
+               Error (Declaration, E_Type_Error, Get_Type (Existing));
+               --  FIXME: check arguments
+            end if;
+            Entity_Table.Replace_Element
+              (Existing,
+               (Entity_Table.Element (Existing) with delta
+                  Redefine => False,
+                  Entity_Type => Entity_Type,
+                  Declaration => Declaration));
+            return Existing;
+         else
+            Error (Declaration, E_Redefined_Name, Existing);
+         end if;
+      end if;
+
       return Entity : constant Entity_Id := Entity_Table.Last_Index + 1 do
          Entity_Table.Append
            (Entity_Record'
-              (Name        => Name,
-               Kind        => Kind,
-               Context     => Context,
-               Declaration => Declaration,
-               Entity_Type => Entity_Type,
-               Children    => <>));
+              (Redefine       => False,
+               Name           => Name,
+               Kind           => Kind,
+               Context        => Context,
+               Inherited_From => No_Entity,
+               Declaration    => Declaration,
+               Entity_Type    => Entity_Type,
+               Children       => <>));
          if Context = No_Entity then
             Top_Level_Entities.Insert
               (Name, Entity);
@@ -228,6 +309,31 @@ package body Aquarius.Ack is
       end return;
    end New_Node;
 
+   -------------------------
+   -- New_Primitive_Class --
+   -------------------------
+
+   function New_Primitive_Class
+     (Name        : Name_Id)
+      return Entity_Id
+   is
+   begin
+      return Entity : constant Entity_Id := Entity_Table.Last_Index + 1 do
+         Entity_Table.Append
+           (Entity_Record'
+              (Redefine       => False,
+               Name           => Name,
+               Kind           => Class_Entity,
+               Context        => No_Entity,
+               Inherited_From => No_Entity,
+               Declaration    => No_Node,
+               Entity_Type    => Entity,
+               Children       => <>));
+         Top_Level_Entities.Insert
+           (Name, Entity);
+      end return;
+   end New_Primitive_Class;
+
    ----------
    -- Scan --
    ----------
@@ -244,6 +350,21 @@ package body Aquarius.Ack is
          end loop;
       end if;
    end Scan;
+
+   -------------------
+   -- Scan_Children --
+   -------------------
+
+   procedure Scan_Children
+     (Entity  : Entity_Id;
+      Process : not null access
+        procedure (Child : Entity_Id))
+   is
+   begin
+      for Child of Entity_Table.Element (Entity).Children loop
+         Process (Child);
+      end loop;
+   end Scan_Children;
 
    -----------------
    -- Scan_Errors --

@@ -93,6 +93,16 @@ package body Aquarius.Ack.Parser is
       return Node_Id
      with Pre => From.Name = "feature_name";
 
+   function Import_Redefine
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is (New_Node (N_Redefine, From,
+                 List =>
+                    Import_List (From.Program_Child ("feature_list"),
+                                 "feature_name",
+                                 Import_Feature_Name'Access)))
+   with Pre => From.Name = "redefine";
+
    function Import_Declaration_Body
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
@@ -602,11 +612,34 @@ package body Aquarius.Ack.Parser is
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
    is
+      use Aquarius.Programs;
+      function Import_Redefine_Adaption
+        (Feature_Adaption : Aquarius.Programs.Program_Tree)
+         return Node_Id;
+
+      ------------------------------
+      -- Import_Redefine_Adaption --
+      ------------------------------
+
+      function Import_Redefine_Adaption
+        (Feature_Adaption : Aquarius.Programs.Program_Tree)
+         return Node_Id
+      is
+      begin
+         return Import_Optional_Child
+           (Feature_Adaption, "redefine", Import_Redefine'Access);
+      end Import_Redefine_Adaption;
+
+      Redefines : constant Node_Id :=
+                    Import_Optional_Child
+                      (From, "feature_adaptation",
+                       Import_Redefine_Adaption'Access);
    begin
       return New_Node (N_Inherited, From,
                        Field_1 =>
                          Import_Class_Type
-                           (From.Program_Child ("class_Type")));
+                           (From.Program_Child ("class_type")),
+                       Field_4 => Redefines);
    end Import_Inherited;
 
    ------------------------

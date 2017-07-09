@@ -1,5 +1,5 @@
 class Options.Checks.Option_Declaration
-   inherit Options.Syntax.Option_Declaration
+   inherit Options.Syntax.Option_Declaration_Node
      --  redefine end
      
 feature

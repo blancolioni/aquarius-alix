@@ -45,6 +45,8 @@ package Aquarius.Ack is
       N_Operator,
       N_Precursor,
       N_Constant,
+      N_String_Constant,
+      N_Integer_Constant,
       N_Variable,
       N_Identifier);
 
@@ -57,9 +59,13 @@ package Aquarius.Ack is
    subtype N_Expression_Node is Node_Kind range
      N_Operator .. N_Constant;
 
+   subtype N_Constant_Value is Node_Kind range
+     N_String_Constant .. N_Integer_Constant;
+
    type Error_Kind is
      (E_No_Error,
       E_Undeclared_Name,
+      E_Redefined_Name,
       E_No_Component,
       E_No_Child,
       E_Id_List_With_Arguments,
@@ -73,6 +79,7 @@ package Aquarius.Ack is
       Class_Entity,
       Feature_Entity,
       Argument_Entity,
+      Result_Entity,
       Local_Entity
      );
 
@@ -119,6 +126,7 @@ package Aquarius.Ack is
    function Get_Context (Entity : Entity_Id) return Entity_Id;
    function Get_Name (Entity : Entity_Id) return Name_Id;
    function Get_Declaration (Entity : Entity_Id) return Node_Id;
+   function Get_Kind (Entity : Entity_Id) return Entity_Kind;
    function Get_Type (Entity : Entity_Id) return Entity_Id;
 
    function New_Entity
@@ -127,9 +135,33 @@ package Aquarius.Ack is
       Context     : Entity_Id;
       Declaration : Node_Id;
       Entity_Type : Entity_Id)
+      return Entity_Id
+     with Post => Get_Type (New_Entity'Result) = Entity_Type
+     and then Get_Kind (New_Entity'Result) = Kind
+     and then Get_Declaration (New_Entity'Result) = Declaration;
+
+   procedure Inherit_Entity
+     (Entity        : Entity_Id;
+      Derived_Class : Entity_Id;
+      Declaration   : Node_Id;
+      Redefine      : Boolean;
+      Rename        : Name_Id);
+
+   procedure Scan_Children
+     (Entity  : Entity_Id;
+      Process : not null access
+        procedure (Child : Entity_Id));
+
+   function New_Primitive_Class
+     (Name        : Name_Id)
       return Entity_Id;
 
    function Find_Entity
+     (Context : Entity_Id;
+      Name    : Name_Id)
+      return Entity_Id;
+
+   function Find_Local_Entity
      (Context : Entity_Id;
       Name    : Name_Id)
       return Entity_Id;
@@ -174,6 +206,9 @@ package Aquarius.Ack is
      with Pre => Kind (N) = N_Inheritance;
 
    function Inherit_Class_Type (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Inherited;
+
+   function Redefine (N : Node_Id) return List_Id
      with Pre => Kind (N) = N_Inherited;
 
    function Identifiers (N : Node_Id) return List_Id
@@ -230,6 +265,9 @@ package Aquarius.Ack is
 
    function Expression (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Assignment;
+
+   function Constant_Value (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Constant;
 
    function Entity_Type (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Entity_Declaration_Group;
@@ -306,12 +344,14 @@ private
 
    type Entity_Record is
       record
-         Name        : Name_Id;
-         Kind        : Entity_Kind;
-         Context     : Entity_Id;
-         Declaration : Node_Id;
-         Entity_Type : Entity_Id;
-         Children    : List_Of_Entities.List;
+         Redefine       : Boolean;
+         Name           : Name_Id;
+         Kind           : Entity_Kind;
+         Context        : Entity_Id;
+         Inherited_From : Entity_Id;
+         Declaration    : Node_Id;
+         Entity_Type    : Entity_Id;
+         Children       : List_Of_Entities.List;
       end record;
 
    package Node_Vectors is
@@ -381,6 +421,10 @@ private
    function Inherit_Class_Type (N : Node_Id) return Node_Id
    is (Field_1 (N));
 
+   function Redefine (N : Node_Id) return List_Id
+   is (if Field_4 (N) = No_Node then No_List
+       else Node_Table (Field_4 (N)).List);
+
    function Identifiers (N : Node_Id) return List_Id
    is (Node_Table.Element (N).List);
 
@@ -438,6 +482,9 @@ private
    function Expression (N : Node_Id) return Node_Id
    is (Field_2 (N));
 
+   function Constant_Value (N : Node_Id) return Node_Id
+   is (Field_2 (N));
+
    function Has_Error
      (Node : Node_Id)
       return Boolean
@@ -493,9 +540,17 @@ private
    function Get_Type (Entity : Entity_Id) return Entity_Id
    is (Entity_Table.Element (Entity).Entity_Type);
 
+   function Get_Kind (Entity : Entity_Id) return Entity_Kind
+   is (Entity_Table.Element (Entity).Kind);
+
    procedure Set_Entity
      (Node : Real_Node_Id;
       Entity : Entity_Id)
      with Pre => Entity /= No_Entity and then Get_Entity (Node) = No_Entity;
+
+   function Contains_Name
+     (List : List_Id;
+      Name : Name_Id)
+      return Boolean;
 
 end Aquarius.Ack;

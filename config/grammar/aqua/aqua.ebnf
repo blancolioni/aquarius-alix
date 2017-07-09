@@ -5,7 +5,7 @@ identifier         ::= !\l[\w]*!
 integer            ::= ![0-9]+!
 real               ::= ![0-9]+\.[0-9]+([eE][0-9]+)?!
 character_constant ::= !\'[.]\'!
-string_literal     ::= !\x22[^\x22]*\x22!
+string_constant     ::= !\x22[^\x22]*\x22!
 
 line_comment = "--"
 
@@ -180,7 +180,7 @@ routine_mark ::=
 once ::=
          'once' [ '(' key_list ')' ]
 key_list ::=
-         < string_literal / ',' >
+         < string_constant / ',' >
 	 
 local_declarations ::=
          'local' [ entity_declaration_list ]
@@ -462,7 +462,7 @@ manifest_value ::=
       |  character_constant
       |  integer_constant
       |  real_constant
-      |  string_literal
+      |  string_constant
       |  manifest_type
       
 sign ::=

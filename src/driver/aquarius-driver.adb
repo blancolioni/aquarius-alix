@@ -8,7 +8,6 @@ with Aquarius.Actions;
 with Aquarius.Command_Line;
 with Aquarius.Config_Paths;
 with Aquarius.Configuration;
-with Aquarius.Errors;
 with Aquarius.Grammars.Aqua_Gen;
 with Aquarius.Grammars.Manager;
 with Aquarius.Library;
@@ -26,8 +25,10 @@ with Aquarius.Version;
 
 with Aquarius.Grammars.UI;
 
+with Aquarius.Ack.Errors;
 with Aquarius.Ack.IO;
 with Aquarius.Ack.Parser;
+with Aquarius.Ack.Primitives;
 with Aquarius.Ack.Semantic;
 
 with Komnenos.Logging;
@@ -253,6 +254,9 @@ begin
                Aquarius.Grammars.Aqua_Gen.Generate (Grammar);
 
             elsif Command_Line.Action = "import-aqua" then
+
+               Aquarius.Ack.Primitives.Create_Primitives;
+
                declare
                   Node : constant Aquarius.Ack.Node_Id :=
                            Aquarius.Ack.Parser.Import
@@ -267,59 +271,8 @@ begin
                     ("analysing: " & Input.Source_File_Name);
 
                   Aquarius.Ack.Semantic.Analyse_Class_Declaration (Node);
+                  Aquarius.Ack.Errors.Record_Errors (Node);
 
-                  declare
-                     procedure Set_Error
-                       (Node : Aquarius.Ack.Node_Id;
-                        Error : Aquarius.Ack.Error_Kind);
-
-                     ---------------
-                     -- Set_Error --
-                     ---------------
-
-                     procedure Set_Error
-                       (Node  : Aquarius.Ack.Node_Id;
-                        Error : Aquarius.Ack.Error_Kind)
-                     is
-                        use Aquarius.Ack;
-                        Program : constant Aquarius.Programs.Program_Tree :=
-                                    Get_Program (Node);
-                        Message : constant String :=
-                                    (case Error is
-                                        when E_No_Error =>
-                                           raise Constraint_Error with
-                                             "scan_errors sent no error",
-                                        when E_Undeclared_Name =>
-                                           "undeclared: "
-                                     & To_String (Get_Name (Node)),
-                                        when E_No_Child        =>
-                                           "child class not found",
-                                        when E_No_Component    =>
-                                           "invalid prefix in selected "
-                                     & "component",
-                                        when E_Id_List_With_Arguments =>
-                                           "arguments cannot appear here",
-                                        when E_Id_List_With_No_Type   =>
-                                           "declaration group "
-                                     & "requires a type",
-                                        when E_Id_List_With_Routine   =>
-                                           "routine can have only one name",
-                                        when E_Type_Error             =>
-                                           "expected type derived from "
-                                     & To_String
-                                       (Get_Name (Get_Error_Entity (Node)))
-                                     & " but found "
-                                     & To_String
-                                       (Get_Name
-                                          (Get_Type (Get_Entity (Node)))));
-                     begin
-                        Aquarius.Errors.Error (Program, Message);
-                     end Set_Error;
-
-                  begin
-                     Aquarius.Ack.Scan_Errors
-                       (Node, Set_Error'Access);
-                  end;
                end;
             else
                Grammar.Run_Actions (Command_Line.Action, Input);

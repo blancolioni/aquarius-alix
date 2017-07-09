@@ -128,9 +128,26 @@ package body Aquarius.Ack.Parser.Expressions is
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
    is
+      use Aquarius.Programs;
+      Value : constant Program_Tree := From.Program_Child ("manifest_value");
+      Choice : constant Program_Tree := Value.Chosen_Tree;
+      Kind   : Node_Kind;
    begin
-      return New_Node (N_Constant, From,
-                       Name => Get_Name_Id (From.Concatenate_Children));
+      if Choice.Name = "string_constant" then
+         Kind := N_String_Constant;
+      elsif Choice.Name = "integer_constant" then
+         Kind := N_Integer_Constant;
+      else
+         raise Constraint_Error with
+           "unhandled constant type: " & Choice.Name;
+      end if;
+
+      return New_Node
+        (N_Constant, From,
+         Field_2 =>
+           New_Node
+             (Kind, Choice,
+              Name => Get_Name_Id (Choice.Concatenate_Children)));
    end Import_Manifest_Constant;
 
    ----------------------
