@@ -1,3 +1,4 @@
+with Ada.Characters.Handling;
 with Ada.Containers.Ordered_Maps;
 
 package body Aquarius.Ack is
@@ -7,6 +8,11 @@ package body Aquarius.Ack is
        (Name_Id, Entity_Id);
 
    Top_Level_Entities : Entity_Maps.Map;
+
+   function To_Lower_Case_String
+     (Name : Name_Id)
+      return String
+   is (Ada.Characters.Handling.To_Lower (To_String (Name)));
 
    ------------
    -- Append --
@@ -158,6 +164,21 @@ package body Aquarius.Ack is
       end if;
    end Find_Name_Id;
 
+   -------------------
+   -- Get_Link_Name --
+   -------------------
+
+   function Get_Link_Name (Entity : Entity_Id) return String is
+      Local_Name : constant String :=
+                     To_Lower_Case_String (Get_Name (Entity));
+   begin
+      if Get_Context (Entity) = No_Entity then
+         return Local_Name;
+      else
+         return Get_Link_Name (Get_Defined_In (Entity)) & "__" & Local_Name;
+      end if;
+   end Get_Link_Name;
+
    -----------------
    -- Get_Name_Id --
    -----------------
@@ -197,7 +218,11 @@ package body Aquarius.Ack is
                     Declaration => Declaration,
                     Entity_Type => Get_Type (Entity));
    begin
-      Entity_Table  (Result).Redefine := Redefine;
+      Entity_Table (Result).Redefine := Redefine;
+      Entity_Table (Result).Inherited_From := Get_Context (Entity);
+
+      Entity_Table (Result).Defined_In :=
+        (if Redefine then Derived_Class else Get_Context (Entity));
    end Inherit_Entity;
 
    ----------------
@@ -214,6 +239,7 @@ package body Aquarius.Ack is
    is
       Existing : constant Entity_Id :=
                    Find_Local_Entity (Context, Name);
+      Offset   : Natural := 0;
    begin
 
       if Existing /= No_Entity and then Existing /= Undeclared_Entity then
@@ -234,6 +260,12 @@ package body Aquarius.Ack is
          end if;
       end if;
 
+      if Kind = Feature_Entity then
+         Entity_Table (Context).Offset :=
+           Entity_Table (Context).Offset + 1;
+         Offset := Entity_Table (Context).Offset;
+      end if;
+
       return Entity : constant Entity_Id := Entity_Table.Last_Index + 1 do
          Entity_Table.Append
            (Entity_Record'
@@ -241,9 +273,11 @@ package body Aquarius.Ack is
                Name           => Name,
                Kind           => Kind,
                Context        => Context,
+               Defined_In     => Context,
                Inherited_From => No_Entity,
                Declaration    => Declaration,
                Entity_Type    => Entity_Type,
+               Offset         => Offset,
                Children       => <>));
          if Context = No_Entity then
             Top_Level_Entities.Insert
@@ -304,6 +338,7 @@ package body Aquarius.Ack is
                   6 => Field_6),
                List       => List,
                Name       => Name,
+               Integer_Value => 0,
                Entity     => Entity, Error_Entity => No_Entity,
                Error      => E_No_Error));
       end return;
@@ -325,9 +360,11 @@ package body Aquarius.Ack is
                Name           => Name,
                Kind           => Class_Entity,
                Context        => No_Entity,
+               Defined_In     => No_Entity,
                Inherited_From => No_Entity,
                Declaration    => No_Node,
                Entity_Type    => Entity,
+               Offset         => 0,
                Children       => <>));
          Top_Level_Entities.Insert
            (Name, Entity);
@@ -366,6 +403,26 @@ package body Aquarius.Ack is
       end loop;
    end Scan_Children;
 
+   -------------------
+   -- Scan_Children --
+   -------------------
+
+   procedure Scan_Children
+     (Entity  : Entity_Id;
+      Test    : not null access
+        function (Child : Entity_Id)
+      return Boolean;
+      Process : not null access
+        procedure (Child : Entity_Id))
+   is
+   begin
+      for Child of Entity_Table.Element (Entity).Children loop
+         if Test (Child) then
+            Process (Child);
+         end if;
+      end loop;
+   end Scan_Children;
+
    -----------------
    -- Scan_Errors --
    -----------------
@@ -392,6 +449,18 @@ package body Aquarius.Ack is
    begin
       Depth_First_Scan (Top, Process_Node'Access);
    end Scan_Errors;
+
+   ---------------------------
+   -- Set_Declaration_Count --
+   ---------------------------
+
+   procedure Set_Declaration_Count
+     (N     : Node_Id;
+      Count : Natural)
+   is
+   begin
+      Node_Table (N).Integer_Value := Count;
+   end Set_Declaration_Count;
 
    ----------------
    -- Set_Entity --

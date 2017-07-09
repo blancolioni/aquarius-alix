@@ -120,7 +120,7 @@ package body Aquarius.Ack.Parser is
 
    function Import_Entity_Declaration_List
      (From : Aquarius.Programs.Program_Tree)
-      return List_Id
+      return Node_Id
      with Pre => From.Name = "entity_declaration_list";
 
    function Import_Entity_Declaration_Group
@@ -452,7 +452,7 @@ package body Aquarius.Ack.Parser is
 
    function Import_Entity_Declaration_List
      (From : Aquarius.Programs.Program_Tree)
-      return List_Id
+      return Node_Id
    is
       use Aquarius.Programs;
       List : constant List_Id := New_List;
@@ -470,7 +470,9 @@ package body Aquarius.Ack.Parser is
          end;
       end loop;
 
-      return List;
+      return New_Node (N_Entity_Declaration_Group_List, From,
+                       List => List);
+
    end Import_Entity_Declaration_List;
 
    -------------------------
@@ -597,11 +599,11 @@ package body Aquarius.Ack.Parser is
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
    is
-      List : constant List_Id :=
+      Node : constant Node_Id :=
                Import_Entity_Declaration_List
                  (From.Program_Child ("entity_declaration_list"));
    begin
-      return New_Node (N_Formal_Arguments, From, List => List);
+      return New_Node (N_Formal_Arguments, From, Field_1 => Node);
    end Import_Formal_Arguments;
 
    ----------------------

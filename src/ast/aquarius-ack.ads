@@ -27,6 +27,7 @@ package Aquarius.Ack is
       N_New_Feature,
       N_Declaration_Body,
       N_Formal_Arguments,
+      N_Entity_Declaration_Group_List,
       N_Entity_Declaration_Group,
       N_Identifier_List,
       N_Class_Type,
@@ -98,6 +99,10 @@ package Aquarius.Ack is
    procedure Append (List : List_Id;
                      Node : Node_Id);
 
+   function Length
+     (List : List_Id)
+      return Natural;
+
    procedure Scan
      (List : List_Id;
       Process : not null access
@@ -128,6 +133,10 @@ package Aquarius.Ack is
    function Get_Declaration (Entity : Entity_Id) return Node_Id;
    function Get_Kind (Entity : Entity_Id) return Entity_Kind;
    function Get_Type (Entity : Entity_Id) return Entity_Id;
+   function Get_Offset (Entity : Entity_Id) return Natural;
+   function Get_Defined_In (Entity : Entity_Id) return Entity_Id;
+
+   function Get_Link_Name (Entity : Entity_Id) return String;
 
    function New_Entity
      (Name        : Name_Id;
@@ -149,6 +158,14 @@ package Aquarius.Ack is
 
    procedure Scan_Children
      (Entity  : Entity_Id;
+      Process : not null access
+        procedure (Child : Entity_Id));
+
+   procedure Scan_Children
+     (Entity  : Entity_Id;
+      Test    : not null access
+        function (Child : Entity_Id)
+      return Boolean;
       Process : not null access
         procedure (Child : Entity_Id));
 
@@ -242,13 +259,16 @@ package Aquarius.Ack is
    function Formal_Arguments (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Declaration_Body;
 
+   function Declaration_Count (N : Node_Id) return Natural
+     with Pre => Kind (N) = N_Entity_Declaration_Group;
+
    function Value_Type (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Declaration_Body;
 
    function Value (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Declaration_Body;
 
-   function Entity_Declaration_Groups (N : Node_Id) return List_Id
+   function Entity_Declaration_Group_List (N : Node_Id) return Node_Id
      with Pre => Kind (N) in N_Formal_Arguments | N_Local_Declarations;
 
    function Effective_Routine (N : Node_Id) return Node_Id
@@ -315,20 +335,21 @@ private
 
    type Node_Record is
       record
-         Kind         : Node_Kind  := N_Uninitialized_Node;
-         From         : Aquarius.Programs.Program_Tree := null;
-         Deferred     : Boolean    := False;
-         Expanded     : Boolean    := False;
-         Frozen       : Boolean    := False;
-         Defining     : Boolean    := False;
-         Single       : Boolean    := False;
-         Once         : Boolean    := False;
-         Field        : Node_Field_Array := (others => No_Node);
-         List         : List_Id    := No_List;
-         Name         : Name_Id    := No_Name;
-         Entity       : Entity_Id  := No_Entity;
-         Error        : Error_Kind := E_No_Error;
-         Error_Entity : Entity_Id;
+         Kind          : Node_Kind  := N_Uninitialized_Node;
+         From          : Aquarius.Programs.Program_Tree := null;
+         Deferred      : Boolean    := False;
+         Expanded      : Boolean    := False;
+         Frozen        : Boolean    := False;
+         Defining      : Boolean    := False;
+         Single        : Boolean    := False;
+         Once          : Boolean    := False;
+         Field         : Node_Field_Array := (others => No_Node);
+         List          : List_Id    := No_List;
+         Name          : Name_Id    := No_Name;
+         Entity        : Entity_Id  := No_Entity;
+         Error         : Error_Kind := E_No_Error;
+         Error_Entity  : Entity_Id;
+         Integer_Value : Integer;
       end record;
 
    package List_Of_Nodes is
@@ -348,9 +369,11 @@ private
          Name           : Name_Id;
          Kind           : Entity_Kind;
          Context        : Entity_Id;
+         Defined_In     : Entity_Id;
          Inherited_From : Entity_Id;
          Declaration    : Node_Id;
          Entity_Type    : Entity_Id;
+         Offset         : Natural;
          Children       : List_Of_Entities.List;
       end record;
 
@@ -379,6 +402,12 @@ private
      (Name : Name_Id)
       return String
    is (Name_Table (Name));
+
+   function Length
+     (List : List_Id)
+      return Natural
+   is (if List = No_List then 0
+       else Natural (List_Table (List).List.Length));
 
    function Get_Program
      (N : Node_Id)
@@ -446,14 +475,22 @@ private
    function Formal_Arguments (N : Node_Id) return Node_Id
    is (Node_Table.Element (N).Field (1));
 
+   function Declaration_Count (N : Node_Id) return Natural
+   is (Node_Table.Element (N).Integer_Value);
+
+   procedure Set_Declaration_Count
+     (N : Node_Id;
+      Count : Natural)
+     with Pre => Kind (N) = N_Entity_Declaration_Group;
+
    function Value_Type (N : Node_Id) return Node_Id
    is (Node_Table.Element (N).Field (2));
 
    function Value (N : Node_Id) return Node_Id
    is (Node_Table.Element (N).Field (3));
 
-   function Entity_Declaration_Groups (N : Node_Id) return List_Id
-   is (Node_Table.Element (N).List);
+   function Entity_Declaration_Group_List (N : Node_Id) return Node_Id
+   is (Field_1 (N));
 
    function Entity_Type (N : Node_Id) return Node_Id
    is (Field_1 (N));
@@ -527,6 +564,9 @@ private
    function Get_Context (Entity : Entity_Id) return Entity_Id
    is (Entity_Table.Element (Entity).Context);
 
+   function Get_Defined_In (Entity : Entity_Id) return Entity_Id
+   is (Entity_Table.Element (Entity).Defined_In);
+
    function Get_Name (Entity : Entity_Id) return Name_Id
    is (if Entity = No_Entity
        then Get_Name_Id ("(none)")
@@ -542,6 +582,9 @@ private
 
    function Get_Kind (Entity : Entity_Id) return Entity_Kind
    is (Entity_Table.Element (Entity).Kind);
+
+   function Get_Offset (Entity : Entity_Id) return Natural
+   is (Entity_Table.Element (Entity).Offset);
 
    procedure Set_Entity
      (Node : Real_Node_Id;
