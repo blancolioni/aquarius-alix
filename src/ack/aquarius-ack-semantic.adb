@@ -397,7 +397,14 @@ package body Aquarius.Ack.Semantic is
                          (Feature_Name
                             (List_Table.Element (Names).List.First_Element))
                        else No_Name);
+      Feature_Kind : Entity_Kind := Property_Feature_Entity;
    begin
+
+      if Single and then
+        (Arg_Node /= No_Node or else Value_Node /= No_Node)
+      then
+         Feature_Kind := Routine_Feature_Entity;
+      end if;
 
       if not Single then
          if Arg_Node /= No_Node then
@@ -445,7 +452,7 @@ package body Aquarius.Ack.Semantic is
             Entity : constant Entity_Id :=
                        New_Entity
                          (Name        => Get_Name (Feature_Name (Node)),
-                          Kind        => Feature_Entity,
+                          Kind        => Feature_Kind,
                           Context     => Get_Entity (Class),
                           Declaration => Feature,
                           Entity_Type => Type_Entity);
@@ -513,7 +520,7 @@ package body Aquarius.Ack.Semantic is
 
       procedure Inherit_Entity (Entity : Entity_Id) is
       begin
-         if Get_Kind (Entity) = Feature_Entity then
+         if Get_Kind (Entity) in Feature_Entity_Kind then
             Inherit_Entity
               (Entity        => Entity,
                Derived_Class => Get_Entity (Class),
