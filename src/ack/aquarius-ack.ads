@@ -78,11 +78,15 @@ package Aquarius.Ack is
    type Entity_Kind is
      (Table_Entity,
       Class_Entity,
-      Feature_Entity,
+      Routine_Feature_Entity,
+      Property_Feature_Entity,
       Argument_Entity,
       Result_Entity,
       Local_Entity
      );
+
+   subtype Feature_Entity_Kind is
+     Entity_Kind range Routine_Feature_Entity .. Property_Feature_Entity;
 
    subtype Local_Entity_Kind is Entity_Kind range
      Argument_Entity .. Local_Entity;
@@ -133,7 +137,24 @@ package Aquarius.Ack is
    function Get_Declaration (Entity : Entity_Id) return Node_Id;
    function Get_Kind (Entity : Entity_Id) return Entity_Kind;
    function Get_Type (Entity : Entity_Id) return Entity_Id;
-   function Get_Offset (Entity : Entity_Id) return Natural;
+
+   function Get_Virtual_Table_Length (Entity : Entity_Id) return Natural
+     with Pre => Get_Kind (Entity) = Class_Entity;
+   function Get_Property_Count (Entity : Entity_Id) return Natural
+     with Pre => Get_Kind (Entity) = Class_Entity;
+
+   function Get_Virtual_Table_Offset (Entity : Entity_Id) return Natural
+     with Pre => Get_Kind (Entity) = Routine_Feature_Entity;
+
+   function Get_Property_Offset (Entity : Entity_Id) return Natural
+     with Pre => Get_Kind (Entity) = Property_Feature_Entity;
+
+   function Get_Argument_Offset (Entity : Entity_Id) return Natural
+     with Pre => Get_Kind (Entity) = Argument_Entity;
+
+   function Get_Local_Offset (Entity : Entity_Id) return Natural
+     with Pre => Get_Kind (Entity) = Local_Entity;
+
    function Get_Defined_In (Entity : Entity_Id) return Entity_Id;
 
    function Get_Link_Name (Entity : Entity_Id) return String;
@@ -234,7 +255,8 @@ package Aquarius.Ack is
    function Get_Name (N : Node_Id) return Name_Id
      with Pre => Kind (N) = N_Identifier
      or else Kind (N) = N_Feature_Name
-     or else Kind (N) = N_Variable;
+     or else Kind (N) = N_Variable
+     or else Kind (N) = N_Integer_Constant;
 
    function Get_Entity (N : Node_Id) return Entity_Id;
 
@@ -260,7 +282,7 @@ package Aquarius.Ack is
      with Pre => Kind (N) = N_Declaration_Body;
 
    function Declaration_Count (N : Node_Id) return Natural
-     with Pre => Kind (N) = N_Entity_Declaration_Group;
+     with Pre => Kind (N) = N_Entity_Declaration_Group_List;
 
    function Value_Type (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Declaration_Body;
@@ -365,16 +387,19 @@ private
 
    type Entity_Record is
       record
-         Redefine       : Boolean;
-         Name           : Name_Id;
-         Kind           : Entity_Kind;
-         Context        : Entity_Id;
-         Defined_In     : Entity_Id;
-         Inherited_From : Entity_Id;
-         Declaration    : Node_Id;
-         Entity_Type    : Entity_Id;
-         Offset         : Natural;
-         Children       : List_Of_Entities.List;
+         Redefine        : Boolean;
+         Name            : Name_Id;
+         Kind            : Entity_Kind;
+         Context         : Entity_Id;
+         Defined_In      : Entity_Id;
+         Inherited_From  : Entity_Id;
+         Declaration     : Node_Id;
+         Entity_Type     : Entity_Id;
+         Virtual_Offset  : Natural;
+         Property_Offset : Natural;
+         Argument_Offset : Positive;
+         Local_Offset    : Positive;
+         Children        : List_Of_Entities.List;
       end record;
 
    package Node_Vectors is
@@ -583,8 +608,23 @@ private
    function Get_Kind (Entity : Entity_Id) return Entity_Kind
    is (Entity_Table.Element (Entity).Kind);
 
-   function Get_Offset (Entity : Entity_Id) return Natural
-   is (Entity_Table.Element (Entity).Offset);
+   function Get_Virtual_Table_Length (Entity : Entity_Id) return Natural
+   is (Entity_Table.Element (Entity).Virtual_Offset);
+
+   function Get_Property_Count (Entity : Entity_Id) return Natural
+   is (Entity_Table.Element (Entity).Property_Offset);
+
+   function Get_Virtual_Table_Offset (Entity : Entity_Id) return Natural
+   is (Entity_Table.Element (Entity).Virtual_Offset);
+
+   function Get_Property_Offset (Entity : Entity_Id) return Natural
+   is (Entity_Table.Element (Entity).Property_Offset);
+
+   function Get_Argument_Offset (Entity : Entity_Id) return Natural
+   is (Entity_Table.Element (Entity).Argument_Offset);
+
+   function Get_Local_Offset (Entity : Entity_Id) return Natural
+   is (Entity_Table.Element (Entity).Local_Offset);
 
    procedure Set_Entity
      (Node : Real_Node_Id;

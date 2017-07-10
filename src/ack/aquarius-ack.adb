@@ -237,9 +237,12 @@ package body Aquarius.Ack is
       Entity_Type : Entity_Id)
       return Entity_Id
    is
-      Existing : constant Entity_Id :=
-                   Find_Local_Entity (Context, Name);
-      Offset   : Natural := 0;
+      Existing        : constant Entity_Id :=
+                          Find_Local_Entity (Context, Name);
+      Virtual_Offset  : Natural := 0;
+      Property_Offset : Natural := 0;
+      Argument_Offset : Positive := 1;
+      Local_Offset    : Positive := 1;
    begin
 
       if Existing /= No_Entity and then Existing /= Undeclared_Entity then
@@ -260,24 +263,47 @@ package body Aquarius.Ack is
          end if;
       end if;
 
-      if Kind = Feature_Entity then
-         Entity_Table (Context).Offset :=
-           Entity_Table (Context).Offset + 1;
-         Offset := Entity_Table (Context).Offset;
+      if Context /= No_Entity then
+         declare
+            Context_Rec : Entity_Record renames Entity_Table (Context);
+         begin
+            case Kind is
+               when Routine_Feature_Entity =>
+                  Context_Rec.Virtual_Offset := Context_Rec.Virtual_Offset + 1;
+                  Virtual_Offset := Context_Rec.Virtual_Offset;
+               when Property_Feature_Entity =>
+                  Context_Rec.Property_Offset :=
+                    Context_Rec.Property_Offset + 1;
+                  Property_Offset := Context_Rec.Property_Offset;
+               when Argument_Entity =>
+                  Context_Rec.Argument_Offset :=
+                    Context_Rec.Argument_Offset + 1;
+                  Argument_Offset := Context_Rec.Argument_Offset;
+               when Local_Entity =>
+                  Context_Rec.Local_Offset :=
+                    Context_Rec.Local_Offset + 1;
+                  Local_Offset := Context_Rec.Local_Offset;
+               when Class_Entity | Table_Entity | Result_Entity =>
+                  null;
+            end case;
+         end;
       end if;
 
       return Entity : constant Entity_Id := Entity_Table.Last_Index + 1 do
          Entity_Table.Append
            (Entity_Record'
-              (Redefine       => False,
-               Name           => Name,
-               Kind           => Kind,
-               Context        => Context,
-               Defined_In     => Context,
-               Inherited_From => No_Entity,
-               Declaration    => Declaration,
-               Entity_Type    => Entity_Type,
-               Offset         => Offset,
+              (Redefine        => False,
+               Name            => Name,
+               Kind            => Kind,
+               Context         => Context,
+               Defined_In      => Context,
+               Inherited_From  => No_Entity,
+               Declaration     => Declaration,
+               Entity_Type     => Entity_Type,
+               Virtual_Offset  => Virtual_Offset,
+               Property_Offset => Property_Offset,
+               Argument_Offset => Argument_Offset,
+               Local_Offset    => Local_Offset,
                Children       => <>));
          if Context = No_Entity then
             Top_Level_Entities.Insert
@@ -364,8 +390,11 @@ package body Aquarius.Ack is
                Inherited_From => No_Entity,
                Declaration    => No_Node,
                Entity_Type    => Entity,
-               Offset         => 0,
-               Children       => <>));
+               Virtual_Offset  => 0,
+               Property_Offset => 0,
+               Argument_Offset => 1,
+               Local_Offset    => 1,
+               Children        => <>));
          Top_Level_Entities.Insert
            (Name, Entity);
       end return;
