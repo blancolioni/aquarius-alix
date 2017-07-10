@@ -10,8 +10,8 @@ feature
     Result := 2
   end f
 
-  g : Integer do
-    Result := 3
+  g (X : Integer) : Integer do
+    Result := X
   end g
   
 end A
@@ -28,6 +28,6 @@ end A
 --     mov 2, r0
 --     rts
 --  A__g:
---     mov 3, r0
+--     mov 8(fp), r0
 --     rts
 
