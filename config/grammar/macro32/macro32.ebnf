@@ -1,7 +1,7 @@
 top_level ::= source_file
 
 end_of_line ::= !\n!
-identifier  ::= ![\l_]\w*!
+identifier  ::= ![\l_][\w$]*!
 integer     ::= !\d+!
 string      ::= standard ada_string_literal
 delimiter   ::= delimiters ".:$#()+-@=,!"
