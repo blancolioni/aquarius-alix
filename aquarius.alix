@@ -2,7 +2,6 @@ project_name = Aquarius
 source_dir = src
 source_dir = src/ack
 source_dir = src/actions
-source_dir = src/ast
 source_dir = src/buffers
 source_dir = src/code
 source_dir = src/composition
