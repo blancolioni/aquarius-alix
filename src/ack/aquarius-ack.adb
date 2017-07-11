@@ -251,7 +251,7 @@ package body Aquarius.Ack is
       Entity_Table (Result).Inherited_From := Entity;
 
       Entity_Table (Result).Defined_In :=
-        (if Redefine then Derived_Class else Get_Context (Entity));
+        (if Redefine then Derived_Class else Get_Defined_In (Entity));
    end Inherit_Entity;
 
    ----------------
