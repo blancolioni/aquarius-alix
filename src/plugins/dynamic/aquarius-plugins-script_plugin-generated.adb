@@ -45,7 +45,7 @@ package body Aquarius.Plugins.Script_Plugin.Generated is
       procedure Actionable_group_declaration_Before_list_of_actions (Target_Actionable : not null access Aquarius.Actions.Actionable'Class;
                                                                      Child_Actionable : not null access Aquarius.Actions.Actionable'Class) is
       begin
-         Aquarius.Plugins.Script_Plugin.Bindings.group_declaration_Before_list_of_actions (Aquarius.Programs.Program_Tree
+         Aquarius.Plugins.Script_Plugin.Bindings.Group_Declaration_After_Group_Header (Aquarius.Programs.Program_Tree
            (Target_Actionable), Aquarius.Programs.Program_Tree
            (Child_Actionable));
       end Actionable_group_declaration_Before_list_of_actions;
@@ -98,10 +98,10 @@ package body Aquarius.Plugins.Script_Plugin.Generated is
       Plugin.Register_Action ("property_declaration", Parser,
                               Aquarius.After,
                               Bindings.Actionable_property_declaration_After'access);
-      Plugin.Register_Action ("group_declaration", "list_of_actions",
-                              Parser, Aquarius.Before,
+      Plugin.Register_Action ("group_declaration", "group_header",
+                              Parser, Aquarius.After,
                               Bindings.Actionable_group_declaration_Before_list_of_actions'access);
-      Plugin.Register_Action ("group_declaration", "list_of_actions",
+      Plugin.Register_Action ("group_body", "list_of_actions",
                               Parser, Aquarius.After,
                               Bindings.Actionable_group_declaration_After_list_of_actions'access);
       Plugin.Register_Action ("group_declaration", Parser,

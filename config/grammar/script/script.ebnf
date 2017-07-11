@@ -36,9 +36,18 @@ value_declaration ::= identifier '=' value ';'
 
 property_declaration ::= 'property' identifier [ 'inherited' ] ';'
 
-group_declaration ::= 'group' identifier ':' identifier 'is'
+group_declaration ::= 'group' group_header [ group_body ] ';'
+
+group_header ::= group_name ':' trigger_name
+
+group_name ::= identifier
+
+trigger_name ::= identifier
+
+group_body ::= 'is'
    list_of_actions
-   'end' identifier ';'
+   'end' identifier
+
 
 list_of_actions ::= { action_file_reference ';' }
 

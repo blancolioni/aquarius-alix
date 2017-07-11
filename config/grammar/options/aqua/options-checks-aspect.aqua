@@ -14,6 +14,6 @@ feature
       if not Character_Literal.Void then
          Entry.Set_Short_Name (Character_Literal.First_Element)
       end if
-   end After_Node
+   end
    
-end Options.Checks.Aspect
+end

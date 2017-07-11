@@ -1,6 +1,8 @@
 with Ada.Characters.Handling;
 with Ada.Text_IO;
 
+with WL.String_Maps;
+
 with Aquarius.Config_Paths;
 
 package body Aquarius.Grammars.Aqua_Gen is
@@ -107,6 +109,13 @@ package body Aquarius.Grammars.Aqua_Gen is
 
       use Aquarius.Syntax;
 
+      package Found_Syntax_Maps is
+        new WL.String_Maps (String);
+
+      Found_Syntax : Found_Syntax_Maps.Map;
+
+      Have_Feature : Boolean := False;
+
       procedure Scan_Features
         (Tree     : Aquarius.Syntax.Syntax_Tree;
          Repeated : Boolean);
@@ -133,30 +142,54 @@ package body Aquarius.Grammars.Aqua_Gen is
             New_Line;
             Put_Line ("   " & Feature_Name
                       & " (Child : "
+                      & To_Mixed_Case (Language_Name)
+                      & ".Syntax."
                       & To_Mixed_Case (Tree.Name & "_Node")
                       & ")");
             Put_Line ("      require");
             Put_Line ("         Child /= null");
             Put_Line ("      do");
-            Put_Line ("      end " & Feature_Name);
+            Put_Line ("      end");
          end Put_Feature;
 
       begin
+         if not Have_Feature
+           and then (Tree.Syntax_Class = Terminal
+                     or else Tree.Name /= "")
+         then
+            New_Line;
+            Put_Line ("feature");
+            Have_Feature := True;
+         end if;
+
          if Tree.Syntax_Class = Terminal then
             if not Aquarius.Tokens.Is_Reserved
               (Tree.Frame, Tree.Token)
             then
-               New_Line;
-               Put_Line
-                 ("   "
-                  & To_Mixed_Case
-                    (Aquarius.Tokens.Get_Name (Tree.Frame, Tree.Token))
-                  & " : "
-                  & (if Repeated then "List[String]" else "String"));
+               declare
+                  Name : constant String :=
+                           To_Mixed_Case
+                             (Aquarius.Tokens.Get_Name
+                                (Tree.Frame, Tree.Token));
+               begin
+                  if not Found_Syntax.Contains (Name) then
+                     New_Line;
+                     Put_Line
+                       ("   "
+                        & To_Mixed_Case
+                          (Aquarius.Tokens.Get_Name (Tree.Frame, Tree.Token))
+                        & " : "
+                        & (if Repeated then "List[String]" else "String"));
+                     Found_Syntax.Insert (Name, "");
+                  end if;
+               end;
             end if;
          elsif Tree.Name /= "" then
-            Put_Feature ("Before_");
-            Put_Feature ("After_");
+            if not Found_Syntax.Contains (Tree.Name) then
+               Put_Feature ("Before_");
+               Put_Feature ("After_");
+               Found_Syntax.Insert (Tree.Name, "");
+            end if;
          else
             for I in 1 .. Tree.Child_Count loop
                Scan_Features
@@ -188,15 +221,13 @@ package body Aquarius.Grammars.Aqua_Gen is
       New_Line;
       Put_Line ("inherit");
       Put_Line ("   Aquarius.Trees.Program_Node");
-      New_Line;
-      Put_Line ("feature");
       for I in 1 .. Syntax.Child_Count loop
          Scan_Features
            (Aquarius.Syntax.Syntax_Tree (Syntax.Child (I)),
             Syntax.Repeatable);
       end loop;
       New_Line;
-      Put_Line ("end " & Class_Name);
+      Put_Line ("end");
       Set_Output (Standard_Output);
       Close (File);
    end Generate_Class;
@@ -226,7 +257,7 @@ package body Aquarius.Grammars.Aqua_Gen is
       Set_Output (File);
       Put_Line ("class " & To_Mixed_Case (Class_Name));
       New_Line;
-      Put_Line ("end " & To_Mixed_Case (Class_Name));
+      Put_Line ("end");
       Set_Output (Standard_Output);
       Close (File);
    end Generate_Empty_Class;

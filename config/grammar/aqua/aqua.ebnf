@@ -43,9 +43,7 @@ class_declaration ::=
    [ creators ]
    [ features ]
    [ invariant ]
-   'end' matching_class_name [ ';' ]
-
-matching_class_name ::= class_name
+   'end' [ ';' ]
 
 notes ::= 'note' note_list
 
@@ -99,7 +97,7 @@ new_feature ::=
          [ 'frozen' ] feature_name
 	 
 routine ::=
-         [ precondition ] [ local_declarations ] feature_body [ postcondition ] [ rescue ] 'end' matching_routine_name
+         [ precondition ] [ local_declarations ] feature_body [ postcondition ] [ rescue ] 'end'
          
 matching_routine_name ::= identifier
 

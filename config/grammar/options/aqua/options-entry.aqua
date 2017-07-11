@@ -17,21 +17,21 @@ feature
    do
       Name          := Option_Name;
       Type          := Option_Type;
-   end New_Option
+   end
    
    Set_Short_Name (Name : Character)
    do
       Short_Name := Name;
-   end Set_Short_Name
+   end
    
    Set_Long_Name (Name : String)
    do
       Long_Name := Name
-   end Set_Long_Name
+   end
    
    Set_Default_Value (Value : String)
    do
       Default_Value := Value
-   end Set_Default_Value
+   end
    
-end Options.Entry
+end

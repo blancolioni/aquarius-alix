@@ -6,4 +6,4 @@ feature
 
    Option_Entry : Options.Entry
    
-end Options.Checks.Option_Declaration
+end

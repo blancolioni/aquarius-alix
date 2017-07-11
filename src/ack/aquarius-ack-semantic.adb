@@ -309,7 +309,7 @@ package body Aquarius.Ack.Semantic is
       end Insert_Group;
 
    begin
-      Scan (Node_Table (Group_List).List, Insert_Group'Access);
+      Scan (Node_Table.Element (Group_List).List, Insert_Group'Access);
       Node_Table (Group_List).Integer_Value := Count;
    end Analyse_Entity_Declaration_Groups;
 
@@ -666,6 +666,9 @@ package body Aquarius.Ack.Semantic is
                   Aquarius.Ack.Errors.Record_Errors (Node);
                   Aquarius.Ack.Errors.Report_Errors (Node);
                   Entity := Get_Entity (Node);
+                  Loaded_Classes.Insert
+                    (Get_File_Name (Entity), Node);
+                  Partial_Class_List.Append (Node);
                end;
             end if;
          end;

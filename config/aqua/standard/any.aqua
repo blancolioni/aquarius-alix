@@ -1,7 +1,3 @@
 class Any
 
-feature
-
-   Void : Boolean
-   
-end Any
+end

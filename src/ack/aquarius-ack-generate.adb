@@ -3,7 +3,7 @@ with Tagatha.Units;
 
 with Aquarius.Config_Paths;
 
-with Aquarius.Ack.Files;
+--  with Aquarius.Ack.Files;
 
 package body Aquarius.Ack.Generate is
 
@@ -141,18 +141,18 @@ package body Aquarius.Ack.Generate is
                Unit.Push (0);
                Unit.Pop_Register ("pv");
                Unit.Native_Operation
-                 ("set_property " & To_String (Get_Name (Item)));
+                 ("set_property " & To_Standard_String (Get_Name (Item)));
 
             when Routine_Feature_Entity =>
                Unit.Push_Operand
                  (Tagatha.Operands.External_Operand
                     (Get_Link_Name (Definition_Class)
-                     & "__" & To_String (Get_Name (Item)),
+                     & "__" & To_Standard_String (Get_Name (Item)),
                      True),
                   Tagatha.Default_Size);
                Unit.Pop_Register ("pv");
                Unit.Native_Operation
-                 ("set_property " & To_String (Get_Name (Item)));
+                 ("set_property " & To_Standard_String (Get_Name (Item)));
          end case;
       end Set_Value;
 
@@ -194,8 +194,24 @@ package body Aquarius.Ack.Generate is
       Entity : constant Entity_Id := Get_Entity (Node);
    begin
       Unit.Create_Unit
-        (Aquarius.Ack.Files.Base_File_Name (Get_Entity (Node)),
+        (Get_File_Name (Get_Entity (Node)),
          Get_Program (Node).Source_File_Name);
+
+      Unit.Directive
+        ("map ="
+         & Natural'Image (16#3000_0001#));
+
+      Unit.Directive
+        ("array ="
+         & Natural'Image (16#3000_0002#));
+
+      Unit.Directive
+        ("aqua ="
+         & Natural'Image (16#3000_0003#));
+
+      Unit.Directive
+        ("io ="
+         & Natural'Image (16#3000_0004#));
 
       Generate_Allocator (Unit, Entity);
       Generate_Default_Create (Unit, Entity);
@@ -303,7 +319,8 @@ package body Aquarius.Ack.Generate is
          Unit.Push (0);
          Unit.Pop_Register ("pv");
          Unit.Native_Operation
-           ("set_property " & To_String (Get_Name (Original_Feature)));
+           ("set_property "
+            & To_Standard_String (Get_Name (Original_Feature)));
       end Clear_Feature_Value;
 
    begin
@@ -377,7 +394,7 @@ package body Aquarius.Ack.Generate is
                        (if Type_Node = No_Node then 0 else 1);
    begin
       Unit.Begin_Routine
-        (Name           => Get_Link_Name (Feature),
+        (Name           => To_Standard_String (Get_Name (Feature)),
          Argument_Words => Arg_Count,
          Frame_Words    => Frame_Count,
          Result_Words   => (if Type_Node = No_Node then 0 else 1),
@@ -443,7 +460,8 @@ package body Aquarius.Ack.Generate is
                   Unit.Pop_Register ("op");
                   Unit.Native_Operation
                     ("get_property "
-                     & To_String (Get_Name (Original_Feature)) & ",0",
+                     & To_Standard_String
+                       (Get_Name (Original_Feature)) & ",0",
                      Input_Stack_Words  => 0,
                      Output_Stack_Words => 0,
                      Changed_Registers  => "pv");
@@ -510,7 +528,7 @@ package body Aquarius.Ack.Generate is
                Unit.Pop_Register ("pv");
                Unit.Native_Operation
                  ("set_property "
-                  & To_String (Get_Name (Original_Feature)));
+                  & To_Standard_String (Get_Name (Original_Feature)));
             end;
 
          when Routine_Feature_Entity =>
