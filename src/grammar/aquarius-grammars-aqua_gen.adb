@@ -146,8 +146,6 @@ package body Aquarius.Grammars.Aqua_Gen is
                       & ".Syntax."
                       & To_Mixed_Case (Tree.Name & "_Node")
                       & ")");
-            Put_Line ("      require");
-            Put_Line ("         Child /= null");
             Put_Line ("      do");
             Put_Line ("      end");
          end Put_Feature;
