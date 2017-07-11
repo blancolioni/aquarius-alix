@@ -1,8 +1,6 @@
 plugin Options version 0.1 is
 
-   group run_check : semantic is
-       options_check;
-   end run_check;
+   group checks : semantic;
 
    group generate_spec : code is
        options_generate_spec;

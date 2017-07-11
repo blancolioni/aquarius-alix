@@ -1,4 +1,3 @@
-with Ada.Characters.Handling;
 with Ada.Containers.Ordered_Maps;
 
 package body Aquarius.Ack is
@@ -163,6 +162,21 @@ package body Aquarius.Ack is
          return No_Name;
       end if;
    end Find_Name_Id;
+
+   -------------------
+   -- Get_File_Name --
+   -------------------
+
+   function Get_File_Name (Entity : Entity_Id) return String is
+      Local_Name : constant String :=
+                     To_Lower_Case_String (Get_Name (Entity));
+   begin
+      if Get_Context (Entity) = No_Entity then
+         return Local_Name;
+      else
+         return Get_File_Name (Get_Defined_In (Entity)) & "-" & Local_Name;
+      end if;
+   end Get_File_Name;
 
    -------------------
    -- Get_Link_Name --

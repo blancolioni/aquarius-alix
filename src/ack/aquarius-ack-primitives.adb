@@ -1,5 +1,6 @@
 package body Aquarius.Ack.Primitives is
 
+   Primitives_Created : Boolean := False;
    Local_String_Class  : Entity_Id := No_Entity;
    Local_Integer_Class : Entity_Id := No_Entity;
 
@@ -9,12 +10,15 @@ package body Aquarius.Ack.Primitives is
 
    procedure Create_Primitives is
    begin
-      Local_String_Class :=
-        New_Primitive_Class
-          (Get_Name_Id ("String"));
-      Local_Integer_Class :=
-        New_Primitive_Class
-          (Get_Name_Id ("Integer"));
+      if not Primitives_Created then
+         Local_String_Class :=
+           New_Primitive_Class
+             (Get_Name_Id ("String"));
+         Local_Integer_Class :=
+           New_Primitive_Class
+             (Get_Name_Id ("Integer"));
+         Primitives_Created := True;
+      end if;
    end Create_Primitives;
 
    -------------------

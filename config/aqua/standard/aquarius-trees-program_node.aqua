@@ -7,7 +7,11 @@ feature
    Symbol_Table : Aqua.Containers.Table
 
    Before_Node
+   do
+   end
    
    After_Node
+   do
+   end
    
-end Aquarius.Trees.Program_Node
+end

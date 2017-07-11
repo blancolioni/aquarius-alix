@@ -1,3 +1,4 @@
+private with Ada.Characters.Handling;
 private with Ada.Containers.Doubly_Linked_Lists;
 private with Ada.Containers.Vectors;
 private with Ada.Containers.Indefinite_Vectors;
@@ -128,6 +129,10 @@ package Aquarius.Ack is
      (Name : Name_Id)
       return String;
 
+   function To_Standard_String
+     (Name : Name_Id)
+      return String;
+
    type Entity_Id is private;
 
    No_Entity : constant Entity_Id;
@@ -160,6 +165,7 @@ package Aquarius.Ack is
      with Pre => Get_Kind (Feature) in Feature_Entity_Kind,
      Post => Get_Kind (Get_Original_Ancestor'Result) in Feature_Entity_Kind;
 
+   function Get_File_Name (Entity : Entity_Id) return String;
    function Get_Link_Name (Entity : Entity_Id) return String;
 
    function New_Entity
@@ -431,6 +437,11 @@ private
       return String
    is (Name_Table (Name));
 
+   function To_Standard_String
+     (Name : Name_Id)
+      return String
+   is (Ada.Characters.Handling.To_Lower (To_String (Name)));
+
    function Length
      (List : List_Id)
       return Natural
@@ -638,5 +649,20 @@ private
      (List : List_Id;
       Name : Name_Id)
       return Boolean;
+
+   package Compiled_Class_Maps is
+     new WL.String_Maps (String);
+
+   Class_Object_Paths : Compiled_Class_Maps.Map;
+
+   package Class_Node_Maps is
+     new WL.String_Maps (Node_Id);
+
+   Loaded_Classes : Class_Node_Maps.Map;
+
+   package Class_Node_Lists is
+     new Ada.Containers.Doubly_Linked_Lists (Node_Id);
+
+   Partial_Class_List : Class_Node_Lists.List;
 
 end Aquarius.Ack;

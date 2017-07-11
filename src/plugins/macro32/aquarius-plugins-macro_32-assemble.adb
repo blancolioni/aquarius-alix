@@ -534,7 +534,7 @@ package body Aquarius.Plugins.Macro_32.Assemble is
       Source_File    : constant Program_Tree := Program_Tree (Target);
       Source_Name    : constant String :=
                          Source_File.Source_File_Name;
-      Assembly       : constant Aqua.Assembler.Assembly :=
+      Assembly       : Aqua.Assembler.Assembly :=
                          Assembly_Object
                            (Source_File.Property
                               (Global_Plugin.Assembly)).Assembly;
@@ -543,6 +543,7 @@ package body Aquarius.Plugins.Macro_32.Assemble is
    begin
       --  Assembly.Write_Listing;
       Assembly.Write_Image (Output_File);
+      Aqua.Assembler.Free (Assembly);
    end After_Source_File;
 
    ----------------

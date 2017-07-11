@@ -19,7 +19,7 @@ package Aquarius.Plugins.Script_Plugin.Bindings is
    procedure Group_Declaration_After
      (Item : Aquarius.Programs.Program_Tree);
 
-   procedure Group_Declaration_Before_List_Of_Actions
+   procedure Group_Declaration_After_Group_Header
      (Parent : Aquarius.Programs.Program_Tree;
       Child  : Aquarius.Programs.Program_Tree);
 
