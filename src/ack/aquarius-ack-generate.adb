@@ -394,7 +394,9 @@ package body Aquarius.Ack.Generate is
                        (if Type_Node = No_Node then 0 else 1);
    begin
       Unit.Begin_Routine
-        (Name           => To_Standard_String (Get_Name (Feature)),
+        (Name           =>
+           Get_Link_Name (Get_Context (Feature)) & "__"
+           & To_Standard_String (Get_Name (Feature)),
          Argument_Words => Arg_Count,
          Frame_Words    => Frame_Count,
          Result_Words   => (if Type_Node = No_Node then 0 else 1),
