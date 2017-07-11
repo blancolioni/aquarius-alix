@@ -156,6 +156,9 @@ package Aquarius.Ack is
      with Pre => Get_Kind (Entity) = Local_Entity;
 
    function Get_Defined_In (Entity : Entity_Id) return Entity_Id;
+   function Get_Original_Ancestor (Feature : Entity_Id) return Entity_Id
+     with Pre => Get_Kind (Feature) in Feature_Entity_Kind,
+     Post => Get_Kind (Get_Original_Ancestor'Result) in Feature_Entity_Kind;
 
    function Get_Link_Name (Entity : Entity_Id) return String;
 

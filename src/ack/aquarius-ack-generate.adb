@@ -7,29 +7,181 @@ with Aquarius.Ack.Files;
 
 package body Aquarius.Ack.Generate is
 
+   procedure Generate_Allocator
+     (Unit  : in out Tagatha.Units.Tagatha_Unit;
+      Class : Entity_Id);
+
+   procedure Generate_Default_Create
+     (Unit  : in out Tagatha.Units.Tagatha_Unit;
+      Class : Entity_Id);
+
    procedure Generate_Feature
      (Unit    : in out Tagatha.Units.Tagatha_Unit;
       Feature : Entity_Id);
 
    procedure Generate_Compound
      (Unit    : in out Tagatha.Units.Tagatha_Unit;
-      Table   : Entity_Id;
       Node    : Node_Id);
 
    procedure Generate_Expression
      (Unit       : in out Tagatha.Units.Tagatha_Unit;
-      Table      : Entity_Id;
       Expression : Node_Id);
 
    procedure Generate_Precursor
      (Unit      : in out Tagatha.Units.Tagatha_Unit;
-      Table     : Entity_Id;
       Precursor : Node_Id);
 
    procedure Generate_Set_Value
      (Unit    : in out Tagatha.Units.Tagatha_Unit;
-      Table   : Entity_Id;
       Node    : Node_Id);
+
+   ------------------------
+   -- Generate_Allocator --
+   ------------------------
+
+   procedure Generate_Allocator
+     (Unit  : in out Tagatha.Units.Tagatha_Unit;
+      Class : Entity_Id)
+   is
+      Scanned : List_Of_Entities.List;
+
+      function Is_Feature (Item : Entity_Id) return Boolean
+      is (Get_Kind (Item) in Feature_Entity_Kind);
+
+      procedure Set_Value (Item : Entity_Id);
+
+      procedure Generate_Local_Allocator
+        (Ancestor_Class : Entity_Id);
+
+      procedure Scan_Hierarchy
+        (Current : Entity_Id);
+
+      ------------------------------
+      -- Generate_Local_Allocator --
+      ------------------------------
+
+      procedure Generate_Local_Allocator
+        (Ancestor_Class : Entity_Id)
+      is
+      begin
+         Unit.Push_Operand
+           (Tagatha.Operands.External_Operand ("map", True),
+            Tagatha.Default_Size);
+         Unit.Pop_Register ("op");
+         Unit.Native_Operation
+           ("allocate",
+            Input_Stack_Words  => 0,
+            Output_Stack_Words => 0,
+            Changed_Registers  => "op");
+         Unit.Push_Register ("op");
+         Unit.Pop_Register ("pv");
+         Unit.Push_Register ("agg");
+         Unit.Pop_Register ("op");
+         Unit.Native_Operation
+           ("set_property " & Get_Link_Name (Ancestor_Class));
+      end Generate_Local_Allocator;
+
+      --------------------
+      -- Scan_Hierarchy --
+      --------------------
+
+      procedure Scan_Hierarchy (Current : Entity_Id) is
+
+         procedure Generate (Inherit : Node_Id);
+
+         --------------
+         -- Generate --
+         --------------
+
+         procedure Generate (Inherit : Node_Id) is
+         begin
+            Scan_Hierarchy (Get_Entity (Inherit));
+         end Generate;
+
+      begin
+         if not Scanned.Contains (Current) then
+            Scanned.Append (Current);
+            Generate_Local_Allocator (Current);
+
+            declare
+               Inherited : constant Node_Id :=
+                             Inheritance
+                               (Get_Declaration (Current));
+            begin
+               if Inherited /= No_Node then
+                  Scan (Inherits (Inherited), Generate'Access);
+               end if;
+            end;
+         end if;
+      end Scan_Hierarchy;
+
+      ---------------
+      -- Set_Value --
+      ---------------
+
+      procedure Set_Value (Item : Entity_Id) is
+         Definition_Class : constant Entity_Id := Get_Defined_In (Item);
+         Original_Feature : constant Entity_Id := Get_Original_Ancestor (Item);
+         Original_Class   : constant Entity_Id :=
+                              Get_Context (Original_Feature);
+
+      begin
+         Unit.Push_Register ("agg");
+         Unit.Pop_Register ("op");
+         Unit.Native_Operation
+           ("get_property " & Get_Link_Name (Original_Class) & ",0",
+            Input_Stack_Words  => 0,
+            Output_Stack_Words => 0,
+            Changed_Registers  => "pv");
+         Unit.Push_Register ("pv");
+         Unit.Pop_Register ("op");
+
+         case Feature_Entity_Kind (Get_Kind (Item)) is
+            when Property_Feature_Entity =>
+               Unit.Push (0);
+               Unit.Pop_Register ("pv");
+               Unit.Native_Operation
+                 ("set_property " & To_String (Get_Name (Item)));
+
+            when Routine_Feature_Entity =>
+               Unit.Push_Operand
+                 (Tagatha.Operands.External_Operand
+                    (Get_Link_Name (Definition_Class)
+                     & "__" & To_String (Get_Name (Item)),
+                     True),
+                  Tagatha.Default_Size);
+               Unit.Pop_Register ("pv");
+               Unit.Native_Operation
+                 ("set_property " & To_String (Get_Name (Item)));
+         end case;
+      end Set_Value;
+
+   begin
+      Unit.Begin_Routine
+        (Get_Link_Name (Class) & "$allocate",
+         Argument_Words => 0,
+         Frame_Words    => 0,
+         Result_Words   => 1,
+         Global         => True);
+      Unit.Push_Operand
+        (Tagatha.Operands.External_Operand ("map", True),
+         Tagatha.Default_Size);
+      Unit.Pop_Register ("op");
+      Unit.Native_Operation
+        ("allocate",
+         Input_Stack_Words  => 0,
+         Output_Stack_Words => 0,
+         Changed_Registers  => "op");
+      Unit.Push_Register ("op");
+      Unit.Push_Register ("op");
+      Unit.Pop_Register ("agg");
+      Scan_Hierarchy (Class);
+      Scan_Children (Class, Is_Feature'Access, Set_Value'Access);
+
+      Unit.Pop_Result;
+      Unit.End_Routine;
+
+   end Generate_Allocator;
 
    --------------------------------
    -- Generate_Class_Declaration --
@@ -45,27 +197,10 @@ package body Aquarius.Ack.Generate is
         (Aquarius.Ack.Files.Base_File_Name (Get_Entity (Node)),
          Get_Program (Node).Source_File_Name);
 
-      Unit.Begin_Routine
-        (Get_Link_Name (Entity) & "$default_create",
-         Argument_Words => 1,
-         Frame_Words    => 0,
-         Result_Words   => 0,
-         Global         => True);
-
-      Unit.Push_Argument (1);
-      Unit.Pop_Register ("r0");
+      Generate_Allocator (Unit, Entity);
+      Generate_Default_Create (Unit, Entity);
 
       declare
-
-         function Virtual_Table_Feature
-           (Feature : Entity_Id)
-            return Boolean
-         is (Get_Kind (Feature) = Routine_Feature_Entity);
-
-         function Property_Feature
-           (Feature : Entity_Id)
-            return Boolean
-         is (Get_Kind (Feature) = Property_Feature_Entity);
 
          function Class_Defined_Feature
            (Feature : Entity_Id)
@@ -73,38 +208,7 @@ package body Aquarius.Ack.Generate is
          is (Get_Kind (Feature) in Feature_Entity_Kind
              and then Get_Defined_In (Feature) = Entity);
 
-         procedure Clear_Feature_Value (Feature : Entity_Id);
-         procedure Feature_Address (Feature : Entity_Id);
          procedure Generate_Feature (Feature : Entity_Id);
-
-         -------------------------
-         -- Clear_Feature_Value --
-         -------------------------
-
-         procedure Clear_Feature_Value (Feature : Entity_Id) is
-            pragma Unreferenced (Feature);
-         begin
-            Unit.Push_Register ("r0");
-            Unit.Push_Operand
-              (Tagatha.Operands.Constant_Operand (4), Tagatha.Default_Size);
-            Unit.Operate (Tagatha.Op_Add);
-            Unit.Pop_Register ("r0");
-            Unit.Push_Operand
-              (Tagatha.Operands.Constant_Operand (0), Tagatha.Default_Size);
-            Unit.Pop_Operand
-              (Tagatha.Operands.Register_Operand
-                 ("r0", Dereference => True),
-               Tagatha.Default_Size);
-         end Clear_Feature_Value;
-
-         ---------------------
-         -- Feature_Address --
-         ---------------------
-
-         procedure Feature_Address (Feature : Entity_Id) is
-         begin
-            Unit.Data (Get_Link_Name (Feature));
-         end Feature_Address;
 
          ----------------------
          -- Generate_Feature --
@@ -115,28 +219,8 @@ package body Aquarius.Ack.Generate is
             Generate_Feature (Unit, Feature);
          end Generate_Feature;
 
-         VT_Label : constant String :=
-                      Get_Link_Name (Entity) & "$vt";
-
       begin
-         Unit.Push_Operand
-           (Tagatha.Operands.External_Operand
-              (VT_Label, Immediate => True),
-            Tagatha.Default_Size);
-         Unit.Pop_Operand
-           (Tagatha.Operands.Register_Operand
-              ("r0", Dereference => True),
-            Tagatha.Default_Size);
 
-         Scan_Children (Entity, Property_Feature'Access,
-                        Clear_Feature_Value'Access);
-
-         Unit.End_Routine;
-         Unit.Segment (Tagatha.Read_Only);
-         Unit.Label (VT_Label, Export => True);
-
-         Scan_Children (Entity, Virtual_Table_Feature'Access,
-                        Feature_Address'Access);
          Scan_Children (Entity, Class_Defined_Feature'Access,
                         Generate_Feature'Access);
       end;
@@ -154,7 +238,6 @@ package body Aquarius.Ack.Generate is
 
    procedure Generate_Compound
      (Unit    : in out Tagatha.Units.Tagatha_Unit;
-      Table   : Entity_Id;
       Node    : Node_Id)
    is
       procedure Generate_Instruction
@@ -170,8 +253,8 @@ package body Aquarius.Ack.Generate is
       begin
          case N_Instruction (Kind (Instruction)) is
             when N_Assignment =>
-               Generate_Expression (Unit, Table, Expression (Instruction));
-               Generate_Set_Value (Unit, Table, Variable (Instruction));
+               Generate_Expression (Unit, Expression (Instruction));
+               Generate_Set_Value (Unit, Variable (Instruction));
             when N_Creation_Instruction =>
                null;
             when N_Conditional =>
@@ -183,13 +266,69 @@ package body Aquarius.Ack.Generate is
       Scan (Instructions (Node), Generate_Instruction'Access);
    end Generate_Compound;
 
+   -----------------------------
+   -- Generate_Default_Create --
+   -----------------------------
+
+   procedure Generate_Default_Create
+     (Unit  : in out Tagatha.Units.Tagatha_Unit;
+      Class : Entity_Id)
+   is
+      function Property_Feature
+        (Feature : Entity_Id)
+            return Boolean
+      is (Get_Kind (Feature) = Property_Feature_Entity);
+
+      procedure Clear_Feature_Value (Feature : Entity_Id);
+
+      -------------------------
+      -- Clear_Feature_Value --
+      -------------------------
+
+      procedure Clear_Feature_Value (Feature : Entity_Id) is
+         Original_Feature : constant Entity_Id :=
+                              Get_Original_Ancestor (Feature);
+         Original_Class   : constant Entity_Id :=
+                              Get_Context (Original_Feature);
+      begin
+         Unit.Push_Register ("r0");
+         Unit.Pop_Register ("op");
+         Unit.Native_Operation
+           ("get_property " & Get_Link_Name (Original_Class) & ",0",
+            Input_Stack_Words  => 0,
+            Output_Stack_Words => 0,
+            Changed_Registers  => "pv");
+         Unit.Push_Register ("pv");
+         Unit.Pop_Register ("op");
+         Unit.Push (0);
+         Unit.Pop_Register ("pv");
+         Unit.Native_Operation
+           ("set_property " & To_String (Get_Name (Original_Feature)));
+      end Clear_Feature_Value;
+
+   begin
+      Unit.Begin_Routine
+        (Get_Link_Name (Class) & "$default_create",
+         Argument_Words => 1,
+         Frame_Words    => 0,
+         Result_Words   => 0,
+         Global         => True);
+
+      Unit.Push_Argument (1);
+      Unit.Pop_Register ("r0");
+
+      Scan_Children (Class, Property_Feature'Access,
+                     Clear_Feature_Value'Access);
+      Unit.End_Routine;
+
+   end Generate_Default_Create;
+
    -------------------------
    -- Generate_Expression --
    -------------------------
 
    procedure Generate_Expression
      (Unit       : in out Tagatha.Units.Tagatha_Unit;
-      Table      : Entity_Id;
       Expression : Node_Id)
    is
    begin
@@ -197,23 +336,20 @@ package body Aquarius.Ack.Generate is
          when N_Operator =>
             null;
          when N_Precursor =>
-            Generate_Precursor (Unit, Table, Expression);
+            Generate_Precursor (Unit, Expression);
          when N_Constant =>
             declare
-               Value      : constant Node_Id := Constant_Value (Expression);
+               Value : constant Node_Id := Constant_Value (Expression);
             begin
                case N_Constant_Value (Kind (Value)) is
                   when N_String_Constant =>
-                     Unit.Push_Operand
-                       (Tagatha.Operands.Constant_Operand (0),
-                        Tagatha.Default_Size);
+                     Unit.Push_Text
+                       (To_String (Get_Name (Value)));
                   when N_Integer_Constant =>
-                     Unit.Push_Operand
-                       (Tagatha.Operands.Constant_Operand
-                          (Tagatha.Tagatha_Integer'Value
-                               (To_String
-                                    (Get_Name (Value)))),
-                        Tagatha.Default_Size);
+                     Unit.Push
+                       (Tagatha.Tagatha_Integer'Value
+                          (To_String
+                               (Get_Name (Value))));
                end case;
             end;
       end case;
@@ -232,7 +368,6 @@ package body Aquarius.Ack.Generate is
       Arg_Node     : constant Node_Id := Formal_Arguments (Dec_Body);
       Type_Node    : constant Node_Id := Value_Type (Dec_Body);
       Value_Node   : constant Node_Id := Value (Dec_Body);
-      Table        : constant Entity_Id := Get_Entity (Feature_Node);
 
       Arg_Count    : constant Natural :=
                        (if Arg_Node = No_Node then 0
@@ -255,7 +390,7 @@ package body Aquarius.Ack.Generate is
             Compound_Node : constant Node_Id :=
                               Compound (Routine_Node);
          begin
-            Generate_Compound (Unit, Table, Compound_Node);
+            Generate_Compound (Unit, Compound_Node);
          end;
       end if;
 
@@ -273,10 +408,8 @@ package body Aquarius.Ack.Generate is
 
    procedure Generate_Precursor
      (Unit      : in out Tagatha.Units.Tagatha_Unit;
-      Table     : Entity_Id;
       Precursor : Node_Id)
    is
-      pragma Unreferenced (Table);
       List   : constant List_Id :=
                  Node_Table (Precursor).List;
 
@@ -292,26 +425,41 @@ package body Aquarius.Ack.Generate is
          case Get_Kind (Entity) is
             when Class_Entity | Table_Entity =>
                null;
-            when Routine_Feature_Entity =>
-               Unit.Push_Argument (1);
-               Unit.Dereference (Tagatha.Default_Size);
-               Unit.Push_Operand
-                 (Tagatha.Operands.Constant_Operand
-                    (Tagatha.Tagatha_Integer
-                         (Get_Virtual_Table_Offset (Entity) * 4)),
-                     Tagatha.Default_Size);
-               Unit.Operate (Tagatha.Op_Add, Tagatha.Default_Size);
-               Unit.Indirect_Call;
-               Unit.Push_Result;
-            when Property_Feature_Entity =>
-               Unit.Push_Argument (1);
-               Unit.Push_Operand
-                 (Tagatha.Operands.Constant_Operand
-                    (Tagatha.Tagatha_Integer
-                         (Get_Property_Offset (Entity) * 4)),
-                  Tagatha.Default_Size);
-               Unit.Operate (Tagatha.Op_Add, Tagatha.Default_Size);
-               Unit.Dereference;
+            when Feature_Entity_Kind =>
+               declare
+                  Original_Feature : constant Entity_Id :=
+                                       Get_Original_Ancestor (Entity);
+                  Original_Class   : constant Entity_Id :=
+                                       Get_Context (Original_Feature);
+               begin
+                  Unit.Push_Argument (1);
+                  Unit.Pop_Register ("op");
+                  Unit.Native_Operation
+                    ("get_property " & Get_Link_Name (Original_Class) & ",0",
+                     Input_Stack_Words  => 0,
+                     Output_Stack_Words => 0,
+                     Changed_Registers  => "pv");
+                  Unit.Push_Register ("pv");
+                  Unit.Pop_Register ("op");
+                  Unit.Native_Operation
+                    ("get_property "
+                     & To_String (Get_Name (Original_Feature)) & ",0",
+                     Input_Stack_Words  => 0,
+                     Output_Stack_Words => 0,
+                     Changed_Registers  => "pv");
+
+                  case Feature_Entity_Kind (Get_Kind (Entity)) is
+                     when Routine_Feature_Entity =>
+                        Unit.Push_Register ("pv");
+                        Unit.Indirect_Call;
+                        if Get_Type (Original_Feature) /= No_Entity then
+                           Unit.Push_Register ("r0");
+                        end if;
+                     when Property_Feature_Entity =>
+                        Unit.Push_Register ("pv");
+                  end case;
+               end;
+
             when Argument_Entity =>
                Unit.Push_Argument
                  (Tagatha.Argument_Offset
@@ -336,23 +484,35 @@ package body Aquarius.Ack.Generate is
 
    procedure Generate_Set_Value
      (Unit    : in out Tagatha.Units.Tagatha_Unit;
-      Table   : Entity_Id;
       Node    : Node_Id)
    is
-      pragma Unreferenced (Table);
       Entity : constant Entity_Id := Get_Entity (Node);
    begin
       case Get_Kind (Entity) is
          when Class_Entity | Table_Entity =>
             null;
          when Property_Feature_Entity =>
-            Unit.Push_Argument (1);
-            Unit.Push_Operand
-              (Tagatha.Operands.Constant_Operand
-                 (Tagatha.Tagatha_Integer
-                      (Get_Property_Offset (Entity) * 4)),
-               Tagatha.Default_Size);
-            Unit.Operate (Tagatha.Op_Add, Tagatha.Default_Size);
+            declare
+               Original_Feature : constant Entity_Id :=
+                                    Get_Original_Ancestor (Entity);
+               Original_Class   : constant Entity_Id :=
+                                    Get_Context (Original_Feature);
+            begin
+               Unit.Push_Argument (1);
+               Unit.Pop_Register ("op");
+               Unit.Native_Operation
+                 ("get_property " & Get_Link_Name (Original_Class) & ",0",
+                  Input_Stack_Words  => 0,
+                  Output_Stack_Words => 0,
+                  Changed_Registers  => "pv");
+               Unit.Push_Register ("pv");
+               Unit.Pop_Register ("op");
+               Unit.Pop_Register ("pv");
+               Unit.Native_Operation
+                 ("set_property "
+                  & To_String (Get_Name (Original_Feature)));
+            end;
+
          when Routine_Feature_Entity =>
             raise Program_Error;
          when Argument_Entity =>
