@@ -14,6 +14,8 @@ feature
     Result := X
   end g
   
+  prop_a : integer
+  
 end A
 
 --  A__vm:

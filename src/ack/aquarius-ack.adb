@@ -197,6 +197,21 @@ package body Aquarius.Ack is
       end if;
    end Get_Name_Id;
 
+   ---------------------------
+   -- Get_Original_Ancestor --
+   ---------------------------
+
+   function Get_Original_Ancestor (Feature : Entity_Id) return Entity_Id is
+      Inherited : constant Entity_Id :=
+                    Entity_Table.Element (Feature).Inherited_From;
+   begin
+      if Inherited = No_Entity then
+         return Feature;
+      else
+         return Get_Original_Ancestor (Inherited);
+      end if;
+   end Get_Original_Ancestor;
+
    --------------------
    -- Inherit_Entity --
    --------------------
@@ -219,7 +234,7 @@ package body Aquarius.Ack is
                     Entity_Type => Get_Type (Entity));
    begin
       Entity_Table (Result).Redefine := Redefine;
-      Entity_Table (Result).Inherited_From := Get_Context (Entity);
+      Entity_Table (Result).Inherited_From := Entity;
 
       Entity_Table (Result).Defined_In :=
         (if Redefine then Derived_Class else Get_Context (Entity));
