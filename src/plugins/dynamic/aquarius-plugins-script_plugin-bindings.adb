@@ -371,20 +371,20 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                               Aquarius.Config_Paths.Config_File
                                 ("aqua/generated/");
 
-      procedure Load_Generated_Class
+      procedure Load_Class
         (Directory_Entry : Ada.Directories.Directory_Entry_Type);
 
-      --------------------------
-      -- Load_Generated_Class --
-      --------------------------
+      ----------------
+      -- Load_Class --
+      ----------------
 
-      procedure Load_Generated_Class
+      procedure Load_Class
         (Directory_Entry : Ada.Directories.Directory_Entry_Type)
       is
       begin
          Aquarius.Ack.Compile.Compile_Class
            (Ada.Directories.Full_Name (Directory_Entry), Image);
-      end Load_Generated_Class;
+      end Load_Class;
 
    begin
       Aquarius.Ack.Primitives.Create_Primitives;
@@ -393,11 +393,11 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Ada.Directories.Search
         (Base_Generated_Path,
          Grammar.Name & "-syntax*.aqua",
-         Process => Load_Generated_Class'Access);
-      Aquarius.Ack.Compile.Compile_Class
-        (Source_Path =>
-           Base_Aqua_Path & Grammar.Name & "-" & Group_Name & ".aqua",
-         To_Image    => Image);
+         Process => Load_Class'Access);
+      Ada.Directories.Search
+        (Base_Aqua_Path,
+         Grammar.Name & "-" & Group_Name & "*.aqua",
+         Process => Load_Class'Access);
    end Load_Ack_Binding;
 
    ----------------
