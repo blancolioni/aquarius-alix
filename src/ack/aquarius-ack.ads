@@ -34,11 +34,13 @@ package Aquarius.Ack is
       N_Class_Type,
       N_Anchored_Type,
       N_Feature_Name,
+      N_Feature_Alias,
       N_Feature_Value,
       N_Explicit_Value,
       N_Routine,
       N_Local_Declarations,
-      N_Effective_Routine,
+      N_Internal,
+      N_External,
       N_Compound,
       N_Assignment,
       N_Creation_Instruction,
@@ -63,6 +65,8 @@ package Aquarius.Ack is
 
    subtype N_Constant_Value is Node_Kind range
      N_String_Constant .. N_Integer_Constant;
+
+   subtype N_Effective_Routine is Node_Kind range N_Internal .. N_External;
 
    type Error_Kind is
      (E_No_Error,
@@ -264,6 +268,8 @@ package Aquarius.Ack is
    function Get_Name (N : Node_Id) return Name_Id
      with Pre => Kind (N) = N_Identifier
      or else Kind (N) = N_Feature_Name
+     or else Kind (N) = N_External
+     or else Kind (N) = N_Feature_Alias
      or else Kind (N) = N_Variable
      or else Kind (N) = N_Integer_Constant;
 
@@ -302,11 +308,14 @@ package Aquarius.Ack is
    function Entity_Declaration_Group_List (N : Node_Id) return Node_Id
      with Pre => Kind (N) in N_Formal_Arguments | N_Local_Declarations;
 
+   function Feature_Alias (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_External;
+
    function Effective_Routine (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Routine;
 
    function Compound (N : Node_Id) return Node_Id
-     with Pre => Kind (N) = N_Effective_Routine;
+     with Pre => Kind (N) = N_Internal;
 
    function Instructions (N : Node_Id) return List_Id
      with Pre => Kind (N) = N_Compound;
@@ -542,6 +551,9 @@ private
 
    function Features (N : Node_Id) return Node_Id
    is (Node_Table.Element (N).Field (5));
+
+   function Feature_Alias (N : Node_Id) return Node_Id
+   is (Field_1 (N));
 
    function Effective_Routine (N : Node_Id) return Node_Id
    is (Field_3 (N));

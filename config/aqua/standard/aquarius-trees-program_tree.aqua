@@ -1,0 +1,22 @@
+class Aquarius.Trees.Program_Tree
+
+feature
+
+   Parent   : ? Aquarius.Trees.Program_Tree
+      external "aqua"
+      alias "tree__parent"
+      
+   Children : Array [Aquarius.Trees.Program_Tree]
+   Has_Child (Name : String) : Boolean
+      do
+         
+      end
+   Before_Node
+   do
+   end
+   
+   After_Node
+   do
+   end
+   
+end

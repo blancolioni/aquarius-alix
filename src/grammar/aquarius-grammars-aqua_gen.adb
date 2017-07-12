@@ -223,7 +223,7 @@ package body Aquarius.Grammars.Aqua_Gen is
       Put_Line ("class " & Class_Name);
       New_Line;
       Put_Line ("inherit");
-      Put_Line ("   Aquarius.Trees.Program_Node");
+      Put_Line ("   Aquarius.Trees.Program_Tree");
       for I in 1 .. Syntax.Child_Count loop
          Scan_Features
            (Aquarius.Syntax.Syntax_Tree (Syntax.Child (I)),

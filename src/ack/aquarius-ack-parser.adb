@@ -164,9 +164,22 @@ package body Aquarius.Ack.Parser is
       return Node_Id is (No_Node)
    with Pre => From.Name = "deferred";
 
+   function Import_Internal
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     with Pre => From.Name = "internal";
+
+   function Import_External
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   with Pre => From.Name = "external";
+
    function Import_Effective_Routine
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
+   is (Import_Choice
+       (From, "internal", "external",
+        Import_Internal'Access, Import_External'Access))
    with Pre => From.Name = "effective_routine";
 
    function Import_Instruction
@@ -218,6 +231,10 @@ package body Aquarius.Ack.Parser is
        (From, "deferred", "effective_routine",
         Import_Deferred'Access, Import_Effective_Routine'Access))
    with Pre => From.Name = "feature_body";
+
+   function Import_String_Constant
+     (Raw_Text : String)
+      return String;
 
    ------------
    -- Import --
@@ -397,24 +414,6 @@ package body Aquarius.Ack.Parser is
                        Field_3 => Feature_Value_Node);
    end Import_Declaration_Body;
 
-   ------------------------------
-   -- Import_Effective_Routine --
-   ------------------------------
-
-   function Import_Effective_Routine
-     (From : Aquarius.Programs.Program_Tree)
-      return Node_Id
-   is
-      Once : constant Boolean :=
-               From.Program_Child ("routine_mark").Chosen_Tree.Name = "once";
-   begin
-      return New_Node (N_Effective_Routine, From,
-                       Once => Once,
-                       Field_1 =>
-                         Import_Compound
-                           (From.Program_Child ("compound")));
-   end Import_Effective_Routine;
-
    -------------------------------------
    -- Import_Entity_Declaration_Group --
    -------------------------------------
@@ -486,6 +485,37 @@ package body Aquarius.Ack.Parser is
 --     begin
 --        return New_Node (N_Event_Clause, From);
 --     end Import_Event_Clause;
+
+   ---------------------
+   -- Import_External --
+   ---------------------
+
+   function Import_External
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+      use Aquarius.Programs;
+      Alias_Tree : constant Program_Tree :=
+                     From.Program_Child ("external_name");
+      Alias_Node : constant Node_Id :=
+                     (if Alias_Tree /= null
+                      then New_Node
+                        (N_Feature_Alias, Alias_Tree,
+                         Name => Get_Name_Id
+                           (Import_String_Constant
+                              (Alias_Tree.Program_Child
+                                 ("string_constant").Text)))
+                      else No_Node);
+   begin
+      return New_Node (N_External, From,
+                       Name =>
+                         Get_Name_Id
+                           (Import_String_Constant
+                              (From.Program_Child
+                                 ("external_language")
+                               .Program_Child ("string_constant").Text)),
+                       Field_1 => Alias_Node);
+   end Import_External;
 
    ---------------------------
    -- Import_Feature_Clause --
@@ -694,6 +724,24 @@ package body Aquarius.Ack.Parser is
 
    end Import_Instruction;
 
+   ---------------------
+   -- Import_Internal --
+   ---------------------
+
+   function Import_Internal
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+      Once : constant Boolean :=
+               From.Program_Child ("routine_mark").Chosen_Tree.Name = "once";
+   begin
+      return New_Node (N_Internal, From,
+                       Once    => Once,
+                       Field_1 =>
+                         Import_Compound
+                           (From.Program_Child ("compound")));
+   end Import_Internal;
+
    -----------------
    -- Import_List --
    -----------------
@@ -782,6 +830,40 @@ package body Aquarius.Ack.Parser is
                          Import_Feature_Body
                            (From.Program_Child ("feature_body")));
    end Import_Routine;
+
+   ----------------------------
+   -- Import_String_Constant --
+   ----------------------------
+
+   function Import_String_Constant
+     (Raw_Text : String)
+      return String
+   is
+      Result : String (1 .. Raw_Text'Length) := Raw_Text;
+      Count  : Natural := 0;
+      Index  : Positive := 1;
+   begin
+      while Index <= Result'Last loop
+         if (Index = 1 or else Index = Result'Last)
+           and then Result (Index) = '"'
+         then
+            Index := Index + 1;
+         elsif Index < Result'Last - 1
+           and then Result (Index) = '"'
+           and then Result (Index + 1) = '"'
+         then
+            Index := Index + 2;
+            Count := Count + 1;
+            Result (Count) := '"';
+         else
+            Count := Count + 1;
+            Result (Count) := Result (Index);
+            Index := Index + 1;
+         end if;
+      end loop;
+
+      return Result (1 .. Count);
+   end Import_String_Constant;
 
    -----------------
    -- Import_Type --

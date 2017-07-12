@@ -7,7 +7,7 @@ plugin Aqua version 0.1 is
    end run_check;
 
    group generate : code is
-      aqua_tagatha;
+--      aqua_tagatha;
       --  aqua_generate;
    end generate;
    
