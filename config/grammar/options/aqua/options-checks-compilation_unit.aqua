@@ -1,0 +1,9 @@
+class Options.Checks.Compilation_Unit
+   inherit Options.Syntax.Compilation_Unit_Node
+     --  redefine end
+     
+feature
+
+   Current_Entry : Options.Entry
+   
+end

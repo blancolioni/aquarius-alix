@@ -1,0 +1,13 @@
+class Options.Checks.Declaration
+inherit
+   Options.Syntax.Declaration_Node
+   
+feature
+
+   Option_Entry : Options.Entry
+   
+   After_Option_Declaration (Child : Options.Checks.Option_Declaration) 
+      do
+         Option_Entry := Child.Option_Entry
+      end
+end

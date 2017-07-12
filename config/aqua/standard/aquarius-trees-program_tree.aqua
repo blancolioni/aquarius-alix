@@ -1,6 +1,12 @@
+note
+   implicit_external_object : aqua_tree
+   
 class Aquarius.Trees.Program_Tree
-
+      
 feature
+
+   Name     : String external "aqua" alias "tree__name"
+   Text     : String external "aqua" alias "tree__text"
 
    Parent   : ? Aquarius.Trees.Program_Tree
       external "aqua"
@@ -11,6 +17,7 @@ feature
       do
          
       end
+      
    Before_Node
    do
    end
