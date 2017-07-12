@@ -118,7 +118,8 @@ package body Aquarius.Grammars.Aqua_Gen is
 
       procedure Scan_Features
         (Tree     : Aquarius.Syntax.Syntax_Tree;
-         Repeated : Boolean);
+         Repeated : Boolean;
+         Optional : Boolean);
 
       -------------------
       -- Scan_Features --
@@ -126,7 +127,8 @@ package body Aquarius.Grammars.Aqua_Gen is
 
       procedure Scan_Features
         (Tree     : Aquarius.Syntax.Syntax_Tree;
-         Repeated : Boolean)
+         Repeated : Boolean;
+         Optional : Boolean)
       is
 
          procedure Put_Feature (Prefix : String);
@@ -177,6 +179,7 @@ package body Aquarius.Grammars.Aqua_Gen is
                         & To_Mixed_Case
                           (Aquarius.Tokens.Get_Name (Tree.Frame, Tree.Token))
                         & " : "
+                        & (if Optional then "? " else "")
                         & (if Repeated then "List[String]" else "String"));
                      Found_Syntax.Insert (Name, "");
                   end if;
@@ -192,7 +195,9 @@ package body Aquarius.Grammars.Aqua_Gen is
             for I in 1 .. Tree.Child_Count loop
                Scan_Features
                  (Aquarius.Syntax.Syntax_Tree (Tree.Child (I)),
-                  Repeated or else Tree.Repeatable);
+                  Repeated or else Tree.Repeatable,
+                  Optional or else Tree.Optional
+                  or else Tree.Syntax_Class = Choice);
             end loop;
          end if;
       end Scan_Features;
@@ -222,7 +227,8 @@ package body Aquarius.Grammars.Aqua_Gen is
       for I in 1 .. Syntax.Child_Count loop
          Scan_Features
            (Aquarius.Syntax.Syntax_Tree (Syntax.Child (I)),
-            Syntax.Repeatable);
+            Syntax.Repeatable,
+            Syntax.Optional or else Syntax.Syntax_Class = Choice);
       end loop;
       New_Line;
       Put_Line ("end");
