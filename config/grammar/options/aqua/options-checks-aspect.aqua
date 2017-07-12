@@ -1,18 +1,18 @@
 class Options.Checks.Aspect
-   inherit Options.Syntax.Aspect_Node
-     redefine After_Node end
      
 feature
 
-   Entry : Options.Entry
+   Node  : Options.Syntax.Aspect_Node
+   
+   Option_Entry : Options.Entry
    
    After_Node
    do
-      if not String_Literal.Void then
-         Entry.Set_Long_Name (String_Literal)
+      if Node.String_Literal /= Void then
+         Entry.Set_Long_Name (Node.String_Literal.Text)
       end if
-      if not Character_Literal.Void then
-         Entry.Set_Short_Name (Character_Literal.First_Element)
+      if Node.Character_Literal /= Void then
+         Entry.Set_Short_Name (Node.Character_Literal.First_Element)
       end if
    end
    

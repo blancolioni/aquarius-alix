@@ -1,8 +1,9 @@
 class Options.Checks.Option_Declaration
-     
+   inherit Aqua.Text_IO
+   
 feature
 
-   Node : Options.Syntax.Option_Declaration_Node
+   Node         : Options.Syntax.Option_Declaration_Node
    Option_Entry : Options.Entry
    
 end
