@@ -153,15 +153,6 @@ package body Aquarius.Grammars.Aqua_Gen is
          end Put_Feature;
 
       begin
-         if not Have_Feature
-           and then (Tree.Syntax_Class = Terminal
-                     or else Tree.Name /= "")
-         then
-            New_Line;
-            Put_Line ("feature");
-            Have_Feature := True;
-         end if;
-
          if Tree.Syntax_Class = Terminal then
             if not Aquarius.Tokens.Is_Reserved
               (Tree.Frame, Tree.Token)
@@ -173,6 +164,12 @@ package body Aquarius.Grammars.Aqua_Gen is
                                 (Tree.Frame, Tree.Token));
                begin
                   if not Found_Syntax.Contains (Name) then
+                     if not Have_Feature then
+                        New_Line;
+                        Put_Line ("feature");
+                        Have_Feature := True;
+                     end if;
+
                      New_Line;
                      Put_Line
                        ("   "
@@ -186,10 +183,12 @@ package body Aquarius.Grammars.Aqua_Gen is
                end;
             end if;
          elsif Tree.Name /= "" then
-            if not Found_Syntax.Contains (Tree.Name) then
-               Put_Feature ("Before_");
-               Put_Feature ("After_");
-               Found_Syntax.Insert (Tree.Name, "");
+            if False then
+               if not Found_Syntax.Contains (Tree.Name) then
+                  Put_Feature ("Before_");
+                  Put_Feature ("After_");
+                  Found_Syntax.Insert (Tree.Name, "");
+               end if;
             end if;
          else
             for I in 1 .. Tree.Child_Count loop
