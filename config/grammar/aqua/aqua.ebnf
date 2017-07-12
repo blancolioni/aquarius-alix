@@ -277,7 +277,6 @@ anchored ::=
 	 
 anchor ::=
          feature_name
-      |  'current'
       
 actual_generics ::=
          '[' type_list ']'
