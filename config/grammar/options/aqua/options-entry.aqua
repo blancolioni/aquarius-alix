@@ -1,22 +1,22 @@
 class Options.Entry
 
-create
-   New_Option
-   
 feature
    Name          : String
-   Type          : String
+   Type_Name     : String
    Short_Name    : Character
    Long_Name     : String
    Default_Value : String
 
 feature
-
-   New_Option
-     (Option_Name, Option_Type : String)
+   
+   Set_Name (Option_Name : String)
    do
-      Name          := Option_Name;
-      Type          := Option_Type;
+      Name := Option_Name;
+   end
+   
+   Set_Type (Name : String)
+   do
+      Type_Name := Name
    end
    
    Set_Short_Name (Name : Character)

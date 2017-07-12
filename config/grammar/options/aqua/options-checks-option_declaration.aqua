@@ -1,9 +1,28 @@
 class Options.Checks.Option_Declaration
    inherit Aqua.Text_IO
-   
+           Options.Option_Entry_Node
 feature
 
    Node         : Options.Syntax.Option_Declaration_Node
-   Option_Entry : Options.Entry
+   
+   After_Identifier (Id : String)
+      do
+         Option_Entry.Set_Name (Id)
+      end
+      
+   After_Type (Type : Options.Syntax.Type_Node)
+      do
+         Option_Entry.Set_Name (Type.Identifier.Text)
+      end
+      
+   After_Numeric_Literal (Child : String)
+      do
+         Option_Entry.Set_Default_Value (Child)
+      end
+      
+   Before_List_Of_Aspects (Child : Options.Checks.List_Of_Aspects)
+      do
+         Child.Inherit_Option_Entry (Current)
+      end
    
 end
