@@ -1,6 +1,15 @@
 class Array[T]
 
 feature
-   Get (Index : Integer) : T
-   
-end Array
+
+   Entry (Index : Integer) : T
+
+   Lower, Upper : Integer
+
+   Count : Integer
+      do
+         Result := Upper - Lower + 1
+      ensure
+         Consistent_With_Bounds: Result = Upper - Lower + 1
+      end         
+end

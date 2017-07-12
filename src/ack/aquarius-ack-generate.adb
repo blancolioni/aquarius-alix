@@ -406,10 +406,28 @@ package body Aquarius.Ack.Generate is
          declare
             Routine_Node : constant Node_Id :=
                              Effective_Routine (Value_Node);
-            Compound_Node : constant Node_Id :=
-                              Compound (Routine_Node);
          begin
-            Generate_Compound (Unit, Compound_Node);
+            case N_Effective_Routine (Kind (Routine_Node)) is
+               when N_Internal =>
+                  Generate_Compound (Unit, Compound (Routine_Node));
+               when N_External =>
+                  declare
+                     Label : constant String :=
+                               (if Feature_Alias (Routine_Node) /= No_Node
+                                then To_String
+                                  (Get_Name (Feature_Alias (Routine_Node)))
+                                else "_"
+                                & To_Standard_String (Get_Name (Feature)));
+                  begin
+                     Unit.Push_Argument (1);
+                     Unit.Call (Label);
+                     Unit.Drop;
+                     if Type_Node /= No_Node then
+                        Unit.Push_Register ("r0");
+                        Unit.Pop_Local (1);
+                     end if;
+                  end;
+            end case;
          end;
       end if;
 

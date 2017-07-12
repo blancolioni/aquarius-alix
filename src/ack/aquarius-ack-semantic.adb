@@ -1,3 +1,5 @@
+with Ada.Text_IO;
+
 with Aquarius.Loader;
 
 with Aquarius.Ack.Classes;
@@ -247,7 +249,16 @@ package body Aquarius.Ack.Semantic is
       Routine : Node_Id)
    is
    begin
-      Analyse_Compound (Class, Table, Compound (Routine));
+      case N_Effective_Routine (Kind (Routine)) is
+         when N_Internal =>
+            Analyse_Compound (Class, Table, Compound (Routine));
+         when N_External =>
+            Ada.Text_IO.Put_Line
+              ("external: " & To_String (Get_Name (Routine))
+               & (if Feature_Alias (Routine) /= No_Node
+                 then ": " & To_String (Get_Name (Feature_Alias (Routine)))
+                 else ""));
+      end case;
    end Analyse_Effective_Routine;
 
    ---------------------------------------

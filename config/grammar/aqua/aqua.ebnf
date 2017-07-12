@@ -99,8 +99,6 @@ new_feature ::=
 routine ::=
          [ precondition ] [ local_declarations ] feature_body [ postcondition ] [ rescue ] 'end'
          
-matching_routine_name ::= identifier
-
 feature_body ::=
          deferred
       |  effective_routine
@@ -168,9 +166,18 @@ identifier_list ::=
 deferred ::=
          'deferred'
 	 
-effective_routine ::=
+effective_routine ::= internal | external
+
+internal ::=
          routine_mark compound
 	 
+external ::= 
+         'external' external_language [ external_name ]
+         
+external_language ::= string_constant
+
+external_name ::= 'alias' string_constant
+
 routine_mark ::=
          'do'
       |  once
