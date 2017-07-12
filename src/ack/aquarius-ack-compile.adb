@@ -1,4 +1,6 @@
+with Ada.Calendar;
 with Ada.Directories;
+with Ada.Text_IO;
 
 with Aquarius.Ack.Parser;
 with Aquarius.Ack.Semantic;
@@ -23,8 +25,7 @@ package body Aquarius.Ack.Compile is
       To_Image    : Aqua.Images.Image_Type);
 
    procedure Generate_Object_Code
-     (Base_Name   : String;
-      Target      : Aqua.Images.Image_Type);
+     (Base_Name   : String);
 
    -------------------
    -- Compile_Class --
@@ -68,15 +69,11 @@ package body Aquarius.Ack.Compile is
    --------------------------
 
    procedure Generate_Object_Code
-     (Base_Name   : String;
-      Target      : Aqua.Images.Image_Type)
+     (Base_Name   : String)
    is
       Assembly_Path    : constant String :=
                            Aquarius.Paths.Scratch_File
                              (Base_Name, "m32");
-      Object_Path    : constant String :=
-                           Aquarius.Paths.Scratch_File
-                             (Base_Name, "o32");
       Assembly_Program : constant Aquarius.Programs.Program_Tree :=
                            Aquarius.Loader.Load_From_File
                              (Assembly_Path);
@@ -86,9 +83,6 @@ package body Aquarius.Ack.Compile is
    begin
       Assembly_Grammar.Run_Action_Trigger
         (Assembly_Program, Aquarius.Actions.Semantic_Trigger);
-
-      Target.Load (Base_Name & ".o32");
-      Class_Object_Paths.Insert (Base_Name, Object_Path);
    end Generate_Object_Code;
 
    ----------------
@@ -133,10 +127,28 @@ package body Aquarius.Ack.Compile is
 
          end if;
 
-         Aquarius.Ack.Generate.Generate_Class_Declaration
-           (Loaded_Classes.Element (Base_Name));
+         declare
+            use Ada.Directories, Ada.Calendar;
+            Object_Path : constant String :=
+                            Aquarius.Paths.Scratch_File
+                              (Base_Name & ".o32");
+         begin
+            if not Exists (Object_Path)
+              or else Modification_Time (Object_Path)
+              < Modification_Time (Source_Path)
+            then
+               Ada.Text_IO.Put_Line
+                 ("generating " & Base_Name);
+               Aquarius.Ack.Generate.Generate_Class_Declaration
+                 (Loaded_Classes.Element (Base_Name));
 
-         Generate_Object_Code (Base_Name, To_Image);
+               Generate_Object_Code (Base_Name);
+            end if;
+
+            To_Image.Load (Base_Name & ".o32");
+            Class_Object_Paths.Insert (Base_Name, Object_Path);
+
+         end;
 
       end if;
 
