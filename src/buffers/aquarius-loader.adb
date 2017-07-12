@@ -25,7 +25,7 @@ pragma Unreferenced (Aquarius.Transformers.Action_Script);
 
 package body Aquarius.Loader is
 
-   Trace_Files : constant Boolean := True;
+   Trace_Files : constant Boolean := False;
    --  if True, report each loaded file to standard_output
 
    Show_Full_Path : constant Boolean := False;
