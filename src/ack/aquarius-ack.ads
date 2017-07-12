@@ -41,13 +41,13 @@ package Aquarius.Ack is
       N_Local_Declarations,
       N_Internal,
       N_External,
+      N_Expression,
       N_Compound,
       N_Assignment,
       N_Creation_Instruction,
       N_Conditional,
-      N_Expression,
-      N_Operator,
       N_Precursor,
+      N_Operator,
       N_Constant,
       N_String_Constant,
       N_Integer_Constant,
@@ -58,10 +58,10 @@ package Aquarius.Ack is
      N_Class_Type .. N_Anchored_Type;
 
    subtype N_Instruction is Node_Kind range
-     N_Assignment .. N_Conditional;
+     N_Assignment .. N_Precursor;
 
    subtype N_Expression_Node is Node_Kind range
-     N_Operator .. N_Constant;
+     N_Precursor .. N_Constant;
 
    subtype N_Constant_Value is Node_Kind range
      N_String_Constant .. N_Integer_Constant;
