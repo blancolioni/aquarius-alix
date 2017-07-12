@@ -709,6 +709,7 @@ package body Aquarius.Ack.Parser is
             Insert ("creation_instruction",
                     Import_Creation_Instruction'Access);
             Insert ("conditional", Import_Conditional'Access);
+            Insert ("precursor", Expressions.Import_Precursor'Access);
          end;
       end if;
 

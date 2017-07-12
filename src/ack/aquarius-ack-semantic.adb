@@ -232,6 +232,8 @@ package body Aquarius.Ack.Semantic is
                null;
             when N_Conditional =>
                null;
+            when N_Precursor =>
+               null;
          end case;
       end Analyse;
 

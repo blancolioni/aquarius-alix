@@ -277,6 +277,8 @@ package body Aquarius.Ack.Generate is
                null;
             when N_Conditional =>
                null;
+            when N_Precursor =>
+               null;
          end case;
       end Generate_Instruction;
 
