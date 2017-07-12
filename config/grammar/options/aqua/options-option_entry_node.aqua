@@ -1,0 +1,12 @@
+deferred class Options.Option_Entry_Node
+
+feature
+
+   Option_Entry : Options.Entry
+   
+   Inherit_Option_Entry (From_Node : Options.Option_Entry_Node)
+      do
+         Option_Entry := From_Node.Option_Entry
+      end
+      
+end
