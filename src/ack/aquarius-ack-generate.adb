@@ -1,3 +1,5 @@
+with Ada.Strings.Fixed;
+
 with Tagatha.Operands;
 with Tagatha.Units;
 
@@ -412,19 +414,43 @@ package body Aquarius.Ack.Generate is
                   Generate_Compound (Unit, Compound (Routine_Node));
                when N_External =>
                   declare
-                     Label : constant String :=
-                               (if Feature_Alias (Routine_Node) /= No_Node
-                                then To_String
-                                  (Get_Name (Feature_Alias (Routine_Node)))
-                                else "_"
-                                & To_Standard_String (Get_Name (Feature)));
+                     Call : constant String :=
+                              (if Feature_Alias (Routine_Node) /= No_Node
+                               then To_String
+                                 (Get_Name (Feature_Alias (Routine_Node)))
+                               else Get_Link_Name (Get_Context (Feature))
+                               & "."
+                               & To_Standard_String (Get_Name (Feature)));
+                     Dot  : constant Natural :=
+                              Ada.Strings.Fixed.Index (Call, ".");
+                     Object_Name : constant String :=
+                                     (if Dot > 0
+                                      then Call (Call'First .. Dot - 1)
+                                      else "");
+                     Property_Name : constant String :=
+                                       Call (Dot + 1 .. Call'Last);
                   begin
-                     Unit.Push_Argument (1);
-                     Unit.Call (Label);
-                     Unit.Drop;
-                     if Type_Node /= No_Node then
-                        Unit.Push_Register ("r0");
-                        Unit.Pop_Local (1);
+                     if Dot = 0 then
+                        Unit.Push_Argument (1);
+                        Unit.Call (Call);
+                        Unit.Drop;
+                        if Type_Node /= No_Node then
+                           Unit.Push_Register ("r0");
+                           Unit.Pop_Local (1);
+                        end if;
+                     else
+                        Unit.Push_Operand
+                          (Tagatha.Operands.External_Operand
+                             (Object_Name, True),
+                           Tagatha.Default_Size);
+                        Unit.Pop_Register ("op");
+                        Unit.Native_Operation
+                          ("get_property " & Property_Name & ",0",
+                           Input_Stack_Words  => 0,
+                           Output_Stack_Words => 0,
+                           Changed_Registers  => "pv");
+                        Unit.Push_Register ("pv");
+
                      end if;
                   end;
             end case;
