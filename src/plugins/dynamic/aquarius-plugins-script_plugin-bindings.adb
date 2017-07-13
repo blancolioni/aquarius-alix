@@ -427,10 +427,13 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                   & "$allocate");
                Ada.Text_IO.Put_Line
                  (Action_File,
+                  "      IO.Put_Line (tree.__" & Parent_Tree & ".Image)");
+               Ada.Text_IO.Put_Line
+                 (Action_File,
                   "   end if");
                Ada.Text_IO.Put_Line
                  (Action_File,
-                  "   IO.Put_Line (tree.__" & Parent_Tree & ".Image)");
+                  "   tree.__" & Parent_Tree & "." & Position_Name & "_node");
                Ada.Text_IO.Put_Line
                  (Action_File,
                   "end;");
