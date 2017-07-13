@@ -1,5 +1,3 @@
-with Ada.Text_IO;
-
 with Aquarius.Loader;
 
 with Aquarius.Ack.Classes;
@@ -15,9 +13,9 @@ with Aquarius.Ack.Errors;
 package body Aquarius.Ack.Semantic is
 
    function Load_Entity
-     (Referrer : Aquarius.Programs.Program_Tree;
-      Parent   : Entity_Id;
-      Name     : Name_Id)
+     (Referrer        : Aquarius.Programs.Program_Tree;
+      Parent          : Entity_Id;
+      Name            : Name_Id)
       return Entity_Id;
 
    procedure Analyse_Class_Header
@@ -158,10 +156,45 @@ package body Aquarius.Ack.Semantic is
                (if Defining_Name
                 then List.Last
                 else List_Of_Nodes.No_Element);
-      Parent : Entity_Id := No_Entity;
+
+      Class_Context : Entity_Id :=
+                        (if Defining_Name then No_Entity
+                         else Get_Entity (Class));
+      Parent : Entity_Id;
       Class_Program : constant Aquarius.Programs.Program_Tree :=
                         Node_Table.Element (Class).From;
+
    begin
+      if Defining_Name then
+         Parent := No_Entity;
+      else
+         Parent := Undeclared_Entity;
+         declare
+            Element_Node : constant Node_Id :=
+                             List_Of_Nodes.Element (Position);
+            Element_Name : constant Name_Id :=
+                             Node_Table.Element (Element_Node).Name;
+         begin
+            while Class_Context /= No_Entity loop
+               Parent :=
+                 Load_Entity (Class_Program, Class_Context, Element_Name);
+               exit when Parent /= Undeclared_Entity;
+               Class_Context := Get_Context (Class_Context);
+            end loop;
+            if Parent = Undeclared_Entity then
+               Parent := Load_Entity (Class_Program, No_Entity, Element_Name);
+            end if;
+         end;
+
+         if Parent = Undeclared_Entity then
+            Error (List_Of_Nodes.Element (Position), E_Undeclared_Name);
+            return;
+         end if;
+
+         List_Of_Nodes.Next (Position);
+
+      end if;
+
       while Position /= Last loop
          declare
             Element_Node : constant Node_Id :=
@@ -169,7 +202,10 @@ package body Aquarius.Ack.Semantic is
             Element_Name : constant Name_Id :=
                              Node_Table.Element (Element_Node).Name;
             New_Parent   : constant Entity_Id :=
-                             Load_Entity (Class_Program, Parent, Element_Name);
+                             Load_Entity
+                               (Referrer        => Class_Program,
+                                Parent          => Parent,
+                                Name            => Element_Name);
          begin
             if New_Parent = Undeclared_Entity then
                Error (Element_Node,
@@ -255,11 +291,7 @@ package body Aquarius.Ack.Semantic is
          when N_Internal =>
             Analyse_Compound (Class, Table, Compound (Routine));
          when N_External =>
-            Ada.Text_IO.Put_Line
-              ("external: " & To_String (Get_Name (Routine))
-               & (if Feature_Alias (Routine) /= No_Node
-                 then ": " & To_String (Get_Name (Feature_Alias (Routine)))
-                 else ""));
+            null;
       end case;
    end Analyse_Effective_Routine;
 
@@ -654,9 +686,9 @@ package body Aquarius.Ack.Semantic is
    -----------------
 
    function Load_Entity
-     (Referrer : Aquarius.Programs.Program_Tree;
-      Parent   : Entity_Id;
-      Name     : Name_Id)
+     (Referrer        : Aquarius.Programs.Program_Tree;
+      Parent          : Entity_Id;
+      Name            : Name_Id)
       return Entity_Id
    is
       Entity : Entity_Id := Find_Entity (Parent, Name);
