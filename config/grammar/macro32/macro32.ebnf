@@ -97,7 +97,7 @@ arg ::= identifier | deferred
       | autodecrement | autodecrement_deferred
       | indexed | indexed_deferred
       | immediate | absolute
-      | string
+      | string | subroutine
       
 deferred ::= '(' identifier ')'
 autoincrement ::= '(' identifier ')' '+'
@@ -106,6 +106,7 @@ autodecrement ::= '-' '(' identifier ')'
 autodecrement_deferred ::= '@' '-' '(' identifier ')'
 indexed ::= operand '(' identifier ')'
 indexed_deferred ::= '@' operand '(' identifier ')'
+subroutine ::= '{' identifier '}'
 immediate ::= '#' expression
 absolute ::= '@' '#' expression
 
