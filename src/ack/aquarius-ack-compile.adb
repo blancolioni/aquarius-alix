@@ -33,7 +33,12 @@ package body Aquarius.Ack.Compile is
 
    procedure Compile_Class
      (Source_Path : String;
-      To_Image    : Aqua.Images.Image_Type)
+      To_Image    : Aqua.Images.Image_Type;
+      Feature_Callback : access
+        procedure (Class        : Entity_Id;
+                   Feature_Name : String;
+                   Child_Name   : String;
+                   Child_Type   : Entity_Id))
    is
       Base_Name : constant String :=
                     Ada.Directories.Base_Name (Source_Path);
@@ -62,6 +67,33 @@ package body Aquarius.Ack.Compile is
 
          Partial_Class_List.Clear;
       end if;
+
+      if Feature_Callback /= null then
+         declare
+            Class : constant Real_Entity_Id :=
+                      Get_Entity (Loaded_Classes.Element (Base_Name));
+
+            function OK (Entity : Entity_Id) return Boolean
+            is (Get_Kind (Entity) = Routine_Feature_Entity);
+
+            procedure Call (Feature : Entity_Id);
+
+            ----------
+            -- Call --
+            ----------
+
+            procedure Call (Feature : Entity_Id) is
+            begin
+               Feature_Callback
+                 (Class, To_Standard_String (Get_Name (Feature)),
+                  "", No_Entity);
+            end Call;
+
+         begin
+            Scan_Children (Class, OK'Access, Call'Access);
+         end;
+      end if;
+
    end Compile_Class;
 
    --------------------------
