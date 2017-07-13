@@ -117,6 +117,28 @@ package body Aquarius.Actions.Tagatha_Scanner is
       Processor.Unit.Push_Register ("r0");
    end Call_Function;
 
+   -------------------
+   -- Call_Property --
+   -------------------
+
+   overriding procedure Call_Property
+     (Processor      : in out Tagatha_Scanner;
+      Name           : String;
+      Argument_Count : Natural)
+   is
+      pragma Unreferenced (Argument_Count);
+   begin
+      Processor.Unit.Pop_Register ("op");
+      Processor.Unit.Native_Operation
+        ("get_property " & Name,
+         Input_Stack_Words  => 0,
+         Output_Stack_Words => 0,
+         Changed_Registers  => "pv");
+      Processor.Unit.Push_Register ("pv");
+      Processor.Unit.Indirect_Call;
+      Processor.Unit.Push_Result;
+   end Call_Property;
+
    ------------------
    -- Clear_Result --
    ------------------

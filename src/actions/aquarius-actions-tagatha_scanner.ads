@@ -133,7 +133,12 @@ private
      (Processor      : in out Tagatha_Scanner;
       Name           : String);
 
-      overriding procedure Get_Property
+   overriding procedure Get_Property
+     (Processor      : in out Tagatha_Scanner;
+      Name           : String;
+      Argument_Count : Natural);
+
+   overriding procedure Call_Property
      (Processor      : in out Tagatha_Scanner;
       Name           : String;
       Argument_Count : Natural);

@@ -39,7 +39,8 @@ package body Aquarius.Actions.Scanner is
    procedure Scan_Object_Reference
      (Processor   : in out Action_Processor_Interface'Class;
       Reference   : in Aquarius.Programs.Program_Tree;
-      Destination : Boolean := False);
+      Destination : Boolean := False;
+      Call        : Boolean := False);
 
    procedure Write_Position
      (Processor  : in out Action_Processor_Interface'Class;
@@ -296,6 +297,11 @@ package body Aquarius.Actions.Scanner is
       elsif Action.Name = "procedure_call_statement" then
          Scan_Object_Reference (Processor,
                                 Action.Program_Child ("object_reference"));
+         Processor.Clear_Result;
+      elsif Action.Name = "explicit_call_statement" then
+         Scan_Object_Reference (Processor,
+                                Action.Program_Child ("object_reference"),
+                                Call => True);
          Processor.Clear_Result;
       elsif Action.Name = "for_loop_statement" then
          Scan (Processor, Action.Program_Child ("iterator_loop"));
@@ -641,7 +647,8 @@ package body Aquarius.Actions.Scanner is
    procedure Scan_Object_Reference
      (Processor   : in out Action_Processor_Interface'Class;
       Reference   : in Aquarius.Programs.Program_Tree;
-      Destination : Boolean := False)
+      Destination : Boolean := False;
+      Call        : Boolean := False)
    is
       Qs : constant Array_Of_Program_Trees :=
              Reference.Direct_Children ("name_qualifier");
@@ -819,11 +826,21 @@ package body Aquarius.Actions.Scanner is
                               if J = Qs'Last and then Destination then
                                  Processor.Set_Property (Component);
                               elsif J = I then
-                                 Processor.Get_Property
-                                   (Component, Arguments'Length);
+                                 if Call and then J = Qs'Last then
+                                    Processor.Call_Property
+                                      (Component, Arguments'Length);
+                                 else
+                                    Processor.Get_Property
+                                      (Component, Arguments'Length);
+                                 end if;
                               else
-                                 Processor.Get_Property
-                                   (Component, 0);
+                                 if Call and then J = Qs'Last then
+                                    Processor.Call_Property
+                                      (Component, 0);
+                                 else
+                                    Processor.Get_Property
+                                      (Component, 0);
+                                 end if;
                               end if;
                            elsif Op = "/" then
                               Processor.Get_Property ("tree_child", 1);
