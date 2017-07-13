@@ -433,7 +433,11 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                   "   end if");
                Ada.Text_IO.Put_Line
                  (Action_File,
-                  "   tree.__" & Parent_Tree & "." & Position_Name & "_node");
+                  "   call "
+                  & "tree.__" & Parent_Tree & "."
+                  & Aquarius.Ack.Get_Link_Name (Class)
+                  & "."
+                  & Position_Name & "_node");
                Ada.Text_IO.Put_Line
                  (Action_File,
                   "end;");
