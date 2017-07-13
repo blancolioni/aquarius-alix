@@ -1,7 +1,5 @@
 class Options.Checks.List_Of_Declarations
-inherit
-   Options.Syntax.List_Of_Declarations_Node
-   
+
 feature
 
    Option_Entry_List : List [Options.Entry]
