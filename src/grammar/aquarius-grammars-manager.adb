@@ -87,8 +87,10 @@ package body Aquarius.Grammars.Manager is
          end if;
       end loop;
 
-      Ada.Text_IO.Put_Line
-        ("Loading grammar: " & Standard_Name);
+      if False then
+         Ada.Text_IO.Put_Line
+           ("Loading grammar: " & Standard_Name);
+      end if;
 
       --  Maybe we want to load a custom grammar.  Check to see if
       --  a file exists in the current directory, and that the name
