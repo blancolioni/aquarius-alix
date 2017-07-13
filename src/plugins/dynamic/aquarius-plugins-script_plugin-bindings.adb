@@ -20,11 +20,6 @@ with Aquarius.Actions.Tagatha_Scanner;
 
 with Aquarius.Ack;
 
-with Aquarius.Ack.Parser;
-with Aquarius.Ack.Semantic;
-with Aquarius.Ack.Generate;
-
-with Aquarius.Ack.Errors;
 with Aquarius.Ack.Primitives;
 
 with Aquarius.Ack.Compile;
@@ -56,14 +51,15 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
    procedure Process_Compiled_Plugin
      (Assembly_Name : String);
 
-   procedure Load_Class
-     (Image : Aqua.Images.Image_Type;
-      Path  : String);
+   procedure Load_Action_File
+     (Full_Path : String;
+      Group     : Aquarius.Actions.Action_Group;
+      Image     : Aqua.Images.Image_Type);
 
    procedure Load_Ack_Binding
      (Image        : Aqua.Images.Image_Type;
       Grammar      : Aquarius.Grammars.Aquarius_Grammar;
-      Group_Name   : String;
+      Group        : Aquarius.Actions.Action_Group;
       Trigger      : Aquarius.Actions.Action_Execution_Trigger);
 
    ---------------------------------
@@ -282,12 +278,16 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
             Trigger    : constant Aquarius.Actions.Action_Execution_Trigger :=
                            Aquarius.Actions.Action_Execution_Trigger'Value
                              (Ids (2).Text & "_Trigger");
+            Group_Name : constant String :=
+                           Ids (1).Text;
+            Group      : constant Aquarius.Actions.Action_Group :=
+                           Get_Plugin (Item).Grammar.Group (Group_Name);
          begin
             Load_Ack_Binding
-              (Image        => Dynamic.Dynamic_Plugin (New_Plugin).Image,
-               Grammar      => New_Plugin.Grammar,
-               Group_Name   => Ids (1).Text,
-               Trigger      => Trigger);
+              (Image    => Dynamic.Dynamic_Plugin (New_Plugin).Image,
+               Grammar  => New_Plugin.Grammar,
+               Group    => Group,
+               Trigger  => Trigger);
          end;
       end if;
 
@@ -359,7 +359,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
    procedure Load_Ack_Binding
      (Image        : Aqua.Images.Image_Type;
       Grammar      : Aquarius.Grammars.Aquarius_Grammar;
-      Group_Name   : String;
+      Group        : Aquarius.Actions.Action_Group;
       Trigger      : Aquarius.Actions.Action_Execution_Trigger)
    is
       pragma Unreferenced (Trigger);
@@ -367,12 +367,75 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                          Aquarius.Config_Paths.Config_File
                            ("grammar/" & Grammar.Name
                             & "/aqua/");
-      Base_Generated_Path : constant String :=
-                              Aquarius.Config_Paths.Config_File
-                                ("aqua/generated/");
+
+      Action_File : Ada.Text_IO.File_Type;
 
       procedure Load_Class
         (Directory_Entry : Ada.Directories.Directory_Entry_Type);
+
+      procedure Add_Feature_Binding
+        (Class        : Aquarius.Ack.Entity_Id;
+         Feature_Name : String;
+         Child_Name   : String;
+         Child_Type   : Aquarius.Ack.Entity_Id);
+
+      -------------------------
+      -- Add_Feature_Binding --
+      -------------------------
+
+      procedure Add_Feature_Binding
+        (Class        : Aquarius.Ack.Entity_Id;
+         Feature_Name : String;
+         Child_Name   : String;
+         Child_Type   : Aquarius.Ack.Entity_Id)
+      is
+         pragma Unreferenced (Child_Name, Child_Type);
+         Index : constant Natural :=
+                   Ada.Strings.Fixed.Index (Feature_Name, "_");
+         Position_Name : constant String :=
+                           (if Index > 0
+                            then Feature_Name (Feature_Name'First .. Index - 1)
+                            else "");
+         Child_Tree    : constant String :=
+                           Feature_Name (Index + 1 .. Feature_Name'Last);
+         Parent_Tree   : constant String :=
+                           Aquarius.Ack.To_Standard_String
+                             (Aquarius.Ack.Get_Name (Class));
+      begin
+         if Index > 0
+           and then (Position_Name = "before"
+                     or else Position_Name = "after")
+         then
+            if Child_Tree = "node" then
+               Ada.Text_IO.Put_Line
+                 (Action_File,
+                  Position_Name & " " & Parent_Tree & " do");
+               Ada.Text_IO.Put_Line
+                 (Action_File,
+                  "   io.put_line (""" & Position_Name
+                  & " " & Parent_Tree & """)");
+               Ada.Text_IO.Put_Line
+                 (Action_File,
+                  "end;");
+            else
+               Ada.Text_IO.Put_Line
+                 (Action_File,
+                  Position_Name & " " & Parent_Tree
+                  & "/" & Child_Tree & " do");
+               Ada.Text_IO.Put_Line
+                 (Action_File,
+                  "   io.put_line (""" & Position_Name
+                  & " " & Parent_Tree
+                  & "/" & Child_Tree
+                  & """)");
+               Ada.Text_IO.Put_Line
+                 (Action_File,
+                  "end;");
+            end if;
+            Ada.Text_IO.New_Line (Action_File);
+         end if;
+
+      end Add_Feature_Binding;
 
       ----------------
       -- Load_Class --
@@ -383,69 +446,85 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       is
       begin
          Aquarius.Ack.Compile.Compile_Class
-           (Ada.Directories.Full_Name (Directory_Entry), Image);
+           (Ada.Directories.Full_Name (Directory_Entry), Image,
+            Add_Feature_Binding'Access);
       end Load_Class;
+
+      Group_Name : constant String :=
+                     Aquarius.Actions.Action_Group_Name (Group);
+
+      Action_File_Path : constant String :=
+                           Aquarius.Paths.Scratch_File
+                             (Grammar.Name & "-"
+                              & Group_Name
+                              & "-action_bindings",
+                              "action");
 
    begin
       Aquarius.Ack.Primitives.Create_Primitives;
 
-      Load_Class (Image, Base_Generated_Path & Grammar.Name & ".aqua");
-      Ada.Directories.Search
-        (Base_Generated_Path,
-         Grammar.Name & "-syntax*.aqua",
-         Process => Load_Class'Access);
+      Ada.Text_IO.Create (Action_File, Ada.Text_IO.Out_File,
+                          Action_File_Path);
+
       Ada.Directories.Search
         (Base_Aqua_Path,
          Grammar.Name & "-" & Group_Name & "*.aqua",
          Process => Load_Class'Access);
+
+      Ada.Text_IO.Close (Action_File);
+
+      Load_Action_File
+        (Full_Path => Action_File_Path,
+         Group     => Group,
+         Image     => Image);
+
    end Load_Ack_Binding;
 
-   ----------------
-   -- Load_Class --
-   ----------------
+   ----------------------
+   -- Load_Action_File --
+   ----------------------
 
-   procedure Load_Class
-     (Image : Aqua.Images.Image_Type;
-      Path  : String)
+   procedure Load_Action_File
+     (Full_Path : String;
+      Group     : Aquarius.Actions.Action_Group;
+      Image     : Aqua.Images.Image_Type)
    is
-      Class_Program : constant Program_Tree :=
-                        Aquarius.Loader.Load_From_File
-                          (Path);
+      Base_Name      : constant String :=
+                         Ada.Directories.Base_Name (Full_Path);
+      Assembly_Path  : constant String :=
+                         Aquarius.Paths.Scratch_File
+                           (Base_Name, "m32");
+      Object_Path    : constant String :=
+                         Aquarius.Paths.Scratch_File
+                           (Base_Name, "o32");
+      Action_Program : constant Aquarius.Programs.Program_Tree :=
+                         Aquarius.Loader.Load_From_File (Full_Path);
    begin
 
-      declare
-         Node : constant Aquarius.Ack.Node_Id :=
-                  Aquarius.Ack.Parser.Import
-                    (Class_Program);
-      begin
-         Ada.Text_IO.Put_Line
-           ("analysing: " & Class_Program.Source_File_Name);
-
-         Aquarius.Ack.Semantic.Analyse_Class_Declaration (Node);
-         Aquarius.Ack.Errors.Record_Errors (Node);
-
+      if Aquarius.Paths.Is_Newer (Full_Path, Assembly_Path) then
          declare
             use Aquarius.Messages;
-            List : Message_List;
+            Processor : Aquarius.Actions.Tagatha_Scanner.Tagatha_Scanner;
          begin
-            Class_Program.Get_Messages (List);
-            if Message_Count (List) = 0 or else
-              Highest_Level (List) <= Warning
-            then
-               declare
-                  Assembly_Name : constant String :=
-                                    Aquarius.Ack.Get_File_Name
-                                      (Aquarius.Ack.Get_Entity (Node));
-               begin
-                  Aquarius.Ack.Generate.Generate_Class_Declaration (Node);
-                  Process_Compiled_Plugin (Assembly_Name);
-                  Image.Load (Assembly_Name & ".o32");
-               end;
+            Aquarius.Actions.Scanner.Scan_Actions
+              (Processor, Action_Program, Group);
+            if Console.Check_Messages (Action_Program.all) >= Warning then
+               Ada.Text_IO.Put_Line
+                 (Ada.Text_IO.Standard_Error,
+                  "errors detected");
+               return;
             end if;
+            Processor.Write;
          end;
+      end if;
 
-      end;
-   end Load_Class;
+      if Aquarius.Paths.Is_Newer (Assembly_Path, Object_Path) then
+         Process_Compiled_Plugin (Base_Name);
+      end if;
+
+      Image.Load (Base_Name & ".o32");
+
+   end Load_Action_File;
 
    ---------------------------------------------------
    -- Plugin_Declaration_After_List_Of_Declarations --
