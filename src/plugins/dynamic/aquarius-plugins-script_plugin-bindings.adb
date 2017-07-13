@@ -416,6 +416,23 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                   & " " & Parent_Tree & """)");
                Ada.Text_IO.Put_Line
                  (Action_File,
+                  "   if not tree.__" & Parent_Tree & " then");
+               Ada.Text_IO.Put_Line
+                 (Action_File,
+                  "      tree.__" & Parent_Tree & " :=");
+               Ada.Text_IO.Put_Line
+                 (Action_File,
+                  "        "
+                  & Aquarius.Ack.Get_Link_Name (Class)
+                  & "$allocate");
+               Ada.Text_IO.Put_Line
+                 (Action_File,
+                  "   end if");
+               Ada.Text_IO.Put_Line
+                 (Action_File,
+                  "   IO.Put_Line (tree.__" & Parent_Tree & ".Image)");
+               Ada.Text_IO.Put_Line
+                 (Action_File,
                   "end;");
             else
                Ada.Text_IO.Put_Line
