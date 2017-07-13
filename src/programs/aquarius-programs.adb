@@ -1184,13 +1184,13 @@ package body Aquarius.Programs is
             use Aqua;
             Object_Primitive_Name : constant String :=
                                       "tree__" & Name;
-            Object_Primitive      : constant Subroutine_Reference :=
+            Object_Primitive      : constant Primitive_Reference :=
                                       Aqua.Primitives.Get_Primitive
                                         (Object_Primitive_Name);
             Result : Word;
          begin
             if Object_Primitive /= 0 then
-               Result := Aqua.Words.To_Subroutine_Word (Object_Primitive);
+               Result := Aqua.Words.To_Primitive_Word (Object_Primitive);
             else
                Result := 0;
             end if;
