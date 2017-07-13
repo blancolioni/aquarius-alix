@@ -53,7 +53,8 @@ local_variable_list ::= < identifier / ',' >
 sequence_of_statements ::= { statement [ ';' ] }
 
 statement ::= for_loop_statement | case_statement | if_statement | assignment_statement
-            | procedure_call_statement | declare_statement | null_statement | return_statement
+            | procedure_call_statement | explicit_call_statement
+            | declare_statement | null_statement | return_statement
 
 null_statement ::= 'null'
 
@@ -62,6 +63,8 @@ return_statement ::= 'return' expression
 assignment_statement ::= object_reference ':=' expression
 
 procedure_call_statement ::= object_reference
+
+explicit_call_statement ::= 'call' object_reference
 
 action_header ::= action_time < action_context / 'or' >
 
