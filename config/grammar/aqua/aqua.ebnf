@@ -202,7 +202,6 @@ instruction ::=
       |  conditional
       |  multi_branch
       |  loop
-      |  iteration
       |  debug
       |  precursor
       |  check
@@ -241,7 +240,7 @@ only ::=
          'only' [ feature_list ]
 	 
 check ::=
-         'check' assertion [ notes ] 'end' 'check'
+         'check' assertion [ notes ] 'end'
 	 
 variant ::=
          'variant' [ tag_mark ] expression
@@ -269,8 +268,8 @@ class_type ::=
          [ attachment_mark ] class_name [ actual_generics ]
 	 
 attachment_mark ::=
-         '?'
-      |  '!'
+         'detachable'
+      |  'attached'
       
 anchored ::=
          [ attachment_mark ] 'like' anchor
@@ -325,7 +324,7 @@ conditional ::=
    'if' boolean_expression 'then' compound
       { 'elsif' boolean_expression 'then' compound }
       [ 'else' compound ]
-   'end' 'if'
+   'end'
 
 multi_branch ::=
          'case' expression [ when_part_list ] 'end' 'case'
@@ -353,8 +352,10 @@ type_interval ::=
          manifest_type '..' manifest_type
 	 
 loop ::=
-         initialization [ invariant ] exit_condition loop_body [ variant ] 'end' 'loop'
-	 
+         [iteration] [initialization] [ invariant ] [exit_condition] loop_body [ variant ] 'end'
+	
+Iteration ::= 'across' expression 'as' identifier
+    
 initialization ::=
          'from' compound
 exit_condition ::=
@@ -365,10 +366,8 @@ until_expression ::= boolean_expression
 loop_body ::=
          'loop' compound
          
-iteration ::= 'for' identifier 'of' expression 'loop' compound 'end' 'loop'
-
 debug ::=
-         'debug' [ '(' key_list ')' ] compound 'end' 'debug'
+         'debug' [ '(' key_list ')' ] compound 'end'
 
 attribute ::=
          'attribute' compound
@@ -417,6 +416,7 @@ retry ::=
 expression ::=
     relation { boolean_operator relation }
    | relation member_of class_name
+   | 'attached' expression 'as' identifier
    
 member_of ::= 'in' | 'not' 'in'
 
