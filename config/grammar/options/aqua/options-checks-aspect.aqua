@@ -8,12 +8,12 @@ feature
    
    After_Node
    do
-      if Node.String_Literal /= Void then
-         Entry.Set_Long_Name (Node.String_Literal.Text)
-      end if
+      if attached Node.String_Literal as Long_Name then
+         Entry.Set_Long_Name (Long_Name.Text)
+      end
       if Node.Character_Literal /= Void then
          Entry.Set_Short_Name (Node.Character_Literal.First_Element)
-      end if
+      end
    end
    
 end

@@ -4,3 +4,4 @@ feature
    Put (S : String) external "aqua" alias "io.put"
    Put_Line (S : String) external "aqua" alias "io.put_line"
    New_Line external "aqua" alias "io.new_line"
+   Set_Output (Path : String) external "aqua" alias "io.set_output"

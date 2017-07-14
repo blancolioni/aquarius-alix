@@ -335,6 +335,10 @@ package body Aquarius.Ack is
                Local_Offset    => Local_Offset,
                Children       => <>));
          if Context = No_Entity then
+            if Top_Level_Entities.Contains (Name) then
+               raise Constraint_Error with
+                 "redefined top level entity: " & To_String (Name);
+            end if;
             Top_Level_Entities.Insert
               (Name, Entity);
          else
@@ -424,6 +428,11 @@ package body Aquarius.Ack is
                Argument_Offset => 1,
                Local_Offset    => 1,
                Children        => <>));
+         if Top_Level_Entities.Contains (Name) then
+            raise Constraint_Error with
+              "redefined primitive top level entity: " & To_String (Name);
+         end if;
+
          Top_Level_Entities.Insert
            (Name, Entity);
       end return;
