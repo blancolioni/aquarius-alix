@@ -487,13 +487,29 @@ package body Aquarius.Ack.Generate is
       List   : constant List_Id :=
                  Node_Table (Precursor).List;
 
-      procedure Process (Element : Node_Id);
+      Pending : List_Of_Nodes.List;
 
-      -------------
-      -- Process --
-      -------------
+      First_Element : constant Node_Id :=
+                        List_Table (List).List.First_Element;
+      Last_Element  : constant Node_Id :=
+                        List_Table (List).List.Last_Element;
 
-      procedure Process (Element : Node_Id) is
+      procedure Apply_Arguments
+        (Element        : Node_Id;
+         Push_Arguments : Boolean);
+
+      procedure Process
+        (Element      : Node_Id;
+         Stack_Result : out Boolean);
+
+      ---------------------
+      -- Apply_Arguments --
+      ---------------------
+
+      procedure Apply_Arguments
+        (Element        : Node_Id;
+         Push_Arguments : Boolean)
+      is
          Entity : constant Entity_Id := Get_Entity (Element);
       begin
          case Get_Kind (Entity) is
@@ -501,15 +517,8 @@ package body Aquarius.Ack.Generate is
                null;
             when Feature_Entity_Kind =>
                declare
-                  Original_Feature : constant Entity_Id :=
-                                       Get_Original_Ancestor (Entity);
-                  Original_Class   : constant Entity_Id :=
-                                       Get_Context (Original_Feature);
                   Actual_List_Node : constant Node_Id :=
                                        Actual_List (Element);
-                  Argument_Count   : Positive := 1;
-                  Feature_Kind     : constant Feature_Entity_Kind :=
-                                       Feature_Entity_Kind (Get_Kind (Entity));
                begin
 
                   if Actual_List_Node /= No_Node then
@@ -523,18 +532,57 @@ package body Aquarius.Ack.Generate is
                                                 (Actuals_List).List;
                      begin
                         for Item of reverse Actuals_Node_List loop
-                           Generate_Expression (Unit, Item);
-                           Argument_Count := Argument_Count + 1;
+                           if Push_Arguments then
+                              Generate_Expression (Unit, Item);
+                           else
+                              Unit.Drop;
+                           end if;
                         end loop;
                      end;
                   end if;
 
-                  if Feature_Kind = Routine_Feature_Entity then
+               end;
+
+            when Argument_Entity =>
+               null;
+            when Local_Entity =>
+               null;
+            when Result_Entity =>
+               null;
+         end case;
+      end Apply_Arguments;
+
+      -------------
+      -- Process --
+      -------------
+
+      procedure Process
+        (Element      : Node_Id;
+         Stack_Result : out Boolean)
+      is
+         Entity : constant Entity_Id := Get_Entity (Element);
+      begin
+         Stack_Result := True;
+         case Get_Kind (Entity) is
+            when Class_Entity | Table_Entity =>
+               null;
+            when Feature_Entity_Kind =>
+               declare
+                  Original_Feature : constant Entity_Id :=
+                                       Get_Original_Ancestor (Entity);
+                  Original_Class   : constant Entity_Id :=
+                                       Get_Context (Original_Feature);
+                  Feature_Kind     : constant Feature_Entity_Kind :=
+                                       Feature_Entity_Kind (Get_Kind (Entity));
+               begin
+
+                  if Element = First_Element then
                      Unit.Push_Argument (1);
                   end if;
 
-                  Unit.Push_Argument (1);
                   Unit.Pop_Register ("op");
+                  Unit.Push_Register ("op");
+
                   Unit.Native_Operation
                     ("get_property " & Get_Link_Name (Original_Class) & ",0",
                      Input_Stack_Words  => 0,
@@ -554,13 +602,14 @@ package body Aquarius.Ack.Generate is
                      when Routine_Feature_Entity =>
                         Unit.Push_Register ("pv");
                         Unit.Indirect_Call;
-                        for I in 1 .. Argument_Count loop
-                           Unit.Drop;
-                        end loop;
+                        Unit.Drop;
                         if Get_Type (Original_Feature) /= No_Entity then
                            Unit.Push_Register ("r0");
+                        else
+                           Stack_Result := False;
                         end if;
                      when Property_Feature_Entity =>
+                        Unit.Drop;
                         Unit.Push_Register ("pv");
                   end case;
                end;
@@ -579,7 +628,39 @@ package body Aquarius.Ack.Generate is
 
    begin
 
-      Scan (List, Process'Access);
+      for Element of List_Table (List).List loop
+         Pending.Append (Element);
+
+         declare
+            Entity : constant Entity_Id := Get_Entity (Element);
+            Kind   : constant Entity_Kind := Get_Kind (Entity);
+            Stack_Result : Boolean;
+         begin
+            if Element = Last_Element
+              or else (Kind in Feature_Entity_Kind
+                       and then Actual_List (Element) /= No_Node)
+            then
+               Apply_Arguments (Element, Push_Arguments => True);
+               for Item of Pending loop
+                  Process (Item, Stack_Result);
+                  pragma Assert
+                    (Stack_Result or else Item = Pending.Last_Element);
+               end loop;
+
+               if Stack_Result then
+                  Unit.Pop_Register ("r0");
+               end if;
+
+               Apply_Arguments (Element, Push_Arguments => False);
+
+               if Stack_Result then
+                  Unit.Push_Register ("r0");
+               end if;
+
+               Pending.Clear;
+            end if;
+         end;
+      end loop;
 
    end Generate_Precursor;
 
