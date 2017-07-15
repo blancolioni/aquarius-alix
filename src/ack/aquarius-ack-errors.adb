@@ -48,6 +48,10 @@ package body Aquarius.Ack.Errors is
               & To_String
               (Get_Name
                  (Get_Type (Get_Entity (Node))));
+         when E_Insufficient_Arguments =>
+            return "not enough arguments";
+         when E_Too_Many_Arguments =>
+            return "too many arguments";
       end case;
    end Error_Message;
 

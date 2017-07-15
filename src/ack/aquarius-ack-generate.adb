@@ -278,7 +278,7 @@ package body Aquarius.Ack.Generate is
             when N_Conditional =>
                null;
             when N_Precursor =>
-               null;
+               Generate_Precursor (Unit, Instruction);
          end case;
       end Generate_Instruction;
 
@@ -391,11 +391,10 @@ package body Aquarius.Ack.Generate is
       Value_Node   : constant Node_Id := Value (Dec_Body);
 
       Arg_Count    : constant Natural :=
-                       (if Arg_Node = No_Node then 0
-                        else Declaration_Count
-                          (Entity_Declaration_Group_List (Arg_Node)));
-      Frame_Count  : constant Natural :=
-                       (if Type_Node = No_Node then 0 else 1);
+                       1 + (if Arg_Node = No_Node then 0
+                            else Declaration_Count
+                              (Entity_Declaration_Group_List (Arg_Node)));
+      Frame_Count  : constant Natural := 0;
    begin
       Unit.Begin_Routine
         (Name           =>
@@ -441,16 +440,26 @@ package body Aquarius.Ack.Generate is
                            Unit.Pop_Local (1);
                         end if;
                      else
+                        for I in 2 .. Arg_Count loop
+                           Unit.Push_Argument
+                             (Tagatha.Argument_Offset (I));
+                        end loop;
                         Unit.Push_Operand
                           (Tagatha.Operands.External_Operand
                              (Object_Name, True),
                            Tagatha.Default_Size);
                         Unit.Pop_Register ("op");
                         Unit.Native_Operation
-                          ("get_property " & Property_Name & ",0",
+                          ("get_property " & Property_Name & ","
+                           & Natural'Image (Arg_Count - 1),
                            Input_Stack_Words  => 0,
                            Output_Stack_Words => 0,
                            Changed_Registers  => "pv");
+
+                        for I in 2 .. Arg_Count loop
+                           Unit.Drop;
+                        end loop;
+
                         Unit.Push_Register ("pv");
 
                      end if;
@@ -496,7 +505,34 @@ package body Aquarius.Ack.Generate is
                                        Get_Original_Ancestor (Entity);
                   Original_Class   : constant Entity_Id :=
                                        Get_Context (Original_Feature);
+                  Actual_List_Node : constant Node_Id :=
+                                       Actual_List (Element);
+                  Argument_Count   : Positive := 1;
+                  Feature_Kind     : constant Feature_Entity_Kind :=
+                                       Feature_Entity_Kind (Get_Kind (Entity));
                begin
+
+                  if Actual_List_Node /= No_Node then
+                     declare
+                        use List_Of_Nodes;
+                        Actuals_List      : constant List_Id :=
+                                              Node_Table.Element
+                                                (Actual_List_Node).List;
+                        Actuals_Node_List : constant List_Of_Nodes.List :=
+                                              List_Table.Element
+                                                (Actuals_List).List;
+                     begin
+                        for Item of reverse Actuals_Node_List loop
+                           Generate_Expression (Unit, Item);
+                           Argument_Count := Argument_Count + 1;
+                        end loop;
+                     end;
+                  end if;
+
+                  if Feature_Kind = Routine_Feature_Entity then
+                     Unit.Push_Argument (1);
+                  end if;
+
                   Unit.Push_Argument (1);
                   Unit.Pop_Register ("op");
                   Unit.Native_Operation
@@ -514,10 +550,13 @@ package body Aquarius.Ack.Generate is
                      Output_Stack_Words => 0,
                      Changed_Registers  => "pv");
 
-                  case Feature_Entity_Kind (Get_Kind (Entity)) is
+                  case Feature_Kind is
                      when Routine_Feature_Entity =>
                         Unit.Push_Register ("pv");
                         Unit.Indirect_Call;
+                        for I in 1 .. Argument_Count loop
+                           Unit.Drop;
+                        end loop;
                         if Get_Type (Original_Feature) /= No_Entity then
                            Unit.Push_Register ("r0");
                         end if;

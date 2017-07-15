@@ -8,8 +8,6 @@ with Aquarius.Ack.Primitives;
 
 with Aquarius.Ack.Errors;
 
---  with Aquarius.Ack.IO;
-
 package body Aquarius.Ack.Semantic is
 
    function Load_Entity
@@ -54,8 +52,8 @@ package body Aquarius.Ack.Semantic is
       Kind       : Local_Entity_Kind);
 
    procedure Analyse_Routine
-     (Class  : Node_Id;
-      Table  : Entity_Id;
+     (Class   : Node_Id;
+      Table   : Entity_Id;
       Routine : Node_Id);
 
    procedure Analyse_Effective_Routine
@@ -160,7 +158,7 @@ package body Aquarius.Ack.Semantic is
       Class_Context : Entity_Id :=
                         (if Defining_Name then No_Entity
                          else Get_Entity (Class));
-      Parent : Entity_Id;
+      Parent        : Entity_Id;
       Class_Program : constant Aquarius.Programs.Program_Tree :=
                         Node_Table.Element (Class).From;
 
@@ -269,7 +267,11 @@ package body Aquarius.Ack.Semantic is
             when N_Conditional =>
                null;
             when N_Precursor =>
-               null;
+               Analyse_Precursor
+                 (Class           => Class,
+                  Table           => Table,
+                  Expression_Type => No_Entity,
+                  Precursor       => Node);
          end case;
       end Analyse;
 
@@ -315,8 +317,8 @@ package body Aquarius.Ack.Semantic is
       ------------------
 
       procedure Insert_Group (Group_Node : Node_Id) is
-         Ids        : constant List_Id := Identifiers (Group_Node);
-         Group_Type : constant Node_Id := Entity_Type (Group_Node);
+         Ids         : constant List_Id := Identifiers (Group_Node);
+         Group_Type  : constant Node_Id := Entity_Type (Group_Node);
          Class_Node  : constant Node_Id :=
                          (if Group_Type /= No_Node
                           then Class_Name (Group_Type)
@@ -331,12 +333,12 @@ package body Aquarius.Ack.Semantic is
 
          procedure Insert_Id (Id_Node : Node_Id) is
             Entity      : constant Entity_Id :=
-                       New_Entity
-                         (Name        => Get_Name (Id_Node),
-                          Kind        => Kind,
-                          Context     => Table,
-                          Declaration => Group_Node,
-                          Entity_Type => Type_Entity);
+                            New_Entity
+                              (Name        => Get_Name (Id_Node),
+                               Kind        => Kind,
+                               Context     => Table,
+                               Declaration => Group_Node,
+                               Entity_Type => Type_Entity);
          begin
             Set_Entity (Id_Node, Entity);
             Count := Count + 1;
@@ -378,10 +380,10 @@ package body Aquarius.Ack.Semantic is
          when N_Constant =>
             declare
                use Aquarius.Ack.Primitives;
-               Value : constant Node_Id := Constant_Value (Expression);
+               Value      : constant Node_Id := Constant_Value (Expression);
                Value_Type : constant Entity_Id :=
                               (case N_Constant_Value (Kind (Value)) is
-                                  when N_String_Constant =>
+                                  when N_String_Constant  =>
                                      String_Class,
                                   when N_Integer_Constant =>
                                      Integer_Class);
@@ -423,25 +425,25 @@ package body Aquarius.Ack.Semantic is
      (Class   : Node_Id;
       Feature : Node_Id)
    is
-      Names       : constant List_Id := New_Feature_List (Feature);
-      Dec_Body    : constant Node_Id := Declaration_Body (Feature);
-      Arg_Node    : constant Node_Id := Formal_Arguments (Dec_Body);
-      Type_Node   : constant Node_Id := Value_Type (Dec_Body);
-      Value_Node  : constant Node_Id := Value (Dec_Body);
-      Class_Node  : constant Node_Id :=
-                      (if Type_Node /= No_Node
-                       then Class_Name (Type_Node)
-                       else No_Node);
-      Type_Entity : Entity_Id := No_Entity;
-      Local_Table : Entity_Id := No_Entity;
-      Single      : constant Boolean :=
-                      Natural (List_Table.Element (Names).List.Length) = 1;
-      Single_Name : constant Name_Id :=
-                      (if Single
-                       then Get_Name
-                         (Feature_Name
-                            (List_Table.Element (Names).List.First_Element))
-                       else No_Name);
+      Names        : constant List_Id := New_Feature_List (Feature);
+      Dec_Body     : constant Node_Id := Declaration_Body (Feature);
+      Arg_Node     : constant Node_Id := Formal_Arguments (Dec_Body);
+      Type_Node    : constant Node_Id := Value_Type (Dec_Body);
+      Value_Node   : constant Node_Id := Value (Dec_Body);
+      Class_Node   : constant Node_Id :=
+                       (if Type_Node /= No_Node
+                        then Class_Name (Type_Node)
+                        else No_Node);
+      Type_Entity  : Entity_Id := No_Entity;
+      Local_Table  : Entity_Id := No_Entity;
+      Single       : constant Boolean :=
+                       Natural (List_Table.Element (Names).List.Length) = 1;
+      Single_Name  : constant Name_Id :=
+                       (if Single
+                        then Get_Name
+                          (Feature_Name
+                             (List_Table.Element (Names).List.First_Element))
+                        else No_Name);
       Feature_Kind : Entity_Kind := Property_Feature_Entity;
    begin
 
@@ -483,13 +485,9 @@ package body Aquarius.Ack.Semantic is
       end if;
 
       if Class_Node /= No_Node then
---           Ada.Text_IO.Put_Line ("analysing class node");
---           Aquarius.Ack.IO.Put_Line (Class_Node);
          Analyse_Class_Name (Class, Class_Node,
                              Defining_Name => False);
          Type_Entity := Get_Entity (Class_Node);
---           Ada.Text_IO.Put_Line
---             ("type entity: " & To_String (Get_Name (Type_Entity)));
       end if;
 
       for Node of List_Table.Element (Names).List loop
@@ -502,19 +500,13 @@ package body Aquarius.Ack.Semantic is
                           Declaration => Feature,
                           Entity_Type => Type_Entity);
          begin
---              Ada.Text_IO.Put_Line
---                (To_String (Get_Name (Get_Entity (Class)))
---                 & "."
---                 & To_String (Get_Name (Entity))
---                 & " : "
---                 & Entity'Img & " "
---                 & To_String (Get_Name (Get_Type (Entity))));
             Set_Entity (Node, Entity);
          end;
       end loop;
 
       if Value_Node /= No_Node then
          if Kind (Value_Node) = N_Routine then
+            Create_Current_Entity (Get_Entity (Class), Feature, Local_Table);
             Set_Entity
               (Value_Node,
                New_Entity
@@ -620,7 +612,6 @@ package body Aquarius.Ack.Semantic is
       Expression_Type : Entity_Id;
       Precursor       : Node_Id)
    is
-      pragma Unreferenced (Class);
       List   : constant List_Id :=
                  Node_Table (Precursor).List;
 
@@ -628,24 +619,102 @@ package body Aquarius.Ack.Semantic is
       Value_Entity : Entity_Id := No_Entity;
       Value_Type   : Entity_Id := No_Entity;
 
-      procedure Process (Element : Node_Id);
+      procedure Process (Precursor_Element : Node_Id);
 
       -------------
       -- Process --
       -------------
 
-      procedure Process (Element : Node_Id) is
-         Entity : constant Entity_Id :=
-                    Find_Entity (Local_Table, Get_Name (Element));
+      procedure Process (Precursor_Element : Node_Id) is
+         Entity           : constant Entity_Id :=
+                              Find_Entity
+                                (Local_Table, Get_Name (Precursor_Element));
+         Actual_List_Node : constant Node_Id :=
+                              Actual_List (Precursor_Element);
       begin
          if Entity = Undeclared_Entity then
-            Error (Element, E_Undeclared_Name);
+            Error (Precursor_Element, E_Undeclared_Name);
          else
---              Ada.Text_IO.Put_Line
---                ("Precursor: " & Entity'Img & " "
---                   & To_String (Get_Name (Entity))
---                   & " : " & To_String (Get_Name (Get_Type (Entity))));
-            Set_Entity (Element, Entity);
+
+            if Get_Kind (Entity) in Feature_Entity_Kind then
+               declare
+                  Declaration : constant Node_Id :=
+                                  Declaration_Body
+                                    (Get_Declaration
+                                       (Get_Original_Ancestor (Entity)));
+                  Formals     : constant Node_Id :=
+                                  Formal_Arguments (Declaration);
+               begin
+                  if Actual_List_Node = No_Node then
+                     if Formals /= No_Node then
+                        Error (Precursor_Element, E_Insufficient_Arguments);
+                     end if;
+                  else
+
+                     declare
+                        use List_Of_Nodes;
+                        Actuals_List : constant List_Id :=
+                                         Node_Table.Element
+                                           (Actual_List_Node).List;
+                        Actuals_Node_List : constant List_Of_Nodes.List :=
+                                              List_Table.Element
+                                                (Actuals_List).List;
+                        Current_Actual    : Cursor :=
+                                              (if Actuals_Node_List.Is_Empty
+                                               then No_Element
+                                               else Actuals_Node_List.First);
+                        Stop              : Boolean := False;
+                        Entity_Group_List : constant Node_Id :=
+                                              Entity_Declaration_Group_List
+                                                (Formals);
+                        procedure Check_Argument
+                          (Declaration_Node : Node_Id);
+
+                        --------------------
+                        -- Check_Argument --
+                        --------------------
+
+                        procedure Check_Argument
+                          (Declaration_Node : Node_Id)
+                        is
+                           Name        : constant Name_Id :=
+                                           Get_Name (Declaration_Node)
+                                           with Unreferenced;
+                           Entity      : constant Entity_Id :=
+                                           Get_Entity (Declaration_Node);
+                           Entity_Type : constant Entity_Id :=
+                                           Get_Type (Entity);
+                        begin
+
+                           if Stop then
+                              return;
+                           end if;
+
+                           if not Has_Element (Current_Actual) then
+                              Error (Precursor_Element,
+                                     E_Insufficient_Arguments);
+                              Stop := True;
+                           else
+                              Analyse_Expression
+                                (Class, Table, Entity_Type,
+                                 List_Of_Nodes.Element (Current_Actual));
+                              Next (Current_Actual);
+                           end if;
+                        end Check_Argument;
+
+                     begin
+                        Scan_Entity_Declarations
+                          (Entity_Group_List, Check_Argument'Access);
+                        if Has_Element (Current_Actual) then
+                           Error (Precursor_Element, E_Too_Many_Arguments);
+                        end if;
+                     end;
+
+                  end if;
+               end;
+            end if;
+
+            Set_Entity (Precursor_Element, Entity);
             Value_Entity := Entity;
             Value_Type := Get_Type (Value_Entity);
             Local_Table := Value_Type;
@@ -689,7 +758,7 @@ package body Aquarius.Ack.Semantic is
      (Referrer        : Aquarius.Programs.Program_Tree;
       Parent          : Entity_Id;
       Name            : Name_Id)
-      return Entity_Id
+            return Entity_Id
    is
       Entity : Entity_Id := Find_Entity (Parent, Name);
    begin

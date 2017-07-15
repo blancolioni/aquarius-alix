@@ -14,22 +14,6 @@ package body Aquarius.Ack.Parser is
 
    Instruction_Imports : Import_Function_Maps.Map;
 
-   function Import_List
-     (From         : Aquarius.Programs.Program_Tree;
-      Child_Name   : String;
-      Import_Child : not null access
-        function (Child : Aquarius.Programs.Program_Tree)
-      return Node_Id)
-      return List_Id;
-
-   function Import_Optional_Child
-     (Parent     : Aquarius.Programs.Program_Tree;
-      Child_Name : String;
-      Import     : not null access
-        function (Child : Aquarius.Programs.Program_Tree)
-      return Node_Id)
-      return Node_Id;
-
    function Import_Choice
      (Parent : Aquarius.Programs.Program_Tree;
       Left_Name, Right_Name : String;
@@ -231,10 +215,6 @@ package body Aquarius.Ack.Parser is
        (From, "deferred", "effective_routine",
         Import_Deferred'Access, Import_Effective_Routine'Access))
    with Pre => From.Name = "feature_body";
-
-   function Import_String_Constant
-     (Raw_Text : String)
-      return String;
 
    ------------
    -- Import --
