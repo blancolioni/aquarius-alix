@@ -325,9 +325,13 @@ package body Aquarius.Ack is
                     Context_Rec.Property_Offset + 1;
                   Property_Offset := Context_Rec.Property_Offset;
                when Argument_Entity =>
-                  Context_Rec.Argument_Offset :=
-                    Context_Rec.Argument_Offset + 1;
-                  Argument_Offset := Context_Rec.Argument_Offset;
+                  if Name = Get_Name_Id ("current") then
+                     Argument_Offset := 1;
+                  else
+                     Context_Rec.Argument_Offset :=
+                       Context_Rec.Argument_Offset + 1;
+                     Argument_Offset := Context_Rec.Argument_Offset;
+                  end if;
                when Local_Entity =>
                   Context_Rec.Local_Offset :=
                     Context_Rec.Local_Offset + 1;
