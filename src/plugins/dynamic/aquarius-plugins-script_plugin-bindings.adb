@@ -412,10 +412,6 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                   Position_Name & " " & Parent_Tree & " do");
                Ada.Text_IO.Put_Line
                  (Action_File,
-                  "   io.put_line (""" & Position_Name
-                  & " " & Parent_Tree & """)");
-               Ada.Text_IO.Put_Line
-                 (Action_File,
                   "   if not tree.__" & Parent_Tree & " then");
                Ada.Text_IO.Put_Line
                  (Action_File,
@@ -437,7 +433,8 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                   & "tree.__" & Parent_Tree & "."
                   & Aquarius.Ack.Get_Link_Name (Class)
                   & "."
-                  & Position_Name & "_node");
+                  & Position_Name & "_node"
+                  & "(tree.__" & Parent_Tree & ")");
                Ada.Text_IO.Put_Line
                  (Action_File,
                   "end;");
@@ -446,12 +443,6 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                  (Action_File,
                   Position_Name & " " & Parent_Tree
                   & "/" & Child_Tree & " do");
-               Ada.Text_IO.Put_Line
-                 (Action_File,
-                  "   io.put_line (""" & Position_Name
-                  & " " & Parent_Tree
-                  & "/" & Child_Tree
-                  & """)");
                Ada.Text_IO.Put_Line
                  (Action_File,
                   "end;");
