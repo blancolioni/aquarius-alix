@@ -11,8 +11,25 @@ package body Aquarius.Ack.Parser.Expressions is
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id;
 
-   function Import_Primary (From : Aquarius.Programs.Program_Tree)
-                            return Node_Id;
+   function Import_Primary
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id;
+
+   function Import_Precursor_Element
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id;
+
+   function Import_Actual_List
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is (New_Node
+       (N_Actual_List,
+        From,
+        List =>
+           Import_List
+          (From         => From,
+           Child_Name   => "expression",
+           Import_Child => Import_Expression'Access)));
 
    --------------------
    -- Generic_Import --
@@ -132,11 +149,16 @@ package body Aquarius.Ack.Parser.Expressions is
       Value : constant Program_Tree := From.Program_Child ("manifest_value");
       Choice : constant Program_Tree := Value.Chosen_Tree;
       Kind   : Node_Kind;
+      Text   : Name_Id;
    begin
       if Choice.Name = "string_constant" then
          Kind := N_String_Constant;
+         Text :=
+           Get_Name_Id
+             (Import_String_Constant (Choice.Concatenate_Children));
       elsif Choice.Name = "integer_constant" then
          Kind := N_Integer_Constant;
+         Text := Get_Name_Id (Choice.Concatenate_Children);
       else
          raise Constraint_Error with
            "unhandled constant type: " & Choice.Name;
@@ -147,7 +169,7 @@ package body Aquarius.Ack.Parser.Expressions is
          Field_2 =>
            New_Node
              (Kind, Choice,
-              Name => Get_Name_Id (Choice.Concatenate_Children)));
+              Name => Text));
    end Import_Manifest_Constant;
 
    ----------------------
@@ -162,16 +184,44 @@ package body Aquarius.Ack.Parser.Expressions is
       Es : constant Array_Of_Program_Trees :=
              From.Direct_Children (Skip_Separators => True);
       List : constant List_Id := New_List;
+
    begin
       for E of Es loop
-         Append (List,
-                 New_Node
-                   (N_Identifier, E,
-                    Name =>
-                      Get_Name_Id (E.Program_Child ("identifier").Text)));
+         Append (List, Import_Precursor_Element (E));
+--                   New_Node
+--                     (N_Identifier, E,
+--                      Name =>
+--                        Get_Name_Id (E.Program_Child ("identifier").Text)));
       end loop;
       return New_Node (N_Precursor, From, List => List);
    end Import_Precursor;
+
+   ------------------------------
+   -- Import_Precursor_Element --
+   ------------------------------
+
+   function Import_Precursor_Element
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+      use Aquarius.Programs;
+
+      function Import_Actuals
+        (Actuals_Tree : Program_Tree)
+         return Node_Id
+      is (Import_Actual_List (Actuals_Tree.Program_Child ("actual_list")));
+
+      Id : constant String := From.Program_Child ("identifier").Text;
+      Actual_Node : constant Node_Id :=
+                      Import_Optional_Child
+                        (From, "actuals",
+                         Import_Actuals'Access);
+   begin
+      return New_Node (N_Precursor_Element, From,
+                       Name => Get_Name_Id (Id),
+                       Field_1 => No_Node,
+                       Field_2 => Actual_Node);
+   end Import_Precursor_Element;
 
    --------------------
    -- Import_Primary --

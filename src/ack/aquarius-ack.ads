@@ -52,6 +52,8 @@ package Aquarius.Ack is
       N_String_Constant,
       N_Integer_Constant,
       N_Variable,
+      N_Precursor_Element,
+      N_Actual_List,
       N_Identifier);
 
    subtype N_Type is Node_Kind range
@@ -77,7 +79,9 @@ package Aquarius.Ack is
       E_Id_List_With_Arguments,
       E_Id_List_With_No_Type,
       E_Id_List_With_Routine,
-      E_Type_Error
+      E_Type_Error,
+      E_Insufficient_Arguments,
+      E_Too_Many_Arguments
      );
 
    type Entity_Kind is
@@ -171,6 +175,11 @@ package Aquarius.Ack is
 
    function Get_File_Name (Entity : Entity_Id) return String;
    function Get_Link_Name (Entity : Entity_Id) return String;
+
+   procedure Create_Current_Entity
+     (Class       : Entity_Id;
+      Feature     : Node_Id;
+      Table       : Entity_Id);
 
    function New_Entity
      (Name        : Name_Id;
@@ -271,7 +280,9 @@ package Aquarius.Ack is
      or else Kind (N) = N_External
      or else Kind (N) = N_Feature_Alias
      or else Kind (N) = N_Variable
-     or else Kind (N) = N_Integer_Constant;
+     or else Kind (N) = N_Integer_Constant
+     or else Kind (N) = N_String_Constant
+     or else Kind (N) = N_Precursor_Element;
 
    function Get_Entity (N : Node_Id) return Entity_Id;
 
@@ -308,6 +319,12 @@ package Aquarius.Ack is
    function Entity_Declaration_Group_List (N : Node_Id) return Node_Id
      with Pre => Kind (N) in N_Formal_Arguments | N_Local_Declarations;
 
+   procedure Scan_Entity_Declarations
+     (Group   : Node_Id;
+      Process : not null access
+        procedure (Declaration_Node : Node_Id))
+     with Pre => Kind (Group) = N_Entity_Declaration_Group_List;
+
    function Feature_Alias (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_External;
 
@@ -325,6 +342,9 @@ package Aquarius.Ack is
 
    function Expression (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Assignment;
+
+   function Actual_List (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Precursor_Element;
 
    function Constant_Value (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Constant;
@@ -568,6 +588,9 @@ private
    is (Field_1 (N));
 
    function Expression (N : Node_Id) return Node_Id
+   is (Field_2 (N));
+
+   function Actual_List (N : Node_Id) return Node_Id
    is (Field_2 (N));
 
    function Constant_Value (N : Node_Id) return Node_Id

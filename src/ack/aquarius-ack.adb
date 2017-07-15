@@ -42,6 +42,26 @@ package body Aquarius.Ack is
       return False;
    end Contains_Name;
 
+   ---------------------------
+   -- Create_Current_Entity --
+   ---------------------------
+
+   procedure Create_Current_Entity
+     (Class       : Entity_Id;
+      Feature     : Node_Id;
+      Table       : Entity_Id)
+   is
+      Current : constant Entity_Id :=
+                  New_Entity
+                    (Name        => Get_Name_Id ("current"),
+                     Kind        => Argument_Entity,
+                     Context     => Table,
+                     Declaration => Feature,
+                     Entity_Type => Class);
+   begin
+      pragma Unreferenced (Current);
+   end Create_Current_Entity;
+
    ----------------------
    -- Depth_First_Scan --
    ----------------------
@@ -480,6 +500,42 @@ package body Aquarius.Ack is
          end if;
       end loop;
    end Scan_Children;
+
+   ------------------------------
+   -- Scan_Entity_Declarations --
+   ------------------------------
+
+   procedure Scan_Entity_Declarations
+     (Group   : Node_Id;
+      Process : not null access
+        procedure (Declaration_Node : Node_Id))
+   is
+      procedure Process_Group (Node : Node_Id);
+
+      -------------------
+      -- Process_Group --
+      -------------------
+
+      procedure Process_Group (Node : Node_Id) is
+
+         procedure Process_Id (Id_Node : Node_Id);
+
+         ----------------
+         -- Process_Id --
+         ----------------
+
+         procedure Process_Id (Id_Node : Node_Id) is
+         begin
+            Process (Id_Node);
+         end Process_Id;
+
+      begin
+         Scan (Node_Table (Node).List, Process_Id'Access);
+      end Process_Group;
+
+   begin
+      Scan (Node_Table (Group).List, Process_Group'Access);
+   end Scan_Entity_Declarations;
 
    -----------------
    -- Scan_Errors --
