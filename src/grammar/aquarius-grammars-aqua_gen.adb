@@ -176,7 +176,7 @@ package body Aquarius.Grammars.Aqua_Gen is
                         & To_Mixed_Case
                           (Aquarius.Tokens.Get_Name (Tree.Frame, Tree.Token))
                         & " : "
-                        & (if Optional then "? " else "")
+                        & (if Optional then "detachable " else "")
                         & (if Repeated then "List[String]" else "String"));
                      Found_Syntax.Insert (Name, "");
                   end if;
