@@ -1,9 +1,10 @@
 package body Aquarius.Ack.Primitives is
 
-   Primitives_Created : Boolean := False;
-   Local_Boolean_Class : Entity_Id := No_Entity;
-   Local_Integer_Class : Entity_Id := No_Entity;
-   Local_String_Class  : Entity_Id := No_Entity;
+   Primitives_Created    : Boolean := False;
+   Local_Boolean_Class   : Entity_Id := No_Entity;
+   Local_Character_Class : Entity_Id := No_Entity;
+   Local_Integer_Class   : Entity_Id := No_Entity;
+   Local_String_Class    : Entity_Id := No_Entity;
 
    -------------------
    -- Boolean_Class --
@@ -13,6 +14,11 @@ package body Aquarius.Ack.Primitives is
    begin
       return Local_Boolean_Class;
    end Boolean_Class;
+
+   function Character_Class return Entity_Id is
+   begin
+      return Local_Character_Class;
+   end Character_Class;
 
    -----------------------
    -- Create_Primitives --
@@ -24,6 +30,9 @@ package body Aquarius.Ack.Primitives is
          Local_Boolean_Class :=
            New_Primitive_Class
              (Get_Name_Id ("Boolean"));
+         Local_Character_Class :=
+           New_Primitive_Class
+             (Get_Name_Id ("Character"));
          Local_Integer_Class :=
            New_Primitive_Class
              (Get_Name_Id ("Integer"));
