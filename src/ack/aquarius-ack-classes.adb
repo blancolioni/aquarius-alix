@@ -1,4 +1,9 @@
+with Ada.Containers.Ordered_Sets;
+
 package body Aquarius.Ack.Classes is
+
+   package Entity_Id_Sets is
+     new Ada.Containers.Ordered_Sets (Entity_Id);
 
    ---------------
    -- Add_Class --
@@ -35,8 +40,45 @@ package body Aquarius.Ack.Classes is
       Descendent : Entity_Id)
       return Boolean
    is
+      Tried : Entity_Id_Sets.Set;
+
+      function Try (Class : Entity_Id) return Boolean;
+
+      ---------
+      -- Try --
+      ---------
+
+      function Try (Class : Entity_Id) return Boolean is
+      begin
+         if Class = Ancestor then
+            return True;
+         elsif Tried.Contains (Class) then
+            return False;
+         else
+            declare
+               Declaration  : constant Node_Id :=
+                                Get_Declaration (Class);
+               Inherit_Node : constant Node_Id :=
+                                (if Declaration = No_Node then No_Node
+                                 else Inheritance (Declaration));
+               Inherit_List : constant List_Id :=
+                                (if Inherit_Node = No_Node
+                                 then No_List
+                                 else Inherits (Inherit_Node));
+            begin
+               Tried.Insert (Class);
+               for Parent_Node of List_Table (Inherit_List).List loop
+                  if Try (Get_Entity (Parent_Node)) then
+                     return True;
+                  end if;
+               end loop;
+               return False;
+            end;
+         end if;
+      end Try;
+
    begin
-      return Ancestor = Descendent;
+      return Try (Descendent);
    end Is_Derived_From;
 
 end Aquarius.Ack.Classes;
