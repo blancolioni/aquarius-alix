@@ -68,7 +68,9 @@ package body Aquarius.Ack.Compile is
          Partial_Class_List.Clear;
       end if;
 
-      if Feature_Callback /= null then
+      if Feature_Callback /= null
+        and then Loaded_Classes.Contains (Base_Name)
+      then
          declare
             Class : constant Real_Entity_Id :=
                       Get_Entity (Loaded_Classes.Element (Base_Name));
