@@ -8,7 +8,7 @@ feature
    Name     : String external "aqua" alias "tree__name"
    Text     : String external "aqua" alias "tree__text"
 
-   Parent   : ? Aquarius.Trees.Program_Tree
+   Parent   : detachable Aquarius.Trees.Program_Tree
       external "aqua"
       alias "tree__parent"
       
