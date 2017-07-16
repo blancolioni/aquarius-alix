@@ -638,12 +638,8 @@ package body Aquarius.Ack.Semantic is
 
             if Get_Kind (Entity) in Feature_Entity_Kind then
                declare
-                  Declaration : constant Node_Id :=
-                                  Declaration_Body
-                                    (Get_Declaration
-                                       (Get_Original_Ancestor (Entity)));
-                  Formals     : constant Node_Id :=
-                                  Formal_Arguments (Declaration);
+                  Formals : constant Node_Id :=
+                                  Get_Formal_Arguments_Node (Entity);
                begin
                   if Actual_List_Node = No_Node then
                      if Formals /= No_Node then

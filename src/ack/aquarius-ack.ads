@@ -176,6 +176,11 @@ package Aquarius.Ack is
    function Get_File_Name (Entity : Entity_Id) return String;
    function Get_Link_Name (Entity : Entity_Id) return String;
 
+   function Get_Formal_Arguments_Node
+     (Entity : Entity_Id)
+      return Node_Id
+     with Pre => Get_Kind (Entity) in Feature_Entity_Kind;
+
    procedure Create_Current_Entity
      (Class       : Entity_Id;
       Feature     : Node_Id;

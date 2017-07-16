@@ -1,5 +1,7 @@
 with Ada.Containers.Ordered_Sets;
 
+with Aquarius.Ack.Primitives;
+
 package body Aquarius.Ack.Classes is
 
    package Entity_Id_Sets is
@@ -67,18 +69,21 @@ package body Aquarius.Ack.Classes is
                                  else Inherits (Inherit_Node));
             begin
                Tried.Insert (Class);
-               for Parent_Node of List_Table (Inherit_List).List loop
-                  if Try (Get_Entity (Parent_Node)) then
-                     return True;
-                  end if;
-               end loop;
+               if Inherit_List /= No_List then
+                  for Parent_Node of List_Table (Inherit_List).List loop
+                     if Try (Get_Entity (Parent_Node)) then
+                        return True;
+                     end if;
+                  end loop;
+               end if;
                return False;
             end;
          end if;
       end Try;
 
    begin
-      return Try (Descendent);
+      return Ancestor = Aquarius.Ack.Primitives.Any_Class
+        or else Try (Descendent);
    end Is_Derived_From;
 
 end Aquarius.Ack.Classes;
