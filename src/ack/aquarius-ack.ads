@@ -15,6 +15,9 @@ package Aquarius.Ack is
       N_Class_Declaration,
       N_Class_Header,
       N_Class_Name,
+      N_Formal_Generics,
+      N_Formal_Generic,
+      N_Formal_Generic_Name,
       N_Inheritance,
       N_Inherited,
       N_New_Exports,
@@ -81,12 +84,14 @@ package Aquarius.Ack is
       E_Id_List_With_Routine,
       E_Type_Error,
       E_Insufficient_Arguments,
-      E_Too_Many_Arguments
+      E_Too_Many_Arguments,
+      E_Ignored_Return_Value
      );
 
    type Entity_Kind is
      (Table_Entity,
       Class_Entity,
+      Generic_Argument_Entity,
       Routine_Feature_Entity,
       Property_Feature_Entity,
       Argument_Entity,
@@ -264,6 +269,15 @@ package Aquarius.Ack is
    function Class_Name (N : Node_Id) return Node_Id
      with Pre => Kind (N) in N_Class_Header | N_Class_Type;
 
+   function Formal_Generics (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Class_Header;
+
+   function Formal_Generics_List (N : Node_Id) return List_Id
+     with Pre => Kind (N) = N_Formal_Generics;
+
+   function Formal_Generic_Name (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Formal_Generic;
+
    function Inheritance (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Class_Declaration;
 
@@ -287,7 +301,8 @@ package Aquarius.Ack is
      or else Kind (N) = N_Variable
      or else Kind (N) = N_Integer_Constant
      or else Kind (N) = N_String_Constant
-     or else Kind (N) = N_Precursor_Element;
+     or else Kind (N) = N_Precursor_Element
+     or else Kind (N) = N_Formal_Generic_Name;
 
    function Get_Entity (N : Node_Id) return Entity_Id;
 
@@ -513,6 +528,15 @@ private
 
    function Class_Name (N : Node_Id) return Node_Id
    is (Field_2 (N));
+
+   function Formal_Generics (N : Node_Id) return Node_Id
+   is (Field_3 (N));
+
+   function Formal_Generics_List (N : Node_Id) return List_Id
+   is (Node_Table (N).List);
+
+   function Formal_Generic_Name (N : Node_Id) return Node_Id
+   is (Field_1 (N));
 
    function Inheritance (N : Node_Id) return Node_Id
    is (Field_3 (N));

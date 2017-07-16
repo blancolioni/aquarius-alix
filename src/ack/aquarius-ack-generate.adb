@@ -516,7 +516,7 @@ package body Aquarius.Ack.Generate is
          Entity : constant Entity_Id := Get_Entity (Element);
       begin
          case Get_Kind (Entity) is
-            when Class_Entity | Table_Entity =>
+            when Class_Entity | Table_Entity | Generic_Argument_Entity =>
                null;
             when Feature_Entity_Kind =>
                declare
@@ -567,7 +567,7 @@ package body Aquarius.Ack.Generate is
       begin
          Stack_Result := True;
          case Get_Kind (Entity) is
-            when Class_Entity | Table_Entity =>
+            when Class_Entity | Table_Entity | Generic_Argument_Entity =>
                null;
             when Feature_Entity_Kind =>
                declare
@@ -678,7 +678,7 @@ package body Aquarius.Ack.Generate is
       Entity : constant Entity_Id := Get_Entity (Node);
    begin
       case Get_Kind (Entity) is
-         when Class_Entity | Table_Entity =>
+         when Class_Entity | Table_Entity | Generic_Argument_Entity =>
             null;
          when Property_Feature_Entity =>
             declare

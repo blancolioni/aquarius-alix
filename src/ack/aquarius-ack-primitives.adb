@@ -6,6 +6,7 @@ package body Aquarius.Ack.Primitives is
    Local_Boolean_Class   : Entity_Id := No_Entity;
    Local_Character_Class : Entity_Id := No_Entity;
    Local_Integer_Class   : Entity_Id := No_Entity;
+   Local_None_Class      : Entity_Id := No_Entity;
    Local_String_Class    : Entity_Id := No_Entity;
 
    Local_Void_Feature    : Entity_Id := No_Entity;
@@ -59,6 +60,9 @@ package body Aquarius.Ack.Primitives is
          Local_String_Class :=
            New_Primitive_Class
              (Get_Name_Id ("String"));
+         Local_None_Class :=
+           New_Primitive_Class
+             (Get_Name_Id ("None"));
 
          Local_Void_Feature :=
            New_Entity
@@ -66,7 +70,7 @@ package body Aquarius.Ack.Primitives is
               Kind        => Property_Feature_Entity,
               Context     => No_Entity,
               Declaration => No_Node,
-              Entity_Type => Local_Any_Class);
+              Entity_Type => Local_None_Class);
 
          Primitives_Created := True;
       end if;
@@ -80,6 +84,15 @@ package body Aquarius.Ack.Primitives is
    begin
       return Local_Integer_Class;
    end Integer_Class;
+
+   ----------------
+   -- None_Class --
+   ----------------
+
+   function None_Class return Entity_Id is
+   begin
+      return Local_None_Class;
+   end None_Class;
 
    ------------------
    -- String_Class --

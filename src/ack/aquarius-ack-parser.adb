@@ -32,6 +32,32 @@ package body Aquarius.Ack.Parser is
       return Node_Id
      with Pre => From.Name = "class_header";
 
+   function Import_Formal_Generic
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     with Pre => From.Name = "formal_generic";
+
+   function Import_Formal_Generic_Name
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is (New_Node (N_Formal_Generic_Name, From,
+                 Name =>
+                    Get_Name_Id (From.Program_Child ("identifier").Text)))
+     with Pre => From.Name = "formal_generic_name";
+
+   function Import_Formal_Generics
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is (New_Node (N_Formal_Generics, From,
+                 List =>
+                    Import_List
+                   (From         =>
+                       From.Program_Child ("formal_generic_list"),
+                    Child_Name   => "formal_generic",
+                    Import_Child =>
+                       Import_Formal_Generic'Access)))
+     with Pre => From.Name = "formal_generics";
+
    function Import_Inherited
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
@@ -315,11 +341,16 @@ package body Aquarius.Ack.Parser is
       Class_Name_Node : constant Node_Id :=
                           Import_Class_Name
                             (From.Program_Child ("class_name"));
+      Generics_Node   : constant Node_Id :=
+                          Import_Optional_Child
+                            (From, "formal_generics",
+                             Import_Formal_Generics'Access);
    begin
       Node_Table (Class_Name_Node).Defining := True;
       return New_Node
         (N_Class_Header, From,
-         Field_2 => Class_Name_Node);
+         Field_2 => Class_Name_Node,
+         Field_3 => Generics_Node);
    end Import_Class_Header;
 
    -----------------------
@@ -615,6 +646,21 @@ package body Aquarius.Ack.Parser is
    begin
       return New_Node (N_Formal_Arguments, From, Field_1 => Node);
    end Import_Formal_Arguments;
+
+   ----------------------------
+   -- Import_Formal_Generics --
+   ----------------------------
+
+   function Import_Formal_Generic
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+   begin
+      return New_Node (N_Formal_Generic, From,
+                       Field_1 =>
+                         Import_Formal_Generic_Name
+                           (From.Program_Child ("formal_generic_name")));
+   end Import_Formal_Generic;
 
    ----------------------
    -- Import_Inherited --

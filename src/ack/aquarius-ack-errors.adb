@@ -50,6 +50,8 @@ package body Aquarius.Ack.Errors is
                  (Get_Type (Get_Entity (Node))));
          when E_Insufficient_Arguments =>
             return "not enough arguments";
+         when E_Ignored_Return_Value =>
+            return "cannot ignore return value of routine";
          when E_Too_Many_Arguments =>
             return "too many arguments";
       end case;

@@ -361,7 +361,11 @@ package body Aquarius.Ack is
                   Context_Rec.Local_Offset :=
                     Context_Rec.Local_Offset + 1;
                   Local_Offset := Context_Rec.Local_Offset;
-               when Class_Entity | Table_Entity | Result_Entity =>
+               when Result_Entity =>
+                  null;
+               when Class_Entity | Table_Entity =>
+                  null;
+               when Generic_Argument_Entity =>
                   null;
             end case;
          end;

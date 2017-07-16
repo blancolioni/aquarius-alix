@@ -3,6 +3,8 @@ package Aquarius.Ack.Primitives is
    procedure Create_Primitives;
 
    function Any_Class return Entity_Id;
+   function None_Class return Entity_Id;
+
    function Boolean_Class return Entity_Id;
    function Character_Class return Entity_Id;
    function Integer_Class return Entity_Id;
