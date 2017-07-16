@@ -432,7 +432,10 @@ package body Aquarius.Ack.Generate is
                                        Call (Dot + 1 .. Call'Last);
                   begin
                      if Dot = 0 then
-                        Unit.Push_Argument (1);
+                        for I in reverse 1 .. Arg_Count loop
+                           Unit.Push_Argument
+                             (Tagatha.Argument_Offset (I));
+                        end loop;
                         Unit.Call (Call);
                         Unit.Drop;
                         if Type_Node /= No_Node then
@@ -440,7 +443,7 @@ package body Aquarius.Ack.Generate is
                            Unit.Pop_Local (1);
                         end if;
                      else
-                        for I in 2 .. Arg_Count loop
+                        for I in reverse 2 .. Arg_Count loop
                            Unit.Push_Argument
                              (Tagatha.Argument_Offset (I));
                         end loop;
