@@ -198,6 +198,31 @@ package body Aquarius.Ack is
       end if;
    end Get_File_Name;
 
+   -------------------------------
+   -- Get_Formal_Arguments_Node --
+   -------------------------------
+
+   function Get_Formal_Arguments_Node
+     (Entity : Entity_Id)
+      return Node_Id
+   is
+      Ancestor : constant Entity_Id := Get_Original_Ancestor (Entity);
+      Declaration : constant Node_Id := Get_Declaration (Ancestor);
+   begin
+      if Declaration /= No_Node then
+         declare
+            Dec_Body : constant Node_Id :=
+                         Declaration_Body (Declaration);
+            Formals     : constant Node_Id :=
+                            Formal_Arguments (Dec_Body);
+         begin
+            return Formals;
+         end;
+      else
+         return No_Node;
+      end if;
+   end Get_Formal_Arguments_Node;
+
    -------------------
    -- Get_Link_Name --
    -------------------
