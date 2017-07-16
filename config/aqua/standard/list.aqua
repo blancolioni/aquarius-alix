@@ -1,2 +1,48 @@
-class List[T]
+class List[G]
+
+feature{None}
+
+   First_Cell : detachable Linkable[G]
+   Last_Cell  : detachable Linkable[G]
+   
+feature
+
+   Is_Empty : Boolean
+      do
+         Result := First_Cell = Void
+      ensure
+         Result = (First_Cell = Void)
+      end
+
+   First_Element : G
+      require
+         not Is_Empty
+      do
+         Result := First_Cell.Item
+      end
+      
+   Last_Element : G
+      require
+         not Is_Empty
+      do
+         Result := Last_Cell.Item
+      end
+      
+   Append (New_Item : G)
+      local
+         New_Cell : Linkable[G]
+      do
+         if Is_Empty then
+            create First_Cell
+            Last_Cell := First_Cell
+         else
+            create New_Cell
+            Last_Cell.Put_Right (New_Cell)
+            Last_Cell := New_Cell
+         end
+         
+         Last_Cell.Put (New_Item)
+      ensure
+         Appended_To_End: Last_Element = New_Item
+      end
 end
