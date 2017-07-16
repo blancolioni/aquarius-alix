@@ -1,0 +1,26 @@
+class Linkable[G]
+
+inherit
+
+   Cell[G]
+   
+feature
+
+   Right : G
+   
+feature
+
+   Put_Right (Other : G)
+      do
+         Right := Other
+      ensure
+         Chained: Right = Other
+      end
+      
+   Forget_Right
+      do
+         Right := Void
+      ensure
+         Not_Chained: Right = Void
+      end
+      
