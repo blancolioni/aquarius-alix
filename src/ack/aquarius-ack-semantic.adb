@@ -20,6 +20,10 @@ package body Aquarius.Ack.Semantic is
      (Class  : Node_Id;
       Header : Node_Id);
 
+   procedure Analyse_Formal_Generics
+     (Class           : Node_Id;
+      Formal_Generics : Node_Id);
+
    procedure Analyse_Class_Name
      (Class         : Node_Id;
       Class_Name    : Node_Id;
@@ -112,9 +116,13 @@ package body Aquarius.Ack.Semantic is
    procedure Analyse_Class_Declaration
      (Node : Node_Id)
    is
+      Inheritance_Node : constant Node_Id := Inheritance (Node);
       Features_Node : constant Node_Id := Features (Node);
    begin
       Analyse_Class_Header (Node, Class_Header (Node));
+      if Inheritance_Node /= No_Node then
+         Analyse_Inheritance (Node, Inheritance_Node);
+      end if;
       if Features_Node in Real_Node_Id then
          Analyse_Features (Node, Features_Node);
       end if;
@@ -128,12 +136,12 @@ package body Aquarius.Ack.Semantic is
      (Class  : Node_Id;
       Header : Node_Id)
    is
-      Inheritance_Node : constant Node_Id := Inheritance (Class);
+      Formal_Generics_Node : constant Node_Id := Formal_Generics (Header);
    begin
       Analyse_Class_Name (Class, Class_Name (Header),
                           Defining_Name => True);
-      if Inheritance_Node /= No_Node then
-         Analyse_Inheritance (Class, Inheritance_Node);
+      if Formal_Generics_Node /= No_Node then
+         Analyse_Formal_Generics (Class, Formal_Generics_Node);
       end if;
    end Analyse_Class_Header;
 
@@ -537,6 +545,39 @@ package body Aquarius.Ack.Semantic is
       end loop;
    end Analyse_Features;
 
+   -----------------------------
+   -- Analyse_Formal_Generics --
+   -----------------------------
+
+   procedure Analyse_Formal_Generics
+     (Class           : Node_Id;
+      Formal_Generics : Node_Id)
+   is
+      procedure Analyse_Formal_Generic (Node : Node_Id);
+
+      ----------------------------
+      -- Analyse_Formal_Generic --
+      ----------------------------
+
+      procedure Analyse_Formal_Generic (Node : Node_Id) is
+         Name : constant Name_Id :=
+                  Get_Name (Formal_Generic_Name (Node));
+         Generic_Entity : constant Entity_Id :=
+                            New_Entity
+                              (Name        => Name,
+                               Kind        => Generic_Argument_Entity,
+                               Context     => Get_Entity (Class),
+                               Declaration => Node,
+                               Entity_Type => Primitives.Any_Class);
+      begin
+         Set_Entity (Node, Generic_Entity);
+      end Analyse_Formal_Generic;
+
+   begin
+      Scan (Formal_Generics_List (Formal_Generics),
+            Analyse_Formal_Generic'Access);
+   end Analyse_Formal_Generics;
+
    ---------------------
    -- Analyse_Inherit --
    ---------------------
@@ -724,7 +765,11 @@ package body Aquarius.Ack.Semantic is
       if Value_Entity /= No_Entity then
          Set_Entity (Precursor, Value_Entity);
 
-         if not Aquarius.Ack.Classes.Is_Derived_From
+         if Expression_Type = No_Entity then
+            if Value_Type /= No_Entity then
+               Error (Precursor, E_Ignored_Return_Value);
+            end if;
+         elsif not Aquarius.Ack.Classes.Is_Derived_From
            (Expression_Type, Value_Type)
          then
             Error (Precursor, E_Type_Error, Expression_Type);

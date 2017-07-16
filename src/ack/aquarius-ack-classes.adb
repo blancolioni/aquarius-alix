@@ -56,6 +56,8 @@ package body Aquarius.Ack.Classes is
             return True;
          elsif Tried.Contains (Class) then
             return False;
+         elsif Get_Kind (Class) = Generic_Argument_Entity then
+            return False;
          else
             declare
                Declaration  : constant Node_Id :=
@@ -82,8 +84,11 @@ package body Aquarius.Ack.Classes is
       end Try;
 
    begin
-      return Ancestor = Aquarius.Ack.Primitives.Any_Class
-        or else Try (Descendent);
+      return Ancestor = Descendent
+        or else Ancestor = Aquarius.Ack.Primitives.Any_Class
+        or else Descendent = Aquarius.Ack.Primitives.None_Class
+        or else (Get_Kind (Ancestor) = Class_Entity
+                 and then Try (Descendent));
    end Is_Derived_From;
 
 end Aquarius.Ack.Classes;
