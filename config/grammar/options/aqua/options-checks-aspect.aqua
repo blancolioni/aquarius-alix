@@ -1,19 +1,20 @@
 class Options.Checks.Aspect
-     
+   inherit Aqua.Text_IO
+           Options.Option_Entry_Node
+           
 feature
 
    Node  : Options.Syntax.Aspect_Node
    
-   Option_Entry : Options.Entry
-   
    After_Node
    do
-      if Node.String_Literal /= Void then
-         Entry.Set_Long_Name (Node.String_Literal.Text)
-      end if
-      if Node.Character_Literal /= Void then
-         Entry.Set_Short_Name (Node.Character_Literal.First_Element)
-      end if
+      Put_Line ("After aspect node")
+      if attached Node.String_Literal as S then
+         Entry.Set_Long_Name (S)
+      end
+      if attached Node.Character_Literal as C then
+         Entry.Set_Short_Name (C.First_Element)
+      end
    end
    
 end
