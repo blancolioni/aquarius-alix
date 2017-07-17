@@ -159,6 +159,19 @@ package body Aquarius.Ack.Parser is
       return Node_Id is (No_Node)
    with Pre => From.Name = "anchored";
 
+   function Import_Actual_Generics
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is (New_Node (N_Actual_Generics, From,
+                 List =>
+                    Import_List
+                   (From         =>
+                       From.Program_Child ("type_list"),
+                    Child_Name   => "type",
+                    Import_Child =>
+                       Import_Type'Access)))
+   with Pre => From.Name = "actual_generics";
+
    function Import_Explicit_Value
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id is (No_Node)
@@ -224,7 +237,7 @@ package body Aquarius.Ack.Parser is
    function Import_Loop
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id is (New_Node (N_Loop, From))
-   with Pre => From.Name = "conditional";
+   with Pre => From.Name = "loop";
 
    function Import_Variable
      (From : Aquarius.Programs.Program_Tree)
@@ -396,11 +409,20 @@ package body Aquarius.Ack.Parser is
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
    is
+      Actual_Generics_Node : constant Node_Id :=
+                               Import_Optional_Child
+                                 (From, "actual_generics",
+                                  Import_Actual_Generics'Access);
    begin
-      return New_Node (N_Class_Type, From,
-                       Field_2 =>
-                         Import_Class_Name
-                           (From.Program_Child ("class_name")));
+      return Node : constant Node_Id :=
+        New_Node (N_Class_Type, From,
+                  Field_2 =>
+                    Import_Class_Name
+                      (From.Program_Child ("class_name")),
+                  Field_3 => Actual_Generics_Node)
+      do
+         null;
+      end return;
    end Import_Class_Type;
 
    -----------------------------
