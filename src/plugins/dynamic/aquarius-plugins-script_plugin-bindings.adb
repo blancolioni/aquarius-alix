@@ -23,6 +23,7 @@ with Aquarius.Ack;
 with Aquarius.Ack.Primitives;
 
 with Aquarius.Ack.Compile;
+with Aquarius.Ack.Errors;
 
 with Aqua.Images;
 
@@ -460,6 +461,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
         (Directory_Entry : Ada.Directories.Directory_Entry_Type)
       is
       begin
+         Aquarius.Ack.Errors.Clear_Errors;
          Aquarius.Ack.Compile.Compile_Class
            (Ada.Directories.Full_Name (Directory_Entry), Image,
             Add_Feature_Binding'Access);

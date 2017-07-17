@@ -4,10 +4,21 @@ with Aquarius.Programs;
 
 package body Aquarius.Ack.Errors is
 
+   Local_Has_Errors : Boolean := False;
+
    function Error_Message
      (Node    : Node_Id;
       Error   : Error_Kind)
       return String;
+
+   ------------------
+   -- Clear_Errors --
+   ------------------
+
+   procedure Clear_Errors is
+   begin
+      Local_Has_Errors := False;
+   end Clear_Errors;
 
    -------------------
    -- Error_Message --
@@ -27,7 +38,7 @@ package body Aquarius.Ack.Errors is
               & To_String (Get_Name (Node));
          when E_Redefined_Name =>
             return "redefinition of "
-              & To_String (Get_Name (Get_Entity (Node)));
+              & Get_Description (Get_Entity (Node));
          when E_No_Child               =>
             return "child class not found";
          when E_No_Component           =>
@@ -42,12 +53,11 @@ package body Aquarius.Ack.Errors is
             return "routine can have only one name";
          when E_Type_Error             =>
             return "expected type derived from "
-              & To_String
-              (Get_Name (Get_Error_Entity (Node)))
+              & Get_Description
+              (Get_Error_Entity (Node))
               & " but found "
-              & To_String
-              (Get_Name
-                 (Get_Type (Get_Entity (Node))));
+              & Get_Description
+                 (Get_Type (Get_Entity (Node)));
          when E_Insufficient_Arguments =>
             return "not enough arguments";
          when E_Ignored_Return_Value =>
@@ -56,6 +66,15 @@ package body Aquarius.Ack.Errors is
             return "too many arguments";
       end case;
    end Error_Message;
+
+   ----------------
+   -- Has_Errors --
+   ----------------
+
+   function Has_Errors return Boolean is
+   begin
+      return Local_Has_Errors;
+   end Has_Errors;
 
    -------------------
    -- Record_Errors --
@@ -79,6 +98,7 @@ package body Aquarius.Ack.Errors is
                      Get_Program (Node);
          Message : constant String := Error_Message (Node, Error);
       begin
+         Local_Has_Errors := True;
          Aquarius.Errors.Error (Program, Message);
       end Set_Error;
 
