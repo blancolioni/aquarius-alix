@@ -2,7 +2,7 @@ with Aquarius.Errors;
 with Aquarius.Messages.Console;
 with Aquarius.Programs;
 
-package body Aquarius.Ack.Errors is
+package body Ack.Errors is
 
    Local_Has_Errors : Boolean := False;
 
@@ -83,16 +83,16 @@ package body Aquarius.Ack.Errors is
    procedure Record_Errors (Node : Node_Id) is
 
       procedure Set_Error
-        (Node  : Aquarius.Ack.Node_Id;
-         Error : Aquarius.Ack.Error_Kind);
+        (Node  : Ack.Node_Id;
+         Error : Ack.Error_Kind);
 
       ---------------
       -- Set_Error --
       ---------------
 
       procedure Set_Error
-        (Node  : Aquarius.Ack.Node_Id;
-         Error : Aquarius.Ack.Error_Kind)
+        (Node  : Ack.Node_Id;
+         Error : Ack.Error_Kind)
       is
          Program : constant Aquarius.Programs.Program_Tree :=
                      Get_Program (Node);
@@ -122,4 +122,4 @@ package body Aquarius.Ack.Errors is
       end if;
    end Report_Errors;
 
-end Aquarius.Ack.Errors;
+end Ack.Errors;

@@ -5,9 +5,9 @@ with Tagatha.Units;
 
 with Aquarius.Config_Paths;
 
---  with Aquarius.Ack.Files;
+--  with Ack.Files;
 
-package body Aquarius.Ack.Generate is
+package body Ack.Generate is
 
    procedure Generate_Allocator
      (Unit  : in out Tagatha.Units.Tagatha_Unit;
@@ -724,4 +724,4 @@ package body Aquarius.Ack.Generate is
       end case;
    end Generate_Set_Value;
 
-end Aquarius.Ack.Generate;
+end Ack.Generate;

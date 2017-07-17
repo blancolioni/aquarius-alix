@@ -4,7 +4,7 @@ with Ada.Text_IO;
 
 --  with Aquarius.Config_Paths;
 
-package body Aquarius.Ack.IO is
+package body Ack.IO is
 
    ---------
    -- Put --
@@ -54,4 +54,4 @@ package body Aquarius.Ack.IO is
       Ada.Text_IO.New_Line;
    end Put_Line;
 
-end Aquarius.Ack.IO;
+end Ack.IO;

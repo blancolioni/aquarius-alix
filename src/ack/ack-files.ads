@@ -1,4 +1,4 @@
-package Aquarius.Ack.Files is
+package Ack.Files is
 
    function Base_File_Name (Class : Entity_Id) return String;
 
@@ -8,4 +8,4 @@ package Aquarius.Ack.Files is
       Name     : Name_Id)
       return String;
 
-end Aquarius.Ack.Files;
+end Ack.Files;

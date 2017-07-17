@@ -18,12 +18,12 @@ with Aquarius.Syntax;
 with Aquarius.Actions.Scanner;
 with Aquarius.Actions.Tagatha_Scanner;
 
-with Aquarius.Ack;
+with Ack;
 
-with Aquarius.Ack.Primitives;
+with Ack.Primitives;
 
-with Aquarius.Ack.Compile;
-with Aquarius.Ack.Errors;
+with Ack.Compile;
+with Ack.Errors;
 
 with Aqua.Images;
 
@@ -375,20 +375,20 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
         (Directory_Entry : Ada.Directories.Directory_Entry_Type);
 
       procedure Add_Feature_Binding
-        (Class        : Aquarius.Ack.Entity_Id;
+        (Class        : Ack.Entity_Id;
          Feature_Name : String;
          Child_Name   : String;
-         Child_Type   : Aquarius.Ack.Entity_Id);
+         Child_Type   : Ack.Entity_Id);
 
       -------------------------
       -- Add_Feature_Binding --
       -------------------------
 
       procedure Add_Feature_Binding
-        (Class        : Aquarius.Ack.Entity_Id;
+        (Class        : Ack.Entity_Id;
          Feature_Name : String;
          Child_Name   : String;
-         Child_Type   : Aquarius.Ack.Entity_Id)
+         Child_Type   : Ack.Entity_Id)
       is
          pragma Unreferenced (Child_Name, Child_Type);
          Index : constant Natural :=
@@ -400,8 +400,8 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
          Child_Tree    : constant String :=
                            Feature_Name (Index + 1 .. Feature_Name'Last);
          Parent_Tree   : constant String :=
-                           Aquarius.Ack.To_Standard_String
-                             (Aquarius.Ack.Get_Name (Class));
+                           Ack.To_Standard_String
+                             (Ack.Get_Name (Class));
       begin
          if Index > 0
            and then (Position_Name = "before"
@@ -420,7 +420,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                Ada.Text_IO.Put_Line
                  (Action_File,
                   "        "
-                  & Aquarius.Ack.Get_Link_Name (Class)
+                  & Ack.Get_Link_Name (Class)
                   & "$allocate");
                Ada.Text_IO.Put_Line
                  (Action_File,
@@ -432,7 +432,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                  (Action_File,
                   "   call "
                   & "tree.__" & Parent_Tree & "."
-                  & Aquarius.Ack.Get_Link_Name (Class)
+                  & Ack.Get_Link_Name (Class)
                   & "."
                   & Position_Name & "_node"
                   & "(tree.__" & Parent_Tree & ")");
@@ -461,8 +461,8 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
         (Directory_Entry : Ada.Directories.Directory_Entry_Type)
       is
       begin
-         Aquarius.Ack.Errors.Clear_Errors;
-         Aquarius.Ack.Compile.Compile_Class
+         Ack.Errors.Clear_Errors;
+         Ack.Compile.Compile_Class
            (Ada.Directories.Full_Name (Directory_Entry), Image,
             Add_Feature_Binding'Access);
       end Load_Class;
@@ -478,7 +478,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                               "action");
 
    begin
-      Aquarius.Ack.Primitives.Create_Primitives;
+      Ack.Primitives.Create_Primitives;
 
       Ada.Text_IO.Create (Action_File, Ada.Text_IO.Out_File,
                           Action_File_Path);

@@ -1,4 +1,4 @@
-package body Aquarius.Ack.Parser.Expressions is
+package body Ack.Parser.Expressions is
 
    generic
       Prefix_Operators : String;
@@ -245,4 +245,4 @@ package body Aquarius.Ack.Parser.Expressions is
       end if;
    end Import_Primary;
 
-end Aquarius.Ack.Parser.Expressions;
+end Ack.Parser.Expressions;

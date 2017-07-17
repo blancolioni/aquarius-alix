@@ -1,6 +1,6 @@
 with Ada.Containers.Ordered_Maps;
 
-package body Aquarius.Ack is
+package body Ack is
 
    package Entity_Maps is
      new Ada.Containers.Ordered_Maps
@@ -686,4 +686,4 @@ package body Aquarius.Ack is
       Node_Table (Node).Entity := Entity;
    end Set_Entity;
 
-end Aquarius.Ack;
+end Ack;

@@ -1,4 +1,4 @@
-package body Aquarius.Ack.Primitives is
+package body Ack.Primitives is
 
    Primitives_Created    : Boolean := False;
 
@@ -112,4 +112,4 @@ package body Aquarius.Ack.Primitives is
       return Local_Void_Feature;
    end Void_Feature;
 
-end Aquarius.Ack.Primitives;
+end Ack.Primitives;

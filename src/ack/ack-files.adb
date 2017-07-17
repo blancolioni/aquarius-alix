@@ -5,7 +5,7 @@ with Ada.Directories;
 
 with Aquarius.Config_Paths;
 
-package body Aquarius.Ack.Files is
+package body Ack.Files is
 
    package String_Lists is
      new Ada.Containers.Indefinite_Doubly_Linked_Lists (String);
@@ -91,4 +91,4 @@ package body Aquarius.Ack.Files is
 
    end Find_Class_File;
 
-end Aquarius.Ack.Files;
+end Ack.Files;

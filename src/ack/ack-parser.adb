@@ -2,9 +2,9 @@ with WL.String_Maps;
 
 with Aquarius.Trees;
 
-with Aquarius.Ack.Parser.Expressions;
+with Ack.Parser.Expressions;
 
-package body Aquarius.Ack.Parser is
+package body Ack.Parser is
 
    type Import_Function is access
      function (From : Aquarius.Programs.Program_Tree) return Node_Id;
@@ -286,7 +286,7 @@ package body Aquarius.Ack.Parser is
         (N_Assignment, From,
          Field_1 => Import_Variable (From.Program_Child ("variable")),
          Field_2 =>
-           Aquarius.Ack.Parser.Expressions.Import_Expression
+           Ack.Parser.Expressions.Import_Expression
              (From.Program_Child ("expression")));
    end Import_Assignment;
 
@@ -960,4 +960,4 @@ package body Aquarius.Ack.Parser is
                            (From.Program_Child ("identifier").Text));
    end Import_Variable;
 
-end Aquarius.Ack.Parser;
+end Ack.Parser;
