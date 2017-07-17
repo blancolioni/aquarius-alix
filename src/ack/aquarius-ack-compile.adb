@@ -46,24 +46,29 @@ package body Aquarius.Ack.Compile is
       if not Class_Object_Paths.Contains (Base_Name) then
          Load_Class (Source_Path, To_Image);
 
-         for Partial_Class of Partial_Class_List loop
-            declare
-               Key : constant String :=
-                       Get_File_Name (Get_Entity (Partial_Class));
-            begin
-               if not Class_Object_Paths.Contains (Key) then
-                  declare
-                     Program : constant Aquarius.Programs.Program_Tree :=
-                                 Get_Program (Partial_Class);
-                     Source_Path : constant String :=
-                                     Program.Source_Directory
-                                     & "/" & Program.Source_File_Name;
-                  begin
-                     Load_Class (Source_Path, To_Image);
-                  end;
-               end if;
-            end;
-         end loop;
+         if not Aquarius.Ack.Errors.Has_Errors then
+
+            for Partial_Class of Partial_Class_List loop
+               exit when Aquarius.Ack.Errors.Has_Errors;
+               declare
+                  Key : constant String :=
+                          Get_File_Name (Get_Entity (Partial_Class));
+               begin
+                  if not Class_Object_Paths.Contains (Key) then
+                     declare
+                        use Aquarius.Programs;
+                        Program     : constant Program_Tree :=
+                                        Get_Program (Partial_Class);
+                        Source_Path : constant String :=
+                                        Program.Source_Directory
+                                        & "/" & Program.Source_File_Name;
+                     begin
+                        Load_Class (Source_Path, To_Image);
+                     end;
+                  end if;
+               end;
+            end loop;
+         end if;
 
          Partial_Class_List.Clear;
       end if;
