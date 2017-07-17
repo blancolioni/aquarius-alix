@@ -1,4 +1,4 @@
-package Aquarius.Ack.Classes is
+package Ack.Classes is
 
    procedure Add_Class
      (Context : Entity_Id;
@@ -11,11 +11,19 @@ package Aquarius.Ack.Classes is
       return Node_Id;
 
    function Is_Derived_From
-     (Ancestor   : Entity_Id;
+     (Context    : Entity_Id;
+      Ancestor   : Entity_Id;
       Descendent : Entity_Id)
-      return Boolean;
+      return Boolean
+     with Pre => Ancestor /= No_Entity and then Descendent /= No_Entity;
    --  Return True if Ancestor = Descendent, or else
    --  for some parent class P of Descendent,
    --  Id_Derived_From (Ancestor, P)
 
-end Aquarius.Ack.Classes;
+   function Instantiate_Class
+     (Class   : Entity_Id;
+      Context : Entity_Id;
+      Actuals : Node_Id)
+      return Entity_Id;
+
+end Ack.Classes;

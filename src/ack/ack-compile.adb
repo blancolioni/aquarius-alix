@@ -2,11 +2,11 @@ with Ada.Calendar;
 with Ada.Directories;
 with Ada.Text_IO;
 
-with Aquarius.Ack.Parser;
-with Aquarius.Ack.Semantic;
-with Aquarius.Ack.Generate;
+with Ack.Parser;
+with Ack.Semantic;
+with Ack.Generate;
 
-with Aquarius.Ack.Errors;
+with Ack.Errors;
 
 with Aquarius.Loader;
 with Aquarius.Messages;
@@ -18,7 +18,7 @@ with Aquarius.Grammars.Manager;
 
 with Aquarius.Paths;
 
-package body Aquarius.Ack.Compile is
+package body Ack.Compile is
 
    procedure Load_Class
      (Source_Path : String;
@@ -46,29 +46,36 @@ package body Aquarius.Ack.Compile is
       if not Class_Object_Paths.Contains (Base_Name) then
          Load_Class (Source_Path, To_Image);
 
-         for Partial_Class of Partial_Class_List loop
-            declare
-               Key : constant String :=
-                       Get_File_Name (Get_Entity (Partial_Class));
-            begin
-               if not Class_Object_Paths.Contains (Key) then
-                  declare
-                     Program : constant Aquarius.Programs.Program_Tree :=
-                                 Get_Program (Partial_Class);
-                     Source_Path : constant String :=
-                                     Program.Source_Directory
-                                     & "/" & Program.Source_File_Name;
-                  begin
-                     Load_Class (Source_Path, To_Image);
-                  end;
-               end if;
-            end;
-         end loop;
+         if not Ack.Errors.Has_Errors then
+
+            for Partial_Class of Partial_Class_List loop
+               exit when Ack.Errors.Has_Errors;
+               declare
+                  Key : constant String :=
+                          Get_File_Name (Get_Entity (Partial_Class));
+               begin
+                  if not Class_Object_Paths.Contains (Key) then
+                     declare
+                        use Aquarius.Programs;
+                        Program     : constant Program_Tree :=
+                                        Get_Program (Partial_Class);
+                        Source_Path : constant String :=
+                                        Program.Source_Directory
+                                        & "/" & Program.Source_File_Name;
+                     begin
+                        Load_Class (Source_Path, To_Image);
+                     end;
+                  end if;
+               end;
+            end loop;
+         end if;
 
          Partial_Class_List.Clear;
       end if;
 
-      if Feature_Callback /= null then
+      if Feature_Callback /= null
+        and then Loaded_Classes.Contains (Base_Name)
+      then
          declare
             Class : constant Real_Entity_Id :=
                       Get_Entity (Loaded_Classes.Element (Base_Name));
@@ -134,12 +141,12 @@ package body Aquarius.Ack.Compile is
                Source_Program : constant Aquarius.Programs.Program_Tree :=
                                   Aquarius.Loader.Load_From_File
                                     (Source_Path);
-               Node           : constant Aquarius.Ack.Node_Id :=
-                                  Aquarius.Ack.Parser.Import
+               Node           : constant Ack.Node_Id :=
+                                  Ack.Parser.Import
                                     (Source_Program);
             begin
-               Aquarius.Ack.Semantic.Analyse_Class_Declaration (Node);
-               Aquarius.Ack.Errors.Record_Errors (Node);
+               Ack.Semantic.Analyse_Class_Declaration (Node);
+               Ack.Errors.Record_Errors (Node);
 
                declare
                   use Aquarius.Messages;
@@ -171,7 +178,7 @@ package body Aquarius.Ack.Compile is
             then
                Ada.Text_IO.Put_Line
                  ("generating " & Base_Name);
-               Aquarius.Ack.Generate.Generate_Class_Declaration
+               Ack.Generate.Generate_Class_Declaration
                  (Loaded_Classes.Element (Base_Name));
 
                Generate_Object_Code (Base_Name);
@@ -186,4 +193,4 @@ package body Aquarius.Ack.Compile is
 
    end Load_Class;
 
-end Aquarius.Ack.Compile;
+end Ack.Compile;

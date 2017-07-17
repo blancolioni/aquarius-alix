@@ -5,9 +5,9 @@ with Tagatha.Units;
 
 with Aquarius.Config_Paths;
 
---  with Aquarius.Ack.Files;
+--  with Ack.Files;
 
-package body Aquarius.Ack.Generate is
+package body Ack.Generate is
 
    procedure Generate_Allocator
      (Unit  : in out Tagatha.Units.Tagatha_Unit;
@@ -280,7 +280,7 @@ package body Aquarius.Ack.Generate is
             when N_Loop =>
                null;
             when N_Precursor =>
-               null;
+               Generate_Precursor (Unit, Instruction);
          end case;
       end Generate_Instruction;
 
@@ -393,11 +393,10 @@ package body Aquarius.Ack.Generate is
       Value_Node   : constant Node_Id := Value (Dec_Body);
 
       Arg_Count    : constant Natural :=
-                       (if Arg_Node = No_Node then 0
-                        else Declaration_Count
-                          (Entity_Declaration_Group_List (Arg_Node)));
-      Frame_Count  : constant Natural :=
-                       (if Type_Node = No_Node then 0 else 1);
+                       1 + (if Arg_Node = No_Node then 0
+                            else Declaration_Count
+                              (Entity_Declaration_Group_List (Arg_Node)));
+      Frame_Count  : constant Natural := 0;
    begin
       Unit.Begin_Routine
         (Name           =>
@@ -435,7 +434,10 @@ package body Aquarius.Ack.Generate is
                                        Call (Dot + 1 .. Call'Last);
                   begin
                      if Dot = 0 then
-                        Unit.Push_Argument (1);
+                        for I in reverse 1 .. Arg_Count loop
+                           Unit.Push_Argument
+                             (Tagatha.Argument_Offset (I));
+                        end loop;
                         Unit.Call (Call);
                         Unit.Drop;
                         if Type_Node /= No_Node then
@@ -443,16 +445,26 @@ package body Aquarius.Ack.Generate is
                            Unit.Pop_Local (1);
                         end if;
                      else
+                        for I in reverse 2 .. Arg_Count loop
+                           Unit.Push_Argument
+                             (Tagatha.Argument_Offset (I));
+                        end loop;
                         Unit.Push_Operand
                           (Tagatha.Operands.External_Operand
                              (Object_Name, True),
                            Tagatha.Default_Size);
                         Unit.Pop_Register ("op");
                         Unit.Native_Operation
-                          ("get_property " & Property_Name & ",0",
+                          ("get_property " & Property_Name & ","
+                           & Natural'Image (Arg_Count - 1),
                            Input_Stack_Words  => 0,
                            Output_Stack_Words => 0,
                            Changed_Registers  => "pv");
+
+                        for I in 2 .. Arg_Count loop
+                           Unit.Drop;
+                        end loop;
+
                         Unit.Push_Register ("pv");
 
                      end if;
@@ -480,17 +492,88 @@ package body Aquarius.Ack.Generate is
       List   : constant List_Id :=
                  Node_Table (Precursor).List;
 
-      procedure Process (Element : Node_Id);
+      Pending : List_Of_Nodes.List;
+
+      First_Element : constant Node_Id :=
+                        List_Table (List).List.First_Element;
+      Last_Element  : constant Node_Id :=
+                        List_Table (List).List.Last_Element;
+
+      procedure Apply_Arguments
+        (Element        : Node_Id;
+         Push_Arguments : Boolean);
+
+      procedure Process
+        (Element      : Node_Id;
+         Stack_Result : out Boolean);
+
+      ---------------------
+      -- Apply_Arguments --
+      ---------------------
+
+      procedure Apply_Arguments
+        (Element        : Node_Id;
+         Push_Arguments : Boolean)
+      is
+         Entity : constant Entity_Id := Get_Entity (Element);
+      begin
+         case Get_Kind (Entity) is
+            when Class_Entity | Instantiated_Class_Entity =>
+               null;
+            when Table_Entity | Generic_Argument_Entity =>
+               null;
+            when Feature_Entity_Kind =>
+               declare
+                  Actual_List_Node : constant Node_Id :=
+                                       Actual_List (Element);
+               begin
+
+                  if Actual_List_Node /= No_Node then
+                     declare
+                        use List_Of_Nodes;
+                        Actuals_List      : constant List_Id :=
+                                              Node_Table.Element
+                                                (Actual_List_Node).List;
+                        Actuals_Node_List : constant List_Of_Nodes.List :=
+                                              List_Table.Element
+                                                (Actuals_List).List;
+                     begin
+                        for Item of reverse Actuals_Node_List loop
+                           if Push_Arguments then
+                              Generate_Expression (Unit, Item);
+                           else
+                              Unit.Drop;
+                           end if;
+                        end loop;
+                     end;
+                  end if;
+
+               end;
+
+            when Argument_Entity =>
+               null;
+            when Local_Entity =>
+               null;
+            when Result_Entity =>
+               null;
+         end case;
+      end Apply_Arguments;
 
       -------------
       -- Process --
       -------------
 
-      procedure Process (Element : Node_Id) is
+      procedure Process
+        (Element      : Node_Id;
+         Stack_Result : out Boolean)
+      is
          Entity : constant Entity_Id := Get_Entity (Element);
       begin
+         Stack_Result := True;
          case Get_Kind (Entity) is
-            when Class_Entity | Table_Entity =>
+            when Class_Entity | Instantiated_Class_Entity =>
+               null;
+            when Table_Entity | Generic_Argument_Entity =>
                null;
             when Feature_Entity_Kind =>
                declare
@@ -498,9 +581,17 @@ package body Aquarius.Ack.Generate is
                                        Get_Original_Ancestor (Entity);
                   Original_Class   : constant Entity_Id :=
                                        Get_Context (Original_Feature);
+                  Feature_Kind     : constant Feature_Entity_Kind :=
+                                       Feature_Entity_Kind (Get_Kind (Entity));
                begin
-                  Unit.Push_Argument (1);
+
+                  if Element = First_Element then
+                     Unit.Push_Argument (1);
+                  end if;
+
                   Unit.Pop_Register ("op");
+                  Unit.Push_Register ("op");
+
                   Unit.Native_Operation
                     ("get_property " & Get_Link_Name (Original_Class) & ",0",
                      Input_Stack_Words  => 0,
@@ -516,14 +607,18 @@ package body Aquarius.Ack.Generate is
                      Output_Stack_Words => 0,
                      Changed_Registers  => "pv");
 
-                  case Feature_Entity_Kind (Get_Kind (Entity)) is
+                  case Feature_Kind is
                      when Routine_Feature_Entity =>
                         Unit.Push_Register ("pv");
                         Unit.Indirect_Call;
+                        Unit.Drop;
                         if Get_Type (Original_Feature) /= No_Entity then
                            Unit.Push_Register ("r0");
+                        else
+                           Stack_Result := False;
                         end if;
                      when Property_Feature_Entity =>
+                        Unit.Drop;
                         Unit.Push_Register ("pv");
                   end case;
                end;
@@ -542,7 +637,39 @@ package body Aquarius.Ack.Generate is
 
    begin
 
-      Scan (List, Process'Access);
+      for Element of List_Table (List).List loop
+         Pending.Append (Element);
+
+         declare
+            Entity : constant Entity_Id := Get_Entity (Element);
+            Kind   : constant Entity_Kind := Get_Kind (Entity);
+            Stack_Result : Boolean;
+         begin
+            if Element = Last_Element
+              or else (Kind in Feature_Entity_Kind
+                       and then Actual_List (Element) /= No_Node)
+            then
+               Apply_Arguments (Element, Push_Arguments => True);
+               for Item of Pending loop
+                  Process (Item, Stack_Result);
+                  pragma Assert
+                    (Stack_Result or else Item = Pending.Last_Element);
+               end loop;
+
+               if Stack_Result then
+                  Unit.Pop_Register ("r0");
+               end if;
+
+               Apply_Arguments (Element, Push_Arguments => False);
+
+               if Stack_Result then
+                  Unit.Push_Register ("r0");
+               end if;
+
+               Pending.Clear;
+            end if;
+         end;
+      end loop;
 
    end Generate_Precursor;
 
@@ -557,7 +684,9 @@ package body Aquarius.Ack.Generate is
       Entity : constant Entity_Id := Get_Entity (Node);
    begin
       case Get_Kind (Entity) is
-         when Class_Entity | Table_Entity =>
+         when Class_Entity | Instantiated_Class_Entity =>
+            null;
+         when Table_Entity | Generic_Argument_Entity =>
             null;
          when Property_Feature_Entity =>
             declare
@@ -595,4 +724,4 @@ package body Aquarius.Ack.Generate is
       end case;
    end Generate_Set_Value;
 
-end Aquarius.Ack.Generate;
+end Ack.Generate;

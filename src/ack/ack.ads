@@ -7,7 +7,7 @@ private with WL.String_Maps;
 
 with Aquarius.Programs;
 
-package Aquarius.Ack is
+package Ack is
 
    type Node_Kind is
      (N_Uninitialized_Node,
@@ -15,6 +15,10 @@ package Aquarius.Ack is
       N_Class_Declaration,
       N_Class_Header,
       N_Class_Name,
+      N_Formal_Generics,
+      N_Formal_Generic,
+      N_Formal_Generic_Name,
+      N_Actual_Generics,
       N_Inheritance,
       N_Inherited,
       N_New_Exports,
@@ -53,6 +57,8 @@ package Aquarius.Ack is
       N_String_Constant,
       N_Integer_Constant,
       N_Variable,
+      N_Precursor_Element,
+      N_Actual_List,
       N_Identifier);
 
    subtype N_Type is Node_Kind range
@@ -78,12 +84,17 @@ package Aquarius.Ack is
       E_Id_List_With_Arguments,
       E_Id_List_With_No_Type,
       E_Id_List_With_Routine,
-      E_Type_Error
+      E_Type_Error,
+      E_Insufficient_Arguments,
+      E_Too_Many_Arguments,
+      E_Ignored_Return_Value
      );
 
    type Entity_Kind is
      (Table_Entity,
       Class_Entity,
+      Instantiated_Class_Entity,
+      Generic_Argument_Entity,
       Routine_Feature_Entity,
       Property_Feature_Entity,
       Argument_Entity,
@@ -96,6 +107,9 @@ package Aquarius.Ack is
 
    subtype Local_Entity_Kind is Entity_Kind range
      Argument_Entity .. Local_Entity;
+
+   subtype Class_Entity_Kind is
+     Entity_Kind range Class_Entity .. Generic_Argument_Entity;
 
    type Node_Id is private;
 
@@ -144,6 +158,7 @@ package Aquarius.Ack is
 
    function Get_Context (Entity : Entity_Id) return Entity_Id;
    function Get_Name (Entity : Entity_Id) return Name_Id;
+   function Get_Description (Entity : Entity_Id) return String;
    function Get_Declaration (Entity : Entity_Id) return Node_Id;
    function Get_Kind (Entity : Entity_Id) return Entity_Kind;
    function Get_Type (Entity : Entity_Id) return Entity_Id;
@@ -173,6 +188,16 @@ package Aquarius.Ack is
    function Get_File_Name (Entity : Entity_Id) return String;
    function Get_Link_Name (Entity : Entity_Id) return String;
 
+   function Get_Formal_Arguments_Node
+     (Entity : Entity_Id)
+      return Node_Id
+     with Pre => Get_Kind (Entity) in Feature_Entity_Kind;
+
+   procedure Create_Current_Entity
+     (Class       : Entity_Id;
+      Feature     : Node_Id;
+      Table       : Entity_Id);
+
    function New_Entity
      (Name        : Name_Id;
       Kind        : Entity_Kind;
@@ -190,6 +215,13 @@ package Aquarius.Ack is
       Declaration   : Node_Id;
       Redefine      : Boolean;
       Rename        : Name_Id);
+
+   procedure Instantiate_Entity
+     (Generic_Class  : Entity_Id;
+      Concrete_Class : Entity_Id;
+      Formal_Entity  : Entity_Id;
+      Actual_Entity  : Entity_Id;
+      Declaration    : Node_Id);
 
    procedure Scan_Children
      (Entity  : Entity_Id;
@@ -251,6 +283,18 @@ package Aquarius.Ack is
    function Class_Name (N : Node_Id) return Node_Id
      with Pre => Kind (N) in N_Class_Header | N_Class_Type;
 
+   function Actual_Generics (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Class_Type;
+
+   function Formal_Generics (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Class_Header;
+
+   function Formal_Generics_List (N : Node_Id) return List_Id
+     with Pre => Kind (N) = N_Formal_Generics;
+
+   function Formal_Generic_Name (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Formal_Generic;
+
    function Inheritance (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Class_Declaration;
 
@@ -272,7 +316,10 @@ package Aquarius.Ack is
      or else Kind (N) = N_External
      or else Kind (N) = N_Feature_Alias
      or else Kind (N) = N_Variable
-     or else Kind (N) = N_Integer_Constant;
+     or else Kind (N) = N_Integer_Constant
+     or else Kind (N) = N_String_Constant
+     or else Kind (N) = N_Precursor_Element
+     or else Kind (N) = N_Formal_Generic_Name;
 
    function Get_Entity (N : Node_Id) return Entity_Id;
 
@@ -309,6 +356,12 @@ package Aquarius.Ack is
    function Entity_Declaration_Group_List (N : Node_Id) return Node_Id
      with Pre => Kind (N) in N_Formal_Arguments | N_Local_Declarations;
 
+   procedure Scan_Entity_Declarations
+     (Group   : Node_Id;
+      Process : not null access
+        procedure (Declaration_Node : Node_Id))
+     with Pre => Kind (Group) = N_Entity_Declaration_Group_List;
+
    function Feature_Alias (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_External;
 
@@ -326,6 +379,9 @@ package Aquarius.Ack is
 
    function Expression (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Assignment;
+
+   function Actual_List (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Precursor_Element;
 
    function Constant_Value (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Constant;
@@ -406,19 +462,20 @@ private
 
    type Entity_Record is
       record
-         Redefine        : Boolean;
-         Name            : Name_Id;
-         Kind            : Entity_Kind;
-         Context         : Entity_Id;
-         Defined_In      : Entity_Id;
-         Inherited_From  : Entity_Id;
-         Declaration     : Node_Id;
-         Entity_Type     : Entity_Id;
-         Virtual_Offset  : Natural;
-         Property_Offset : Natural;
-         Argument_Offset : Positive;
-         Local_Offset    : Positive;
-         Children        : List_Of_Entities.List;
+         Redefine          : Boolean;
+         Name              : Name_Id;
+         Kind              : Entity_Kind;
+         Context           : Entity_Id;
+         Defined_In        : Entity_Id;
+         Inherited_From    : Entity_Id;
+         Instantiated_From : Entity_Id;
+         Declaration       : Node_Id;
+         Entity_Type       : Entity_Id;
+         Virtual_Offset    : Natural;
+         Property_Offset   : Natural;
+         Argument_Offset   : Positive;
+         Local_Offset      : Positive;
+         Children          : List_Of_Entities.List;
       end record;
 
    package Node_Vectors is
@@ -489,6 +546,22 @@ private
 
    function Class_Name (N : Node_Id) return Node_Id
    is (Field_2 (N));
+
+   function Actual_Generics (N : Node_Id) return Node_Id
+   is (Field_3 (N));
+
+   function Actual_Generics_List (N : Node_Id) return List_Id
+   is (Node_Table (N).List)
+   with Pre => Kind (N) = N_Actual_Generics;
+
+   function Formal_Generics (N : Node_Id) return Node_Id
+   is (Field_3 (N));
+
+   function Formal_Generics_List (N : Node_Id) return List_Id
+   is (Node_Table (N).List);
+
+   function Formal_Generic_Name (N : Node_Id) return Node_Id
+   is (Field_1 (N));
 
    function Inheritance (N : Node_Id) return Node_Id
    is (Field_3 (N));
@@ -569,6 +642,9 @@ private
    is (Field_1 (N));
 
    function Expression (N : Node_Id) return Node_Id
+   is (Field_2 (N));
+
+   function Actual_List (N : Node_Id) return Node_Id
    is (Field_2 (N));
 
    function Constant_Value (N : Node_Id) return Node_Id
@@ -678,4 +754,4 @@ private
 
    Partial_Class_List : Class_Node_Lists.List;
 
-end Aquarius.Ack;
+end Ack;

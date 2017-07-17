@@ -9,7 +9,7 @@ feature
       
    After_Type (Type : Syntax.Type_Node)
       do
-         Option_Entry.Set_Name (Type.Identifier.Text)
+         Option_Entry.Set_Name (Type.Identifier)
       end
       
    After_Numeric_Literal (Child : String)
