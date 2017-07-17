@@ -293,7 +293,7 @@ formal_generic ::=
          [ 'frozen' ] formal_generic_name [ constraint ]
 	 
 formal_generic_name ::=
-         [ '?' ] identifier
+         [ 'detachable' ] identifier
 	 
 constraint ::=
          '->' constraining_types [ constraint_creators ]

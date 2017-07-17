@@ -2,9 +2,9 @@ with WL.String_Maps;
 
 with Aquarius.Trees;
 
-with Aquarius.Ack.Parser.Expressions;
+with Ack.Parser.Expressions;
 
-package body Aquarius.Ack.Parser is
+package body Ack.Parser is
 
    type Import_Function is access
      function (From : Aquarius.Programs.Program_Tree) return Node_Id;
@@ -13,22 +13,6 @@ package body Aquarius.Ack.Parser is
      new WL.String_Maps (Import_Function);
 
    Instruction_Imports : Import_Function_Maps.Map;
-
-   function Import_List
-     (From         : Aquarius.Programs.Program_Tree;
-      Child_Name   : String;
-      Import_Child : not null access
-        function (Child : Aquarius.Programs.Program_Tree)
-      return Node_Id)
-      return List_Id;
-
-   function Import_Optional_Child
-     (Parent     : Aquarius.Programs.Program_Tree;
-      Child_Name : String;
-      Import     : not null access
-        function (Child : Aquarius.Programs.Program_Tree)
-      return Node_Id)
-      return Node_Id;
 
    function Import_Choice
      (Parent : Aquarius.Programs.Program_Tree;
@@ -47,6 +31,32 @@ package body Aquarius.Ack.Parser is
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
      with Pre => From.Name = "class_header";
+
+   function Import_Formal_Generic
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     with Pre => From.Name = "formal_generic";
+
+   function Import_Formal_Generic_Name
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is (New_Node (N_Formal_Generic_Name, From,
+                 Name =>
+                    Get_Name_Id (From.Program_Child ("identifier").Text)))
+     with Pre => From.Name = "formal_generic_name";
+
+   function Import_Formal_Generics
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is (New_Node (N_Formal_Generics, From,
+                 List =>
+                    Import_List
+                   (From         =>
+                       From.Program_Child ("formal_generic_list"),
+                    Child_Name   => "formal_generic",
+                    Import_Child =>
+                       Import_Formal_Generic'Access)))
+     with Pre => From.Name = "formal_generics";
 
    function Import_Inherited
      (From : Aquarius.Programs.Program_Tree)
@@ -149,6 +159,19 @@ package body Aquarius.Ack.Parser is
       return Node_Id is (No_Node)
    with Pre => From.Name = "anchored";
 
+   function Import_Actual_Generics
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is (New_Node (N_Actual_Generics, From,
+                 List =>
+                    Import_List
+                   (From         =>
+                       From.Program_Child ("type_list"),
+                    Child_Name   => "type",
+                    Import_Child =>
+                       Import_Type'Access)))
+   with Pre => From.Name = "actual_generics";
+
    function Import_Explicit_Value
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id is (No_Node)
@@ -237,10 +260,6 @@ package body Aquarius.Ack.Parser is
         Import_Deferred'Access, Import_Effective_Routine'Access))
    with Pre => From.Name = "feature_body";
 
-   function Import_String_Constant
-     (Raw_Text : String)
-      return String;
-
    ------------
    -- Import --
    ------------
@@ -267,7 +286,7 @@ package body Aquarius.Ack.Parser is
         (N_Assignment, From,
          Field_1 => Import_Variable (From.Program_Child ("variable")),
          Field_2 =>
-           Aquarius.Ack.Parser.Expressions.Import_Expression
+           Ack.Parser.Expressions.Import_Expression
              (From.Program_Child ("expression")));
    end Import_Assignment;
 
@@ -340,11 +359,16 @@ package body Aquarius.Ack.Parser is
       Class_Name_Node : constant Node_Id :=
                           Import_Class_Name
                             (From.Program_Child ("class_name"));
+      Generics_Node   : constant Node_Id :=
+                          Import_Optional_Child
+                            (From, "formal_generics",
+                             Import_Formal_Generics'Access);
    begin
       Node_Table (Class_Name_Node).Defining := True;
       return New_Node
         (N_Class_Header, From,
-         Field_2 => Class_Name_Node);
+         Field_2 => Class_Name_Node,
+         Field_3 => Generics_Node);
    end Import_Class_Header;
 
    -----------------------
@@ -385,11 +409,20 @@ package body Aquarius.Ack.Parser is
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
    is
+      Actual_Generics_Node : constant Node_Id :=
+                               Import_Optional_Child
+                                 (From, "actual_generics",
+                                  Import_Actual_Generics'Access);
    begin
-      return New_Node (N_Class_Type, From,
-                       Field_2 =>
-                         Import_Class_Name
-                           (From.Program_Child ("class_name")));
+      return Node : constant Node_Id :=
+        New_Node (N_Class_Type, From,
+                  Field_2 =>
+                    Import_Class_Name
+                      (From.Program_Child ("class_name")),
+                  Field_3 => Actual_Generics_Node)
+      do
+         null;
+      end return;
    end Import_Class_Type;
 
    -----------------------------
@@ -640,6 +673,21 @@ package body Aquarius.Ack.Parser is
    begin
       return New_Node (N_Formal_Arguments, From, Field_1 => Node);
    end Import_Formal_Arguments;
+
+   ----------------------------
+   -- Import_Formal_Generics --
+   ----------------------------
+
+   function Import_Formal_Generic
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+   begin
+      return New_Node (N_Formal_Generic, From,
+                       Field_1 =>
+                         Import_Formal_Generic_Name
+                           (From.Program_Child ("formal_generic_name")));
+   end Import_Formal_Generic;
 
    ----------------------
    -- Import_Inherited --
@@ -912,4 +960,4 @@ package body Aquarius.Ack.Parser is
                            (From.Program_Child ("identifier").Text));
    end Import_Variable;
 
-end Aquarius.Ack.Parser;
+end Ack.Parser;

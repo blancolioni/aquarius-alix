@@ -1,6 +1,6 @@
 with Ada.Containers.Ordered_Maps;
 
-package body Aquarius.Ack is
+package body Ack is
 
    package Entity_Maps is
      new Ada.Containers.Ordered_Maps
@@ -41,6 +41,26 @@ package body Aquarius.Ack is
       end loop;
       return False;
    end Contains_Name;
+
+   ---------------------------
+   -- Create_Current_Entity --
+   ---------------------------
+
+   procedure Create_Current_Entity
+     (Class       : Entity_Id;
+      Feature     : Node_Id;
+      Table       : Entity_Id)
+   is
+      Current : constant Entity_Id :=
+                  New_Entity
+                    (Name        => Get_Name_Id ("current"),
+                     Kind        => Argument_Entity,
+                     Context     => Table,
+                     Declaration => Feature,
+                     Entity_Type => Class);
+   begin
+      pragma Unreferenced (Current);
+   end Create_Current_Entity;
 
    ----------------------
    -- Depth_First_Scan --
@@ -133,6 +153,9 @@ package body Aquarius.Ack is
                return Undeclared_Entity;
             end if;
          end;
+      elsif Get_Kind (Context) = Instantiated_Class_Entity then
+         return Find_Local_Entity
+           (Entity_Table (Context).Instantiated_From, Name);
       else
          declare
             Entity_Rec : Entity_Record renames Entity_Table (Context);
@@ -163,6 +186,41 @@ package body Aquarius.Ack is
       end if;
    end Find_Name_Id;
 
+   ---------------------
+   -- Get_Description --
+   ---------------------
+
+   function Get_Description (Entity : Entity_Id) return String is
+   begin
+      if Entity = No_Entity then
+         return "(no entity)";
+      end if;
+      return To_String (Get_Name (Entity))
+        & (case Get_Kind (Entity) is
+              when Class_Entity =>
+                 " (a class)",
+              when Instantiated_Class_Entity =>
+                 " (an instantiated class)",
+              when Generic_Argument_Entity   =>
+                 " (a generic argument)",
+              when Routine_Feature_Entity    =>
+                 " (a routine)",
+              when Property_Feature_Entity   =>
+                 " (a property)",
+              when Argument_Entity           =>
+                 " (a feature argument)",
+              when Result_Entity             =>
+                 " (the feature result)",
+              when Local_Entity              =>
+                 " (a local entity)",
+              when Table_Entity              =>
+                 raise Constraint_Error with "can't describe table")
+            & (if Get_Context (Entity) = No_Entity
+               then ""
+               else " defined in "
+               & To_String (Get_Name (Get_Context (Entity))));
+   end Get_Description;
+
    -------------------
    -- Get_File_Name --
    -------------------
@@ -177,6 +235,31 @@ package body Aquarius.Ack is
          return Get_File_Name (Get_Defined_In (Entity)) & "-" & Local_Name;
       end if;
    end Get_File_Name;
+
+   -------------------------------
+   -- Get_Formal_Arguments_Node --
+   -------------------------------
+
+   function Get_Formal_Arguments_Node
+     (Entity : Entity_Id)
+      return Node_Id
+   is
+      Ancestor : constant Entity_Id := Get_Original_Ancestor (Entity);
+      Declaration : constant Node_Id := Get_Declaration (Ancestor);
+   begin
+      if Declaration /= No_Node then
+         declare
+            Dec_Body : constant Node_Id :=
+                         Declaration_Body (Declaration);
+            Formals     : constant Node_Id :=
+                            Formal_Arguments (Dec_Body);
+         begin
+            return Formals;
+         end;
+      else
+         return No_Node;
+      end if;
+   end Get_Formal_Arguments_Node;
 
    -------------------
    -- Get_Link_Name --
@@ -254,6 +337,29 @@ package body Aquarius.Ack is
         (if Redefine then Derived_Class else Get_Defined_In (Entity));
    end Inherit_Entity;
 
+   ------------------------
+   -- Instantiate_Entity --
+   ------------------------
+
+   procedure Instantiate_Entity
+     (Generic_Class  : Entity_Id;
+      Concrete_Class : Entity_Id;
+      Formal_Entity  : Entity_Id;
+      Actual_Entity  : Entity_Id;
+      Declaration    : Node_Id)
+   is
+      pragma Unreferenced (Declaration);
+      New_Rec  : Entity_Record := Entity_Table (Actual_Entity);
+      New_Name : constant String :=
+                   Get_Link_Name (Generic_Class) & "--formal--"
+                 & Get_Link_Name (Formal_Entity);
+   begin
+      New_Rec.Name := Get_Name_Id (New_Name);
+      New_Rec.Instantiated_From := Actual_Entity;
+      Entity_Table.Append (New_Rec);
+      Entity_Table (Concrete_Class).Children.Append (Entity_Table.Last_Index);
+   end Instantiate_Entity;
+
    ----------------
    -- New_Entity --
    ----------------
@@ -305,14 +411,24 @@ package body Aquarius.Ack is
                     Context_Rec.Property_Offset + 1;
                   Property_Offset := Context_Rec.Property_Offset;
                when Argument_Entity =>
-                  Context_Rec.Argument_Offset :=
-                    Context_Rec.Argument_Offset + 1;
-                  Argument_Offset := Context_Rec.Argument_Offset;
+                  if Name = Get_Name_Id ("current") then
+                     Argument_Offset := 1;
+                  else
+                     Context_Rec.Argument_Offset :=
+                       Context_Rec.Argument_Offset + 1;
+                     Argument_Offset := Context_Rec.Argument_Offset;
+                  end if;
                when Local_Entity =>
                   Context_Rec.Local_Offset :=
                     Context_Rec.Local_Offset + 1;
                   Local_Offset := Context_Rec.Local_Offset;
-               when Class_Entity | Table_Entity | Result_Entity =>
+               when Result_Entity =>
+                  null;
+               when Class_Entity | Instantiated_Class_Entity =>
+                  null;
+               when Table_Entity =>
+                  null;
+               when Generic_Argument_Entity =>
                   null;
             end case;
          end;
@@ -321,19 +437,20 @@ package body Aquarius.Ack is
       return Entity : constant Entity_Id := Entity_Table.Last_Index + 1 do
          Entity_Table.Append
            (Entity_Record'
-              (Redefine        => False,
-               Name            => Name,
-               Kind            => Kind,
-               Context         => Context,
-               Defined_In      => Context,
-               Inherited_From  => No_Entity,
-               Declaration     => Declaration,
-               Entity_Type     => Entity_Type,
-               Virtual_Offset  => Virtual_Offset,
-               Property_Offset => Property_Offset,
-               Argument_Offset => Argument_Offset,
-               Local_Offset    => Local_Offset,
-               Children       => <>));
+              (Redefine          => False,
+               Name              => Name,
+               Kind              => Kind,
+               Context           => Context,
+               Defined_In        => Context,
+               Inherited_From    => No_Entity,
+               Instantiated_From => No_Entity,
+               Declaration       => Declaration,
+               Entity_Type       => Entity_Type,
+               Virtual_Offset    => Virtual_Offset,
+               Property_Offset   => Property_Offset,
+               Argument_Offset   => Argument_Offset,
+               Local_Offset      => Local_Offset,
+               Children          => <>));
          if Context = No_Entity then
             if Top_Level_Entities.Contains (Name) then
                raise Constraint_Error with
@@ -415,19 +532,20 @@ package body Aquarius.Ack is
       return Entity : constant Entity_Id := Entity_Table.Last_Index + 1 do
          Entity_Table.Append
            (Entity_Record'
-              (Redefine       => False,
-               Name           => Name,
-               Kind           => Class_Entity,
-               Context        => No_Entity,
-               Defined_In     => No_Entity,
-               Inherited_From => No_Entity,
-               Declaration    => No_Node,
-               Entity_Type    => Entity,
-               Virtual_Offset  => 0,
-               Property_Offset => 0,
-               Argument_Offset => 1,
-               Local_Offset    => 1,
-               Children        => <>));
+              (Redefine          => False,
+               Name              => Name,
+               Kind              => Class_Entity,
+               Context           => No_Entity,
+               Defined_In        => No_Entity,
+               Inherited_From    => No_Entity,
+               Instantiated_From => No_Entity,
+               Declaration       => No_Node,
+               Entity_Type       => Entity,
+               Virtual_Offset    => 0,
+               Property_Offset   => 0,
+               Argument_Offset   => 1,
+               Local_Offset      => 1,
+               Children          => <>));
          if Top_Level_Entities.Contains (Name) then
             raise Constraint_Error with
               "redefined primitive top level entity: " & To_String (Name);
@@ -490,6 +608,42 @@ package body Aquarius.Ack is
       end loop;
    end Scan_Children;
 
+   ------------------------------
+   -- Scan_Entity_Declarations --
+   ------------------------------
+
+   procedure Scan_Entity_Declarations
+     (Group   : Node_Id;
+      Process : not null access
+        procedure (Declaration_Node : Node_Id))
+   is
+      procedure Process_Group (Node : Node_Id);
+
+      -------------------
+      -- Process_Group --
+      -------------------
+
+      procedure Process_Group (Node : Node_Id) is
+
+         procedure Process_Id (Id_Node : Node_Id);
+
+         ----------------
+         -- Process_Id --
+         ----------------
+
+         procedure Process_Id (Id_Node : Node_Id) is
+         begin
+            Process (Id_Node);
+         end Process_Id;
+
+      begin
+         Scan (Node_Table (Node).List, Process_Id'Access);
+      end Process_Group;
+
+   begin
+      Scan (Node_Table (Group).List, Process_Group'Access);
+   end Scan_Entity_Declarations;
+
    -----------------
    -- Scan_Errors --
    -----------------
@@ -541,4 +695,4 @@ package body Aquarius.Ack is
       Node_Table (Node).Entity := Entity;
    end Set_Entity;
 
-end Aquarius.Ack;
+end Ack;

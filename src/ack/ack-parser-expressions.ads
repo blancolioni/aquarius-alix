@@ -1,4 +1,4 @@
-private package Aquarius.Ack.Parser.Expressions is
+private package Ack.Parser.Expressions is
 
    function Import_Expression
      (From : Aquarius.Programs.Program_Tree)
@@ -15,4 +15,4 @@ private package Aquarius.Ack.Parser.Expressions is
       return Node_Id
      with Pre => From.Name = "precursor";
 
-end Aquarius.Ack.Parser.Expressions;
+end Ack.Parser.Expressions;

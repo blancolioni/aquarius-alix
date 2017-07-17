@@ -1,0 +1,12 @@
+class Cell[G]
+
+feature
+
+   Item : G
+   
+   Put (V : G) 
+      do
+         Item := V
+      ensure
+         Item_Inserted: Item = V
+      end
