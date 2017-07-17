@@ -274,6 +274,8 @@ package body Aquarius.Ack.Semantic is
                null;
             when N_Conditional =>
                null;
+            when N_Loop =>
+               null;
             when N_Precursor =>
                Analyse_Precursor
                  (Class           => Class,

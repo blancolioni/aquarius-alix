@@ -49,6 +49,7 @@ package Aquarius.Ack is
       N_Assignment,
       N_Creation_Instruction,
       N_Conditional,
+      N_Loop,
       N_Precursor,
       N_Operator,
       N_Constant,

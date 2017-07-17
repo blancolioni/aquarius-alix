@@ -221,6 +221,11 @@ package body Aquarius.Ack.Parser is
       return Node_Id is (New_Node (N_Conditional, From))
      with Pre => From.Name = "conditional";
 
+   function Import_Loop
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id is (New_Node (N_Loop, From))
+   with Pre => From.Name = "conditional";
+
    function Import_Variable
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
@@ -735,6 +740,7 @@ package body Aquarius.Ack.Parser is
             Insert ("creation_instruction",
                     Import_Creation_Instruction'Access);
             Insert ("conditional", Import_Conditional'Access);
+            Insert ("loop", Import_Loop'Access);
             Insert ("precursor", Expressions.Import_Precursor'Access);
          end;
       end if;
