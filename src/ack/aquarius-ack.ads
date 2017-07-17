@@ -18,6 +18,7 @@ package Aquarius.Ack is
       N_Formal_Generics,
       N_Formal_Generic,
       N_Formal_Generic_Name,
+      N_Actual_Generics,
       N_Inheritance,
       N_Inherited,
       N_New_Exports,
@@ -92,6 +93,7 @@ package Aquarius.Ack is
    type Entity_Kind is
      (Table_Entity,
       Class_Entity,
+      Instantiated_Class_Entity,
       Generic_Argument_Entity,
       Routine_Feature_Entity,
       Property_Feature_Entity,
@@ -105,6 +107,9 @@ package Aquarius.Ack is
 
    subtype Local_Entity_Kind is Entity_Kind range
      Argument_Entity .. Local_Entity;
+
+   subtype Class_Entity_Kind is
+     Entity_Kind range Class_Entity .. Generic_Argument_Entity;
 
    type Node_Id is private;
 
@@ -153,6 +158,7 @@ package Aquarius.Ack is
 
    function Get_Context (Entity : Entity_Id) return Entity_Id;
    function Get_Name (Entity : Entity_Id) return Name_Id;
+   function Get_Description (Entity : Entity_Id) return String;
    function Get_Declaration (Entity : Entity_Id) return Node_Id;
    function Get_Kind (Entity : Entity_Id) return Entity_Kind;
    function Get_Type (Entity : Entity_Id) return Entity_Id;
@@ -209,6 +215,13 @@ package Aquarius.Ack is
       Declaration   : Node_Id;
       Redefine      : Boolean;
       Rename        : Name_Id);
+
+   procedure Instantiate_Entity
+     (Generic_Class  : Entity_Id;
+      Concrete_Class : Entity_Id;
+      Formal_Entity  : Entity_Id;
+      Actual_Entity  : Entity_Id;
+      Declaration    : Node_Id);
 
    procedure Scan_Children
      (Entity  : Entity_Id;
@@ -269,6 +282,9 @@ package Aquarius.Ack is
 
    function Class_Name (N : Node_Id) return Node_Id
      with Pre => Kind (N) in N_Class_Header | N_Class_Type;
+
+   function Actual_Generics (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Class_Type;
 
    function Formal_Generics (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Class_Header;
@@ -446,19 +462,20 @@ private
 
    type Entity_Record is
       record
-         Redefine        : Boolean;
-         Name            : Name_Id;
-         Kind            : Entity_Kind;
-         Context         : Entity_Id;
-         Defined_In      : Entity_Id;
-         Inherited_From  : Entity_Id;
-         Declaration     : Node_Id;
-         Entity_Type     : Entity_Id;
-         Virtual_Offset  : Natural;
-         Property_Offset : Natural;
-         Argument_Offset : Positive;
-         Local_Offset    : Positive;
-         Children        : List_Of_Entities.List;
+         Redefine          : Boolean;
+         Name              : Name_Id;
+         Kind              : Entity_Kind;
+         Context           : Entity_Id;
+         Defined_In        : Entity_Id;
+         Inherited_From    : Entity_Id;
+         Instantiated_From : Entity_Id;
+         Declaration       : Node_Id;
+         Entity_Type       : Entity_Id;
+         Virtual_Offset    : Natural;
+         Property_Offset   : Natural;
+         Argument_Offset   : Positive;
+         Local_Offset      : Positive;
+         Children          : List_Of_Entities.List;
       end record;
 
    package Node_Vectors is
@@ -529,6 +546,13 @@ private
 
    function Class_Name (N : Node_Id) return Node_Id
    is (Field_2 (N));
+
+   function Actual_Generics (N : Node_Id) return Node_Id
+   is (Field_3 (N));
+
+   function Actual_Generics_List (N : Node_Id) return List_Id
+   is (Node_Table (N).List)
+   with Pre => Kind (N) = N_Actual_Generics;
 
    function Formal_Generics (N : Node_Id) return Node_Id
    is (Field_3 (N));

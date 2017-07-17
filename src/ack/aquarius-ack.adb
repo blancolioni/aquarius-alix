@@ -153,6 +153,9 @@ package body Aquarius.Ack is
                return Undeclared_Entity;
             end if;
          end;
+      elsif Get_Kind (Context) = Instantiated_Class_Entity then
+         return Find_Local_Entity
+           (Entity_Table (Context).Instantiated_From, Name);
       else
          declare
             Entity_Rec : Entity_Record renames Entity_Table (Context);
@@ -182,6 +185,41 @@ package body Aquarius.Ack is
          return No_Name;
       end if;
    end Find_Name_Id;
+
+   ---------------------
+   -- Get_Description --
+   ---------------------
+
+   function Get_Description (Entity : Entity_Id) return String is
+   begin
+      if Entity = No_Entity then
+         return "(no entity)";
+      end if;
+      return To_String (Get_Name (Entity))
+        & (case Get_Kind (Entity) is
+              when Class_Entity =>
+                 " (a class)",
+              when Instantiated_Class_Entity =>
+                 " (an instantiated class)",
+              when Generic_Argument_Entity   =>
+                 " (a generic argument)",
+              when Routine_Feature_Entity    =>
+                 " (a routine)",
+              when Property_Feature_Entity   =>
+                 " (a property)",
+              when Argument_Entity           =>
+                 " (a feature argument)",
+              when Result_Entity             =>
+                 " (the feature result)",
+              when Local_Entity              =>
+                 " (a local entity)",
+              when Table_Entity              =>
+                 raise Constraint_Error with "can't describe table")
+            & (if Get_Context (Entity) = No_Entity
+               then ""
+               else " defined in "
+               & To_String (Get_Name (Get_Context (Entity))));
+   end Get_Description;
 
    -------------------
    -- Get_File_Name --
@@ -299,6 +337,29 @@ package body Aquarius.Ack is
         (if Redefine then Derived_Class else Get_Defined_In (Entity));
    end Inherit_Entity;
 
+   ------------------------
+   -- Instantiate_Entity --
+   ------------------------
+
+   procedure Instantiate_Entity
+     (Generic_Class  : Entity_Id;
+      Concrete_Class : Entity_Id;
+      Formal_Entity  : Entity_Id;
+      Actual_Entity  : Entity_Id;
+      Declaration    : Node_Id)
+   is
+      pragma Unreferenced (Declaration);
+      New_Rec  : Entity_Record := Entity_Table (Actual_Entity);
+      New_Name : constant String :=
+                   Get_Link_Name (Generic_Class) & "--formal--"
+                 & Get_Link_Name (Formal_Entity);
+   begin
+      New_Rec.Name := Get_Name_Id (New_Name);
+      New_Rec.Instantiated_From := Actual_Entity;
+      Entity_Table.Append (New_Rec);
+      Entity_Table (Concrete_Class).Children.Append (Entity_Table.Last_Index);
+   end Instantiate_Entity;
+
    ----------------
    -- New_Entity --
    ----------------
@@ -363,7 +424,9 @@ package body Aquarius.Ack is
                   Local_Offset := Context_Rec.Local_Offset;
                when Result_Entity =>
                   null;
-               when Class_Entity | Table_Entity =>
+               when Class_Entity | Instantiated_Class_Entity =>
+                  null;
+               when Table_Entity =>
                   null;
                when Generic_Argument_Entity =>
                   null;
@@ -374,19 +437,20 @@ package body Aquarius.Ack is
       return Entity : constant Entity_Id := Entity_Table.Last_Index + 1 do
          Entity_Table.Append
            (Entity_Record'
-              (Redefine        => False,
-               Name            => Name,
-               Kind            => Kind,
-               Context         => Context,
-               Defined_In      => Context,
-               Inherited_From  => No_Entity,
-               Declaration     => Declaration,
-               Entity_Type     => Entity_Type,
-               Virtual_Offset  => Virtual_Offset,
-               Property_Offset => Property_Offset,
-               Argument_Offset => Argument_Offset,
-               Local_Offset    => Local_Offset,
-               Children       => <>));
+              (Redefine          => False,
+               Name              => Name,
+               Kind              => Kind,
+               Context           => Context,
+               Defined_In        => Context,
+               Inherited_From    => No_Entity,
+               Instantiated_From => No_Entity,
+               Declaration       => Declaration,
+               Entity_Type       => Entity_Type,
+               Virtual_Offset    => Virtual_Offset,
+               Property_Offset   => Property_Offset,
+               Argument_Offset   => Argument_Offset,
+               Local_Offset      => Local_Offset,
+               Children          => <>));
          if Context = No_Entity then
             Top_Level_Entities.Insert
               (Name, Entity);
@@ -464,19 +528,20 @@ package body Aquarius.Ack is
       return Entity : constant Entity_Id := Entity_Table.Last_Index + 1 do
          Entity_Table.Append
            (Entity_Record'
-              (Redefine       => False,
-               Name           => Name,
-               Kind           => Class_Entity,
-               Context        => No_Entity,
-               Defined_In     => No_Entity,
-               Inherited_From => No_Entity,
-               Declaration    => No_Node,
-               Entity_Type    => Entity,
-               Virtual_Offset  => 0,
-               Property_Offset => 0,
-               Argument_Offset => 1,
-               Local_Offset    => 1,
-               Children        => <>));
+              (Redefine          => False,
+               Name              => Name,
+               Kind              => Class_Entity,
+               Context           => No_Entity,
+               Defined_In        => No_Entity,
+               Inherited_From    => No_Entity,
+               Instantiated_From => No_Entity,
+               Declaration       => No_Node,
+               Entity_Type       => Entity,
+               Virtual_Offset    => 0,
+               Property_Offset   => 0,
+               Argument_Offset   => 1,
+               Local_Offset      => 1,
+               Children          => <>));
          Top_Level_Entities.Insert
            (Name, Entity);
       end return;
