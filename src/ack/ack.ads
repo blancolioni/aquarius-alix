@@ -7,7 +7,7 @@ private with WL.String_Maps;
 
 with Aquarius.Programs;
 
-package Aquarius.Ack is
+package Ack is
 
    type Node_Kind is
      (N_Uninitialized_Node,
@@ -754,4 +754,4 @@ private
 
    Partial_Class_List : Class_Node_Lists.List;
 
-end Aquarius.Ack;
+end Ack;

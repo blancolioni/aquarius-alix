@@ -1,4 +1,4 @@
-package Aquarius.Ack.Errors is
+package Ack.Errors is
 
    procedure Report_Errors (Node : Node_Id);
    procedure Record_Errors (Node : Node_Id);
@@ -6,4 +6,4 @@ package Aquarius.Ack.Errors is
    function Has_Errors return Boolean;
    procedure Clear_Errors;
 
-end Aquarius.Ack.Errors;
+end Ack.Errors;

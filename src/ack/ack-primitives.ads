@@ -1,4 +1,4 @@
-package Aquarius.Ack.Primitives is
+package Ack.Primitives is
 
    procedure Create_Primitives;
 
@@ -12,4 +12,4 @@ package Aquarius.Ack.Primitives is
 
    function Void_Feature return Entity_Id;
 
-end Aquarius.Ack.Primitives;
+end Ack.Primitives;

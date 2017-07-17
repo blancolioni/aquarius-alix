@@ -1,4 +1,4 @@
-package Aquarius.Ack.Classes is
+package Ack.Classes is
 
    procedure Add_Class
      (Context : Entity_Id;
@@ -26,4 +26,4 @@ package Aquarius.Ack.Classes is
       Actuals : Node_Id)
       return Entity_Id;
 
-end Aquarius.Ack.Classes;
+end Ack.Classes;

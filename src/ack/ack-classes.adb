@@ -1,8 +1,8 @@
 with Ada.Containers.Ordered_Sets;
 
-with Aquarius.Ack.Primitives;
+with Ack.Primitives;
 
-package body Aquarius.Ack.Classes is
+package body Ack.Classes is
 
    package Entity_Id_Sets is
      new Ada.Containers.Ordered_Sets (Entity_Id);
@@ -258,10 +258,10 @@ package body Aquarius.Ack.Classes is
 
    begin
       return Ancestor = Descendent
-        or else Ancestor = Aquarius.Ack.Primitives.Any_Class
-        or else Descendent = Aquarius.Ack.Primitives.None_Class
+        or else Ancestor = Ack.Primitives.Any_Class
+        or else Descendent = Ack.Primitives.None_Class
         or else (Get_Kind (Local_Ancestor) in Class_Entity_Kind
                  and then Try (Local_Descendent));
    end Is_Derived_From;
 
-end Aquarius.Ack.Classes;
+end Ack.Classes;

@@ -25,13 +25,13 @@ with Aquarius.Version;
 
 with Aquarius.Grammars.UI;
 
-with Aquarius.Ack.Errors;
-with Aquarius.Ack.IO;
-with Aquarius.Ack.Primitives;
+with Ack.Errors;
+with Ack.IO;
+with Ack.Primitives;
 
-with Aquarius.Ack.Parser;
-with Aquarius.Ack.Semantic;
-with Aquarius.Ack.Generate;
+with Ack.Parser;
+with Ack.Semantic;
+with Ack.Generate;
 
 with Komnenos.Logging;
 with Komnenos.Paths;
@@ -257,23 +257,23 @@ begin
 
             elsif Command_Line.Action = "import-aqua" then
 
-               Aquarius.Ack.Primitives.Create_Primitives;
+               Ack.Primitives.Create_Primitives;
 
                declare
-                  Node : constant Aquarius.Ack.Node_Id :=
-                           Aquarius.Ack.Parser.Import
+                  Node : constant Ack.Node_Id :=
+                           Ack.Parser.Import
                              (Input);
                begin
 
                   if False then
-                     Aquarius.Ack.IO.Put_Line (Node);
+                     Ack.IO.Put_Line (Node);
                   end if;
 
                   Ada.Text_IO.Put_Line
                     ("analysing: " & Input.Source_File_Name);
 
-                  Aquarius.Ack.Semantic.Analyse_Class_Declaration (Node);
-                  Aquarius.Ack.Errors.Record_Errors (Node);
+                  Ack.Semantic.Analyse_Class_Declaration (Node);
+                  Ack.Errors.Record_Errors (Node);
 
                   declare
                      use Aquarius.Messages;
@@ -283,7 +283,7 @@ begin
                      if Message_Count (List) = 0 or else
                        Highest_Level (List) <= Warning
                      then
-                        Aquarius.Ack.Generate.Generate_Class_Declaration
+                        Ack.Generate.Generate_Class_Declaration
                           (Node);
                      end if;
                   end;

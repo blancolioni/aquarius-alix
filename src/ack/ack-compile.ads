@@ -1,6 +1,6 @@
 with Aqua.Images;
 
-package Aquarius.Ack.Compile is
+package Ack.Compile is
 
    procedure Compile_Class
      (Source_Path : String;
@@ -11,4 +11,4 @@ package Aquarius.Ack.Compile is
                    Child_Name   : String;
                    Child_Type   : Entity_Id));
 
-end Aquarius.Ack.Compile;
+end Ack.Compile;

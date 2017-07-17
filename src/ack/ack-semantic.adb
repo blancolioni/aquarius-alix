@@ -1,14 +1,14 @@
 with Aquarius.Loader;
 
-with Aquarius.Ack.Classes;
-with Aquarius.Ack.Files;
-with Aquarius.Ack.Parser;
+with Ack.Classes;
+with Ack.Files;
+with Ack.Parser;
 
-with Aquarius.Ack.Primitives;
+with Ack.Primitives;
 
-with Aquarius.Ack.Errors;
+with Ack.Errors;
 
-package body Aquarius.Ack.Semantic is
+package body Ack.Semantic is
 
    function Load_Entity
      (Referrer        : Aquarius.Programs.Program_Tree;
@@ -270,7 +270,7 @@ package body Aquarius.Ack.Semantic is
             Last_Name : constant Name_Id :=
                           Node_Table.Element (Last_Node).Name;
          begin
-            Aquarius.Ack.Classes.Add_Class
+            Ack.Classes.Add_Class
               (Parent, Last_Name, Class);
          end;
       else
@@ -311,7 +311,7 @@ package body Aquarius.Ack.Semantic is
          Scan (Actual_Generics_List (Generics_Node),
                Analyse_Generic_Type'Access);
          Type_Entity :=
-           Aquarius.Ack.Classes.Instantiate_Class
+           Ack.Classes.Instantiate_Class
              (Type_Entity, Get_Entity (Class), Generics_Node);
       end if;
 
@@ -454,7 +454,7 @@ package body Aquarius.Ack.Semantic is
               (Class, Table, Expression_Type, Expression);
          when N_Constant =>
             declare
-               use Aquarius.Ack.Primitives;
+               use Ack.Primitives;
                Value      : constant Node_Id := Constant_Value (Expression);
                Value_Type : constant Entity_Id :=
                               (case N_Constant_Value (Kind (Value)) is
@@ -466,7 +466,7 @@ package body Aquarius.Ack.Semantic is
                Set_Entity (Expression, Value_Type);
                if Expression_Type = No_Entity then
                   Error (Value, E_Ignored_Return_Value);
-               elsif not Aquarius.Ack.Classes.Is_Derived_From
+               elsif not Ack.Classes.Is_Derived_From
                  (Context    => Get_Entity (Class),
                   Ancestor   => Value_Type,
                   Descendent => Expression_Type)
@@ -820,7 +820,7 @@ package body Aquarius.Ack.Semantic is
                Error (Precursor, E_Ignored_Return_Value);
             end if;
          elsif Value_Type /= No_Entity
-           and then not Aquarius.Ack.Classes.Is_Derived_From
+           and then not Ack.Classes.Is_Derived_From
              (Get_Entity (Class), Expression_Type, Value_Type)
          then
             Error (Precursor, E_Type_Error, Expression_Type);
@@ -875,7 +875,7 @@ package body Aquarius.Ack.Semantic is
       if Entity = Undeclared_Entity then
          declare
             Path : constant String :=
-                     Aquarius.Ack.Files.Find_Class_File
+                     Ack.Files.Find_Class_File
                        (Referrer, Parent, Name);
          begin
             if Path /= "" then
@@ -884,11 +884,11 @@ package body Aquarius.Ack.Semantic is
                               Aquarius.Loader.Load_From_File
                                 (Path);
                   Node    : constant Node_Id :=
-                              Aquarius.Ack.Parser.Import (Program);
+                              Ack.Parser.Import (Program);
                begin
-                  Aquarius.Ack.Semantic.Analyse_Class_Declaration (Node);
-                  Aquarius.Ack.Errors.Record_Errors (Node);
-                  Aquarius.Ack.Errors.Report_Errors (Node);
+                  Ack.Semantic.Analyse_Class_Declaration (Node);
+                  Ack.Errors.Record_Errors (Node);
+                  Ack.Errors.Report_Errors (Node);
                   Entity := Get_Entity (Node);
                   Loaded_Classes.Insert
                     (Get_File_Name (Entity), Node);
@@ -900,4 +900,4 @@ package body Aquarius.Ack.Semantic is
       return Entity;
    end Load_Entity;
 
-end Aquarius.Ack.Semantic;
+end Ack.Semantic;

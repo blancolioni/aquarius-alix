@@ -1,4 +1,4 @@
-package Aquarius.Ack.Parser is
+package Ack.Parser is
 
    function Import
      (Program : Aquarius.Programs.Program_Tree)
@@ -31,4 +31,4 @@ private
      (Raw_Text : String)
       return String;
 
-end Aquarius.Ack.Parser;
+end Ack.Parser;
