@@ -1,267 +1,314 @@
-with Ada.Containers.Ordered_Sets;
-
-with Ack.Primitives;
+with Ack.Environment;
 
 package body Ack.Classes is
 
-   package Entity_Id_Sets is
-     new Ada.Containers.Ordered_Sets (Entity_Id);
+   --------------------
+   -- Add_Constraint --
+   --------------------
 
-   function Get_Local_Entity
-     (Context : Entity_Id;
-      Entity  : Entity_Id)
-      return Entity_Id;
-
-   ---------------
-   -- Add_Class --
-   ---------------
-
-   procedure Add_Class
-     (Context : Entity_Id;
-      Name    : Name_Id;
-      Class   : Node_Id)
-   is
-      Entity : constant Entity_Id :=
-                 New_Entity (Name, Class_Entity, Context, Class, No_Entity);
-   begin
-      Entity_Table (Entity).Entity_Type := Entity;
-      Node_Table (Class).Entity := Entity;
-   end Add_Class;
-
-   ---------------
-   -- Get_Class --
-   ---------------
-
-   function Get_Class
-     (Context : Node_Id;
-      Name    : Name_Id)
-      return Node_Id
-   is (No_Node);
-
-   ----------------------
-   -- Get_Local_Entity --
-   ----------------------
-
-   function Get_Local_Entity
-     (Context : Entity_Id;
-      Entity  : Entity_Id)
-      return Entity_Id
+   procedure Add_Constraint
+     (Formal     : in out Class_Entity_Record'Class;
+      Class      : Class_Entity)
    is
    begin
-      case Get_Kind (Entity) is
-         when Generic_Argument_Entity =>
-            if Get_Context (Entity) = Context then
-               return Entity;
-            else
-               declare
-                  Name : constant String :=
-                           Get_Link_Name (Get_Context (Entity))
-                           & "--formal--"
-                           & Get_Link_Name (Entity);
-                  Value : constant Entity_Id :=
-                            Find_Local_Entity (Context, Get_Name_Id (Name));
-               begin
-                  if Value = Undeclared_Entity then
-                     raise Constraint_Error with
-                       "expected to find an instantiation of "
-                       & Get_Description (Entity)
-                       & " in " & Get_Description (Context);
-                  end if;
-                  return Value;
-               end;
+      Formal.Constraints.Append (Class);
+   end Add_Constraint;
+
+   -----------------
+   -- Add_Feature --
+   -----------------
+
+   procedure Add_Feature
+     (Class   : in out Class_Entity_Record'Class;
+      Feature : not null access Ack.Features.Feature_Entity_Record'Class)
+   is
+   begin
+      Class.Class_Features.Append (Feature);
+   end Add_Feature;
+
+   ------------------------
+   -- Add_Generic_Formal --
+   ------------------------
+
+   procedure Add_Generic_Formal
+     (Class  : in out Class_Entity_Record'Class;
+      Formal : not null access Class_Entity_Record'Class)
+   is
+   begin
+      Class.Formal_Arguments.Append (Class_Entity (Formal));
+      Class.Generic_Class := True;
+   end Add_Generic_Formal;
+
+   ----------
+   -- Bind --
+   ----------
+
+   overriding procedure Bind
+     (Class : in out Class_Entity_Record)
+   is
+   begin
+      for Feature of Class.Class_Features loop
+         Class.Insert (Feature);
+      end loop;
+      for Inherited of Class.Inherited_Classes loop
+         for Feature of Inherited.Inherited_Class.Class_Features loop
+            if not Inherited.Redefined_Features.Contains (Feature) then
+               Class.Insert (Feature);
             end if;
+         end loop;
+      end loop;
+   end Bind;
 
-         when others =>
-            return Entity;
-      end case;
-   end Get_Local_Entity;
+   -----------------
+   -- Conforms_To --
+   -----------------
 
-   -----------------------
-   -- Instantiate_Class --
-   -----------------------
-
-   function Instantiate_Class
-     (Class   : Entity_Id;
-      Context : Entity_Id;
-      Actuals : Node_Id)
-      return Entity_Id
-   is
-      function Generic_Actuals_Name
-        (Current : List_Of_Nodes.Cursor)
-         return String;
-
-      --------------------------
-      -- Generic_Actuals_Name --
-      --------------------------
-
-      function Generic_Actuals_Name
-        (Current : List_Of_Nodes.Cursor)
-         return String
-      is
-      begin
-         if not List_Of_Nodes.Has_Element (Current) then
-            return "";
-         end if;
-
-         declare
-            Entity : constant Entity_Id :=
-                       Get_Entity (List_Of_Nodes.Element (Current));
-            Name   : constant String := To_String (Get_Name (Entity));
-            Rest   : constant String :=
-                       Generic_Actuals_Name
-                         (List_Of_Nodes.Next (Current));
-         begin
-            return "--" & Name & Rest;
-         end;
-      end Generic_Actuals_Name;
-
---        Formals_Node : constant Node_Id :=
---                         Formal_Generics
---                           (Class_Header
---                              (Get_Declaration (Class)));
-      List         : constant List_Id := Actual_Generics_List (Actuals);
-      Name         : constant String :=
-                       Get_Link_Name (Class)
-                       & Generic_Actuals_Name (List_Table (List).List.First);
-      Id           : constant Name_Id := Get_Name_Id (Name);
-      Result       : Entity_Id :=
-                       Find_Local_Entity (Context, Id);
-   begin
-      if Result = Undeclared_Entity then
-         Result := New_Entity
-           (Name        => Get_Name_Id (Name),
-            Kind        => Instantiated_Class_Entity,
-            Context     => Context,
-            Declaration => Actuals,
-            Entity_Type => Class);
-
-         declare
-            use List_Of_Nodes;
-            Formal_List : constant List_Id :=
-                            Formal_Generics_List
-                              (Formal_Generics
-                                 (Class_Header
-                                    (Get_Declaration (Class))));
-            Actual_List : constant List_Id :=
-                            Actual_Generics_List (Actuals);
-            Formal      : Cursor := List_Table (Formal_List).List.First;
-            Actual      : Cursor := List_Table (Actual_List).List.First;
-         begin
-            while Has_Element (Formal) and then Has_Element (Actual) loop
-               declare
-                  Actual_Entity : constant Entity_Id :=
-                                    Get_Entity (Element (Actual));
-                  Formal_Entity : constant Entity_Id :=
-                                    Get_Entity (Element (Formal));
-               begin
-                  Instantiate_Entity
-                    (Generic_Class  => Class,
-                     Concrete_Class => Context,
-                     Formal_Entity  => Formal_Entity,
-                     Actual_Entity  => Actual_Entity,
-                     Declaration    => Element (Actual));
-               end;
-               Next (Formal);
-               Next (Actual);
-            end loop;
-         end;
-
---           declare
---              procedure Add_Retyped_Child
---                (Child : Entity_Id);
---
---              -----------------------
---              -- Add_Retyped_Child --
---              -----------------------
---
---              procedure Add_Retyped_Child
---                (Child : Entity_Id)
---              is
---              begin
---                 Ada.Text_IO.Put_Line
---                   (Name & ": instantiating: "
---                    & Get_Description (Child));
---                 if Get_Kind (Child) in Feature_Entity_Kind then
---                    Entity_Table (Result).Children.Append (Child)
---                      (Instantiate_Feature
---                         (Child, Formals_Node, Actuals));
---                 end if;
---              end Add_Retyped_Child;
---
---           begin
---              Scan_Children (Class, Add_Retyped_Child'Access);
---           end;
-
-         Entity_Table (Result).Entity_Type := Result;
-         Entity_Table (Result).Instantiated_From := Class;
-      end if;
-      return Result;
-   end Instantiate_Class;
-
-   ---------------------
-   -- Is_Derived_From --
-   ---------------------
-
-   function Is_Derived_From
-     (Context    : Entity_Id;
-      Ancestor   : Entity_Id;
-      Descendent : Entity_Id)
+   overriding function Conforms_To
+     (Class : not null access Class_Entity_Record;
+      Other : not null access Root_Entity_Type'Class)
       return Boolean
    is
-      Tried : Entity_Id_Sets.Set;
+      Ancestor : constant Class_Entity :=
+                   (if Other.all in Class_Entity_Record'Class
+                    then Class_Entity (Other) else null);
 
-      function Try (Class : Entity_Id) return Boolean
-        with Pre => Get_Kind (Class) in Class_Entity_Kind;
-
-      Local_Ancestor   : constant Entity_Id :=
-                           Get_Local_Entity (Context, Ancestor);
-      Local_Descendent : constant Entity_Id :=
-                           Get_Local_Entity (Context, Descendent);
+      function Try (Current : Class_Entity) return Boolean;
 
       ---------
       -- Try --
       ---------
 
-      function Try (Class : Entity_Id) return Boolean is
+      function Try (Current : Class_Entity) return Boolean is
       begin
-         if Class = Local_Ancestor then
+         if Current = Ancestor then
             return True;
-         elsif Tried.Contains (Class) then
-            return False;
-         elsif Get_Kind (Class) = Generic_Argument_Entity then
-
-            return False;
          else
-            declare
-               Declaration  : constant Node_Id :=
-                                Get_Declaration (Class);
-               Inherit_Node : constant Node_Id :=
-                                (if Declaration = No_Node then No_Node
-                                 else Inheritance (Declaration));
-               Inherit_List : constant List_Id :=
-                                (if Inherit_Node = No_Node
-                                 then No_List
-                                 else Inherits (Inherit_Node));
-            begin
-               Tried.Insert (Class);
-               if Inherit_List /= No_List then
-                  for Parent_Node of List_Table (Inherit_List).List loop
-                     if Try (Get_Entity (Parent_Node)) then
-                        return True;
-                     end if;
-                  end loop;
+            for Inherited of Current.Inherited_Classes loop
+               if Try (Inherited.Inherited_Class) then
+                  return True;
                end if;
-               return False;
-            end;
+            end loop;
+            return False;
          end if;
       end Try;
 
    begin
-      return Ancestor = Descendent
-        or else Ancestor = Ack.Primitives.Any_Class
-        or else Descendent = Ack.Primitives.None_Class
-        or else (Get_Kind (Local_Ancestor) in Class_Entity_Kind
-                 and then Try (Local_Descendent));
-   end Is_Derived_From;
+      if Ancestor = null then
+         return False;
+      end if;
+
+      return Try (Class_Entity (Class));
+   end Conforms_To;
+
+   ----------------------
+   -- Detachable_Class --
+   ----------------------
+
+   function Detachable_Class
+     (From_Class : not null access Class_Entity_Record'Class)
+      return Class_Entity
+   is
+   begin
+      return Result : constant Class_Entity := new Class_Entity_Record do
+         Result.Detachable := True;
+         Result.Reference_Class := Class_Entity (From_Class);
+      end return;
+   end Detachable_Class;
+
+   -------------
+   -- Feature --
+   -------------
+
+   function Feature
+     (Class : Class_Entity_Record'Class;
+      Name  : Name_Id)
+      return Ack.Features.Feature_Entity
+   is
+   begin
+      return Ack.Features.Feature_Entity (Class.Get (Name));
+   end Feature;
+
+   ----------------------
+   -- Get_Class_Entity --
+   ----------------------
+
+   function Get_Class_Entity
+     (Node : Node_Id)
+      return Class_Entity
+   is
+   begin
+      return Class_Entity (Get_Entity (Node));
+   end Get_Class_Entity;
+
+   -------------------------
+   -- Get_Top_Level_Class --
+   -------------------------
+
+   function Get_Top_Level_Class
+     (Name : String)
+      return Class_Entity
+   is
+   begin
+      if Ack.Environment.Top_Level.Contains (Name) then
+         return Class_Entity (Ack.Environment.Top_Level.Get (Name));
+      else
+         return null;
+      end if;
+   end Get_Top_Level_Class;
+
+   -------------
+   -- Inherit --
+   -------------
+
+   procedure Inherit
+     (Class           : in out Class_Entity_Record'Class;
+      Inherited_Class : not null access Class_Entity_Record'Class)
+   is
+   begin
+      Class.Inherited_Classes.Append
+        ((Inherited_Class => Class_Entity (Inherited_Class),
+          others => <>));
+   end Inherit;
+
+   ---------------
+   -- New_Class --
+   ---------------
+
+   function New_Class
+     (Name        : Name_Id;
+      Context     : Class_Entity;
+      Declaration : Node_Id)
+      return Class_Entity
+   is
+   begin
+      return Result : constant Class_Entity := new Class_Entity_Record do
+         Result.Create
+           (Name, Declaration,
+            Parent_Environment => Ack.Environment.Top_Level,
+            Context            => Context);
+         Result.Reference_Class := Context;
+         Result.Top_Level := Context = null;
+      end return;
+   end New_Class;
+
+   ------------------------
+   -- New_Generic_Formal --
+   ------------------------
+
+   function New_Generic_Formal
+     (Name        : Name_Id;
+      Declaration : Node_Id)
+      return Class_Entity
+   is
+   begin
+      return Formal : constant Class_Entity :=
+        new Class_Entity_Record
+      do
+         Formal.Create (Name, Declaration, null, null);
+         Formal.Formal_Argument := True;
+      end return;
+   end New_Generic_Formal;
+
+   ----------------------------
+   -- New_Instantiated_Class --
+   ----------------------------
+
+   function New_Instantiated_Class
+     (Generic_Class   : Class_Entity;
+      Generic_Actuals : Array_Of_Classes;
+      Node            : Node_Id)
+      return Class_Entity
+   is
+   begin
+      return Result : constant Class_Entity := new Class_Entity_Record do
+         Result.Create
+           (Get_Name_Id (Generic_Class.Standard_Name), Node, null, null);
+         Result.Instantiated_Class := True;
+         Result.Reference_Class := Generic_Class;
+         for Actual of Generic_Actuals loop
+            Result.Actual_Arguments.Append (Actual);
+         end loop;
+      end return;
+   end New_Instantiated_Class;
+
+   --------------
+   -- Redefine --
+   --------------
+
+   procedure Redefine
+     (Class           : in out Class_Entity_Record'Class;
+      Inherited_Class : not null access Class_Entity_Record'Class;
+      Feature_Name    : Name_Id)
+   is
+   begin
+      for Inherited of Class.Inherited_Classes loop
+         if Inherited.Inherited_Class = Inherited_Class then
+            Inherited.Redefined_Features.Append
+              (Inherited_Class.Feature (Feature_Name));
+            exit;
+         end if;
+      end loop;
+   end Redefine;
+
+   ------------
+   -- Rename --
+   ------------
+
+   procedure Rename
+     (Class            : in out Class_Entity_Record'Class;
+      Inherited_Class  : not null access Class_Entity_Record'Class;
+      Feature_Name     : Name_Id;
+      New_Feature_Name : Name_Id)
+   is
+   begin
+      for Inherited of Class.Inherited_Classes loop
+         if Inherited.Inherited_Class = Inherited_Class then
+            Inherited.Renamed_Features.Append
+              ((Feature_Name, New_Feature_Name));
+            exit;
+         end if;
+      end loop;
+   end Rename;
+
+   -------------------
+   -- Scan_Features --
+   -------------------
+
+   procedure Scan_Features
+     (Class : Class_Entity_Record'Class;
+      Process : not null access
+        procedure (Feature : not null access constant
+                     Ack.Features.Feature_Entity_Record'Class))
+   is
+      function Always (Feature : not null access constant
+                         Ack.Features.Feature_Entity_Record'Class)
+                       return Boolean
+      is (True);
+
+   begin
+      Class.Scan_Features (Always'Access, Process);
+   end Scan_Features;
+
+   -------------------
+   -- Scan_Features --
+   -------------------
+
+   procedure Scan_Features
+     (Class   : Class_Entity_Record'Class;
+      Test    : not null access
+        function (Feature : not null access constant
+                    Ack.Features.Feature_Entity_Record'Class)
+          return Boolean;
+      Process : not null access
+        procedure (Feature : not null access constant
+                     Ack.Features.Feature_Entity_Record'Class))
+   is
+   begin
+      for Feature of Class.Class_Features loop
+         if Test (Feature) then
+            Process (Feature);
+         end if;
+      end loop;
+   end Scan_Features;
 
 end Ack.Classes;

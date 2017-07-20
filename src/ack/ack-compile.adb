@@ -6,6 +6,8 @@ with Ack.Parser;
 with Ack.Semantic;
 with Ack.Generate;
 
+with Ack.Features;
+
 with Ack.Errors;
 
 with Aquarius.Loader;
@@ -32,13 +34,14 @@ package body Ack.Compile is
    -------------------
 
    procedure Compile_Class
-     (Source_Path : String;
-      To_Image    : Aqua.Images.Image_Type;
+     (Source_Path      : String;
+      To_Image         : Aqua.Images.Image_Type;
       Feature_Callback : access
-        procedure (Class        : Entity_Id;
+        procedure (Class        : not null access constant
+                     Ack.Classes.Class_Entity_Record'Class;
                    Feature_Name : String;
                    Child_Name   : String;
-                   Child_Type   : Entity_Id))
+                   Child_Type   : Entity_Type))
    is
       Base_Name : constant String :=
                     Ada.Directories.Base_Name (Source_Path);
@@ -52,7 +55,7 @@ package body Ack.Compile is
                exit when Ack.Errors.Has_Errors;
                declare
                   Key : constant String :=
-                          Get_File_Name (Get_Entity (Partial_Class));
+                          Get_Entity (Partial_Class).Base_File_Name;
                begin
                   if not Class_Object_Paths.Contains (Key) then
                      declare
@@ -77,27 +80,26 @@ package body Ack.Compile is
         and then Loaded_Classes.Contains (Base_Name)
       then
          declare
-            Class : constant Real_Entity_Id :=
-                      Get_Entity (Loaded_Classes.Element (Base_Name));
+            Class : constant Ack.Classes.Class_Entity :=
+                      Ack.Classes.Get_Class_Entity
+                        (Loaded_Classes.Element (Base_Name));
 
-            function OK (Entity : Entity_Id) return Boolean
-            is (Get_Kind (Entity) = Routine_Feature_Entity);
-
-            procedure Call (Feature : Entity_Id);
+            procedure Call (Feature : not null access constant
+                              Ack.Features.Feature_Entity_Record'Class);
 
             ----------
             -- Call --
             ----------
 
-            procedure Call (Feature : Entity_Id) is
+            procedure Call (Feature : not null access constant
+                              Ack.Features.Feature_Entity_Record'Class) is
             begin
                Feature_Callback
-                 (Class, To_Standard_String (Get_Name (Feature)),
-                  "", No_Entity);
+                 (Class, Feature.Standard_Name, "", null);
             end Call;
 
          begin
-            Scan_Children (Class, OK'Access, Call'Access);
+            Class.Scan_Features (Call'Access);
          end;
       end if;
 

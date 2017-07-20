@@ -1,0 +1,20 @@
+class Options.Checks.Qualified_Identifier
+feature
+
+   Identifiers : String_List
+
+   After_Identifier (Id : String)
+      do
+         Identifiers.Append (Id)
+      end
+      
+   Ada_Name : String
+      do
+         Result := Identifiers.Interpolate (".")
+      end
+      
+   Base_File_Name : String
+      do
+         Result := Identifiers.Interpolate ("-").To_Lower
+      end
+end

@@ -1,0 +1,22 @@
+class Options.Checks.Package_Declaration
+feature
+
+   Entries : List[Options.Entry]
+
+   Specification_File_Name : String
+   Body_File_Name          : String
+   Package_Name            : String
+
+   After_Qualified_Identifier (Child : Options.Checks.Qualified_Identifier) 
+      do
+         Specification_File_Name := Child.Base_File_Name & ".ads"
+         Body_File_Name          := Child.Base_File_Name & ".adb"
+         Package_Name            := Child.Ada_Name
+      end
+   
+   After_List_Of_Declarations (Child : Options.Checks.List_Of_Declarations)
+      do
+         Entries := Child.Option_Entry_List
+      end
+      
+end

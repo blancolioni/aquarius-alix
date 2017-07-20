@@ -38,7 +38,7 @@ package body Ack.Errors is
               & To_String (Get_Name (Node));
          when E_Redefined_Name =>
             return "redefinition of "
-              & Get_Description (Get_Entity (Node));
+              & Get_Entity (Node).Description;
          when E_No_Child               =>
             return "child class not found";
          when E_No_Component           =>
@@ -53,17 +53,17 @@ package body Ack.Errors is
             return "routine can have only one name";
          when E_Type_Error             =>
             return "expected type derived from "
-              & Get_Description
-              (Get_Error_Entity (Node))
+              & Get_Error_Entity (Node).Description
               & " but found "
-              & Get_Description
-                 (Get_Type (Get_Entity (Node)));
+              & Get_Entity (Node).Description;
          when E_Insufficient_Arguments =>
             return "not enough arguments";
          when E_Ignored_Return_Value =>
             return "cannot ignore return value of routine";
          when E_Too_Many_Arguments =>
             return "too many arguments";
+         when E_Does_Not_Accept_Arguments =>
+            return "entity does not accept arguments";
       end case;
    end Error_Message;
 
