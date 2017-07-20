@@ -34,6 +34,23 @@ package Ack.Classes is
       Feature_Name     : Name_Id;
       New_Feature_Name : Name_Id);
 
+   function Is_Rename
+     (Class        : Class_Entity_Record'Class;
+      Feature_Name : Name_Id)
+      return Boolean;
+
+   function Is_Redefinition
+     (Class : Class_Entity_Record'Class;
+      Feature_Name : Name_Id)
+      return Boolean;
+
+   procedure Scan_Old_Definitions
+     (Class : Class_Entity_Record'Class;
+      Feature_Name : Name_Id;
+      Process      : not null access
+        procedure (Feature : not null access constant
+                     Ack.Features.Feature_Entity_Record'Class));
+
    overriding procedure Bind
      (Class : in out Class_Entity_Record);
 
@@ -41,6 +58,13 @@ package Ack.Classes is
      (Class : Class_Entity_Record'Class;
       Name  : Name_Id)
       return Ack.Features.Feature_Entity;
+
+   procedure Scan_Ancestors
+     (Class            : not null access constant Class_Entity_Record'Class;
+      Proper_Ancestors : Boolean;
+      Process          : not null access
+        procedure (Ancestor : not null access constant
+                     Class_Entity_Record'Class));
 
    procedure Scan_Features
      (Class : Class_Entity_Record'Class;
