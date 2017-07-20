@@ -1,0 +1,38 @@
+deferred class Aqua.Containers.Forward_Iterator [Element]
+   inherit Cell [Element]
+   
+feature
+
+   Next
+      require
+         not Off_Right
+         
+      deferred
+      
+      ensure
+         Next_Of_Last_Element: old At_End implies Off_End
+      end
+      
+   At_Start : Boolean
+      deferred
+      ensure
+         Result implies not Off_End
+      end
+      
+   At_End : Boolean
+      deferred
+      ensure
+         Result implies not Off_End
+      end
+      
+   Off_End : Boolean
+      deferred
+      ensure
+         Result implies not (At_Start or At_End)
+      end
+
+invariant
+   Consistent_Properties:
+      (At_Start or At_End) implies not Off_End
+      
+end

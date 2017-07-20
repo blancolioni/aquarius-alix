@@ -2,7 +2,7 @@ class Options.Checks.List_Of_Declarations
 
 feature
 
-   Option_Entry_List : List [Options.Entry]
+   Option_Entry_List : Aqua.Containers.Linked_List [Options.Entry]
    
    After_Declaration (Child : Options.Checks.Declaration) 
       do

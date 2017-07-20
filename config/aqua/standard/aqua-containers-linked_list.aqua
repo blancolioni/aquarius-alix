@@ -1,6 +1,8 @@
-class List[G]
-
-feature{None}
+class Aqua.Containers.Linked_List[G]
+   inherit Forward_Iterable[G]
+              redefine First end
+   
+feature{Aqua.Containers.Linked_List_Iterator}
 
    First_Cell : detachable Linkable[G]
    Last_Cell  : detachable Linkable[G]
@@ -14,6 +16,11 @@ feature
          Result = (First_Cell = Void)
       end
 
+   First : Linked_List_Iterator[G]
+      do
+         create Result.Make (Current)
+      end
+      
    First_Element : G
       require
          not Is_Empty

@@ -1,0 +1,28 @@
+class Aqua.Containers.Linkable[G]
+
+inherit
+
+   Cell[G]
+   
+feature
+
+   Next : detachable Linkable[G]
+   
+feature
+
+   Put_Next (Other : G)
+      do
+         create Next
+         Next.Put (Other)
+      ensure
+         Have_Next: Next /= Void
+         Chained: Next.Item = Other
+      end
+      
+   Remove_Next
+      do
+         Next := Void
+      ensure
+         Not_Chained: Next = Void
+      end
+      
