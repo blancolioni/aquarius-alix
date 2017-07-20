@@ -1,0 +1,40 @@
+class Aqua.Containers.Linked_List_Iterator [Element] inherit
+   Forward_Iterator[Element]
+      redefine Next, At_Start, At_End, Off_Right end
+         
+   create
+      Make
+      
+feature{Aqua.Containers.Linked_List}
+
+   Make (List : Linked_List) 
+      do
+        Current_Linkable := List.First_Cell
+      end
+   
+feature
+
+   Next
+      do
+         Current_Linkable := Current_Linkable.Next
+      end
+
+   At_Start : Boolean
+      do
+         Result := Current_Linkable /= Void and then Current_Linkable = List.First_Cell
+      end
+      
+   At_End : Boolean
+      do
+         Result := Current_Linkable /= Void and then Current_Linkable = List.Last_Cell
+      end
+      
+   Off_End : Boolean
+      do
+         Result := Current_Linkable = Void
+      end
+   
+feature{None}
+
+   Current_Linkable : detachable Linkable[Element]
+   

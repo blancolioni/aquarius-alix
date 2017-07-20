@@ -12,7 +12,7 @@ feature
       external "aqua"
       alias "tree__parent"
       
-   Children : Array [Aquarius.Trees.Program_Tree]
+   Children : Aqua.Containers.Array [Aquarius.Trees.Program_Tree]
    Has_Child (Name : String) : Boolean
       do
          

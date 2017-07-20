@@ -1,8 +1,9 @@
-class Array[T]
+class Aqua.Containers.Array[T]
 
 feature
 
-   Entry (Index : Integer) : T
+   Item (Index : Integer) : T
+      external "aqua" alias "array.get"
 
    Lower, Upper : Integer
 

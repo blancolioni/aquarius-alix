@@ -8,5 +8,5 @@ feature
       do
          Item := V
       ensure
-         Item_Inserted: Item = V
+         Item_Put: Item = V
       end
