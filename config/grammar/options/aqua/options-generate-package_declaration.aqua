@@ -1,0 +1,23 @@
+class Options.Generate.Package_Declaration
+   inherit Aqua.Text_IO
+   
+feature
+
+   Node    : Options.Checks.Package_Declaration
+   
+   Before_Node
+      do
+         Put ("generating: ")
+         Put (Node.Identifier.Text)
+         New_Line
+         Set_Output (Node.Specification_File_Name & ".ads")
+         Put_Line ("package " & Node.Package_Name & " is")
+         New_Line
+         across Node.Entries as Entry loop
+            Put_Line ("   function " & Entry.Name & " return " & Entry.Type_Name & ";")
+         end
+         New_Line
+         Put_Line ("end " & Node.Package_Name & ";")
+         Set_Output ("")
+      end      
+end

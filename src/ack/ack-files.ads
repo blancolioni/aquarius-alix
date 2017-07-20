@@ -1,10 +1,8 @@
 package Ack.Files is
 
-   function Base_File_Name (Class : Entity_Id) return String;
-
    function Find_Class_File
      (Referrer : Aquarius.Programs.Program_Tree;
-      Parent   : Entity_Id;
+      Parent   : not null access constant Root_Entity_Type'Class;
       Name     : Name_Id)
       return String;
 

@@ -1,4 +1,3 @@
-with Ada.Characters.Handling;
 with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 
 with Ada.Directories;
@@ -12,52 +11,18 @@ package body Ack.Files is
 
    Class_Path : String_Lists.List;
 
-   function Base_File_Name
-     (Parent : Entity_Id;
-      Name   : Name_Id)
-      return String;
-
-   --------------------
-   -- Base_File_Name --
-   --------------------
-
-   function Base_File_Name
-     (Parent : Entity_Id;
-      Name   : Name_Id)
-      return String
-   is
-      File_Name : constant String :=
-                    Ada.Characters.Handling.To_Lower (To_String (Name));
-   begin
-      if Parent = No_Entity then
-         return File_Name;
-      else
-         return Base_File_Name (Get_Context (Parent), Get_Name (Parent))
-           & "-" & File_Name;
-      end if;
-   end Base_File_Name;
-
-   --------------------
-   -- Base_File_Name --
-   --------------------
-
-   function Base_File_Name (Class : Entity_Id) return String is
-   begin
-      return Base_File_Name (Get_Context (Class), Get_Name (Class));
-   end Base_File_Name;
-
    ---------------------
    -- Find_Class_File --
    ---------------------
 
    function Find_Class_File
      (Referrer : Aquarius.Programs.Program_Tree;
-      Parent   : Entity_Id;
+      Parent   : not null access constant Root_Entity_Type'Class;
       Name     : Name_Id)
       return String
    is
       File_Name : constant String :=
-                    Base_File_Name (Parent, Name) & ".aqua";
+                    Parent.Base_Child_File_Name (Name) & ".aqua";
    begin
       if Class_Path.Is_Empty then
          Class_Path.Append (Ada.Directories.Current_Directory);
@@ -82,10 +47,6 @@ package body Ack.Files is
             return Path & "/" & File_Name;
          end if;
       end loop;
-
---        Ada.Text_IO.Put_Line
---          (Ada.Text_IO.Standard_Error,
---           "Cannot find class file " & File_Name);
 
       return "";
 

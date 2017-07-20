@@ -1,5 +1,2 @@
 class String
-inherit Array[Character]
-feature
-  To_Lower : String;
-end String
+end

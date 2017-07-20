@@ -27,7 +27,6 @@ with Aquarius.Grammars.UI;
 
 with Ack.Errors;
 with Ack.IO;
-with Ack.Primitives;
 
 with Ack.Parser;
 with Ack.Semantic;
@@ -256,8 +255,6 @@ begin
                Aquarius.Grammars.Aqua_Gen.Generate (Grammar);
 
             elsif Command_Line.Action = "import-aqua" then
-
-               Ack.Primitives.Create_Primitives;
 
                declare
                   Node : constant Ack.Node_Id :=

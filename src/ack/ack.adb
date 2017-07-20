@@ -1,17 +1,4 @@
-with Ada.Containers.Ordered_Maps;
-
 package body Ack is
-
-   package Entity_Maps is
-     new Ada.Containers.Ordered_Maps
-       (Name_Id, Entity_Id);
-
-   Top_Level_Entities : Entity_Maps.Map;
-
-   function To_Lower_Case_String
-     (Name : Name_Id)
-      return String
-   is (Ada.Characters.Handling.To_Lower (To_String (Name)));
 
    ------------
    -- Append --
@@ -23,6 +10,39 @@ package body Ack is
    begin
       List_Table (List).List.Append (Node);
    end Append;
+
+   -----------------
+   -- Conforms_To --
+   -----------------
+
+   function Conforms_To
+     (Class : not null access Root_Entity_Type;
+      Other : not null access Root_Entity_Type'Class)
+      return Boolean
+   is
+   begin
+      return Root_Entity_Type'Class (Class.all)'Access = Other;
+   end Conforms_To;
+
+   --------------
+   -- Contains --
+   --------------
+
+   function Contains
+     (Table_Entity : Root_Entity_Type;
+      Name         : String;
+      Recursive    : Boolean := True)
+      return Boolean
+   is
+   begin
+      if Table_Entity.Child_Map.Contains (Name) then
+         return True;
+      elsif Recursive and then Table_Entity.Parent_Environment /= null then
+         return Table_Entity.Parent_Environment.Contains (Name, Recursive);
+      else
+         return False;
+      end if;
+   end Contains;
 
    -------------------
    -- Contains_Name --
@@ -42,25 +62,25 @@ package body Ack is
       return False;
    end Contains_Name;
 
-   ---------------------------
-   -- Create_Current_Entity --
-   ---------------------------
+   ------------
+   -- Create --
+   ------------
 
-   procedure Create_Current_Entity
-     (Class       : Entity_Id;
-      Feature     : Node_Id;
-      Table       : Entity_Id)
+   procedure Create
+     (Entity             : in out Root_Entity_Type'Class;
+      Name               : Name_Id;
+      Node               : Node_Id;
+      Parent_Environment : access Root_Entity_Type'Class := null;
+      Context            : access Root_Entity_Type'Class := null)
    is
-      Current : constant Entity_Id :=
-                  New_Entity
-                    (Name        => Get_Name_Id ("current"),
-                     Kind        => Argument_Entity,
-                     Context     => Table,
-                     Declaration => Feature,
-                     Entity_Type => Class);
    begin
-      pragma Unreferenced (Current);
-   end Create_Current_Entity;
+      Entity.Name := +(To_Standard_String (Name));
+      Entity.Source_Name := +(To_String (Name));
+      Entity.Declaration_Node := Node;
+      Entity.Value_Type := null;
+      Entity.Parent_Environment := Entity_Type (Parent_Environment);
+      Entity.Declaration_Context := Entity_Type (Context);
+   end Create;
 
    ----------------------
    -- Depth_First_Scan --
@@ -105,70 +125,12 @@ package body Ack is
    procedure Error
      (Node   : Node_Id;
       Kind   : Error_Kind;
-      Entity : Entity_Id := No_Entity)
+      Entity : Entity_Type := null)
    is
    begin
       Node_Table (Node).Error := Kind;
       Node_Table (Node).Error_Entity := Entity;
    end Error;
-
-   -----------------
-   -- Find_Entity --
-   -----------------
-
-   function Find_Entity
-     (Context : Entity_Id;
-      Name    : Name_Id)
-      return Entity_Id
-   is
-      Result : constant Entity_Id := Find_Local_Entity (Context, Name);
-   begin
-      if Result = Undeclared_Entity
-        and then Context /= No_Entity
-      then
-         return Find_Entity (Entity_Table (Context).Context, Name);
-      else
-         return Result;
-      end if;
-   end Find_Entity;
-
-   -----------------------
-   -- Find_Local_Entity --
-   -----------------------
-
-   function Find_Local_Entity
-     (Context : Entity_Id;
-      Name    : Name_Id)
-      return Entity_Id
-   is
-   begin
-      if Context = No_Entity then
-         declare
-            Position : constant Entity_Maps.Cursor :=
-                         Top_Level_Entities.Find (Name);
-         begin
-            if Entity_Maps.Has_Element (Position) then
-               return Entity_Maps.Element (Position);
-            else
-               return Undeclared_Entity;
-            end if;
-         end;
-      elsif Get_Kind (Context) = Instantiated_Class_Entity then
-         return Find_Local_Entity
-           (Entity_Table (Context).Instantiated_From, Name);
-      else
-         declare
-            Entity_Rec : Entity_Record renames Entity_Table (Context);
-         begin
-            for Item of Entity_Rec.Children loop
-               if Get_Name (Item) = Name then
-                  return Item;
-               end if;
-            end loop;
-         end;
-         return Undeclared_Entity;
-      end if;
-   end Find_Local_Entity;
 
    ------------------
    -- Find_Name_Id --
@@ -186,95 +148,22 @@ package body Ack is
       end if;
    end Find_Name_Id;
 
-   ---------------------
-   -- Get_Description --
-   ---------------------
+   ---------
+   -- Get --
+   ---------
 
-   function Get_Description (Entity : Entity_Id) return String is
-   begin
-      if Entity = No_Entity then
-         return "(no entity)";
-      end if;
-      return To_String (Get_Name (Entity))
-        & (case Get_Kind (Entity) is
-              when Class_Entity =>
-                 " (a class)",
-              when Instantiated_Class_Entity =>
-                 " (an instantiated class)",
-              when Generic_Argument_Entity   =>
-                 " (a generic argument)",
-              when Routine_Feature_Entity    =>
-                 " (a routine)",
-              when Property_Feature_Entity   =>
-                 " (a property)",
-              when Argument_Entity           =>
-                 " (a feature argument)",
-              when Result_Entity             =>
-                 " (the feature result)",
-              when Local_Entity              =>
-                 " (a local entity)",
-              when Table_Entity              =>
-                 raise Constraint_Error with "can't describe table")
-            & (if Get_Context (Entity) = No_Entity
-               then ""
-               else " defined in "
-               & To_String (Get_Name (Get_Context (Entity))));
-   end Get_Description;
-
-   -------------------
-   -- Get_File_Name --
-   -------------------
-
-   function Get_File_Name (Entity : Entity_Id) return String is
-      Local_Name : constant String :=
-                     To_Lower_Case_String (Get_Name (Entity));
-   begin
-      if Get_Context (Entity) = No_Entity then
-         return Local_Name;
-      else
-         return Get_File_Name (Get_Defined_In (Entity)) & "-" & Local_Name;
-      end if;
-   end Get_File_Name;
-
-   -------------------------------
-   -- Get_Formal_Arguments_Node --
-   -------------------------------
-
-   function Get_Formal_Arguments_Node
-     (Entity : Entity_Id)
-      return Node_Id
+   function Get
+     (Table_Entity : Root_Entity_Type;
+      Name         : String)
+      return Entity_Type
    is
-      Ancestor : constant Entity_Id := Get_Original_Ancestor (Entity);
-      Declaration : constant Node_Id := Get_Declaration (Ancestor);
    begin
-      if Declaration /= No_Node then
-         declare
-            Dec_Body : constant Node_Id :=
-                         Declaration_Body (Declaration);
-            Formals     : constant Node_Id :=
-                            Formal_Arguments (Dec_Body);
-         begin
-            return Formals;
-         end;
+      if Table_Entity.Child_Map.Contains (Name) then
+         return Table_Entity.Child_Map.Element (Name);
       else
-         return No_Node;
+         return Table_Entity.Parent_Environment.Get (Name);
       end if;
-   end Get_Formal_Arguments_Node;
-
-   -------------------
-   -- Get_Link_Name --
-   -------------------
-
-   function Get_Link_Name (Entity : Entity_Id) return String is
-      Local_Name : constant String :=
-                     To_Lower_Case_String (Get_Name (Entity));
-   begin
-      if Get_Context (Entity) = No_Entity then
-         return Local_Name;
-      else
-         return Get_Link_Name (Get_Defined_In (Entity)) & "__" & Local_Name;
-      end if;
-   end Get_Link_Name;
+   end Get;
 
    -----------------
    -- Get_Name_Id --
@@ -294,175 +183,19 @@ package body Ack is
       end if;
    end Get_Name_Id;
 
-   ---------------------------
-   -- Get_Original_Ancestor --
-   ---------------------------
+   ------------
+   -- Insert --
+   ------------
 
-   function Get_Original_Ancestor (Feature : Entity_Id) return Entity_Id is
-      Inherited : constant Entity_Id :=
-                    Entity_Table.Element (Feature).Inherited_From;
-   begin
-      if Inherited = No_Entity then
-         return Feature;
-      else
-         return Get_Original_Ancestor (Inherited);
-      end if;
-   end Get_Original_Ancestor;
-
-   --------------------
-   -- Inherit_Entity --
-   --------------------
-
-   procedure Inherit_Entity
-     (Entity        : Entity_Id;
-      Derived_Class : Entity_Id;
-      Declaration   : Node_Id;
-      Redefine      : Boolean;
-      Rename        : Name_Id)
+   procedure Insert
+     (Table_Entity : in out Root_Entity_Type'Class;
+      Entity       : not null access Root_Entity_Type'Class)
    is
-      Result : constant Entity_Id :=
-                 New_Entity
-                   (Name        => (if Rename = No_Name
-                                    then Get_Name (Entity)
-                                    else Rename),
-                    Kind        => Get_Kind (Entity),
-                    Context     => Derived_Class,
-                    Declaration => Declaration,
-                    Entity_Type => Get_Type (Entity));
    begin
-      Entity_Table (Result).Redefine := Redefine;
-      Entity_Table (Result).Inherited_From := Entity;
-
-      Entity_Table (Result).Defined_In :=
-        (if Redefine then Derived_Class else Get_Defined_In (Entity));
-   end Inherit_Entity;
-
-   ------------------------
-   -- Instantiate_Entity --
-   ------------------------
-
-   procedure Instantiate_Entity
-     (Generic_Class  : Entity_Id;
-      Concrete_Class : Entity_Id;
-      Formal_Entity  : Entity_Id;
-      Actual_Entity  : Entity_Id;
-      Declaration    : Node_Id)
-   is
-      pragma Unreferenced (Declaration);
-      New_Rec  : Entity_Record := Entity_Table (Actual_Entity);
-      New_Name : constant String :=
-                   Get_Link_Name (Generic_Class) & "--formal--"
-                 & Get_Link_Name (Formal_Entity);
-   begin
-      New_Rec.Name := Get_Name_Id (New_Name);
-      New_Rec.Instantiated_From := Actual_Entity;
-      Entity_Table.Append (New_Rec);
-      Entity_Table (Concrete_Class).Children.Append (Entity_Table.Last_Index);
-   end Instantiate_Entity;
-
-   ----------------
-   -- New_Entity --
-   ----------------
-
-   function New_Entity
-     (Name        : Name_Id;
-      Kind        : Entity_Kind;
-      Context     : Entity_Id;
-      Declaration : Node_Id;
-      Entity_Type : Entity_Id)
-      return Entity_Id
-   is
-      Existing        : constant Entity_Id :=
-                          Find_Local_Entity (Context, Name);
-      Virtual_Offset  : Natural := 0;
-      Property_Offset : Natural := 0;
-      Argument_Offset : Positive := 1;
-      Local_Offset    : Positive := 1;
-   begin
-
-      if Existing /= No_Entity and then Existing /= Undeclared_Entity then
-         if Entity_Table.Element (Existing).Redefine then
-            if Get_Type (Existing) /= Entity_Type then
-               Error (Declaration, E_Type_Error, Get_Type (Existing));
-               --  FIXME: check arguments
-            end if;
-            Entity_Table.Replace_Element
-              (Existing,
-               (Entity_Table.Element (Existing) with delta
-                  Redefine => False,
-                  Entity_Type => Entity_Type,
-                  Declaration => Declaration));
-            return Existing;
-         else
-            Error (Declaration, E_Redefined_Name, Existing);
-         end if;
-      end if;
-
-      if Context /= No_Entity then
-         declare
-            Context_Rec : Entity_Record renames Entity_Table (Context);
-         begin
-            case Kind is
-               when Routine_Feature_Entity =>
-                  Context_Rec.Virtual_Offset := Context_Rec.Virtual_Offset + 1;
-                  Virtual_Offset := Context_Rec.Virtual_Offset;
-               when Property_Feature_Entity =>
-                  Context_Rec.Property_Offset :=
-                    Context_Rec.Property_Offset + 1;
-                  Property_Offset := Context_Rec.Property_Offset;
-               when Argument_Entity =>
-                  if Name = Get_Name_Id ("current") then
-                     Argument_Offset := 1;
-                  else
-                     Context_Rec.Argument_Offset :=
-                       Context_Rec.Argument_Offset + 1;
-                     Argument_Offset := Context_Rec.Argument_Offset;
-                  end if;
-               when Local_Entity =>
-                  Context_Rec.Local_Offset :=
-                    Context_Rec.Local_Offset + 1;
-                  Local_Offset := Context_Rec.Local_Offset;
-               when Result_Entity =>
-                  null;
-               when Class_Entity | Instantiated_Class_Entity =>
-                  null;
-               when Table_Entity =>
-                  null;
-               when Generic_Argument_Entity =>
-                  null;
-            end case;
-         end;
-      end if;
-
-      return Entity : constant Entity_Id := Entity_Table.Last_Index + 1 do
-         Entity_Table.Append
-           (Entity_Record'
-              (Redefine          => False,
-               Name              => Name,
-               Kind              => Kind,
-               Context           => Context,
-               Defined_In        => Context,
-               Inherited_From    => No_Entity,
-               Instantiated_From => No_Entity,
-               Declaration       => Declaration,
-               Entity_Type       => Entity_Type,
-               Virtual_Offset    => Virtual_Offset,
-               Property_Offset   => Property_Offset,
-               Argument_Offset   => Argument_Offset,
-               Local_Offset      => Local_Offset,
-               Children          => <>));
-         if Context = No_Entity then
-            if Top_Level_Entities.Contains (Name) then
-               raise Constraint_Error with
-                 "redefined top level entity: " & To_String (Name);
-            end if;
-            Top_Level_Entities.Insert
-              (Name, Entity);
-         else
-            Entity_Table (Context).Children.Append (Entity);
-         end if;
-      end return;
-   end New_Entity;
+      Table_Entity.Child_Map.Insert
+        (-(Entity.Name), Entity_Type (Entity));
+      Table_Entity.Child_List.Append (Entity_Type (Entity));
+   end Insert;
 
    --------------
    -- New_List --
@@ -482,20 +215,20 @@ package body Ack is
    function New_Node
      (Kind     : Node_Kind;
       From     : Aquarius.Programs.Program_Tree;
-      Deferred : Boolean    := False;
-      Expanded : Boolean    := False;
-      Frozen   : Boolean    := False;
-      Defining : Boolean    := False;
-      Once     : Boolean    := False;
-      Field_1  : Node_Id    := No_Node;
-      Field_2  : Node_Id    := No_Node;
-      Field_3  : Node_Id    := No_Node;
-      Field_4  : Node_Id    := No_Node;
-      Field_5  : Node_Id    := No_Node;
-      Field_6  : Node_Id    := No_Node;
-      List     : List_Id    := No_List;
-      Name     : Name_Id    := No_Name;
-      Entity   : Entity_Id  := No_Entity)
+      Deferred : Boolean     := False;
+      Expanded : Boolean     := False;
+      Frozen   : Boolean     := False;
+      Defining : Boolean     := False;
+      Once     : Boolean     := False;
+      Field_1  : Node_Id     := No_Node;
+      Field_2  : Node_Id     := No_Node;
+      Field_3  : Node_Id     := No_Node;
+      Field_4  : Node_Id     := No_Node;
+      Field_5  : Node_Id     := No_Node;
+      Field_6  : Node_Id     := No_Node;
+      List     : List_Id     := No_List;
+      Name     : Name_Id     := No_Name;
+      Entity   : Entity_Type := null)
       return Node_Id
    is
    begin
@@ -515,46 +248,11 @@ package body Ack is
                List       => List,
                Name       => Name,
                Integer_Value => 0,
-               Entity     => Entity, Error_Entity => No_Entity,
-               Error      => E_No_Error));
+               Entity        => Entity,
+               Error_Entity  => null,
+               Error         => E_No_Error));
       end return;
    end New_Node;
-
-   -------------------------
-   -- New_Primitive_Class --
-   -------------------------
-
-   function New_Primitive_Class
-     (Name        : Name_Id)
-      return Entity_Id
-   is
-   begin
-      return Entity : constant Entity_Id := Entity_Table.Last_Index + 1 do
-         Entity_Table.Append
-           (Entity_Record'
-              (Redefine          => False,
-               Name              => Name,
-               Kind              => Class_Entity,
-               Context           => No_Entity,
-               Defined_In        => No_Entity,
-               Inherited_From    => No_Entity,
-               Instantiated_From => No_Entity,
-               Declaration       => No_Node,
-               Entity_Type       => Entity,
-               Virtual_Offset    => 0,
-               Property_Offset   => 0,
-               Argument_Offset   => 1,
-               Local_Offset      => 1,
-               Children          => <>));
-         if Top_Level_Entities.Contains (Name) then
-            raise Constraint_Error with
-              "redefined primitive top level entity: " & To_String (Name);
-         end if;
-
-         Top_Level_Entities.Insert
-           (Name, Entity);
-      end return;
-   end New_Primitive_Class;
 
    ----------
    -- Scan --
@@ -572,41 +270,6 @@ package body Ack is
          end loop;
       end if;
    end Scan;
-
-   -------------------
-   -- Scan_Children --
-   -------------------
-
-   procedure Scan_Children
-     (Entity  : Entity_Id;
-      Process : not null access
-        procedure (Child : Entity_Id))
-   is
-   begin
-      for Child of Entity_Table.Element (Entity).Children loop
-         Process (Child);
-      end loop;
-   end Scan_Children;
-
-   -------------------
-   -- Scan_Children --
-   -------------------
-
-   procedure Scan_Children
-     (Entity  : Entity_Id;
-      Test    : not null access
-        function (Child : Entity_Id)
-      return Boolean;
-      Process : not null access
-        procedure (Child : Entity_Id))
-   is
-   begin
-      for Child of Entity_Table.Element (Entity).Children loop
-         if Test (Child) then
-            Process (Child);
-         end if;
-      end loop;
-   end Scan_Children;
 
    ------------------------------
    -- Scan_Entity_Declarations --
@@ -688,11 +351,31 @@ package body Ack is
    ----------------
 
    procedure Set_Entity
-     (Node   : Real_Node_Id;
-      Entity : Entity_Id)
+     (Node : Real_Node_Id;
+      Entity : not null access Root_Entity_Type'Class)
    is
    begin
-      Node_Table (Node).Entity := Entity;
+      Node_Table (Node).Entity := Entity_Type (Entity);
    end Set_Entity;
+
+   --------------
+   -- To_Array --
+   --------------
+
+   function To_Array
+     (List : List_Id)
+      return Array_Of_Nodes
+   is
+      Length : constant Natural :=
+                 Natural (List_Table.Element (List).List.Length);
+      Count  : Natural := 0;
+   begin
+      return Result : Array_Of_Nodes (1 .. Length) do
+         for Node of List_Table.Element (List).List loop
+            Count := Count + 1;
+            Result (Count) := Node;
+         end loop;
+      end return;
+   end To_Array;
 
 end Ack;
