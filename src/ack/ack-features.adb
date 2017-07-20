@@ -135,71 +135,73 @@ package body Ack.Features is
                        (if Feature.Value_Type /= null
                         then 1 else 0);
    begin
-      Unit.Begin_Routine
-        (Name           => Feature.Link_Name,
-         Argument_Words => Arg_Count,
-         Frame_Words    => Frame_Count,
-         Result_Words   => Result_Count,
-         Global         => True);
+      if Feature.Routine then
+         Unit.Begin_Routine
+           (Name           => Feature.Link_Name,
+            Argument_Words => Arg_Count,
+            Frame_Words    => Frame_Count,
+            Result_Words   => Result_Count,
+            Global         => True);
 
-      if Feature.External then
-         declare
-            Object_Name : constant String := -Feature.External_Object;
-            Label       : constant String := -Feature.External_Label;
-         begin
-            if Object_Name = "" then
-               for I in reverse 1 .. Arg_Count loop
-                  Unit.Push_Argument
-                    (Tagatha.Argument_Offset (I));
-               end loop;
-               Unit.Call (Label);
-               for I in 1 .. Arg_Count loop
-                  Unit.Drop;
-               end loop;
+         if Feature.External then
+            declare
+               Object_Name : constant String := -Feature.External_Object;
+               Label       : constant String := -Feature.External_Label;
+            begin
+               if Object_Name = "" then
+                  for I in reverse 1 .. Arg_Count loop
+                     Unit.Push_Argument
+                       (Tagatha.Argument_Offset (I));
+                  end loop;
+                  Unit.Call (Label);
+                  for I in 1 .. Arg_Count loop
+                     Unit.Drop;
+                  end loop;
 
-               if Feature.Has_Result then
-                  Unit.Push_Register ("r0");
-                  Unit.Pop_Local (1);
+                  if Feature.Has_Result then
+                     Unit.Push_Register ("r0");
+                     Unit.Pop_Local (1);
+                  end if;
+
+               else
+
+                  for I in reverse 2 .. Arg_Count loop
+                     Unit.Push_Argument
+                       (Tagatha.Argument_Offset (I));
+                  end loop;
+
+                  Unit.Push_Operand
+                    (Tagatha.Operands.External_Operand
+                       (Object_Name, True),
+                     Tagatha.Default_Size);
+                  Unit.Pop_Register ("op");
+                  Unit.Native_Operation
+                    ("get_property " & Label & ","
+                     & Natural'Image (Arg_Count - 1),
+                     Input_Stack_Words  => 0,
+                     Output_Stack_Words => 0,
+                     Changed_Registers  => "pv");
+
+                  for I in 2 .. Arg_Count loop
+                     Unit.Drop;
+                  end loop;
+
+                  Unit.Push_Register ("pv");
+
                end if;
+            end;
+         else
+            Ack.Generate.Generate_Compound
+              (Unit, Compound (Effective_Routine (Feature.Routine_Node)));
+         end if;
 
-            else
+         if Feature.Has_Result then
+            Unit.Push_Local (1);
+            Unit.Pop_Result;
+         end if;
 
-               for I in reverse 2 .. Arg_Count loop
-                  Unit.Push_Argument
-                    (Tagatha.Argument_Offset (I));
-               end loop;
-
-               Unit.Push_Operand
-                 (Tagatha.Operands.External_Operand
-                    (Object_Name, True),
-                  Tagatha.Default_Size);
-               Unit.Pop_Register ("op");
-               Unit.Native_Operation
-                 ("get_property " & Label & ","
-                  & Natural'Image (Arg_Count - 1),
-                  Input_Stack_Words  => 0,
-                  Output_Stack_Words => 0,
-                  Changed_Registers  => "pv");
-
-               for I in 2 .. Arg_Count loop
-                  Unit.Drop;
-               end loop;
-
-               Unit.Push_Register ("pv");
-
-            end if;
-         end;
-      else
-         Ack.Generate.Generate_Compound
-           (Unit, Compound (Feature.Routine_Node));
+         Unit.End_Routine;
       end if;
-
-      if Feature.Has_Result then
-         Unit.Push_Local (1);
-         Unit.Pop_Result;
-      end if;
-
-      Unit.End_Routine;
    end Generate_Routine;
 
    --------------------------
@@ -288,6 +290,33 @@ package body Ack.Features is
            Locals              => <>,
            Routine_Node        => Routine_Node)
       do
+         if Class.Is_Redefinition (Name) then
+            declare
+               procedure Add_Original_Classes
+                 (Redefined_Feature : not null access constant
+                    Feature_Entity_Record'Class);
+
+               --------------------------
+               -- Add_Original_Classes --
+               --------------------------
+
+               procedure Add_Original_Classes
+                 (Redefined_Feature : not null access constant
+                    Feature_Entity_Record'Class)
+               is
+               begin
+                  for Original of Redefined_Feature.Original_Classes loop
+                     Feature.Original_Classes.Append (Original);
+                  end loop;
+               end Add_Original_Classes;
+
+            begin
+               Class.Scan_Old_Definitions (Name, Add_Original_Classes'Access);
+            end;
+         else
+            Feature.Original_Classes.Append (Class);
+         end if;
+
          Class.Add_Feature (Feature);
       end return;
    end New_Feature;
@@ -309,7 +338,7 @@ package body Ack.Features is
          Declaration_Node => Declaration,
          Class            => Class,
          Result_Type      => Property_Type,
-         Property         => False,
+         Property         => True,
          Has_Result       => False,
          Has_Current      => False);
    end New_Property_Feature;
@@ -322,6 +351,7 @@ package body Ack.Features is
      (Name          : Name_Id;
       Class         : not null access Ack.Classes.Class_Entity_Record'Class;
       Result_Type   : access Ack.Classes.Class_Entity_Record'Class;
+      Deferred      : Boolean;
       Declaration   : Node_Id;
       Routine       : Node_Id)
       return Feature_Entity
@@ -332,6 +362,7 @@ package body Ack.Features is
          Declaration_Node => Declaration,
          Class            => Class,
          Result_Type      => Result_Type,
+         Deferred         => Deferred,
          Routine          => True,
          Has_Result       => Result_Type /= null,
          Has_Current      => True,

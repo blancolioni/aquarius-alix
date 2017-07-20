@@ -1,21 +1,12 @@
-with Ada.Containers.Doubly_Linked_Lists;
---  with Ada.Strings.Fixed;
-
 with Tagatha.Operands;
 with Tagatha.Units;
 
 with Aquarius.Config_Paths;
 
---  with Ack.Files;
-
 with Ack.Classes;
 with Ack.Features;
 
 package body Ack.Generate is
-
-   package List_Of_Entities is
-     new Ada.Containers.Doubly_Linked_Lists
-       (Ack.Entity_Type);
 
    procedure Generate_Allocator
      (Unit  : in out Tagatha.Units.Tagatha_Unit;
@@ -50,8 +41,6 @@ package body Ack.Generate is
      (Unit  : in out Tagatha.Units.Tagatha_Unit;
       Class : not null access Ack.Classes.Class_Entity_Record'Class)
    is
-      Scanned : List_Of_Entities.List;
-
       procedure Set_Value
         (Feature : not null access constant
            Ack.Features.Feature_Entity_Record'Class);
@@ -59,10 +48,6 @@ package body Ack.Generate is
       procedure Generate_Local_Allocator
         (Ancestor_Class : not null access
            constant Ack.Classes.Class_Entity_Record'Class);
-
-      procedure Scan_Hierarchy
-        (Current : not null access constant
-           Ack.Classes.Class_Entity_Record'Class);
 
       ------------------------------
       -- Generate_Local_Allocator --
@@ -89,43 +74,6 @@ package body Ack.Generate is
          Unit.Native_Operation
            ("set_property " & Ancestor_Class.Link_Name);
       end Generate_Local_Allocator;
-
-      --------------------
-      -- Scan_Hierarchy --
-      --------------------
-
-      procedure Scan_Hierarchy
-        (Current : not null access constant
-           Ack.Classes.Class_Entity_Record'Class)
-      is
-
-         procedure Generate (Inherit : Node_Id);
-
-         --------------
-         -- Generate --
-         --------------
-
-         procedure Generate (Inherit : Node_Id) is
-         begin
-            Scan_Hierarchy (Ack.Classes.Get_Class_Entity (Inherit));
-         end Generate;
-
-      begin
-         if not Scanned.Contains (Current) then
-            Scanned.Append (Current);
-            Generate_Local_Allocator (Current);
-
-            declare
-               Inherited : constant Node_Id :=
-                             Inheritance
-                               (Current.Declaration_Node);
-            begin
-               if Inherited /= No_Node then
-                  Scan (Inherits (Inherited), Generate'Access);
-               end if;
-            end;
-         end if;
-      end Scan_Hierarchy;
 
       ---------------
       -- Set_Value --
@@ -158,8 +106,8 @@ package body Ack.Generate is
       Unit.Push_Register ("op");
       Unit.Push_Register ("op");
       Unit.Pop_Register ("agg");
-      Scan_Hierarchy (Class);
 
+      Class.Scan_Ancestors (True, Generate_Local_Allocator'Access);
       Class.Scan_Features (Set_Value'Access);
 
       Unit.Pop_Result;
@@ -521,16 +469,21 @@ package body Ack.Generate is
       for Element of List_Table (List).List loop
          Pending.Append (Element);
 
-         if Element = Last_Element
-           or else Actual_List (Element) /= No_Node
-         then
-            declare
-               Actual_List_Node : constant Node_Id :=
-                                    Actual_List (Element);
-               List             : constant List_Id :=
-                                    Node_Table (Actual_List_Node).List;
-            begin
-               Apply_Arguments (List, True);
+         declare
+            Actual_List_Node : constant Node_Id :=
+                                 Actual_List (Element);
+            Actual_List      : constant List_Id :=
+                                 (if Actual_List_Node /= No_Node
+                                  then Node_Table.Element
+                                    (Actual_List_Node).List
+                                  else No_List);
+         begin
+            if Element = Last_Element
+              or else Actual_List /= No_List
+            then
+               if Actual_List /= No_List then
+                  Apply_Arguments (Actual_List, True);
+               end if;
 
                for Item of Pending loop
                   Process (Item);
@@ -538,13 +491,15 @@ package body Ack.Generate is
 
                Unit.Pop_Register ("r0");
 
-               Apply_Arguments (List, False);
+               if Actual_List /= No_List then
+                  Apply_Arguments (Actual_List, False);
+               end if;
 
                Unit.Push_Register ("r0");
 
                Pending.Clear;
-            end;
-         end if;
+            end if;
+         end;
       end loop;
 
    end Generate_Precursor;

@@ -879,11 +879,13 @@ package body Ack.Parser is
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
    is
+      Feature_Body : constant Node_Id :=
+                       Import_Feature_Body
+                         (From.Program_Child ("feature_body"));
    begin
       return New_Node (N_Routine, From,
-                       Field_3 =>
-                         Import_Feature_Body
-                           (From.Program_Child ("feature_body")));
+                       Deferred => Feature_Body = No_Node,
+                       Field_3  => Feature_Body);
    end Import_Routine;
 
    ----------------------------

@@ -36,6 +36,7 @@ package body Ack.Classes is
    is
    begin
       Class.Formal_Arguments.Append (Class_Entity (Formal));
+      Class.Insert (Formal);
       Class.Generic_Class := True;
    end Add_Generic_Formal;
 
@@ -167,8 +168,59 @@ package body Ack.Classes is
    begin
       Class.Inherited_Classes.Append
         ((Inherited_Class => Class_Entity (Inherited_Class),
-          others => <>));
+          others          => <>));
    end Inherit;
+
+   ---------------------
+   -- Is_Redefinition --
+   ---------------------
+
+   function Is_Redefinition
+     (Class        : Class_Entity_Record'Class;
+      Feature_Name : Name_Id)
+      return Boolean
+   is
+   begin
+      for Inherited of Class.Inherited_Classes loop
+         declare
+            Local_Name : Name_Id := Feature_Name;
+         begin
+            for Rename of Inherited.Renamed_Features loop
+               if Rename.New_Name = Feature_Name then
+                  Local_Name := Rename.Old_Name;
+                  exit;
+               end if;
+            end loop;
+
+            for Feature of Inherited.Redefined_Features loop
+               if Get_Name_Id (Feature.Standard_Name) = Local_Name then
+                  return True;
+               end if;
+            end loop;
+         end;
+      end loop;
+      return False;
+   end Is_Redefinition;
+
+   ---------------
+   -- Is_Rename --
+   ---------------
+
+   function Is_Rename
+     (Class        : Class_Entity_Record'Class;
+      Feature_Name : Name_Id)
+      return Boolean
+   is
+   begin
+      for Inherited of Class.Inherited_Classes loop
+         for Rename of Inherited.Renamed_Features loop
+            if Rename.New_Name = Feature_Name then
+               return True;
+            end if;
+         end loop;
+      end loop;
+      return False;
+   end Is_Rename;
 
    ---------------
    -- New_Class --
@@ -270,6 +322,54 @@ package body Ack.Classes is
       end loop;
    end Rename;
 
+   --------------------
+   -- Scan_Ancestors --
+   --------------------
+
+   procedure Scan_Ancestors
+     (Class            : not null access constant Class_Entity_Record'Class;
+      Proper_Ancestors : Boolean;
+      Process          : not null access
+        procedure (Ancestor : not null access constant
+                     Class_Entity_Record'Class))
+   is
+      package Name_Sets is
+        new WL.String_Maps (Boolean);
+
+      Scanned : Name_Sets.Map;
+
+      procedure Scan
+        (Ancestor : not null access constant
+           Class_Entity_Record'Class);
+
+      ----------
+      -- Scan --
+      ----------
+
+      procedure Scan
+        (Ancestor : not null access constant
+           Class_Entity_Record'Class)
+      is
+      begin
+         for Inherited of Ancestor.Inherited_Classes loop
+            if not Scanned.Contains
+              (Inherited.Inherited_Class.Qualified_Name)
+            then
+               Scanned.Insert (Inherited.Inherited_Class.Qualified_Name, True);
+               Process (Inherited.Inherited_Class);
+               Scan (Inherited.Inherited_Class);
+            end if;
+         end loop;
+      end Scan;
+
+   begin
+      Scan (Class);
+
+      if not Proper_Ancestors then
+         Process (Class);
+      end if;
+   end Scan_Ancestors;
+
    -------------------
    -- Scan_Features --
    -------------------
@@ -310,5 +410,37 @@ package body Ack.Classes is
          end if;
       end loop;
    end Scan_Features;
+
+   --------------------------
+   -- Scan_Old_Definitions --
+   --------------------------
+
+   procedure Scan_Old_Definitions
+     (Class        : Class_Entity_Record'Class;
+      Feature_Name : Name_Id;
+      Process      : not null access
+        procedure (Feature : not null access constant
+                     Ack.Features.Feature_Entity_Record'Class))
+   is
+   begin
+      for Inherited of Class.Inherited_Classes loop
+         declare
+            Local_Name : Name_Id := Feature_Name;
+         begin
+            for Rename of Inherited.Renamed_Features loop
+               if Rename.New_Name = Feature_Name then
+                  Local_Name := Rename.Old_Name;
+                  exit;
+               end if;
+            end loop;
+
+            for Feature of Inherited.Redefined_Features loop
+               if Get_Name_Id (Feature.Standard_Name) = Local_Name then
+                  Process (Feature);
+               end if;
+            end loop;
+         end;
+      end loop;
+   end Scan_Old_Definitions;
 
 end Ack.Classes;

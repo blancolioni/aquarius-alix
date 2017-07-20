@@ -572,6 +572,10 @@ package body Ack.Semantic is
       Routine      : constant Boolean :=
                        Single and then
                            (Arg_Node /= No_Node or else Value_Node /= No_Node);
+      Deferred     : constant Boolean :=
+                       (if Value_Node /= No_Node
+                        then Node_Table.Element (Value_Node).Deferred
+                        else False);
    begin
 
       if Headers then
@@ -598,16 +602,37 @@ package body Ack.Semantic is
             use type Ack.Classes.Class_Entity;
             use type Ack.Features.Feature_Entity;
             Entity : Ack.Features.Feature_Entity;
+            Effective : constant Node_Id :=
+                          (if Value_Node = No_Node then No_Node
+                           else Effective_Routine (Value_Node));
          begin
             if Headers then
                if Routine then
-                  Entity :=
-                    Ack.Features.New_Routine_Feature
-                      (Name          => Get_Name (Feature_Name (Node)),
-                       Class         => Class,
-                       Result_Type   => Type_Entity,
-                       Declaration   => Node,
-                       Routine       => Value_Node);
+                  if not Deferred and then Kind (Effective) = N_External then
+                     Entity :=
+                       Ack.Features.New_External_Feature
+                         (Name           => Get_Name (Feature_Name (Node)),
+                          Class          => Class,
+                          External_Type  =>
+                            To_Standard_String (Get_Name (Effective)),
+                          External_Alias =>
+                            To_String (Get_Name (Feature_Alias (Effective))),
+                          Result_Type    => Type_Entity,
+                          Declaration    => Node);
+                  elsif Deferred or else Kind (Effective) = N_Internal then
+                     Entity :=
+                       Ack.Features.New_Routine_Feature
+                         (Name          => Get_Name (Feature_Name (Node)),
+                          Class         => Class,
+                          Result_Type   => Type_Entity,
+                          Deferred      => Deferred,
+                          Declaration   => Node,
+                          Routine       => Value_Node);
+                  else
+                     Ack.IO.Put_Line (Value_Node);
+                     raise Constraint_Error with "whoops, got that wrong";
+                  end if;
+
                elsif Type_Entity /= null then
                   Entity :=
                     Ack.Features.New_Property_Feature
@@ -863,11 +888,14 @@ package body Ack.Semantic is
       Container : not null access Root_Entity_Type'Class;
       Routine   : Node_Id)
    is
+      Effective : constant Node_Id := Effective_Routine (Routine);
    begin
-      Analyse_Effective_Routine
-        (Class     => Class,
-         Container => Container,
-         Routine   => Effective_Routine (Routine));
+      if Effective /= No_Node then
+         Analyse_Effective_Routine
+           (Class     => Class,
+            Container => Container,
+            Routine   => Effective_Routine (Routine));
+      end if;
    end Analyse_Routine;
 
    ------------------

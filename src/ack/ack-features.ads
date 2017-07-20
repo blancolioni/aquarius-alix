@@ -48,27 +48,28 @@ package Ack.Features is
    type Feature_Entity is access all Feature_Entity_Record'Class;
 
    function New_Property_Feature
-     (Name          : Name_Id;
-      Class         : not null access Ack.Classes.Class_Entity_Record'Class;
-      Property_Type : not null access Ack.Classes.Class_Entity_Record'Class;
-      Declaration   : Node_Id)
+     (Name            : Name_Id;
+      Class           : not null access Ack.Classes.Class_Entity_Record'Class;
+      Property_Type   : not null access Ack.Classes.Class_Entity_Record'Class;
+      Declaration     : Node_Id)
       return Feature_Entity;
 
    function New_Routine_Feature
-     (Name          : Name_Id;
-      Class         : not null access Ack.Classes.Class_Entity_Record'Class;
-      Result_Type   : access Ack.Classes.Class_Entity_Record'Class;
-      Declaration   : Node_Id;
-      Routine       : Node_Id)
+     (Name            : Name_Id;
+      Class           : not null access Ack.Classes.Class_Entity_Record'Class;
+      Result_Type     : access Ack.Classes.Class_Entity_Record'Class;
+      Deferred        : Boolean;
+      Declaration     : Node_Id;
+      Routine         : Node_Id)
       return Feature_Entity;
 
    function New_External_Feature
-     (Name           : Name_Id;
-      Class          : not null access Ack.Classes.Class_Entity_Record'Class;
-      External_Type  : String;
-      External_Alias : String;
-      Result_Type    : access Ack.Classes.Class_Entity_Record'Class;
-      Declaration    : Node_Id)
+     (Name            : Name_Id;
+      Class           : not null access Ack.Classes.Class_Entity_Record'Class;
+      External_Type   : String;
+      External_Alias  : String;
+      Result_Type     : access Ack.Classes.Class_Entity_Record'Class;
+      Declaration     : Node_Id)
       return Feature_Entity;
 
    function Is_Feature
