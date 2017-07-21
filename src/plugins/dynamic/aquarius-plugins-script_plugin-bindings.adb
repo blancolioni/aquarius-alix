@@ -460,7 +460,6 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
         (Directory_Entry : Ada.Directories.Directory_Entry_Type)
       is
       begin
-         Ack.Errors.Clear_Errors;
          Ack.Compile.Compile_Class
            (Ada.Directories.Full_Name (Directory_Entry), Image,
             Add_Feature_Binding'Access);
@@ -487,10 +486,12 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
 
       Ada.Text_IO.Close (Action_File);
 
-      Load_Action_File
-        (Full_Path => Action_File_Path,
-         Group     => Group,
-         Image     => Image);
+      if not Ack.Errors.Has_Errors then
+         Load_Action_File
+           (Full_Path => Action_File_Path,
+            Group     => Group,
+            Image     => Image);
+      end if;
 
    end Load_Ack_Binding;
 

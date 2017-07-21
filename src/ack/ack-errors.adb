@@ -39,6 +39,10 @@ package body Ack.Errors is
          when E_Redefined_Name =>
             return "redefinition of "
               & Get_Entity (Node).Description;
+         when E_Not_Defined_In =>
+            return To_String (Get_Name (Node))
+              & " is not defined in "
+              & Get_Error_Entity (Node).Description;
          when E_No_Child               =>
             return "child class not found";
          when E_No_Component           =>
@@ -52,10 +56,17 @@ package body Ack.Errors is
          when E_Id_List_With_Routine   =>
             return "routine can have only one name";
          when E_Type_Error             =>
-            return "expected type derived from "
-              & Get_Error_Entity (Node).Description
-              & " but found "
-              & Get_Entity (Node).Description;
+            declare
+               Value_Type : constant Entity_Type :=
+                              Get_Entity (Node).Value_Type;
+            begin
+               return "expected type derived from "
+                 & Get_Error_Entity (Node).Description
+                 & " but found "
+                 & Get_Entity (Node).Declared_Name
+                 & (if Value_Type = null then " with no type"
+                    else " of type " & Value_Type.Qualified_Name);
+            end;
          when E_Insufficient_Arguments =>
             return "not enough arguments";
          when E_Ignored_Return_Value =>
@@ -64,6 +75,8 @@ package body Ack.Errors is
             return "too many arguments";
          when E_Does_Not_Accept_Arguments =>
             return "entity does not accept arguments";
+         when E_Requires_Value =>
+            return "feature requires a body";
       end case;
    end Error_Message;
 

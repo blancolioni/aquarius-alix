@@ -10,6 +10,18 @@ package body Ack.Environment is
    is (To_Standard_String (Child_Name));
 
    Top_Level_Entity : aliased Top_Level_Entity_Record;
+   Initialised      : Boolean := False;
+
+   procedure Create_Top_Level;
+
+   ----------------------
+   -- Create_Top_Level --
+   ----------------------
+
+   procedure Create_Top_Level is
+   begin
+      Initialised := True;
+   end Create_Top_Level;
 
    ---------------
    -- Top_Level --
@@ -17,6 +29,9 @@ package body Ack.Environment is
 
    function Top_Level return Entity_Type is
    begin
+      if not Initialised then
+         Create_Top_Level;
+      end if;
       return Top_Level_Entity'Access;
    end Top_Level;
 

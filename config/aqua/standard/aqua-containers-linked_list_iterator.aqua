@@ -1,13 +1,13 @@
 class Aqua.Containers.Linked_List_Iterator [Element] inherit
    Forward_Iterator[Element]
-      redefine Next, At_Start, At_End, Off_Right end
+      redefine Next, At_Start, At_End, Off_End end
          
    create
       Make
       
 feature{Aqua.Containers.Linked_List}
 
-   Make (List : Linked_List) 
+   Make (List : Linked_List[Element]) 
       do
         Current_Linkable := List.First_Cell
       end

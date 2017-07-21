@@ -168,28 +168,30 @@ package body Ack.Compile is
 
          end if;
 
-         declare
-            use Ada.Directories, Ada.Calendar;
-            Object_Path : constant String :=
-                            Aquarius.Paths.Scratch_File
-                              (Base_Name & ".o32");
-         begin
-            if not Exists (Object_Path)
-              or else Modification_Time (Object_Path)
-              < Modification_Time (Source_Path)
-            then
-               Ada.Text_IO.Put_Line
-                 ("generating " & Base_Name);
-               Ack.Generate.Generate_Class_Declaration
-                 (Loaded_Classes.Element (Base_Name));
+         if not Ack.Errors.Has_Errors then
+            declare
+               use Ada.Directories, Ada.Calendar;
+               Object_Path : constant String :=
+                               Aquarius.Paths.Scratch_File
+                                 (Base_Name & ".o32");
+            begin
+               if not Exists (Object_Path)
+                 or else Modification_Time (Object_Path)
+                 < Modification_Time (Source_Path)
+               then
+                  Ada.Text_IO.Put_Line
+                    ("generating " & Base_Name);
+                  Ack.Generate.Generate_Class_Declaration
+                    (Loaded_Classes.Element (Base_Name));
 
-               Generate_Object_Code (Base_Name);
-            end if;
+                  Generate_Object_Code (Base_Name);
+               end if;
 
-            To_Image.Load (Base_Name & ".o32");
-            Class_Object_Paths.Insert (Base_Name, Object_Path);
+               To_Image.Load (Base_Name & ".o32");
+               Class_Object_Paths.Insert (Base_Name, Object_Path);
 
-         end;
+            end;
+         end if;
 
       end if;
 

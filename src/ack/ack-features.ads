@@ -3,6 +3,8 @@ with Tagatha.Units;
 private with Ada.Containers.Vectors;
 
 limited with Ack.Classes;
+limited with Ack.Types;
+
 private with Ack.Variables;
 
 package Ack.Features is
@@ -26,12 +28,12 @@ package Ack.Features is
    procedure Add_Argument
      (Feature   : in out Feature_Entity_Record'Class;
       Name_Node : in     Node_Id;
-      Arg_Type  : not null access Root_Entity_Type'Class);
+      Arg_Type  : not null access Ack.Types.Type_Entity_Record'Class);
 
    procedure Add_Local
      (Feature    : in out Feature_Entity_Record'Class;
       Name_Node  : in     Node_Id;
-      Local_Type : not null access Root_Entity_Type'Class);
+      Local_Type : not null access Ack.Types.Type_Entity_Record'Class);
 
    procedure Set_Default_Value
      (Feature : Feature_Entity_Record;
@@ -50,14 +52,14 @@ package Ack.Features is
    function New_Property_Feature
      (Name            : Name_Id;
       Class           : not null access Ack.Classes.Class_Entity_Record'Class;
-      Property_Type   : not null access Ack.Classes.Class_Entity_Record'Class;
+      Property_Type   : not null access Ack.Types.Type_Entity_Record'Class;
       Declaration     : Node_Id)
       return Feature_Entity;
 
    function New_Routine_Feature
      (Name            : Name_Id;
       Class           : not null access Ack.Classes.Class_Entity_Record'Class;
-      Result_Type     : access Ack.Classes.Class_Entity_Record'Class;
+      Result_Type     : access Ack.Types.Type_Entity_Record'Class;
       Deferred        : Boolean;
       Declaration     : Node_Id;
       Routine         : Node_Id)
@@ -68,7 +70,7 @@ package Ack.Features is
       Class           : not null access Ack.Classes.Class_Entity_Record'Class;
       External_Type   : String;
       External_Alias  : String;
-      Result_Type     : access Ack.Classes.Class_Entity_Record'Class;
+      Result_Type     : access Ack.Types.Type_Entity_Record'Class;
       Declaration     : Node_Id)
       return Feature_Entity;
 
@@ -97,7 +99,6 @@ private
          External_Label   : Ada.Strings.Unbounded.Unbounded_String;
          Original_Classes : List_Of_Entities.List;
          Definition_Class : access Ack.Classes.Class_Entity_Record'Class;
-         Result_Type      : access Ack.Classes.Class_Entity_Record'Class;
          Arguments        : Variable_Vectors.Vector;
          Locals           : Variable_Vectors.Vector;
          Routine_Node     : Node_Id;
@@ -113,6 +114,10 @@ private
       Index  : Positive)
       return Entity_Type
    is (Entity_Type (Entity.Arguments.Element (Index)));
+
+   overriding function Description
+     (Feature : Feature_Entity_Record)
+      return String;
 
    function Is_Feature
      (Entity : not null access constant Root_Entity_Type'Class)

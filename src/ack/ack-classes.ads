@@ -1,4 +1,5 @@
 with Ack.Features;
+limited with Ack.Types;
 
 package Ack.Classes is
 
@@ -6,14 +7,11 @@ package Ack.Classes is
      new Root_Entity_Type with private;
 
    type Class_Entity is access all Class_Entity_Record'Class;
+   type Constant_Class_Entity is access constant Class_Entity_Record'Class;
 
    function Class_Declaration_Context
      (Class : Class_Entity_Record'Class)
       return Class_Entity;
-
-   procedure Add_Constraint
-     (Formal : in out Class_Entity_Record'Class;
-      Class  : Class_Entity);
 
    procedure Add_Feature
      (Class : in out Class_Entity_Record'Class;
@@ -44,6 +42,15 @@ package Ack.Classes is
       Feature_Name : Name_Id)
       return Boolean;
 
+   function Generic_Formal_Count
+     (Class : Class_Entity_Record'Class)
+      return Natural;
+
+   function Generic_Formal
+     (Class : Class_Entity_Record'Class;
+      Index : Positive)
+      return access constant Ack.Types.Type_Entity_Record'Class;
+
    procedure Scan_Old_Definitions
      (Class : Class_Entity_Record'Class;
       Feature_Name : Name_Id;
@@ -54,10 +61,16 @@ package Ack.Classes is
    overriding procedure Bind
      (Class : in out Class_Entity_Record);
 
+   function Has_Feature
+     (Class : Class_Entity_Record'Class;
+      Name  : Name_Id)
+      return Boolean;
+
    function Feature
      (Class : Class_Entity_Record'Class;
       Name  : Name_Id)
-      return Ack.Features.Feature_Entity;
+      return Ack.Features.Feature_Entity
+     with Pre => Class.Has_Feature (Name);
 
    procedure Scan_Ancestors
      (Class            : not null access constant Class_Entity_Record'Class;
@@ -82,14 +95,9 @@ package Ack.Classes is
         procedure (Feature : not null access constant
                      Ack.Features.Feature_Entity_Record'Class));
 
-   function New_Generic_Formal
-     (Name        : Name_Id;
-      Declaration : Node_Id)
-      return Class_Entity;
-
    procedure Add_Generic_Formal
      (Class  : in out Class_Entity_Record'Class;
-      Formal : not null access Class_Entity_Record'Class);
+      Formal : not null access Ack.Types.Type_Entity_Record'Class);
 
    function New_Class
      (Name        : Name_Id;
@@ -97,24 +105,15 @@ package Ack.Classes is
       Declaration : Node_Id)
       return Class_Entity;
 
+   function Has_Class_Entity
+     (Node : Node_Id)
+      return Boolean;
+
    function Get_Class_Entity
      (Node : Node_Id)
       return Class_Entity
      with Pre => Kind (Node) in
-     N_Class_Declaration | N_Class_Header | N_Class_Name | N_Class_Type;
-
-   type Array_Of_Classes is
-     array (Positive range <>) of Class_Entity;
-
-   function Detachable_Class
-     (From_Class : not null access Class_Entity_Record'Class)
-      return Class_Entity;
-
-   function New_Instantiated_Class
-     (Generic_Class   : Class_Entity;
-      Generic_Actuals : Array_Of_Classes;
-      Node            : Node_Id)
-      return Class_Entity;
+     N_Class_Declaration | N_Class_Header | N_Class_Name;
 
    function Get_Top_Level_Class
      (Name : String)
@@ -151,48 +150,52 @@ private
    type Class_Entity_Record is
      new Root_Entity_Type with
       record
-         Generic_Class      : Boolean := False;
-         Instantiated_Class : Boolean := False;
-         Formal_Argument    : Boolean := False;
-         Detachable         : Boolean := False;
-         Deferred           : Boolean := False;
-         Expanded           : Boolean := False;
-         Frozen             : Boolean := False;
-         Anchored           : Boolean := False;
-         Top_Level          : Boolean := False;
-         Reference_Entity   : Entity_Type;
-         Reference_Class    : Class_Entity;
-         Constraints        : List_Of_Class_Entities.List;
-         Inherited_Classes  : List_Of_Inherited_Class_Records.List;
-         Class_Features     : List_Of_Feature_Entities.List;
-         Formal_Arguments   : List_Of_Class_Entities.List;
-         Actual_Arguments   : List_Of_Class_Entities.List;
+         Generic_Class     : Boolean := False;
+         Deferred          : Boolean := False;
+         Expanded          : Boolean := False;
+         Frozen            : Boolean := False;
+         Inherited_Classes : List_Of_Inherited_Class_Records.List;
+         Class_Features    : List_Of_Feature_Entities.List;
+         Formal_Arguments  : List_Of_Entities.List;
       end record;
-
-   overriding function Has_Context
-     (Class : Class_Entity_Record)
-      return Boolean
-   is (not Class.Top_Level);
 
    overriding function Description
      (Class : Class_Entity_Record)
       return String
    is ("class " & Class_Entity_Record'Class (Class).Qualified_Name);
 
-   overriding function Conforms_To
-     (Class : not null access Class_Entity_Record;
-      Other : not null access Root_Entity_Type'Class)
+   overriding function Contains
+     (Class     : Class_Entity_Record;
+      Name      : String;
+      Recursive : Boolean := True)
       return Boolean;
+
+   overriding function Get
+     (Class : Class_Entity_Record;
+      Name  : String)
+      return Entity_Type;
+
+   overriding function Conforms_To
+     (Class : not null access constant Class_Entity_Record;
+      Other : not null access constant Root_Entity_Type'Class)
+      return Boolean;
+
+   function Has_Feature
+     (Class : Class_Entity_Record'Class;
+      Name  : Name_Id)
+      return Boolean
+   is (Class.Contains (Name)
+       and then Ack.Features.Is_Feature (Class.Get (Name)));
 
    function Class_Declaration_Context
      (Class : Class_Entity_Record'Class)
       return Class_Entity
    is (Class_Entity (Class.Declaration_Context));
 
-   type Generic_Formal_Record is
-     new Root_Entity_Type with
-      record
-         Constraints : List_Of_Class_Entities.List;
-      end record;
+   function Has_Class_Entity
+     (Node : Node_Id)
+      return Boolean
+   is (Has_Entity (Node)
+       and then Get_Entity (Node).all in Class_Entity_Record'Class);
 
 end Ack.Classes;

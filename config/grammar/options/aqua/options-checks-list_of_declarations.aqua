@@ -6,6 +6,6 @@ feature
    
    After_Declaration (Child : Options.Checks.Declaration) 
       do
-         Option_Entry_List.Append (Child)
+         Option_Entry_List.Append (Child.Option_Entry)
       end
 end

@@ -376,10 +376,13 @@ variable ::= identifier
       
 creators ::=
          < creation_clause >
+         
 creation_clause ::=
          'create' [ clients ] creation_procedure_list
+         
 creation_procedure_list ::=
          < creation_procedure / ',' >
+         
 creation_procedure ::=
          feature_name
          

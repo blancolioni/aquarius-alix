@@ -16,8 +16,8 @@ package body Ack is
    -----------------
 
    function Conforms_To
-     (Class : not null access Root_Entity_Type;
-      Other : not null access Root_Entity_Type'Class)
+     (Class : not null access constant Root_Entity_Type;
+      Other : not null access constant Root_Entity_Type'Class)
       return Boolean
    is
    begin

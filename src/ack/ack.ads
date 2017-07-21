@@ -82,6 +82,7 @@ package Ack is
      (E_No_Error,
       E_Undeclared_Name,
       E_Redefined_Name,
+      E_Not_Defined_In,
       E_No_Component,
       E_No_Child,
       E_Id_List_With_Arguments,
@@ -91,7 +92,8 @@ package Ack is
       E_Insufficient_Arguments,
       E_Too_Many_Arguments,
       E_Does_Not_Accept_Arguments,
-      E_Ignored_Return_Value
+      E_Ignored_Return_Value,
+      E_Requires_Value
      );
 
    type Node_Id is private;
@@ -159,8 +161,8 @@ package Ack is
    is (Root_Entity_Type'Class (Entity).Qualified_Name);
 
    function Conforms_To
-     (Class : not null access Root_Entity_Type;
-      Other : not null access Root_Entity_Type'Class)
+     (Class : not null access constant Root_Entity_Type;
+      Other : not null access constant Root_Entity_Type'Class)
       return Boolean;
 
    function Argument_Count (Entity : Root_Entity_Type) return Natural
@@ -204,7 +206,7 @@ package Ack is
      (Table_Entity : Root_Entity_Type;
       Name         : String)
       return Entity_Type
-   with Pre => Table_Entity.Contains (Name);
+   with Pre'Class => Table_Entity.Contains (Name);
 
    function Contains
      (Table_Entity : Root_Entity_Type'Class;
@@ -213,7 +215,7 @@ package Ack is
    is (Table_Entity.Contains (To_Standard_String (Name)));
 
    function Get
-     (Table_Entity : Root_Entity_Type;
+     (Table_Entity : Root_Entity_Type'Class;
       Name         : Name_Id)
       return Entity_Type
    is (Table_Entity.Get (To_Standard_String (Name)));
@@ -394,6 +396,7 @@ package Ack is
      or else Kind (N) = N_Formal_Generic_Name;
 
    function Get_Entity (N : Node_Id) return Entity_Type;
+   function Has_Entity (N : Node_Id) return Boolean;
 
    function Class_Features (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Class_Declaration;
@@ -686,6 +689,9 @@ private
 
    function Get_Name (N : Node_Id) return Name_Id
    is (Node_Table.Element (N).Name);
+
+   function Has_Entity (N : Node_Id) return Boolean
+   is (Node_Table.Element (N).Entity /= null);
 
    function Get_Entity (N : Node_Id) return Entity_Type
    is (Node_Table.Element (N).Entity);
