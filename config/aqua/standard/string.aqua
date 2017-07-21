@@ -1,2 +1,6 @@
 class String
+
+feature
+   To_Lower : String
+   
 end
