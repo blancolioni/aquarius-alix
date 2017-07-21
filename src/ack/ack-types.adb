@@ -12,8 +12,11 @@ package body Ack.Types is
       return Boolean
    is
    begin
-      return Conformer.Class.Conforms_To
-        (Constant_Type_Entity (Other).Class);
+      if Constant_Type_Entity (Conformer) = Constant_Type_Entity (Other) then
+         return True;
+      else
+         return Conformer.Class.Conforms_To (Other);
+      end if;
    end Conforms_To;
 
    --------------

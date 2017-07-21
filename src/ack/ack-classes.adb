@@ -77,7 +77,11 @@ package body Ack.Classes is
    is
       Ancestor : constant Constant_Class_Entity :=
                    (if Other.all in Class_Entity_Record'Class
-                    then Constant_Class_Entity (Other) else null);
+                    then Constant_Class_Entity (Other)
+                    elsif Other.all in
+                      Ack.Types.Type_Entity_Record'Class
+                    then Ack.Types.Type_Entity_Record'Class (Other.all).Class
+                    else null);
 
       function Try
         (Current : Constant_Class_Entity)
@@ -112,6 +116,10 @@ package body Ack.Classes is
 
       if Ancestor = null then
          return False;
+      end if;
+
+      if Ancestor.Standard_Name = "any" then
+         return True;
       end if;
 
       return Try (Constant_Class_Entity (Class));
