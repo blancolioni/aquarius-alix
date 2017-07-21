@@ -1,3 +1,7 @@
+with Ada.Text_IO;
+
+with Ack.IO;
+
 with Aquarius.Loader;
 
 with Ack.Files;
@@ -5,12 +9,15 @@ with Ack.Parser;
 
 with Ack.Classes;
 with Ack.Features;
+with Ack.Types;
 
 with Ack.Environment;
 
 with Ack.Errors;
 
 package body Ack.Semantic is
+
+   Trace_Class_Analysis : constant Boolean := False;
 
    function Load_Class
      (Referrer : Aquarius.Programs.Program_Tree;
@@ -168,18 +175,41 @@ package body Ack.Semantic is
    begin
       if Inheritance_Node /= No_Node then
          Analyse_Inheritance (Class, Inheritance_Node);
+      elsif Class.Standard_Name /= "any" then
+         Class.Inherit
+           (Load_Class
+              (Get_Program (Node), Ack.Environment.Top_Level,
+               Get_Name_Id ("Any")));
+      end if;
+
+      if Trace_Class_Analysis then
+         Ada.Text_IO.Put_Line
+           ("Analysing: " & Class.Qualified_Name);
       end if;
 
       if Features_Node in Real_Node_Id then
          Analyse_Features (Class, Features_Node);
       end if;
 
+      if Trace_Class_Analysis then
+         Ada.Text_IO.Put_Line
+           ("  binding: " & Class.Qualified_Name);
+      end if;
+
       Class.Bind;
 
+      if Trace_Class_Analysis then
+         Ada.Text_IO.Put_Line
+           ("  feature bodies: " & Class.Qualified_Name);
+      end if;
       if Features_Node in Real_Node_Id then
          Analyse_Feature_Bodies (Class, Features_Node);
       end if;
 
+      if Trace_Class_Analysis then
+         Ada.Text_IO.Put_Line
+           ("Finished: " & Class.Qualified_Name);
+      end if;
    end Analyse_Class_Declaration;
 
    --------------------------
@@ -228,6 +258,22 @@ package body Ack.Semantic is
       Referrer : constant Aquarius.Programs.Program_Tree :=
                         Get_Program (Class_Name);
    begin
+
+      if not Defining_Name
+        and then Natural (List.Length) = 1
+      then
+         --  this might be a local type, not a class
+         declare
+            Local_Node : constant Node_Id := List.First_Element;
+            Local_Name : constant Name_Id := Get_Name (Local_Node);
+         begin
+            if Context.Contains (Local_Name) then
+               Set_Entity (Class_Name, Context.Get (Local_Name));
+               return;
+            end if;
+         end;
+      end if;
+
       if Defining_Name then
          Parent := null;
       else
@@ -322,36 +368,47 @@ package body Ack.Semantic is
      (Class     : Ack.Classes.Class_Entity;
       Type_Node : Node_Id)
    is
-      use type Ack.Classes.Class_Entity;
       Name_Node     : constant Node_Id := Class_Name (Type_Node);
       Generics_Node : constant Node_Id := Actual_Generics (Type_Node);
-      Type_Entity   : Ack.Classes.Class_Entity := null;
+      Class_Entity  : Ack.Classes.Class_Entity := null;
+      Type_Entity   : Ack.Types.Type_Entity := null;
 
    begin
       Analyse_Class_Name (Class, Name_Node, False);
-      Type_Entity := Ack.Classes.Get_Class_Entity (Name_Node);
 
-      if Type_Entity = null then
+      if not Has_Entity (Name_Node) then
          return;
       end if;
 
-      if Generics_Node /= No_Node then
-         declare
-            Actual_Nodes : constant Array_Of_Nodes :=
-                             To_Array (Actual_Generics_List (Generics_Node));
-            Actual_Types : Ack.Classes.Array_Of_Classes
-              (Actual_Nodes'Range);
-         begin
-            for I in Actual_Nodes'Range loop
-               Analyse_Type (Class, Actual_Nodes (I));
-               Actual_Types (I) :=
-                 Ack.Classes.Get_Class_Entity (Actual_Nodes (I));
-            end loop;
+      if Ack.Types.Has_Type_Entity (Name_Node) then
+         Type_Entity := Ack.Types.Get_Type_Entity (Name_Node);
+      else
+         Class_Entity := Ack.Classes.Get_Class_Entity (Name_Node);
 
+         if Generics_Node = No_Node then
             Type_Entity :=
-              Ack.Classes.New_Instantiated_Class
-                (Type_Entity, Actual_Types, Type_Node);
-         end;
+              Ack.Types.New_Class_Type (Type_Node, Class_Entity,
+                                        Detachable => False);
+         else
+            declare
+               Actual_Nodes : constant Array_Of_Nodes :=
+                                To_Array
+                                  (Actual_Generics_List (Generics_Node));
+               Actual_Types : Ack.Types.Array_Of_Types (Actual_Nodes'Range);
+            begin
+               for I in Actual_Nodes'Range loop
+                  Analyse_Type (Class, Actual_Nodes (I));
+                  Actual_Types (I) :=
+                    Ack.Types.Get_Type_Entity (Actual_Nodes (I));
+               end loop;
+
+               Type_Entity :=
+                 Ack.Types.Instantiate_Generic_Class
+                   (Node            => Type_Node,
+                    Generic_Class   => Class_Entity,
+                    Generic_Actuals => Actual_Types);
+            end;
+         end if;
       end if;
 
       Set_Entity (Type_Node, Type_Entity);
@@ -437,7 +494,7 @@ package body Ack.Semantic is
       procedure Insert_Group (Group_Node : Node_Id) is
          Ids         : constant List_Id := Identifiers (Group_Node);
          Type_Node   : constant Node_Id := Group_Type (Group_Node);
-         Type_Entity : Entity_Type := null;
+         Type_Entity : Ack.Types.Type_Entity := null;
 
          procedure Insert_Id (Id_Node : Node_Id);
 
@@ -459,10 +516,10 @@ package body Ack.Semantic is
       begin
          if Type_Node /= No_Node then
             Analyse_Type (Class, Type_Node);
-            Type_Entity := Get_Entity (Type_Node);
          end if;
 
-         if Type_Entity /= null then
+         if Has_Entity (Type_Node) then
+            Type_Entity := Ack.Types.Get_Type_Entity (Type_Node);
             Scan (Ids, Insert_Id'Access);
          end if;
 
@@ -566,7 +623,7 @@ package body Ack.Semantic is
       Arg_Node     : constant Node_Id := Formal_Arguments (Dec_Body);
       Type_Node    : constant Node_Id := Value_Type (Dec_Body);
       Value_Node   : constant Node_Id := Value (Dec_Body);
-      Type_Entity  : Ack.Classes.Class_Entity := null;
+      Type_Entity  : Ack.Types.Type_Entity := null;
       Single       : constant Boolean :=
                        Natural (List_Table.Element (Names).List.Length) = 1;
       Routine      : constant Boolean :=
@@ -593,13 +650,15 @@ package body Ack.Semantic is
 
          if Type_Node /= No_Node then
             Analyse_Class_Type (Class, Type_Node);
-            Type_Entity := Ack.Classes.Get_Class_Entity (Type_Node);
+            if Has_Entity (Type_Node) then
+               Type_Entity := Ack.Types.Get_Type_Entity (Type_Node);
+            end if;
          end if;
       end if;
 
       for Node of List_Table.Element (Names).List loop
          declare
-            use type Ack.Classes.Class_Entity;
+            use type Ack.Types.Type_Entity;
             use type Ack.Features.Feature_Entity;
             Entity : Ack.Features.Feature_Entity;
             Effective : constant Node_Id :=
@@ -608,7 +667,11 @@ package body Ack.Semantic is
          begin
             if Headers then
                if Routine then
-                  if not Deferred and then Kind (Effective) = N_External then
+                  if not Deferred and then Value_Node = No_Node then
+                     Error (Node, E_Requires_Value);
+                  elsif not Deferred
+                    and then Kind (Effective) = N_External
+                  then
                      Entity :=
                        Ack.Features.New_External_Feature
                          (Name           => Get_Name (Feature_Name (Node)),
@@ -650,7 +713,10 @@ package body Ack.Semantic is
                Entity := Ack.Features.Feature_Entity (Get_Entity (Node));
             end if;
 
-            if Headers and then Single and then Arg_Node /= No_Node then
+            if Headers and then Single
+              and then Arg_Node /= No_Node
+              and then Entity /= null
+            then
                Analyse_Entity_Declaration_Groups
                  (Class, Entity,
                   Entity_Declaration_Group_List (Arg_Node),
@@ -707,8 +773,9 @@ package body Ack.Semantic is
       procedure Analyse_Formal_Generic (Node : Node_Id) is
          Name : constant Name_Id :=
                   Get_Name (Formal_Generic_Name (Node));
-         Generic_Entity : constant Ack.Classes.Class_Entity :=
-                            Ack.Classes.New_Generic_Formal (Name, Node);
+         Generic_Entity : constant Ack.Types.Type_Entity :=
+                            Ack.Types.New_Generic_Formal_Type
+                              (Name, Node, Class);
       begin
          Set_Entity (Node, Generic_Entity);
          Class.Add_Generic_Formal (Generic_Entity);
@@ -728,7 +795,6 @@ package body Ack.Semantic is
       Inherit : Node_Id)
    is
       Class_Type      : constant Node_Id := Inherit_Class_Type (Inherit);
-      Class_Node      : constant Node_Id := Class_Name (Class_Type);
       Redefine_List   : constant List_Id := Redefine (Inherit);
 
       Inherited_Class : Ack.Classes.Class_Entity;
@@ -741,18 +807,22 @@ package body Ack.Semantic is
 
       procedure Set_Redefine (Node : Node_Id) is
       begin
-         Class.Redefine (Inherited_Class, Get_Name (Node));
+         if Inherited_Class.Has_Feature (Get_Name (Node)) then
+            Class.Redefine (Inherited_Class, Get_Name (Node));
+         else
+            Error (Node, E_Not_Defined_In, Entity_Type (Inherited_Class));
+         end if;
       end Set_Redefine;
 
    begin
 
-      Analyse_Class_Name (Class, Class_Node,
-                          Defining_Name => False);
-      Inherited_Class := Ack.Classes.Get_Class_Entity (Class_Node);
+      Analyse_Class_Type (Class, Class_Type);
+
+      Inherited_Class := Ack.Types.Get_Type_Entity (Class_Type).Class;
 
       Set_Entity (Inherit, Inherited_Class);
 
-      Class.Inherit (Ack.Classes.Get_Class_Entity (Class_Node));
+      Class.Inherit (Inherited_Class);
       Scan (Redefine_List, Set_Redefine'Access);
 
    end Analyse_Inherit;
@@ -959,7 +1029,13 @@ package body Ack.Semantic is
             end if;
          end;
       end if;
-      return Ack.Classes.Class_Entity (Entity);
+
+      if Entity = null then
+         return null;
+      else
+         return Ack.Classes.Class_Entity (Entity);
+      end if;
+
    end Load_Class;
 
 end Ack.Semantic;

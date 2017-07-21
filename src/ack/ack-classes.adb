@@ -1,18 +1,11 @@
+with Ada.Text_IO;
+
 with Ack.Environment;
+with Ack.Types;
 
 package body Ack.Classes is
 
-   --------------------
-   -- Add_Constraint --
-   --------------------
-
-   procedure Add_Constraint
-     (Formal     : in out Class_Entity_Record'Class;
-      Class      : Class_Entity)
-   is
-   begin
-      Formal.Constraints.Append (Class);
-   end Add_Constraint;
+   Trace_Classes : constant Boolean := False;
 
    -----------------
    -- Add_Feature --
@@ -32,10 +25,10 @@ package body Ack.Classes is
 
    procedure Add_Generic_Formal
      (Class  : in out Class_Entity_Record'Class;
-      Formal : not null access Class_Entity_Record'Class)
+      Formal : not null access Ack.Types.Type_Entity_Record'Class)
    is
    begin
-      Class.Formal_Arguments.Append (Class_Entity (Formal));
+      Class.Formal_Arguments.Append (Formal);
       Class.Insert (Formal);
       Class.Generic_Class := True;
    end Add_Generic_Formal;
@@ -48,16 +41,23 @@ package body Ack.Classes is
      (Class : in out Class_Entity_Record)
    is
    begin
+      if Trace_Classes then
+         Ada.Text_IO.Put_Line ("binding: " & Class.Description);
+      end if;
+
       for Feature of Class.Class_Features loop
          Class.Insert (Feature);
       end loop;
       for Inherited of Class.Inherited_Classes loop
          for Feature of Inherited.Inherited_Class.Class_Features loop
-            if not Inherited.Redefined_Features.Contains (Feature) then
+            if not Inherited.Redefined_Features.Contains (Feature)
+              and then not Class.Child_Map.Contains (Feature.Standard_Name)
+            then
                Class.Insert (Feature);
             end if;
          end loop;
       end loop;
+
    end Bind;
 
    -----------------
@@ -65,27 +65,32 @@ package body Ack.Classes is
    -----------------
 
    overriding function Conforms_To
-     (Class : not null access Class_Entity_Record;
-      Other : not null access Root_Entity_Type'Class)
+     (Class : not null access constant Class_Entity_Record;
+      Other : not null access constant Root_Entity_Type'Class)
       return Boolean
    is
-      Ancestor : constant Class_Entity :=
+      Ancestor : constant Constant_Class_Entity :=
                    (if Other.all in Class_Entity_Record'Class
-                    then Class_Entity (Other) else null);
+                    then Constant_Class_Entity (Other) else null);
 
-      function Try (Current : Class_Entity) return Boolean;
+      function Try
+        (Current : Constant_Class_Entity)
+         return Boolean;
 
       ---------
       -- Try --
       ---------
 
-      function Try (Current : Class_Entity) return Boolean is
+      function Try
+        (Current : Constant_Class_Entity)
+         return Boolean
+      is
       begin
          if Current = Ancestor then
             return True;
          else
             for Inherited of Current.Inherited_Classes loop
-               if Try (Inherited.Inherited_Class) then
+               if Try (Constant_Class_Entity (Inherited.Inherited_Class)) then
                   return True;
                end if;
             end loop;
@@ -94,27 +99,42 @@ package body Ack.Classes is
       end Try;
 
    begin
+
+      if Class.Standard_Name = "none" then
+         return True;
+      end if;
+
       if Ancestor = null then
          return False;
       end if;
 
-      return Try (Class_Entity (Class));
+      return Try (Constant_Class_Entity (Class));
    end Conforms_To;
 
-   ----------------------
-   -- Detachable_Class --
-   ----------------------
+   --------------
+   -- Contains --
+   --------------
 
-   function Detachable_Class
-     (From_Class : not null access Class_Entity_Record'Class)
-      return Class_Entity
+   overriding function Contains
+     (Class     : Class_Entity_Record;
+      Name      : String;
+      Recursive : Boolean := True)
+      return Boolean
    is
    begin
-      return Result : constant Class_Entity := new Class_Entity_Record do
-         Result.Detachable := True;
-         Result.Reference_Class := Class_Entity (From_Class);
-      end return;
-   end Detachable_Class;
+      if Root_Entity_Type (Class).Contains (Name, False) then
+         return True;
+      elsif Recursive then
+         for Inherited of Class.Inherited_Classes loop
+            if Inherited.Inherited_Class.Contains (Name, False) then
+               return True;
+            end if;
+         end loop;
+         return Ack.Environment.Top_Level.Contains (Name);
+      else
+         return False;
+      end if;
+   end Contains;
 
    -------------
    -- Feature --
@@ -128,6 +148,61 @@ package body Ack.Classes is
    begin
       return Ack.Features.Feature_Entity (Class.Get (Name));
    end Feature;
+
+   --------------------
+   -- Generic_Formal --
+   --------------------
+
+   function Generic_Formal
+     (Class : Class_Entity_Record'Class;
+      Index : Positive)
+      return access constant Ack.Types.Type_Entity_Record'Class
+   is
+      Count : Natural := 0;
+   begin
+      for Formal of Class.Formal_Arguments loop
+         Count := Count + 1;
+         if Count = Index then
+            return Ack.Types.Type_Entity (Formal);
+         end if;
+      end loop;
+      raise Constraint_Error with
+        "violated precondition";
+   end Generic_Formal;
+
+   --------------------------
+   -- Generic_Formal_Count --
+   --------------------------
+
+   function Generic_Formal_Count
+     (Class : Class_Entity_Record'Class)
+      return Natural
+   is
+   begin
+      return Natural (Class.Formal_Arguments.Length);
+   end Generic_Formal_Count;
+
+   ---------
+   -- Get --
+   ---------
+
+   overriding function Get
+     (Class : Class_Entity_Record;
+      Name  : String)
+      return Entity_Type
+   is
+   begin
+      if Root_Entity_Type (Class).Contains (Name, False) then
+         return Root_Entity_Type (Class).Get (Name);
+      else
+         for Inherited of Class.Inherited_Classes loop
+            if Inherited.Inherited_Class.Contains (Name, False) then
+               return Inherited.Inherited_Class.Get (Name);
+            end if;
+         end loop;
+         return Ack.Environment.Top_Level.Get (Name);
+      end if;
+   end Get;
 
    ----------------------
    -- Get_Class_Entity --
@@ -238,50 +313,8 @@ package body Ack.Classes is
            (Name, Declaration,
             Parent_Environment => Ack.Environment.Top_Level,
             Context            => Context);
-         Result.Reference_Class := Context;
-         Result.Top_Level := Context = null;
       end return;
    end New_Class;
-
-   ------------------------
-   -- New_Generic_Formal --
-   ------------------------
-
-   function New_Generic_Formal
-     (Name        : Name_Id;
-      Declaration : Node_Id)
-      return Class_Entity
-   is
-   begin
-      return Formal : constant Class_Entity :=
-        new Class_Entity_Record
-      do
-         Formal.Create (Name, Declaration, null, null);
-         Formal.Formal_Argument := True;
-      end return;
-   end New_Generic_Formal;
-
-   ----------------------------
-   -- New_Instantiated_Class --
-   ----------------------------
-
-   function New_Instantiated_Class
-     (Generic_Class   : Class_Entity;
-      Generic_Actuals : Array_Of_Classes;
-      Node            : Node_Id)
-      return Class_Entity
-   is
-   begin
-      return Result : constant Class_Entity := new Class_Entity_Record do
-         Result.Create
-           (Get_Name_Id (Generic_Class.Standard_Name), Node, null, null);
-         Result.Instantiated_Class := True;
-         Result.Reference_Class := Generic_Class;
-         for Actual of Generic_Actuals loop
-            Result.Actual_Arguments.Append (Actual);
-         end loop;
-      end return;
-   end New_Instantiated_Class;
 
    --------------
    -- Redefine --

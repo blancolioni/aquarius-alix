@@ -4,6 +4,7 @@ with Tagatha.Operands;
 
 with Ack.Classes;
 with Ack.Generate;
+with Ack.Types;
 
 package body Ack.Features is
 
@@ -11,7 +12,7 @@ package body Ack.Features is
      (Name             : Name_Id;
       Declaration_Node : Node_Id;
       Class            : not null access Ack.Classes.Class_Entity_Record'Class;
-      Result_Type      : access Ack.Classes.Class_Entity_Record'Class;
+      Result_Type      : access Ack.Types.Type_Entity_Record'Class;
       Routine          : Boolean := False;
       Property         : Boolean := False;
       Named_Value      : Boolean := False;
@@ -31,7 +32,7 @@ package body Ack.Features is
    procedure Add_Argument
      (Feature   : in out Feature_Entity_Record'Class;
       Name_Node : in     Node_Id;
-      Arg_Type  : not null access Root_Entity_Type'Class)
+      Arg_Type  : not null access Ack.Types.Type_Entity_Record'Class)
    is
    begin
       Feature.Arguments.Append
@@ -46,7 +47,7 @@ package body Ack.Features is
    procedure Add_Local
      (Feature    : in out Feature_Entity_Record'Class;
       Name_Node  : in     Node_Id;
-      Local_Type : not null access Root_Entity_Type'Class)
+      Local_Type : not null access Ack.Types.Type_Entity_Record'Class)
    is
    begin
       Feature.Locals.Append
@@ -68,7 +69,10 @@ package body Ack.Features is
                         Ack.Variables.New_Argument_Entity
                           (Get_Name_Id ("Current"),
                            Feature.Declaration_Node,
-                           Feature.Definition_Class);
+                           Ack.Types.New_Class_Type
+                             (Feature.Declaration_Node,
+                              Feature.Definition_Class,
+                              Detachable => False));
          begin
             Feature.Insert (Current);
          end;
@@ -106,6 +110,19 @@ package body Ack.Features is
    begin
       return Feature.Definition_Class;
    end Definition_Class;
+
+   -----------------
+   -- Description --
+   -----------------
+
+   overriding function Description
+     (Feature : Feature_Entity_Record)
+      return String
+   is
+   begin
+      return Root_Entity_Type (Feature).Description
+        & " parent " & Feature.Declaration_Context.Qualified_Name;
+   end Description;
 
    -------------------------------
    -- Generate_Allocation_Value --
@@ -209,12 +226,12 @@ package body Ack.Features is
    --------------------------
 
    function New_External_Feature
-     (Name           : Name_Id;
-      Class          : not null access Ack.Classes.Class_Entity_Record'Class;
-      External_Type  : String;
-      External_Alias : String;
-      Result_Type    : access Ack.Classes.Class_Entity_Record'Class;
-      Declaration    : Node_Id)
+     (Name            : Name_Id;
+      Class           : not null access Ack.Classes.Class_Entity_Record'Class;
+      External_Type   : String;
+      External_Alias  : String;
+      Result_Type     : access Ack.Types.Type_Entity_Record'Class;
+      Declaration     : Node_Id)
       return Feature_Entity
    is
    begin
@@ -239,7 +256,7 @@ package body Ack.Features is
      (Name             : Name_Id;
       Declaration_Node : Node_Id;
       Class            : not null access Ack.Classes.Class_Entity_Record'Class;
-      Result_Type      : access Ack.Classes.Class_Entity_Record'Class;
+      Result_Type      : access Ack.Types.Type_Entity_Record'Class;
       Routine          : Boolean := False;
       Property         : Boolean := False;
       Named_Value      : Boolean := False;
@@ -285,7 +302,6 @@ package body Ack.Features is
            External_Label      => +External_Label,
            Original_Classes    => <>,
            Definition_Class    => Class,
-           Result_Type         => Result_Type,
            Arguments           => <>,
            Locals              => <>,
            Routine_Node        => Routine_Node)
@@ -326,10 +342,10 @@ package body Ack.Features is
    --------------------------
 
    function New_Property_Feature
-     (Name          : Name_Id;
-      Class         : not null access Ack.Classes.Class_Entity_Record'Class;
-      Property_Type : not null access Ack.Classes.Class_Entity_Record'Class;
-      Declaration   : Node_Id)
+     (Name            : Name_Id;
+      Class           : not null access Ack.Classes.Class_Entity_Record'Class;
+      Property_Type   : not null access Ack.Types.Type_Entity_Record'Class;
+      Declaration     : Node_Id)
       return Feature_Entity
    is
    begin
@@ -348,12 +364,12 @@ package body Ack.Features is
    -------------------------
 
    function New_Routine_Feature
-     (Name          : Name_Id;
-      Class         : not null access Ack.Classes.Class_Entity_Record'Class;
-      Result_Type   : access Ack.Classes.Class_Entity_Record'Class;
-      Deferred      : Boolean;
-      Declaration   : Node_Id;
-      Routine       : Node_Id)
+     (Name            : Name_Id;
+      Class           : not null access Ack.Classes.Class_Entity_Record'Class;
+      Result_Type     : access Ack.Types.Type_Entity_Record'Class;
+      Deferred        : Boolean;
+      Declaration     : Node_Id;
+      Routine         : Node_Id)
       return Feature_Entity
    is
    begin

@@ -2,7 +2,7 @@ class Aqua.Containers.Linkable[G]
 
 inherit
 
-   Cell[G]
+   Aqua.Containers.Cell[G]
    
 feature
 
