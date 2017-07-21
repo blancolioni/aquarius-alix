@@ -17,6 +17,7 @@ package body Ack.Classes is
    is
    begin
       Class.Class_Features.Append (Feature);
+      Root_Entity_Type (Class).Insert (Feature);
    end Add_Feature;
 
    ------------------------
@@ -40,24 +41,29 @@ package body Ack.Classes is
    overriding procedure Bind
      (Class : in out Class_Entity_Record)
    is
+      procedure Scan_Hierarchy (Top : Class_Entity);
+
+      --------------------
+      -- Scan_Hierarchy --
+      --------------------
+
+      procedure Scan_Hierarchy (Top : Class_Entity) is
+      begin
+         if not Class.Inherited_List.Contains (Top) then
+            Class.Inherited_List.Append (Top);
+            for Inherited of Top.Inherited_Classes loop
+               Scan_Hierarchy (Inherited.Inherited_Class);
+            end loop;
+         end if;
+      end Scan_Hierarchy;
+
    begin
       if Trace_Classes then
          Ada.Text_IO.Put_Line ("binding: " & Class.Description);
       end if;
-
-      for Feature of Class.Class_Features loop
-         Class.Insert (Feature);
-      end loop;
       for Inherited of Class.Inherited_Classes loop
-         for Feature of Inherited.Inherited_Class.Class_Features loop
-            if not Inherited.Redefined_Features.Contains (Feature)
-              and then not Class.Child_Map.Contains (Feature.Standard_Name)
-            then
-               Class.Insert (Feature);
-            end if;
-         end loop;
+         Scan_Hierarchy (Inherited.Inherited_Class);
       end loop;
-
    end Bind;
 
    -----------------
@@ -125,8 +131,8 @@ package body Ack.Classes is
       if Root_Entity_Type (Class).Contains (Name, False) then
          return True;
       elsif Recursive then
-         for Inherited of Class.Inherited_Classes loop
-            if Inherited.Inherited_Class.Contains (Name, False) then
+         for Inherited of Class.Inherited_List loop
+            if Inherited.Contains (Name, False) then
                return True;
             end if;
          end loop;
@@ -195,9 +201,9 @@ package body Ack.Classes is
       if Root_Entity_Type (Class).Contains (Name, False) then
          return Root_Entity_Type (Class).Get (Name);
       else
-         for Inherited of Class.Inherited_Classes loop
-            if Inherited.Inherited_Class.Contains (Name, False) then
-               return Inherited.Inherited_Class.Get (Name);
+         for Inherited of Class.Inherited_List loop
+            if Inherited.Contains (Name, False) then
+               return Inherited.Get (Name);
             end if;
          end loop;
          return Ack.Environment.Top_Level.Get (Name);
@@ -320,20 +326,20 @@ package body Ack.Classes is
    -- Redefine --
    --------------
 
-   procedure Redefine
-     (Class           : in out Class_Entity_Record'Class;
-      Inherited_Class : not null access Class_Entity_Record'Class;
-      Feature_Name    : Name_Id)
-   is
-   begin
-      for Inherited of Class.Inherited_Classes loop
-         if Inherited.Inherited_Class = Inherited_Class then
-            Inherited.Redefined_Features.Append
-              (Inherited_Class.Feature (Feature_Name));
-            exit;
-         end if;
-      end loop;
-   end Redefine;
+--     procedure Redefine
+--       (Class           : in out Class_Entity_Record'Class;
+--        Inherited_Class : not null access Class_Entity_Record'Class;
+--        Feature_Name    : Name_Id)
+--     is
+--     begin
+--        for Inherited of Class.Inherited_Classes loop
+--           if Inherited.Inherited_Class = Inherited_Class then
+--              Inherited.Redefined_Features.Append
+--                (Inherited_Class.Feature (Feature_Name));
+--              exit;
+--           end if;
+--        end loop;
+--     end Redefine;
 
    ------------
    -- Rename --

@@ -43,6 +43,9 @@ package body Ack.Errors is
             return To_String (Get_Name (Node))
               & " is not defined in "
               & Get_Error_Entity (Node).Description;
+         when E_Missing_Redefinition =>
+            return "missing declaration for redefined feature "
+              & To_String (Get_Name (Node));
          when E_No_Child               =>
             return "child class not found";
          when E_No_Component           =>

@@ -21,11 +21,6 @@ package Ack.Classes is
      (Class           : in out Class_Entity_Record'Class;
       Inherited_Class : not null access Class_Entity_Record'Class);
 
-   procedure Redefine
-     (Class           : in out Class_Entity_Record'Class;
-      Inherited_Class : not null access Class_Entity_Record'Class;
-      Feature_Name    : Name_Id);
-
    procedure Rename
      (Class            : in out Class_Entity_Record'Class;
       Inherited_Class  : not null access Class_Entity_Record'Class;
@@ -155,6 +150,7 @@ private
          Expanded          : Boolean := False;
          Frozen            : Boolean := False;
          Inherited_Classes : List_Of_Inherited_Class_Records.List;
+         Inherited_List    : List_Of_Class_Entities.List;
          Class_Features    : List_Of_Feature_Entities.List;
          Formal_Arguments  : List_Of_Entities.List;
       end record;

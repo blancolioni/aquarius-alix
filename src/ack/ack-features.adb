@@ -23,7 +23,8 @@ package body Ack.Features is
       External_Type    : String := "";
       External_Alias   : String := "";
       Routine_Node     : Node_Id := No_Node)
-      return Feature_Entity;
+      return Feature_Entity
+     with Unreferenced;
 
    ------------------
    -- Add_Argument --
@@ -209,7 +210,7 @@ package body Ack.Features is
             end;
          else
             Ack.Generate.Generate_Compound
-              (Unit, Compound (Effective_Routine (Feature.Routine_Node)));
+              (Unit, Compound (Feature.Routine_Node));
          end if;
 
          if Feature.Has_Result then
@@ -220,33 +221,6 @@ package body Ack.Features is
          Unit.End_Routine;
       end if;
    end Generate_Routine;
-
-   --------------------------
-   -- New_External_Feature --
-   --------------------------
-
-   function New_External_Feature
-     (Name            : Name_Id;
-      Class           : not null access Ack.Classes.Class_Entity_Record'Class;
-      External_Type   : String;
-      External_Alias  : String;
-      Result_Type     : access Ack.Types.Type_Entity_Record'Class;
-      Declaration     : Node_Id)
-      return Feature_Entity
-   is
-   begin
-      return New_Feature
-        (Name             => Name,
-         Declaration_Node => Declaration,
-         Class            => Class,
-         Result_Type      => Result_Type,
-         Routine          => True,
-         External         => True,
-         Has_Result       => Result_Type /= null,
-         Has_Current      => True,
-         External_Type    => External_Type,
-         External_Alias   => External_Alias);
-   end New_External_Feature;
 
    -----------------
    -- New_Feature --
@@ -337,53 +311,26 @@ package body Ack.Features is
       end return;
    end New_Feature;
 
-   --------------------------
-   -- New_Property_Feature --
-   --------------------------
+   -----------------
+   -- New_Feature --
+   -----------------
 
-   function New_Property_Feature
-     (Name            : Name_Id;
-      Class           : not null access Ack.Classes.Class_Entity_Record'Class;
-      Property_Type   : not null access Ack.Types.Type_Entity_Record'Class;
-      Declaration     : Node_Id)
+   function New_Feature
+     (Name        : Name_Id;
+      Declaration : Node_Id;
+      Class       : not null access Ack.Classes.Class_Entity_Record'Class)
       return Feature_Entity
    is
    begin
-      return New_Feature
-        (Name             => Name,
-         Declaration_Node => Declaration,
-         Class            => Class,
-         Result_Type      => Property_Type,
-         Property         => True,
-         Has_Result       => False,
-         Has_Current      => False);
-   end New_Property_Feature;
-
-   -------------------------
-   -- New_Routine_Feature --
-   -------------------------
-
-   function New_Routine_Feature
-     (Name            : Name_Id;
-      Class           : not null access Ack.Classes.Class_Entity_Record'Class;
-      Result_Type     : access Ack.Types.Type_Entity_Record'Class;
-      Deferred        : Boolean;
-      Declaration     : Node_Id;
-      Routine         : Node_Id)
-      return Feature_Entity
-   is
-   begin
-      return New_Feature
-        (Name             => Name,
-         Declaration_Node => Declaration,
-         Class            => Class,
-         Result_Type      => Result_Type,
-         Deferred         => Deferred,
-         Routine          => True,
-         Has_Result       => Result_Type /= null,
-         Has_Current      => True,
-         Routine_Node     => Routine);
-   end New_Routine_Feature;
+      return Feature : constant Feature_Entity := new Feature_Entity_Record do
+         Feature.Create
+           (Name, Declaration,
+            Parent_Environment => Class,
+            Context            => Class);
+         Feature.Definition_Class := Class;
+         Feature.Property := True;
+      end return;
+   end New_Feature;
 
    ---------------------------
    -- Scan_Original_Classes --
@@ -396,9 +343,13 @@ package body Ack.Features is
                      Ack.Classes.Class_Entity_Record'Class))
    is
    begin
-      for Class of Feature.Original_Classes loop
-         Process (Ack.Classes.Class_Entity (Class));
-      end loop;
+      if Feature.Original_Classes.Is_Empty then
+         Process (Feature.Definition_Class);
+      else
+         for Class of Feature.Original_Classes loop
+            Process (Ack.Classes.Class_Entity (Class));
+         end loop;
+      end if;
    end Scan_Original_Classes;
 
    -----------------------
@@ -444,5 +395,102 @@ package body Ack.Features is
          end if;
       end loop;
    end Set_Default_Value;
+
+   ------------------
+   -- Set_Deferred --
+   ------------------
+
+   procedure Set_Deferred
+     (Feature     : in out Feature_Entity_Record'Class)
+   is
+   begin
+      Feature.Property := False;
+      Feature.Deferred := True;
+      Feature.Definition_Class := null;
+   end Set_Deferred;
+
+   ------------------
+   -- Set_External --
+   ------------------
+
+   procedure Set_External
+     (Feature        : in out Feature_Entity_Record'Class;
+      External_Type  : String;
+      External_Alias : String)
+   is
+      Dot_Index       : constant Natural :=
+                          Ada.Strings.Fixed.Index (External_Alias, ".");
+      External_Object : constant String :=
+                          (if Dot_Index > 0
+                           then External_Alias
+                             (External_Alias'First .. Dot_Index - 1)
+                           else "");
+      External_Label  : constant String :=
+                          External_Alias
+                            (Dot_Index + 1 .. External_Alias'Last);
+   begin
+      Feature.Property := False;
+      Feature.External := True;
+      Feature.External_Object := +External_Object;
+      Feature.External_Type := +External_Type;
+      Feature.External_Label := +External_Label;
+   end Set_External;
+
+   ------------------------
+   -- Set_Feature_Entity --
+   ------------------------
+
+   procedure Set_Feature_Entity
+     (Node    : Node_Id;
+      Feature : not null access Feature_Entity_Record'Class)
+   is
+   begin
+      Set_Entity (Node, Feature);
+   end Set_Feature_Entity;
+
+   -------------------
+   -- Set_Redefined --
+   -------------------
+
+   procedure Set_Redefined
+     (Feature     : in out Feature_Entity_Record'Class;
+      Original    : not null access Ack.Classes.Class_Entity_Record'Class)
+   is
+   begin
+      Feature.Original_Classes.Append (Original);
+   end Set_Redefined;
+
+   ---------------------
+   -- Set_Result_Type --
+   ---------------------
+
+   procedure Set_Result_Type
+     (Feature     : in out Feature_Entity_Record'Class;
+      Result_Type : not null access Ack.Types.Type_Entity_Record'Class)
+   is
+   begin
+      Feature.Value_Type := Entity_Type (Result_Type);
+      if Feature.Routine then
+         Feature.Has_Result := True;
+      end if;
+   end Set_Result_Type;
+
+   -----------------
+   -- Set_Routine --
+   -----------------
+
+   procedure Set_Routine
+     (Feature      : in out Feature_Entity_Record'Class;
+      Routine_Node : Node_Id)
+   is
+   begin
+      Feature.Property := False;
+      Feature.Routine_Node := Routine_Node;
+      Feature.Routine := True;
+      if Feature.Value_Type /= null then
+         Feature.Has_Result := True;
+      end if;
+      Feature.Has_Current := True;
+   end Set_Routine;
 
 end Ack.Features;
