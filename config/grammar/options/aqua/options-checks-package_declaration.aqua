@@ -1,7 +1,7 @@
 class Options.Checks.Package_Declaration
 feature
 
-   Entries : List[Options.Entry]
+   Entries : Aqua.Containers.Linked_List[Options.Entry]
 
    Specification_File_Name : String
    Body_File_Name          : String

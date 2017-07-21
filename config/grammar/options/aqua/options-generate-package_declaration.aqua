@@ -8,7 +8,7 @@ feature
    Before_Node
       do
          Put ("generating: ")
-         Put (Node.Identifier.Text)
+         Put (Node.Package_Name)
          New_Line
          Set_Output (Node.Specification_File_Name & ".ads")
          Put_Line ("package " & Node.Package_Name & " is")
