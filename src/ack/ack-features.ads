@@ -25,6 +25,27 @@ package Ack.Features is
      (Feature : Feature_Entity_Record'Class)
      return access constant Ack.Classes.Class_Entity_Record'Class;
 
+   procedure Set_Result_Type
+     (Feature     : in out Feature_Entity_Record'Class;
+      Result_Type : not null access Ack.Types.Type_Entity_Record'Class);
+
+   procedure Set_Routine
+     (Feature      : in out Feature_Entity_Record'Class;
+      Routine_Node : Node_Id)
+     with Pre => Kind (Routine_Node) = N_Internal;
+
+   procedure Set_Deferred
+     (Feature     : in out Feature_Entity_Record'Class);
+
+   procedure Set_Redefined
+     (Feature     : in out Feature_Entity_Record'Class;
+      Original    : not null access Ack.Classes.Class_Entity_Record'Class);
+
+   procedure Set_External
+     (Feature        : in out Feature_Entity_Record'Class;
+      External_Type  : String;
+      External_Alias : String);
+
    procedure Add_Argument
      (Feature   : in out Feature_Entity_Record'Class;
       Name_Node : in     Node_Id;
@@ -49,34 +70,28 @@ package Ack.Features is
 
    type Feature_Entity is access all Feature_Entity_Record'Class;
 
-   function New_Property_Feature
-     (Name            : Name_Id;
-      Class           : not null access Ack.Classes.Class_Entity_Record'Class;
-      Property_Type   : not null access Ack.Types.Type_Entity_Record'Class;
-      Declaration     : Node_Id)
-      return Feature_Entity;
-
-   function New_Routine_Feature
-     (Name            : Name_Id;
-      Class           : not null access Ack.Classes.Class_Entity_Record'Class;
-      Result_Type     : access Ack.Types.Type_Entity_Record'Class;
-      Deferred        : Boolean;
-      Declaration     : Node_Id;
-      Routine         : Node_Id)
-      return Feature_Entity;
-
-   function New_External_Feature
-     (Name            : Name_Id;
-      Class           : not null access Ack.Classes.Class_Entity_Record'Class;
-      External_Type   : String;
-      External_Alias  : String;
-      Result_Type     : access Ack.Types.Type_Entity_Record'Class;
-      Declaration     : Node_Id)
+   function New_Feature
+     (Name        : Name_Id;
+      Declaration : Node_Id;
+      Class       : not null access Ack.Classes.Class_Entity_Record'Class)
       return Feature_Entity;
 
    function Is_Feature
      (Entity : not null access constant Root_Entity_Type'Class)
       return Boolean;
+
+   procedure Set_Feature_Entity
+     (Node    : Node_Id;
+      Feature : not null access Feature_Entity_Record'Class);
+
+   function Has_Feature_Entity
+     (Node    : Node_Id)
+      return Boolean;
+
+   function Get_Feature_Entity
+     (Node    : Node_Id)
+      return Feature_Entity
+     with Pre => Has_Feature_Entity (Node);
 
 private
 
@@ -123,5 +138,15 @@ private
      (Entity : not null access constant Root_Entity_Type'Class)
       return Boolean
    is (Entity.all in Feature_Entity_Record'Class);
+
+   function Has_Feature_Entity
+     (Node    : Node_Id)
+      return Boolean
+   is (Has_Entity (Node) and then Is_Feature (Get_Entity (Node)));
+
+   function Get_Feature_Entity
+     (Node    : Node_Id)
+      return Feature_Entity
+   is (Feature_Entity (Get_Entity (Node)));
 
 end Ack.Features;

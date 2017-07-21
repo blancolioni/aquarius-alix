@@ -83,6 +83,7 @@ package Ack is
       E_Undeclared_Name,
       E_Redefined_Name,
       E_Not_Defined_In,
+      E_Missing_Redefinition,
       E_No_Component,
       E_No_Child,
       E_Id_List_With_Arguments,

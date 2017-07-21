@@ -1,7 +1,5 @@
 with Ada.Text_IO;
 
-with Ack.IO;
-
 with Aquarius.Loader;
 
 with Ack.Files;
@@ -39,15 +37,32 @@ package body Ack.Semantic is
       Class_Name    : Node_Id;
       Defining_Name : Boolean);
 
-   procedure Analyse_Features
-     (Class    : Ack.Classes.Class_Entity;
-      Features : Node_Id)
-     with Pre => Kind (Features) = N_Features;
+   procedure Analyse_Feature_Name
+     (Class   : Ack.Classes.Class_Entity;
+      Exports : Node_Id;
+      Feature : Node_Id)
+     with Pre => Kind (Feature) = N_Feature_Declaration;
 
-   procedure Analyse_Feature_Bodies
-     (Class    : Ack.Classes.Class_Entity;
-      Features : Node_Id)
-     with Pre => Kind (Features) = N_Features;
+   procedure Analyse_Feature_Header
+     (Class   : Ack.Classes.Class_Entity;
+      Exports : Node_Id;
+      Feature : Node_Id)
+     with Pre => Kind (Feature) = N_Feature_Declaration;
+
+   procedure Analyse_Feature_Body
+     (Class   : Ack.Classes.Class_Entity;
+      Exports : Node_Id;
+      Feature : Node_Id)
+     with Pre => Kind (Feature) = N_Feature_Declaration;
+
+   procedure Analyse_Features
+     (Class   : Ack.Classes.Class_Entity;
+      Node    : Node_Id;
+      Analyse : not null access
+        procedure (Class : Ack.Classes.Class_Entity;
+                   Exports  : Node_Id;
+                   Node  : Node_Id))
+     with Pre => Kind (Node) = N_Features;
 
    procedure Analyse_Inheritance
      (Class       : Ack.Classes.Class_Entity;
@@ -56,18 +71,6 @@ package body Ack.Semantic is
    procedure Analyse_Inherit
      (Class   : Ack.Classes.Class_Entity;
       Inherit : Node_Id);
-
-   procedure Analyse_Feature_Clause
-     (Class   : Ack.Classes.Class_Entity;
-      Clause  : Node_Id;
-      Headers : Boolean;
-      Bodies  : Boolean);
-
-   procedure Analyse_Feature_Declaration
-     (Class      : Ack.Classes.Class_Entity;
-      Feature    : Node_Id;
-      Headers    : Boolean;
-      Bodies     : Boolean);
 
    procedure Analyse_Entity_Declaration_Groups
      (Class      : Ack.Classes.Class_Entity;
@@ -89,11 +92,6 @@ package body Ack.Semantic is
      (Class     : Ack.Classes.Class_Entity;
       Type_Node : Node_Id)
      with Pre => Kind (Type_Node) = N_Anchored_Type;
-
-   procedure Analyse_Routine
-     (Class     : Ack.Classes.Class_Entity;
-      Container : not null access Root_Entity_Type'Class;
-      Routine   : Node_Id);
 
    procedure Analyse_Effective_Routine
      (Class     : Ack.Classes.Class_Entity;
@@ -173,6 +171,22 @@ package body Ack.Semantic is
       Class : constant Ack.Classes.Class_Entity :=
                            Analyse_Class_Header (Node, Class_Header (Node));
    begin
+
+      if Trace_Class_Analysis then
+         Ada.Text_IO.Put_Line
+           ("Analysing: " & Class.Qualified_Name);
+      end if;
+
+      if Features_Node in Real_Node_Id then
+         if Trace_Class_Analysis then
+            Ada.Text_IO.Put_Line
+              ("Analysing feature names: " & Class.Qualified_Name);
+         end if;
+
+         Analyse_Features (Class, Features_Node,
+                           Analyse_Feature_Name'Access);
+      end if;
+
       if Inheritance_Node /= No_Node then
          Analyse_Inheritance (Class, Inheritance_Node);
       elsif Class.Standard_Name /= "any" then
@@ -182,13 +196,13 @@ package body Ack.Semantic is
                Get_Name_Id ("Any")));
       end if;
 
-      if Trace_Class_Analysis then
-         Ada.Text_IO.Put_Line
-           ("Analysing: " & Class.Qualified_Name);
-      end if;
-
       if Features_Node in Real_Node_Id then
-         Analyse_Features (Class, Features_Node);
+         if Trace_Class_Analysis then
+            Ada.Text_IO.Put_Line
+              ("Analysing feature headers: " & Class.Qualified_Name);
+         end if;
+         Analyse_Features
+           (Class, Features_Node, Analyse_Feature_Header'Access);
       end if;
 
       if Trace_Class_Analysis then
@@ -198,18 +212,20 @@ package body Ack.Semantic is
 
       Class.Bind;
 
-      if Trace_Class_Analysis then
-         Ada.Text_IO.Put_Line
-           ("  feature bodies: " & Class.Qualified_Name);
-      end if;
       if Features_Node in Real_Node_Id then
-         Analyse_Feature_Bodies (Class, Features_Node);
+         if Trace_Class_Analysis then
+            Ada.Text_IO.Put_Line
+              ("  feature bodies: " & Class.Qualified_Name);
+         end if;
+         Analyse_Features (Class, Features_Node,
+                           Analyse_Feature_Body'Access);
       end if;
 
       if Trace_Class_Analysis then
          Ada.Text_IO.Put_Line
            ("Finished: " & Class.Qualified_Name);
       end if;
+
    end Analyse_Class_Declaration;
 
    --------------------------
@@ -268,6 +284,12 @@ package body Ack.Semantic is
             Local_Name : constant Name_Id := Get_Name (Local_Node);
          begin
             if Context.Contains (Local_Name) then
+               if Has_Entity (Class_Name) then
+                  raise Constraint_Error with
+                  Get_Program (Local_Node).Show_Location
+                    & "node already has an entity: "
+                    & Get_Entity (Class_Name).Description;
+               end if;
                Set_Entity (Class_Name, Context.Get (Local_Name));
                return;
             end if;
@@ -569,190 +591,163 @@ package body Ack.Semantic is
       end case;
    end Analyse_Expression;
 
-   ----------------------------
-   -- Analyse_Feature_Bodies --
-   ----------------------------
+   --------------------------
+   -- Analyse_Feature_Body --
+   --------------------------
 
-   procedure Analyse_Feature_Bodies
-     (Class    : Ack.Classes.Class_Entity;
-      Features : Node_Id)
-   is
-      Clause_List : constant List_Id :=
-                      Feature_Clauses (Features);
-   begin
-      for Clause_Node of List_Table.Element (Clause_List).List loop
-         Analyse_Feature_Clause (Class, Clause_Node,
-                                 Headers => False, Bodies => True);
-      end loop;
-   end Analyse_Feature_Bodies;
-
-   ----------------------------
-   -- Analyse_Feature_Clause --
-   ----------------------------
-
-   procedure Analyse_Feature_Clause
+   procedure Analyse_Feature_Body
      (Class   : Ack.Classes.Class_Entity;
-      Clause  : Node_Id;
-      Headers : Boolean;
-      Bodies  : Boolean)
+      Exports : Node_Id;
+      Feature : Node_Id)
    is
-      Feature_List : constant List_Id :=
-                       Feature_Declarations (Clause);
+      pragma Unreferenced (Exports);
+      Names        : constant List_Id := New_Feature_List (Feature);
+      Dec_Body     : constant Node_Id := Declaration_Body (Feature);
+      Value_Node   : constant Node_Id := Value (Dec_Body);
+      Deferred     : constant Boolean :=
+                       Value_Node /= No_Node
+                           and then Node_Table.Element (Value_Node).Deferred;
+      Effective    : constant Boolean :=
+                       Value_Node /= No_Node and then not Deferred;
+      Effective_Node : constant Node_Id :=
+                         (if Effective then Effective_Routine (Value_Node)
+                          else No_Node);
+      Internal     : constant Boolean :=
+                       Effective
+                             and then Kind (Effective_Node) = N_Internal;
+      External     : constant Boolean :=
+                         Effective
+                             and then Kind (Effective_Node) = N_External;
    begin
-      if Feature_List in Real_List_Id then
-         for Feature_Node of List_Table.Element (Feature_List).List loop
-            Analyse_Feature_Declaration
-              (Class, Feature_Node,
-               Headers => Headers, Bodies => Bodies);
-         end loop;
-      end if;
-   end Analyse_Feature_Clause;
+      for Node of List_Table.Element (Names).List loop
+         declare
+            Entity : constant Ack.Features.Feature_Entity :=
+                       Ack.Features.Get_Feature_Entity (Node);
+         begin
+            if Deferred then
+               Entity.Set_Deferred;
+            elsif Internal then
+               Entity.Set_Routine (Effective_Node);
+            elsif External then
+               Entity.Set_External
+                 (External_Type  =>
+                    To_Standard_String (Get_Name (Effective_Node)),
+                  External_Alias =>
+                    To_String (Get_Name (Feature_Alias (Effective_Node))));
+            end if;
 
-   ---------------------------------
-   -- Analyse_Feature_Declaration --
-   ---------------------------------
+            Entity.Bind;
 
-   procedure Analyse_Feature_Declaration
-     (Class      : Ack.Classes.Class_Entity;
-      Feature    : Node_Id;
-      Headers    : Boolean;
-      Bodies     : Boolean)
+            if Internal then
+               Analyse_Effective_Routine (Class, Entity, Effective_Node);
+            end if;
+
+         end;
+      end loop;
+   end Analyse_Feature_Body;
+
+   ----------------------------
+   -- Analyse_Feature_Header --
+   ----------------------------
+
+   procedure Analyse_Feature_Header
+     (Class   : Ack.Classes.Class_Entity;
+      Exports : Node_Id;
+      Feature : Node_Id)
    is
+      pragma Unreferenced (Exports);
       Names        : constant List_Id := New_Feature_List (Feature);
       Dec_Body     : constant Node_Id := Declaration_Body (Feature);
       Arg_Node     : constant Node_Id := Formal_Arguments (Dec_Body);
       Type_Node    : constant Node_Id := Value_Type (Dec_Body);
-      Value_Node   : constant Node_Id := Value (Dec_Body);
-      Type_Entity  : Ack.Types.Type_Entity := null;
-      Single       : constant Boolean :=
-                       Natural (List_Table.Element (Names).List.Length) = 1;
-      Routine      : constant Boolean :=
-                       Single and then
-                           (Arg_Node /= No_Node or else Value_Node /= No_Node);
-      Deferred     : constant Boolean :=
-                       (if Value_Node /= No_Node
-                        then Node_Table.Element (Value_Node).Deferred
-                        else False);
    begin
-
-      if Headers then
-         if not Single then
-            if Arg_Node /= No_Node then
-               Error (Feature, E_Id_List_With_Arguments);
-            elsif Type_Node = No_Node then
-               Error (Feature, E_Id_List_With_No_Type);
-            elsif Value_Node /= No_Node
-              and then Kind (Value_Node) = N_Routine
-            then
-               Error (Feature, E_Id_List_With_Routine);
-            end if;
-         end if;
-
-         if Type_Node /= No_Node then
-            Analyse_Class_Type (Class, Type_Node);
-            if Has_Entity (Type_Node) then
-               Type_Entity := Ack.Types.Get_Type_Entity (Type_Node);
-            end if;
-         end if;
+      if Type_Node /= No_Node then
+         Analyse_Class_Type (Class, Type_Node);
       end if;
 
       for Node of List_Table.Element (Names).List loop
+         if not Ack.Features.Has_Feature_Entity (Node) then
+            raise Constraint_Error with
+            Get_Program (Node).Show_Location
+              & ": expected an entity in "
+              & To_String (Get_Name (Feature_Name (Node)));
+         end if;
+
          declare
-            use type Ack.Types.Type_Entity;
-            use type Ack.Features.Feature_Entity;
-            Entity : Ack.Features.Feature_Entity;
-            Effective : constant Node_Id :=
-                          (if Value_Node = No_Node then No_Node
-                           else Effective_Routine (Value_Node));
+            Entity    : constant Ack.Features.Feature_Entity :=
+                       Ack.Features.Get_Feature_Entity (Node);
          begin
-            if Headers then
-               if Routine then
-                  if not Deferred and then Value_Node = No_Node then
-                     Error (Node, E_Requires_Value);
-                  elsif not Deferred
-                    and then Kind (Effective) = N_External
-                  then
-                     Entity :=
-                       Ack.Features.New_External_Feature
-                         (Name           => Get_Name (Feature_Name (Node)),
-                          Class          => Class,
-                          External_Type  =>
-                            To_Standard_String (Get_Name (Effective)),
-                          External_Alias =>
-                            To_String (Get_Name (Feature_Alias (Effective))),
-                          Result_Type    => Type_Entity,
-                          Declaration    => Node);
-                  elsif Deferred or else Kind (Effective) = N_Internal then
-                     Entity :=
-                       Ack.Features.New_Routine_Feature
-                         (Name          => Get_Name (Feature_Name (Node)),
-                          Class         => Class,
-                          Result_Type   => Type_Entity,
-                          Deferred      => Deferred,
-                          Declaration   => Node,
-                          Routine       => Value_Node);
-                  else
-                     Ack.IO.Put_Line (Value_Node);
-                     raise Constraint_Error with "whoops, got that wrong";
-                  end if;
-
-               elsif Type_Entity /= null then
-                  Entity :=
-                    Ack.Features.New_Property_Feature
-                      (Name          => Get_Name (Feature_Name (Node)),
-                       Class         => Class,
-                       Property_Type => Type_Entity,
-                       Declaration   => Node);
-               end if;
-
-               if Entity /= null then
-                  Set_Entity (Node, Entity);
-               end if;
-
-            else
-               Entity := Ack.Features.Feature_Entity (Get_Entity (Node));
-            end if;
-
-            if Headers and then Single
-              and then Arg_Node /= No_Node
-              and then Entity /= null
-            then
+            if Arg_Node /= No_Node then
                Analyse_Entity_Declaration_Groups
                  (Class, Entity,
                   Entity_Declaration_Group_List (Arg_Node),
                   Local => False);
             end if;
 
-            if Bodies and then Entity /= null then
-               Entity.Bind;
-
-               if Bodies and then Value_Node /= No_Node then
-                  if Kind (Value_Node) = N_Routine then
-                     Analyse_Routine (Class, Entity, Value_Node);
-                  end if;
-               end if;
+            if Type_Node /= No_Node
+              and then Has_Entity (Type_Node)
+            then
+               Entity.Set_Result_Type
+                 (Ack.Types.Get_Type_Entity (Type_Node));
             end if;
-
          end;
       end loop;
+   end Analyse_Feature_Header;
 
-   end Analyse_Feature_Declaration;
+   --------------------------
+   -- Analyse_Feature_Name --
+   --------------------------
+
+   procedure Analyse_Feature_Name
+     (Class   : Ack.Classes.Class_Entity;
+      Exports : Node_Id;
+      Feature : Node_Id)
+   is
+      pragma Unreferenced (Exports);
+      Names        : constant List_Id := New_Feature_List (Feature);
+   begin
+      for Node of List_Table.Element (Names).List loop
+         declare
+            Name_Node : constant Node_Id :=
+                          Feature_Name (Node);
+            Entity : constant Ack.Features.Feature_Entity :=
+                       Ack.Features.New_Feature
+                         (Name        => Get_Name (Name_Node),
+                          Declaration => Node,
+                          Class       => Class);
+         begin
+            Ack.Features.Set_Feature_Entity (Node, Entity);
+            Class.Add_Feature (Entity);
+         end;
+      end loop;
+   end Analyse_Feature_Name;
 
    ----------------------
    -- Analyse_Features --
    ----------------------
 
    procedure Analyse_Features
-     (Class    : Ack.Classes.Class_Entity;
-      Features : Node_Id)
+     (Class   : Ack.Classes.Class_Entity;
+      Node    : Node_Id;
+      Analyse : not null access
+        procedure (Class : Ack.Classes.Class_Entity;
+                   Exports  : Node_Id;
+                   Node  : Node_Id))
    is
       Clause_List : constant List_Id :=
-                      Feature_Clauses (Features);
+                      Feature_Clauses (Node);
    begin
       for Clause_Node of List_Table.Element (Clause_List).List loop
-         Analyse_Feature_Clause
-           (Class, Clause_Node,
-            Headers => True, Bodies => False);
+         declare
+            Feature_List : constant List_Id :=
+                             Feature_Declarations (Clause_Node);
+         begin
+            for Feature_Node of List_Table.Element (Feature_List).List loop
+               Analyse (Class   => Class,
+                        Exports => No_Node,
+                        Node    => Feature_Node);
+            end loop;
+         end;
       end loop;
    end Analyse_Features;
 
@@ -808,7 +803,13 @@ package body Ack.Semantic is
       procedure Set_Redefine (Node : Node_Id) is
       begin
          if Inherited_Class.Has_Feature (Get_Name (Node)) then
-            Class.Redefine (Inherited_Class, Get_Name (Node));
+            if Class.Has_Feature (Get_Name (Node)) then
+               Class.Feature (Get_Name (Node)).Set_Redefined
+                 (Inherited_Class);
+            else
+               Error (Node, E_Missing_Redefinition,
+                      Entity_Type (Inherited_Class));
+            end if;
          else
             Error (Node, E_Not_Defined_In, Entity_Type (Inherited_Class));
          end if;
@@ -948,25 +949,6 @@ package body Ack.Semantic is
       end if;
 
    end Analyse_Precursor;
-
-   ---------------------
-   -- Analyse_Routine --
-   ---------------------
-
-   procedure Analyse_Routine
-     (Class     : Ack.Classes.Class_Entity;
-      Container : not null access Root_Entity_Type'Class;
-      Routine   : Node_Id)
-   is
-      Effective : constant Node_Id := Effective_Routine (Routine);
-   begin
-      if Effective /= No_Node then
-         Analyse_Effective_Routine
-           (Class     => Class,
-            Container => Container,
-            Routine   => Effective_Routine (Routine));
-      end if;
-   end Analyse_Routine;
 
    ------------------
    -- Analyse_Type --
