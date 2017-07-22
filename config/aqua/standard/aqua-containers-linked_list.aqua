@@ -1,11 +1,11 @@
 class Aqua.Containers.Linked_List[G]
-   inherit Forward_Iterable[G]
+   inherit Aqua.Containers.Forward_Iterable[G]
               redefine First end
    
 feature{Aqua.Containers.Linked_List_Iterator}
 
-   First_Cell : detachable Linkable[G]
-   Last_Cell  : detachable Linkable[G]
+   First_Cell : detachable Aqua.Containers.Linkable[G]
+   Last_Cell  : detachable Aqua.Containers.Linkable[G]
    
 feature
 

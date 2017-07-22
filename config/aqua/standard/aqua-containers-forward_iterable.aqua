@@ -1,5 +1,5 @@
 deferred class Aqua.Containers.Forward_Iterable [Element]
-   inherit Cell [Element]
+   inherit Aqua.Containers.Cell [Element]
    
 feature
 
