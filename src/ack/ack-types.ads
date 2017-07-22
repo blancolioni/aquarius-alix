@@ -81,9 +81,16 @@ private
          Class            : access Ack.Classes.Class_Entity_Record'Class;
          Generic_Bindings : List_Of_Generic_Bindings.List;
          Constraints      : List_Of_Constraints.List;
+         Generic_Formal   : Boolean := False;
          Detachable       : Boolean := False;
          Anchored         : Boolean := False;
       end record;
+
+   overriding function Instantiate
+     (Entity             : not null access Type_Entity_Record;
+      Type_Instantiation : not null access
+        function (Generic_Type : Entity_Type) return Entity_Type)
+      return Entity_Type;
 
    overriding function Conforms_To
      (Conformer : not null access constant Type_Entity_Record;
@@ -91,9 +98,8 @@ private
       return Boolean;
 
    overriding function Description
-     (Typ : Type_Entity_Record)
-      return String
-   is ("type " & Type_Entity_Record'Class (Typ).Qualified_Name);
+     (Typ       : Type_Entity_Record)
+      return String;
 
    overriding function Contains
      (Typ       : Type_Entity_Record;
@@ -109,7 +115,7 @@ private
    function Class
      (Typ : Type_Entity_Record'Class)
       return access Ack.Classes.Class_Entity_Record'Class
-   is (Typ.Class);
+   is (if Typ.Generic_Formal then null else Typ.Class);
 
    function Has_Type_Entity
      (Node : Node_Id)

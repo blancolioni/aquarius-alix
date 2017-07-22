@@ -166,6 +166,13 @@ package Ack is
       Other : not null access constant Root_Entity_Type'Class)
       return Boolean;
 
+   function Instantiate
+     (Entity             : not null access Root_Entity_Type;
+      Type_Instantiation : not null access
+        function (Generic_Type : Entity_Type) return Entity_Type)
+      return Entity_Type
+      is abstract;
+
    function Argument_Count (Entity : Root_Entity_Type) return Natural
    is (0);
 
@@ -222,7 +229,7 @@ package Ack is
    is (Table_Entity.Get (To_Standard_String (Name)));
 
    procedure Insert
-     (Table_Entity : in out Root_Entity_Type'Class;
+     (Table_Entity : Root_Entity_Type'Class;
       Entity       : not null access Root_Entity_Type'Class)
      with Pre => not Table_Entity.Contains (Entity.Standard_Name, False),
      Post => Table_Entity.Contains (Entity.Standard_Name, False);
@@ -840,6 +847,14 @@ private
    package List_Of_Entities is
      new Ada.Containers.Doubly_Linked_Lists (Entity_Type);
 
+   type Entity_Table_Record is
+      record
+         Map : Entity_Maps.Map;
+         List : List_Of_Entities.List;
+      end record;
+
+   type Entity_Table is access Entity_Table_Record;
+
    type Root_Entity_Type is abstract tagged
       record
          Name                : Ada.Strings.Unbounded.Unbounded_String;
@@ -847,8 +862,7 @@ private
          Declaration_Node    : Node_Id;
          Declaration_Context : Entity_Type;
          Value_Type          : Entity_Type;
-         Child_Map           : Entity_Maps.Map;
-         Child_List          : List_Of_Entities.List;
+         Children            : Entity_Table;
          Parent_Environment  : Entity_Type;
       end record;
 
@@ -908,6 +922,7 @@ private
      (Entity             : in out Root_Entity_Type'Class;
       Name               : Name_Id;
       Node               : Node_Id;
+      Table              : Boolean;
       Parent_Environment : access Root_Entity_Type'Class := null;
       Context            : access Root_Entity_Type'Class := null);
 

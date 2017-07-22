@@ -11,14 +11,6 @@ package Ack.Variables is
       Argument_Type : not null access Root_Entity_Type'Class)
       return Variable_Entity;
 
-   function Instantiate_Argument
-     (Generic_Argument : Variable_Entity;
-      Instantiate_Type : not null access
-        function (Generic_Type : not null access
-                    Root_Entity_Type'Class)
-      return Entity_Type)
-      return Variable_Entity;
-
    function New_Local_Entity
      (Name       : Name_Id;
       Node       : Node_Id;
@@ -32,5 +24,11 @@ private
       record
          null;
       end record;
+
+   overriding function Instantiate
+     (Entity             : not null access Variable_Entity_Record;
+      Type_Instantiation : not null access
+        function (Generic_Type : Entity_Type) return Entity_Type)
+      return Entity_Type;
 
 end Ack.Variables;

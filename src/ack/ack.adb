@@ -35,7 +35,9 @@ package body Ack is
       return Boolean
    is
    begin
-      if Table_Entity.Child_Map.Contains (Name) then
+      if Table_Entity.Children /= null
+        and then Table_Entity.Children.Map.Contains (Name)
+      then
          return True;
       elsif Recursive and then Table_Entity.Parent_Environment /= null then
          return Table_Entity.Parent_Environment.Contains (Name, Recursive);
@@ -70,6 +72,7 @@ package body Ack is
      (Entity             : in out Root_Entity_Type'Class;
       Name               : Name_Id;
       Node               : Node_Id;
+      Table              : Boolean;
       Parent_Environment : access Root_Entity_Type'Class := null;
       Context            : access Root_Entity_Type'Class := null)
    is
@@ -80,6 +83,10 @@ package body Ack is
       Entity.Value_Type := null;
       Entity.Parent_Environment := Entity_Type (Parent_Environment);
       Entity.Declaration_Context := Entity_Type (Context);
+      if Table then
+         Entity.Children := new Entity_Table_Record;
+      end if;
+
    end Create;
 
    ----------------------
@@ -158,8 +165,10 @@ package body Ack is
       return Entity_Type
    is
    begin
-      if Table_Entity.Child_Map.Contains (Name) then
-         return Table_Entity.Child_Map.Element (Name);
+      if Table_Entity.Children /= null
+        and then Table_Entity.Children.Map.Contains (Name)
+      then
+         return Table_Entity.Children.Map.Element (Name);
       else
          return Table_Entity.Parent_Environment.Get (Name);
       end if;
@@ -188,13 +197,13 @@ package body Ack is
    ------------
 
    procedure Insert
-     (Table_Entity : in out Root_Entity_Type'Class;
+     (Table_Entity : Root_Entity_Type'Class;
       Entity       : not null access Root_Entity_Type'Class)
    is
    begin
-      Table_Entity.Child_Map.Insert
+      Table_Entity.Children.Map.Insert
         (-(Entity.Name), Entity_Type (Entity));
-      Table_Entity.Child_List.Append (Entity_Type (Entity));
+      Table_Entity.Children.List.Append (Entity_Type (Entity));
    end Insert;
 
    --------------
