@@ -19,7 +19,7 @@ package Ack.Classes is
 
    procedure Inherit
      (Class           : in out Class_Entity_Record'Class;
-      Inherited_Class : not null access Class_Entity_Record'Class);
+      Inherited_Type : not null access Ack.Types.Type_Entity_Record'Class);
 
    procedure Rename
      (Class            : in out Class_Entity_Record'Class;
@@ -45,13 +45,6 @@ package Ack.Classes is
      (Class : Class_Entity_Record'Class;
       Index : Positive)
       return access constant Ack.Types.Type_Entity_Record'Class;
-
-   procedure Scan_Old_Definitions
-     (Class : Class_Entity_Record'Class;
-      Feature_Name : Name_Id;
-      Process      : not null access
-        procedure (Feature : not null access constant
-                     Ack.Features.Feature_Entity_Record'Class));
 
    overriding procedure Bind
      (Class : in out Class_Entity_Record);
@@ -132,15 +125,15 @@ private
    package List_Of_Feature_Renames is
      new Ada.Containers.Doubly_Linked_Lists (Feature_Rename);
 
-   type Inherited_Class_Record is
+   type Inherited_Type_Record is
       record
-         Inherited_Class    : Class_Entity;
+         Inherited_Type     : access Ack.Types.Type_Entity_Record'Class;
          Redefined_Features : List_Of_Feature_Entities.List;
          Renamed_Features   : List_Of_Feature_Renames.List;
       end record;
 
-   package List_Of_Inherited_Class_Records is
-     new Ada.Containers.Doubly_Linked_Lists (Inherited_Class_Record);
+   package List_Of_Inherited_Type_Records is
+     new Ada.Containers.Doubly_Linked_Lists (Inherited_Type_Record);
 
    type Class_Entity_Record is
      new Root_Entity_Type with
@@ -149,7 +142,7 @@ private
          Deferred          : Boolean := False;
          Expanded          : Boolean := False;
          Frozen            : Boolean := False;
-         Inherited_Classes : List_Of_Inherited_Class_Records.List;
+         Inherited_Types   : List_Of_Inherited_Type_Records.List;
          Inherited_List    : List_Of_Class_Entities.List;
          Class_Features    : List_Of_Feature_Entities.List;
          Formal_Arguments  : List_Of_Entities.List;
