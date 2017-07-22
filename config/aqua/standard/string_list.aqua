@@ -4,5 +4,13 @@ class String_List
       
 feature
    Interpolate (Separator : String) : String
-   
+      do
+         Result := ""
+         across Current as item loop
+            if Result /= "" then
+               Result := Result & Separator
+            end
+            Result := Result & Current
+         end
+      end
 end
