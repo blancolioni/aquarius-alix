@@ -1,28 +1,21 @@
 package body Ack.Variables is
 
-   --------------------------
-   -- Instantiate_Argument --
-   --------------------------
+   -----------------
+   -- Instantiate --
+   -----------------
 
-   function Instantiate_Argument
-     (Generic_Argument : Variable_Entity;
-      Instantiate_Type : not null access
-        function (Generic_Type : not null access
-                    Root_Entity_Type'Class)
-      return Entity_Type)
-      return Variable_Entity
+   overriding function Instantiate
+     (Entity             : not null access Variable_Entity_Record;
+      Type_Instantiation : not null access
+        function (Generic_Type : Entity_Type) return Entity_Type)
+      return Entity_Type
    is
+      Result : constant Variable_Entity :=
+                 new Variable_Entity_Record'(Entity.all);
    begin
-      return new Variable_Entity_Record'
-        (Name                => Generic_Argument.Name,
-         Source_Name         => Generic_Argument.Source_Name,
-         Declaration_Node    => Generic_Argument.Declaration_Node,
-         Declaration_Context => Generic_Argument.Declaration_Context,
-         Value_Type          => Instantiate_Type (Generic_Argument.Value_Type),
-         Child_Map           => <>,
-         Child_List          => <>,
-         Parent_Environment  => Generic_Argument.Parent_Environment);
-   end Instantiate_Argument;
+      Result.Value_Type := Result.Value_Type.Instantiate (Type_Instantiation);
+      return Entity_Type (Result);
+   end Instantiate;
 
    -------------------------
    -- New_Argument_Entity --
@@ -38,7 +31,7 @@ package body Ack.Variables is
       return Result : constant Variable_Entity :=
         new Variable_Entity_Record
       do
-         Result.Create (Name, Node);
+         Result.Create (Name, Node, Table => False);
          Result.Value_Type := Entity_Type (Argument_Type);
       end return;
    end New_Argument_Entity;
@@ -57,7 +50,7 @@ package body Ack.Variables is
       return Result : constant Variable_Entity :=
         new Variable_Entity_Record
       do
-         Result.Create (Name, Node);
+         Result.Create (Name, Node, Table => False);
          Result.Value_Type := Entity_Type (Local_Type);
       end return;
    end New_Local_Entity;

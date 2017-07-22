@@ -9,6 +9,13 @@ package body Ack.Environment is
       return String
    is (To_Standard_String (Child_Name));
 
+   overriding function Instantiate
+     (Entity             : not null access Top_Level_Entity_Record;
+      Type_Instantiation : not null access
+        function (Generic_Type : Entity_Type) return Entity_Type)
+      return Entity_Type
+   is (Entity_Type (Entity));
+
    Top_Level_Entity : aliased Top_Level_Entity_Record;
    Initialised      : Boolean := False;
 
@@ -20,6 +27,12 @@ package body Ack.Environment is
 
    procedure Create_Top_Level is
    begin
+      Top_Level_Entity.Create
+        (Name               => Get_Name_Id ("standard"),
+         Node               => No_Node,
+         Table              => True,
+         Parent_Environment => null,
+         Context            => null);
       Initialised := True;
    end Create_Top_Level;
 

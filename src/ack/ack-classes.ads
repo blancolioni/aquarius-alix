@@ -171,6 +171,13 @@ private
       Name  : String)
       return Entity_Type;
 
+   overriding function Instantiate
+     (Entity             : not null access Class_Entity_Record;
+      Type_Instantiation : not null access
+        function (Generic_Type : Entity_Type) return Entity_Type)
+      return Entity_Type
+   is (Entity_Type (Entity));
+
    overriding function Conforms_To
      (Class : not null access constant Class_Entity_Record;
       Other : not null access constant Root_Entity_Type'Class)

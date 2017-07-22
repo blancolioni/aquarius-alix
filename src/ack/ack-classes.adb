@@ -325,6 +325,7 @@ package body Ack.Classes is
       return Result : constant Class_Entity := new Class_Entity_Record do
          Result.Create
            (Name, Declaration,
+            Table              => True,
             Parent_Environment => Ack.Environment.Top_Level,
             Context            => Context);
       end return;

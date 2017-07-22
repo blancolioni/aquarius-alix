@@ -119,6 +119,12 @@ private
          Routine_Node     : Node_Id;
       end record;
 
+   overriding function Instantiate
+     (Entity             : not null access Feature_Entity_Record;
+      Type_Instantiation : not null access
+        function (Generic_Type : Entity_Type) return Entity_Type)
+      return Entity_Type;
+
    overriding function Argument_Count
      (Entity : Feature_Entity_Record)
       return Natural

@@ -8,24 +8,6 @@ with Ack.Types;
 
 package body Ack.Features is
 
-   function New_Feature
-     (Name             : Name_Id;
-      Declaration_Node : Node_Id;
-      Class            : not null access Ack.Classes.Class_Entity_Record'Class;
-      Result_Type      : access Ack.Types.Type_Entity_Record'Class;
-      Routine          : Boolean := False;
-      Property         : Boolean := False;
-      Named_Value      : Boolean := False;
-      Deferred         : Boolean := False;
-      External         : Boolean := False;
-      Has_Result       : Boolean := False;
-      Has_Current      : Boolean := True;
-      External_Type    : String := "";
-      External_Alias   : String := "";
-      Routine_Node     : Node_Id := No_Node)
-      return Feature_Entity
-     with Unreferenced;
-
    ------------------
    -- Add_Argument --
    ------------------
@@ -223,93 +205,32 @@ package body Ack.Features is
    end Generate_Routine;
 
    -----------------
-   -- New_Feature --
+   -- Instantiate --
    -----------------
 
-   function New_Feature
-     (Name             : Name_Id;
-      Declaration_Node : Node_Id;
-      Class            : not null access Ack.Classes.Class_Entity_Record'Class;
-      Result_Type      : access Ack.Types.Type_Entity_Record'Class;
-      Routine          : Boolean := False;
-      Property         : Boolean := False;
-      Named_Value      : Boolean := False;
-      Deferred         : Boolean := False;
-      External         : Boolean := False;
-      Has_Result       : Boolean := False;
-      Has_Current      : Boolean := True;
-      External_Type    : String := "";
-      External_Alias   : String := "";
-      Routine_Node     : Node_Id := No_Node)
-      return Feature_Entity
+   overriding function Instantiate
+     (Entity             : not null access Feature_Entity_Record;
+      Type_Instantiation : not null access
+        function (Generic_Type : Entity_Type) return Entity_Type)
+      return Entity_Type
    is
-      Dot_Index : constant Natural :=
-                    Ada.Strings.Fixed.Index (External_Alias, ".");
-      External_Object : constant String :=
-                          (if Dot_Index > 0
-                           then External_Alias
-                             (External_Alias'First .. Dot_Index - 1)
-                           else "");
-      External_Label  : constant String :=
-                          External_Alias
-                            (Dot_Index + 1 .. External_Alias'Last);
+      Instan : constant Feature_Entity :=
+                 new Feature_Entity_Record'(Entity.all);
    begin
-      return Feature : constant Feature_Entity :=
-        new Feature_Entity_Record'
-          (Name                => +(To_Standard_String (Name)),
-           Source_Name         => +(To_String (Name)),
-           Declaration_Node    => Declaration_Node,
-           Declaration_Context => Entity_Type (Class),
-           Value_Type          => Entity_Type (Result_Type),
-           Child_Map           => <>,
-           Child_List          => <>,
-           Parent_Environment  => Entity_Type (Class),
-           Routine             => Routine,
-           Property            => Property,
-           Named_Value         => Named_Value,
-           Deferred            => Deferred,
-           External            => External,
-           Has_Result          => Has_Result,
-           Has_Current         => Has_Current,
-           External_Object     => +External_Object,
-           External_Type       => +External_Type,
-           External_Label      => +External_Label,
-           Original_Classes    => <>,
-           Definition_Class    => Class,
-           Arguments           => <>,
-           Locals              => <>,
-           Routine_Node        => Routine_Node)
-      do
-         if Class.Is_Redefinition (Name) then
-            declare
-               procedure Add_Original_Classes
-                 (Redefined_Feature : not null access constant
-                    Feature_Entity_Record'Class);
+      if Instan.Value_Type /= null then
+         Instan.Value_Type :=
+           Instan.Value_Type.Instantiate (Type_Instantiation);
+      end if;
 
-               --------------------------
-               -- Add_Original_Classes --
-               --------------------------
+      for Arg of Instan.Arguments loop
+         Arg :=
+           Ack.Variables.Variable_Entity
+             (Arg.Instantiate (Type_Instantiation));
+      end loop;
 
-               procedure Add_Original_Classes
-                 (Redefined_Feature : not null access constant
-                    Feature_Entity_Record'Class)
-               is
-               begin
-                  for Original of Redefined_Feature.Original_Classes loop
-                     Feature.Original_Classes.Append (Original);
-                  end loop;
-               end Add_Original_Classes;
+      return Entity_Type (Instan);
 
-            begin
-               Class.Scan_Old_Definitions (Name, Add_Original_Classes'Access);
-            end;
-         else
-            Feature.Original_Classes.Append (Class);
-         end if;
-
-         Class.Add_Feature (Feature);
-      end return;
-   end New_Feature;
+   end Instantiate;
 
    -----------------
    -- New_Feature --
@@ -325,6 +246,7 @@ package body Ack.Features is
       return Feature : constant Feature_Entity := new Feature_Entity_Record do
          Feature.Create
            (Name, Declaration,
+            Table              => True,
             Parent_Environment => Class,
             Context            => Class);
          Feature.Definition_Class := Class;
@@ -344,7 +266,12 @@ package body Ack.Features is
    is
    begin
       if Feature.Original_Classes.Is_Empty then
-         Process (Feature.Definition_Class);
+         if Feature.Definition_Class = null then
+            --  deferred
+            null;
+         else
+            Process (Feature.Definition_Class);
+         end if;
       else
          for Class of Feature.Original_Classes loop
             Process (Ack.Classes.Class_Entity (Class));
