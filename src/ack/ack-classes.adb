@@ -51,8 +51,8 @@ package body Ack.Classes is
       begin
          if not Class.Inherited_List.Contains (Top) then
             Class.Inherited_List.Append (Top);
-            for Inherited of Top.Inherited_Classes loop
-               Scan_Hierarchy (Inherited.Inherited_Class);
+            for Inherited of Top.Inherited_Types loop
+               Scan_Hierarchy (Inherited.Inherited_Type.Class);
             end loop;
          end if;
       end Scan_Hierarchy;
@@ -61,8 +61,8 @@ package body Ack.Classes is
       if Trace_Classes then
          Ada.Text_IO.Put_Line ("binding: " & Class.Description);
       end if;
-      for Inherited of Class.Inherited_Classes loop
-         Scan_Hierarchy (Inherited.Inherited_Class);
+      for Inherited of Class.Inherited_Types loop
+         Scan_Hierarchy (Inherited.Inherited_Type.Class);
       end loop;
    end Bind;
 
@@ -99,8 +99,10 @@ package body Ack.Classes is
          if Current = Ancestor then
             return True;
          else
-            for Inherited of Current.Inherited_Classes loop
-               if Try (Constant_Class_Entity (Inherited.Inherited_Class)) then
+            for Inherited of Current.Inherited_Types loop
+               if Try (Constant_Class_Entity
+                       (Inherited.Inherited_Type.Class))
+               then
                   return True;
                end if;
             end loop;
@@ -252,11 +254,11 @@ package body Ack.Classes is
 
    procedure Inherit
      (Class           : in out Class_Entity_Record'Class;
-      Inherited_Class : not null access Class_Entity_Record'Class)
+      Inherited_Type  : not null access Ack.Types.Type_Entity_Record'Class)
    is
    begin
-      Class.Inherited_Classes.Append
-        ((Inherited_Class => Class_Entity (Inherited_Class),
+      Class.Inherited_Types.Append
+        ((Inherited_Type => Ack.Types.Type_Entity (Inherited_Type),
           others          => <>));
    end Inherit;
 
@@ -270,7 +272,7 @@ package body Ack.Classes is
       return Boolean
    is
    begin
-      for Inherited of Class.Inherited_Classes loop
+      for Inherited of Class.Inherited_Types loop
          declare
             Local_Name : Name_Id := Feature_Name;
          begin
@@ -301,7 +303,7 @@ package body Ack.Classes is
       return Boolean
    is
    begin
-      for Inherited of Class.Inherited_Classes loop
+      for Inherited of Class.Inherited_Types loop
          for Rename of Inherited.Renamed_Features loop
             if Rename.New_Name = Feature_Name then
                return True;
@@ -361,8 +363,8 @@ package body Ack.Classes is
       New_Feature_Name : Name_Id)
    is
    begin
-      for Inherited of Class.Inherited_Classes loop
-         if Inherited.Inherited_Class = Inherited_Class then
+      for Inherited of Class.Inherited_Types loop
+         if Inherited.Inherited_Type.Class = Inherited_Class then
             Inherited.Renamed_Features.Append
               ((Feature_Name, New_Feature_Name));
             exit;
@@ -399,13 +401,14 @@ package body Ack.Classes is
            Class_Entity_Record'Class)
       is
       begin
-         for Inherited of Ancestor.Inherited_Classes loop
+         for Inherited of Ancestor.Inherited_Types loop
             if not Scanned.Contains
-              (Inherited.Inherited_Class.Qualified_Name)
+              (Inherited.Inherited_Type.Class.Qualified_Name)
             then
-               Scanned.Insert (Inherited.Inherited_Class.Qualified_Name, True);
-               Process (Inherited.Inherited_Class);
-               Scan (Inherited.Inherited_Class);
+               Scanned.Insert
+                 (Inherited.Inherited_Type.Class.Qualified_Name, True);
+               Process (Inherited.Inherited_Type.Class);
+               Scan (Inherited.Inherited_Type.Class);
             end if;
          end loop;
       end Scan;
@@ -458,37 +461,5 @@ package body Ack.Classes is
          end if;
       end loop;
    end Scan_Features;
-
-   --------------------------
-   -- Scan_Old_Definitions --
-   --------------------------
-
-   procedure Scan_Old_Definitions
-     (Class        : Class_Entity_Record'Class;
-      Feature_Name : Name_Id;
-      Process      : not null access
-        procedure (Feature : not null access constant
-                     Ack.Features.Feature_Entity_Record'Class))
-   is
-   begin
-      for Inherited of Class.Inherited_Classes loop
-         declare
-            Local_Name : Name_Id := Feature_Name;
-         begin
-            for Rename of Inherited.Renamed_Features loop
-               if Rename.New_Name = Feature_Name then
-                  Local_Name := Rename.Old_Name;
-                  exit;
-               end if;
-            end loop;
-
-            for Feature of Inherited.Redefined_Features loop
-               if Get_Name_Id (Feature.Standard_Name) = Local_Name then
-                  Process (Feature);
-               end if;
-            end loop;
-         end;
-      end loop;
-   end Scan_Old_Definitions;
 
 end Ack.Classes;

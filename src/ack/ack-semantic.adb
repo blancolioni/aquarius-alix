@@ -191,9 +191,13 @@ package body Ack.Semantic is
          Analyse_Inheritance (Class, Inheritance_Node);
       elsif Class.Standard_Name /= "any" then
          Class.Inherit
-           (Load_Class
-              (Get_Program (Node), Ack.Environment.Top_Level,
-               Get_Name_Id ("Any")));
+           (Ack.Types.New_Class_Type
+              (Node       => Node,
+               Class      =>
+                 Load_Class
+                   (Get_Program (Node), Ack.Environment.Top_Level,
+                    Get_Name_Id ("Any")),
+               Detachable => False));
       end if;
 
       if Features_Node in Real_Node_Id then
@@ -792,6 +796,7 @@ package body Ack.Semantic is
       Class_Type      : constant Node_Id := Inherit_Class_Type (Inherit);
       Redefine_List   : constant List_Id := Redefine (Inherit);
 
+      Inherited_Type  : Ack.Types.Type_Entity;
       Inherited_Class : Ack.Classes.Class_Entity;
 
       procedure Set_Redefine (Node : Node_Id);
@@ -819,11 +824,12 @@ package body Ack.Semantic is
 
       Analyse_Class_Type (Class, Class_Type);
 
-      Inherited_Class := Ack.Types.Get_Type_Entity (Class_Type).Class;
+      Inherited_Type := Ack.Types.Get_Type_Entity (Class_Type);
+      Inherited_Class := Inherited_Type.Class;
 
-      Set_Entity (Inherit, Inherited_Class);
+      Set_Entity (Inherit, Inherited_Type);
 
-      Class.Inherit (Inherited_Class);
+      Class.Inherit (Inherited_Type);
       Scan (Redefine_List, Set_Redefine'Access);
 
    end Analyse_Inherit;
