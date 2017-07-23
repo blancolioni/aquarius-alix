@@ -329,7 +329,7 @@ package body Ack.Features is
       procedure Set (Class : not null access constant
                        Ack.Classes.Class_Entity_Record'Class)
       is
-   begin
+      begin
          Unit.Push_Register ("agg");
          Unit.Pop_Register ("op");
          Unit.Native_Operation
