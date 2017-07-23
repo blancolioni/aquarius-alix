@@ -3,6 +3,10 @@ package Ack.Variables is
    type Variable_Entity_Record is
      new Root_Entity_Type with private;
 
+   procedure Set_Offset
+     (Variable : in out Variable_Entity_Record'Class;
+      Offset   : Positive);
+
    type Variable_Entity is access all Variable_Entity_Record'Class;
 
    function New_Argument_Entity
@@ -19,10 +23,13 @@ package Ack.Variables is
 
 private
 
+   type Variable_Kind is (Argument, Local);
+
    type Variable_Entity_Record is
      new Root_Entity_Type with
       record
-         null;
+         Kind   : Variable_Kind;
+         Offset : Positive;
       end record;
 
    overriding function Instantiate
@@ -30,5 +37,9 @@ private
       Type_Instantiation : not null access
         function (Generic_Type : Entity_Type) return Entity_Type)
       return Entity_Type;
+
+   overriding procedure Push_Entity
+     (Variable : Variable_Entity_Record;
+      Unit     : in out Tagatha.Units.Tagatha_Unit);
 
 end Ack.Variables;
