@@ -483,11 +483,26 @@ package body Ack.Classes is
         procedure (Feature : not null access constant
                      Ack.Features.Feature_Entity_Record'Class))
    is
+      package Name_Sets is new WL.String_Maps (Boolean);
+
+      Scanned : Name_Sets.Map;
+
    begin
       for Feature of Class.Class_Features loop
          if Test (Feature) then
+            Scanned.Insert (Feature.Standard_Name, True);
             Process (Feature);
          end if;
+      end loop;
+      for Inherited of Class.Inherited_List loop
+         for Feature of Inherited.Class_Features loop
+            if not Scanned.Contains (Feature.Standard_Name)
+              and then Test (Feature)
+            then
+               Scanned.Insert (Feature.Standard_Name, True);
+               Process (Feature);
+            end if;
+         end loop;
       end loop;
    end Scan_Features;
 
