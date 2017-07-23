@@ -45,6 +45,8 @@ package body Ack.Features is
    overriding procedure Bind
      (Feature : in out Feature_Entity_Record)
    is
+      Next_Argument : Positive := 1;
+      Next_Local    : Positive := 1;
    begin
       if Feature.Has_Current then
          declare
@@ -58,10 +60,13 @@ package body Ack.Features is
                               Detachable => False));
          begin
             Feature.Insert (Current);
+            Next_Argument := 2;
          end;
       end if;
 
       for Argument of Feature.Arguments loop
+         Argument.Set_Offset (Next_Argument);
+         Next_Argument := Next_Argument + 1;
          Feature.Insert (Argument);
       end loop;
 
@@ -74,10 +79,13 @@ package body Ack.Features is
                           Feature.Value_Type);
          begin
             Feature.Insert (Result);
+            Next_Local := 2;
          end;
       end if;
 
       for Local of Feature.Locals loop
+         Local.Set_Offset (Next_Local);
+         Next_Local := Next_Local + 1;
          Feature.Insert (Local);
       end loop;
    end Bind;
