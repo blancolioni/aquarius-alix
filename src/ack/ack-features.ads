@@ -144,6 +144,10 @@ private
      (Feature : Feature_Entity_Record)
       return String;
 
+   overriding procedure Push_Entity
+     (Feature : Feature_Entity_Record;
+      Unit    : in out Tagatha.Units.Tagatha_Unit);
+
    function Is_Feature
      (Entity : not null access constant Root_Entity_Type'Class)
       return Boolean
