@@ -107,7 +107,9 @@ package body Ack.Generate is
       Unit.Push_Register ("op");
       Unit.Pop_Register ("agg");
 
-      Class.Scan_Ancestors (True, Generate_Local_Allocator'Access);
+      Class.Scan_Ancestors (Proper_Ancestors => False,
+                            Process          =>
+                              Generate_Local_Allocator'Access);
       Class.Scan_Features (Set_Value'Access);
 
       Unit.Pop_Result;
