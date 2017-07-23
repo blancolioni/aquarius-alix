@@ -160,7 +160,7 @@ package body Ack is
    ---------
 
    function Get
-     (Table_Entity : Root_Entity_Type;
+     (Table_Entity : not null access Root_Entity_Type;
       Name         : String)
       return Entity_Type
    is

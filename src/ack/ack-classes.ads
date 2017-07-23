@@ -50,12 +50,12 @@ package Ack.Classes is
      (Class : in out Class_Entity_Record);
 
    function Has_Feature
-     (Class : Class_Entity_Record'Class;
+     (Class : not null access constant Class_Entity_Record'Class;
       Name  : Name_Id)
       return Boolean;
 
    function Feature
-     (Class : Class_Entity_Record'Class;
+     (Class : not null access constant Class_Entity_Record'Class;
       Name  : Name_Id)
       return Ack.Features.Feature_Entity
      with Pre => Class.Has_Feature (Name);
@@ -102,6 +102,11 @@ package Ack.Classes is
       return Class_Entity
      with Pre => Kind (Node) in
      N_Class_Declaration | N_Class_Header | N_Class_Name;
+
+   function Get_Ancestor_Type
+     (Descendent_Class : Class_Entity_Record'Class;
+      Ancestor_Class   : not null access constant Class_Entity_Record'Class)
+      return access Ack.Types.Type_Entity_Record'Class;
 
    function Get_Top_Level_Class
      (Name : String)
@@ -160,7 +165,7 @@ private
       return Boolean;
 
    overriding function Get
-     (Class : Class_Entity_Record;
+     (Class : not null access constant Class_Entity_Record;
       Name  : String)
       return Entity_Type;
 
@@ -177,7 +182,7 @@ private
       return Boolean;
 
    function Has_Feature
-     (Class : Class_Entity_Record'Class;
+     (Class : not null access constant Class_Entity_Record'Class;
       Name  : Name_Id)
       return Boolean
    is (Class.Contains (Name)
