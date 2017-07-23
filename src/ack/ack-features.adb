@@ -319,8 +319,17 @@ package body Ack.Features is
      (Feature : Feature_Entity_Record;
       Unit    : in out Tagatha.Units.Tagatha_Unit)
    is
+      procedure Set (Class : not null access constant
+                       Ack.Classes.Class_Entity_Record'Class);
+
+      ---------
+      -- Set --
+      ---------
+
+      procedure Set (Class : not null access constant
+                       Ack.Classes.Class_Entity_Record'Class)
+      is
    begin
-      for Class of Feature.Original_Classes loop
          Unit.Push_Register ("agg");
          Unit.Pop_Register ("op");
          Unit.Native_Operation
@@ -352,7 +361,10 @@ package body Ack.Features is
               "expected a property or a routine, but found '"
               & (-Feature.Source_Name) & "'";
          end if;
-      end loop;
+      end Set;
+
+   begin
+      Feature.Scan_Original_Classes (Set'Access);
    end Set_Default_Value;
 
    ------------------
@@ -389,6 +401,7 @@ package body Ack.Features is
                             (Dot_Index + 1 .. External_Alias'Last);
    begin
       Feature.Property := False;
+      Feature.Routine := True;
       Feature.External := True;
       Feature.External_Object := +External_Object;
       Feature.External_Type := +External_Type;
