@@ -80,6 +80,9 @@ package body Ack.Errors is
             return "entity does not accept arguments";
          when E_Requires_Value =>
             return "feature requires a body";
+         when E_Illegal_Redefinition =>
+            return "illegal redefinition of "
+              & Get_Error_Entity (Node).Declared_Name;
       end case;
    end Error_Message;
 

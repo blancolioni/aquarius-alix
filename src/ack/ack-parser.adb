@@ -174,7 +174,11 @@ package body Ack.Parser is
 
    function Import_Explicit_Value
      (From : Aquarius.Programs.Program_Tree)
-      return Node_Id is (No_Node)
+      return Node_Id is
+     (New_Node (N_Explicit_Value, From,
+                Field_1 =>
+                   Ack.Parser.Expressions.Import_Manifest_Constant
+                  (From.Program_Child ("manifest_constant"))))
    with Pre => From.Name = "explicit_value";
 
    function Import_Routine

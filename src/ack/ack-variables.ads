@@ -42,4 +42,8 @@ private
      (Variable : Variable_Entity_Record;
       Unit     : in out Tagatha.Units.Tagatha_Unit);
 
+   overriding procedure Pop_Entity
+     (Variable : Variable_Entity_Record;
+      Unit     : in out Tagatha.Units.Tagatha_Unit);
+
 end Ack.Variables;

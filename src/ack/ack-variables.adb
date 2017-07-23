@@ -57,6 +57,28 @@ package body Ack.Variables is
       end return;
    end New_Local_Entity;
 
+   ----------------
+   -- Pop_Entity --
+   ----------------
+
+   overriding procedure Pop_Entity
+     (Variable : Variable_Entity_Record;
+      Unit     : in out Tagatha.Units.Tagatha_Unit)
+   is
+   begin
+      case Variable.Kind is
+         when Local =>
+            Unit.Pop_Local
+              (Tagatha.Local_Offset (Variable.Offset),
+               Tagatha.Default_Size);
+
+         when Argument =>
+            Unit.Pop_Argument
+              (Tagatha.Argument_Offset (Variable.Offset),
+               Tagatha.Default_Size);
+      end case;
+   end Pop_Entity;
+
    -----------------
    -- Push_Entity --
    -----------------

@@ -46,6 +46,10 @@ package Ack.Features is
       External_Type  : String;
       External_Alias : String);
 
+   procedure Set_Explicit_Value
+     (Feature : in out Feature_Entity_Record'Class;
+      Value   : Node_Id);
+
    procedure Add_Argument
      (Feature   : in out Feature_Entity_Record'Class;
       Name_Node : in     Node_Id;
@@ -102,21 +106,22 @@ private
    type Feature_Entity_Record is
      new Root_Entity_Type with
       record
-         Routine          : Boolean := False;
-         Property         : Boolean := False;
-         Named_Value      : Boolean := False;
-         Deferred         : Boolean := False;
-         External         : Boolean := False;
-         Has_Result       : Boolean := False;
-         Has_Current      : Boolean := False;
-         External_Object  : Ada.Strings.Unbounded.Unbounded_String;
-         External_Type    : Ada.Strings.Unbounded.Unbounded_String;
-         External_Label   : Ada.Strings.Unbounded.Unbounded_String;
-         Original_Classes : List_Of_Entities.List;
-         Definition_Class : access Ack.Classes.Class_Entity_Record'Class;
-         Arguments        : Variable_Vectors.Vector;
-         Locals           : Variable_Vectors.Vector;
-         Routine_Node     : Node_Id;
+         Routine             : Boolean := False;
+         Property            : Boolean := False;
+         Explicit_Value      : Boolean := False;
+         Deferred            : Boolean := False;
+         External            : Boolean := False;
+         Has_Result          : Boolean := False;
+         Has_Current         : Boolean := False;
+         Original_Classes    : List_Of_Entities.List;
+         Definition_Class    : access Ack.Classes.Class_Entity_Record'Class;
+         External_Object     : Ada.Strings.Unbounded.Unbounded_String;
+         External_Type       : Ada.Strings.Unbounded.Unbounded_String;
+         External_Label      : Ada.Strings.Unbounded.Unbounded_String;
+         Arguments           : Variable_Vectors.Vector;
+         Locals              : Variable_Vectors.Vector;
+         Routine_Node        : Node_Id;
+         Explicit_Value_Node : Node_Id;
       end record;
 
    overriding function Instantiate
@@ -145,6 +150,10 @@ private
       return String;
 
    overriding procedure Push_Entity
+     (Feature : Feature_Entity_Record;
+      Unit    : in out Tagatha.Units.Tagatha_Unit);
+
+   overriding procedure Pop_Entity
      (Feature : Feature_Entity_Record;
       Unit    : in out Tagatha.Units.Tagatha_Unit);
 

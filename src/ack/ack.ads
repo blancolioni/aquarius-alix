@@ -94,7 +94,8 @@ package Ack is
       E_Too_Many_Arguments,
       E_Does_Not_Accept_Arguments,
       E_Ignored_Return_Value,
-      E_Requires_Value
+      E_Requires_Value,
+      E_Illegal_Redefinition
      );
 
    type Node_Id is private;
@@ -473,7 +474,8 @@ package Ack is
      with Pre => Kind (N) = N_Precursor_Element;
 
    function Constant_Value (N : Node_Id) return Node_Id
-     with Pre => Kind (N) = N_Constant;
+     with Pre => Kind (N) = N_Constant
+     or else Kind (N) = N_Explicit_Value;
 
 private
 
