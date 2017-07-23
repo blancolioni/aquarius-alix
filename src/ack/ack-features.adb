@@ -286,6 +286,50 @@ package body Ack.Features is
       end return;
    end New_Feature;
 
+   -----------------
+   -- Push_Entity --
+   -----------------
+
+   overriding procedure Push_Entity
+     (Feature : Feature_Entity_Record;
+      Unit    : in out Tagatha.Units.Tagatha_Unit)
+   is
+      Original_Class : constant Ack.Classes.Class_Entity :=
+                         (if Feature.Original_Classes.Is_Empty
+                          then Feature.Definition_Class
+                          else Ack.Classes.Class_Entity
+                            (Feature.Original_Classes.First_Element));
+   begin
+      Unit.Pop_Register ("op");
+      Unit.Push_Register ("op");
+
+      Unit.Native_Operation
+        ("get_property "
+         & Original_Class.Link_Name & ",0",
+         Input_Stack_Words  => 0,
+         Output_Stack_Words => 0,
+         Changed_Registers  => "pv");
+      Unit.Push_Register ("pv");
+      Unit.Pop_Register ("op");
+      Unit.Native_Operation
+        ("get_property " & Feature.Standard_Name & ",0",
+         Input_Stack_Words  => 0,
+         Output_Stack_Words => 0,
+         Changed_Registers  => "pv");
+
+      if Feature.Routine then
+         Unit.Push_Register ("pv");
+         Unit.Indirect_Call;
+         Unit.Drop;
+         Unit.Push_Register ("r0");
+
+      elsif Feature.Property then
+         Unit.Drop;
+         Unit.Push_Register ("pv");
+      end if;
+
+   end Push_Entity;
+
    ---------------------------
    -- Scan_Original_Classes --
    ---------------------------

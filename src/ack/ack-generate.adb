@@ -357,8 +357,8 @@ package body Ack.Generate is
 
       Pending : List_Of_Nodes.List;
 
---        First_Element : constant Node_Id :=
---                          List_Table (List).List.First_Element;
+      First_Element : constant Node_Id :=
+                        List_Table (List).List.First_Element;
       Last_Element  : constant Node_Id :=
                         List_Table (List).List.Last_Element;
 
@@ -397,8 +397,15 @@ package body Ack.Generate is
       procedure Process
         (Element      : Node_Id)
       is
+         Entity : constant Entity_Type := Get_Entity (Element);
       begin
-         Get_Entity (Element).Push_Entity (Unit);
+         if Ack.Features.Is_Feature (Entity)
+           and then Element = First_Element
+         then
+            Unit.Push_Argument (1);
+         end if;
+
+         Entity.Push_Entity (Unit);
 
 --           Stack_Result := True;
 --           case Get_Kind (Entity) is
