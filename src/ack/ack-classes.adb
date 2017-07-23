@@ -157,7 +157,7 @@ package body Ack.Classes is
    -------------
 
    function Feature
-     (Class : Class_Entity_Record'Class;
+     (Class : not null access constant Class_Entity_Record'Class;
       Name  : Name_Id)
       return Ack.Features.Feature_Entity
    is
@@ -203,13 +203,13 @@ package body Ack.Classes is
    ---------
 
    overriding function Get
-     (Class : Class_Entity_Record;
+     (Class : not null access constant Class_Entity_Record;
       Name  : String)
       return Entity_Type
    is
    begin
-      if Root_Entity_Type (Class).Contains (Name, False) then
-         return Root_Entity_Type (Class).Get (Name);
+      if Root_Entity_Type (Class.all).Contains (Name, False) then
+         return Root_Entity_Type (Class.all).Get (Name);
       else
          for Inherited of Class.Inherited_List loop
             if Inherited.Contains (Name, False) then
@@ -219,6 +219,35 @@ package body Ack.Classes is
          return Ack.Environment.Top_Level.Get (Name);
       end if;
    end Get;
+
+   -----------------------
+   -- Get_Ancestor_Type --
+   -----------------------
+
+   function Get_Ancestor_Type
+     (Descendent_Class : Class_Entity_Record'Class;
+      Ancestor_Class   : not null access constant Class_Entity_Record'Class)
+      return access Ack.Types.Type_Entity_Record'Class
+   is
+   begin
+      for Inherited of Descendent_Class.Inherited_Types loop
+         if Inherited.Inherited_Type.Class = Ancestor_Class then
+            return Inherited.Inherited_Type;
+         end if;
+      end loop;
+      for Inherited of Descendent_Class.Inherited_Types loop
+         declare
+            Ancestor : constant access Ack.Types.Type_Entity_Record'Class :=
+                         Inherited.Inherited_Type.Class.Get_Ancestor_Type
+                           (Ancestor_Class);
+         begin
+            if Ancestor /= null then
+               return Ancestor;
+            end if;
+         end;
+      end loop;
+      return null;
+   end Get_Ancestor_Type;
 
    ----------------------
    -- Get_Class_Entity --

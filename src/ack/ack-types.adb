@@ -58,7 +58,7 @@ package body Ack.Types is
          return Typ.Declared_Name & " (a generic argument of "
            & Typ.Class.Description & ")";
       else
-         return Typ.Declared_Name & " (" & Typ.Class.Description & ")";
+         return Typ.Full_Name & " (" & Typ.Class.Description & ")";
       end if;
    end Description;
 
@@ -72,18 +72,53 @@ package body Ack.Types is
       return Ack.Features.Feature_Entity
    is
    begin
-      return Typ.Class.Feature (Name);
+      return Ack.Features.Feature_Entity (Typ.Get (Name));
    end Feature;
+
+   overriding function Full_Name
+     (Typ       : Type_Entity_Record)
+      return String
+   is
+      function Generic_Bindings_Image return String;
+
+      ----------------------------
+      -- Generic_Bindings_Image --
+      ----------------------------
+
+      function Generic_Bindings_Image return String is
+         use Ada.Strings.Unbounded;
+         Result : Unbounded_String;
+      begin
+         for Binding of Typ.Generic_Bindings loop
+            if Result /= Null_Unbounded_String then
+               Result := Result & ",";
+            end if;
+            Result := Result & Binding.Actual.Qualified_Name;
+         end loop;
+         return To_String (Result);
+      end Generic_Bindings_Image;
+
+   begin
+      if Typ.Generic_Bindings.Is_Empty then
+         return Type_Entity_Record'Class (Typ).Qualified_Name;
+      else
+         return Type_Entity_Record'Class (Typ).Qualified_Name
+           & "[" & Generic_Bindings_Image & "]";
+      end if;
+   end Full_Name;
 
    ---------
    -- Get --
    ---------
 
    overriding function Get
-     (Typ  : Type_Entity_Record;
+     (Typ  : not null access constant Type_Entity_Record;
       Name : String)
       return Entity_Type
    is
+
+      Ancestor_Type : Constant_Type_Entity;
+
       function Instantiate_Entity
         (Entity : Entity_Type)
          return Entity_Type;
@@ -97,7 +132,7 @@ package body Ack.Types is
          return Entity_Type
       is
       begin
-         for Binding of Typ.Generic_Bindings loop
+         for Binding of Ancestor_Type.Generic_Bindings loop
             if Constant_Type_Entity (Entity) = Binding.Formal then
                return Entity_Type (Binding.Actual);
             end if;
@@ -106,20 +141,36 @@ package body Ack.Types is
       end Instantiate_Entity;
 
    begin
-      if Root_Entity_Type (Typ).Contains (Name) then
-         return Root_Entity_Type (Typ).Get (Name);
-      elsif Typ.Generic_Bindings.Is_Empty then
-         return Typ.Class.Get (Name);
+      if Root_Entity_Type (Typ.all).Contains (Name) then
+         return Root_Entity_Type (Typ.all).Get (Name);
       else
          declare
-            Generic_Entity : constant Entity_Type :=
-                               Typ.Class.Get (Name);
-            Instantiated_Entity : constant Entity_Type :=
-                                    Generic_Entity.Instantiate
-                                      (Instantiate_Entity'Access);
+            use type Ack.Classes.Constant_Class_Entity;
+            Feature          : constant Ack.Features.Feature_Entity :=
+                                 Typ.Class.Feature
+                                   (Get_Name_Id (Name));
+            Definition_Class : constant Ack.Classes.Constant_Class_Entity :=
+                                 Feature.Definition_Class;
          begin
-            Typ.Insert (Instantiated_Entity);
-            return Instantiated_Entity;
+            Ancestor_Type :=
+              (if Definition_Class = Typ.Class
+               then Constant_Type_Entity (Typ)
+               else Typ.Class.Get_Ancestor_Type
+                 (Definition_Class));
+
+            if Ancestor_Type.Generic_Bindings.Is_Empty then
+               Typ.Insert (Feature);
+               return Entity_Type (Feature);
+            else
+               declare
+                  Instantiated_Entity : constant Entity_Type :=
+                                          Feature.Instantiate
+                                            (Instantiate_Entity'Access);
+               begin
+                  Typ.Insert (Instantiated_Entity);
+                  return Instantiated_Entity;
+               end;
+            end if;
          end;
       end if;
    end Get;

@@ -158,6 +158,9 @@ package Ack is
       Child_Name : Name_Id)
       return String;
 
+   function Full_Name (Entity : Root_Entity_Type) return String
+   is (Root_Entity_Type'Class (Entity).Qualified_Name);
+
    function Description (Entity : Root_Entity_Type) return String
    is (Root_Entity_Type'Class (Entity).Qualified_Name);
 
@@ -211,7 +214,7 @@ package Ack is
       return Boolean;
 
    function Get
-     (Table_Entity : Root_Entity_Type;
+     (Table_Entity : not null access constant Root_Entity_Type;
       Name         : String)
       return Entity_Type
    with Pre'Class => Table_Entity.Contains (Name);
@@ -223,7 +226,7 @@ package Ack is
    is (Table_Entity.Contains (To_Standard_String (Name)));
 
    function Get
-     (Table_Entity : Root_Entity_Type'Class;
+     (Table_Entity : not null access constant Root_Entity_Type'Class;
       Name         : Name_Id)
       return Entity_Type
    is (Table_Entity.Get (To_Standard_String (Name)));

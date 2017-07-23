@@ -140,6 +140,10 @@ private
      (Feature : Feature_Entity_Record)
       return String;
 
+   overriding function Full_Name
+     (Feature : Feature_Entity_Record)
+      return String;
+
    function Is_Feature
      (Entity : not null access constant Root_Entity_Type'Class)
       return Boolean

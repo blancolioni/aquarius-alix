@@ -104,8 +104,40 @@ package body Ack.Features is
    is
    begin
       return Root_Entity_Type (Feature).Description
-        & " parent " & Feature.Declaration_Context.Qualified_Name;
+        & " parent " & Feature.Declaration_Context.Full_Name;
    end Description;
+
+   ---------------
+   -- Full_Name --
+   ---------------
+
+   overriding function Full_Name
+     (Feature : Feature_Entity_Record)
+      return String
+   is
+      use Ada.Strings.Unbounded;
+      Result : Unbounded_String;
+   begin
+      if not Feature.Arguments.Is_Empty then
+         for Arg of Feature.Arguments loop
+            if Result = Null_Unbounded_String then
+               Result := Result & "(";
+            else
+               Result := Result & ",";
+            end if;
+            Result := Result
+              & Entity_Type (Arg).Value_Type.Full_Name;
+         end loop;
+         Result := Result & ")";
+      end if;
+
+      Result := Feature.Qualified_Name & Result;
+
+      if Feature.Value_Type /= null then
+         Result := Result & ": " & Feature.Value_Type.Full_Name;
+      end if;
+      return To_String (Result);
+   end Full_Name;
 
    -------------------------------
    -- Generate_Allocation_Value --

@@ -101,6 +101,10 @@ private
      (Typ       : Type_Entity_Record)
       return String;
 
+   overriding function Full_Name
+     (Typ       : Type_Entity_Record)
+      return String;
+
    overriding function Contains
      (Typ       : Type_Entity_Record;
       Name      : String;
@@ -108,7 +112,7 @@ private
       return Boolean;
 
    overriding function Get
-     (Typ  : Type_Entity_Record;
+     (Typ  : not null access constant Type_Entity_Record;
       Name : String)
       return Entity_Type;
 
