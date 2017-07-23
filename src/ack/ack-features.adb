@@ -59,6 +59,7 @@ package body Ack.Features is
                               Feature.Definition_Class,
                               Detachable => False));
          begin
+            Current.Set_Offset (1);
             Feature.Insert (Current);
             Next_Argument := 2;
          end;
@@ -78,6 +79,7 @@ package body Ack.Features is
                           Feature.Declaration_Node,
                           Feature.Value_Type);
          begin
+            Result.Set_Offset (1);
             Feature.Insert (Result);
             Next_Local := 2;
          end;
@@ -294,6 +296,35 @@ package body Ack.Features is
       end return;
    end New_Feature;
 
+   ----------------
+   -- Pop_Entity --
+   ----------------
+
+   overriding procedure Pop_Entity
+     (Feature : Feature_Entity_Record;
+      Unit    : in out Tagatha.Units.Tagatha_Unit)
+   is
+      pragma Assert (Feature.Property);
+      Original_Class : constant Ack.Classes.Class_Entity :=
+                         (if Feature.Original_Classes.Is_Empty
+                          then Feature.Definition_Class
+                          else Ack.Classes.Class_Entity
+                            (Feature.Original_Classes.First_Element));
+   begin
+      Unit.Push_Argument (1);
+      Unit.Pop_Register ("op");
+      Unit.Native_Operation
+        ("get_property " & Original_Class.Link_Name & ",0",
+         Input_Stack_Words  => 0,
+         Output_Stack_Words => 0,
+         Changed_Registers  => "pv");
+      Unit.Push_Register ("pv");
+      Unit.Pop_Register ("op");
+      Unit.Pop_Register ("pv");
+      Unit.Native_Operation
+        ("set_property " & Feature.Standard_Name);
+   end Pop_Entity;
+
    -----------------
    -- Push_Entity --
    -----------------
@@ -308,6 +339,22 @@ package body Ack.Features is
                           else Ack.Classes.Class_Entity
                             (Feature.Original_Classes.First_Element));
    begin
+      if Feature.Standard_Name = "void" then
+         Unit.Push (0);
+         return;
+      elsif Feature.Explicit_Value then
+         case N_Constant_Value (Kind (Feature.Explicit_Value_Node)) is
+            when N_String_Constant =>
+               Unit.Push_Text
+                 (To_String (Get_Name (Feature.Explicit_Value_Node)));
+            when N_Integer_Constant =>
+               Unit.Push
+                 (Tagatha.Tagatha_Integer'Value
+                    (To_String (Get_Name (Feature.Explicit_Value_Node))));
+         end case;
+         return;
+      end if;
+
       Unit.Pop_Register ("op");
       Unit.Push_Register ("op");
 
@@ -431,6 +478,19 @@ package body Ack.Features is
       Feature.Deferred := True;
       Feature.Definition_Class := null;
    end Set_Deferred;
+
+   ------------------------
+   -- Set_Explicit_Value --
+   ------------------------
+
+   procedure Set_Explicit_Value
+     (Feature : in out Feature_Entity_Record'Class;
+      Value   : Node_Id)
+   is
+   begin
+      Feature.Explicit_Value := True;
+      Feature.Explicit_Value_Node := Value;
+   end Set_Explicit_Value;
 
    ------------------
    -- Set_External --

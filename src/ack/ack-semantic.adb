@@ -605,30 +605,43 @@ package body Ack.Semantic is
       Feature : Node_Id)
    is
       pragma Unreferenced (Exports);
-      Names        : constant List_Id := New_Feature_List (Feature);
-      Dec_Body     : constant Node_Id := Declaration_Body (Feature);
-      Value_Node   : constant Node_Id := Value (Dec_Body);
-      Deferred     : constant Boolean :=
-                       Value_Node /= No_Node
-                           and then Node_Table.Element (Value_Node).Deferred;
-      Effective    : constant Boolean :=
-                       Value_Node /= No_Node and then not Deferred;
-      Effective_Node : constant Node_Id :=
-                         (if Effective then Effective_Routine (Value_Node)
-                          else No_Node);
-      Internal     : constant Boolean :=
-                       Effective
-                             and then Kind (Effective_Node) = N_Internal;
-      External     : constant Boolean :=
-                         Effective
-                             and then Kind (Effective_Node) = N_External;
+      Names           : constant List_Id := New_Feature_List (Feature);
+      Dec_Body        : constant Node_Id := Declaration_Body (Feature);
+      Value_Node      : constant Node_Id := Value (Dec_Body);
+      Value_Feature   : constant Boolean :=
+                          Value_Node /= No_Node
+                              and then Kind (Value_Node) = N_Explicit_Value;
+      Routine_Feature : constant Boolean :=
+                          Value_Node /= No_Node
+                              and then Kind (Value_Node) = N_Routine;
+      Deferred        : constant Boolean :=
+                          Routine_Feature
+                              and then Node_Table.Element
+                                (Value_Node).Deferred;
+      Effective       : constant Boolean :=
+                          Routine_Feature and then not Deferred
+                                and then Kind (Value_Node) = N_Routine;
+      Effective_Node  : constant Node_Id :=
+                          (if Effective then Effective_Routine (Value_Node)
+                           else No_Node);
+      Internal        : constant Boolean :=
+                          Effective
+                              and then Kind (Effective_Node) = N_Internal;
+      External        : constant Boolean :=
+                          Effective
+                              and then Kind (Effective_Node) = N_External;
    begin
       for Node of List_Table.Element (Names).List loop
          declare
             Entity : constant Ack.Features.Feature_Entity :=
                        Ack.Features.Get_Feature_Entity (Node);
          begin
-            if Deferred then
+            if Entity.Standard_Name = "void" then
+               Entity.Set_Explicit_Value (No_Node);
+            elsif Value_Feature then
+               Entity.Set_Explicit_Value
+                 (Constant_Value (Value_Node));
+            elsif Deferred then
                Entity.Set_Deferred;
             elsif Internal then
                Entity.Set_Routine (Effective_Node);
@@ -720,6 +733,12 @@ package body Ack.Semantic is
                           Declaration => Node,
                           Class       => Class);
          begin
+            if Entity.Standard_Name = "void"
+              and then Class.Standard_Name /= "any"
+            then
+               Error (Name_Node, E_Illegal_Redefinition);
+            end if;
+
             Ack.Features.Set_Feature_Entity (Node, Entity);
             Class.Add_Feature (Entity);
          end;
