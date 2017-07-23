@@ -199,12 +199,12 @@ package Ack is
 
    procedure Push_Entity
      (Entity : Root_Entity_Type;
-      Unit   : Tagatha.Units.Tagatha_Unit)
+      Unit   : in out Tagatha.Units.Tagatha_Unit)
    is null;
 
    procedure Pop_Entity
      (Entity : Root_Entity_Type;
-      Unit   : Tagatha.Units.Tagatha_Unit)
+      Unit   : in out Tagatha.Units.Tagatha_Unit)
    is null;
 
    function Contains
