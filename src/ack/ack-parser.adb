@@ -235,7 +235,7 @@ package body Ack.Parser is
 
    function Import_Conditional
      (From : Aquarius.Programs.Program_Tree)
-      return Node_Id is (New_Node (N_Conditional, From))
+      return Node_Id
      with Pre => From.Name = "conditional";
 
    function Import_Loop
@@ -428,6 +428,45 @@ package body Ack.Parser is
          null;
       end return;
    end Import_Class_Type;
+
+   ------------------------
+   -- Import_Conditional --
+   ------------------------
+
+   function Import_Conditional
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+      use Aquarius.Programs;
+
+      List : constant List_Id := New_List;
+      Children         : constant Array_Of_Program_Trees :=
+                           From.Direct_Children;
+      Expression       : Program_Tree := null;
+   begin
+      for T of Children loop
+         if T.Name = "boolean_expression" then
+            pragma Assert (Expression = null);
+            Expression := T;
+         elsif T.Name = "compound" then
+            if Expression = null then
+               Append
+                 (List,
+                  New_Node
+                    (N_If_Then, Expression,
+                     Field_1 =>
+                       Expressions.Import_Expression (Expression),
+                     Field_2 => Import_Compound (T)));
+            else
+               Append (List,
+                       New_Node
+                         (N_If_Then, T,
+                          Field_2 => Import_Compound (T)));
+            end if;
+         end if;
+      end loop;
+      return New_Node (N_Conditional, From, List => List);
+   end Import_Conditional;
 
    -----------------------------
    -- Import_Declaration_Body --
