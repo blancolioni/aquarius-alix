@@ -19,9 +19,7 @@ with Aquarius.Actions.Scanner;
 with Aquarius.Actions.Tagatha_Scanner;
 
 with Ack;
-
-with Ack.Compile;
-with Ack.Errors;
+with Ack.Bindings;
 
 with Aqua.Images;
 with Ack.Classes;
@@ -55,12 +53,6 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
      (Full_Path : String;
       Group     : Aquarius.Actions.Action_Group;
       Image     : Aqua.Images.Image_Type);
-
-   procedure Load_Ack_Binding
-     (Image        : Aqua.Images.Image_Type;
-      Grammar      : Aquarius.Grammars.Aquarius_Grammar;
-      Group        : Aquarius.Actions.Action_Group;
-      Trigger      : Aquarius.Actions.Action_Execution_Trigger);
 
    ---------------------------------
    -- After_Action_File_Reference --
@@ -282,12 +274,33 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                            Ids (1).Text;
             Group      : constant Aquarius.Actions.Action_Group :=
                            Get_Plugin (Item).Grammar.Group (Group_Name);
+            Grammar    : constant Aquarius.Grammars.Aquarius_Grammar :=
+                           New_Plugin.Grammar;
+            Action_File_Path : constant String :=
+                                 Aquarius.Paths.Scratch_File
+                                   (Grammar.Name & "-"
+                                    & Group_Name
+                                    & "-action_bindings",
+                                    "action");
+            Base_Aqua_Path   : constant String :=
+                                 Aquarius.Config_Paths.Config_File
+                                   ("grammar/" & Grammar.Name
+                                    & "/aqua/");
+
          begin
-            Load_Ack_Binding
-              (Image    => Dynamic.Dynamic_Plugin (New_Plugin).Image,
-               Grammar  => New_Plugin.Grammar,
-               Group    => Group,
-               Trigger  => Trigger);
+            if Ack.Bindings.Load_Ack_Binding
+              (Action_File_Path => Action_File_Path,
+               Base_Aqua_Path   => Base_Aqua_Path,
+               Image            => Dynamic.Dynamic_Plugin (New_Plugin).Image,
+               Grammar          => Grammar,
+               Group            => Group,
+               Trigger          => Trigger)
+            then
+               Load_Action_File
+                 (Full_Path => Action_File_Path,
+                  Group     => Group,
+                  Image     => Dynamic.Dynamic_Plugin (New_Plugin).Image);
+            end if;
          end;
       end if;
 
@@ -351,149 +364,6 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
    begin
       null;
    end Group_Declaration_Before;
-
-   ----------------------
-   -- Load_Ack_Binding --
-   ----------------------
-
-   procedure Load_Ack_Binding
-     (Image        : Aqua.Images.Image_Type;
-      Grammar      : Aquarius.Grammars.Aquarius_Grammar;
-      Group        : Aquarius.Actions.Action_Group;
-      Trigger      : Aquarius.Actions.Action_Execution_Trigger)
-   is
-      pragma Unreferenced (Trigger);
-      Base_Aqua_Path : constant String :=
-                         Aquarius.Config_Paths.Config_File
-                           ("grammar/" & Grammar.Name
-                            & "/aqua/");
-
-      Action_File : Ada.Text_IO.File_Type;
-
-      procedure Load_Class
-        (Directory_Entry : Ada.Directories.Directory_Entry_Type);
-
-      procedure Add_Feature_Binding
-        (Class        : not null access constant
-           Ack.Classes.Class_Entity_Record'Class;
-         Feature_Name : String;
-         Child_Name   : String;
-         Child_Type   : Ack.Entity_Type);
-
-      -------------------------
-      -- Add_Feature_Binding --
-      -------------------------
-
-      procedure Add_Feature_Binding
-        (Class        : not null access constant
-           Ack.Classes.Class_Entity_Record'Class;
-         Feature_Name : String;
-         Child_Name   : String;
-         Child_Type   : Ack.Entity_Type)
-      is
-         pragma Unreferenced (Child_Name, Child_Type);
-         Index : constant Natural :=
-                   Ada.Strings.Fixed.Index (Feature_Name, "_");
-         Position_Name : constant String :=
-                           (if Index > 0
-                            then Feature_Name (Feature_Name'First .. Index - 1)
-                            else "");
-         Child_Tree    : constant String :=
-                           Feature_Name (Index + 1 .. Feature_Name'Last);
-         Parent_Tree   : constant String := Class.Standard_Name;
-      begin
-         if Index > 0
-           and then (Position_Name = "before"
-                     or else Position_Name = "after")
-         then
-            if Child_Tree = "node" then
-               Ada.Text_IO.Put_Line
-                 (Action_File,
-                  Position_Name & " " & Parent_Tree & " do");
-               Ada.Text_IO.Put_Line
-                 (Action_File,
-                  "   if not tree.__" & Parent_Tree & " then");
-               Ada.Text_IO.Put_Line
-                 (Action_File,
-                  "      tree.__" & Parent_Tree & " :=");
-               Ada.Text_IO.Put_Line
-                 (Action_File,
-                  "        "
-                  & Class.Link_Name
-                  & "$allocate");
-               Ada.Text_IO.Put_Line
-                 (Action_File,
-                  "      IO.Put_Line (tree.__" & Parent_Tree & ".Image)");
-               Ada.Text_IO.Put_Line
-                 (Action_File,
-                  "   end if");
-               Ada.Text_IO.Put_Line
-                 (Action_File,
-                  "   call "
-                  & "tree.__" & Parent_Tree & "."
-                  & Class.Link_Name
-                  & "."
-                  & Position_Name & "_node"
-                  & "(tree.__" & Parent_Tree & ")");
-               Ada.Text_IO.Put_Line
-                 (Action_File,
-                  "end;");
-            else
-               Ada.Text_IO.Put_Line
-                 (Action_File,
-                  Position_Name & " " & Parent_Tree
-                  & "/" & Child_Tree & " do");
-               Ada.Text_IO.Put_Line
-                 (Action_File,
-                  "end;");
-            end if;
-            Ada.Text_IO.New_Line (Action_File);
-         end if;
-
-      end Add_Feature_Binding;
-
-      ----------------
-      -- Load_Class --
-      ----------------
-
-      procedure Load_Class
-        (Directory_Entry : Ada.Directories.Directory_Entry_Type)
-      is
-      begin
-         Ack.Compile.Compile_Class
-           (Ada.Directories.Full_Name (Directory_Entry), Image,
-            Add_Feature_Binding'Access);
-      end Load_Class;
-
-      Group_Name : constant String :=
-                     Aquarius.Actions.Action_Group_Name (Group);
-
-      Action_File_Path : constant String :=
-                           Aquarius.Paths.Scratch_File
-                             (Grammar.Name & "-"
-                              & Group_Name
-                              & "-action_bindings",
-                              "action");
-
-   begin
-      Ada.Text_IO.Create (Action_File, Ada.Text_IO.Out_File,
-                          Action_File_Path);
-
-      Ada.Directories.Search
-        (Base_Aqua_Path,
-         Grammar.Name & "-" & Group_Name & "*.aqua",
-         Process => Load_Class'Access);
-
-      Ada.Text_IO.Close (Action_File);
-
-      if not Ack.Errors.Has_Errors then
-         Load_Action_File
-           (Full_Path => Action_File_Path,
-            Group     => Group,
-            Image     => Image);
-      end if;
-
-   end Load_Ack_Binding;
 
    ----------------------
    -- Load_Action_File --
