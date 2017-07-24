@@ -44,7 +44,7 @@ feature
             Last_Cell := First_Cell
          else
             create New_Cell
-            Last_Cell.Put_Right (New_Cell)
+            Last_Cell.Put_Next (New_Cell)
             Last_Cell := New_Cell
          end
          
