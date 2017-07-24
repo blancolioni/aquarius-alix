@@ -248,6 +248,18 @@ package body Ack.Types is
 
    end Instantiate_Generic_Class;
 
+   ---------------
+   -- Link_Name --
+   ---------------
+
+   overriding function Link_Name
+     (Typ       : Type_Entity_Record)
+      return String
+   is
+   begin
+      return Typ.Class.Link_Name;
+   end Link_Name;
+
    --------------------
    -- New_Class_Type --
    --------------------

@@ -152,7 +152,7 @@ package Ack is
    function Standard_Name (Entity : Root_Entity_Type'Class) return String;
    function Declared_Name (Entity : Root_Entity_Type'Class) return String;
    function Qualified_Name (Entity : Root_Entity_Type'Class) return String;
-   function Link_Name (Entity : Root_Entity_Type'Class) return String;
+   function Link_Name (Entity : Root_Entity_Type) return String;
    function Base_File_Name (Entity : Root_Entity_Type'Class) return String;
    function Base_Child_File_Name
      (Entity     : Root_Entity_Type;
@@ -195,6 +195,11 @@ package Ack is
    function Get_Type
      (Entity : Root_Entity_Type'Class)
       return Entity_Type;
+
+   function Detachable
+     (Entity : Root_Entity_Type)
+      return Boolean
+   is (False);
 
    procedure Bind (Entity : in out Root_Entity_Type) is null;
 
@@ -901,7 +906,7 @@ private
    function Qualified_Name (Entity : Root_Entity_Type'Class) return String
    is (Entity.Context_Name (".", False));
 
-   function Link_Name (Entity : Root_Entity_Type'Class) return String
+   function Link_Name (Entity : Root_Entity_Type) return String
    is (Entity.Context_Name ("__", True));
 
    function Base_File_Name (Entity : Root_Entity_Type'Class) return String
