@@ -650,7 +650,10 @@ package body Ack.Semantic is
                  (External_Type  =>
                     To_Standard_String (Get_Name (Effective_Node)),
                   External_Alias =>
-                    To_String (Get_Name (Feature_Alias (Effective_Node))));
+                    (if Feature_Alias (Effective_Node) = No_Node
+                     then Entity.Standard_Name
+                     else To_String
+                       (Get_Name (Feature_Alias (Effective_Node)))));
             end if;
 
             Entity.Bind;
