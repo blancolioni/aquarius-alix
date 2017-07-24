@@ -42,14 +42,16 @@ feature
          if Is_Empty then
             create First_Cell
             Last_Cell := First_Cell
+            Last_Cell.Put (New_Item)
          else
-            create New_Cell
-            Last_Cell.Put_Next (New_Cell)
-            Last_Cell := New_Cell
+            Last_Cell.Put_Next (New_Item)
+            Last_Cell := Last_Cell.Next
          end
-         
-         Last_Cell.Put (New_Item)
       ensure
          Appended_To_End: Last_Element = New_Item
       end
+      
+invariant
+   Last_Cell_Definition: Last_Cell = Void or else Last_Cell.Next = Void
+   Cells_Consistent: (First_Cell = Void) = (Last_Cell = Void)
 end
