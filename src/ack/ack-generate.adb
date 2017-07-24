@@ -21,6 +21,10 @@ package body Ack.Generate is
       Feature : not null access constant
         Ack.Features.Feature_Entity_Record'Class);
 
+   procedure Generate_Conditional
+     (Unit        : in out Tagatha.Units.Tagatha_Unit;
+      Conditional : Node_Id);
+
    procedure Generate_Expression
      (Unit       : in out Tagatha.Units.Tagatha_Unit;
       Expression : Node_Id);
@@ -208,6 +212,9 @@ package body Ack.Generate is
         (Instruction : Node_Id)
       is
       begin
+         Unit.Source_Position
+           (Line   => Positive (Get_Program (Instruction).Location_Line),
+            Column => Positive (Get_Program (Instruction).Location_Column));
          case N_Instruction (Kind (Instruction)) is
             when N_Assignment =>
                Generate_Expression (Unit, Expression (Instruction));
@@ -215,7 +222,7 @@ package body Ack.Generate is
             when N_Creation_Instruction =>
                null;
             when N_Conditional =>
-               null;
+               Generate_Conditional (Unit, Instruction);
             when N_Loop =>
                null;
             when N_Precursor =>
@@ -226,6 +233,65 @@ package body Ack.Generate is
    begin
       Scan (Instructions (Node), Generate_Instruction'Access);
    end Generate_Compound;
+
+   --------------------------
+   -- Generate_Conditional --
+   --------------------------
+
+   procedure Generate_Conditional
+     (Unit        : in out Tagatha.Units.Tagatha_Unit;
+      Conditional : Node_Id)
+   is
+
+      Out_Label  : constant Positive := Unit.Next_Label;
+      Else_Label : Natural := 0;
+
+      procedure Generate_Element (Element : Node_Id);
+
+      ----------------------
+      -- Generate_Element --
+      ----------------------
+
+      procedure Generate_Element (Element : Node_Id) is
+         Condition : constant Node_Id := Field_1 (Element);
+         Compound  : constant Node_Id := Field_2 (Element);
+      begin
+         if Else_Label /= 0 then
+            Unit.Label (Else_Label);
+            Else_Label := 0;
+         end if;
+
+         if Condition /= No_Node then
+            Generate_Expression (Unit, Condition);
+            if Has_Entity (Condition) then
+               Unit.Pop_Register ("r0");
+               Unit.Push_Register ("r0");
+               Unit.Push_Register ("r0");
+            end if;
+
+            Else_Label := Unit.Next_Label;
+            Unit.Operate (Tagatha.Op_Test, Tagatha.Default_Size);
+            Unit.Jump (Else_Label, Tagatha.C_Equal);
+         end if;
+         Generate_Compound (Unit, Compound);
+         if Condition /= No_Node
+           and then Has_Entity (Condition)
+         then
+            Unit.Drop;
+         end if;
+
+         Unit.Jump (Out_Label);
+      end Generate_Element;
+
+   begin
+      Scan (Node_Table.Element (Conditional).List,
+            Generate_Element'Access);
+      if Else_Label /= 0 then
+         Unit.Label (Else_Label);
+      end if;
+      Unit.Label (Out_Label);
+
+   end Generate_Conditional;
 
    -----------------------------
    -- Generate_Default_Create --
@@ -308,26 +374,16 @@ package body Ack.Generate is
       Expression : Node_Id)
    is
    begin
+      Unit.Source_Position
+        (Line   => Positive (Get_Program (Expression).Location_Line),
+         Column => Positive (Get_Program (Expression).Location_Column));
       case N_Expression_Node (Kind (Expression)) is
          when N_Operator =>
             null;
          when N_Precursor =>
             Generate_Precursor (Unit, Expression);
          when N_Attachment_Test =>
-            declare
-               Continue_Label : constant Positive :=
-                                  Unit.Next_Label;
-            begin
                Generate_Expression (Unit, Field_1 (Expression));
-               Unit.Pop_Register ("r0");
-               Unit.Operate (Tagatha.Op_Test, Tagatha.Default_Size);
-               Unit.Jump (Continue_Label, Tagatha.C_Not_Equal);
-               if Get_Name (Expression) /= No_Name then
-                  Unit.Push_Register ("r0");
-               end if;
-               Set_Label (Expression, Continue_Label);
-            end;
-
          when N_Constant =>
             declare
                Value : constant Node_Id := Constant_Value (Expression);

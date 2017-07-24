@@ -8,6 +8,7 @@ with Ack.Parser;
 with Ack.Classes;
 with Ack.Features;
 with Ack.Types;
+with Ack.Variables;
 
 with Ack.Environment;
 
@@ -418,8 +419,9 @@ package body Ack.Semantic is
 
          if Generics_Node = No_Node then
             Type_Entity :=
-              Ack.Types.New_Class_Type (Type_Node, Class_Entity,
-                                        Detachable => False);
+              Ack.Types.New_Class_Type
+                (Type_Node, Class_Entity,
+                 Detachable => Node_Table.Element (Type_Node).Detachable);
          else
             declare
                Actual_Nodes : constant Array_Of_Nodes :=
@@ -511,8 +513,14 @@ package body Ack.Semantic is
               (Class, Container,
                Ack.Types.Get_Top_Level_Type ("boolean"),
                Condition);
+            if Has_Entity (Condition) then
+               Container.Add_Implicit (Get_Entity (Condition));
+            end if;
          end if;
          Analyse_Compound (Class, Container, Compound);
+         if Condition /= No_Node and then Has_Entity (Condition) then
+            Container.Remove_Implicit;
+         end if;
       end Analyse_Element;
 
    begin
@@ -615,7 +623,19 @@ package body Ack.Semantic is
                                 Ack.Types.Get_Top_Level_Type ("any"),
                                 Expression => Field_1 (Expression));
             if Get_Name (Expression) /= No_Name then
-               null;
+               declare
+                  Implicit : constant Ack.Variables.Variable_Entity :=
+                               Ack.Variables.New_Local_Entity
+                                 (Name       => Get_Name (Expression),
+                                  Node       => Expression,
+                                  Local_Type =>
+                                    Get_Type (Field_1 (Expression)));
+               begin
+                  Implicit.Set_Attached;
+                  Set_Type (Expression,
+                            Ack.Types.Get_Top_Level_Type ("boolean"));
+                  Set_Entity (Expression, Implicit);
+               end;
             end if;
 
          when N_Constant =>
@@ -631,6 +651,7 @@ package body Ack.Semantic is
                Value_Type : constant Ack.Classes.Class_Entity :=
                               Ack.Classes.Get_Top_Level_Class (Type_Name);
             begin
+               Set_Type (Expression, Value_Type);
                Set_Entity (Expression, Value_Type);
                if Expression_Type = null then
                   Error (Value, E_Ignored_Return_Value);
@@ -1035,6 +1056,11 @@ package body Ack.Semantic is
                       Entity_Type (Expression_Type));
             end if;
          end if;
+
+         if Value_Type /= null then
+            Set_Type (Precursor, Value_Type);
+         end if;
+
       end if;
 
    end Analyse_Precursor;

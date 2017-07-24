@@ -418,6 +418,7 @@ package body Ack.Parser is
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
    is
+      use Aquarius.Programs;
       Actual_Generics_Node : constant Node_Id :=
                                Import_Optional_Child
                                  (From, "actual_generics",
@@ -425,6 +426,7 @@ package body Ack.Parser is
    begin
       return Node : constant Node_Id :=
         New_Node (N_Class_Type, From,
+                  Detachable => From.Program_Child ("detachable") /= null,
                   Field_2 =>
                     Import_Class_Name
                       (From.Program_Child ("class_name")),
@@ -452,9 +454,9 @@ package body Ack.Parser is
       for T of Children loop
          if T.Name = "boolean_expression" then
             pragma Assert (Expression = null);
-            Expression := T;
+            Expression := T.Program_Child ("expression");
          elsif T.Name = "compound" then
-            if Expression = null then
+            if Expression /= null then
                Append
                  (List,
                   New_Node
@@ -462,6 +464,7 @@ package body Ack.Parser is
                      Field_1 =>
                        Expressions.Import_Expression (Expression),
                      Field_2 => Import_Compound (T)));
+               Expression := null;
             else
                Append (List,
                        New_Node
