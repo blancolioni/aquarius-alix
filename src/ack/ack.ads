@@ -102,6 +102,8 @@ package Ack is
 
    type Node_Id is private;
 
+   No_Node : constant Node_Id;
+
    function Kind (Node : Node_Id) return Node_Kind;
 
    type List_Id is private;
@@ -467,6 +469,11 @@ package Ack is
    function Feature_Alias (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_External;
 
+   function Local_Declarations (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Routine,
+     Post => Local_Declarations'Result = No_Node
+       or else Kind (Local_Declarations'Result) = N_Local_Declarations;
+
    function Effective_Routine (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Routine;
 
@@ -706,6 +713,9 @@ private
 
    function Value_Type (N : Node_Id) return Node_Id
    is (Node_Table.Element (N).Field (2));
+
+   function Local_Declarations (N : Node_Id) return Node_Id
+   is (Field_2 (N));
 
    function Value (N : Node_Id) return Node_Id
    is (Node_Table.Element (N).Field (3));
