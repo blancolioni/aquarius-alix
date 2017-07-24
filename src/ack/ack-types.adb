@@ -121,11 +121,17 @@ package body Ack.Types is
          return To_String (Result);
       end Generic_Bindings_Image;
 
+      Detachable : constant String :=
+                     (if Typ.Detachable
+                      then "detachable " else "");
+
    begin
       if Typ.Generic_Bindings.Is_Empty then
-         return Type_Entity_Record'Class (Typ).Qualified_Name;
+         return Detachable
+           & Type_Entity_Record'Class (Typ).Qualified_Name;
       else
-         return Type_Entity_Record'Class (Typ).Qualified_Name
+         return Detachable
+           & Type_Entity_Record'Class (Typ).Qualified_Name
            & "[" & Generic_Bindings_Image & "]";
       end if;
    end Full_Name;

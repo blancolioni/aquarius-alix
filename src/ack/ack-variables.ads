@@ -21,6 +21,10 @@ package Ack.Variables is
       Local_Type : not null access Root_Entity_Type'Class)
       return Variable_Entity;
 
+   function Is_Variable
+     (Entity : not null access Root_Entity_Type'Class)
+      return Boolean;
+
 private
 
    type Variable_Kind is (Argument, Local);
@@ -45,5 +49,10 @@ private
    overriding procedure Pop_Entity
      (Variable : Variable_Entity_Record;
       Unit     : in out Tagatha.Units.Tagatha_Unit);
+
+   function Is_Variable
+     (Entity : not null access Root_Entity_Type'Class)
+      return Boolean
+   is (Entity.all in Variable_Entity_Record'Class);
 
 end Ack.Variables;

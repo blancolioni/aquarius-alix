@@ -174,6 +174,16 @@ package Ack is
       Other : not null access constant Root_Entity_Type'Class)
       return Boolean;
 
+   function Attached
+     (Entity : not null access constant Root_Entity_Type'Class)
+      return Boolean;
+
+   procedure Set_Attached
+     (Entity : in out Root_Entity_Type'Class);
+
+   procedure Clear_Attached
+     (Entity : in out Root_Entity_Type'Class);
+
    function Instantiate
      (Entity             : not null access Root_Entity_Type;
       Type_Instantiation : not null access
@@ -251,6 +261,13 @@ package Ack is
       Entity       : not null access Root_Entity_Type'Class)
      with Pre => not Table_Entity.Contains (Entity.Standard_Name, False),
      Post => Table_Entity.Contains (Entity.Standard_Name, False);
+
+   procedure Add_Implicit
+     (Table_Entity    : in out Root_Entity_Type;
+      Implicit_Entity : not null access Root_Entity_Type'Class);
+
+   procedure Remove_Implicit
+     (Table_Entity    : in out Root_Entity_Type);
 
    --     type Entity_Type is private;
 --
@@ -419,10 +436,14 @@ package Ack is
      or else Kind (N) = N_Integer_Constant
      or else Kind (N) = N_String_Constant
      or else Kind (N) = N_Precursor_Element
-     or else Kind (N) = N_Formal_Generic_Name;
+     or else Kind (N) = N_Formal_Generic_Name
+     or else Kind (N) = N_Attachment_Test;
 
    function Get_Entity (N : Node_Id) return Entity_Type;
    function Has_Entity (N : Node_Id) return Boolean;
+
+   function Get_Type (N : Node_Id) return Entity_Type;
+   function Has_Type (N : Node_Id) return Boolean;
 
    function Class_Features (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Class_Declaration;
@@ -539,10 +560,12 @@ private
          Defining      : Boolean    := False;
          Single        : Boolean    := False;
          Once          : Boolean    := False;
+         Detachable    : Boolean    := False;
          Field         : Node_Field_Array := (others => No_Node);
          List          : List_Id    := No_List;
          Name          : Name_Id    := No_Name;
          Entity        : Entity_Type := null;
+         Node_Type     : Entity_Type := null;
          Error         : Error_Kind := E_No_Error;
          Error_Entity  : Entity_Type := null;
          Integer_Value : Integer;
@@ -735,6 +758,12 @@ private
    function Get_Entity (N : Node_Id) return Entity_Type
    is (Node_Table.Element (N).Entity);
 
+   function Has_Type (N : Node_Id) return Boolean
+   is (Node_Table.Element (N).Node_Type /= null);
+
+   function Get_Type (N : Node_Id) return Entity_Type
+   is (Node_Table.Element (N).Node_Type);
+
    function Class_Features (N : Node_Id) return Node_Id
    is (Node_Table.Element (N).Field (5));
 
@@ -778,22 +807,23 @@ private
    is (Node_Table.Element (Node).Error_Entity);
 
    function New_Node
-     (Kind     : Node_Kind;
-      From     : Aquarius.Programs.Program_Tree;
-      Deferred : Boolean     := False;
-      Expanded : Boolean     := False;
-      Frozen   : Boolean     := False;
-      Defining : Boolean     := False;
-      Once     : Boolean     := False;
-      Field_1  : Node_Id     := No_Node;
-      Field_2  : Node_Id     := No_Node;
-      Field_3  : Node_Id     := No_Node;
-      Field_4  : Node_Id     := No_Node;
-      Field_5  : Node_Id     := No_Node;
-      Field_6  : Node_Id     := No_Node;
-      List     : List_Id     := No_List;
-      Name     : Name_Id     := No_Name;
-      Entity   : Entity_Type := null)
+     (Kind       : Node_Kind;
+      From       : Aquarius.Programs.Program_Tree;
+      Deferred   : Boolean     := False;
+      Expanded   : Boolean     := False;
+      Frozen     : Boolean     := False;
+      Defining   : Boolean     := False;
+      Once       : Boolean     := False;
+      Detachable : Boolean     := False;
+      Field_1    : Node_Id     := No_Node;
+      Field_2    : Node_Id     := No_Node;
+      Field_3    : Node_Id     := No_Node;
+      Field_4    : Node_Id     := No_Node;
+      Field_5    : Node_Id     := No_Node;
+      Field_6    : Node_Id     := No_Node;
+      List       : List_Id     := No_List;
+      Name       : Name_Id     := No_Name;
+      Entity     : Entity_Type := null)
     return Node_Id;
 
    procedure Depth_First_Scan
@@ -846,6 +876,11 @@ private
       Entity : not null access Root_Entity_Type'Class)
      with Pre => Get_Entity (Node) = null;
 
+   procedure Set_Type
+     (Node   : Real_Node_Id;
+      Entity : not null access Root_Entity_Type'Class)
+     with Pre => Get_Type (Node) = null;
+
    procedure Set_Label
      (Node  : Real_Node_Id;
       Value : Positive)
@@ -885,8 +920,9 @@ private
 
    type Entity_Table_Record is
       record
-         Map : Entity_Maps.Map;
-         List : List_Of_Entities.List;
+         Map       : Entity_Maps.Map;
+         List      : List_Of_Entities.List;
+         Implicits : List_Of_Entities.List;
       end record;
 
    type Entity_Table is access Entity_Table_Record;
@@ -900,6 +936,7 @@ private
          Value_Type          : Entity_Type;
          Children            : Entity_Table;
          Parent_Environment  : Entity_Type;
+         Attached            : Boolean := False;
       end record;
 
    function Has_Context
@@ -953,6 +990,11 @@ private
      (Entity : Root_Entity_Type'Class)
       return Node_Id
    is (Entity.Declaration_Node);
+
+   function Attached
+     (Entity : not null access constant Root_Entity_Type'Class)
+      return Boolean
+   is (Entity.Attached);
 
    procedure Create
      (Entity             : in out Root_Entity_Type'Class;

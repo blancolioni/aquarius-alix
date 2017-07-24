@@ -117,6 +117,11 @@ private
      (Typ       : Type_Entity_Record)
       return String;
 
+   overriding function Detachable
+     (Typ : Type_Entity_Record)
+      return Boolean
+   is (Typ.Detachable);
+
    overriding function Contains
      (Typ       : Type_Entity_Record;
       Name      : String;

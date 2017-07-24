@@ -1,4 +1,5 @@
 with Ada.Strings.Fixed;
+with Ada.Text_IO;
 
 with Tagatha.Operands;
 
@@ -22,6 +23,23 @@ package body Ack.Features is
         (Ack.Variables.New_Argument_Entity
            (Get_Name (Name_Node), Name_Node, Arg_Type));
    end Add_Argument;
+
+   ------------------
+   -- Add_Implicit --
+   ------------------
+
+   overriding procedure Add_Implicit
+     (Feature         : in out Feature_Entity_Record;
+      Implicit_Entity : not null access Root_Entity_Type'Class)
+   is
+   begin
+      Root_Entity_Type (Feature).Add_Implicit (Implicit_Entity);
+      if Ack.Variables.Is_Variable (Implicit_Entity) then
+         Feature.Local_Count := Feature.Local_Count + 1;
+         Ack.Variables.Variable_Entity_Record (Implicit_Entity.all)
+           .Set_Offset (Feature.Local_Count);
+      end if;
+   end Add_Implicit;
 
    ---------------
    -- Add_Local --
@@ -59,6 +77,7 @@ package body Ack.Features is
                               Feature.Definition_Class,
                               Detachable => False));
          begin
+            Current.Set_Attached;
             Current.Set_Offset (1);
             Feature.Insert (Current);
             Next_Argument := 2;
@@ -90,6 +109,8 @@ package body Ack.Features is
          Next_Local := Next_Local + 1;
          Feature.Insert (Local);
       end loop;
+
+      Feature.Local_Count := Next_Local - 1;
    end Bind;
 
    ----------------------
@@ -386,7 +407,16 @@ package body Ack.Features is
          Unit.Push_Register ("r0");
 
       elsif Feature.Property then
-         if not Feature.Detachable then
+         if not Feature.Get_Type.Detachable
+           and then not Feature.Attached
+         then
+
+            if False and then Feature.Get_Type /= null then
+               Ada.Text_IO.Put_Line
+                 ("forcing " & Feature.Declared_Name
+                  & " : " & Feature.Get_Type.Full_Name);
+            end if;
+
             declare
                Continue_Label : constant Positive :=
                                   Unit.Next_Label;
@@ -449,6 +479,22 @@ package body Ack.Features is
       end if;
 
    end Push_Entity;
+
+   ---------------------
+   -- Remove_Implicit --
+   ---------------------
+
+   overriding procedure Remove_Implicit
+     (Feature         : in out Feature_Entity_Record)
+   is
+      Implicit_Entity : constant Entity_Type :=
+                          Feature.Children.Implicits.Last_Element;
+   begin
+      Root_Entity_Type (Feature).Remove_Implicit;
+      if Ack.Variables.Is_Variable (Implicit_Entity) then
+         Feature.Local_Count := Feature.Local_Count - 1;
+      end if;
+   end Remove_Implicit;
 
    ---------------------------
    -- Scan_Original_Classes --

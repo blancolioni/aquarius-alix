@@ -60,6 +60,13 @@ package Ack.Features is
       Name_Node  : in     Node_Id;
       Local_Type : not null access Ack.Types.Type_Entity_Record'Class);
 
+   overriding procedure Add_Implicit
+     (Feature    : in out Feature_Entity_Record;
+      Implicit_Entity : not null access Root_Entity_Type'Class);
+
+   overriding procedure Remove_Implicit
+     (Feature    : in out Feature_Entity_Record);
+
    procedure Set_Default_Value
      (Feature : Feature_Entity_Record;
       Unit    : in out Tagatha.Units.Tagatha_Unit);
@@ -122,6 +129,7 @@ private
          Locals              : Variable_Vectors.Vector;
          Routine_Node        : Node_Id;
          Explicit_Value_Node : Node_Id;
+         Local_Count         : Natural := 0;
       end record;
 
    overriding function Instantiate
