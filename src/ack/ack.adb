@@ -259,7 +259,8 @@ package body Ack is
                Integer_Value => 0,
                Entity        => Entity,
                Error_Entity  => null,
-               Error         => E_No_Error));
+               Error         => E_No_Error,
+               Label         => 0));
       end return;
    end New_Node;
 
@@ -366,6 +367,18 @@ package body Ack is
    begin
       Node_Table (Node).Entity := Entity_Type (Entity);
    end Set_Entity;
+
+   ---------------
+   -- Set_Label --
+   ---------------
+
+   procedure Set_Label
+     (Node  : Real_Node_Id;
+      Value : Positive)
+   is
+   begin
+      Node_Table (Node).Label := Value;
+   end Set_Label;
 
    --------------
    -- To_Array --
