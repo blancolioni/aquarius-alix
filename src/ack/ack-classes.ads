@@ -49,6 +49,10 @@ package Ack.Classes is
    overriding procedure Bind
      (Class : in out Class_Entity_Record);
 
+   overriding procedure Allocate
+     (Class : Class_Entity_Record;
+      Unit  : in out Tagatha.Units.Tagatha_Unit);
+
    function Has_Feature
      (Class : not null access constant Class_Entity_Record'Class;
       Name  : Name_Id)
