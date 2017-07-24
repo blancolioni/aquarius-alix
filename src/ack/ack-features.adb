@@ -379,8 +379,64 @@ package body Ack.Features is
          Unit.Push_Register ("r0");
 
       elsif Feature.Property then
-         Unit.Drop;
-         Unit.Push_Register ("pv");
+         if not Feature.Detachable then
+            declare
+               Continue_Label : constant Positive :=
+                                  Unit.Next_Label;
+            begin
+               Unit.Push_Register ("pv");
+               Unit.Operate (Tagatha.Op_Test, Tagatha.Default_Size);
+               Unit.Jump (Continue_Label, Tagatha.C_Not_Equal);
+               Unit.Drop;
+               Unit.Push_Operand
+                 (Tagatha.Operands.External_Operand
+                    (Feature.Get_Type.Link_Name & "$allocate",
+                     Immediate => True),
+                  Tagatha.Default_Size);
+               Unit.Indirect_Call;
+               Unit.Push_Result;
+               Unit.Pop_Register ("pv");
+               Unit.Push_Argument (1);
+               Unit.Pop_Register ("op");
+
+               declare
+                  procedure Set_Value
+                    (Class : not null access constant
+                       Ack.Classes.Class_Entity_Record'Class);
+
+                  ---------------
+                  -- Set_Value --
+                  ---------------
+
+                  procedure Set_Value
+                    (Class : not null access constant
+                       Ack.Classes.Class_Entity_Record'Class)
+                  is
+                  begin
+                     Unit.Push_Register ("pv");
+                     Unit.Native_Operation
+                       ("get_property "
+                        & Class.Link_Name & ",0",
+                        Input_Stack_Words  => 0,
+                        Output_Stack_Words => 0,
+                        Changed_Registers  => "pv");
+                     Unit.Push_Register ("pv");
+                     Unit.Pop_Register ("op");
+                     Unit.Pop_Register ("pv");
+                     Unit.Native_Operation
+                       ("set_property " & Feature.Standard_Name);
+                  end Set_Value;
+
+               begin
+                  Feature.Scan_Original_Classes
+                    (Set_Value'Access);
+               end;
+
+               Unit.Label (Continue_Label);
+            end;
+         end if;
+            Unit.Drop;
+            Unit.Push_Register ("pv");
       end if;
 
    end Push_Entity;
