@@ -9,10 +9,10 @@ feature
    After_Node
    do
       if attached Node.String_Literal as Long_Name then
-         Entry.Set_Long_Name (Long_Name.Text)
+         Option_Entry.Set_Long_Name (Long_Name.Text)
       end
       if attached Node.Character_Literal as C then
-         Entry.Set_Short_Name (C.First_Element)
+         Option_Entry.Set_Short_Name (C.First_Element)
       end
    end
    
