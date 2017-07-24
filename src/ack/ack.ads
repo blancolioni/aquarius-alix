@@ -56,6 +56,7 @@ package Ack is
       N_Loop,
       N_Precursor,
       N_Operator,
+      N_Attachment_Test,
       N_Constant,
       N_String_Constant,
       N_Integer_Constant,
