@@ -416,10 +416,13 @@ rescue ::=
          'rescue' compound
 retry ::=
          'retry'
-expression ::=
-    relation { boolean_operator relation }
-   | relation member_of class_name
-   | 'attached' expression 'as' identifier
+         
+expression ::= operator_expression
+             | attachment_test
+             
+operator_expression ::= relation { boolean_operator relation }
+
+attachment_test ::= 'attached' expression [ 'as' identifier ]
    
 member_of ::= 'in' | 'not' 'in'
 

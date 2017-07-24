@@ -11,6 +11,10 @@ package body Ack.Parser.Expressions is
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id;
 
+   function Import_Attachment_Test
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id;
+
    function Import_Primary
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id;
@@ -50,6 +54,12 @@ package body Ack.Parser.Expressions is
          Index := Index + 1;
       end if;
 
+      if Children (Index).Name /= Sub_Expressions then
+         raise Constraint_Error with
+           "expected a child called '" & Sub_Expressions
+           & "' but found '" & Children (Index).Name & "'";
+      end if;
+
       pragma Assert (Index <= Children'Last);
       pragma Assert (Children (Index).Name = Sub_Expressions);
 
@@ -82,6 +92,32 @@ package body Ack.Parser.Expressions is
 
       return Node;
    end Generic_Import;
+
+   ----------------------------
+   -- Import_Attachment_Test --
+   ----------------------------
+
+   function Import_Attachment_Test
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+      use Aquarius.Programs;
+      Children : constant Array_Of_Program_Trees :=
+                   From.Direct_Children;
+      Expression : Node_Id := No_Node;
+      Identifier : Name_Id := No_Name;
+   begin
+      for Child of Children loop
+         if Child.Name = "expression" then
+            Expression := Import_Expression (Child);
+         elsif Child.Name = "identifier" then
+            Identifier := Get_Name_Id (Child.Text);
+         end if;
+      end loop;
+      return New_Node (N_Attachment_Test, From,
+                       Name => Identifier,
+                       Field_1 => Expression);
+   end Import_Attachment_Test;
 
    -----------------------
    -- Import_Expression --
@@ -119,21 +155,16 @@ package body Ack.Parser.Expressions is
           ("", "relation",
            "boolean_operator",
            Import_Relation);
+
+      Top_Choice : constant Program_Tree := From.Chosen_Tree;
    begin
-      if From.Program_Child ("member_of") /= null then
-         return New_Node (N_Operator, From,
-                          Field_1 =>
-                            Import_Relation
-                              (From.Program_Child ("relation")),
-                          Field_2 =>
-                            Import_Class_Name
-                              (From.Program_Child ("class_name")),
-                          Name    =>
-                            Get_Name_Id
-                              (From.Program_Child ("member_of")
-                               .Concatenate_Children));
+      if Top_Choice.Name = "operator_expression" then
+         return Import_Top_Level (Top_Choice);
+      elsif Top_Choice.Name = "attachment_test" then
+         return Import_Attachment_Test (Top_Choice);
       else
-         return Import_Top_Level (From);
+         raise Constraint_Error with
+           "expected an expression but found '" & Top_Choice.Name & "'";
       end if;
    end Import_Expression;
 

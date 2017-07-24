@@ -313,6 +313,21 @@ package body Ack.Generate is
             null;
          when N_Precursor =>
             Generate_Precursor (Unit, Expression);
+         when N_Attachment_Test =>
+            declare
+               Continue_Label : constant Positive :=
+                                  Unit.Next_Label;
+            begin
+               Generate_Expression (Unit, Field_1 (Expression));
+               Unit.Pop_Register ("r0");
+               Unit.Operate (Tagatha.Op_Test, Tagatha.Default_Size);
+               Unit.Jump (Continue_Label, Tagatha.C_Not_Equal);
+               if Get_Name (Expression) /= No_Name then
+                  Unit.Push_Register ("r0");
+               end if;
+               Set_Label (Expression, Continue_Label);
+            end;
+
          when N_Constant =>
             declare
                Value : constant Node_Id := Constant_Value (Expression);

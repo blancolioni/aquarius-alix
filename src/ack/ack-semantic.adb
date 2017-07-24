@@ -111,13 +111,13 @@ package body Ack.Semantic is
    procedure Analyse_Expression
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
-      Expression_Type : Ack.Entity_Type;
+      Expression_Type : access Root_Entity_Type'Class;
       Expression      : Node_Id);
 
    procedure Analyse_Precursor
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
-      Expression_Type : Ack.Entity_Type;
+      Expression_Type : access Root_Entity_Type'Class;
       Precursor       : Node_Id);
 
    ---------------------------
@@ -562,7 +562,7 @@ package body Ack.Semantic is
    procedure Analyse_Expression
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
-      Expression_Type : Ack.Entity_Type;
+      Expression_Type : access Root_Entity_Type'Class;
       Expression      : Node_Id)
    is
    begin
@@ -572,6 +572,14 @@ package body Ack.Semantic is
          when N_Precursor =>
             Analyse_Precursor
               (Class, Container, Expression_Type, Expression);
+         when N_Attachment_Test =>
+            Analyse_Expression (Class, Container,
+                                Ack.Types.Get_Top_Level_Type ("any"),
+                                Expression => Field_1 (Expression));
+            if Get_Name (Expression) /= No_Name then
+               null;
+            end if;
+
          when N_Constant =>
             declare
                use type Ack.Classes.Class_Entity;
@@ -589,7 +597,8 @@ package body Ack.Semantic is
                if Expression_Type = null then
                   Error (Value, E_Ignored_Return_Value);
                elsif not  Value_Type.Conforms_To (Expression_Type) then
-                  Error (Expression, E_Type_Error, Expression_Type);
+                  Error (Expression, E_Type_Error,
+                         Entity_Type (Expression_Type));
                end if;
             end;
       end case;
@@ -886,7 +895,7 @@ package body Ack.Semantic is
    procedure Analyse_Precursor
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
-      Expression_Type : Ack.Entity_Type;
+      Expression_Type : access Root_Entity_Type'Class;
       Precursor       : Node_Id)
    is
       List   : constant List_Id :=
@@ -971,7 +980,8 @@ package body Ack.Semantic is
             elsif Value_Type /= null
               and then not Value_Type.Conforms_To (Expression_Type)
             then
-               Error (Precursor, E_Type_Error, Expression_Type);
+               Error (Precursor, E_Type_Error,
+                      Entity_Type (Expression_Type));
             end if;
          end if;
       end if;
