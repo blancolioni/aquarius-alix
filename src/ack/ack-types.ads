@@ -59,6 +59,14 @@ package Ack.Types is
       Constraints   : Array_Of_Types := Empty_Type_Array)
       return Type_Entity;
 
+   function Get_Class_Type
+     (Class : not null access Ack.Classes.Class_Entity_Record'Class)
+      return Type_Entity;
+
+   function Get_Top_Level_Type
+     (Name : String)
+      return Type_Entity;
+
 private
 
    type Constant_Type_Entity is access constant Type_Entity_Record'Class;
