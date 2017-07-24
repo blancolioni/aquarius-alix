@@ -1,11 +1,20 @@
 with Ada.Text_IO;
 
+with Tagatha.Operands;
+
 with Ack.Environment;
 with Ack.Types;
 
 package body Ack.Classes is
 
    Trace_Classes : constant Boolean := False;
+
+   type String_Class_Record is
+     new Class_Entity_Record with null record;
+
+   overriding procedure Allocate
+     (Class : String_Class_Record;
+      Unit  : in out Tagatha.Units.Tagatha_Unit);
 
    -----------------
    -- Add_Feature --
@@ -33,6 +42,37 @@ package body Ack.Classes is
       Class.Insert (Formal);
       Class.Generic_Class := True;
    end Add_Generic_Formal;
+
+   --------------
+   -- Allocate --
+   --------------
+
+   overriding procedure Allocate
+     (Class : Class_Entity_Record;
+      Unit  : in out Tagatha.Units.Tagatha_Unit)
+   is
+   begin
+      Unit.Push_Operand
+        (Tagatha.Operands.External_Operand
+           (Class_Entity_Record'Class (Class).Link_Name & "$allocate",
+            Immediate => True),
+         Tagatha.Default_Size);
+      Unit.Indirect_Call;
+      Unit.Push_Result;
+   end Allocate;
+
+   --------------
+   -- Allocate --
+   --------------
+
+   overriding procedure Allocate
+     (Class : String_Class_Record;
+      Unit  : in out Tagatha.Units.Tagatha_Unit)
+   is
+      pragma Unreferenced (Class);
+   begin
+      Unit.Push_Text ("");
+   end Allocate;
 
    ----------
    -- Bind --
@@ -352,14 +392,18 @@ package body Ack.Classes is
       Declaration : Node_Id)
       return Class_Entity
    is
+      Class_Name : constant String := To_Standard_String (Name);
+      Result : constant Class_Entity :=
+                     (if Class_Name = "string"
+                      then new String_Class_Record
+                      else new Class_Entity_Record);
    begin
-      return Result : constant Class_Entity := new Class_Entity_Record do
-         Result.Create
-           (Name, Declaration,
-            Table              => True,
-            Parent_Environment => Ack.Environment.Top_Level,
-            Context            => Context);
-      end return;
+      Result.Create
+        (Name, Declaration,
+         Table              => True,
+         Parent_Environment => Ack.Environment.Top_Level,
+         Context            => Context);
+      return Result;
    end New_Class;
 
    --------------

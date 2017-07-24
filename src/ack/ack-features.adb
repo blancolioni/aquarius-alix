@@ -395,13 +395,14 @@ package body Ack.Features is
                Unit.Operate (Tagatha.Op_Test, Tagatha.Default_Size);
                Unit.Jump (Continue_Label, Tagatha.C_Not_Equal);
                Unit.Drop;
-               Unit.Push_Operand
-                 (Tagatha.Operands.External_Operand
-                    (Feature.Get_Type.Link_Name & "$allocate",
-                     Immediate => True),
-                  Tagatha.Default_Size);
-               Unit.Indirect_Call;
-               Unit.Push_Result;
+               Feature.Get_Type.Allocate (Unit);
+--                 Unit.Push_Operand
+--                   (Tagatha.Operands.External_Operand
+--                      (Feature.Get_Type.Link_Name & "$allocate",
+--                       Immediate => True),
+--                    Tagatha.Default_Size);
+--                 Unit.Indirect_Call;
+--                 Unit.Push_Result;
                Unit.Pop_Register ("pv");
                Unit.Push_Argument (1);
                Unit.Pop_Register ("op");

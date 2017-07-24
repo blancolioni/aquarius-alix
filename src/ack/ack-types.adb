@@ -2,6 +2,18 @@ with Ack.Classes;
 
 package body Ack.Types is
 
+   --------------
+   -- Allocate --
+   --------------
+
+   overriding procedure Allocate
+     (Typ  : Type_Entity_Record;
+      Unit : in out Tagatha.Units.Tagatha_Unit)
+   is
+   begin
+      Typ.Class.Allocate (Unit);
+   end Allocate;
+
    -----------------
    -- Conforms_To --
    -----------------

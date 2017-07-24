@@ -120,6 +120,10 @@ private
       Name : String)
       return Entity_Type;
 
+   overriding procedure Allocate
+     (Typ  : Type_Entity_Record;
+      Unit : in out Tagatha.Units.Tagatha_Unit);
+
    function Class
      (Typ : Type_Entity_Record'Class)
       return access Ack.Classes.Class_Entity_Record'Class

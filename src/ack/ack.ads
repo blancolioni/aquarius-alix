@@ -213,6 +213,11 @@ package Ack is
       Unit   : in out Tagatha.Units.Tagatha_Unit)
    is null;
 
+   procedure Allocate
+     (Entity : Root_Entity_Type;
+      Unit   : in out Tagatha.Units.Tagatha_Unit)
+   is null;
+
    function Contains
      (Table_Entity : Root_Entity_Type;
       Name         : String;
