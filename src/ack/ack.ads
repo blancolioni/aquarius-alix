@@ -537,6 +537,7 @@ private
          Error         : Error_Kind := E_No_Error;
          Error_Entity  : Entity_Type := null;
          Integer_Value : Integer;
+         Label         : Natural := 0;
       end record;
 
    package List_Of_Nodes is
@@ -630,6 +631,9 @@ private
 
    function Kind (Node : Node_Id) return Node_Kind
    is (Node_Table.Element (Node).Kind);
+
+   function Label (Node : Node_Id) return Natural
+   is (Node_Table.Element (Node).Label);
 
    function Class_Header (N : Node_Id) return Node_Id
    is (Node_Table.Element (N).Field (2));
@@ -829,6 +833,11 @@ private
      (Node : Real_Node_Id;
       Entity : not null access Root_Entity_Type'Class)
      with Pre => Get_Entity (Node) = null;
+
+   procedure Set_Label
+     (Node  : Real_Node_Id;
+      Value : Positive)
+     with Pre => Label (Node) = 0;
 
    function Contains_Name
      (List : List_Id;
