@@ -49,6 +49,7 @@ package Ack is
       N_Internal,
       N_External,
       N_Expression,
+      N_If_Then,
       N_Compound,
       N_Assignment,
       N_Creation_Instruction,

@@ -108,6 +108,11 @@ package body Ack.Semantic is
       Container  : not null access Root_Entity_Type'Class;
       Assignment : Node_Id);
 
+   procedure Analyse_Conditional
+     (Class       : Ack.Classes.Class_Entity;
+      Container   : not null access Root_Entity_Type'Class;
+      Conditional : Node_Id);
+
    procedure Analyse_Expression
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
@@ -466,7 +471,7 @@ package body Ack.Semantic is
             when N_Creation_Instruction =>
                null;
             when N_Conditional =>
-               null;
+               Analyse_Conditional (Class, Container, Node);
             when N_Loop =>
                null;
             when N_Precursor =>
@@ -481,6 +486,39 @@ package body Ack.Semantic is
    begin
       Scan (List, Analyse'Access);
    end Analyse_Compound;
+
+   -------------------------
+   -- Analyse_Conditional --
+   -------------------------
+
+   procedure Analyse_Conditional
+     (Class       : Ack.Classes.Class_Entity;
+      Container   : not null access Root_Entity_Type'Class;
+      Conditional : Node_Id)
+   is
+      procedure Analyse_Element (Element : Node_Id);
+
+      ---------------------
+      -- Analyse_Element --
+      ---------------------
+
+      procedure Analyse_Element (Element : Node_Id) is
+         Condition : constant Node_Id := Field_1 (Element);
+         Compound  : constant Node_Id := Field_2 (Element);
+      begin
+         if Condition /= No_Node then
+            Analyse_Expression
+              (Class, Container,
+               Ack.Types.Get_Top_Level_Type ("boolean"),
+               Condition);
+         end if;
+         Analyse_Compound (Class, Container, Compound);
+      end Analyse_Element;
+
+   begin
+      Scan (Node_Table.Element (Conditional).List,
+            Analyse_Element'Access);
+   end Analyse_Conditional;
 
    -------------------------------
    -- Analyse_Effective_Routine --
