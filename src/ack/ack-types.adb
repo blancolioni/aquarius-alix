@@ -1,6 +1,13 @@
+with WL.String_Maps;
+
 with Ack.Classes;
 
 package body Ack.Types is
+
+   package Class_Type_Maps is
+     new WL.String_Maps (Type_Entity);
+
+   Class_Type_Map : Class_Type_Maps.Map;
 
    --------------
    -- Allocate --
@@ -86,6 +93,10 @@ package body Ack.Types is
    begin
       return Ack.Features.Feature_Entity (Typ.Get (Name));
    end Feature;
+
+   ---------------
+   -- Full_Name --
+   ---------------
 
    overriding function Full_Name
      (Typ       : Type_Entity_Record)
@@ -186,6 +197,35 @@ package body Ack.Types is
          end;
       end if;
    end Get;
+
+   --------------------
+   -- Get_Class_Type --
+   --------------------
+
+   function Get_Class_Type
+     (Class : not null access Ack.Classes.Class_Entity_Record'Class)
+      return Type_Entity
+   is
+      Key : constant String := Class.Full_Name;
+   begin
+      if not Class_Type_Map.Contains (Key) then
+         Class_Type_Map.Insert
+           (Key, New_Class_Type (Class.Declaration_Node, Class, False));
+      end if;
+      return Class_Type_Map.Element (Key);
+   end Get_Class_Type;
+
+   ------------------------
+   -- Get_Top_Level_Type --
+   ------------------------
+
+   function Get_Top_Level_Type
+     (Name : String)
+      return Type_Entity
+   is
+   begin
+      return Get_Class_Type (Ack.Classes.Get_Top_Level_Class (Name));
+   end Get_Top_Level_Type;
 
    ---------------------
    -- Get_Type_Entity --
