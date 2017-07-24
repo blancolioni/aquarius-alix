@@ -3,7 +3,7 @@ class Options.Entry
 feature
    Name          : String
    Type_Name     : String
-   Short_Name    : Character
+   Short_Name    : String
    Long_Name     : String
    Default_Value : String
 
@@ -19,7 +19,7 @@ feature
       Type_Name := Name
    end
    
-   Set_Short_Name (Name : Character)
+   Set_Short_Name (Name : String)
    do
       Short_Name := Name;
    end
