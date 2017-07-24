@@ -668,6 +668,9 @@ package body Ack.Semantic is
       Effective       : constant Boolean :=
                           Routine_Feature and then not Deferred
                                 and then Kind (Value_Node) = N_Routine;
+      Locals_Node     : constant Node_Id :=
+                          (if Value_Node = No_Node then No_Node
+                           else Local_Declarations (Value_Node));
       Effective_Node  : constant Node_Id :=
                           (if Effective then Effective_Routine (Value_Node)
                            else No_Node);
@@ -678,11 +681,21 @@ package body Ack.Semantic is
                           Effective
                               and then Kind (Effective_Node) = N_External;
    begin
+
       for Node of List_Table.Element (Names).List loop
          declare
             Entity : constant Ack.Features.Feature_Entity :=
                        Ack.Features.Get_Feature_Entity (Node);
          begin
+
+            if Locals_Node /= No_Node then
+               Analyse_Entity_Declaration_Groups
+                 (Class      => Class,
+                  Feature    => Entity,
+                  Group_List => Entity_Declaration_Group_List (Locals_Node),
+                  Local      => True);
+            end if;
+
             if Entity.Standard_Name = "void" then
                Entity.Set_Explicit_Value (No_Node);
             elsif Value_Feature then

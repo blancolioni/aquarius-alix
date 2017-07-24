@@ -123,6 +123,11 @@ package body Ack.Parser is
 --        return Node_Id
 --       with Pre => From.Name = "event_clause";
 
+   function Import_Local_Declarations
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     with Pre => From.Name = "local_declarations";
+
    function Import_Formal_Arguments
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
@@ -868,6 +873,21 @@ package body Ack.Parser is
       return List;
    end Import_List;
 
+   -------------------------------
+   -- Import_Local_Declarations --
+   -------------------------------
+
+   function Import_Local_Declarations
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+      Node : constant Node_Id :=
+               Import_Entity_Declaration_List
+                 (From.Program_Child ("entity_declaration_list"));
+   begin
+      return New_Node (N_Local_Declarations, From, Field_1 => Node);
+   end Import_Local_Declarations;
+
    ------------------------
    -- Import_New_Feature --
    ------------------------
@@ -922,12 +942,17 @@ package body Ack.Parser is
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
    is
+      Local_Declarations : constant Node_Id :=
+                             Import_Optional_Child
+                               (From, "local_declarations",
+                                Import_Local_Declarations'Access);
       Feature_Body : constant Node_Id :=
                        Import_Feature_Body
                          (From.Program_Child ("feature_body"));
    begin
       return New_Node (N_Routine, From,
                        Deferred => Feature_Body = No_Node,
+                       Field_2  => Local_Declarations,
                        Field_3  => Feature_Body);
    end Import_Routine;
 
