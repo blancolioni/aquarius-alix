@@ -6,11 +6,11 @@ feature
    Interpolate (Separator : String) : String
       do
          Result := ""
-         across Current as item loop
+         across Current as Item loop
             if Result /= "" then
                Result := Result & Separator
             end
-            Result := Result & Current
+            Result := Result & Item
          end
       end
 end
