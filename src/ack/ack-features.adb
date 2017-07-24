@@ -195,13 +195,20 @@ package body Ack.Features is
                      Unit.Push_Argument
                        (Tagatha.Argument_Offset (I));
                   end loop;
-                  Unit.Call (Label);
+
+                  Unit.Pop_Register ("op");
+                  Unit.Native_Operation
+                    ("get_property " & Label & ","
+                     & Natural'Image (Arg_Count - 1),
+                     Input_Stack_Words  => 0,
+                     Output_Stack_Words => 0,
+                     Changed_Registers  => "pv");
                   for I in 1 .. Arg_Count loop
                      Unit.Drop;
                   end loop;
 
                   if Feature.Has_Result then
-                     Unit.Push_Register ("r0");
+                     Unit.Push_Register ("pv");
                      Unit.Pop_Local (1);
                   end if;
 
@@ -435,8 +442,9 @@ package body Ack.Features is
                Unit.Label (Continue_Label);
             end;
          end if;
-            Unit.Drop;
-            Unit.Push_Register ("pv");
+
+         Unit.Drop;
+         Unit.Push_Register ("pv");
       end if;
 
    end Push_Entity;
