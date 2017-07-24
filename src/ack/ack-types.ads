@@ -105,6 +105,10 @@ private
      (Typ       : Type_Entity_Record)
       return String;
 
+   overriding function Link_Name
+     (Typ       : Type_Entity_Record)
+      return String;
+
    overriding function Contains
      (Typ       : Type_Entity_Record;
       Name      : String;
