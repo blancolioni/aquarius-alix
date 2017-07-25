@@ -227,6 +227,7 @@ package body Ack.Generate is
                null;
             when N_Precursor =>
                Generate_Precursor (Unit, Instruction);
+               Unit.Drop;
          end case;
       end Generate_Instruction;
 
