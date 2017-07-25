@@ -34,6 +34,9 @@ package body Ack.Variables is
          Result.Create (Name, Node, Table => False);
          Result.Kind := Argument;
          Result.Value_Type := Entity_Type (Argument_Type);
+         if not Argument_Type.Detachable then
+            Result.Set_Attached;
+         end if;
       end return;
    end New_Argument_Entity;
 
