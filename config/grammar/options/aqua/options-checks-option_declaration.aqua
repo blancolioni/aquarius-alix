@@ -7,9 +7,9 @@ feature
          Option_Entry.Set_Name (Id)
       end
       
-   After_Type (Type : Syntax.Type_Node)
+   After_Type (Type : Options.Checks.Type)
       do
-         Option_Entry.Set_Name (Type.Identifier)
+         Option_Entry.Set_Name (Type.Name)
       end
       
    After_Numeric_Literal (Child : String)
