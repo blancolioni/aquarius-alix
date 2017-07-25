@@ -10,6 +10,8 @@ with Ack.Types;
 
 package body Ack.Bindings is
 
+   Report_Calls : constant Boolean := False;
+
    ----------------------
    -- Load_Ack_Binding --
    ----------------------
@@ -27,15 +29,27 @@ package body Ack.Bindings is
 
       Action_File : Ada.Text_IO.File_Type;
 
+      References  : List_Of_Entities.List;
+
+      function Is_Group_Reference
+        (Class    : not null access constant
+           Ack.Classes.Class_Entity_Record'Class;
+         Property : not null access constant Root_Entity_Type'Class)
+         return Boolean;
+
       procedure Load_Class
         (Directory_Entry : Ada.Directories.Directory_Entry_Type);
 
       procedure Add_Feature_Binding
         (Class        : not null access constant
            Ack.Classes.Class_Entity_Record'Class;
-         Feature_Name : String;
-         Child_Name   : String;
-         Child_Type   : Ack.Entity_Type);
+         Feature      : not null access constant
+           Ack.Root_Entity_Type'Class);
+
+      procedure Check_Allocated
+        (Class     : not null access constant
+           Ack.Root_Entity_Type'Class;
+         Tree_Name : String);
 
       -------------------------
       -- Add_Feature_Binding --
@@ -44,11 +58,10 @@ package body Ack.Bindings is
       procedure Add_Feature_Binding
         (Class        : not null access constant
            Ack.Classes.Class_Entity_Record'Class;
-         Feature_Name : String;
-         Child_Name   : String;
-         Child_Type   : Ack.Entity_Type)
+         Feature      : not null access constant
+           Ack.Root_Entity_Type'Class)
       is
-         pragma Unreferenced (Child_Name, Child_Type);
+         Feature_Name : constant String := Feature.Standard_Name;
          Index         : constant Natural :=
                            Ada.Strings.Fixed.Index (Feature_Name, "_");
          Position_Name : constant String :=
@@ -58,9 +71,18 @@ package body Ack.Bindings is
          Child_Tree    : constant String :=
                            Feature_Name (Index + 1 .. Feature_Name'Last);
          Parent_Tree   : constant String := Class.Standard_Name;
-         Feature       : constant Ack.Features.Feature_Entity :=
-                           Class.Feature (Get_Name_Id (Feature_Name));
+         Group_Property : constant String := Class.Link_Name;
       begin
+         if Ack.Features.Is_Feature (Feature)
+           and then Ack.Features.Feature_Entity_Record (Feature.all)
+           .Is_Property
+           and then Is_Group_Reference
+             (Class,
+              Ack.Features.Feature_Entity_Record'Class (Feature.all)'Access)
+         then
+            References.Append (Feature);
+         end if;
+
          if Index > 0
            and then (Position_Name = "before"
                      or else Position_Name = "after")
@@ -76,48 +98,115 @@ package body Ack.Bindings is
                   & "/" & Child_Tree & " do");
             end if;
 
-            Ada.Text_IO.Put_Line
-              (Action_File,
-               "   if not tree.__" & Parent_Tree & " then");
-            Ada.Text_IO.Put_Line
-              (Action_File,
-               "      tree.__" & Parent_Tree & " :=");
-            Ada.Text_IO.Put_Line
-              (Action_File,
-               "        "
-               & Class.Link_Name
-               & "$allocate");
-            Ada.Text_IO.Put_Line
-              (Action_File,
-               "   end if");
+            Check_Allocated (Class, "tree");
+
+            for Reference of References loop
+               Ada.Text_IO.Put_Line
+                 (Action_File,
+                  "   if tree." & Reference.Get_Type.Link_Name & " then");
+               Ada.Text_IO.Put_Line
+                 (Action_File,
+                  "      tree." & Group_Property
+                  & "." & Class.Link_Name
+                  & "." & Reference.Standard_Name & " :=");
+               Ada.Text_IO.Put_Line
+                 (Action_File,
+                  "        tree." & Reference.Get_Type.Link_Name);
+               Ada.Text_IO.Put_Line
+                 (Action_File,
+                  "   end if");
+            end loop;
+
+            if False then
+               Ada.Text_IO.Put_Line
+                 (Action_File,
+                  "   IO.put_line (tree." & Group_Property & ".Image)");
+            end if;
 
             if Child_Tree = "node" then
                Ada.Text_IO.Put_Line
                  (Action_File,
                   "   call "
-                  & "tree.__" & Parent_Tree & "."
+                  & "tree." & Group_Property & "."
                   & Class.Link_Name
                   & "."
                   & Position_Name & "_node"
-                  & "(tree.__" & Parent_Tree & ")");
+                  & "(tree." & Group_Property & ")");
             else
-               if Feature.Argument (1).Value_Type.Standard_Name = "string" then
-                  if False then
+               declare
+                  Child_Argument : constant Entity_Type :=
+                                     Feature.Argument (1);
+                  Child_Type     : constant Entity_Type :=
+                                     Child_Argument.Get_Type;
+               begin
+                  if Child_Type.Standard_Name = "string" then
+                     if False then
+                        Ada.Text_IO.Put_Line
+                          (Action_File,
+                           "   IO.put_line (""" & Parent_Tree
+                           & "/" & Child_Tree
+                           & " -> "" & child.text.to_lower)");
+                     end if;
+
                      Ada.Text_IO.Put_Line
                        (Action_File,
-                        "   IO.put_line (tree.__"
-                        & Parent_Tree & ".Image)");
+                        "   call "
+                        & "tree." & Group_Property & "."
+                        & Class.Link_Name
+                        & "."
+                        & Position_Name & "_" & Child_Tree
+                        & "(tree." & Group_Property & ","
+                        & "child.text);");
+                  elsif Is_Group_Reference
+                    (Class, Child_Argument)
+                  then
+                     Check_Allocated
+                       (Child_Type, "child");
+
+                     if Report_Calls then
+                        Ada.Text_IO.Put_Line
+                          (Action_File,
+                           "   IO.put_line (""Before call: "
+                           & Position_Name & " "
+                           & Parent_Tree
+                           & "/" & Child_Tree
+                           & " -> "" & child."
+                           & Child_Type.Link_Name
+                           & ".Image)");
+                     end if;
+
+                     Ada.Text_IO.Put_Line
+                       (Action_File,
+                        "   call "
+                        & "tree." & Group_Property & "."
+                        & Class.Link_Name
+                        & "."
+                        & Position_Name & "_" & Child_Tree
+                        & "(tree." & Group_Property & ","
+                        & "child." & Child_Type.Link_Name & ");");
+
+                     if Report_Calls then
+                        Ada.Text_IO.Put_Line
+                          (Action_File,
+                           "   IO.put_line (""After Call: "
+                           & Position_Name & " "
+                           & Parent_Tree
+                           & "/" & Child_Tree
+                           & " -> "" & child."
+                           & Child_Type.Link_Name
+                           & ".Image)");
+                     end if;
+
+                  else
+                     Ada.Text_IO.Put_Line
+                       (Ada.Text_IO.Standard_Error,
+                        "warning: "
+                        & Feature.Full_Name & ": cannot bind argument "
+                        & Child_Argument.Declared_Name
+                        & " of type "
+                        & Child_Type.Full_Name);
                   end if;
-                  Ada.Text_IO.Put_Line
-                    (Action_File,
-                     "   call "
-                     & "tree.__" & Parent_Tree & "."
-                     & Class.Link_Name
-                     & "."
-                     & Position_Name & "_" & Child_Tree
-                     & "(tree.__" & Parent_Tree & ","
-                     & "child.text);");
-               end if;
+               end;
             end if;
 
             Ada.Text_IO.Put_Line
@@ -127,6 +216,76 @@ package body Ack.Bindings is
 
          end if;
       end Add_Feature_Binding;
+
+      ---------------------
+      -- Check_Allocated --
+      ---------------------
+
+      procedure Check_Allocated
+        (Class : not null access constant
+             Ack.Root_Entity_Type'Class;
+         Tree_Name : String)
+      is
+         Group_Property : constant String := Class.Link_Name;
+      begin
+         Ada.Text_IO.Put_Line
+           (Action_File,
+            "   if not " & Tree_Name & "." & Group_Property & " then");
+         Ada.Text_IO.Put_Line
+           (Action_File,
+            "      " & Tree_Name & "." & Group_Property & " :=");
+         Ada.Text_IO.Put_Line
+           (Action_File,
+            "        "
+            & Class.Link_Name
+            & "$allocate");
+         if Report_Calls then
+            Ada.Text_IO.Put_Line
+              (Action_File,
+               "      IO.Put_Line (""Allocated " & Tree_Name & ": "" & "
+               & Tree_Name & "." & Group_Property & ".Image)");
+         end if;
+
+         Ada.Text_IO.Put_Line
+           (Action_File,
+            "   end if");
+      end Check_Allocated;
+
+      ------------------------
+      -- Is_Group_Reference --
+      ------------------------
+
+      function Is_Group_Reference
+        (Class    : not null access constant
+           Ack.Classes.Class_Entity_Record'Class;
+         Property : not null access constant
+           Root_Entity_Type'Class)
+         return Boolean
+      is
+         use Ada.Strings.Fixed;
+         Property_Type : constant Entity_Type := Property.Get_Type;
+         Property_Link_Name : constant String := Property_Type.Link_Name;
+         Class_Link_Name    : constant String := Class.Link_Name;
+         Property_Top_Name  : constant String :=
+                                Property_Link_Name
+                                  (Property_Link_Name'First
+                                   .. Index (Property_Link_Name, "__"));
+         Class_Top_Name     : constant String :=
+                                Class_Link_Name
+                                  (Class_Link_Name'First
+                                   .. Index (Class_Link_Name, "__"));
+         Count              : Natural := 0;
+      begin
+         for I in Property_Link_Name'First .. Property_Link_Name'Last - 1 loop
+            if Property_Link_Name (I .. I + 1) = "__" then
+               Count := Count + 1;
+            end if;
+         end loop;
+
+         return Count = 2
+           and then Property_Link_Name /= Class_Link_Name
+           and then Property_Top_Name = Class_Top_Name;
+      end Is_Group_Reference;
 
       ----------------
       -- Load_Class --
