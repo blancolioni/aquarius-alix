@@ -10,8 +10,7 @@ package Ack.Compile is
       Feature_Callback : access
         procedure (Class        : not null access constant
                      Ack.Classes.Class_Entity_Record'Class;
-                   Feature_Name : String;
-                   Child_Name   : String;
-                   Child_Type   : Entity_Type));
+                   Feature      : not null access constant
+                     Root_Entity_Type'Class));
 
 end Ack.Compile;

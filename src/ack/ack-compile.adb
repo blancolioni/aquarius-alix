@@ -34,14 +34,13 @@ package body Ack.Compile is
    -------------------
 
    procedure Compile_Class
-     (Source_Path      : String;
-      To_Image         : Aqua.Images.Image_Type;
+     (Source_Path : String;
+      To_Image    : Aqua.Images.Image_Type;
       Feature_Callback : access
         procedure (Class        : not null access constant
                      Ack.Classes.Class_Entity_Record'Class;
-                   Feature_Name : String;
-                   Child_Name   : String;
-                   Child_Type   : Entity_Type))
+                   Feature      : not null access constant
+                     Root_Entity_Type'Class))
    is
       Base_Name : constant String :=
                     Ada.Directories.Base_Name (Source_Path);
@@ -94,8 +93,7 @@ package body Ack.Compile is
             procedure Call (Feature : not null access constant
                               Ack.Features.Feature_Entity_Record'Class) is
             begin
-               Feature_Callback
-                 (Class, Feature.Standard_Name, "", null);
+               Feature_Callback (Class, Feature);
             end Call;
 
          begin
