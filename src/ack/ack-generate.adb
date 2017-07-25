@@ -8,6 +8,8 @@ with Ack.Features;
 
 package body Ack.Generate is
 
+   Report_Allocation : constant Boolean := False;
+
    procedure Generate_Allocator
      (Unit  : in out Tagatha.Units.Tagatha_Unit;
       Class : not null access Ack.Classes.Class_Entity_Record'Class);
@@ -45,6 +47,9 @@ package body Ack.Generate is
      (Unit  : in out Tagatha.Units.Tagatha_Unit;
       Class : not null access Ack.Classes.Class_Entity_Record'Class)
    is
+
+      use type Ack.Classes.Class_Entity;
+
       procedure Set_Value
         (Feature : not null access constant
            Ack.Features.Feature_Entity_Record'Class);
@@ -98,6 +103,20 @@ package body Ack.Generate is
          Frame_Words    => 0,
          Result_Words   => 1,
          Global         => True);
+
+      if Report_Allocation then
+         Unit.Push_Text ("allocating: " & Class.Full_Name);
+         Unit.Push_Operand
+           (Tagatha.Operands.External_Operand ("io", True),
+            Tagatha.Default_Size);
+         Unit.Pop_Register ("op");
+         Unit.Native_Operation
+           ("get_property put_line,1",
+            Input_Stack_Words  => 1,
+            Output_Stack_Words => 0,
+            Changed_Registers  => "pv");
+      end if;
+
       Unit.Push_Operand
         (Tagatha.Operands.External_Operand ("map", True),
          Tagatha.Default_Size);
@@ -384,7 +403,7 @@ package body Ack.Generate is
          when N_Precursor =>
             Generate_Precursor (Unit, Expression);
          when N_Attachment_Test =>
-               Generate_Expression (Unit, Field_1 (Expression));
+            Generate_Expression (Unit, Field_1 (Expression));
          when N_Constant =>
             declare
                Value : constant Node_Id := Constant_Value (Expression);
@@ -471,78 +490,9 @@ package body Ack.Generate is
       is
          Entity : constant Entity_Type := Get_Entity (Element);
       begin
-         if Ack.Features.Is_Feature (Entity)
-           and then Element = First_Element
-         then
-            Unit.Push_Argument (1);
-         end if;
-
-         Entity.Push_Entity (Unit);
-
---           Stack_Result := True;
---           case Get_Kind (Entity) is
---              when Class_Entity | Instantiated_Class_Entity =>
---                 null;
---              when Table_Entity | Generic_Argument_Entity =>
---                 null;
---              when Feature_Entity_Kind =>
---                 declare
---                    Original_Feature : constant Entity_Type :=
---                                         Get_Original_Ancestor (Entity);
---                    Original_Class   : constant Entity_Type :=
---                                         Get_Context (Original_Feature);
---                    Feature_Kind     : constant Feature_Entity_Kind :=
---                                  Feature_Entity_Kind (Get_Kind (Entity));
---                 begin
---
---                    if Element = First_Element then
---                       Unit.Push_Argument (1);
---                    end if;
---
---                    Unit.Pop_Register ("op");
---                    Unit.Push_Register ("op");
---
---                    Unit.Native_Operation
---                  ("get_property " & Get_Link_Name (Original_Class) & ",0",
---                       Input_Stack_Words  => 0,
---                       Output_Stack_Words => 0,
---                       Changed_Registers  => "pv");
---                    Unit.Push_Register ("pv");
---                    Unit.Pop_Register ("op");
---                    Unit.Native_Operation
---                      ("get_property "
---                       & To_Standard_String
---                         (Get_Name (Original_Feature)) & ",0",
---                       Input_Stack_Words  => 0,
---                       Output_Stack_Words => 0,
---                       Changed_Registers  => "pv");
---
---                    case Feature_Kind is
---                       when Routine_Feature_Entity =>
---                          Unit.Push_Register ("pv");
---                          Unit.Indirect_Call;
---                          Unit.Drop;
---                          if Get_Type (Original_Feature) /= No_Entity then
---                             Unit.Push_Register ("r0");
---                          else
---                             Stack_Result := False;
---                          end if;
---                       when Property_Feature_Entity =>
---                          Unit.Drop;
---                          Unit.Push_Register ("pv");
---                    end case;
---                 end;
---
---              when Argument_Entity =>
---                 Unit.Push_Argument
---                   (Tagatha.Argument_Offset
---                      (Get_Argument_Offset (Entity)));
---              when Local_Entity =>
---                 Unit.Push_Local
---                   (Tagatha.Local_Offset (Get_Local_Offset (Entity)));
---              when Result_Entity =>
---                 Unit.Push_Local (1);
---           end case;
+         Entity.Push_Entity
+           (Have_Context => Element /= First_Element,
+            Unit         => Unit);
       end Process;
 
    begin
@@ -571,7 +521,7 @@ package body Ack.Generate is
                end loop;
 
                if Actual_List /= No_List then
-               Unit.Pop_Register ("r0");
+                  Unit.Pop_Register ("r0");
                   Apply_Arguments (Actual_List, False);
                   Unit.Push_Register ("r0");
                end if;

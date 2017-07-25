@@ -43,8 +43,10 @@ private
       return Entity_Type;
 
    overriding procedure Push_Entity
-     (Variable : Variable_Entity_Record;
-      Unit     : in out Tagatha.Units.Tagatha_Unit);
+     (Variable     : Variable_Entity_Record;
+      Have_Context : Boolean;
+      Unit         : in out Tagatha.Units.Tagatha_Unit)
+     with Pre => not Have_Context;
 
    overriding procedure Pop_Entity
      (Variable : Variable_Entity_Record;

@@ -25,6 +25,10 @@ package Ack.Features is
      (Feature : Feature_Entity_Record'Class)
      return access constant Ack.Classes.Class_Entity_Record'Class;
 
+   function Is_Property
+     (Feature : Feature_Entity_Record'Class)
+      return Boolean;
+
    procedure Set_Result_Type
      (Feature     : in out Feature_Entity_Record'Class;
       Result_Type : not null access Ack.Types.Type_Entity_Record'Class);
@@ -158,12 +162,18 @@ private
       return String;
 
    overriding procedure Push_Entity
-     (Feature : Feature_Entity_Record;
-      Unit    : in out Tagatha.Units.Tagatha_Unit);
+     (Feature      : Feature_Entity_Record;
+      Have_Context : Boolean;
+      Unit         : in out Tagatha.Units.Tagatha_Unit);
 
    overriding procedure Pop_Entity
      (Feature : Feature_Entity_Record;
       Unit    : in out Tagatha.Units.Tagatha_Unit);
+
+   function Is_Property
+     (Feature : Feature_Entity_Record'Class)
+      return Boolean
+   is (Feature.Property);
 
    function Is_Feature
      (Entity : not null access constant Root_Entity_Type'Class)

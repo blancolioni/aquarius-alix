@@ -1,5 +1,4 @@
 with Ada.Strings.Fixed;
-with Ada.Text_IO;
 
 with Tagatha.Operands;
 
@@ -224,9 +223,6 @@ package body Ack.Features is
                      Input_Stack_Words  => 0,
                      Output_Stack_Words => 0,
                      Changed_Registers  => "pv");
-                  for I in 1 .. Arg_Count loop
-                     Unit.Drop;
-                  end loop;
 
                   if Feature.Has_Result then
                      Unit.Push_Register ("pv");
@@ -251,10 +247,6 @@ package body Ack.Features is
                      Input_Stack_Words  => 0,
                      Output_Stack_Words => 0,
                      Changed_Registers  => "pv");
-
-                  for I in 2 .. Arg_Count loop
-                     Unit.Drop;
-                  end loop;
 
                   Unit.Push_Register ("pv");
 
@@ -358,8 +350,9 @@ package body Ack.Features is
    -----------------
 
    overriding procedure Push_Entity
-     (Feature : Feature_Entity_Record;
-      Unit    : in out Tagatha.Units.Tagatha_Unit)
+     (Feature      : Feature_Entity_Record;
+      Have_Context : Boolean;
+      Unit         : in out Tagatha.Units.Tagatha_Unit)
    is
       Original_Class : constant Ack.Classes.Class_Entity :=
                          (if Feature.Original_Classes.Is_Empty
@@ -383,8 +376,19 @@ package body Ack.Features is
          return;
       end if;
 
+      if not Have_Context then
+         Unit.Push_Argument (1);
+      end if;
+
       Unit.Pop_Register ("op");
-      Unit.Push_Register ("op");
+
+      if Feature.Routine
+        or else (Feature.Property
+                 and then not Feature.Get_Type.Detachable
+                 and then not Feature.Attached)
+      then
+         Unit.Push_Register ("op");
+      end if;
 
       Unit.Native_Operation
         ("get_property "
@@ -405,17 +409,10 @@ package body Ack.Features is
          Unit.Indirect_Call;
          Unit.Drop;
          Unit.Push_Register ("r0");
-
       elsif Feature.Property then
          if not Feature.Get_Type.Detachable
            and then not Feature.Attached
          then
-
-            if False and then Feature.Get_Type /= null then
-               Ada.Text_IO.Put_Line
-                 ("forcing " & Feature.Declared_Name
-                  & " : " & Feature.Get_Type.Full_Name);
-            end if;
 
             declare
                Continue_Label : constant Positive :=
@@ -424,18 +421,10 @@ package body Ack.Features is
                Unit.Push_Register ("pv");
                Unit.Operate (Tagatha.Op_Test, Tagatha.Default_Size);
                Unit.Jump (Continue_Label, Tagatha.C_Not_Equal);
-               Unit.Drop;
                Feature.Get_Type.Allocate (Unit);
---                 Unit.Push_Operand
---                   (Tagatha.Operands.External_Operand
---                      (Feature.Get_Type.Link_Name & "$allocate",
---                       Immediate => True),
---                    Tagatha.Default_Size);
---                 Unit.Indirect_Call;
---                 Unit.Push_Result;
                Unit.Pop_Register ("pv");
-               Unit.Push_Argument (1);
                Unit.Pop_Register ("op");
+               Unit.Push_Register ("op");
 
                declare
                   procedure Set_Value
@@ -471,10 +460,11 @@ package body Ack.Features is
                end;
 
                Unit.Label (Continue_Label);
+               Unit.Drop;
             end;
          end if;
 
-         Unit.Drop;
+--         Unit.Drop;
          Unit.Push_Register ("pv");
       end if;
 

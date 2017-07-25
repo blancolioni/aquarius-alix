@@ -206,6 +206,10 @@ package Ack is
      (Entity : Root_Entity_Type'Class)
       return Node_Id;
 
+   function Has_Type
+     (Entity : Root_Entity_Type'Class)
+      return Boolean;
+
    function Get_Type
      (Entity : Root_Entity_Type'Class)
       return Entity_Type;
@@ -218,8 +222,9 @@ package Ack is
    procedure Bind (Entity : in out Root_Entity_Type) is null;
 
    procedure Push_Entity
-     (Entity : Root_Entity_Type;
-      Unit   : in out Tagatha.Units.Tagatha_Unit)
+     (Entity       : Root_Entity_Type;
+      Have_Context : Boolean;
+      Unit         : in out Tagatha.Units.Tagatha_Unit)
    is null;
 
    procedure Pop_Entity
@@ -980,6 +985,11 @@ private
       Child_Name : Name_Id)
       return String
    is (Entity.Base_File_Name & "-" & To_Standard_String (Child_Name));
+
+   function Has_Type
+     (Entity : Root_Entity_Type'Class)
+      return Boolean
+   is (Entity.Value_Type /= null);
 
    function Get_Type
      (Entity : Root_Entity_Type'Class)

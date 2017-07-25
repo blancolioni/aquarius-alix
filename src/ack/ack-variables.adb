@@ -87,9 +87,11 @@ package body Ack.Variables is
    -----------------
 
    overriding procedure Push_Entity
-     (Variable : Variable_Entity_Record;
-      Unit     : in out Tagatha.Units.Tagatha_Unit)
+     (Variable     : Variable_Entity_Record;
+      Have_Context : Boolean;
+      Unit         : in out Tagatha.Units.Tagatha_Unit)
    is
+      pragma Unreferenced (Have_Context);
    begin
       case Variable.Kind is
          when Local =>
