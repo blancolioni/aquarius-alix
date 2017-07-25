@@ -32,7 +32,7 @@ package body Ack.Variables is
         new Variable_Entity_Record
       do
          Result.Create (Name, Node, Table => False);
-         Result.Kind := Local;
+         Result.Kind := Argument;
          Result.Value_Type := Entity_Type (Argument_Type);
       end return;
    end New_Argument_Entity;
