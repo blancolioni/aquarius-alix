@@ -4,17 +4,17 @@ class Options.Checks.Aspect
            
 feature
 
-   Node  : Options.Syntax.Aspect_Node
-   
-   After_Node
-   do
-      Put_Line ("Options.Checks.Aspect")
-      if attached Node.String_Literal as Long_Name then
-         Option_Entry.Set_Long_Name (Long_Name)
+   After_String_Literal (Text : String)
+      do
+         Put_Line (Text)
+         Option_Entry.Set_Long_Name (Text)
       end
-      if attached Node.Character_Literal as C then
-         Option_Entry.Set_Short_Name (C)
+      
+   After_Character_Literal (Text : String)
+      do
+         Put ("character: ")
+         Put_Line (Text)
+         Option_Entry.Set_Short_Name (Text)
       end
-   end
    
 end
