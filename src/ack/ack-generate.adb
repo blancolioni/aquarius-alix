@@ -570,13 +570,11 @@ package body Ack.Generate is
                   Process (Item);
                end loop;
 
-               Unit.Pop_Register ("r0");
-
                if Actual_List /= No_List then
+               Unit.Pop_Register ("r0");
                   Apply_Arguments (Actual_List, False);
+                  Unit.Push_Register ("r0");
                end if;
-
-               Unit.Push_Register ("r0");
 
                Pending.Clear;
             end if;
