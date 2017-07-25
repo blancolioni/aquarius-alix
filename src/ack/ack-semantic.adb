@@ -992,6 +992,12 @@ package body Ack.Semantic is
             return;
          end if;
 
+         if Local_Table = null then
+            Error (Precursor_Element, E_No_Component);
+            Stop := True;
+            return;
+         end if;
+
          if not Local_Table.Contains (Name) then
             Error (Precursor_Element, E_Undeclared_Name);
             Stop := True;
