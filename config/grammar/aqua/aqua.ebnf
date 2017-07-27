@@ -94,7 +94,7 @@ new_feature_list ::=
          < new_feature / ',' >
 	 
 new_feature ::=
-         [ 'frozen' ] feature_name
+         [ 'frozen' ] extended_feature_name
 	 
 routine ::=
          [ precondition ] [ local_declarations ] feature_body [ postcondition ] [ rescue ] 'end'
@@ -104,11 +104,13 @@ feature_body ::=
       |  effective_routine
       
 extended_feature_name ::=
-         feature_name
+         feature_name [ feature_alias ]
 
 feature_name ::=
          identifier
 	 
+feature_alias ::= 'alias' string_constant [ 'convert' ]
+
 inheritance ::=
          < 'inherit' inherit_list >
 	 

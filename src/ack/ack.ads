@@ -40,6 +40,7 @@ package Ack is
       N_Identifier_List,
       N_Class_Type,
       N_Anchored_Type,
+      N_Extended_Feature_Name,
       N_Feature_Name,
       N_Feature_Alias,
       N_Feature_Value,
@@ -462,8 +463,11 @@ package Ack is
    function New_Feature_List (N : Node_Id) return List_Id
      with Pre => Kind (N) = N_Feature_Declaration;
 
-   function Feature_Name (N : Node_Id) return Node_Id
+   function Extended_Feature_Name (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_New_Feature;
+
+   function Feature_Name (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Extended_Feature_Name;
 
    function Declaration_Body (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Feature_Declaration;
@@ -493,7 +497,7 @@ package Ack is
      with Pre => Kind (Group) = N_Entity_Declaration_Group_List;
 
    function Feature_Alias (N : Node_Id) return Node_Id
-     with Pre => Kind (N) = N_External;
+     with Pre => Kind (N) in N_External | N_Extended_Feature_Name;
 
    function Local_Declarations (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Routine,
@@ -719,6 +723,9 @@ private
    function New_Feature_List (N : Node_Id) return List_Id
    is (Node_Table.Element (N).List);
 
+   function Extended_Feature_Name (N : Node_Id) return Node_Id
+   is (Node_Table.Element (N).Field (1));
+
    function Feature_Name (N : Node_Id) return Node_Id
    is (Node_Table.Element (N).Field (1));
 
@@ -773,7 +780,7 @@ private
    is (Node_Table.Element (N).Field (5));
 
    function Feature_Alias (N : Node_Id) return Node_Id
-   is (Field_1 (N));
+   is (if Kind (N) = N_External then Field_1 (N) else Field_2 (N));
 
    function Effective_Routine (N : Node_Id) return Node_Id
    is (Field_3 (N));

@@ -809,13 +809,15 @@ package body Ack.Semantic is
    begin
       for Node of List_Table.Element (Names).List loop
          declare
-            Name_Node : constant Node_Id :=
-                          Feature_Name (Node);
-            Entity : constant Ack.Features.Feature_Entity :=
-                       Ack.Features.New_Feature
-                         (Name        => Get_Name (Name_Node),
-                          Declaration => Node,
-                          Class       => Class);
+            Extended_Name_Node : constant Node_Id :=
+                                   Extended_Feature_Name (Node);
+            Name_Node          : constant Node_Id :=
+                                   Feature_Name (Extended_Name_Node);
+            Entity             : constant Ack.Features.Feature_Entity :=
+                                   Ack.Features.New_Feature
+                                     (Name        => Get_Name (Name_Node),
+                                      Declaration => Node,
+                                      Class       => Class);
          begin
             if Entity.Standard_Name = "void"
               and then Class.Standard_Name /= "any"

@@ -98,10 +98,23 @@ package body Ack.Parser is
       return Node_Id
      with Pre => From.Name = "new_feature";
 
+   function Import_Extended_Feature_Name
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id;
+
    function Import_Feature_Name
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
      with Pre => From.Name = "feature_name";
+
+   function Import_Feature_Alias
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is (New_Node (N_Feature_Alias, From,
+                 Name => Get_Name_Id
+                   (Import_String_Constant
+                      (From.Program_Child ("string_constant").Text))))
+     with Pre => From.Name = "feature_alias";
 
    function Import_Redefine
      (From : Aquarius.Programs.Program_Tree)
@@ -563,17 +576,26 @@ package body Ack.Parser is
 
    end Import_Entity_Declaration_List;
 
-   -------------------------
-   -- Import_Event_Clause --
-   -------------------------
+   ----------------------------------
+   -- Import_Extended_Feature_Name --
+   ----------------------------------
 
---     function Import_Event_Clause
---       (From : Aquarius.Programs.Program_Tree)
---        return Node_Id
---     is
---     begin
---        return New_Node (N_Event_Clause, From);
---     end Import_Event_Clause;
+   function Import_Extended_Feature_Name
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+      Feature_Name_Node  : constant Node_Id :=
+                             Import_Feature_Name
+                               (From.Program_Child ("feature_name"));
+      Feature_Alias_Node : constant Node_Id :=
+                             Import_Optional_Child
+                               (From, "feature_alias",
+                                Import_Feature_Alias'Access);
+   begin
+      return New_Node (N_Extended_Feature_Name, From,
+                       Field_1 => Feature_Name_Node,
+                       Field_2 => Feature_Alias_Node);
+   end Import_Extended_Feature_Name;
 
    ---------------------
    -- Import_External --
@@ -901,8 +923,8 @@ package body Ack.Parser is
    is
       use Aquarius.Programs;
       Name_Node : constant Node_Id :=
-                    Import_Feature_Name
-                      (From.Program_Child ("feature_name"));
+                    Import_Extended_Feature_Name
+                      (From.Program_Child ("extended_feature_name"));
       Frozen_Tree : constant Program_Tree :=
                       From.Program_Child ("frozen");
    begin
