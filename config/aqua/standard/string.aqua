@@ -2,5 +2,6 @@ class String
 
 feature
    To_Lower : String external "aqua"
+   Join alias "&" (Right : String) : String
    
 end

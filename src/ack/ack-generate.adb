@@ -5,6 +5,9 @@ with Aquarius.Config_Paths;
 
 with Ack.Classes;
 with Ack.Features;
+with Ack.Types;
+
+with Ack.Generate.Primitives;
 
 package body Ack.Generate is
 
@@ -30,6 +33,10 @@ package body Ack.Generate is
    procedure Generate_Expression
      (Unit       : in out Tagatha.Units.Tagatha_Unit;
       Expression : Node_Id);
+
+   procedure Generate_Operator_Expression
+     (Unit          : in out Tagatha.Units.Tagatha_Unit;
+      Operator_Node : Node_Id);
 
    procedure Generate_Precursor
      (Unit      : in out Tagatha.Units.Tagatha_Unit;
@@ -134,6 +141,19 @@ package body Ack.Generate is
                             Process          =>
                               Generate_Local_Allocator'Access);
       Class.Scan_Features (Set_Value'Access);
+
+      if Report_Allocation then
+         Unit.Push_Text ("finished allocating: " & Class.Full_Name);
+         Unit.Push_Operand
+           (Tagatha.Operands.External_Operand ("io", True),
+            Tagatha.Default_Size);
+         Unit.Pop_Register ("op");
+         Unit.Native_Operation
+           ("get_property put_line,1",
+            Input_Stack_Words  => 1,
+            Output_Stack_Words => 0,
+            Changed_Registers  => "pv");
+      end if;
 
       Unit.Pop_Result;
       Unit.End_Routine;
@@ -399,7 +419,7 @@ package body Ack.Generate is
          Column => Positive (Get_Program (Expression).Location_Column));
       case N_Expression_Node (Kind (Expression)) is
          when N_Operator =>
-            null;
+            Generate_Operator_Expression (Unit, Expression);
          when N_Precursor =>
             Generate_Precursor (Unit, Expression);
          when N_Attachment_Test =>
@@ -434,6 +454,52 @@ package body Ack.Generate is
    begin
       Feature.Generate_Routine (Unit);
    end Generate_Feature;
+
+   ----------------------------------
+   -- Generate_Operator_Expression --
+   ----------------------------------
+
+   procedure Generate_Operator_Expression
+     (Unit          : in out Tagatha.Units.Tagatha_Unit;
+      Operator_Node : Node_Id)
+   is
+      use type Ack.Types.Type_Entity;
+      Operator  : constant Name_Id := Get_Name (Operator_Node);
+      Left      : constant Node_Id := Field_1 (Operator_Node);
+      Right     : constant Node_Id := Field_2 (Operator_Node);
+   begin
+
+      Generate_Expression (Unit, Left);
+
+      if Operator = Get_Name_Id ("andthen") then
+         declare
+            Maybe : constant Positive := Unit.Next_Label;
+            Leave : constant Positive := Unit.Next_Label;
+         begin
+            Unit.Operate (Tagatha.Op_Test);
+            Unit.Jump (Maybe, Tagatha.C_Not_Equal);
+            Unit.Push (0);
+            Unit.Jump (Leave);
+            Unit.Label (Maybe);
+            Generate_Expression (Unit, Right);
+            Unit.Label (Leave);
+         end;
+      else
+         Generate_Expression (Unit, Right);
+
+         if not Ack.Generate.Primitives.Generate_Operator
+           (Unit      => Unit,
+            Operator  => Operator,
+            Left_Type => Ack.Types.Type_Entity (Get_Type (Left)))
+         then
+            raise Constraint_Error with
+            Get_Program (Operator_Node).Show_Location
+              & "custom operators ("
+              & To_String (Operator)
+              & ") not implemented yet";
+         end if;
+      end if;
+   end Generate_Operator_Expression;
 
    ------------------------
    -- Generate_Precursor --
@@ -544,46 +610,6 @@ package body Ack.Generate is
       Entity : constant Entity_Type := Get_Entity (Node);
    begin
       Entity.Pop_Entity (Unit);
-
---        case Get_Kind (Entity) is
---           when Class_Entity | Instantiated_Class_Entity =>
---              null;
---           when Table_Entity | Generic_Argument_Entity =>
---              null;
---           when Property_Feature_Entity =>
---              declare
---                 Original_Feature : constant Entity_Type :=
---                                      Get_Original_Ancestor (Entity);
---                 Original_Class   : constant Entity_Type :=
---                                      Get_Context (Original_Feature);
---              begin
---                 Unit.Push_Argument (1);
---                 Unit.Pop_Register ("op");
---                 Unit.Native_Operation
---                   ("get_property " & Get_Link_Name (Original_Class) & ",0",
---                    Input_Stack_Words  => 0,
---                    Output_Stack_Words => 0,
---                    Changed_Registers  => "pv");
---                 Unit.Push_Register ("pv");
---                 Unit.Pop_Register ("op");
---                 Unit.Pop_Register ("pv");
---                 Unit.Native_Operation
---                   ("set_property "
---                    & To_Standard_String (Get_Name (Original_Feature)));
---              end;
---
---           when Routine_Feature_Entity =>
---              raise Program_Error;
---           when Argument_Entity =>
---              Unit.Pop_Argument
---                (Tagatha.Argument_Offset
---                   (Get_Argument_Offset (Entity)));
---           when Local_Entity =>
---              Unit.Pop_Local
---                (Tagatha.Local_Offset (Get_Local_Offset (Entity)));
---           when Result_Entity =>
---              Unit.Pop_Local (1);
---        end case;
    end Generate_Set_Value;
 
 end Ack.Generate;

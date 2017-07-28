@@ -25,6 +25,10 @@ package Ack.Features is
      (Feature : Feature_Entity_Record'Class)
      return access constant Ack.Classes.Class_Entity_Record'Class;
 
+   function Alias
+     (Feature : Feature_Entity_Record'Class)
+      return Name_Id;
+
    function Is_Property
      (Feature : Feature_Entity_Record'Class)
       return Boolean;
@@ -87,6 +91,7 @@ package Ack.Features is
 
    function New_Feature
      (Name        : Name_Id;
+      Alias       : Name_Id;
       Declaration : Node_Id;
       Class       : not null access Ack.Classes.Class_Entity_Record'Class)
       return Feature_Entity;
@@ -124,6 +129,7 @@ private
          External            : Boolean := False;
          Has_Result          : Boolean := False;
          Has_Current         : Boolean := False;
+         Alias               : Name_Id;
          Original_Classes    : List_Of_Entities.List;
          Definition_Class    : access Ack.Classes.Class_Entity_Record'Class;
          External_Object     : Ada.Strings.Unbounded.Unbounded_String;
@@ -169,6 +175,11 @@ private
    overriding procedure Pop_Entity
      (Feature : Feature_Entity_Record;
       Unit    : in out Tagatha.Units.Tagatha_Unit);
+
+   function Alias
+     (Feature : Feature_Entity_Record'Class)
+      return Name_Id
+   is (Feature.Alias);
 
    function Is_Property
      (Feature : Feature_Entity_Record'Class)

@@ -9,6 +9,19 @@ package body Ack.Types is
 
    Class_Type_Map : Class_Type_Maps.Map;
 
+   ---------------------
+   -- Aliased_Feature --
+   ---------------------
+
+   function Aliased_Feature
+     (Typ   : Type_Entity_Record'Class;
+      Alias : Name_Id)
+      return Ack.Features.Feature_Entity
+   is
+   begin
+      return Typ.Class.Aliased_Feature (Alias);
+   end Aliased_Feature;
+
    --------------
    -- Allocate --
    --------------
@@ -244,6 +257,19 @@ package body Ack.Types is
    begin
       return Type_Entity (Get_Entity (Node));
    end Get_Type_Entity;
+
+   -------------------------
+   -- Has_Aliased_Feature --
+   -------------------------
+
+   function Has_Aliased_Feature
+     (Typ   : Type_Entity_Record'Class;
+      Alias : Name_Id)
+      return Boolean
+   is
+   begin
+      return Typ.Class.Has_Aliased_Feature (Alias);
+   end Has_Aliased_Feature;
 
    -----------------
    -- Has_Feature --

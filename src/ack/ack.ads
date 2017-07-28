@@ -443,7 +443,8 @@ package Ack is
      or else Kind (N) = N_String_Constant
      or else Kind (N) = N_Precursor_Element
      or else Kind (N) = N_Formal_Generic_Name
-     or else Kind (N) = N_Attachment_Test;
+     or else Kind (N) = N_Attachment_Test
+     or else Kind (N) = N_Operator;
 
    function Get_Entity (N : Node_Id) return Entity_Type;
    function Has_Entity (N : Node_Id) return Boolean;

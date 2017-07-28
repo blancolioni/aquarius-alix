@@ -64,6 +64,17 @@ package Ack.Classes is
       return Ack.Features.Feature_Entity
      with Pre => Class.Has_Feature (Name);
 
+   function Has_Aliased_Feature
+     (Class : not null access constant Class_Entity_Record'Class;
+      Alias : Name_Id)
+      return Boolean;
+
+   function Aliased_Feature
+     (Class : not null access constant Class_Entity_Record'Class;
+      Alias : Name_Id)
+      return Ack.Features.Feature_Entity
+     with Pre => Class.Has_Aliased_Feature (Alias);
+
    procedure Scan_Ancestors
      (Class            : not null access constant Class_Entity_Record'Class;
       Proper_Ancestors : Boolean;
@@ -202,5 +213,18 @@ private
       return Boolean
    is (Has_Entity (Node)
        and then Get_Entity (Node).all in Class_Entity_Record'Class);
+
+   function Find_Feature
+     (Class   : Class_Entity_Record'Class;
+      Test    : not null access
+        function (Feature : not null access constant
+                    Ack.Features.Feature_Entity_Record'Class)
+      return Boolean)
+      return Ack.Features.Feature_Entity;
+
+   function Find_Aliased_Feature
+     (Class   : Class_Entity_Record'Class;
+      Alias   : Name_Id)
+      return Ack.Features.Feature_Entity;
 
 end Ack.Classes;

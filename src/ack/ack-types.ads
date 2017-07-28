@@ -19,6 +19,17 @@ package Ack.Types is
       return Ack.Features.Feature_Entity
      with Pre => Typ.Has_Feature (Name);
 
+   function Has_Aliased_Feature
+     (Typ   : Type_Entity_Record'Class;
+      Alias : Name_Id)
+      return Boolean;
+
+   function Aliased_Feature
+     (Typ   : Type_Entity_Record'Class;
+      Alias : Name_Id)
+      return Ack.Features.Feature_Entity
+     with Pre => Typ.Has_Aliased_Feature (Alias);
+
    function Class
      (Typ : Type_Entity_Record'Class)
       return access Ack.Classes.Class_Entity_Record'Class;

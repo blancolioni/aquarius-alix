@@ -43,6 +43,19 @@ package body Ack.Classes is
       Class.Generic_Class := True;
    end Add_Generic_Formal;
 
+   ---------------------
+   -- Aliased_Feature --
+   ---------------------
+
+   function Aliased_Feature
+     (Class : not null access constant Class_Entity_Record'Class;
+      Alias : Name_Id)
+      return Ack.Features.Feature_Entity
+   is
+   begin
+      return Class.Find_Aliased_Feature (Alias);
+   end Aliased_Feature;
+
    --------------
    -- Allocate --
    --------------
@@ -205,6 +218,53 @@ package body Ack.Classes is
       return Ack.Features.Feature_Entity (Class.Get (Name));
    end Feature;
 
+   --------------------------
+   -- Find_Aliased_Feature --
+   --------------------------
+
+   function Find_Aliased_Feature
+     (Class   : Class_Entity_Record'Class;
+      Alias   : Name_Id)
+      return Ack.Features.Feature_Entity
+   is
+      function Test (Feature : not null access constant
+                       Ack.Features.Feature_Entity_Record'Class)
+                     return Boolean
+      is (Feature.Alias = Alias);
+   begin
+      return Class.Find_Feature (Test'Access);
+   end Find_Aliased_Feature;
+
+   ------------------
+   -- Find_Feature --
+   ------------------
+
+   function Find_Feature
+     (Class   : Class_Entity_Record'Class;
+      Test    : not null access
+        function (Feature : not null access constant
+                    Ack.Features.Feature_Entity_Record'Class)
+      return Boolean)
+      return Ack.Features.Feature_Entity
+   is
+   begin
+      for Feature of Class.Class_Features loop
+         if Test (Feature) then
+            return Feature;
+         end if;
+      end loop;
+
+      for Inherited of Class.Inherited_List loop
+         for Feature of Inherited.Class_Features loop
+            if Test (Feature) then
+               return Feature;
+            end if;
+         end loop;
+      end loop;
+
+      return null;
+   end Find_Feature;
+
    --------------------
    -- Generic_Formal --
    --------------------
@@ -316,6 +376,20 @@ package body Ack.Classes is
          return null;
       end if;
    end Get_Top_Level_Class;
+
+   -------------------------
+   -- Has_Aliased_Feature --
+   -------------------------
+
+   function Has_Aliased_Feature
+     (Class : not null access constant Class_Entity_Record'Class;
+      Alias : Name_Id)
+      return Boolean
+   is
+      use type Ack.Features.Feature_Entity;
+   begin
+      return Class.Find_Aliased_Feature (Alias) /= null;
+   end Has_Aliased_Feature;
 
    -------------
    -- Inherit --
