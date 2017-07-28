@@ -114,6 +114,11 @@ package body Ack.Semantic is
       Container   : not null access Root_Entity_Type'Class;
       Conditional : Node_Id);
 
+   procedure Analyse_Creation
+     (Class     : Ack.Classes.Class_Entity;
+      Container : not null access Root_Entity_Type'Class;
+      Creation  : Node_Id);
+
    procedure Analyse_Expression
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
@@ -453,7 +458,9 @@ package body Ack.Semantic is
                     Ack.Types.Instantiate_Generic_Class
                       (Node            => Type_Node,
                        Generic_Class   => Class_Entity,
-                       Generic_Actuals => Actual_Types);
+                       Generic_Actuals => Actual_Types,
+                       Detachable      =>
+                         Node_Table.Element (Type_Node).Detachable);
                end if;
             end;
          end if;
@@ -490,7 +497,7 @@ package body Ack.Semantic is
             when N_Assignment =>
                Analyse_Assignment (Class, Container, Node);
             when N_Creation_Instruction =>
-               null;
+               Analyse_Creation (Class, Container, Node);
             when N_Conditional =>
                Analyse_Conditional (Class, Container, Node);
             when N_Loop =>
@@ -532,12 +539,12 @@ package body Ack.Semantic is
               (Class, Container,
                Ack.Types.Get_Top_Level_Type ("boolean"),
                Condition);
-            if Has_Entity (Condition) then
+            if Implicit_Entity (Condition) then
                Container.Add_Implicit (Get_Entity (Condition));
             end if;
          end if;
          Analyse_Compound (Class, Container, Compound);
-         if Condition /= No_Node and then Has_Entity (Condition) then
+         if Condition /= No_Node and then Implicit_Entity (Condition) then
             Container.Remove_Implicit;
          end if;
       end Analyse_Element;
@@ -546,6 +553,27 @@ package body Ack.Semantic is
       Scan (Node_Table.Element (Conditional).List,
             Analyse_Element'Access);
    end Analyse_Conditional;
+
+   ----------------------
+   -- Analyse_Creation --
+   ----------------------
+
+   procedure Analyse_Creation
+     (Class     : Ack.Classes.Class_Entity;
+      Container : not null access Root_Entity_Type'Class;
+      Creation  : Node_Id)
+   is
+      pragma Unreferenced (Class);
+      Call_Node     : constant Node_Id := Creation_Call (Creation);
+      Variable_Node : constant Node_Id := Variable (Call_Node);
+      Name          : constant Name_Id := Get_Name (Variable_Node);
+   begin
+      if not Container.Contains (Name) then
+         Error (Creation, E_Undeclared_Name);
+      else
+         Set_Entity (Creation, Container.Get (Name));
+      end if;
+   end Analyse_Creation;
 
    -------------------------------
    -- Analyse_Effective_Routine --
@@ -655,6 +683,7 @@ package body Ack.Semantic is
                   Set_Type (Expression,
                             Ack.Types.Get_Top_Level_Type ("boolean"));
                   Set_Entity (Expression, Implicit);
+                  Set_Implicit_Entity (Expression);
                end;
             end if;
 
