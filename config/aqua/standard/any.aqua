@@ -3,4 +3,7 @@ class Any
 feature
    Void : None
    
+   Reference_Equal alias "=" (Other : Any) : Boolean 
+   Reference_Not_Equal alias "/=" (Other : Any) : Boolean
+
 end
