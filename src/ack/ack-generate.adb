@@ -26,6 +26,10 @@ package body Ack.Generate is
       Feature : not null access constant
         Ack.Features.Feature_Entity_Record'Class);
 
+   procedure Generate_Creation
+     (Unit     : in out Tagatha.Units.Tagatha_Unit;
+      Creation : Node_Id);
+
    procedure Generate_Conditional
      (Unit        : in out Tagatha.Units.Tagatha_Unit;
       Conditional : Node_Id);
@@ -259,7 +263,7 @@ package body Ack.Generate is
                Generate_Expression (Unit, Expression (Instruction));
                Generate_Set_Value (Unit, Variable (Instruction));
             when N_Creation_Instruction =>
-               null;
+               Generate_Creation (Unit, Instruction);
             when N_Conditional =>
                Generate_Conditional (Unit, Instruction);
             when N_Loop =>
@@ -303,7 +307,7 @@ package body Ack.Generate is
 
          if Condition /= No_Node then
             Generate_Expression (Unit, Condition);
-            if Has_Entity (Condition) then
+            if Implicit_Entity (Condition) then
                Unit.Pop_Register ("r0");
                Unit.Push_Register ("r0");
                Unit.Push_Register ("r0");
@@ -315,7 +319,7 @@ package body Ack.Generate is
          end if;
          Generate_Compound (Unit, Compound);
          if Condition /= No_Node
-           and then Has_Entity (Condition)
+           and then Implicit_Entity (Condition)
          then
             Unit.Drop;
          end if;
@@ -332,6 +336,22 @@ package body Ack.Generate is
       Unit.Label (Out_Label);
 
    end Generate_Conditional;
+
+   -----------------------
+   -- Generate_Creation --
+   -----------------------
+
+   procedure Generate_Creation
+     (Unit     : in out Tagatha.Units.Tagatha_Unit;
+      Creation : Node_Id)
+   is
+   begin
+      Unit.Call
+        (Get_Entity (Creation).Get_Type.Link_Name
+         & "$allocate");
+      Unit.Push_Register ("r0");
+      Get_Entity (Creation).Pop_Entity (Unit);
+   end Generate_Creation;
 
    -----------------------------
    -- Generate_Default_Create --

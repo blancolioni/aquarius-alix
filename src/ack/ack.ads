@@ -49,6 +49,9 @@ package Ack is
       N_Local_Declarations,
       N_Internal,
       N_External,
+      N_Explicit_Creation_Type,
+      N_Explicit_Creation_Call,
+      N_Creation_Call,
       N_Expression,
       N_If_Then,
       N_Compound,
@@ -275,104 +278,6 @@ package Ack is
    procedure Remove_Implicit
      (Table_Entity    : in out Root_Entity_Type);
 
-   --     type Entity_Type is private;
---
---     No_Entity : constant Entity_Type;
---
---     function Get_Context (Entity : Entity_Type) return Entity_Type;
---     function Get_Name (Entity : Entity_Type) return Name_Id;
---     function Get_Description (Entity : Entity_Type) return String;
---     function Get_Declaration (Entity : Entity_Type) return Node_Id;
---     function Get_Kind (Entity : Entity_Type) return Entity_Kind;
---     function Get_Type (Entity : Entity_Type) return Entity_Type;
---
---     function Get_Virtual_Table_Length (Entity : Entity_Type) return Natural
---       with Pre => Get_Kind (Entity) = Class_Entity;
---     function Get_Property_Count (Entity : Entity_Type) return Natural
---       with Pre => Get_Kind (Entity) = Class_Entity;
---
---     function Get_Virtual_Table_Offset (Entity : Entity_Type) return Natural
---       with Pre => Get_Kind (Entity) = Routine_Feature_Entity;
---
---     function Get_Property_Offset (Entity : Entity_Type) return Natural
---       with Pre => Get_Kind (Entity) = Property_Feature_Entity;
---
---     function Get_Argument_Offset (Entity : Entity_Type) return Natural
---       with Pre => Get_Kind (Entity) = Argument_Entity;
---
---     function Get_Local_Offset (Entity : Entity_Type) return Natural
---       with Pre => Get_Kind (Entity) = Local_Entity;
---
---     function Get_Defined_In (Entity : Entity_Type) return Entity_Type;
---   function Get_Original_Ancestor (Feature : Entity_Type) return Entity_Type
---       with Pre => Get_Kind (Feature) in Feature_Entity_Kind,
---    Post => Get_Kind (Get_Original_Ancestor'Result) in Feature_Entity_Kind;
---
---     function Get_File_Name (Entity : Entity_Type) return String;
---     function Get_Link_Name (Entity : Entity_Type) return String;
---
---     function Get_Formal_Arguments_Node
---       (Entity : Entity_Type)
---        return Node_Id
---       with Pre => Get_Kind (Entity) in Feature_Entity_Kind;
---
---     procedure Create_Current_Entity
---       (Class       : Entity_Type;
---        Feature     : Node_Id;
---        Table       : Entity_Type);
---
---     function New_Entity
---       (Name        : Name_Id;
---        Kind        : Entity_Kind;
---        Context     : Entity_Type;
---        Declaration : Node_Id;
---        Entity_Type : Entity_Type)
---        return Entity_Type
---       with Post => Get_Type (New_Entity'Result) = Entity_Type
---       and then Get_Kind (New_Entity'Result) = Kind
---       and then Get_Declaration (New_Entity'Result) = Declaration;
---
---     procedure Inherit_Entity
---       (Entity        : Entity_Type;
---        Derived_Class : Entity_Type;
---        Declaration   : Node_Id;
---        Redefine      : Boolean;
---        Rename        : Name_Id);
---
---     procedure Instantiate_Entity
---       (Generic_Class  : Entity_Type;
---        Concrete_Class : Entity_Type;
---        Formal_Entity  : Entity_Type;
---        Actual_Entity  : Entity_Type;
---        Declaration    : Node_Id);
---
---     procedure Scan_Children
---       (Entity  : Entity_Type;
---        Process : not null access
---          procedure (Child : Entity_Type));
---
---     procedure Scan_Children
---       (Entity  : Entity_Type;
---        Test    : not null access
---          function (Child : Entity_Type)
---        return Boolean;
---        Process : not null access
---          procedure (Child : Entity_Type));
---
---     function New_Primitive_Class
---       (Name        : Name_Id)
---        return Entity_Type;
---
---     function Find_Entity
---       (Context : Entity_Type;
---        Name    : Name_Id)
---        return Entity_Type;
---
---     function Find_Local_Entity
---       (Context : Entity_Type;
---        Name    : Name_Id)
---        return Entity_Type;
-
    function Has_Error
      (Node : Node_Id)
       return Boolean;
@@ -399,6 +304,13 @@ package Ack is
    function Get_Program
      (N : Node_Id)
       return Aquarius.Programs.Program_Tree;
+
+   function Implicit_Entity
+     (N : Node_Id)
+      return Boolean;
+
+   procedure Set_Implicit_Entity
+     (N : Node_Id);
 
    function Class_Header (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Class_Declaration;
@@ -515,10 +427,13 @@ package Ack is
      with Pre => Kind (N) = N_Compound;
 
    function Variable (N : Node_Id) return Node_Id
-     with Pre => Kind (N) = N_Assignment;
+     with Pre => Kind (N) in N_Assignment | N_Creation_Call;
 
    function Expression (N : Node_Id) return Node_Id
-     with Pre => Kind (N) = N_Assignment;
+     with Pre => Kind (N) in N_Assignment;
+
+   function Creation_Call (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Creation_Instruction;
 
    function Actual_List (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Precursor_Element;
@@ -562,24 +477,25 @@ private
 
    type Node_Record is
       record
-         Kind          : Node_Kind  := N_Uninitialized_Node;
-         From          : Aquarius.Programs.Program_Tree := null;
-         Deferred      : Boolean    := False;
-         Expanded      : Boolean    := False;
-         Frozen        : Boolean    := False;
-         Defining      : Boolean    := False;
-         Single        : Boolean    := False;
-         Once          : Boolean    := False;
-         Detachable    : Boolean    := False;
-         Field         : Node_Field_Array := (others => No_Node);
-         List          : List_Id    := No_List;
-         Name          : Name_Id    := No_Name;
-         Entity        : Entity_Type := null;
-         Node_Type     : Entity_Type := null;
-         Error         : Error_Kind := E_No_Error;
-         Error_Entity  : Entity_Type := null;
-         Integer_Value : Integer;
-         Label         : Natural := 0;
+         Kind            : Node_Kind  := N_Uninitialized_Node;
+         From            : Aquarius.Programs.Program_Tree := null;
+         Deferred        : Boolean    := False;
+         Expanded        : Boolean    := False;
+         Frozen          : Boolean    := False;
+         Defining        : Boolean    := False;
+         Single          : Boolean    := False;
+         Once            : Boolean    := False;
+         Detachable      : Boolean    := False;
+         Implicit_Entity : Boolean    := False;
+         Field           : Node_Field_Array := (others => No_Node);
+         List            : List_Id    := No_List;
+         Name            : Name_Id    := No_Name;
+         Entity          : Entity_Type := null;
+         Node_Type       : Entity_Type := null;
+         Error           : Error_Kind := E_No_Error;
+         Error_Entity    : Entity_Type := null;
+         Integer_Value   : Integer;
+         Label           : Natural := 0;
       end record;
 
    package List_Of_Nodes is
@@ -652,6 +568,11 @@ private
      (N : Node_Id)
       return Aquarius.Programs.Program_Tree
    is (Node_Table (N).From);
+
+   function Implicit_Entity
+     (N : Node_Id)
+      return Boolean
+   is (Node_Table.Element (N).Implicit_Entity);
 
    function Field_1 (Node : Node_Id) return Node_Id
    is (Node_Table (Node).Field (1));
@@ -759,9 +680,6 @@ private
    function Entity_Declaration_Group_List (N : Node_Id) return Node_Id
    is (Field_1 (N));
 
---     function Entity_Type (N : Node_Id) return Node_Id
---     is (Field_1 (N));
-
    function Get_Name (N : Node_Id) return Name_Id
    is (Node_Table.Element (N).Name);
 
@@ -793,6 +711,9 @@ private
    is (Node_Table.Element (N).List);
 
    function Variable (N : Node_Id) return Node_Id
+   is (Field_1 (N));
+
+   function Creation_Call (N : Node_Id) return Node_Id
    is (Field_1 (N));
 
    function Expression (N : Node_Id) return Node_Id
@@ -843,46 +764,6 @@ private
      (Top : Node_Id;
       Process : not null access
         procedure (Node : Node_Id));
-
---     function Get_Context (Entity : Entity_Type) return Entity_Type
---     is (Entity_Table.Element (Entity).Context);
---
---     function Get_Defined_In (Entity : Entity_Type) return Entity_Type
---     is (Entity_Table.Element (Entity).Defined_In);
---
---     function Get_Name (Entity : Entity_Type) return Name_Id
---     is (if Entity = No_Entity
---         then Get_Name_Id ("(none)")
---         elsif Entity = Undeclared_Entity
---         then Get_Name_Id ("(undeclared)")
---         else Entity_Table.Element (Entity).Name);
---
---     function Get_Declaration (Entity : Entity_Type) return Node_Id
---     is (Entity_Table.Element (Entity).Declaration);
---
---     function Get_Type (Entity : Entity_Type) return Entity_Type
---     is (Entity_Table.Element (Entity).Entity_Type);
---
---     function Get_Kind (Entity : Entity_Type) return Entity_Kind
---     is (Entity_Table.Element (Entity).Kind);
---
---     function Get_Virtual_Table_Length (Entity : Entity_Type) return Natural
---     is (Entity_Table.Element (Entity).Virtual_Offset);
---
---     function Get_Property_Count (Entity : Entity_Type) return Natural
---     is (Entity_Table.Element (Entity).Property_Offset);
---
---     function Get_Virtual_Table_Offset (Entity : Entity_Type) return Natural
---     is (Entity_Table.Element (Entity).Virtual_Offset);
---
---     function Get_Property_Offset (Entity : Entity_Type) return Natural
---     is (Entity_Table.Element (Entity).Property_Offset);
---
---     function Get_Argument_Offset (Entity : Entity_Type) return Natural
---     is (Entity_Table.Element (Entity).Argument_Offset);
---
---     function Get_Local_Offset (Entity : Entity_Type) return Natural
---     is (Entity_Table.Element (Entity).Local_Offset);
 
    procedure Set_Entity
      (Node : Real_Node_Id;

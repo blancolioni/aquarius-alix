@@ -305,7 +305,8 @@ package body Ack.Types is
    function Instantiate_Generic_Class
      (Node            : Node_Id;
       Generic_Class   : not null access Ack.Classes.Class_Entity_Record'Class;
-      Generic_Actuals : Array_Of_Types)
+      Generic_Actuals : Array_Of_Types;
+      Detachable      : Boolean)
       return Type_Entity
    is
    begin
@@ -315,7 +316,7 @@ package body Ack.Types is
          Generic_Bindings    => <>,
          Constraints         => <>,
          Generic_Formal      => False,
-         Detachable          => False,
+         Detachable          => Detachable,
          Anchored            => False)
       do
          Result.Create

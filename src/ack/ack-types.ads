@@ -60,7 +60,8 @@ package Ack.Types is
    function Instantiate_Generic_Class
      (Node            : Node_Id;
       Generic_Class   : not null access Ack.Classes.Class_Entity_Record'Class;
-      Generic_Actuals : Array_Of_Types)
+      Generic_Actuals : Array_Of_Types;
+      Detachable      : Boolean)
       return Type_Entity;
 
    function New_Generic_Formal_Type

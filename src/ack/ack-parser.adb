@@ -248,7 +248,7 @@ package body Ack.Parser is
 
    function Import_Creation_Instruction
      (From : Aquarius.Programs.Program_Tree)
-      return Node_Id is (New_Node (N_Creation_Instruction, From))
+      return Node_Id
      with Pre => From.Name = "creation_instruction";
 
    function Import_Conditional
@@ -488,6 +488,33 @@ package body Ack.Parser is
       end loop;
       return New_Node (N_Conditional, From, List => List);
    end Import_Conditional;
+
+   ---------------------------------
+   -- Import_Creation_Instruction --
+   ---------------------------------
+
+   function Import_Creation_Instruction
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+      use Aquarius.Programs;
+      Creation_Call_Tree : constant Program_Tree :=
+                             From.Program_Child ("creation_call");
+      Variable_Tree      : constant Program_Tree :=
+                             Creation_Call_Tree.Program_Child
+                               ("variable");
+      Identifier_Tree    : constant Program_Tree :=
+                             Variable_Tree.Program_Child ("identifier");
+   begin
+      return New_Node (N_Creation_Instruction, From,
+                       Field_1 =>
+                         New_Node
+                           (N_Creation_Call, Creation_Call_Tree,
+                            Field_1 =>
+                              New_Node
+                                (N_Variable, Variable_Tree,
+                                 Name => Get_Name_Id (Identifier_Tree.Text))));
+   end Import_Creation_Instruction;
 
    -----------------------------
    -- Import_Declaration_Body --

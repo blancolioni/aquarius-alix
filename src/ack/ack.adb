@@ -286,7 +286,7 @@ package body Ack is
               (Kind => Kind, From => From, Deferred => Deferred,
                Expanded => Expanded, Frozen => Frozen,
                Defining => Defining, Single => False, Once => Once,
-               Detachable => Detachable,
+               Detachable => Detachable, Implicit_Entity => False,
                Field    =>
                  (1 => Field_1,
                   2 => Field_2,
@@ -430,6 +430,17 @@ package body Ack is
    begin
       Node_Table (Node).Entity := Entity_Type (Entity);
    end Set_Entity;
+
+   -------------------------
+   -- Set_Implicit_Entity --
+   -------------------------
+
+   procedure Set_Implicit_Entity
+     (N : Node_Id)
+   is
+   begin
+      Node_Table (N).Implicit_Entity := True;
+   end Set_Implicit_Entity;
 
    ---------------
    -- Set_Label --
