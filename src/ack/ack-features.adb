@@ -300,6 +300,7 @@ package body Ack.Features is
 
    function New_Feature
      (Name        : Name_Id;
+      Alias       : Name_Id;
       Declaration : Node_Id;
       Class       : not null access Ack.Classes.Class_Entity_Record'Class)
       return Feature_Entity
@@ -311,6 +312,7 @@ package body Ack.Features is
             Table              => True,
             Parent_Environment => Class,
             Context            => Class);
+         Feature.Alias := Alias;
          Feature.Definition_Class := Class;
          Feature.Property := True;
       end return;

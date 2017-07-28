@@ -1,2 +1,12 @@
 class Boolean
+
+feature
+
+   Boolean_And alias "and" (Other : Boolean) : Boolean
+   Boolean_Or alias "or" (Other : Boolean) : Boolean
+   Boolean_And_Then alias "andthen" (Other : Boolean) : Boolean
+   Boolean_Or_Then alias "orelse" (Other : Boolean) : Boolean
+   Boolean_Implies alias "implies" (Other : Boolean) : Boolean
+   Boolean_Xor alias "xor" (Other : Boolean) : Boolean
+   
 end

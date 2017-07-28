@@ -120,6 +120,12 @@ package body Ack.Semantic is
       Expression_Type : access Root_Entity_Type'Class;
       Expression      : Node_Id);
 
+   procedure Analyse_Operator
+     (Class           : Ack.Classes.Class_Entity;
+      Container       : not null access Root_Entity_Type'Class;
+      Expression_Type : access Root_Entity_Type'Class;
+      Operator_Node   : Node_Id);
+
    procedure Analyse_Precursor
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
@@ -400,6 +406,7 @@ package body Ack.Semantic is
      (Class     : Ack.Classes.Class_Entity;
       Type_Node : Node_Id)
    is
+      use type Ack.Types.Type_Entity;
       Name_Node     : constant Node_Id := Class_Name (Type_Node);
       Generics_Node : constant Node_Id := Actual_Generics (Type_Node);
       Class_Entity  : Ack.Classes.Class_Entity := null;
@@ -427,24 +434,36 @@ package body Ack.Semantic is
                Actual_Nodes : constant Array_Of_Nodes :=
                                 To_Array
                                   (Actual_Generics_List (Generics_Node));
+               Actual_Count : constant Natural :=
+                                Actual_Nodes'Length;
                Actual_Types : Ack.Types.Array_Of_Types (Actual_Nodes'Range);
             begin
-               for I in Actual_Nodes'Range loop
-                  Analyse_Type (Class, Actual_Nodes (I));
-                  Actual_Types (I) :=
-                    Ack.Types.Get_Type_Entity (Actual_Nodes (I));
-               end loop;
+               if Actual_Count < Class_Entity.Generic_Formal_Count then
+                  Error (Type_Node, E_Insufficient_Arguments);
+               elsif Actual_Count > Class_Entity.Generic_Formal_Count then
+                  Error (Type_Node, E_Too_Many_Arguments);
+               else
+                  for I in Actual_Nodes'Range loop
+                     Analyse_Type (Class, Actual_Nodes (I));
+                     Actual_Types (I) :=
+                       Ack.Types.Get_Type_Entity (Actual_Nodes (I));
+                  end loop;
 
-               Type_Entity :=
-                 Ack.Types.Instantiate_Generic_Class
-                   (Node            => Type_Node,
-                    Generic_Class   => Class_Entity,
-                    Generic_Actuals => Actual_Types);
+                  Type_Entity :=
+                    Ack.Types.Instantiate_Generic_Class
+                      (Node            => Type_Node,
+                       Generic_Class   => Class_Entity,
+                       Generic_Actuals => Actual_Types);
+               end if;
             end;
          end if;
       end if;
 
-      Set_Entity (Type_Node, Type_Entity);
+      if Type_Entity /= null then
+         Set_Entity (Type_Node, Type_Entity);
+      else
+         Set_Entity (Type_Node, Ack.Types.Get_Top_Level_Type ("any"));
+      end if;
 
    end Analyse_Class_Type;
 
@@ -614,7 +633,8 @@ package body Ack.Semantic is
    begin
       case N_Expression_Node (Kind (Expression)) is
          when N_Operator =>
-            null;
+            Analyse_Operator
+              (Class, Container, Expression_Type, Expression);
          when N_Precursor =>
             Analyse_Precursor
               (Class, Container, Expression_Type, Expression);
@@ -648,8 +668,8 @@ package body Ack.Semantic is
                                      "string",
                                   when N_Integer_Constant =>
                                      "integer");
-               Value_Type : constant Ack.Classes.Class_Entity :=
-                              Ack.Classes.Get_Top_Level_Class (Type_Name);
+               Value_Type : constant Ack.Types.Type_Entity :=
+                              Ack.Types.Get_Top_Level_Type (Type_Name);
             begin
                Set_Type (Expression, Value_Type);
                Set_Entity (Expression, Value_Type);
@@ -813,9 +833,15 @@ package body Ack.Semantic is
                                    Extended_Feature_Name (Node);
             Name_Node          : constant Node_Id :=
                                    Feature_Name (Extended_Name_Node);
+            Alias_Node         : constant Node_Id :=
+                                   Feature_Alias (Extended_Name_Node);
+            Alias              : constant Name_Id :=
+                                   (if Alias_Node = No_Node then No_Name
+                                    else Get_Name (Alias_Node));
             Entity             : constant Ack.Features.Feature_Entity :=
                                    Ack.Features.New_Feature
                                      (Name        => Get_Name (Name_Node),
+                                      Alias       => Alias,
                                       Declaration => Node,
                                       Class       => Class);
          begin
@@ -961,6 +987,64 @@ package body Ack.Semantic is
    begin
       Scan (Inherits (Inheritance), Analyse'Access);
    end Analyse_Inheritance;
+
+   ----------------------
+   -- Analyse_Operator --
+   ----------------------
+
+   procedure Analyse_Operator
+     (Class           : Ack.Classes.Class_Entity;
+      Container       : not null access Root_Entity_Type'Class;
+      Expression_Type : access Root_Entity_Type'Class;
+      Operator_Node   : Node_Id)
+   is
+      use type Ack.Types.Type_Entity;
+      Operator  : constant Name_Id := Get_Name (Operator_Node);
+      Left      : constant Node_Id := Field_1 (Operator_Node);
+      Right     : constant Node_Id := Field_2 (Operator_Node);
+      Left_Type : Ack.Types.Type_Entity;
+   begin
+--        Ada.Text_IO.Put_Line
+--          (Get_Program (Left).Show_Location
+--               & ": analysing: " & To_String (Operator));
+      Analyse_Expression
+        (Class           => Class,
+         Container       => Container,
+         Expression_Type => Ack.Types.Get_Top_Level_Type ("any"),
+         Expression      => Left);
+      Left_Type := Ack.Types.Type_Entity (Get_Type (Left));
+
+      if Left_Type = null then
+         null;
+      elsif not Left_Type.Has_Aliased_Feature (Operator) then
+         Error (Operator_Node, E_Undeclared_Name);
+      else
+         declare
+            Feature : constant Ack.Features.Feature_Entity :=
+                        Left_Type.Aliased_Feature (Operator);
+         begin
+            pragma Assert (Feature.Argument_Count in 0 .. 1);
+            if Feature.Argument_Count = 0 then
+               if Right /= No_Node then
+                  Error (Right, E_Too_Many_Arguments);
+               end if;
+            else
+               if Right = No_Node then
+                  Error (Operator_Node, E_Insufficient_Arguments);
+               else
+                  Analyse_Expression
+                    (Class, Container, Feature.Argument (1).Get_Type, Right);
+               end if;
+            end if;
+            Set_Type (Operator_Node, Feature.Get_Type);
+            if not Feature.Get_Type.Conforms_To (Expression_Type) then
+               Error (Operator_Node, E_Type_Error,
+                      Entity_Type (Expression_Type));
+            end if;
+         end;
+      end if;
+
+   end Analyse_Operator;
 
    -----------------------
    -- Analyse_Precursor --
