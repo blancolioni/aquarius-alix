@@ -618,6 +618,9 @@ package body Ack.Features is
       Feature.Property := False;
       Feature.Routine := True;
       Feature.External := True;
+      if Feature.Value_Type /= null then
+         Feature.Has_Result := True;
+      end if;
       Feature.External_Object := +External_Object;
       Feature.External_Type := +External_Type;
       Feature.External_Label := +External_Label;
@@ -657,7 +660,7 @@ package body Ack.Features is
    is
    begin
       Feature.Value_Type := Entity_Type (Result_Type);
-      if Feature.Routine then
+      if Feature.Routine or else Feature.External then
          Feature.Has_Result := True;
       end if;
    end Set_Result_Type;
