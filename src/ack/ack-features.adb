@@ -384,6 +384,21 @@ package body Ack.Features is
 
       Unit.Pop_Register ("op");
 
+      if Feature.Definition_Class.Standard_Name = "string" then
+         Unit.Native_Operation
+           ("get_property " & Feature.Standard_Name & ","
+            & Natural'Image (Feature.Argument_Count),
+            Input_Stack_Words  => 0,
+            Output_Stack_Words => 0,
+            Changed_Registers  => "pv");
+
+         if Feature.Has_Result then
+            Unit.Push_Register ("pv");
+         end if;
+
+         return;
+      end if;
+
       if Feature.Routine
         or else (Feature.Property
                  and then not Feature.Get_Type.Detachable
