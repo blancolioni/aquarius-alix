@@ -1,6 +1,6 @@
 with Ada.Text_IO;
 
-with Tagatha.Operands;
+--  with Tagatha.Operands;
 
 with Ack.Environment;
 with Ack.Types;
@@ -65,12 +65,8 @@ package body Ack.Classes is
       Unit  : in out Tagatha.Units.Tagatha_Unit)
    is
    begin
-      Unit.Push_Operand
-        (Tagatha.Operands.External_Operand
-           (Class_Entity_Record'Class (Class).Link_Name & "$allocate",
-            Immediate => True),
-         Tagatha.Default_Size);
-      Unit.Indirect_Call;
+      Unit.Call
+        (Class_Entity_Record'Class (Class).Link_Name & "$allocate");
       Unit.Push_Result;
    end Allocate;
 
@@ -349,28 +345,28 @@ package body Ack.Classes is
       is
          use type Ack.Types.Type_Entity;
          Result : Ack.Types.Type_Entity := null;
-   begin
+      begin
          for Inherited of Current_Class.Inherited_Types loop
-         if Inherited.Inherited_Type.Class = Ancestor_Class then
+            if Inherited.Inherited_Type.Class = Ancestor_Class then
                Result := Ack.Types.Type_Entity (Inherited.Inherited_Type);
                exit;
-         end if;
-      end loop;
+            end if;
+         end loop;
 
          if Result = null then
             for Inherited of Current_Class.Inherited_Types loop
-         declare
+               declare
                   Ancestor : constant access
                     Ack.Types.Type_Entity_Record'Class :=
                       Get (Inherited.Inherited_Type,
                            Inherited.Inherited_Type.Class.all);
-         begin
-            if Ancestor /= null then
+               begin
+                  if Ancestor /= null then
                      Result := Ack.Types.Type_Entity (Ancestor);
                      exit;
-            end if;
-         end;
-      end loop;
+                  end if;
+               end;
+            end loop;
          end if;
 
          if Result /= null then
