@@ -54,6 +54,12 @@ package Ack is
       N_Creation_Call,
       N_Expression,
       N_If_Then,
+      N_Iteration,
+      N_Initialization,
+      N_Invariant,
+      N_Exit_Condition,
+      N_Loop_Body,
+      N_Variant,
       N_Compound,
       N_Assignment,
       N_Creation_Instruction,
@@ -346,17 +352,12 @@ package Ack is
      with Pre => Kind (N) in N_Class_Name | N_Entity_Declaration_Group;
 
    function Get_Name (N : Node_Id) return Name_Id
-     with Pre => Kind (N) = N_Identifier
-     or else Kind (N) = N_Feature_Name
-     or else Kind (N) = N_External
-     or else Kind (N) = N_Feature_Alias
-     or else Kind (N) = N_Variable
-     or else Kind (N) = N_Integer_Constant
-     or else Kind (N) = N_String_Constant
-     or else Kind (N) = N_Precursor_Element
-     or else Kind (N) = N_Formal_Generic_Name
-     or else Kind (N) = N_Attachment_Test
-     or else Kind (N) = N_Operator;
+     with Pre =>
+       Kind (N) in N_Identifier | N_Feature_Name | N_Feature_Alias
+                 | N_Variable | N_Integer_Constant | N_String_Constant
+                 | N_Effective_Routine | N_Precursor_Element
+                 | N_Formal_Generic_Name
+                 | N_Attachment_Test | N_Iteration | N_Operator;
 
    function Get_Entity (N : Node_Id) return Entity_Type;
    function Has_Entity (N : Node_Id) return Boolean;
@@ -421,7 +422,7 @@ package Ack is
      with Pre => Kind (N) = N_Routine;
 
    function Compound (N : Node_Id) return Node_Id
-     with Pre => Kind (N) = N_Internal;
+     with Pre => Kind (N) in N_Internal | N_Loop_Body;
 
    function Instructions (N : Node_Id) return List_Id
      with Pre => Kind (N) = N_Compound;
@@ -430,7 +431,7 @@ package Ack is
      with Pre => Kind (N) in N_Assignment | N_Creation_Call;
 
    function Expression (N : Node_Id) return Node_Id
-     with Pre => Kind (N) in N_Assignment;
+     with Pre => Kind (N) in N_Assignment | N_Iteration;
 
    function Creation_Call (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Creation_Instruction;
@@ -441,6 +442,15 @@ package Ack is
    function Constant_Value (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Constant
      or else Kind (N) = N_Explicit_Value;
+
+   function Iteration (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Loop,
+     Post => Iteration'Result = No_Node
+       or else Kind (Iteration'Result) = N_Iteration;
+
+   function Loop_Body (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Loop,
+     Post => Kind (Loop_Body'Result) = N_Loop_Body;
 
 private
 
@@ -717,13 +727,20 @@ private
    is (Field_1 (N));
 
    function Expression (N : Node_Id) return Node_Id
-   is (Field_2 (N));
+   is (if Kind (N) = N_Assignment
+       then Field_2 (N) else Field_1 (N));
 
    function Actual_List (N : Node_Id) return Node_Id
    is (Field_2 (N));
 
    function Constant_Value (N : Node_Id) return Node_Id
    is (Field_2 (N));
+
+   function Iteration (N : Node_Id) return Node_Id
+   is (Field_1 (N));
+
+   function Loop_Body (N : Node_Id) return Node_Id
+   is (Field_5 (N));
 
    function Has_Error
      (Node : Node_Id)
