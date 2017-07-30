@@ -1,6 +1,6 @@
 class Aqua.Containers.Linked_List_Iterator [Element] inherit
    Aqua.Containers.Forward_Iterator[Element]
-      redefine Next, At_Start, At_End, Off_End end
+      redefine Item, Next, At_Start, At_End, Off_End end
          
    create
       Make
@@ -15,6 +15,11 @@ feature{Aqua.Containers.Linked_List}
    
 feature
 
+   Item : Element
+      do
+         Result := Current_Linkable.Item
+      end
+      
    Next
       do
          Current_Linkable := Current_Linkable.Next

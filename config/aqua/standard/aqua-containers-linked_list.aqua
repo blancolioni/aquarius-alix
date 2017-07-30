@@ -18,7 +18,8 @@ feature
 
    First : Linked_List_Iterator[G]
       do
-         create Result.Make (Current)
+         create Result
+         Result.Make (Current)
       end
       
    First_Element : G
@@ -36,8 +37,6 @@ feature
       end
       
    Append (New_Item : G)
-      local
-         New_Cell : Linkable[G]
       do
          if Is_Empty then
             create First_Cell
