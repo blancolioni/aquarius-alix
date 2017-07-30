@@ -149,6 +149,27 @@ package body Ack.Types is
       end if;
    end Full_Name;
 
+   ---------------------
+   -- Generic_Binding --
+   ---------------------
+
+   function Generic_Binding
+     (Typ   : Type_Entity_Record'Class;
+      Index : Positive)
+      return Type_Entity
+   is
+      Count : Natural := 0;
+   begin
+      for Binding of Typ.Generic_Bindings loop
+         Count := Count + 1;
+         if Count = Index then
+            return Binding.Actual;
+         end if;
+      end loop;
+      raise Constraint_Error with
+        "generic_binding: index too large: " & Typ.Description;
+   end Generic_Binding;
+
    ---------
    -- Get --
    ---------
@@ -198,7 +219,7 @@ package body Ack.Types is
               (if Definition_Class = Typ.Class
                then Constant_Type_Entity (Typ)
                else Typ.Class.Get_Ancestor_Type
-                 (Definition_Class));
+                 (Typ, Definition_Class));
 
             if Ancestor_Type.Generic_Bindings.Is_Empty then
                Typ.Insert (Feature);
@@ -216,6 +237,19 @@ package body Ack.Types is
          end;
       end if;
    end Get;
+
+   -----------------------
+   -- Get_Ancestor_Type --
+   -----------------------
+
+   function Get_Ancestor_Type
+     (Typ      : not null access constant Type_Entity_Record'Class;
+      Ancestor : not null access Ack.Classes.Class_Entity_Record'Class)
+      return Type_Entity
+   is
+   begin
+      return Typ.Class.Get_Ancestor_Type (Typ, Ancestor);
+   end Get_Ancestor_Type;
 
    --------------------
    -- Get_Class_Type --
@@ -402,5 +436,43 @@ package body Ack.Types is
 
       end return;
    end New_Generic_Formal_Type;
+
+   -------------------------------
+   -- Update_Type_Instantiation --
+   -------------------------------
+
+   function Update_Type_Instantiation
+     (Instantiated_Type  : not null access Type_Entity_Record'Class;
+      Type_With_Bindings : not null access constant
+        Type_Entity_Record'Class)
+      return Type_Entity
+   is
+      Bindings : List_Of_Generic_Bindings.List :=
+                   Instantiated_Type.Generic_Bindings;
+      Changed  : Boolean := False;
+   begin
+      for Inner_Binding of Bindings loop
+         for Outer_Binding of Type_With_Bindings.Generic_Bindings loop
+            if Constant_Type_Entity (Inner_Binding.Actual)
+              = Outer_Binding.Formal
+            then
+               Inner_Binding.Actual := Outer_Binding.Actual;
+               Changed := True;
+               exit;
+            end if;
+         end loop;
+      end loop;
+
+      if Changed then
+         return Result : constant Type_Entity :=
+           new Type_Entity_Record'
+             (Type_Entity_Record (Instantiated_Type.all))
+         do
+            Result.Generic_Bindings := Bindings;
+         end return;
+      else
+         return Type_Entity (Instantiated_Type);
+      end if;
+   end Update_Type_Instantiation;
 
 end Ack.Types;

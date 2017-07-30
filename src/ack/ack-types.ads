@@ -36,6 +36,16 @@ package Ack.Types is
 
    type Type_Entity is access all Type_Entity_Record'Class;
 
+   function Generic_Binding
+     (Typ   : Type_Entity_Record'Class;
+      Index : Positive)
+      return Type_Entity;
+
+   function Get_Ancestor_Type
+     (Typ   : not null access constant Type_Entity_Record'Class;
+      Ancestor : not null access Ack.Classes.Class_Entity_Record'Class)
+      return Type_Entity;
+
    function Has_Type_Entity
      (Node : Node_Id)
       return Boolean;
@@ -62,6 +72,12 @@ package Ack.Types is
       Generic_Class   : not null access Ack.Classes.Class_Entity_Record'Class;
       Generic_Actuals : Array_Of_Types;
       Detachable      : Boolean)
+      return Type_Entity;
+
+   function Update_Type_Instantiation
+     (Instantiated_Type : not null access Type_Entity_Record'Class;
+      Type_With_Bindings : not null access constant
+        Type_Entity_Record'Class)
       return Type_Entity;
 
    function New_Generic_Formal_Type
