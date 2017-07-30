@@ -24,6 +24,8 @@ package body Ack.Semantic is
       Name     : Name_Id)
       return Ack.Classes.Class_Entity;
 
+   function Forward_Iterable return Ack.Classes.Class_Entity;
+
    function Analyse_Class_Header
      (Class  : Node_Id;
       Header : Node_Id)
@@ -118,6 +120,11 @@ package body Ack.Semantic is
      (Class     : Ack.Classes.Class_Entity;
       Container : not null access Root_Entity_Type'Class;
       Creation  : Node_Id);
+
+   procedure Analyse_Loop
+     (Class     : Ack.Classes.Class_Entity;
+      Container : not null access Root_Entity_Type'Class;
+      Loop_Node : Node_Id);
 
    procedure Analyse_Expression
      (Class           : Ack.Classes.Class_Entity;
@@ -501,7 +508,7 @@ package body Ack.Semantic is
             when N_Conditional =>
                Analyse_Conditional (Class, Container, Node);
             when N_Loop =>
-               null;
+               Analyse_Loop (Class, Container, Node);
             when N_Precursor =>
                Analyse_Precursor
                  (Class           => Class,
@@ -1017,6 +1024,70 @@ package body Ack.Semantic is
       Scan (Inherits (Inheritance), Analyse'Access);
    end Analyse_Inheritance;
 
+   ------------------
+   -- Analyse_Loop --
+   ------------------
+
+   procedure Analyse_Loop
+     (Class     : Ack.Classes.Class_Entity;
+      Container : not null access Root_Entity_Type'Class;
+      Loop_Node : Node_Id)
+   is
+      Iteration_Node : constant Node_Id := Iteration (Loop_Node);
+      Loop_Body_Node : constant Node_Id := Loop_Body (Loop_Node);
+   begin
+      if Iteration_Node /= No_Node then
+         declare
+            Expression_Node : constant Node_Id := Expression (Iteration_Node);
+            Expression_Type : constant Ack.Types.Type_Entity :=
+                                Ack.Types.New_Class_Type
+                                  (Iteration_Node, Forward_Iterable, False);
+         begin
+            Analyse_Expression
+              (Class, Container, Expression_Type, Expression_Node);
+
+            declare
+               use Ack.Types;
+               Iterable_Type  : constant Type_Entity :=
+                                  Type_Entity
+                                    (Get_Type (Expression_Node));
+               Inherited_Type : constant Type_Entity :=
+                                  Iterable_Type.Get_Ancestor_Type
+                                    (Forward_Iterable);
+               Implicit_Type      : constant Ack.Types.Type_Entity :=
+                                      Inherited_Type.Generic_Binding (1);
+               Implicit           : constant Ack.Variables.Variable_Entity :=
+                                      Ack.Variables.New_Iterator_Entity
+                                        (Name       =>
+                                                     Get_Name (Iteration_Node),
+                                         Node       => Iteration_Node,
+                                         Local_Type => Implicit_Type);
+            begin
+               if False then
+                  Ada.Text_IO.Put_Line
+                    ("iteration: iterable = " & Iterable_Type.Description);
+                  Ada.Text_IO.Put_Line
+                    ("iteration: inherited = " & Inherited_Type.Description);
+                  Ada.Text_IO.Put_Line
+                    ("iteration: implicit = " & Implicit_Type.Description);
+               end if;
+
+               Implicit.Set_Attached;
+               Set_Entity (Iteration_Node, Implicit);
+               Set_Implicit_Entity (Iteration_Node);
+               Container.Add_Implicit (Implicit);
+            end;
+         end;
+      end if;
+
+      Analyse_Compound (Class, Container, Compound (Loop_Body_Node));
+
+      if Iteration_Node /= No_Node then
+         Container.Remove_Implicit;
+      end if;
+
+   end Analyse_Loop;
+
    ----------------------
    -- Analyse_Operator --
    ----------------------
@@ -1202,6 +1273,30 @@ package body Ack.Semantic is
             Analyse_Anchored_Type (Class, Type_Node);
       end case;
    end Analyse_Type;
+
+   function Forward_Iterable return Ack.Classes.Class_Entity is
+      Container_Name    : constant Name_Id := Get_Name_Id ("containers");
+      Forward_Name      : constant Name_Id := Get_Name_Id ("forward_iterable");
+      Aqua_Entity       : constant Ack.Classes.Class_Entity :=
+                            Ack.Classes.Get_Top_Level_Class ("aqua");
+      Containers_Entity : constant Ack.Classes.Class_Entity :=
+                            (if Aqua_Entity.Contains (Container_Name)
+                             then Ack.Classes.Class_Entity
+                               (Aqua_Entity.Get (Container_Name))
+                             else Load_Class
+                               (Get_Program (Aqua_Entity.Declaration_Node),
+                                Aqua_Entity, Container_Name));
+      Forward_Entity    : constant Ack.Classes.Class_Entity :=
+                            (if Containers_Entity.Contains (Forward_Name)
+                             then Ack.Classes.Class_Entity
+                               (Containers_Entity.Get (Forward_Name))
+                             else Load_Class
+                               (Get_Program
+                                  (Containers_Entity.Declaration_Node),
+                                Containers_Entity, Forward_Name));
+   begin
+      return Forward_Entity;
+   end Forward_Iterable;
 
    ----------------
    -- Load_Class --

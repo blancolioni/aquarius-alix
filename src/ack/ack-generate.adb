@@ -1,5 +1,6 @@
 with Tagatha.Operands;
 with Tagatha.Units;
+with Tagatha.Units.Listing;
 
 with Aquarius.Config_Paths;
 
@@ -33,6 +34,10 @@ package body Ack.Generate is
    procedure Generate_Conditional
      (Unit        : in out Tagatha.Units.Tagatha_Unit;
       Conditional : Node_Id);
+
+   procedure Generate_Loop
+     (Unit      : in out Tagatha.Units.Tagatha_Unit;
+      Loop_Node : Node_Id);
 
    procedure Generate_Expression
      (Unit       : in out Tagatha.Units.Tagatha_Unit;
@@ -230,6 +235,10 @@ package body Ack.Generate is
       end;
 
       Unit.Finish_Unit;
+
+      Tagatha.Units.Listing.Write_Command_Listing (Unit);
+      Tagatha.Units.Listing.Write_Transfer_Listing (Unit);
+
       Unit.Write
         (Target_Name    => "pdp32",
          Directory_Path => Aquarius.Config_Paths.Config_File ("scratch"));
@@ -267,7 +276,7 @@ package body Ack.Generate is
             when N_Conditional =>
                Generate_Conditional (Unit, Instruction);
             when N_Loop =>
-               null;
+               Generate_Loop (Unit, Instruction);
             when N_Precursor =>
                Generate_Precursor (Unit, Instruction);
                Unit.Drop;
@@ -474,6 +483,125 @@ package body Ack.Generate is
    begin
       Feature.Generate_Routine (Unit);
    end Generate_Feature;
+
+   -------------------
+   -- Generate_Loop --
+   -------------------
+
+   procedure Generate_Loop
+     (Unit      : in out Tagatha.Units.Tagatha_Unit;
+      Loop_Node : Node_Id)
+   is
+      Iteration_Node : constant Node_Id := Iteration (Loop_Node);
+      Loop_Body_Node : constant Node_Id := Loop_Body (Loop_Node);
+      Top_Label      : constant Positive := Unit.Next_Label;
+      Out_Label      : constant Positive := Unit.Next_Label;
+   begin
+      if Iteration_Node /= No_Node then
+         declare
+            Expression_Node : constant Node_Id := Expression (Iteration_Node);
+         begin
+            Generate_Expression (Unit, Expression_Node);
+            Unit.Pop_Register ("r0");
+            Unit.Push_Register ("r0");  --  'current' argument to First
+            Unit.Push_Register ("r0");  --  sent to op
+            Unit.Pop_Register ("op");
+            Unit.Native_Operation
+              ("get_property aqua__containers__forward_iterable, 0",
+               Input_Stack_Words  => 0,
+               Output_Stack_Words => 0,
+               Changed_Registers  => "pv");
+            Unit.Push_Register ("pv");
+            Unit.Pop_Register ("op");
+            Unit.Native_Operation
+              ("get_property first, 0",
+               Input_Stack_Words  => 0,
+               Output_Stack_Words => 0,
+               Changed_Registers  => "pv");
+            Unit.Push_Register ("pv");
+            Unit.Indirect_Call;
+            Unit.Drop;
+         end;
+      end if;
+
+      if Iteration_Node /= No_Node then
+         Unit.Push_Register ("r0");
+         Unit.Pop_Register ("op");
+         Unit.Push_Register ("op");
+         Unit.Push_Register ("op");
+         Unit.Native_Operation
+           ("get_property aqua__containers__forward_iterator, 0",
+            Input_Stack_Words  => 0,
+            Output_Stack_Words => 0,
+            Changed_Registers  => "pv");
+         Unit.Push_Register ("pv");
+         Unit.Pop_Register ("op");
+         Unit.Native_Operation
+           ("get_property off_end, 0",
+            Input_Stack_Words  => 0,
+            Output_Stack_Words => 0,
+            Changed_Registers  => "pv");
+         Unit.Push_Register ("pv");
+         Unit.Indirect_Call;
+         Unit.Drop;
+         Unit.Push_Register ("r0");
+         Unit.Operate (Tagatha.Op_Test);
+         Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
+      end if;
+
+      Unit.Label (Top_Label);
+
+      Generate_Compound (Unit, Compound (Loop_Body_Node));
+
+      if Iteration_Node /= No_Node then
+         Unit.Pop_Register ("op");
+         Unit.Push_Register ("op");
+         Unit.Push_Register ("op");
+         Unit.Native_Operation
+           ("get_property aqua__containers__forward_iterator, 0",
+            Input_Stack_Words  => 0,
+            Output_Stack_Words => 0,
+            Changed_Registers  => "pv");
+         Unit.Push_Register ("pv");
+         Unit.Pop_Register ("op");
+         Unit.Native_Operation
+           ("get_property next, 0",
+            Input_Stack_Words  => 0,
+            Output_Stack_Words => 0,
+            Changed_Registers  => "pv");
+         Unit.Push_Register ("pv");
+         Unit.Indirect_Call;
+         Unit.Drop;
+         Unit.Pop_Register ("op");
+         Unit.Push_Register ("op");
+         Unit.Push_Register ("op");
+         Unit.Native_Operation
+           ("get_property aqua__containers__forward_iterator, 0",
+            Input_Stack_Words  => 0,
+            Output_Stack_Words => 0,
+            Changed_Registers  => "pv");
+         Unit.Push_Register ("pv");
+         Unit.Pop_Register ("op");
+         Unit.Native_Operation
+           ("get_property off_end, 0",
+            Input_Stack_Words  => 0,
+            Output_Stack_Words => 0,
+            Changed_Registers  => "pv");
+         Unit.Push_Register ("pv");
+         Unit.Indirect_Call;
+         Unit.Drop;
+         Unit.Push_Register ("r0");
+         Unit.Operate (Tagatha.Op_Test);
+         Unit.Jump (Top_Label, Tagatha.C_Equal);
+      end if;
+
+      Unit.Label (Out_Label);
+
+      if Iteration_Node /= No_Node then
+         Unit.Drop;
+      end if;
+
+   end Generate_Loop;
 
    ----------------------------------
    -- Generate_Operator_Expression --
