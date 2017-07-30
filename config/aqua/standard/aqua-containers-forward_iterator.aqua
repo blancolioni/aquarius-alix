@@ -1,11 +1,17 @@
 deferred class Aqua.Containers.Forward_Iterator [Element]
-   inherit Cell [Element]
-   
+
 feature
 
+   Item : Element
+      require
+         not Off_End
+      deferred
+      
+      end
+      
    Next
       require
-         not Off_Right
+         not Off_End
          
       deferred
       

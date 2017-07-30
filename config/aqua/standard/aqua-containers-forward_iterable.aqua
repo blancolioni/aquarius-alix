@@ -3,7 +3,7 @@ deferred class Aqua.Containers.Forward_Iterable [Element]
    
 feature
 
-   First : Forward_Iterator [Element]
+   First : Aqua.Containers.Forward_Iterator [Element]
       deferred
       ensure
          Result.Off_End or Result.At_Start
