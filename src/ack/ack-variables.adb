@@ -40,6 +40,27 @@ package body Ack.Variables is
       end return;
    end New_Argument_Entity;
 
+   -------------------------
+   -- New_Iterator_Entity --
+   -------------------------
+
+   function New_Iterator_Entity
+     (Name       : Name_Id;
+      Node       : Node_Id;
+      Local_Type : not null access Root_Entity_Type'Class)
+      return Variable_Entity
+   is
+   begin
+      return Result : constant Variable_Entity :=
+        new Variable_Entity_Record
+      do
+         Result.Create (Name, Node, Table => False);
+         Result.Kind := Local;
+         Result.Value_Type := Entity_Type (Local_Type);
+         Result.Iterator := True;
+      end return;
+   end New_Iterator_Entity;
+
    ----------------------
    -- New_Local_Entity --
    ----------------------
@@ -98,6 +119,27 @@ package body Ack.Variables is
             Unit.Push_Local
               (Tagatha.Local_Offset (Variable.Offset),
                Tagatha.Default_Size);
+
+            if Variable.Iterator then
+               Unit.Pop_Register ("op");
+               Unit.Push_Register ("op");
+               Unit.Native_Operation
+                 ("get_property aqua__containers__forward_iterator, 0",
+                  Input_Stack_Words  => 0,
+                  Output_Stack_Words => 0,
+                  Changed_Registers  => "pv");
+               Unit.Push_Register ("pv");
+               Unit.Pop_Register ("op");
+               Unit.Native_Operation
+                 ("get_property item, 0",
+                  Input_Stack_Words  => 0,
+                  Output_Stack_Words => 0,
+                  Changed_Registers  => "pv");
+               Unit.Push_Register ("pv");
+               Unit.Indirect_Call;
+               Unit.Drop;
+               Unit.Push_Register ("r0");
+            end if;
 
          when Argument =>
             Unit.Push_Argument
