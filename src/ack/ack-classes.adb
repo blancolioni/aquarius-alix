@@ -326,27 +326,63 @@ package body Ack.Classes is
 
    function Get_Ancestor_Type
      (Descendent_Class : Class_Entity_Record'Class;
+      Descendent_Type  : not null access constant
+        Ack.Types.Type_Entity_Record'Class;
       Ancestor_Class   : not null access constant Class_Entity_Record'Class)
       return access Ack.Types.Type_Entity_Record'Class
    is
+      function Get
+        (Current_Type : not null access constant
+           Ack.Types.Type_Entity_Record'Class;
+         Current_Class : Class_Entity_Record'Class)
+         return Ack.Types.Type_Entity;
+
+      ---------
+      -- Get --
+      ---------
+
+      function Get
+        (Current_Type  : not null access constant
+           Ack.Types.Type_Entity_Record'Class;
+         Current_Class : Class_Entity_Record'Class)
+         return Ack.Types.Type_Entity
+      is
+         use type Ack.Types.Type_Entity;
+         Result : Ack.Types.Type_Entity := null;
    begin
-      for Inherited of Descendent_Class.Inherited_Types loop
+         for Inherited of Current_Class.Inherited_Types loop
          if Inherited.Inherited_Type.Class = Ancestor_Class then
-            return Inherited.Inherited_Type;
+               Result := Ack.Types.Type_Entity (Inherited.Inherited_Type);
+               exit;
          end if;
       end loop;
-      for Inherited of Descendent_Class.Inherited_Types loop
+
+         if Result = null then
+            for Inherited of Current_Class.Inherited_Types loop
          declare
-            Ancestor : constant access Ack.Types.Type_Entity_Record'Class :=
-                         Inherited.Inherited_Type.Class.Get_Ancestor_Type
-                           (Ancestor_Class);
+                  Ancestor : constant access
+                    Ack.Types.Type_Entity_Record'Class :=
+                      Get (Inherited.Inherited_Type,
+                           Inherited.Inherited_Type.Class.all);
          begin
             if Ancestor /= null then
-               return Ancestor;
+                     Result := Ack.Types.Type_Entity (Ancestor);
+                     exit;
             end if;
          end;
       end loop;
-      return null;
+         end if;
+
+         if Result /= null then
+            Result :=
+              Ack.Types.Update_Type_Instantiation
+                (Result, Current_Type);
+         end if;
+         return Result;
+      end Get;
+
+   begin
+      return Get (Descendent_Type, Descendent_Class);
    end Get_Ancestor_Type;
 
    ----------------------

@@ -120,6 +120,8 @@ package Ack.Classes is
 
    function Get_Ancestor_Type
      (Descendent_Class : Class_Entity_Record'Class;
+      Descendent_Type  : not null access constant
+        Ack.Types.Type_Entity_Record'Class;
       Ancestor_Class   : not null access constant Class_Entity_Record'Class)
       return access Ack.Types.Type_Entity_Record'Class;
 
