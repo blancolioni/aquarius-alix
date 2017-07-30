@@ -131,11 +131,6 @@ package body Ack.Parser is
       return Node_Id
      with Pre => From.Name = "declaration_body";
 
---     function Import_Event_Clause
---       (From : Aquarius.Programs.Program_Tree)
---        return Node_Id
---       with Pre => From.Name = "event_clause";
-
    function Import_Local_Declarations
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
@@ -258,7 +253,7 @@ package body Ack.Parser is
 
    function Import_Loop
      (From : Aquarius.Programs.Program_Tree)
-      return Node_Id is (New_Node (N_Loop, From))
+      return Node_Id
    with Pre => From.Name = "loop";
 
    function Import_Variable
@@ -939,6 +934,71 @@ package body Ack.Parser is
    begin
       return New_Node (N_Local_Declarations, From, Field_1 => Node);
    end Import_Local_Declarations;
+
+   -----------------
+   -- Import_Loop --
+   -----------------
+
+   function Import_Loop
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+
+      function Import_Iteration
+        (Tree : Aquarius.Programs.Program_Tree)
+         return Node_Id
+      is (New_Node (N_Iteration, Tree,
+                    Name =>
+                       Get_Name_Id (Tree.Program_Child ("identifier").Text),
+                    Field_1 =>
+                       Expressions.Import_Expression
+                         (Tree.Program_Child ("expression"))));
+
+      function Import_Initialization
+        (Tree : Aquarius.Programs.Program_Tree)
+         return Node_Id
+      is (No_Node);
+
+      function Import_Invariant
+        (Tree : Aquarius.Programs.Program_Tree)
+         return Node_Id
+      is (No_Node);
+
+      function Import_Exit_Condition
+        (Tree : Aquarius.Programs.Program_Tree)
+         return Node_Id
+      is (No_Node);
+
+      function Import_Variant
+        (Tree : Aquarius.Programs.Program_Tree)
+         return Node_Id
+      is (No_Node);
+
+      Loop_Body : constant Aquarius.Programs.Program_Tree :=
+                    From.Program_Child ("loop_body");
+   begin
+      return New_Node
+        (N_Loop, From,
+         Field_1 =>
+           Import_Optional_Child (From, "iteration", Import_Iteration'Access),
+         Field_2 =>
+           Import_Optional_Child (From, "initialization",
+             Import_Initialization'Access),
+         Field_3 =>
+           Import_Optional_Child (From, "invariant",
+             Import_Invariant'Access),
+         Field_4 =>
+           Import_Optional_Child (From, "exit_condition",
+             Import_Exit_Condition'Access),
+         Field_5 =>
+           New_Node
+             (N_Loop_Body, Loop_Body,
+              Field_1 =>
+                Import_Compound (Loop_Body.Program_Child ("compound"))),
+         Field_6 =>
+           Import_Optional_Child (From, "variant",
+             Import_Variant'Access));
+   end Import_Loop;
 
    ------------------------
    -- Import_New_Feature --
