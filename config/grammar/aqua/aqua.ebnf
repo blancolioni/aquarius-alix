@@ -356,7 +356,7 @@ type_interval ::=
 loop ::=
          [iteration] [initialization] [ invariant ] [exit_condition] loop_body [ variant ] 'end'
 	
-Iteration ::= 'across' expression 'as' identifier
+iteration ::= 'across' expression 'as' identifier
     
 initialization ::=
          'from' compound
