@@ -253,6 +253,9 @@ package body Ack.Features is
                end if;
             end;
          else
+            for I in 1 .. Feature.Local_Count loop
+               Unit.Push (0);
+            end loop;
             Ack.Generate.Generate_Compound
               (Unit, Compound (Feature.Routine_Node));
          end if;
