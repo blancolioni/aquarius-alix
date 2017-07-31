@@ -117,6 +117,17 @@ package body Ack.Bindings is
                   "   end if");
             end loop;
 
+            Ada.Text_IO.Put_Line
+              (Action_File,
+               "   if tree." & Class.Link_Name
+               & ".aquarius__trees__program_tree then");
+            Ada.Text_IO.Put_Line
+              (Action_File,
+               "      tree." & Class.Link_Name
+               & ".aquarius__trees__program_tree := tree");
+            Ada.Text_IO.Put_Line
+              (Action_File, "   end if");
+
             if False then
                Ada.Text_IO.Put_Line
                  (Action_File,
