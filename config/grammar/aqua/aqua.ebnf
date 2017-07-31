@@ -5,7 +5,7 @@ identifier         ::= !\l[\w]*!
 integer            ::= ![0-9]+!
 real               ::= ![0-9]+\.[0-9]+([eE][0-9]+)?!
 character_constant ::= !\'[.]\'!
-string_constant     ::= !\x22[^\x22]*\x22!
+string_constant     ::= standard ada_string_literal
 
 line_comment = "--"
 
