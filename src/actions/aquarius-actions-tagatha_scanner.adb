@@ -600,7 +600,9 @@ package body Aquarius.Actions.Tagatha_Scanner is
       Column         : in Natural)
    is
    begin
-      Processor.Unit.Source_Position (Line, Column);
+      if Line > 0 and then Column > 0 then
+         Processor.Unit.Source_Position (Line, Column);
+      end if;
    end Put_Source_Location;
 
    ------------------

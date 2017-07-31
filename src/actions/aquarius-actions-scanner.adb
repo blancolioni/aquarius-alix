@@ -216,7 +216,14 @@ package body Aquarius.Actions.Scanner is
       Write_Position (Processor, Action);
 
       if Action.Name = "top_level" then
-         Scan (Processor, Action.Program_Child ("compilation_unit"));
+         declare
+            Compilation_Unit : constant Program_Tree :=
+                                 Action.Program_Child ("compilation_unit");
+         begin
+            if Compilation_Unit /= null then
+               Scan (Processor, Action.Program_Child ("compilation_unit"));
+            end if;
+         end;
       elsif Action.Name = "compilation_unit" then
          Scan (Processor,
                Action.Program_Child ("sequence_of_top_level_declarations"));
@@ -369,7 +376,8 @@ package body Aquarius.Actions.Scanner is
       when E : others =>
          Ada.Text_IO.Put_Line
            (Ada.Text_IO.Standard_Error,
-            Action.Show_Location & ": " & Ada.Exceptions.Exception_Name (E)
+            (if Action = null then "(null)" else Action.Show_Location)
+            & ": " & Ada.Exceptions.Exception_Name (E)
             & " " & Ada.Exceptions.Exception_Message (E));
          raise;
    end Scan;
