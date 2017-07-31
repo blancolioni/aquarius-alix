@@ -1,29 +1,13 @@
-note
-   implicit_external_object : aqua_tree
-   
 class Aquarius.Trees.Program_Tree
       
 feature
 
-   Name     : String external "aqua" alias "tree__name"
-   Text     : String external "aqua" alias "tree__text"
+   Name   : String external "aqua"
+   Text   : String external "aqua"
 
-   Parent   : detachable Aquarius.Trees.Program_Tree
+   Parent : detachable Aquarius.Trees.Program_Tree
       external "aqua"
-      alias "tree__parent"
-      
-   Children : Aqua.Containers.Array [Aquarius.Trees.Program_Tree]
-   Has_Child (Name : String) : Boolean
-      do
-         
-      end
-      
-   Before_Node
-   do
-   end
-   
-   After_Node
-   do
-   end
+
+   Error (Message : String) external "aqua"
    
 end
