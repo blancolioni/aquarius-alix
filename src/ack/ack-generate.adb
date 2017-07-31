@@ -13,6 +13,7 @@ with Ack.Generate.Primitives;
 package body Ack.Generate is
 
    Report_Allocation : constant Boolean := False;
+   Write_Listing     : constant Boolean := False;
 
    procedure Generate_Allocator
      (Unit  : in out Tagatha.Units.Tagatha_Unit;
@@ -236,8 +237,10 @@ package body Ack.Generate is
 
       Unit.Finish_Unit;
 
-      Tagatha.Units.Listing.Write_Command_Listing (Unit);
-      Tagatha.Units.Listing.Write_Transfer_Listing (Unit);
+      if Write_Listing then
+         Tagatha.Units.Listing.Write_Command_Listing (Unit);
+         Tagatha.Units.Listing.Write_Transfer_Listing (Unit);
+      end if;
 
       Unit.Write
         (Target_Name    => "pdp32",
