@@ -10,7 +10,7 @@ feature
          Put ("generating: ")
          Put (Node.Package_Name)
          New_Line
-         Set_Output (Node.Specification_File_Name & ".ads")
+         Set_Output (Node.Specification_File_Name)
          Put_Line ("package " & Node.Package_Name & " is")
          New_Line
          across Node.Entries as Entry loop

@@ -9,7 +9,7 @@ feature
       
    After_Type (Type : Options.Checks.Type)
       do
-         Option_Entry.Set_Name (Type.Name)
+         Option_Entry.Set_Type (Type.Name)
       end
       
    After_Numeric_Literal (Child : String)
