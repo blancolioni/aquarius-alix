@@ -1,0 +1,11 @@
+class Options.Checks.Type
+feature
+
+   Name : String
+   
+   After_Identifier (Id : String)
+      do
+         Name := Id
+      end
+   
+end
