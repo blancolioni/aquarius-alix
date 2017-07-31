@@ -428,6 +428,9 @@ package body Ack.Features is
          Unit.Push_Register ("pv");
          Unit.Indirect_Call;
          Unit.Drop;
+         for I in 1 .. Feature.Argument_Count loop
+            Unit.Drop;
+         end loop;
          Unit.Push_Register ("r0");
       elsif Feature.Property then
          if not Feature.Get_Type.Detachable
