@@ -119,7 +119,7 @@ aspect_clause ::= attribute_definition_clause
                 
 overriding_indication ::= ['not'] 'overriding'
 
-subprogram_body ::= 'is' ('abstract' | 'null' | '(' expression ')' | block )
+subprogram_body ::= 'is' ('abstract' | 'null' | parenthesised_expression | block )
                    | 'renames' object_reference
 
 parameter_profile ::= [ formal_argument_spec ]
@@ -137,16 +137,14 @@ mode ::= 'in'
        | 'out'
        | 'in' 'out'
 
-package_declaration ::= package_spec | package_body
+package_declaration ::= package_spec | package_body | package_rename
 
-package_spec ::= 'package' defining_qualified_reference
-                  ('is' package_spec_declaration |
-                   'renames' qualified_reference ) ';'
+package_rename ::= 'package' defining_qualified_reference 'renames' qualified_reference ';'
 
-package_spec_declaration ::=
+package_spec ::= 'package' defining_qualified_reference 'is'
                    list_of_declarations
                    [ private_part]
-                   'end' [ matching_name ]
+                  'end' matching_name ';'
 
 matching_name ::= < identifier / '.' > | operator_symbol
 
@@ -529,6 +527,8 @@ name_qualifier ::= '.' expanded_name
 
 expanded_name        ::= 'all' | identifier | operator_name
 actual_argument_list ::= '(' < actual_argument / ','> ')'
+                       | '(' conditional_expression ')'
+                       | '(' case_expression ')'
 
 operator_name ::= string_literal
 
@@ -735,6 +735,7 @@ aggregate ::=
   | '(' selector_expression ',' < selector_expression / ',' > ')'
 
 selector_expression ::= selector '=>' expression
+                      | selector '=>' '<>'
                       | expression
 
 object_reference_with ::=
