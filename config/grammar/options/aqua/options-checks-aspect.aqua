@@ -1,19 +1,15 @@
 class Options.Checks.Aspect
-   inherit Aqua.Text_IO
-           Options.Option_Entry_Node
+   inherit Options.Option_Entry_Node
            
 feature
 
    After_String_Literal (Text : String)
       do
-         Put_Line (Text)
          Option_Entry.Set_Long_Name (Text)
       end
       
    After_Character_Literal (Text : String)
       do
-         Put ("character: ")
-         Put_Line (Text)
          Option_Entry.Set_Short_Name (Text)
       end
    

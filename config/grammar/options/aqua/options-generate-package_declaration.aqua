@@ -7,9 +7,7 @@ feature
    
    Before_Node
       do
-         Put ("generating: ")
-         Put (Node.Package_Name)
-         New_Line
+         Put_Line ("generating: " & Node.Package_Name)
          Set_Output (Node.Specification_File_Name)
          Put_Line ("package " & Node.Package_Name & " is")
          New_Line
@@ -18,6 +16,26 @@ feature
          end
          New_Line
          Put_Line ("end " & Node.Package_Name & ";")
-         Set_Output ("")
+         
+         Set_Output (Node.Body_File_Name)
+         Put_Line ("with WL.Command_Line;")
+         New_Line
+         
+         Put_Line ("package body " & Node.Package_Name & " is")
+         New_Line
+         
+         Put_Line ("   pragma Style_Checks (Off);")
+         New_Line
+         
+         across Node.Entries as Entry loop
+            Put_Line ("   function " & Entry.Name & " return " & Entry.Type_Name & " is")
+            Put_Line ("   begin")
+            Put_Line ("      return WL.Command_Line.Find_Option")
+            Put_Line ("               (" & Entry.Long_Name & ", " & Entry.Short_Name & ");")
+            Put_Line ("   end " & Entry.Name & ";")
+            New_Line
+         end
+         Put_Line ("end " & Node.Package_Name & ";")
+         Set_Output ("")         
       end      
 end
