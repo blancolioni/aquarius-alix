@@ -31,7 +31,11 @@ feature
             Put_Line ("   function " & Entry.Name & " return " & Entry.Type_Name & " is")
             Put_Line ("   begin")
             Put_Line ("      return WL.Command_Line.Find_Option")
-            Put_Line ("               (" & Entry.Long_Name & ", " & Entry.Short_Name & ");")
+            Put      ("               (" & Entry.Long_Name & ", " & Entry.Short_Name)
+            if Entry.Type_Name = "Natural" then
+               Put (", " & Entry.Default_Value)
+            end
+            Put_Line (");")
             Put_Line ("   end " & Entry.Name & ";")
             New_Line
          end

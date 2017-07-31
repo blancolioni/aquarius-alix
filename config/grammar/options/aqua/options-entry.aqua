@@ -19,6 +19,13 @@ feature
    Set_Type (Name : String)
    do
       Type_Name := Name
+      if Name = "Natural" then
+         Default_Value := "0"
+      elsif Name = "String" then
+         Default_Value := """"""
+      elsif Name = "Boolean" then
+         Default_Value := "False"
+      end
    end
    
    Set_Short_Name (Name : String)
