@@ -402,6 +402,30 @@ package body Ack.Features is
          return;
       end if;
 
+      if Feature.Definition_Class.Link_Name
+        = "aquarius__trees__program_tree"
+      then
+         Unit.Native_Operation
+           ("get_property " & Feature.Definition_Class.Link_Name & ",0",
+            Input_Stack_Words  => 0,
+            Output_Stack_Words => 0,
+            Changed_Registers  => "pv");
+         Unit.Push_Register ("pv");
+         Unit.Pop_Register ("op");
+         Unit.Native_Operation
+           ("get_property " & Feature.Standard_Name & ","
+            & Natural'Image (Feature.Argument_Count),
+            Input_Stack_Words  => 0,
+            Output_Stack_Words => 0,
+            Changed_Registers  => "pv");
+
+         if Feature.Has_Result then
+            Unit.Push_Register ("pv");
+         end if;
+
+         return;
+      end if;
+
       if Feature.Routine
         or else (Feature.Property
                  and then not Feature.Get_Type.Detachable
