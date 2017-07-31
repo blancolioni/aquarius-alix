@@ -1,4 +1,5 @@
 class Options.Checks.Package_Declaration
+   
 feature
 
    Entries : Aqua.Containers.Linked_List[Options.Entry]

@@ -12,6 +12,8 @@ feature
    Set_Name (Option_Name : String)
    do
       Name := Option_Name;
+      Long_Name := """" & Option_Name.Replace ("_", "-").To_Lower & """"
+      Short_Name := "' '"
    end
    
    Set_Type (Name : String)

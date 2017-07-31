@@ -1,4 +1,5 @@
 class Options.Checks.Qualified_Identifier
+   
 feature
 
    Identifiers : String_List
