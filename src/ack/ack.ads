@@ -76,6 +76,7 @@ package Ack is
       N_Constant,
       N_String_Constant,
       N_Integer_Constant,
+      N_Boolean_Constant,
       N_Variable,
       N_Precursor_Element,
       N_Actual_List,
@@ -92,7 +93,7 @@ package Ack is
      N_Precursor .. N_Constant;
 
    subtype N_Constant_Value is Node_Kind range
-     N_String_Constant .. N_Integer_Constant;
+     N_String_Constant .. N_Boolean_Constant;
 
    subtype N_Effective_Routine is Node_Kind range N_Internal .. N_External;
 
@@ -368,8 +369,8 @@ package Ack is
 
    function Get_Name (N : Node_Id) return Name_Id
      with Pre =>
-       Kind (N) in N_Identifier | N_Feature_Name | N_Feature_Alias
-                 | N_Variable | N_Integer_Constant | N_String_Constant
+       Kind (N) in N_Identifier | N_Feature_Name | N_Feature_Alias | N_Variable
+                 | N_Integer_Constant | N_String_Constant | N_Boolean_Constant
                  | N_Effective_Routine | N_Precursor_Element
                  | N_Formal_Generic_Name | N_Get_Property
                  | N_Attachment_Test | N_Iteration | N_Operator
@@ -458,6 +459,9 @@ package Ack is
    function Constant_Value (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Constant
      or else Kind (N) = N_Explicit_Value;
+
+   function Boolean_Value (N : Node_Id) return Boolean
+     with Pre => Kind (N) = N_Boolean_Constant;
 
    function Iteration (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Loop,
@@ -763,6 +767,9 @@ private
 
    function Constant_Value (N : Node_Id) return Node_Id
    is (Field_2 (N));
+
+   function Boolean_Value (N : Node_Id) return Boolean
+   is (To_Standard_String (Get_Name (N)) = "true");
 
    function Iteration (N : Node_Id) return Node_Id
    is (Field_1 (N));

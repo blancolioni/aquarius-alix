@@ -190,6 +190,9 @@ package body Ack.Parser.Expressions is
       elsif Choice.Name = "integer_constant" then
          Kind := N_Integer_Constant;
          Text := Get_Name_Id (Choice.Concatenate_Children);
+      elsif Choice.Name = "boolean_constant" then
+         Kind := N_Boolean_Constant;
+         Text := Get_Name_Id (Choice.Concatenate_Children);
       else
          raise Constraint_Error with
            "unhandled constant type: " & Choice.Name;

@@ -474,6 +474,9 @@ package body Ack.Generate is
                        (Tagatha.Tagatha_Integer'Value
                           (To_String
                                (Get_Name (Value))));
+                  when N_Boolean_Constant =>
+                     Unit.Push
+                       (if Boolean_Value (Value) then 1 else 0);
                end case;
             end;
       end case;

@@ -377,6 +377,9 @@ package body Ack.Features is
                Unit.Push
                  (Tagatha.Tagatha_Integer'Value
                     (To_String (Get_Name (Feature.Explicit_Value_Node))));
+            when N_Boolean_Constant =>
+               Unit.Push
+                 (Boolean'Pos (Boolean_Value (Feature.Explicit_Value_Node)));
          end case;
          return;
       end if;
