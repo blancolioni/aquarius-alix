@@ -109,7 +109,6 @@ package body Aquarius.Grammars.UI is
                            Create_Aquarius_Source_Entity
                              (Table            => Target,
                               Name             => Name,
-                              File_Name        => Header.Source_File_Name,
                               Top_Level        => False,
                               Compilation_Unit => Action_File,
                               Defining_Name    => Header,
