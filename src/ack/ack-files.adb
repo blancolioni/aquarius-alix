@@ -21,6 +21,7 @@ package body Ack.Files is
       Name     : Name_Id)
       return String
    is
+      use type Aquarius.Programs.Program_Tree;
       File_Name : constant String :=
                     Parent.Base_Child_File_Name (Name) & ".aqua";
    begin
@@ -34,13 +35,15 @@ package body Ack.Files is
                             ("aqua/generated"));
       end if;
 
-      declare
-         Local_Path : constant String := Referrer.Source_Directory;
-      begin
-         if Ada.Directories.Exists (Local_Path & "/" & File_Name) then
-            return Local_Path & "/" & File_Name;
-         end if;
-      end;
+      if Referrer /= null then
+         declare
+            Local_Path : constant String := Referrer.Source_Directory;
+         begin
+            if Ada.Directories.Exists (Local_Path & "/" & File_Name) then
+               return Local_Path & "/" & File_Name;
+            end if;
+         end;
+      end if;
 
       for Path of Class_Path loop
          if Ada.Directories.Exists (Path & "/" & File_Name) then
