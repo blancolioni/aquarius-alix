@@ -1,16 +1,7 @@
 plugin Ada version 0.1 is
 
-   group run_check : semantic is
-      types;
-      check_types;
-	  statements;
-	  declarations;
-	  ada_expressions;
-      check_subprograms;
-   end run_check;
+   group checks : semantic;
    
-   group cross_reference : project is
-       cross_reference;
-   end cross_reference;
+   group references : project;
    
 end Ada;
