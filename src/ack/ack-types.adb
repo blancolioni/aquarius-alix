@@ -276,8 +276,14 @@ package body Ack.Types is
      (Name : String)
       return Type_Entity
    is
+      use Ack.Classes;
+      Class : constant Class_Entity := Get_Top_Level_Class (Name);
    begin
-      return Get_Class_Type (Ack.Classes.Get_Top_Level_Class (Name));
+      if Class = null then
+         raise Constraint_Error with
+           "predefined class '" & Name & "' not found";
+      end if;
+      return Get_Class_Type (Class);
    end Get_Top_Level_Type;
 
    ---------------------
