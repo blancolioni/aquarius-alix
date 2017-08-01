@@ -79,7 +79,8 @@ package Ack is
       N_Variable,
       N_Precursor_Element,
       N_Actual_List,
-      N_Identifier);
+      N_Identifier,
+      N_Get_Property);
 
    subtype N_Type is Node_Kind range
      N_Class_Type .. N_Anchored_Type;
@@ -467,6 +468,9 @@ package Ack is
      with Pre => Kind (N) = N_Loop,
      Post => Kind (Loop_Body'Result) = N_Loop_Body;
 
+   function Get_Property (N : Node_Id) return Node_Id
+     with Pre => Kind (N) in N_Expression_Node;
+
 private
 
    type Node_Id is range 0 .. 99_999_999;
@@ -765,6 +769,9 @@ private
 
    function Loop_Body (N : Node_Id) return Node_Id
    is (Field_5 (N));
+
+   function Get_Property (N : Node_Id) return Node_Id
+   is (Field_6 (N));
 
    function Has_Error
      (Node : Node_Id)

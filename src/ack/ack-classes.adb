@@ -43,6 +43,31 @@ package body Ack.Classes is
       Class.Generic_Class := True;
    end Add_Generic_Formal;
 
+   --------------
+   -- Add_Note --
+   --------------
+
+   procedure Add_Note
+     (Class : in out Class_Entity_Record'Class;
+      Name  : String;
+      Value : String)
+   is
+   begin
+      Ada.Text_IO.Put_Line
+        (Class.Qualified_Name & ": " & Name & " = " & Value);
+      Class.Notes.Insert (Name, Value);
+      if Name = "behaviour" then
+         if Value = "normal" then
+            Class.Behaviour := Normal;
+         elsif Value = "aqua_primitive" then
+            Class.Behaviour := Aqua_Primitive;
+         else
+            raise Constraint_Error with
+              "invalid behaviour: " & Value;
+         end if;
+      end if;
+   end Add_Note;
+
    ---------------------
    -- Aliased_Feature --
    ---------------------

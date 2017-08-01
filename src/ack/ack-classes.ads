@@ -3,11 +3,17 @@ limited with Ack.Types;
 
 package Ack.Classes is
 
+   type Class_Behaviour is
+     (Normal, Aqua_Primitive);
+
    type Class_Entity_Record is
      new Root_Entity_Type with private;
 
    type Class_Entity is access all Class_Entity_Record'Class;
    type Constant_Class_Entity is access constant Class_Entity_Record'Class;
+
+   function Behaviour (Class : Class_Entity_Record'Class)
+                       return Class_Behaviour;
 
    function Class_Declaration_Context
      (Class : Class_Entity_Record'Class)
@@ -16,6 +22,22 @@ package Ack.Classes is
    procedure Add_Feature
      (Class : in out Class_Entity_Record'Class;
       Feature : not null access Ack.Features.Feature_Entity_Record'Class);
+
+   procedure Add_Note
+     (Class : in out Class_Entity_Record'Class;
+      Name  : String;
+      Value : String);
+
+   function Has_Note
+     (Class : Class_Entity_Record'Class;
+      Name  : String)
+      return Boolean;
+
+   function Get_Note
+     (Class : Class_Entity_Record'Class;
+      Name  : String)
+      return String
+     with Pre => Class.Has_Note (Name);
 
    procedure Inherit
      (Class           : in out Class_Entity_Record'Class;
@@ -157,6 +179,9 @@ private
    package List_Of_Inherited_Type_Records is
      new Ada.Containers.Doubly_Linked_Lists (Inherited_Type_Record);
 
+   package Notes_Map is
+     new WL.String_Maps (String);
+
    type Class_Entity_Record is
      new Root_Entity_Type with
       record
@@ -164,10 +189,12 @@ private
          Deferred          : Boolean := False;
          Expanded          : Boolean := False;
          Frozen            : Boolean := False;
+         Behaviour         : Class_Behaviour := Normal;
          Inherited_Types   : List_Of_Inherited_Type_Records.List;
          Inherited_List    : List_Of_Class_Entities.List;
          Class_Features    : List_Of_Feature_Entities.List;
          Formal_Arguments  : List_Of_Entities.List;
+         Notes             : Notes_Map.Map;
       end record;
 
    overriding function Description
@@ -228,5 +255,21 @@ private
      (Class   : Class_Entity_Record'Class;
       Alias   : Name_Id)
       return Ack.Features.Feature_Entity;
+
+   function Has_Note
+     (Class : Class_Entity_Record'Class;
+      Name  : String)
+      return Boolean
+   is (Class.Notes.Contains (Name));
+
+   function Get_Note
+     (Class : Class_Entity_Record'Class;
+      Name  : String)
+      return String
+   is (Class.Notes.Element (Name));
+
+   function Behaviour (Class : Class_Entity_Record'Class)
+                       return Class_Behaviour
+   is (Class.Behaviour);
 
 end Ack.Classes;
