@@ -12,7 +12,7 @@ feature
       do
          Full_Name := Child.Identifiers.Interpolate (".")
          Local_Name := Child.Identifiers.Last_Element
-         Entity := Create_Entity (Child, Local_Name, 1)
+         Entity := Create_Entity (Child, Local_Name, "package", True)
          
          Put_Line ("Loading: " & Full_Name)
       end
