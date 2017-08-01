@@ -712,7 +712,9 @@ package body Ack.Semantic is
                                   when N_String_Constant  =>
                                      "string",
                                   when N_Integer_Constant =>
-                                     "integer");
+                                     "integer",
+                                  when N_Boolean_Constant =>
+                                     "boolean");
                Value_Type : constant Ack.Types.Type_Entity :=
                               Ack.Types.Get_Top_Level_Type (Type_Name);
             begin

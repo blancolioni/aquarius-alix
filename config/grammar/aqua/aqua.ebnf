@@ -485,8 +485,8 @@ integer_constant ::=
          [ sign ] integer
 	 
 boolean_constant ::=
-         'True'
-      |  'False'
+         'true'
+      |  'false'
       
 real_constant ::=
          [ sign ] real
