@@ -6,7 +6,6 @@ package Aquarius.Programs.Komnenos_Entities is
      (Table            : not null access
         Komnenos.Entities.Entity_Table_Interface'Class;
       Name             : String;
-      File_Name        : String;
       Top_Level        : Boolean;
       Compilation_Unit : not null access Program_Tree_Type'Class;
       Defining_Name    : not null access Program_Tree_Type'Class;
@@ -27,5 +26,7 @@ package Aquarius.Programs.Komnenos_Entities is
 --       (Table     : not null access Entity_Table_Interface'Class;
 --        Location  : File_Location)
 --        return Entity_Reference;
+
+   procedure Add_Handlers;
 
 end Aquarius.Programs.Komnenos_Entities;

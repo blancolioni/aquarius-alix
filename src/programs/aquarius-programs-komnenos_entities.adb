@@ -1,6 +1,9 @@
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
+with Aqua.Execution;
+with Aqua.Primitives;
+
 with Aquarius.Grammars;
 with Aquarius.Source;
 with Aquarius.Tokens;
@@ -12,6 +15,7 @@ with Aquarius.Programs.Parser;
 with Aquarius.Rendering.Komnenos_Renderer;
 with Aquarius.Trees.Cursors;
 
+with Komnenos.Entities.Aqua_Entities;
 with Komnenos.Entities.Visual_Manager;
 with Komnenos.Fragments;
 with Komnenos.Themes;
@@ -152,6 +156,23 @@ package body Aquarius.Programs.Komnenos_Entities is
    function Show_Buffer
      (Entity : Root_Aquarius_Source_Entity'Class)
       return String;
+
+   function Handle_Create_Entity
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
+   ------------------
+   -- Add_Handlers --
+   ------------------
+
+   procedure Add_Handlers is
+   begin
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__create_entity",
+         Argument_Count => 4,
+         Handler        => Handle_Create_Entity'Access);
+   end Add_Handlers;
 
    ------------------------
    -- Backward_Character --
@@ -314,7 +335,6 @@ package body Aquarius.Programs.Komnenos_Entities is
      (Table            : not null access
         Komnenos.Entities.Entity_Table_Interface'Class;
       Name             : String;
-      File_Name        : String;
       Top_Level        : Boolean;
       Compilation_Unit : not null access Program_Tree_Type'Class;
       Defining_Name    : not null access Program_Tree_Type'Class;
@@ -322,6 +342,9 @@ package body Aquarius.Programs.Komnenos_Entities is
       Entity_Body      : access Program_Tree_Type'Class)
       return Komnenos.Entities.Entity_Reference
    is
+      File_Name : constant String :=
+                    Aquarius.Names.To_String
+                      (Compilation_Unit.Source_File_Name);
       Key : constant String :=
               Get_Key
                 (File_Name => File_Name,
@@ -700,6 +723,38 @@ package body Aquarius.Programs.Komnenos_Entities is
       end if;
    end Get_Start_Of_Line;
 
+   --------------------------
+   -- Handle_Create_Entity --
+   --------------------------
+
+   function Handle_Create_Entity
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      use type Aqua.Word;
+      use Komnenos.Entities.Aqua_Entities;
+      Spec          : constant Program_Tree :=
+                        Program_Tree
+                          (Context.To_External_Object (Arguments (1)));
+      Defining_Name : constant Program_Tree :=
+                        Program_Tree
+                          (Context.To_External_Object (Arguments (2)));
+      Name          : constant String := Context.To_String (Arguments (3));
+      Top_Level     : constant Boolean :=
+                        Arguments (4) /= 0;
+      Entity  : constant Komnenos.Entities.Entity_Reference :=
+                  Create_Aquarius_Source_Entity
+                    (Table            => Get_Aqua_Object.Table,
+                     Name             => Name,
+                     Top_Level        => Top_Level,
+                     Compilation_Unit => Spec.Program_Root,
+                     Defining_Name    => Defining_Name,
+                     Entity_Spec      => Spec,
+                     Entity_Body      => null);
+   begin
+      return Context.To_Word (Entity);
+   end Handle_Create_Entity;
    ----------------------
    -- Insert_Character --
    ----------------------
@@ -1263,8 +1318,6 @@ package body Aquarius.Programs.Komnenos_Entities is
       return Create_Aquarius_Source_Entity
         (Table            => Table,
          Name             => Grammar.Name,
-         File_Name        =>
-           Aquarius.Names.To_String (Syntax.Source_File_Name),
          Top_Level        => False,
          Compilation_Unit => Syntax,
          Defining_Name    => Syntax,

@@ -10,6 +10,7 @@ with Aquarius.Properties;
 with Aquarius.Trees.Properties;
 
 with Aquarius.Programs.Aqua_Tagatha;
+with Aquarius.Programs.Komnenos_Entities;
 
 with Aqua.Execution;
 with Aqua.Primitives;
@@ -474,6 +475,7 @@ package body Aquarius.Programs is
          Argument_Count => 2,
          Handler        => Aqua_Tree_Warning'Access);
 
+      Komnenos_Entities.Add_Handlers;
       Aqua_Tagatha.Add_Handlers;
 
       Aqua.Primitives.New_Primitive_Function
