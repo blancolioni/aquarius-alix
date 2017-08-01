@@ -1,3 +1,6 @@
+note
+   Behaviour: Aqua_Primitive
+   
 class Aquarius.Trees.Program_Tree
       
 feature
@@ -9,5 +12,10 @@ feature
       external "aqua"
 
    Error (Message : String) external "aqua"
-   
+
+   Create_Entity (Defining_Name_Tree : Aquarius.Trees.Program_Tree
+                  Name               : String
+                  Top_Level          : Integer) : Komnenos.Entity
+      external "aqua" alias "tree__create_entity"
+                  
 end
