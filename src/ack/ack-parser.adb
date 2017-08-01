@@ -58,6 +58,26 @@ package body Ack.Parser is
                        Import_Formal_Generic'Access)))
      with Pre => From.Name = "formal_generics";
 
+   function Import_Note_Item
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     with Pre => From.Name = "note_item";
+
+   function Import_Note_Entry
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     with Pre => From.Name = "note_entry";
+
+   function Import_Notes
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is (New_Node (N_Notes, From,
+                 List =>
+                    Import_List (From.Program_Child ("note_list"),
+                                 "note_entry",
+                                 Import_Note_Entry'Access)))
+   with Pre => From.Name = "notes";
+
    function Import_Inherited
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
@@ -345,7 +365,9 @@ package body Ack.Parser is
       Header_Node : constant Node_Id :=
                       Import_Class_Header
                         (From.Program_Child ("class_header"));
-      Notes_Node  : constant Node_Id := No_Node;
+      Notes_Node  : constant Node_Id :=
+                      Import_Optional_Child
+                        (From, "notes", Import_Notes'Access);
       Inheritance_Node : constant Node_Id :=
                            Import_Optional_Child
                              (From, "inheritance", Import_Inheritance'Access);
@@ -580,7 +602,7 @@ package body Ack.Parser is
       use Aquarius.Programs;
       List : constant List_Id := New_List;
       Fs   : constant Array_Of_Program_Trees :=
-               From.Direct_Children;
+               From.Direct_Children ("entity_declaration_group");
    begin
       for F of Fs loop
          declare
@@ -1021,6 +1043,62 @@ package body Ack.Parser is
          Frozen   => Frozen_Tree /= null and then Frozen_Tree.Is_Filled,
          Field_1  => Name_Node);
    end Import_New_Feature;
+
+   -----------------------
+   -- Import_Note_Entry --
+   -----------------------
+
+   function Import_Note_Entry
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+      use Aquarius.Programs;
+      Name_Tree : constant Program_Tree :=
+                    From.Program_Child ("note_name");
+      Value_Tree : constant Program_Tree :=
+                     From.Program_Child ("note_value");
+      Name_Node : constant Node_Id :=
+                     New_Node (N_Note_Name, Name_Tree,
+                               Name =>
+                                 Get_Name_Id
+                                   (Name_Tree.Program_Child
+                                        ("identifier").Text));
+      Value_Node : constant Node_Id :=
+                     New_Node (N_Note_Value, Value_Tree,
+                               List => Import_List
+                                 (From         => Value_Tree,
+                                  Child_Name   => "note_item",
+                                  Import_Child => Import_Note_Item'Access));
+   begin
+      return New_Node (N_Note_Entry, From,
+                       Field_1 => Name_Node,
+                       Field_2 => Value_Node);
+   end Import_Note_Entry;
+
+   ----------------------
+   -- Import_Note_Item --
+   ----------------------
+
+   function Import_Note_Item
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+      function Import_Note_Identifier
+        (Id : Aquarius.Programs.Program_Tree)
+         return Node_Id
+      is (New_Node (N_Identifier, Id,
+                    Name => Get_Name_Id (Id.Text)));
+   begin
+      return New_Node (N_Note_Item, From,
+                       Field_1 =>
+                         Import_Choice
+                           (Parent         => From,
+                            Left_Name      => "identifier",
+                            Right_Name     => "manifest_constant",
+                            Left_Importer  => Import_Note_Identifier'Access,
+                            Right_Importer =>
+                              Expressions.Import_Manifest_Constant'Access));
+   end Import_Note_Item;
 
    ---------------------------
    -- Import_Optional_Child --
