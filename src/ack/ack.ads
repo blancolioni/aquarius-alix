@@ -22,6 +22,11 @@ package Ack is
       N_Formal_Generic,
       N_Formal_Generic_Name,
       N_Actual_Generics,
+      N_Notes,
+      N_Note_Entry,
+      N_Note_Name,
+      N_Note_Value,
+      N_Note_Item,
       N_Inheritance,
       N_Inherited,
       N_New_Exports,
@@ -336,6 +341,15 @@ package Ack is
    function Formal_Generic_Name (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Formal_Generic;
 
+   function Notes (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Class_Declaration;
+
+   function Note_Name (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Note_Entry;
+
+   function Note_Value (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Note_Entry;
+
    function Inheritance (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Class_Declaration;
 
@@ -356,8 +370,9 @@ package Ack is
        Kind (N) in N_Identifier | N_Feature_Name | N_Feature_Alias
                  | N_Variable | N_Integer_Constant | N_String_Constant
                  | N_Effective_Routine | N_Precursor_Element
-                 | N_Formal_Generic_Name
-                 | N_Attachment_Test | N_Iteration | N_Operator;
+                 | N_Formal_Generic_Name | N_Get_Property
+                 | N_Attachment_Test | N_Iteration | N_Operator
+                 | N_Note_Name | N_Note_Item;
 
    function Get_Entity (N : Node_Id) return Entity_Type;
    function Has_Entity (N : Node_Id) return Boolean;
@@ -629,6 +644,15 @@ private
 
    function Formal_Generic_Name (N : Node_Id) return Node_Id
    is (Field_1 (N));
+
+   function Notes (N : Node_Id) return Node_Id
+   is (Field_1 (N));
+
+   function Note_Name (N : Node_Id) return Node_Id
+   is (Field_1 (N));
+
+   function Note_Value (N : Node_Id) return Node_Id
+   is (Field_2 (N));
 
    function Inheritance (N : Node_Id) return Node_Id
    is (Field_3 (N));
