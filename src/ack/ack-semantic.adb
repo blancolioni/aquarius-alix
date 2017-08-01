@@ -40,6 +40,10 @@ package body Ack.Semantic is
       Class_Name    : Node_Id;
       Defining_Name : Boolean);
 
+   procedure Analyse_Notes
+     (Class : Ack.Classes.Class_Entity;
+      Notes : Node_Id);
+
    procedure Analyse_Feature_Name
      (Class   : Ack.Classes.Class_Entity;
       Exports : Node_Id;
@@ -190,6 +194,7 @@ package body Ack.Semantic is
    procedure Analyse_Class_Declaration
      (Node : Node_Id)
    is
+      Notes_Node       : constant Node_Id := Notes (Node);
       Inheritance_Node : constant Node_Id := Inheritance (Node);
       Features_Node    : constant Node_Id := Class_Features (Node);
       Class : constant Ack.Classes.Class_Entity :=
@@ -199,6 +204,10 @@ package body Ack.Semantic is
       if Trace_Class_Analysis then
          Ada.Text_IO.Put_Line
            ("Analysing: " & Class.Qualified_Name);
+      end if;
+
+      if Notes_Node in Real_Node_Id then
+         Analyse_Notes (Class, Notes_Node);
       end if;
 
       if Features_Node in Real_Node_Id then
@@ -1087,6 +1096,32 @@ package body Ack.Semantic is
       end if;
 
    end Analyse_Loop;
+
+   -------------------
+   -- Analyse_Notes --
+   -------------------
+
+   procedure Analyse_Notes
+     (Class : Ack.Classes.Class_Entity;
+      Notes : Node_Id)
+   is
+      List : constant List_Id := Node_Table.Element (Notes).List;
+   begin
+      for Note of List_Table.Element (List).List loop
+         declare
+            Name  : constant Name_Id := Get_Name (Note_Name (Note));
+            Value : constant Node_Id := Note_Value (Note);
+            Value_List : constant List_Id :=
+                           Node_Table.Element (Value).List;
+            First_Value : constant Node_Id :=
+                            List_Table.Element (Value_List).List.First_Element;
+         begin
+            Class.Add_Note
+              (Name  => To_Standard_String (Name),
+               Value => To_Standard_String (Get_Name (Field_1 (First_Value))));
+         end;
+      end loop;
+   end Analyse_Notes;
 
    ----------------------
    -- Analyse_Operator --
