@@ -56,6 +56,11 @@ package body Ack.Generate is
      (Unit    : in out Tagatha.Units.Tagatha_Unit;
       Node    : Node_Id);
 
+   procedure Generate_Get_Property
+     (Unit    : in out Tagatha.Units.Tagatha_Unit;
+      Node    : Node_Id)
+     with Pre => Kind (Node) = N_Get_Property;
+
    ------------------------
    -- Generate_Allocator --
    ------------------------
@@ -472,6 +477,12 @@ package body Ack.Generate is
                end case;
             end;
       end case;
+
+      if Get_Property (Expression) /= No_Node then
+         Generate_Get_Property
+           (Unit, Get_Property (Expression));
+      end if;
+
    end Generate_Expression;
 
    ----------------------
@@ -486,6 +497,24 @@ package body Ack.Generate is
    begin
       Feature.Generate_Routine (Unit);
    end Generate_Feature;
+
+   ---------------------------
+   -- Generate_Get_Property --
+   ---------------------------
+
+   procedure Generate_Get_Property
+     (Unit    : in out Tagatha.Units.Tagatha_Unit;
+      Node    : Node_Id)
+   is
+   begin
+      Unit.Pop_Register ("op");
+      Unit.Native_Operation
+        ("get_property " & To_Standard_String (Get_Name (Node)) & ", 0",
+         Input_Stack_Words  => 0,
+         Output_Stack_Words => 0,
+         Changed_Registers  => "pv");
+      Unit.Push_Register ("pv");
+   end Generate_Get_Property;
 
    -------------------
    -- Generate_Loop --
@@ -671,8 +700,7 @@ package body Ack.Generate is
                         List_Table (List).List.Last_Element;
 
       procedure Apply_Arguments
-        (Actuals_List   : List_Id;
-         Push_Arguments : Boolean);
+        (Actuals_List   : List_Id);
 
       procedure Process
         (Element      : Node_Id);
@@ -682,19 +710,14 @@ package body Ack.Generate is
       ---------------------
 
       procedure Apply_Arguments
-        (Actuals_List   : List_Id;
-         Push_Arguments : Boolean)
+        (Actuals_List   : List_Id)
       is
          Actuals_Node_List : constant List_Of_Nodes.List :=
                                List_Table.Element
                                  (Actuals_List).List;
       begin
          for Item of reverse Actuals_Node_List loop
-            if Push_Arguments then
-               Generate_Expression (Unit, Item);
-            else
-               Unit.Drop;
-            end if;
+            Generate_Expression (Unit, Item);
          end loop;
       end Apply_Arguments;
 
@@ -730,7 +753,7 @@ package body Ack.Generate is
               or else Actual_List /= No_List
             then
                if Actual_List /= No_List then
-                  Apply_Arguments (Actual_List, True);
+                  Apply_Arguments (Actual_List);
                end if;
 
                for Item of Pending loop
