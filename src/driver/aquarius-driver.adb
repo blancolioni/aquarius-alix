@@ -39,7 +39,7 @@ with Komnenos.UI;
 with Komnenos.UI.Sessions;
 
 --  with Komnenos.Entities.Source.Aquarius_Source;
---  with Komnenos.Entities.Aqua_Entities;
+with Komnenos.Entities.Aqua_Entities;
 
 procedure Aquarius.Driver is
 
@@ -394,7 +394,7 @@ begin
            (Aquarius.Config_Paths.Config_File
               ("styles/default.css"));
 
---         Komnenos.Entities.Aqua_Entities.Create_Aqua_Object (UI);
+         Komnenos.Entities.Aqua_Entities.Create_Aqua_Object (UI);
 
          if Command_Line.Project_Name /= "" then
             declare
