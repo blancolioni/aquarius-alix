@@ -14,8 +14,8 @@ feature
    Error (Message : String) external "aqua"
 
    Create_Entity (Defining_Name_Tree : Aquarius.Trees.Program_Tree
-                  Name               : String
-                  Top_Level          : Integer) : Komnenos.Entity
+                  Name, Class_Name   : String
+                  Top_Level          : Boolean) : Komnenos.Entity
       external "aqua" alias "tree__create_entity"
                   
 end
