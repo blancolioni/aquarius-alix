@@ -24,6 +24,10 @@ package body Ack.Semantic is
       Name     : Name_Id)
       return Ack.Classes.Class_Entity;
 
+   function Get_Top_Level_Type
+     (Name : String)
+      return Ack.Types.Type_Entity;
+
    function Forward_Iterable return Ack.Classes.Class_Entity;
 
    function Analyse_Class_Header
@@ -485,7 +489,7 @@ package body Ack.Semantic is
       if Type_Entity /= null then
          Set_Entity (Type_Node, Type_Entity);
       else
-         Set_Entity (Type_Node, Ack.Types.Get_Top_Level_Type ("any"));
+         Set_Entity (Type_Node, Get_Top_Level_Type ("any"));
       end if;
 
    end Analyse_Class_Type;
@@ -553,7 +557,7 @@ package body Ack.Semantic is
          if Condition /= No_Node then
             Analyse_Expression
               (Class, Container,
-               Ack.Types.Get_Top_Level_Type ("boolean"),
+               Get_Top_Level_Type ("boolean"),
                Condition);
             if Implicit_Entity (Condition) then
                Container.Add_Implicit (Get_Entity (Condition));
@@ -684,7 +688,7 @@ package body Ack.Semantic is
               (Class, Container, Expression_Type, Expression);
          when N_Attachment_Test =>
             Analyse_Expression (Class, Container,
-                                Ack.Types.Get_Top_Level_Type ("any"),
+                                Get_Top_Level_Type ("any"),
                                 Expression => Field_1 (Expression));
             if Get_Name (Expression) /= No_Name then
                declare
@@ -716,7 +720,7 @@ package body Ack.Semantic is
                                   when N_Boolean_Constant =>
                                      "boolean");
                Value_Type : constant Ack.Types.Type_Entity :=
-                              Ack.Types.Get_Top_Level_Type (Type_Name);
+                              Get_Top_Level_Type (Type_Name);
             begin
                Set_Type (Expression, Value_Type);
                Set_Entity (Expression, Value_Type);
@@ -1172,7 +1176,7 @@ package body Ack.Semantic is
       Analyse_Expression
         (Class           => Class,
          Container       => Container,
-         Expression_Type => Ack.Types.Get_Top_Level_Type ("any"),
+         Expression_Type => Get_Top_Level_Type ("any"),
          Expression      => Left);
       Left_Type := Ack.Types.Type_Entity (Get_Type (Left));
 
@@ -1359,6 +1363,31 @@ package body Ack.Semantic is
    begin
       return Forward_Entity;
    end Forward_Iterable;
+
+   ------------------------
+   -- Get_Top_Level_Type --
+   ------------------------
+
+   function Get_Top_Level_Type
+     (Name : String)
+      return Ack.Types.Type_Entity
+   is
+      use type Ack.Classes.Class_Entity;
+      Class : Ack.Classes.Class_Entity :=
+                Ack.Classes.Get_Top_Level_Class (Name);
+   begin
+      if Class = null then
+         Class := Load_Class (null, Ack.Environment.Top_Level,
+                              Get_Name_Id (Name));
+      end if;
+
+      if Class = null then
+         raise Constraint_Error with
+           "unknown top-level class: " & Name;
+      end if;
+
+      return Ack.Types.Get_Top_Level_Type (Name);
+   end Get_Top_Level_Type;
 
    ----------------
    -- Load_Class --
