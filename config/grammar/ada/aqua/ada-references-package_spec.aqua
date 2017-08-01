@@ -1,0 +1,16 @@
+class Ada.References.Package_Spec
+inherit
+   Aqua.Text_IO
+   Komnenos
+   
+feature
+
+   Node : Ada.Checks.Package_Spec
+   Tree : Aquarius.Trees.Program_Tree
+   
+   After_Node
+      do
+         Put_Line ("define: " & Node.Local_Name)
+--         Define (Tree, Node.Local_Name, "package-spec", 1)
+      end
+end
