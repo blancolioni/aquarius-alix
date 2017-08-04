@@ -83,6 +83,9 @@ package Aquarius.Programs.Parser is
      (Tree           : in     Program_Tree;
       Context        : in out Parse_Context);
 
+   procedure Summarise_Context
+     (Context : Parse_Context);
+
 private
 
    type Ambiguity_Record;
