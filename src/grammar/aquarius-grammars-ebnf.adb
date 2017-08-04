@@ -343,6 +343,7 @@ package body Aquarius.Grammars.EBNF is
                                 Create_Aquarius_Source_Entity
                                   (Table            => UI,
                                    Name             => Name,
+                                   Qualified_Name   => Name,
                                    Class_Name       => "rule",
                                    Top_Level        => True,
                                    Compilation_Unit => Definition.Program_Root,
