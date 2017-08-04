@@ -94,6 +94,19 @@ package body Ack.Types is
       end if;
    end Description;
 
+   --------------
+   -- Expanded --
+   --------------
+
+   function Expanded
+     (Typ : Type_Entity_Record'Class)
+      return Boolean
+   is
+   begin
+      return Typ.Class /= null
+        and then Typ.Class.Expanded;
+   end Expanded;
+
    -------------
    -- Feature --
    -------------

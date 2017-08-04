@@ -681,4 +681,37 @@ package body Ack.Classes is
       end loop;
    end Scan_Features;
 
+   ------------------
+   -- Set_Deferred --
+   ------------------
+
+   procedure Set_Deferred
+     (Class : in out Class_Entity_Record'Class)
+   is
+   begin
+      Class.Deferred := True;
+   end Set_Deferred;
+
+   ------------------
+   -- Set_Expanded --
+   ------------------
+
+   procedure Set_Expanded
+     (Class : in out Class_Entity_Record'Class)
+   is
+   begin
+      Class.Expanded := True;
+   end Set_Expanded;
+
+   ----------------
+   -- Set_Frozen --
+   ----------------
+
+   procedure Set_Frozen
+     (Class : in out Class_Entity_Record'Class)
+   is
+   begin
+      Class.Frozen := True;
+   end Set_Frozen;
+
 end Ack.Classes;

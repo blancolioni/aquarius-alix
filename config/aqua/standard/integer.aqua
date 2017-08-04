@@ -1,3 +1,4 @@
-class Integer
-
+expanded class Integer
+  -- inherit Comparable
+   
 end

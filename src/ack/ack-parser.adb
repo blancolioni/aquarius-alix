@@ -395,6 +395,7 @@ package body Ack.Parser is
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
    is
+      use Aquarius.Programs;
       Class_Name_Node : constant Node_Id :=
                           Import_Class_Name
                             (From.Program_Child ("class_name"));
@@ -402,12 +403,24 @@ package body Ack.Parser is
                           Import_Optional_Child
                             (From, "formal_generics",
                              Import_Formal_Generics'Access);
+      Header_Mark_Tree : constant Program_Tree :=
+                          From.Program_Child ("header_mark");
+      Header_Mark      : constant String :=
+                           (if Header_Mark_Tree = null
+                            then ""
+                            else Header_Mark_Tree.Concatenate_Children);
+      Deferred        : constant Boolean := Header_Mark = "deferred";
+      Expanded        : constant Boolean := Header_Mark = "expanded";
+      Frozen          : constant Boolean := Header_Mark = "frozen";
    begin
       Node_Table (Class_Name_Node).Defining := True;
       return New_Node
         (N_Class_Header, From,
-         Field_2 => Class_Name_Node,
-         Field_3 => Generics_Node);
+         Deferred => Deferred,
+         Expanded => Expanded,
+         Frozen   => Frozen,
+         Field_2  => Class_Name_Node,
+         Field_3  => Generics_Node);
    end Import_Class_Header;
 
    -----------------------

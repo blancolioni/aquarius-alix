@@ -39,6 +39,27 @@ package Ack.Classes is
       return String
      with Pre => Class.Has_Note (Name);
 
+   function Deferred
+     (Class : Class_Entity_Record'Class)
+      return Boolean;
+
+   function Expanded
+     (Class : Class_Entity_Record'Class)
+      return Boolean;
+
+   function Frozen
+     (Class : Class_Entity_Record'Class)
+      return Boolean;
+
+   procedure Set_Deferred
+     (Class : in out Class_Entity_Record'Class);
+
+   procedure Set_Expanded
+     (Class : in out Class_Entity_Record'Class);
+
+   procedure Set_Frozen
+     (Class : in out Class_Entity_Record'Class);
+
    procedure Inherit
      (Class           : in out Class_Entity_Record'Class;
       Inherited_Type : not null access Ack.Types.Type_Entity_Record'Class);
@@ -271,5 +292,20 @@ private
    function Behaviour (Class : Class_Entity_Record'Class)
                        return Class_Behaviour
    is (Class.Behaviour);
+
+   function Deferred
+     (Class : Class_Entity_Record'Class)
+      return Boolean
+   is (Class.Deferred);
+
+   function Expanded
+     (Class : Class_Entity_Record'Class)
+      return Boolean
+   is (Class.Expanded);
+
+   function Frozen
+     (Class : Class_Entity_Record'Class)
+      return Boolean
+   is (Class.Frozen);
 
 end Ack.Classes;

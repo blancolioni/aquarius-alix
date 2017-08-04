@@ -34,6 +34,10 @@ package Ack.Types is
      (Typ : Type_Entity_Record'Class)
       return access Ack.Classes.Class_Entity_Record'Class;
 
+   function Expanded
+     (Typ : Type_Entity_Record'Class)
+      return Boolean;
+
    type Type_Entity is access all Type_Entity_Record'Class;
 
    function Generic_Binding
