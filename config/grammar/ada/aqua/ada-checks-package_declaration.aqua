@@ -1,13 +1,11 @@
-class Ada.Checks.Package_Declaration
-
+class Ada.Checks.Package_Declaration inherit
+   Ada.Checks.Declared
+   
 feature
 
-   After_Package_Spec (Spec : Ada.Checks.Package_Spec)
+   Before_Package_Specification (Child : Ada.Checks.Package_Specification)
       do
+         Copy_Top_Level (Child)
       end
-      
-   After_Package_Body (Body : Ada.Checks.Package_Body)
-      do
-      end
-      
+
 end
