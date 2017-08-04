@@ -364,6 +364,8 @@ package body Ack.Features is
                           then Feature.Definition_Class
                           else Ack.Classes.Class_Entity
                             (Feature.Original_Classes.First_Element));
+      Feature_Type   : constant Ack.Types.Type_Entity :=
+                         Ack.Types.Type_Entity (Feature.Get_Type);
    begin
       if Feature.Standard_Name = "void" then
          Unit.Push (0);
@@ -431,7 +433,8 @@ package body Ack.Features is
 
       if Feature.Routine
         or else (Feature.Property
-                 and then not Feature.Get_Type.Detachable
+                 and then not Feature_Type.Detachable
+                 and then not Feature_Type.Expanded
                  and then not Feature.Attached)
       then
          Unit.Push_Register ("op");
@@ -461,6 +464,7 @@ package body Ack.Features is
          Unit.Push_Register ("r0");
       elsif Feature.Property then
          if not Feature.Get_Type.Detachable
+           and then not Feature_Type.Expanded
            and then not Feature.Attached
          then
 

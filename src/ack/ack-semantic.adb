@@ -284,6 +284,15 @@ package body Ack.Semantic is
       Analyse_Class_Name (null, Class_Name (Header),
                           Defining_Name => True);
       Result := Ack.Classes.Get_Class_Entity (Class_Name (Header));
+
+      if Node_Table.Element (Header).Deferred then
+         Result.Set_Deferred;
+      elsif Node_Table.Element (Header).Expanded then
+         Result.Set_Expanded;
+      elsif Node_Table.Element (Header).Frozen then
+         Result.Set_Frozen;
+      end if;
+
       Set_Entity (Class, Result);
       if Formal_Generics_Node /= No_Node then
          Analyse_Formal_Generics (Result, Formal_Generics_Node);
@@ -416,6 +425,14 @@ package body Ack.Semantic is
             end if;
             Set_Entity (Last_Node, New_Class);
             Parent := New_Class;
+         exception
+            when others =>
+               Ada.Text_IO.Put_Line
+                 (Ada.Text_IO.Standard_Error,
+                  Get_Program (Last_Node).Show_Location
+                  & ": unhandled exception while defining "
+                  & To_String (Last_Name));
+               raise;
          end;
       end if;
 
@@ -750,8 +767,6 @@ package body Ack.Semantic is
                                      Name =>
                                        Get_Name_Id (Target_Class.Link_Name));
                begin
-                  Ada.Text_IO.Put_Line
-                    ("getting primitive property: " & Target_Class.Link_Name);
                   Node_Table (Expression).Field (6) := Node;
                end;
             end if;
