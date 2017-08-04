@@ -1823,7 +1823,15 @@ package body Aquarius.Programs is
    function Path_Image (Item : Program_Tree_Type) return String is
    begin
       if Item.Program_Parent = null then
-         return Item.Name;
+         if Item.Name = "" then
+            if Item.Syntax.Name = "" then
+               return Item.Syntax.Show_Location;
+            else
+               return Item.Syntax.Name;
+            end if;
+         else
+            return Item.Name;
+         end if;
       elsif Item.Name /= "" then
          return Item.Program_Parent.Path_Image
            & "/" & Item.Name;
