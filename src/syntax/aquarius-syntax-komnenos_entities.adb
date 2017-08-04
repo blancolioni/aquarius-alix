@@ -70,6 +70,7 @@ package body Aquarius.Syntax.Komnenos_Entities is
       Entity.Create
         (Key          => Get_Key (Grammar_Name, Tree.Name),
          Identifier   => Tree.Name,
+         Full_Name    => Tree.Name,
          Class_Name   => "aquarius-syntax-entity",
          Path         => Path,
          Display_Text => Tree.Name,

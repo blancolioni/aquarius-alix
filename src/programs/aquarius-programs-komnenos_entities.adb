@@ -170,7 +170,7 @@ package body Aquarius.Programs.Komnenos_Entities is
    begin
       Aqua.Primitives.New_Primitive_Function
         (Name           => "tree__create_entity",
-         Argument_Count => 5,
+         Argument_Count => 6,
          Handler        => Handle_Create_Entity'Access);
    end Add_Handlers;
 
@@ -335,6 +335,7 @@ package body Aquarius.Programs.Komnenos_Entities is
      (Table            : not null access
         Komnenos.Entities.Entity_Table_Interface'Class;
       Name             : String;
+      Qualified_Name   : String;
       Class_Name       : String;
       Top_Level        : Boolean;
       Compilation_Unit : not null access Program_Tree_Type'Class;
@@ -362,6 +363,7 @@ package body Aquarius.Programs.Komnenos_Entities is
             Entity.Create
               (Key          => Key,
                Identifier   => Name,
+               Full_Name    => Qualified_Name,
                Class_Name   => Class_Name,
                Path         => File_Name,
                Display_Text => Name,
@@ -735,20 +737,22 @@ package body Aquarius.Programs.Komnenos_Entities is
    is
       use type Aqua.Word;
       use Komnenos.Entities.Aqua_Entities;
-      Spec          : constant Program_Tree :=
-                        Program_Tree
-                          (Context.To_External_Object (Arguments (1)));
-      Defining_Name : constant Program_Tree :=
-                        Program_Tree
-                          (Context.To_External_Object (Arguments (2)));
-      Name          : constant String := Context.To_String (Arguments (3));
-      Class_Name    : constant String := Context.To_String (Arguments (4));
-      Top_Level     : constant Boolean :=
-                        Arguments (5) /= 0;
+      Spec           : constant Program_Tree :=
+                         Program_Tree
+                           (Context.To_External_Object (Arguments (1)));
+      Defining_Name  : constant Program_Tree :=
+                         Program_Tree
+                           (Context.To_External_Object (Arguments (2)));
+      Name           : constant String := Context.To_String (Arguments (3));
+      Qualified_Name : constant String := Context.To_String (Arguments (4));
+      Class_Name     : constant String := Context.To_String (Arguments (5));
+      Top_Level      : constant Boolean :=
+                         Arguments (6) /= 0;
       Entity  : constant Komnenos.Entities.Entity_Reference :=
                   Create_Aquarius_Source_Entity
                     (Table            => Get_Aqua_Object.Table,
                      Name             => Name,
+                     Qualified_Name   => Qualified_Name,
                      Class_Name       => Class_Name,
                      Top_Level        => Top_Level,
                      Compilation_Unit => Spec.Program_Root,
@@ -1321,6 +1325,7 @@ package body Aquarius.Programs.Komnenos_Entities is
       return Create_Aquarius_Source_Entity
         (Table            => Table,
          Name             => Grammar.Name,
+         Qualified_Name   => Grammar.Name,
          Class_Name       => "syntax",
          Top_Level        => False,
          Compilation_Unit => Syntax,
