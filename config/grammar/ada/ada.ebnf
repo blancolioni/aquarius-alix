@@ -1,5 +1,4 @@
-compilation_unit ::= { context_clause }
-                     top_level_subprogram_declaration
+top_level ::= compilation_unit
 
 case_sensitive = false
 
@@ -13,18 +12,15 @@ symbol             ::= standard ada_symbol
 line_comment       = "--"
 
 format context_clause new_line_after
-format list_of_declarations indented_child
+format declarative_part indented_child
 format sequence_of_statements indented_child
 format exception_handler indented_child
 format record_type_definition new_line_before indent_before outdent_after
 format record_component_list indented_child
-format formal_argument_spec soft_new_line
+format formal_part soft_new_line
 format actual_argument_list soft_new_line
 format default_value_expression soft_new_line
-format function_return_type soft_new_line
 format type_definition soft_new_line
-format procedure_declaration new_line_after
-format function_declaration new_line_after
 format 'generic' new_line_after
 format generic_formal_parameter_list indented_child
 format interface_inheritance soft_new_line
@@ -35,8 +31,8 @@ format relational_operator soft_new_line
 format binary_adding_operator soft_new_line
 format multiplying_operator soft_new_line
 format array_type_definition soft_new_line
-format function_return_type soft_new_line space_after space_before
 
+format 'return' soft_new_line space_after
 format 'then' closing space_after space_before
 format 'loop' closing space_after space_before
 format 'is' closing space_after space_before
@@ -52,60 +48,91 @@ format 'with' soft_new_line_after space_after space_before
 format 'of' soft_new_line_before space_after space_before
 format ':' space_after space_before
 
-xref procedure_declaration defining_program_unit_name
-xref function_declaration defining_program_unit_name
-xref package_spec defining_package_name
-xref type_declaration type_name
+compilation_unit ::= context_clause library_item
+                   
+context_clause ::= { context_item }
 
-list_of_context_clauses ::= { context_clause }
+library_item ::= [ 'private' ] library_unit_declaration
+               | [ 'private' ] library_unit_renaming_declaration
+               | library_unit_body
+               
+library_unit_declaration ::= subprogram_declaration 
+                           | package_declaration 
+                           | generic_declaration 
+                           | generic_instantiation
 
-top_level_subprogram_declaration ::= [ 'private' ] subprogram_declaration { pragma_spec }
+library_unit_renaming_declaration ::= package_renaming_declaration 
+                                    | generic_renaming_declaration
+                                    | subprogram_renaming_declaration
 
-context_clause ::= with_clause | use_clause | use_type_clause | pragma_spec
+library_unit_body ::= subprogram_body | package_body
+
+subunit ::= 'separate' qualified_reference proper_body
+
+context_item ::= with_clause | use_clause | use_type_clause | pragma_spec
 
 with_clause ::= ['limited'] ['private'] 'with' < withed_unit_name : package_name / ',' > ';'
 
 use_clause ::= 'use' < external_unit_name / ',' > ';'
 
+renaming_declaration ::= 
+      object_renaming_declaration
+    | exception_renaming_declaration
+    | package_renaming_declaration
+    | subprogram_renaming_declaration
+    | generic_renaming_declaration
+    
+object_renaming_declaration ::= 
+    defining_identifier ':' [null_exclusion] subtype_mark 'renames' object_name [aspect_specification] ';'
+  | defining_identifier ':' access_definition 'renames' object_name [ aspect_specification ] ';'
+  
+exception_renaming_declaration ::= defining_identifier ':' 'exception' 'renames' exception_name [ aspect_specification ] ';'
+
+package_renaming_declaration ::= 'package' defining_program_unit_name 'renames' package_name [ aspect_specification ] ';'
+
+subprogram_renaming_declaration ::= 
+    [ overriding_indicator ] subprogram_specification 'renames' callable_entity_name [ aspect_specification ] ';'
+    
+generic_renaming_declaration ::= 
+    'generic' 'package' defining_program_unit_name 'renames' generic_package_name [ aspect_specification ] ';'
+  | 'generic' 'procedure' defining_program_unit_name 'renames' generic_procedure_name [ aspect_specification ] ';'
+  | 'generic' 'function' defining_program_unit_name 'renames' generic_function_name [ aspect_specification ] ';'
+  
 qualified_reference ::= < identifier / '.' >
 
 defining_qualified_reference ::= < identifier / '.' >
 
-subprogram_declaration ::= procedure_declaration | function_declaration
-                         | package_declaration | generic_declaration |
-                           generic_instantiation
+subprogram_declaration ::= [ overriding_indicator ] subprogram_specification [ aspect_specification ] ';'
 
-subprogram_specification ::=
-    procedure_specification
-  | function_specification
+abstract_subprogram_declaration ::= [ overriding_indicator ] subprogram_specification 'is' 'abstract' [ aspect_specification ] ';'
 
-procedure_declaration ::= procedure_spec | procedure_body
+null_procedure_declaration ::= [ overriding_indicator ] procedure_specification 'is' 'null' [ aspect_specification ] ';'
 
-procedure_spec ::= procedure_specification ';'
+expression_function_declaration ::= [ overriding_indicator ] function_specification 'is' parenthesised_expression [ aspect_specification ] ';'
 
-procedure_body ::= procedure_specification subprogram_body ';'
-
-function_declaration ::= function_spec | function_body
-
-function_spec ::= function_specification ';'
-
-function_body ::= function_specification subprogram_body ';'
+subprogram_specification ::= procedure_specification | function_specification
 
 procedure_specification ::=
-   [ overriding_indication ]
-   'procedure' defining_qualified_reference
-            [ formal_argument_spec ]
-       [ aspect_specification ]
+   'procedure' defining_qualified_reference parameter_profile   
 
-function_specification ::=
-   [ overriding_indication ]
-   'function' (defining_qualified_reference | string_literal)
-         [ formal_argument_spec ]
-       function_return_type
-       [ aspect_specification ]
+function_specification ::= 'function' defining_designator parameter_and_result_profile
 
-function_return_type ::= 'return' type_indication
+defining_designator ::= defining_operator_symbol | defining_qualified_reference
 
+defining_operator_symbol ::= operator_symbol
+
+parameter_profile ::= [ formal_part ]
+
+parameter_and_result_profile ::= [ formal_part ] 'return' [ null_exclusion ] subtype_mark
+                               | [ formal_part ] 'return' access_definition
+
+formal_part ::= '(' < parameter_specification / ';' > ')'
+
+parameter_specification ::= defining_identifier_list ':' [ 'aliased' ] [ mode ] [ null_exclusion ] subtype_mark [ ':=' default_expression ]
+                          | defining_identifier_list ':' access_definition [ ':=' default_expression ]
+                          
+mode ::= 'in' | 'out' | 'in' 'out'
+                          
 aspect_specification ::= 'with' list_of_aspects
 
 list_of_aspects ::= < aspect / ',' >
@@ -117,38 +144,30 @@ aspect_clause ::= attribute_definition_clause
                 | record_representation_clause
                 | at_clause
                 
-overriding_indication ::= ['not'] 'overriding'
+overriding_indicator ::= ['not'] 'overriding'
 
-subprogram_body ::= 'is' ('abstract' | 'null' | parenthesised_expression | block )
-                   | 'renames' object_reference
+subprogram_body ::= 
+    [overriding_indicator]
+    subprogram_specification
+       [aspect_specification] 'is'
+       declarative_part
+    'begin'
+        handled_sequence_of_statements
+    'end' [matching_name] ';'
 
-parameter_profile ::= [ formal_argument_spec ]
+package_declaration ::= package_specification ';'
 
-formal_argument_spec ::=
-   '(' < formal_argument / ';'> ')'
-
-formal_argument ::=
-   defining_identifier_list ':' formal_argument_type
-
-formal_argument_type ::= [null_exclusion] ['aliased'] [ mode ] subtype_mark [ ':=' default_expression ]
-                       | access_definition  [ ':=' default_expression ]
-
-mode ::= 'in'
-       | 'out'
-       | 'in' 'out'
-
-package_declaration ::= package_spec | package_body | package_rename
-
+package_specification ::= 
+    'package' defining_program_unit_name
+        [ aspect_specification ] 'is'
+      { basic_declarative_item }
+   [ 'private'
+      { basic_declarative_item } ]
+    'end' [ matching_name ]
+    
 package_rename ::= 'package' defining_qualified_reference 'renames' qualified_reference ';'
 
-package_spec ::= 'package' defining_qualified_reference 'is'
-                   list_of_declarations
-                   [ private_part]
-                  'end' matching_name ';'
-
 matching_name ::= < identifier / '.' > | operator_symbol
-
-private_part ::=   'private' list_of_declarations
 
 generic_instantiation ::=
      'package' defining_qualified_reference 'is' new_generic_package ';'
@@ -165,31 +184,36 @@ generic_association ::= static_expression
                       | identifier '=>' static_expression
                       | operator_symbol '=>' static_expression
 
-defining_designator ::= defining_program_unit_name | defining_operator_symbol
-
-defining_operator_symbol ::= operator_symbol
-
 operator_symbol ::= string_literal
 
-package_body ::= 'package' 'body' defining_qualified_reference 'is'
-                     list_of_declarations
-                     [ 'begin' handled_sequence_of_statements ]
-                     'end' [ package_name ] ';'
+package_body ::= 
+    'package' 'body' defining_program_unit_name
+        [aspect_specification] 'is'
+       declarative_part
+   ['begin'
+        handled_sequence_of_statements]
+    'end' matching_name ';'
+    
+    
+generic_declaration ::= generic_subprogram_declaration 
+                      | generic_package_declaration
 
+generic_subprogram_declaration ::= 
+     generic_formal_part subprogram_specification [aspect_specification] ';'
 
-generic_declaration ::=
-   'generic' generic_formal_parameter_list
-   (procedure_declaration | function_declaration | package_declaration)
+generic_package_declaration ::= 
+     generic_formal_part  package_specification ';'
 
-generic_formal_parameter_list ::=
-    { generic_formal_parameter_declaration }
-generic_formal_parameter_declaration ::=
+generic_formal_part ::= 'generic' generic_formal_parameter_list
+
+generic_formal_parameter_list ::= { generic_formal_parameter_declaration }
+
+generic_formal_parameter_declaration ::= 
       formal_object_declaration
     | formal_type_declaration
     | formal_subprogram_declaration
-    | formal_package_declaration
-    | pragma_spec
-
+    | formal_package_declaration     
+    
 formal_object_declaration ::=
    defining_identifier_list ':' [ mode ] subtype_mark
          [ ':=' default_expression ] ';'
@@ -255,22 +279,7 @@ block ::=
         handled_sequence_of_statements
    'end' [ block_name ]
 
-declarative_part ::= list_of_declarations
-
-list_of_declarations ::= { declaration }
-
-declaration ::= type_declaration 
-              | subtype_declaration
-              | incomplete_type_declaration
-              | variable_declaration 
-              | named_number_declaration
-              | pragma_spec
-              | subprogram_declaration 
-              | protected_declaration
-              | task_declaration
-              | use_clause
-              | use_type_clause 
-              | representation_clause
+declarative_part ::= { declarative_item }
 
 representation_clause ::= attribute_definition_clause
                         | record_representation_clause
@@ -297,9 +306,14 @@ discriminant_list ::= identifier ':' type_indication [ ':=' static_expression ]
 
 type_qualifiers ::= ['abstract'] ['tagged'] ['limited']
 
-variable_declaration ::=
-   defining_identifier_list ':' variable_type ';'
- | defining_identifier_list ':' exception ';'
+object_declaration ::=
+   defining_identifier_list ':' [ 'aliased' ] [ 'constant' ] subtype_indication [ ':=' expression ] [ aspect_specification ] ';'
+ | defining_identifier_list ':' [ 'aliased' ] [ 'constant' ] access_definition [ ':=' expression ]  [ aspect_specification ]';'
+ | defining_identifier_list ':' [ 'aliased' ] [ 'constant' ] array_type_definition [ ':=' expression ]  [ aspect_specification ] ';'
+ | single_task_declaration
+ | single_protected_declaration
+ 
+exception_declaration ::= defining_identifier_list ':' exception [ aspect_specification ] ';'
 
 variable_type ::= type_indication [ ( default_value | renaming ) ]
 
@@ -310,7 +324,7 @@ renaming ::= 'renames' object_reference
 
 default_value_expression ::= expression
 
-named_number_declaration ::=
+number_declaration ::=
      defining_identifier_list ':' 'constant' ':=' static_expression ';'
 
 defining_identifier_list ::= < identifier / ',' >
@@ -345,10 +359,9 @@ access_type_definition ::=
 
 general_access_modifier ::= 'all' | 'constant'
 
-function_type_definition ::= [null_exclusion] 'access' 'function' [ formal_argument_spec ]
-                                function_return_type
+function_type_definition ::= [null_exclusion] 'access' 'function' parameter_and_result_profile
 
-procedure_type_definition ::= [null_exclusion] 'access' 'procedure' [ formal_argument_spec ]
+procedure_type_definition ::= [null_exclusion] 'access' 'procedure' parameter_profile
 
 enumerated_type_definition ::=
         '(' < enumerated_literal / ',' > ')'
@@ -424,13 +437,13 @@ task_item ::= entry_declaration | aspect_clause
 
 task_body ::=
     'task' 'body' defining_identifier [ aspect_specification ] 'is'
-       list_of_declarations
+       declarative_part
     'begin'
        handled_sequence_of_statements
     'end' [identifier] ';'
     
 protected_declaration ::= 
-    protected_specification
+    single_protected_declaration
   | protected_type_specification
   | protected_body
   
@@ -439,7 +452,7 @@ protected_type_specification ::=
         [ 'new' interface_list 'with' ]
         protected_definition ';'
         
-protected_specification ::=
+single_protected_declaration ::=
    'protected' defining_identifier [ aspect_specification ] 'is'
         [ 'new' interface_list 'with' ]
         protected_definition ';'
@@ -470,7 +483,7 @@ protected_operation_item ::=
   | aspect_clause
 
 entry_declaration ::=
-   [overriding_indication]
+   [overriding_indicator]
    'entry' defining_identifier [ '(' discrete_subtype_indication ')' ] parameter_profile [ aspect_specification ] ';'
 
 entry_body ::= 
@@ -486,6 +499,45 @@ entry_barrier ::= 'when' condition
 
 entry_index_specification ::= 'for' defining_identifier 'in' discrete_subtype_indication
 
+declarative_item ::= 
+    basic_declarative_item | body
+
+basic_declarative_item ::= 
+    basic_declaration | aspect_clause | use_clause | use_type_clause | pragma_spec
+
+basic_declaration ::= 
+     type_declaration | subtype_declaration
+   | object_declaration | number_declaration
+   | subprogram_declaration | abstract_subprogram_declaration
+   | null_procedure_declaration | expression_function_declaration
+   | package_declaration | renaming_declaration
+   | exception_declaration | generic_declaration
+   | generic_instantiation
+   
+body ::= proper_body | body_stub
+
+proper_body ::= 
+    subprogram_body | package_body | task_body | protected_body
+    
+body_stub ::= subprogram_body_stub | package_body_stub | task_body_stub | protected_body_stub
+
+subprogram_body_stub ::= 
+   [overriding_indicator]
+   subprogram_specification 'is' 'separate'
+      [aspect_specification] ';'
+
+package_body_stub ::= 
+   'package' 'body' defining_identifier 'is' 'separate'
+      [aspect_specification] ';'
+
+task_body_stub ::= 
+   'task' 'body' defining_identifier 'is' 'separate'
+      [aspect_specification] ';'
+
+protected_body_stub ::= 
+   'protected' 'body' defining_identifier 'is' 'separate'
+      [aspect_specification] ';'
+      
 handled_sequence_of_statements ::=
     sequence_of_statements
     [ 'exception' < exception_handler > ]
@@ -571,7 +623,7 @@ exit_statement ::= 'exit' [ identifier ] [ 'when' expression ] ';'
 declare_statement ::=
    [ declare_block_name ':' ]
    [ 'declare'
-     list_of_declarations ]
+     declarative_part ]
    'begin'
         handled_sequence_of_statements
    'end' [ identifier ] ';'
@@ -829,5 +881,9 @@ generic_procedure_name ::= name
 generic_function_name  ::= name
 
 exception_name ::= name
+
+object_name ::= name
+
+callable_entity_name ::= name
 
 name ::= < identifier / '.' >
