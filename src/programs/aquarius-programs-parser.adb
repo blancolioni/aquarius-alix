@@ -1,4 +1,4 @@
---  with Ada.Text_IO;
+with Ada.Text_IO;
 
 with Aquarius.Errors;
 with Aquarius.Properties;
@@ -1673,6 +1673,19 @@ package body Aquarius.Programs.Parser is
    begin
       return Result;
    end Show_Ambiguity;
+
+   -----------------------
+   -- Summarise_Context --
+   -----------------------
+
+   procedure Summarise_Context
+     (Context : Parse_Context)
+   is
+   begin
+      for A of reverse Context.Ambiguities loop
+         Ada.Text_IO.Put_Line (Show_Ambiguity (A));
+      end loop;
+   end Summarise_Context;
 
    ---------------
    -- Token_OK --
