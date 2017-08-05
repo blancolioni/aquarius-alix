@@ -53,8 +53,6 @@ package body Ack.Classes is
       Value : String)
    is
    begin
-      Ada.Text_IO.Put_Line
-        (Class.Qualified_Name & ": " & Name & " = " & Value);
       Class.Notes.Insert (Name, Value);
       if Name = "behaviour" then
          if Value = "normal" then
