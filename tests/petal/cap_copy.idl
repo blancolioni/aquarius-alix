@@ -1,0 +1,8 @@
+interface Cap_Copy is
+
+   function Copy_Cap
+      (Process  : interface Process;
+       Identity : Word)
+      return Capability;
+      
+end Cap_Copy;

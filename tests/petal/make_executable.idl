@@ -1,0 +1,7 @@
+interface Make_Executable is
+
+   function From_File
+      (Executable : interface File)
+      return interface Executable;
+      
+end Make_Executable;

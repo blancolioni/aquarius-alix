@@ -1,0 +1,5 @@
+interface Rose_Interface is
+
+   function Get_Type return Interface_Type;
+
+end Rose_Interface;

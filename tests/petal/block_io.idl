@@ -1,0 +1,15 @@
+interface Block_IO (Block_Size : Storage_Count)
+   with Identity => 99
+is
+
+   function Block_Count return Word_32;
+   
+   procedure Read_Block (Block_Index  : in Word_32;
+                         Block_Buffer : out Storage_Array)
+        with Block_Buffer'Length => Block_Size;
+
+   procedure Write_Block (Block_Index  : in Word_32;
+                          Block_Buffer : in Storage_Array)
+        with Block_Buffer'Length => Block_Size;
+
+end Block_IO;

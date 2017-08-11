@@ -1,0 +1,9 @@
+interface Kernel is
+   
+   function Create_Cap return Capability;
+   
+   function Create_Cap_Set 
+     (Caps : Capability_Array)
+     return Capability;
+   
+end Kernel;

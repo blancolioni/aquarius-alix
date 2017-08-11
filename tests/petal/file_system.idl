@@ -1,0 +1,7 @@
+interface File_System 
+   with Identity => 100
+is
+
+   function Root_Directory return interface Directory;
+   
+end File_System;

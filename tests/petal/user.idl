@@ -1,0 +1,8 @@
+interface User : Execution is
+
+   procedure New_Instance
+     (Standard_Input  : interface Stream_Reader;
+      Standard_Output : interface Stream_Writer;
+      Standard_Error  : interface Stream_Writer);
+
+end User;

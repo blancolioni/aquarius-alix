@@ -1,0 +1,10 @@
+interface Execution is
+
+   function Get_Executable (Name : String) return interface Executable;
+
+   procedure Set_Executable
+     (Simple_Name : String;
+      Full_Name   : String;
+      Executable  : interface Executable);
+
+end Execution;

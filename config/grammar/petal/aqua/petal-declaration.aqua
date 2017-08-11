@@ -1,0 +1,12 @@
+class Petal.Declaration
+
+feature
+
+   Entry : Petal.Entry
+   
+   Set_Entry (E : Petal.Entry)
+      do
+         Entry := E
+      end
+      
+end

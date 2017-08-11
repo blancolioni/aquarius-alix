@@ -1,0 +1,5 @@
+interface Command_Library is
+
+   function Get_Command (Name : String) return class Process;
+   
+end Command_Library;

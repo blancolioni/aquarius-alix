@@ -1,0 +1,21 @@
+interface Directory 
+   with Identity => 101
+is
+
+   type File_Kind is (Directory, Ordinary_File, Special_File);
+   
+   function New_File (Name : String) return interface File;
+   function New_Directory (Name : String) return interface Directory;
+  --  procedure Mount_Directory
+  --   (Name      : String;
+  --    Directory : interface Directory);
+   
+   function Directory_Entry_Count return Word;
+   function Directory_Entry_Name (Index : Word) return String;
+   function Directory_Entry_Kind (Index : Word) return File_Kind;
+   function Get_Ordinary_File (Index : Word) return interface File;
+   function Get_Directory (Index : Word) return interface Directory;
+   
+   function Read_File (Index : Word) return interface Stream_Reader;
+   
+end Directory;

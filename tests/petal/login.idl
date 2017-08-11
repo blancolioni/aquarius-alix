@@ -1,0 +1,8 @@
+interface Login is
+
+   function Login 
+     (User_Name    : String;
+      Password     : String)
+     return Capability;
+
+end Login;
