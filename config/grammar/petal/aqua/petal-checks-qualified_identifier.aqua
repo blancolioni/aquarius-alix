@@ -1,0 +1,11 @@
+class Petal.Checks.Qualified_Identifier
+
+feature
+
+   Identifiers : String_List
+   
+   After_Identifier (Name : String)
+      do
+         Identifiers.Append (Name)
+      end
+end

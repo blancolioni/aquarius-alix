@@ -1,0 +1,8 @@
+interface Authentication is
+
+   function Authenticate
+     (User_Name : String;
+      Password  : String)
+     return interface User;
+     
+end Authentication;

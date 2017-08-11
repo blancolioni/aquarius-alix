@@ -1,0 +1,3 @@
+interface Handled_File is
+
+end Handled_File;

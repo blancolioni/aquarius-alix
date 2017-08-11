@@ -1,0 +1,7 @@
+interface Endpoint is
+
+   function Create_Capability
+     (Endpoint      : Endpoint)
+     return Capability;
+
+end Rose_Interface;

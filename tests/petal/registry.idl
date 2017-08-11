@@ -1,0 +1,13 @@
+interface Registry is
+
+   procedure Register
+     (Interface_Name : String;
+      Parents        : String;
+      Subprograms    : String;
+      Identity       : Word);
+
+   function Get_Identity
+     (Interface_Name : String)
+     return Word;
+     
+end Registry;

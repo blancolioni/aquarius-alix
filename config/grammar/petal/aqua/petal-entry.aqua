@@ -1,0 +1,28 @@
+deferred class Petal.Entry
+
+feature
+
+   Name          : String
+   Declared_Name : String
+   Parent        : detachable Petal.Entry
+   Context       : detachable Petal.Entry
+   Type          : detachable Petal.Type
+   Children      : Aqua.Containers.Linked_List[Petal.Entry]
+   
+   Create_Entry (Entry_Name    : String
+                 Entry_Context : detachable Petal.Entry
+                 Entry_Parent  : detachable Petal.Entry
+                 Entry_Type    : detachable Petal.Type)
+   do
+      Name := Entry_Name.To_Lower
+      Declared_Name := Entry_Name
+      Context := Entry_Context
+      Parent := Entry_Parent
+      Type := Entry_Type
+      
+      if attached Entry_Context as Ctxt then
+         Ctxt.Children.Append (Current)
+      end
+   end
+
+end

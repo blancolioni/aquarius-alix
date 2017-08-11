@@ -1,0 +1,103 @@
+top_level ::= compilation_unit
+case_sensitive = false
+
+identifier         ::= standard ada_identifier
+numeric_literal    ::= standard ada_numeric_literal
+character_literal  ::= standard ada_character_literal
+string_literal     ::= standard ada_string_literal
+delimiter          ::= delimiters "&()+,;|"
+symbol             ::= standard ada_symbol
+comment            ::= standard ada_comment
+
+format list_of_declarations indented_child
+format record_components indented_child
+
+format ';' no_space_before no_space_after new_line_after
+format '.' no_space_before no_space_after
+format '(' space_before no_space_after
+format ')' no_space_before space_after
+format ',' no_space_before space_after
+format ''' no_space_before no_space_after
+
+compilation_unit ::= top_level_interface_declaration | top_level_package_declaration | top_level_procedure_declaration
+
+top_level_package_declaration ::= 'package' qualified_identifier 'is' list_of_declarations 'end' matching_qualified_identifier ';'
+
+top_level_procedure_declaration ::= 'procedure' qualified_identifier [ formal_arguments ] 'is' list_of_declarations 'begin' sequence_of_statements 'end' matching_qualified_identifier ';' 
+
+sequence_of_statements ::= < statement ';' >
+
+statement ::= null_statement | assignment_statement | call_statement | declare_statement
+
+null_statement ::= 'null'
+
+declare_statement ::= 'declare' list_of_declarations 'begin' sequence_of_statements 'end'
+
+call_statement ::= object_reference
+
+assignment_statement ::= object_reference ':=' expression
+
+expression ::= primary
+
+primary ::= numeric_literal | character_literal | string_literal | interface_reference | object_reference
+
+interface_reference ::= 'interface' qualified_identifier
+
+object_reference ::= < identifier [ actual_arguments ] / '.' >
+
+actual_arguments ::= '(' actual_argument_list ')'
+
+actual_argument_list ::= < expression / ',' >
+
+top_level_interface_declaration ::=
+   'interface' qualified_identifier [ ':' parent_interfaces ] 'is'
+      list_of_declarations
+   'end' qualified_identifier ';'
+
+parent_interfaces ::= < qualified_identifier / ',' >
+
+qualified_identifier ::= < identifier / '.' >
+
+matching_qualified_identifier ::= qualified_identifier
+
+list_of_declarations ::= { declaration ';' }
+
+declaration ::= subprogram_declaration | type_declaration | constant_declaration | variable_declaration
+
+constant_declaration ::= identifier ':' 'constant' [ typeref ] ':=' expression
+
+variable_declaration ::= identifier ':' typeref [ ':=' expression ]
+
+subprogram_declaration ::= function_declaration | procedure_declaration
+
+function_declaration ::= 'function' identifier [ formal_arguments ] 'return' typeref
+
+procedure_declaration ::= 'procedure' identifier [ formal_arguments ]
+
+type_declaration ::= 'type' identifier 'is' type_definition
+
+type_definition ::= record_type_definition
+                  | new_type_definition
+                  
+new_type_definition ::= 'new' qualified_identifier
+
+record_type_definition ::=
+   'record' record_components 'end' 'record'
+
+record_components ::= < record_component ';' >
+
+record_component ::= identifier ':' typeref
+
+formal_arguments ::= '(' < formal_argument / ';' > ')'
+
+formal_argument ::= identifier ':' [ argument_spec ] typeref
+
+argument_spec ::= 'in' | inout | 'out'
+
+inout ::= 'in' 'out'
+
+typeref ::= interface_typeref
+          | named_typeref
+
+interface_typeref ::= 'interface' qualified_identifier
+named_typeref ::= qualified_identifier

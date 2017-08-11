@@ -1,0 +1,11 @@
+interface File_System_Object is
+
+   function Read return class Stream_Reader;
+   function Write return class Stream_Writer;
+   function Append return class Stream_Writer;
+
+   function Open (Mode   : File_Mode) return class File;
+   
+   function Make_Process_Cap return class Process;
+   
+end File_System_Object;

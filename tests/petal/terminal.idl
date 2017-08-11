@@ -1,0 +1,61 @@
+interface Terminal : Stream is
+
+   --  Terminal control commands
+   
+   type Terminal_Command is
+     (No_Command,
+           --  Null command
+           
+      Restore_Default,
+           --  Reset to defaults (exact behaviour is device-dependent,
+           --  but intent is to exit any "unusual" operation modes)
+      
+      Input_Buffer, Output_Buffer,
+           --  Buffer commands: how terminal input/output is buffered
+           
+      Flush,
+           --  Flush output buffer (overrides buffer strategy
+           --  and writes output immediately)
+           
+      Input_Echo,
+           --  Control whether user input is automatically echoed
+           
+      Set_Cursor
+           --  Set the position of the cursor
+           --     Arg_1 = column, Arg_2 = row
+      );
+      
+   
+   --  Buffer strategies
+   Block_Buffer : constant := 0;
+   Line_Buffer  : constant := 1;
+   Unbuffered   : constant := 2;
+   
+   --  Echo constants
+   No_Echo      : constant := 0;
+   Echo         : constant := 1;
+   
+   --  Queries
+   
+   type Terminal_Query is
+     (No_Query,
+     
+      Geometry,
+         --  Ask for terminal geometry
+         --  Result_1 := terminal width; Result_2 := terminal height
+   
+      Cursor_Position
+         --  Get current cursor position (zero-based)
+         --  Result_1 := cursor column, Result-2 := cursor row
+       
+      );
+         
+   procedure Control (Command    : Terminal_Command;
+                      Arg_1      : Word;
+                      Arg_2      : Word);
+                      
+   procedure Query (Query     : Terminal_Query;
+                    Result_1  : out Word;
+                    Result_2  : out Word);
+
+end Terminal;

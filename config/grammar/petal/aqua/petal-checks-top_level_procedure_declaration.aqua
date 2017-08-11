@@ -1,0 +1,15 @@
+class Petal.Checks.Top_Level_Procedure_Declaration
+inherit
+   Aqua.Text_IO
+   Petal.Declaration
+   
+feature
+
+   After_Qualified_Identifier (Child : Petal.Checks.Qualified_Identifier)
+      do
+         Put_Line ("procedure " & Child.Identifiers.Interpolate ("."))
+         create Entry
+         Entry.Create_Entry (Child.Identifiers.Last_Element, Void, Void, Void)
+      end
+      
+end

@@ -1,0 +1,6 @@
+interface Executable is
+
+   procedure Launch
+     (Wait_For_Completion : Boolean := True);
+     
+end Executable;

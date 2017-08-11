@@ -1,0 +1,14 @@
+interface Account : Authentication is
+
+   procedure Add_User
+     (User_Name    : String;
+      Password     : String;
+      User_Process : interface User);
+
+   procedure Change_Password 
+     (User_Name    : String;                              
+      New_Password : String);
+
+   procedure Remove_User (User_Name   : String);
+   
+end Account;

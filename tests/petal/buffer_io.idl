@@ -1,0 +1,9 @@
+interface Buffer_IO : Rose_Interface is
+
+   procedure Read_Buffer (Buffer   : in     Address;
+                          Count    : in out Storage_Count);
+
+   procedure Write_Buffer (Buffer  : in     Address;
+                           Count   : in out Storage_Count);   
+
+end Buffer_IO;

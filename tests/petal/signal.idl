@@ -1,0 +1,5 @@
+interface Signal : Error is
+   
+   procedure Receive_Signal;
+   
+end Signal;

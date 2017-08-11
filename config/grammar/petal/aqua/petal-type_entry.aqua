@@ -1,0 +1,6 @@
+deferred class Petal.Type_Entry
+
+inherit
+   Petal.Entry
+   
+end Petal.Type_Entry

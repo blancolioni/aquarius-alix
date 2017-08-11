@@ -1,0 +1,8 @@
+plugin Petal version 0.1 is
+
+   group checks : semantic;
+
+   --  group generate-interfaces : code;
+
+   --  group generate-script : code;
+   

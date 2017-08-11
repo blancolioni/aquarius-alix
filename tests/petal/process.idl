@@ -1,0 +1,10 @@
+interface Process is
+
+   function Get_Interface
+     (Identity : Word_32)
+     return Capability;
+     
+   procedure Send_Cap
+     (Cap : Capability);
+     
+end Process;

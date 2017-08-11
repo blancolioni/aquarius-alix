@@ -1,0 +1,5 @@
+interface Send_Cap is
+
+   procedure Send (Cap : Capability);
+
+end Send_Cap;
