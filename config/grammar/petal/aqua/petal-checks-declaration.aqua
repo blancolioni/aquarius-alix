@@ -1,0 +1,11 @@
+class Petal.Checks.Declaration 
+   inherit Petal.Declaration
+   
+feature
+
+   After_Constant_Declaration (Child : Petal.Checks.Constant_Declaration)
+      do
+         Entry := Child.Entry
+      end
+      
+end

@@ -2,7 +2,7 @@ class Petal.Declaration
 
 feature
 
-   Entry : Petal.Entry
+   Entry : detachable Petal.Entry
    
    Set_Entry (E : Petal.Entry)
       do

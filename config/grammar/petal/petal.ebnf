@@ -52,7 +52,7 @@ actual_argument_list ::= < expression / ',' >
 top_level_interface_declaration ::=
    'interface' qualified_identifier [ ':' parent_interfaces ] 'is'
       list_of_declarations
-   'end' qualified_identifier ';'
+   'end' matching_qualified_identifier ';'
 
 parent_interfaces ::= < qualified_identifier / ',' >
 

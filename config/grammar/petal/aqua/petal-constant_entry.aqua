@@ -1,0 +1,5 @@
+class Petal.Constant_Entry
+
+inherit Petal.Entry
+
+end
