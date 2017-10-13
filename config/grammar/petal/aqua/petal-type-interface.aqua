@@ -1,0 +1,9 @@
+class Petal.Type.Interface
+
+inherit Petal.Type
+
+feature   
+   
+   Elements : Aqua.Containers.Linked_List[Petal.Entry]
+   
+end
