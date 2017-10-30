@@ -1,0 +1,15 @@
+class Logfiles.Entry
+
+feature
+   Name   : String
+   Path   : String
+   Fields : Aqua.Containers.Linked_List[Field_Entry]
+   
+feature
+   
+   Set_Name (Entry_Name : String)
+   do
+      Name := Entry_Name;
+   end
+   
+end

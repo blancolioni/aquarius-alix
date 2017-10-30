@@ -1,0 +1,28 @@
+class Logfiles.Checks.File_Declaration
+   inherit File_Entry_Node
+           Aqua.Text_IO
+           
+feature
+
+   After_Identifier (Id : String)
+      do
+         File_Entry.Set_Name (Id)
+      end
+      
+   Before_List_Of_Fields (Child : List_Of_Fields)
+      do
+         Child.Inherit_File_Entry (Current)
+      end
+      
+   Before_List_Of_Aspects (Child : List_Of_Aspects)
+      do
+         Child.Inherit_File_Entry (Current)
+      end
+   
+   After_Node
+      do
+         Put ("log file: ")
+         Put (File_Entry.Name)
+         New_Line
+      end
+end

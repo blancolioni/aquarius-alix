@@ -1,0 +1,21 @@
+class Logfiles.Checks.Field
+   inherit File_Entry_Node
+      
+feature
+
+   Field      : Field_Entry
+   Field_Name : String
+   Field_Type : String
+   
+   After_Identifier (Id : String)
+      do
+         Field_Name := Id
+      end
+      
+   After_Qualified_Identifier (Q : Qualified_Identifier)
+      do
+         Field_Type := Q.Ada_Name
+         create Field
+         Field.Make (Field_Name, Field_Type, Q.Package_Name)         
+         File_Entry.Fields.Append (Field)
+      end

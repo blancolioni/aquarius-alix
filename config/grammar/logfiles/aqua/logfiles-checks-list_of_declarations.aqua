@@ -1,0 +1,11 @@
+class Logfiles.Checks.List_Of_Declarations
+
+feature
+
+   File_Entry_List : Aqua.Containers.Linked_List [Logfiles.Entry]
+   
+   After_Declaration (Child : Logfiles.Checks.Declaration) 
+      do
+         File_Entry_List.Append (Child.File_Entry)
+      end
+end

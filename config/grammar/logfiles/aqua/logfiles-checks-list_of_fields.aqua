@@ -1,0 +1,10 @@
+class Logfiles.Checks.List_Of_Fields
+   inherit File_Entry_Node
+feature
+
+   Before_Field (Child : Field)
+      do
+         Child.Inherit_File_Entry (Current)
+      end
+      
+end

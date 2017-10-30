@@ -1,0 +1,17 @@
+package Concorde.Logs is
+
+   file Update_Bid
+     (Start_Belief_Low  : Concorde.Money.Price_Type;
+      Start_Belief_High : Concorde.Money.Price_Type;
+      Start_Mean        : Concorde.Money.Price_Type;
+      Supply            : Concorde.Quantities.Quantity_Type;
+      Demand            : Concorde.Quantities.Quantity_Type;
+      Bid_Quantity      : Concorde.Quantities.Quantity_Type;
+      Bid_Filled        : Concorde.Quantities.Quantity_Type;
+      New_Belief_Low    : Concorde.Money.Price_Type;
+      New_Belief_High   : Concorde.Money.Price_Type;
+      New_Belief_Mean   : Concorde.Money.Price_Type)
+    with Path   => Agent_Short_Name, Commodity,
+         Format => CSV;
+      
+end Concorde.Logs;
