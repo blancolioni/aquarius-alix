@@ -1,0 +1,14 @@
+class Logfiles.Checks.Context_Clause
+   inherit Aqua.Text_IO
+   
+feature
+
+   Package_Name : String
+   
+   After_Qualified_Identifier (Child : Logfiles.Checks.Qualified_Identifier) 
+      do
+         Put_Line ("dependency: " & Child.Ada_Name)
+         Package_Name := Child.Ada_Name
+      end
+   
+end

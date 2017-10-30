@@ -1,0 +1,31 @@
+class Logfiles.Checks.Qualified_Identifier
+   
+feature
+
+   Identifiers : String_List
+   Parents : String_List
+
+   After_Identifier (Id : String)
+      do
+         if Identifiers.Is_Empty then
+         else
+            Parents.Append (Identifiers.Last_Element)
+         end
+         Identifiers.Append (Id)
+      end
+      
+   Package_Name : String
+      do
+         Result := Parents.Interpolate (".")
+      end
+      
+   Ada_Name : String
+      do
+         Result := Identifiers.Interpolate (".")
+      end
+      
+   Base_File_Name : String
+      do
+         Result := Identifiers.Interpolate ("-").To_Lower
+      end
+end

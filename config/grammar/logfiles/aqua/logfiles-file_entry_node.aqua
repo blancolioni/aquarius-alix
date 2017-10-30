@@ -1,0 +1,12 @@
+deferred class Logfiles.File_Entry_Node
+
+feature
+
+   File_Entry : Logfiles.Entry
+   
+   Inherit_File_Entry (From_Node : Logfiles.File_Entry_Node)
+      do
+         File_Entry := From_Node.File_Entry
+      end
+      
+end

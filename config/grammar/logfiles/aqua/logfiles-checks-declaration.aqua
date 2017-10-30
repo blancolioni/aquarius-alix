@@ -1,0 +1,10 @@
+class Logfiles.Checks.Declaration
+   inherit Logfiles.File_Entry_Node
+
+feature
+   
+   Before_File_Declaration (Child : Logfiles.Checks.File_Declaration) 
+      do
+         Child.Inherit_File_Entry (Current)
+      end
+end

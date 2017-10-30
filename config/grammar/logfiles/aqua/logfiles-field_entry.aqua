@@ -1,0 +1,16 @@
+class Logfiles.Field_Entry
+
+feature
+   Name           : String
+   Type           : String
+   Image_Function : String
+   
+   Make (Field_Name   : String
+         Type_Package : String
+         Field_Type   : String)
+      do
+         Name := Field_Name
+         Type := Field_Type
+         Image_Function := Type_Package & ".Image"
+      end
+end

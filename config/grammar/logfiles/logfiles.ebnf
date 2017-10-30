@@ -1,0 +1,48 @@
+compilation_unit ::= package_declaration
+                     
+case_sensitive = false
+
+identifier         ::= standard ada_identifier
+numeric_literal    ::= standard ada_numeric_literal
+character_literal  ::= standard ada_character_literal
+string_literal     ::= standard ada_string_literal
+delimiter          ::= delimiters "&()+,;|"
+symbol             ::= standard ada_symbol
+comment            ::= standard ada_comment
+
+format list_of_declarations indented_child
+
+format ';' no_space_before no_space_after new_line_after
+format '.' no_space_before no_space_after
+format ',' no_space_before space_after
+
+package_declaration ::=
+   context_clauses
+   'package' qualified_identifier 'is' list_of_declarations 'end' qualified_identifier ';'
+   
+context_clauses ::= { context_clause }
+
+context_clause ::= 'with' qualified_identifier ';'
+
+list_of_declarations ::= { declaration ';' }
+
+declaration ::= file_declaration
+
+file_declaration ::= 'file' identifier '(' list_of_fields ')' [ 'with' list_of_aspects ]
+
+list_of_fields ::= < field / ';' >
+
+list_of_aspects ::= < aspect / ',' >
+
+field ::= identifier ':' qualified_identifier
+
+aspect ::= identifier '=>' aspect_value
+
+aspect_value ::= atomic_aspect_value
+               | list_aspect_value
+               
+atomic_aspect_value ::= identifier
+
+list_aspect_value ::= '(' < qualified_identifier / ',' ')'
+
+qualified_identifier ::= < identifier / '.' >

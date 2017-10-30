@@ -1,0 +1,12 @@
+class Logfiles.Checks.Context_Clauses
+   
+feature
+
+   Package_Names : String_List
+   
+   After_Context_Clause (Child : Context_Clause) 
+      do
+         Package_Names.Append (Child.Package_Name)
+      end
+   
+end

@@ -1,0 +1,29 @@
+class Logfiles.Checks.Package_Declaration
+   
+feature
+
+   Withs   : String_List
+   Entries : Aqua.Containers.Linked_List[Logfiles.Entry]
+
+   Specification_File_Name : String
+   Body_File_Name          : String
+   Package_Name            : String
+   
+   After_Context_Clauses (Child : Logfiles.Checks.Context_Clauses)
+      do
+         Withs := Child.Package_Names
+      end
+
+   After_Qualified_Identifier (Child : Logfiles.Checks.Qualified_Identifier) 
+      do
+         Specification_File_Name := Child.Base_File_Name & ".ads"
+         Body_File_Name          := Child.Base_File_Name & ".adb"
+         Package_Name            := Child.Ada_Name
+      end
+   
+   After_List_Of_Declarations (Child : Logfiles.Checks.List_Of_Declarations)
+      do
+         Entries := Child.File_Entry_List
+      end
+      
+end

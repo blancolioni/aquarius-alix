@@ -1,0 +1,83 @@
+class Logfiles.Generate.Package_Declaration
+   inherit Aqua.Text_IO
+   
+feature
+
+   Node    : Logfiles.Checks.Package_Declaration
+   
+   Before_Node
+      do
+         Put_Line ("generating: " & Node.Package_Name)
+         Set_Output (Node.Specification_File_Name)
+         
+         across Node.Withs as Name loop
+            Put_Line ("with " & Name & ";")
+         end
+         
+         Put_Line ("package " & Node.Package_Name & " is")
+         New_Line
+         
+         across Node.Entries as Entry loop
+            Put_Line ("   procedure " & Entry.Name)
+            Put ("     (")
+            across Entry.Fields as Field loop
+              Put (Field.Name & " : " & Field.Type)
+              if Field.Name /= Entry.Fields.Last_Element.Name then
+                 Put_Line (";")
+                 Put ("      ")
+              else
+                 Put_Line (");")
+              end
+            end
+         end
+         
+         New_Line
+         Put_Line ("end " & Node.Package_Name & ";")
+         
+         Set_Output (Node.Body_File_Name)
+         Put_Line ("with WL.Logs;")
+         New_Line
+         
+         Put_Line ("package body " & Node.Package_Name & " is")
+         New_Line
+         
+         Put_Line ("   pragma Style_Checks (Off);")
+         New_Line
+         
+         across Node.Entries as Entry loop
+            Put_Line ("   Started_" & Entry.Name & " : Boolean := False;");
+         end
+         
+         New_Line;
+         
+         across Node.Entries as Entry loop
+            Put_Line ("   procedure " & Entry.Name)
+            Put ("     (Context : WL.Logs.Log_Context")
+            across Entry.Fields as Field loop
+               Put_Line (";")
+               Put ("      " & Field.Name & " : " & Field.Type)
+            end            
+            Put_Line (")")
+
+            Put_line ("   is")
+            Put_Line ("   begin")
+            Put_Line ("      WL.Logs.Log_Line")
+            Put_Line ("        (Context,")
+            across Entry.Fields as Field loop
+               if Field.Name = Entry.Fields.First_Element.Name then
+                  Put ("         ")
+               else
+                  New_Line
+                  Put ("       & ")
+               end
+               Put (Field.Image_Function & " (" & Field.Name & ")")
+            end
+            Put_Line (");")
+            
+            Put_Line ("   end " & Entry.Name);
+         end
+         
+         Put_Line ("end " & Node.Package_Name & ";")
+         Set_Output ("")         
+      end      
+end

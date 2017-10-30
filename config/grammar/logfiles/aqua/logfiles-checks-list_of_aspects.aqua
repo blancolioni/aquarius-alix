@@ -1,0 +1,4 @@
+class Logfiles.Checks.List_Of_Aspects
+   inherit Logfiles.File_Entry_Node
+
+end
