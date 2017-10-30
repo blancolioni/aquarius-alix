@@ -4,10 +4,3 @@ plugin Options version 0.1 is
 
    group generate : code;
    
---    group generate_spec : code is
---        options_generate_spec;
---    end generate_spec;
-
---    group generate_body : code is
---        options_generate_body;
---    end generate_body;
