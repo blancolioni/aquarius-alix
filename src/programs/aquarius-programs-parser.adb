@@ -444,9 +444,14 @@ package body Aquarius.Programs.Parser is
 
       if Context.Run_Actions and then not Has_Ambiguities (Context) then
 
-         Aquarius.Grammars.Run_Parse_Actions
-           (Tree     => Program.Program_Parent.all,
-            Position => After);
+         if Program.Program_Parent /= null then
+            Aquarius.Grammars.Run_Parse_Actions
+              (Tree     => Program.Program_Parent.all,
+               Position => After);
+         else
+            raise Constraint_Error with
+            Program.Show_Location & ": expected this to have a parent";
+         end if;
       end if;
 
       Move_To_Right_Of_Parent (Location);
