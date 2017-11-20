@@ -427,25 +427,35 @@ begin
             Komnenos.UI.Sessions.Load_Session (UI, ".aquarius-session");
          end if;
 
-         if Command_Line.Input_File /= ""
-           or else Command_Line.Extra_Arguments /= ""
-         then
+         if Command_Line.Edit_Plugin /= "" then
             declare
-               Path : constant String :=
-                        (if Command_Line.Input_File /= ""
-                         then Command_Line.Input_File
-                         else Command_Line.Extra_Arguments);
                Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
-                           Aquarius.Grammars.Manager.Get_Grammar_For_File
-                             (Path);
-               Input : constant Aquarius.Programs.Program_Tree :=
-                         Aquarius.Loader.Load_From_File
-                             (Grammar, Path);
+                           Aquarius.Grammars.Manager.Get_Grammar
+                             (Command_Line.Edit_Plugin);
             begin
-               Grammar.Run_Action_Trigger
-                 (Input,
-                  Aquarius.Actions.Semantic_Trigger);
+               pragma Unreferenced (Grammar);
             end;
+         else
+            if Command_Line.Input_File /= ""
+              or else Command_Line.Extra_Arguments /= ""
+            then
+               declare
+                  Path    : constant String :=
+                              (if Command_Line.Input_File /= ""
+                               then Command_Line.Input_File
+                               else Command_Line.Extra_Arguments);
+                  Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
+                              Aquarius.Grammars.Manager.Get_Grammar_For_File
+                                (Path);
+                  Input   : constant Aquarius.Programs.Program_Tree :=
+                              Aquarius.Loader.Load_From_File
+                                (Grammar, Path);
+               begin
+                  Grammar.Run_Action_Trigger
+                    (Input,
+                     Aquarius.Actions.Semantic_Trigger);
+               end;
+            end if;
          end if;
 
          Show_Allocations;

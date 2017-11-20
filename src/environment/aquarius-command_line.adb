@@ -32,6 +32,15 @@ package body Aquarius.Command_Line is
       return Get_Flag ("", "clear-cache");
    end Clear_Cache;
 
+   -----------------
+   -- Edit_Plugin --
+   -----------------
+
+   function Edit_Plugin return String is
+   begin
+      return Get_Argument ("", "edit-plugin", "");
+   end Edit_Plugin;
+
    ------------------
    -- Enable_Debug --
    ------------------
