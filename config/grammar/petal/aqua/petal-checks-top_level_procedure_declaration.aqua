@@ -2,6 +2,7 @@ class Petal.Checks.Top_Level_Procedure_Declaration
 inherit
    Aqua.Text_IO
    Petal.Declaration
+   Petal.Top_Level
    
 feature
 

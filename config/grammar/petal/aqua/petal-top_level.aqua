@@ -1,0 +1,24 @@
+class Petal.Top_Level
+inherit
+   Petal.Entry_Table
+      
+feature
+   
+   Standard : Petal.Entry_Table
+   once
+      Create_Standard_Table (Result)
+   end
+   
+feature
+   Create_Standard_Table (Table : Petal.Entry_Table)
+   do
+      create Capability_Type
+      create Capability_Entry
+      Capability_Entry.Create_Type_Entry ("Capability", Capability_Type, Void, Void)
+      Table.Entry_List.Append (Capability_Entry)
+   end
+   
+   Capability_Type  : Petal.Type.Capability
+   Capability_Entry : Entry
+   
+end

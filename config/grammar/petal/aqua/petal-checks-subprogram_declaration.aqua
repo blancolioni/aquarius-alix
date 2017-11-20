@@ -1,0 +1,11 @@
+class Petal.Checks.Subprogram_Declaration
+inherit 
+   Petal.Declaration
+
+feature
+   
+   After_Procedure_Declaration (Child : Petal.Checks.Procedure_Declaration)
+      do
+         Entry := Child.Entry
+      end
+      

@@ -37,22 +37,63 @@ call_statement ::= object_reference
 
 assignment_statement ::= object_reference ':=' expression
 
-expression ::= primary
+expression ::=
+    relation { boolean_operator relation }
+
+relation ::=
+        simple_expression [ relational_operator simple_expression  ]
+
+simple_expression ::=
+    [ unary_adding_operator ] term { binary_adding_operator term }
+
+term ::= factor { multiplying_operator factor }
+
+factor ::= primary
+       | unary_primary_operator primary
+
+boolean_operator ::=
+        'and' | 'and' 'then' | 'or' | 'or' 'else' | 'xor'
+
+relational_operator ::= '=' | '/=' | '<' | '<=' | '>' | '>='
+
+binary_adding_operator ::= '+' | '-' | '&'
+
+unary_adding_operator ::= '+' | '-'
+
+unary_primary_operator ::= 'abs' | 'not'
+
+multiplying_operator ::= '*' | '/' | 'mod' | 'rem'
 
 primary ::= numeric_literal | character_literal | string_literal | interface_reference | object_reference
 
 interface_reference ::= 'interface' qualified_identifier
 
-object_reference ::= < identifier [ actual_arguments ] / '.' >
+object_reference ::= identifier { object_qualifier }
 
-actual_arguments ::= '(' actual_argument_list ')'
+object_qualifier ::= '.' object_reference
+                   | ''' attribute
+                   | '(' actual_argument_list ')'
+
+attribute ::= identifier
 
 actual_argument_list ::= < expression / ',' >
 
 top_level_interface_declaration ::=
-   'interface' qualified_identifier [ ':' parent_interfaces ] 'is'
+   'interface' qualified_identifier optional_constraint [ ':' parent_interfaces ] [ optional_aspect_list ] 'is'
       list_of_declarations
    'end' matching_qualified_identifier ';'
+
+optional_constraint ::= [ '(' identifier ':' typeref ')' ]
+
+optional_aspect_list ::= [ 'with' aspect_list ]
+
+aspect_list ::= < aspect / ',' >
+
+aspect ::= aspect_name [ '=>' static_expression ]
+
+aspect_name ::= identifier [ ''' identifier ]
+
+static_expression ::= expression
 
 parent_interfaces ::= < qualified_identifier / ',' >
 
@@ -62,19 +103,17 @@ matching_qualified_identifier ::= qualified_identifier
 
 list_of_declarations ::= { declaration ';' }
 
-declaration ::= subprogram_declaration | type_declaration | constant_declaration | variable_declaration
+declaration ::= subprogram_declaration | type_declaration | object_declaration
 
-constant_declaration ::= identifier ':' 'constant' [ typeref ] ':=' expression
-
-variable_declaration ::= identifier ':' typeref [ ':=' expression ]
+object_declaration ::= identifier ':' [ 'constant' ] [ typeref ] [ ':=' expression ]
 
 subprogram_declaration ::= function_declaration | procedure_declaration
 
-function_declaration ::= 'function' identifier [ formal_arguments ] 'return' typeref
+function_declaration ::= 'function' identifier [ formal_arguments ] 'return' typeref optional_aspect_list
 
-procedure_declaration ::= 'procedure' identifier [ formal_arguments ]
+procedure_declaration ::= 'procedure' identifier [ formal_arguments ] optional_aspect_list
 
-type_declaration ::= 'type' identifier 'is' type_definition
+type_declaration ::= 'type' identifier 'is' type_definition optional_aspect_list
 
 type_definition ::= record_type_definition
                   | new_type_definition

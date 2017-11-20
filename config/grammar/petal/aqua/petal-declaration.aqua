@@ -2,11 +2,17 @@ class Petal.Declaration
 
 feature
 
+   Table : Petal.Entry_Table
    Entry : detachable Petal.Entry
    
+   Set_Table (T : Petal.Entry_Table)
+      do
+         Table := T
+      end
+      
    Set_Entry (E : Petal.Entry)
       do
          Entry := E
       end
-      
+   
 end

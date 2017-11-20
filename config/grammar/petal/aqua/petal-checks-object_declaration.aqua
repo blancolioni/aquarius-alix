@@ -1,0 +1,41 @@
+class Petal.Checks.Object_Declaration 
+inherit
+   Petal.Declaration
+   Aquarius.Trees.Program_Tree
+   
+feature
+   Name : String
+   Constant : Boolean
+   Initialiser : detachable Petal.Checks.Expression
+   
+feature
+
+   After_Identifier (Id : String) 
+      do
+         Name := Id
+      end
+      
+   After_Constant (Unused : String)
+      do
+         Constant := True
+      end
+      
+   After_Expression (Expr : Petal.Checks.Expression)
+   do
+      Initialiser := Expr
+   end
+      
+   After_Node
+   do
+      create Entry
+      if Constant then
+         if attached Initialiser as Init then
+            Entry.Create_Constant_Entry (Name, Init, Void, Void, Void)
+         else
+            Error ("constant requires initialiser")
+         end
+      else
+         Entry.Create_Entry (Name, Void, Void, Void)
+      end
+   end
+   
