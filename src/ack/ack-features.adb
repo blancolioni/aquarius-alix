@@ -196,6 +196,11 @@ package body Ack.Features is
       Result_Count : constant Natural :=
                        (if Feature.Value_Type /= null
                         then 1 else 0);
+      Once_Flag_Label  : constant String :=
+                           "once_flag$" & Feature.Link_Name;
+      Once_Value_Label : constant String :=
+                           "once_value$" & Feature.Link_Name;
+      Exit_Label       : constant Positive := Unit.Next_Label;
    begin
       if Feature.Routine then
          Unit.Begin_Routine
@@ -253,6 +258,21 @@ package body Ack.Features is
                end if;
             end;
          else
+            if Feature.Once then
+               declare
+                  Continue_Once : constant Positive := Unit.Next_Label;
+               begin
+                  Unit.Push_Register (Once_Flag_Label);
+                  Unit.Operate (Tagatha.Op_Test, Tagatha.Default_Size);
+                  Unit.Jump (Continue_Once, Tagatha.C_Equal);
+                  if Feature.Has_Result then
+                     Unit.Push_Register (Once_Value_Label);
+                     Unit.Pop_Result;
+                  end if;
+                  Unit.Jump (Exit_Label);
+                  Unit.Label (Continue_Once);
+               end;
+            end if;
             for I in 1 .. Feature.Local_Count loop
                Unit.Push (0);
             end loop;
@@ -261,11 +281,27 @@ package body Ack.Features is
          end if;
 
          if Feature.Has_Result then
+            if Feature.Once then
+               Unit.Push (1);
+               Unit.Pop_Register (Once_Flag_Label);
+               Unit.Push_Local (1);
+               Unit.Pop_Register (Once_Value_Label);
+            end if;
+
             Unit.Push_Local (1);
             Unit.Pop_Result;
          end if;
 
+         Unit.Label (Exit_Label);
          Unit.End_Routine;
+
+         if Feature.Once then
+            Unit.Label (Once_Flag_Label);
+            Unit.Data (0);
+            Unit.Label (Once_Value_Label);
+            Unit.Data (0);
+         end if;
+
       end if;
    end Generate_Routine;
 
@@ -729,6 +765,7 @@ package body Ack.Features is
       Feature.Property := False;
       Feature.Routine_Node := Routine_Node;
       Feature.Routine := True;
+      Feature.Once := Once_Routine (Routine_Node);
       if Feature.Value_Type /= null then
          Feature.Has_Result := True;
       end if;

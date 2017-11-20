@@ -438,6 +438,9 @@ package Ack is
    function Effective_Routine (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Routine;
 
+   function Once_Routine (N : Node_Id) return Boolean
+     with Pre => Kind (N) = N_Internal;
+
    function Compound (N : Node_Id) return Node_Id
      with Pre => Kind (N) in N_Internal | N_Loop_Body;
 
@@ -745,6 +748,9 @@ private
 
    function Effective_Routine (N : Node_Id) return Node_Id
    is (Field_3 (N));
+
+   function Once_Routine (N : Node_Id) return Boolean
+   is (Node_Table.Element (N).Once);
 
    function Compound (N : Node_Id) return Node_Id
    is (Field_1 (N));

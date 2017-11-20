@@ -1151,7 +1151,7 @@ package body Ack.Parser is
                                 Import_Local_Declarations'Access);
       Feature_Body : constant Node_Id :=
                        Import_Feature_Body
-                         (From.Program_Child ("feature_body"));
+                               (From.Program_Child ("feature_body"));
    begin
       return New_Node (N_Routine, From,
                        Deferred => Feature_Body = No_Node,
