@@ -129,6 +129,7 @@ private
          External            : Boolean := False;
          Has_Result          : Boolean := False;
          Has_Current         : Boolean := False;
+         Once                : Boolean := False;
          Alias               : Name_Id;
          Original_Classes    : List_Of_Entities.List;
          Definition_Class    : access Ack.Classes.Class_Entity_Record'Class;
