@@ -2,6 +2,10 @@ plugin Petal version 0.1 is
 
    group checks : semantic;
 
+   group kernel : code;
+   
+   group init : code;
+   
    --  group generate-interfaces : code;
 
    --  group generate-script : code;

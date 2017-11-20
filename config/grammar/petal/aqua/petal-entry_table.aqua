@@ -1,0 +1,34 @@
+class Petal.Entry_Table
+
+feature
+   Entry_List : Aqua.Containers.Linked_List[Petal.Entry]
+   Parent : detachable Petal.Entry_Table
+   
+   Set_Entry_List (List : Aqua.Containers.Linked_List[Petal.Entry])
+      do
+         Entry_List := List
+      end
+   
+   Set_Parent (P : PEtal.Entry_Table)
+   do
+      Parent := P
+   end
+   
+feature
+
+   Find (Name : String) : detachable Petal.Entry
+   local
+      Lower_Name : String := Name.To_Lower
+   do
+      across Entry_List as E loop
+         if E.Name = Name then
+            Result := E
+         end
+      end
+      if Result = Void then
+         if Parent /= Void then
+            Result := Parent.Find (Name)
+         end
+      end
+   end
+end

@@ -1,21 +1,18 @@
 class Petal.Checks.List_Of_Declarations
-
-inherit Aqua.Text_IO
+inherit 
+   Petal.Entry_Table
+   Aqua.Text_IO
 
 feature
-
-   Entry_List : Aqua.Containers.Linked_List[Petal.Entry]
-   
-   Set_Entry_List (List : Aqua.Containers.Linked_List[Petal.Entry])
-      do
-         Entry_List := List
-      end
 
    After_Declaration (Child : Petal.Checks.Declaration)
       do
          if attached Child.Entry as E then
             Entry_List.Append (E)
-            Put_Line ("declaration: " & E.Declared_Name)
+            if E.Constant then
+               Put_Line ("constant: " & E.Declared_Name)
+            else
+               Put_Line ("declaration: " & E.Declared_Name)
          end
       end
       

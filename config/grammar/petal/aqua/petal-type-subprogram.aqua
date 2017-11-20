@@ -1,5 +1,8 @@
 deferred class Petal.Type.Subprogram
-   inherit Petal.Type
+inherit 
+   Petal.Type
+
+feature
 
    Formal_Arguments : Aqua.Containers.Linked_List [Petal.Entry]
    

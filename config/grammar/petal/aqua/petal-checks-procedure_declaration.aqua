@@ -1,0 +1,15 @@
+class Petal.Checks.Procedure_Declaration 
+inherit 
+   Petal.Declaration
+
+feature
+   
+   Procedure_Entry : Petal.Entry.Procedure_Entry
+   
+   After_Identifier (Id : String) 
+      do
+         create Procedure_Entry
+         Entry := Procedure_Entry
+         Entry.Create_Entry (Id, Void, Void, Void)
+      end
+      

@@ -1,5 +1,7 @@
 deferred class Petal.Entry
-
+inherit
+   Aqua.Text_IO
+   
 feature
 
    Name          : String
@@ -8,6 +10,9 @@ feature
    Context       : detachable Petal.Entry
    Type          : detachable Petal.Type
    Children      : Aqua.Containers.Linked_List[Petal.Entry]
+   Constant      : Boolean
+   Is_Type       : Boolean
+   Initialiser   : detachable Petal.Checks.Expression
    
    Create_Entry (Entry_Name    : String
                  Entry_Context : detachable Petal.Entry
@@ -25,4 +30,47 @@ feature
       end
    end
 
+   Create_Constant_Entry (Entry_Name        : String
+                          Entry_Initialiser : Petal.Checks.Expression
+                          Entry_Context     : detachable Petal.Entry
+                          Entry_Parent      : detachable Petal.Entry
+                          Entry_Type        : detachable Petal.Type)
+   do
+      Create_Entry (Entry_Name, Entry_Context, Entry_Parent, Entry_Type)
+      Constant := True
+      Initialiser := Entry_Initialiser
+   end
+   
+   Create_Type_Entry (Entry_Name    : String
+                      Entry_Type    : Petal.Type
+                      Entry_Context : detachable Petal.Entry
+                      Entry_Parent  : detachable Petal.Entry)
+   do
+      Create_Entry (Entry_Name, Entry_Context, Entry_Parent, Entry_Type)
+      Is_Type := True
+   end
+   
+   Qualified_Name : String
+   do
+      if attached Parent as P then
+         Result := P.Qualified_Name & "." & Declared_Name
+      else
+         Result := Declared_Name
+      end
+   end
+   
+   Base_File_Name : String
+   do
+      if attached Parent as P then
+         Result := P.Base_File_Name & "-" & Name
+      else
+         Result := Name
+      end
+   end
+   
+   Generate_Kernel_Type
+   do
+      Put_Line ("   -- TODO: generate kernel type for " & Declared_Name)
+   end
+   
 end

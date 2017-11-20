@@ -1,0 +1,5 @@
+class Petal.Type.Capability
+inherit
+   Petal.Type
+   
+end
