@@ -1,0 +1,21 @@
+class Ada.Checks.Specification inherit
+   Ada.Checks.Declared
+
+feature
+
+   Part_Of_Body : Boolean
+   
+   Set_Part_Of_Body
+      do
+         Part_Of_Body := True
+      end
+      
+   Copy_To (To : Ada.Checks.Specification)
+      do
+         Copy_Top_Level (To)
+         if Part_Of_Body then
+            To.Set_Part_Of_Body
+         end
+      end
+
+end

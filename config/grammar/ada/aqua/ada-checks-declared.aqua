@@ -1,24 +1,28 @@
-deferred class Ada.Checks.Declared inherit
-   Aquarius.Trees.Program_Tree
-
+class Ada.Checks.Declared
+   
 feature
 
-   Copy_Top_Level (To : Ada.Checks.Declared)
+   Top_Level  : Boolean
+   Full_Name  : String
+   Local_Name : String
+   Entity     : Komnenos.Entity
+
+   Set_Name (Ids : String_List)
       do
+         Full_Name := Ids.Interpolate (".")
+         Local_Name := Ids.Last_Element
       end
       
-   Copy_Declaration (From_Node : Ada.Checks.Declared)
+   Set_Top_Level
       do
-         Name_Node := From_Node.Name_Node
-         Full_Name := From_Node.Full_Name
-         Name      := From_Node.Name
+         Top_Level := True
       end
-   
-   Full_Name : String
-   Name      : String
-   Name_Node : Aquarius.Trees.Program_Tree
-   
-feature
-   Declaration : Ada.Declaration
-   
+      
+   Copy_Top_Level (To : Ada.Checks.Declared)
+      do
+         if Top_Level then
+            To.Set_Top_Level
+         end
+      end
+      
 end
