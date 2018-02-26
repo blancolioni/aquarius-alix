@@ -49,18 +49,18 @@ package Aquarius.File_System_Stores is
      (Item : not null access Root_File_System_Store;
       Config : Tropos.Configuration);
 
---     procedure Create
---       (Item      : in out Root_File_System_Store'Class;
---        Base_Path : String);
---
---     procedure Add_Extension
---       (Item : in out Root_File_System_Store'Class;
---        Extension : String);
---
---     procedure Add_Folder
---       (Item        : in out Root_File_System_Store'Class;
---        Folder_Path : String);
---
+   procedure Create
+     (Item      : in out Root_File_System_Store'Class;
+      Base_Path : String);
+
+   procedure Add_Extension
+     (Item : in out Root_File_System_Store'Class;
+      Extension : String);
+
+   procedure Add_Folder
+     (Item        : in out Root_File_System_Store'Class;
+      Folder_Path : String);
+
    type File_System_Store is access all Root_File_System_Store'Class;
 
    procedure Register;
