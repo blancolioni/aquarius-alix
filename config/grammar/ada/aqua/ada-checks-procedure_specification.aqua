@@ -1,13 +1,22 @@
 class Ada.Checks.Procedure_Specification inherit
-   Ada.Checks.Declared
-
+   Ada.Checks.Specification
+   Aquarius.Trees.Program_Tree
+   Aqua.Text_IO
+   
 feature
 
-   After_Defining_Qualified_Reference (Child : Defining_Qualified_Reference)
+   After_Defining_Qualified_Reference (Child : Ada.Checks.Defining_Qualified_Reference)
       do
-         Name_Node := Child
          Full_Name := Child.Identifiers.Interpolate (".")
-         Name      := Child.Identifiers.Last_Element
+         Local_Name := Child.Identifiers.Last_Element
+         
+         if Part_Of_Body then
+            Put_Line ("new procedure body: " & Full_Name)
+            Entity := Create_Entity (Child, Local_Name, Full_Name, "procedure-body", Top_Level)
+         else
+            Put_Line ("new procedure spec: " & Full_Name)
+            Entity := Create_Entity (Child, Local_Name, Full_Name, "procedure-spec", Top_Level)
+         end
       end
 
 end

@@ -1,4 +1,7 @@
-class Ada.Checks.Defining_Program_Unit_Name inherit
+class Ada.Checks.Defining_Designator
+
+inherit
+   Ada.Checks.Declared
    Aquarius.Trees.Program_Tree
 
 feature
@@ -8,6 +11,7 @@ feature
    After_Defining_Qualified_Reference (Child : Defining_Qualified_Reference)
       do
          Identifiers := Child.Identifiers
+         Set_Name (Identifiers)
       end
 
 end

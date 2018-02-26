@@ -1,15 +1,24 @@
 class Ada.Checks.Package_Specification inherit
-   Ada.Checks.Declared
-
+   Aqua.Text_IO
+   Aquarius.Trees.Program_Tree
+   Ada.Checks.Specification
+   
 feature
 
-   After_Defining_Program_Unit_Name (Child : Defining_Program_Unit_Name)
+   After_Defining_Program_Unit_Name (Child : Ada.Checks.Defining_Program_Unit_Name)
       do
-         Full_Name := Child.Identifiers.Interpolate (".")
-         Name := Child.Identifiers.Last_Element
+         Set_Name (Child.Identifiers)
+         Entity := Create_Entity (Child, Local_Name, Full_Name, "package", Top_Level)
+         
+         Put_Line ("New package: " & Full_Name)
       end
       
-   Before_Matching_Name (Child : Matching_Name)
+   Before_Basic_Declarative_Item (Child : Ada.Checks.Basic_Declarative_Item)
+      do
+         Copy_Top_Level (Child)
+      end
+      
+   Before_Matching_Name (Child : Ada.Checks.Matching_Name)
       do
          Child.Set_Original_Name (Full_Name)
       end
