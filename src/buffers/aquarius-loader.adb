@@ -305,7 +305,9 @@ package body Aquarius.Loader is
                              (Ada.Text_IO.Standard_Error, ")");
                         end;
 
-                        Summarise_Context (Context);
+                        if False then
+                           Summarise_Context (Context);
+                        end if;
 
                         Have_Error := True;
                         Recovering := True;
