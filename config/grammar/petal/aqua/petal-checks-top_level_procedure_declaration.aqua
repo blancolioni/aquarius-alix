@@ -10,7 +10,12 @@ feature
       do
          Put_Line ("procedure " & Child.Identifiers.Interpolate ("."))
          create Entry
-         Entry.Create_Entry (Child.Identifiers.Last_Element, Void, Void, Void)
+         Entry.Create_Entry (Child.Identifiers.Last_Element, Void, Void)
       end
-      
+
+   Before_List_Of_Declarations (Child : Petal.Checks.List_Of_Declarations)
+   do
+      Child.Set_Context (Standard)
+   end
+   
 end

@@ -1,10 +1,16 @@
 class Petal.Checks.List_Of_Declarations
 inherit 
+   Petal.Context
    Petal.Entry_Table
    Aqua.Text_IO
 
 feature
 
+   Before_Declaration (Child : Petal.Checks.Declaration)
+   do
+      Copy_Context (Child)
+   end
+  
    After_Declaration (Child : Petal.Checks.Declaration)
       do
          if attached Child.Entry as E then
