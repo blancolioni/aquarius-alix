@@ -1,8 +1,18 @@
 class Petal.Checks.Declaration 
    inherit Petal.Declaration
-   
+
 feature
 
+   Before_Object_Declaration (Child : Petal.Checks.Object_Declaration)
+      do
+         Copy_Context (Child)
+      end
+      
+   Before_Subprogram_Declaration (Child : Petal.Checks.Subprogram_Declaration)
+      do
+         Copy_Context (Child)
+      end
+      
    After_Object_Declaration (Child : Petal.Checks.Object_Declaration)
       do
          Entry := Child.Entry

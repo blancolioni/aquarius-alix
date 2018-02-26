@@ -1,4 +1,6 @@
 class Petal.Declaration
+inherit            
+   Petal.Context
 
 feature
 
