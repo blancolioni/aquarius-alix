@@ -2,6 +2,6 @@ plugin Ada version 0.1 is
 
    group checks : semantic;
    
-   group references : project;
+   --  group references : project;
    
 end Ada;

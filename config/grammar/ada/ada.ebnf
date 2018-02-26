@@ -83,8 +83,8 @@ renaming_declaration ::=
     | generic_renaming_declaration
     
 object_renaming_declaration ::= 
-    defining_identifier ':' [null_exclusion] subtype_mark 'renames' object_name [aspect_specification] ';'
-  | defining_identifier ':' access_definition 'renames' object_name [ aspect_specification ] ';'
+    defining_identifier ':' [null_exclusion] subtype_mark 'renames' object_reference [aspect_specification] ';'
+  | defining_identifier ':' access_definition 'renames' object_reference [ aspect_specification ] ';'
   
 exception_renaming_declaration ::= defining_identifier ':' 'exception' 'renames' exception_name [ aspect_specification ] ';'
 
@@ -862,7 +862,6 @@ procedure_name ::= qualified_reference
 function_name ::= qualified_reference
 
 package_name ::= qualified_reference
-defining_package_name ::= defining_qualified_reference : package_name
 
 subprogram_name ::= qualified_reference | operator_symbol
 

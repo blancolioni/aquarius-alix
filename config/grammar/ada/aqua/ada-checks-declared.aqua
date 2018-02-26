@@ -1,0 +1,24 @@
+deferred class Ada.Checks.Declared inherit
+   Aquarius.Trees.Program_Tree
+
+feature
+
+   Copy_Top_Level (To : Ada.Checks.Declared)
+      do
+      end
+      
+   Copy_Declaration (From_Node : Ada.Checks.Declared)
+      do
+         Name_Node := From_Node.Name_Node
+         Full_Name := From_Node.Full_Name
+         Name      := From_Node.Name
+      end
+   
+   Full_Name : String
+   Name      : String
+   Name_Node : Aquarius.Trees.Program_Tree
+   
+feature
+   Declaration : Ada.Declaration
+   
+end
