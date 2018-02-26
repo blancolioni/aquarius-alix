@@ -15,7 +15,7 @@ with Aquarius.Programs.Parser;
 with Aquarius.Rendering.Komnenos_Renderer;
 with Aquarius.Trees.Cursors;
 
-with Komnenos.Entities.Aqua_Entities;
+with Komnenos.Entities.Tables;
 with Komnenos.Entities.Visual_Manager;
 with Komnenos.Fragments;
 with Komnenos.Themes;
@@ -399,6 +399,31 @@ package body Aquarius.Programs.Komnenos_Entities is
       end if;
    end Create_Aquarius_Source_Entity;
 
+   -----------------------------------
+   -- Create_Aquarius_Source_Entity --
+   -----------------------------------
+
+   procedure Create_Aquarius_Source_Entity
+     (Table            : not null access
+        Komnenos.Entities.Entity_Table_Interface'Class;
+      Name             : String;
+      Qualified_Name   : String;
+      Class_Name       : String;
+      Top_Level        : Boolean;
+      Compilation_Unit : not null access Program_Tree_Type'Class;
+      Defining_Name    : not null access Program_Tree_Type'Class;
+      Entity_Spec      : not null access Program_Tree_Type'Class;
+      Entity_Body      : access Program_Tree_Type'Class)
+   is
+      Entity : constant Komnenos.Entities.Entity_Reference :=
+                 Create_Aquarius_Source_Entity
+                   (Table, Name, Qualified_Name, Class_Name,
+                    Top_Level, Compilation_Unit, Defining_Name,
+                    Entity_Spec, Entity_Body);
+   begin
+      pragma Unreferenced (Entity);
+   end Create_Aquarius_Source_Entity;
+
    -------------------
    -- Delete_Region --
    -------------------
@@ -736,7 +761,6 @@ package body Aquarius.Programs.Komnenos_Entities is
       return Aqua.Word
    is
       use type Aqua.Word;
-      use Komnenos.Entities.Aqua_Entities;
       Spec           : constant Program_Tree :=
                          Program_Tree
                            (Context.To_External_Object (Arguments (1)));
@@ -750,7 +774,7 @@ package body Aquarius.Programs.Komnenos_Entities is
                          Arguments (6) /= 0;
       Entity  : constant Komnenos.Entities.Entity_Reference :=
                   Create_Aquarius_Source_Entity
-                    (Table            => Get_Aqua_Object.Table,
+                    (Table            => Komnenos.Entities.Tables.Table ("/"),
                      Name             => Name,
                      Qualified_Name   => Qualified_Name,
                      Class_Name       => Class_Name,
@@ -762,6 +786,7 @@ package body Aquarius.Programs.Komnenos_Entities is
    begin
       return Context.To_Word (Entity);
    end Handle_Create_Entity;
+
    ----------------------
    -- Insert_Character --
    ----------------------

@@ -15,6 +15,18 @@ package Aquarius.Programs.Komnenos_Entities is
       Entity_Body      : access Program_Tree_Type'Class)
       return Komnenos.Entities.Entity_Reference;
 
+   procedure Create_Aquarius_Source_Entity
+     (Table            : not null access
+        Komnenos.Entities.Entity_Table_Interface'Class;
+      Name             : String;
+      Qualified_Name   : String;
+      Class_Name       : String;
+      Top_Level        : Boolean;
+      Compilation_Unit : not null access Program_Tree_Type'Class;
+      Defining_Name    : not null access Program_Tree_Type'Class;
+      Entity_Spec      : not null access Program_Tree_Type'Class;
+      Entity_Body      : access Program_Tree_Type'Class);
+
    procedure Set_Entity_Body
      (Entity : Komnenos.Entities.Entity_Reference;
       Entity_Body : not null access Program_Tree_Type'Class);
