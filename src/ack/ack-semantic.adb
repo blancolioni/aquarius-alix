@@ -1,7 +1,6 @@
 with Ada.Text_IO;
 
-with Komnenos.Entities;
-with Komnenos.UI;
+with Komnenos.Entities.Tables;
 
 with Aquarius.Loader;
 with Aquarius.Programs.Komnenos_Entities;
@@ -1448,31 +1447,22 @@ package body Ack.Semantic is
                        (Base_Name, Node);
                   end;
 
-                  if Komnenos.UI.Have_UI then
-                     declare
-                        use Aquarius.Programs.Komnenos_Entities;
-                        use Komnenos.Entities;
-                        K_Entity : constant Entity_Reference :=
-                                     Create_Aquarius_Source_Entity
-                                       (Table            =>
-                                                       Komnenos.UI.Current_UI,
-                                        Name             =>
-                                          Entity.Qualified_Name,
-                                        Qualified_Name   =>
-                                          Entity.Qualified_Name,
-                                        Class_Name       => "class",
-                                        Top_Level        => True,
-                                        Compilation_Unit => Program,
-                                        Defining_Name    => Program,
-                                        Entity_Spec      => Program,
-                                        Entity_Body      => Program);
-                     begin
-                        Komnenos.UI.Add_Entity
-                          (UI     => Komnenos.UI.Current_UI.all,
-                           Key    => "class-" & Entity.Standard_Name,
-                           Entity => K_Entity);
-                     end;
-                  end if;
+                  declare
+                     use Aquarius.Programs.Komnenos_Entities;
+                     use Komnenos.Entities;
+                  begin
+                     Create_Aquarius_Source_Entity
+                       (Table            =>
+                          Komnenos.Entities.Tables.Table ("aqua"),
+                        Name             => Entity.Qualified_Name,
+                        Qualified_Name   => Entity.Qualified_Name,
+                        Class_Name       => "class",
+                        Top_Level        => True,
+                        Compilation_Unit => Program,
+                        Defining_Name    => Program,
+                        Entity_Spec      => Program,
+                        Entity_Body      => Program);
+                  end;
 
                   Partial_Class_List.Append (Node);
                end;
