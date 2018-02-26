@@ -1,0 +1,12 @@
+class Ada.Checks.Defining_Program_Unit_Name
+
+feature
+
+   Identifiers : String_List
+   Parent      : Ada.Declaration.Subprogram
+   
+   After_Defining_Qualified_Reference (Child : Ada.Checks.Defining_Qualified_Reference)
+      do
+         Identifiers := Child.Identifiers
+      end
+end

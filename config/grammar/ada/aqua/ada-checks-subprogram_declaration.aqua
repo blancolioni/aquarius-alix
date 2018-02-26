@@ -1,0 +1,17 @@
+class Ada.Checks.Subprogram_Declaration inherit
+   Ada.Checks.Declared
+   
+feature
+
+   Before_Subprogram_Specification (Child : Ada.Checks.Subprogram_Specification)
+      do
+         Copy_Top_Level (Child)
+      end
+
+   After_Subprogram_Specification (Child : Ada.Checks.Subprogram_Specification)
+      do
+         Full_Name := Child.Full_Name
+         Name := Child.Name
+      end
+      
+end

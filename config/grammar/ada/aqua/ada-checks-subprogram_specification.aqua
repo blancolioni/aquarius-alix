@@ -1,0 +1,10 @@
+class Ada.Checks.Subprogram_Specification inherit
+   Ada.Checks.Declared
+
+feature
+
+   After_Procedure_Specification (Child : Procedure_Specification)
+      do
+         Copy_Declaration (Child)
+      end
+end

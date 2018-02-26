@@ -1,0 +1,13 @@
+class Ada.Checks.Procedure_Specification inherit
+   Ada.Checks.Declared
+
+feature
+
+   After_Defining_Qualified_Reference (Child : Defining_Qualified_Reference)
+      do
+         Name_Node := Child
+         Full_Name := Child.Identifiers.Interpolate (".")
+         Name      := Child.Identifiers.Last_Element
+      end
+
+end
