@@ -1,0 +1,15 @@
+class Petal.Context
+
+feature
+   Context : Petal.Entry_Table
+   
+   Set_Context (To : Petal.Entry_Table)
+   do
+      Context := To
+   end
+   
+   Copy_Context (Child : Petal.Context)
+   do
+      Child.Set_Context (Context)
+   end
+   

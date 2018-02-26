@@ -6,6 +6,7 @@ inherit
 feature
    Name : String
    Constant : Boolean
+   Type        : detachable Petal.Type
    Initialiser : detachable Petal.Checks.Expression
    
 feature
@@ -24,18 +25,27 @@ feature
    do
       Initialiser := Expr
    end
+   
+   Before_Typeref (Child : Petal.Checks.Typeref)
+   do
+      Copy_Context (Child)
+   end
       
    After_Node
    do
       create Entry
       if Constant then
          if attached Initialiser as Init then
-            Entry.Create_Constant_Entry (Name, Init, Void, Void, Void)
+            Entry.Create_Constant_Entry (Name, Init, Void, Void)
          else
             Error ("constant requires initialiser")
          end
       else
-         Entry.Create_Entry (Name, Void, Void, Void)
+         if attached Type as Entry_Type then 
+            Entry.Create_Entry (Name, Void, Entry_Type)
+         else
+            Error ("missing type")
+         end
       end
    end
    

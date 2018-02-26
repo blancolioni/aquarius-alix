@@ -1,0 +1,17 @@
+class Petal.Checks.Named_Typeref
+inherit
+   Aquarius.Trees.Program_Tree
+   Petal.Context
+   
+feature
+   Entry : Petal.Entry
+   
+feature
+
+   After_Qualified_Identifier (Child : Petal.Checks.Qualified_Identifier)
+   do
+      Entry := Child.Lookup (Context)
+   end
+
+end
+   

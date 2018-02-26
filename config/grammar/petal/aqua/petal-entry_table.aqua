@@ -16,6 +16,11 @@ feature
    
 feature
 
+   Insert (Entry : Petal.Entry)
+   do
+      Entry_List.Append (Entry)
+   end
+      
    Find (Name : String) : detachable Petal.Entry
    local
       Lower_Name : String := Name.To_Lower
