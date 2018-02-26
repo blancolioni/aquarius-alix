@@ -12,7 +12,7 @@ feature
          Put_Line ("interface " & Child.Identifiers.Interpolate ("."))
          create Entry
          create Interface
-         Entry.Create_Entry (Child.Identifiers.Last_Element, Void, Void, Interface)
+         Entry.Create_Entry (Child.Identifiers.Last_Element, Void, Interface)
       end
       
    Before_List_Of_Declarations (Child : Petal.Checks.List_Of_Declarations)

@@ -1,0 +1,24 @@
+class Petal.Checks.Typeref
+inherit
+   Aquarius.Trees.Program_Tree
+   Petal.Context
+   
+feature
+   Type_Entry : Petal.Entry
+   Type       : Petal.Type
+   
+feature
+
+   Before_Named_Typeref (Child : Petal.Checks.Named_Typeref) 
+   do
+      Copy_Context (Child)
+   end
+   
+   After_Named_Typeref (Ref : Petal.Checks.Named_Typeref)
+   do
+      Type_Entry := Ref.Entry
+      Type := Type_Entry.Type
+   end
+
+end
+   
