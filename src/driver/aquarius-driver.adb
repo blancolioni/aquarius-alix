@@ -40,6 +40,7 @@ with Komnenos.UI.Sessions;
 
 --  with Komnenos.Entities.Source.Aquarius_Source;
 with Komnenos.Entities.Aqua_Entities;
+with Komnenos.Entities.Tables;
 
 procedure Aquarius.Driver is
 
@@ -389,6 +390,8 @@ begin
                   Komnenos.UI.Create_UI;
          Load_Session : Boolean := True;
       begin
+
+         Komnenos.Entities.Tables.Set_Table ("/", UI);
 
          UI.Load_Style_Sheet
            (Aquarius.Config_Paths.Config_File
