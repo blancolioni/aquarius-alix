@@ -2,14 +2,18 @@ with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 
 with Ada.Directories;
 
+with Komnenos.Entities.Tables;
+
 with Aquarius.Config_Paths;
+with Aquarius.File_System_Stores;
 
 package body Ack.Files is
 
    package String_Lists is
      new Ada.Containers.Indefinite_Doubly_Linked_Lists (String);
 
-   Class_Path : String_Lists.List;
+   Class_Path  : String_Lists.List;
+   Class_Store : Aquarius.File_System_Stores.File_System_Store;
 
    ---------------------
    -- Find_Class_File --
@@ -21,11 +25,31 @@ package body Ack.Files is
       Name     : Name_Id)
       return String
    is
+      use type Aquarius.File_System_Stores.File_System_Store;
       use type Aquarius.Programs.Program_Tree;
+
       File_Name : constant String :=
                     Parent.Base_Child_File_Name (Name) & ".aqua";
    begin
-      if Class_Path.Is_Empty then
+      if Class_Store = null then
+         Class_Store :=
+           new Aquarius.File_System_Stores.Root_File_System_Store;
+         Class_Store.Create
+           (Aquarius.Config_Paths.Config_File ("aqua"));
+         Class_Store.Add_Folder (".");
+         Class_Store.Add_Folder ("standard");
+         Class_Store.Add_Folder ("generated");
+         Class_Store.Add_Extension ("aqua");
+
+         declare
+            Table : constant Komnenos.Entities.Entity_Table_Access :=
+                      new Komnenos.Entities.Entity_Table;
+         begin
+            Table.Set_Program_Store (Class_Store);
+            Komnenos.Entities.Tables.Set_Table
+              ("aqua", Table);
+         end;
+
          Class_Path.Append (Ada.Directories.Current_Directory);
          Class_Path.Append (Aquarius.Config_Paths.Config_File
                             ("aqua"));
