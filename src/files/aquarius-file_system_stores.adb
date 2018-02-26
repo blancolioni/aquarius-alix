@@ -19,6 +19,43 @@ package body Aquarius.File_System_Stores is
    function Load_Program (Path : String)
                            return Aquarius.Programs.Program_Tree;
 
+   -------------------
+   -- Add_Extension --
+   -------------------
+
+   procedure Add_Extension
+     (Item      : in out Root_File_System_Store'Class;
+      Extension : String)
+   is
+   begin
+      Item.Extensions.Insert (Extension);
+   end Add_Extension;
+
+   ----------------
+   -- Add_Folder --
+   ----------------
+
+   procedure Add_Folder
+     (Item        : in out Root_File_System_Store'Class;
+      Folder_Path : String)
+   is
+   begin
+      Item.Folders.Append (Folder_Path);
+   end Add_Folder;
+
+   ------------
+   -- Create --
+   ------------
+
+   procedure Create
+     (Item      : in out Root_File_System_Store'Class;
+      Base_Path : String)
+   is
+   begin
+      Item.Base_Path :=
+        Aquarius.Names.To_Aquarius_Name (Base_Path);
+   end Create;
+
    -----------------
    -- From_Config --
    -----------------
