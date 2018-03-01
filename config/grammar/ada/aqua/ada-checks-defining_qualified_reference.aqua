@@ -1,12 +1,34 @@
 class Ada.Checks.Defining_Qualified_Reference inherit
    Aquarius.Trees.Program_Tree
-
+   Aqua.Text_IO
+   
 feature
 
+   Context     : detachable Komnenos.Entity
+   New_Context : detachable Komnenos.Entity
+   
+   Reference   : Aqua.Containers.Linked_List[Ada.Entity_Reference]
    Identifiers : String_List
    
-   After_Identifier (Name : String)
+   After_Identifier (Id : String)
+      local
+         Ref : Ada.Entity_Reference
       do
-         Identifiers.Append (Name)
+         Context := New_Context
+         if attached Context then
+            New_Context := Find_Entity ("/", Id, "")
+         else
+            if Identifiers.Is_Empty then
+               New_Context := Find_Entity ("/", Id, "")
+            else
+               Error ("undefined: " & Identifiers.Last_Element)
+            end
+         end
+         if attached New_Context then
+            create Ref
+            Ref.Make (Id, New_Context, Current)
+            Reference.Append (Ref)
+         end
+         Identifiers.Append (Id)
       end
 end
