@@ -397,7 +397,9 @@ begin
            (Aquarius.Config_Paths.Config_File
               ("styles/default.css"));
 
-         Komnenos.Entities.Aqua_Entities.Create_Aqua_Object (UI);
+         if False then
+            Komnenos.Entities.Aqua_Entities.Create_Aqua_Object (UI);
+         end if;
 
          if Command_Line.Project_Name /= "" then
             declare

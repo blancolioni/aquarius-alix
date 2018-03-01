@@ -311,6 +311,10 @@ package body Aquarius.Programs is
       return 0;
    end Aqua_Tree_Error;
 
+   ----------------------------------
+   -- Aqua_Tree_Inherited_Property --
+   ----------------------------------
+
    function Aqua_Tree_Inherited_Property
      (Context   : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Aqua.Array_Of_Words)
@@ -333,7 +337,7 @@ package body Aquarius.Programs is
       if It = null then
          return 0;
       else
-         return It.Get_Property (Name);
+         return Context.To_Word (It.Get_Property (Name));
       end if;
 
    end Aqua_Tree_Inherited_Property;
@@ -1169,7 +1173,7 @@ package body Aquarius.Programs is
    overriding function Get_Property
      (Program  : in out Program_Tree_Type;
       Name     : in String)
-      return Aqua.Word
+      return Aqua.Values.Property_Value
    is
    begin
 
@@ -1189,12 +1193,13 @@ package body Aquarius.Programs is
             Object_Primitive      : constant Primitive_Reference :=
                                       Aqua.Primitives.Get_Primitive
                                         (Object_Primitive_Name);
-            Result : Word;
+            Result                : Aqua.Values.Property_Value :=
+                                      Aqua.Values.Null_Value;
          begin
             if Object_Primitive /= 0 then
-               Result := Aqua.Words.To_Primitive_Word (Object_Primitive);
-            else
-               Result := 0;
+               Result :=
+                 Aqua.Values.To_Word_Value
+                   (Aqua.Words.To_Primitive_Word (Object_Primitive));
             end if;
             return Result;
          end;
@@ -1728,7 +1733,7 @@ package body Aquarius.Programs is
    begin
       pragma Assert (Aquarius.Syntax."/=" (Syntax, null));
 
-         Num_Allocated_Trees := Num_Allocated_Trees + 1;
+      Num_Allocated_Trees := Num_Allocated_Trees + 1;
       if Free_List.Last_Index > 0 then
          Result := Free_List.Last_Element;
          Free_List.Delete (Free_List.Last_Index);
@@ -2097,8 +2102,8 @@ package body Aquarius.Programs is
    overriding procedure Scan_Properties
      (Program  : in Program_Tree_Type;
       Process  : not null access
-        procedure (Property_Name : String;
-                   Property_Value : Aqua.Word))
+        procedure (Name : String;
+                   Value : Aqua.Values.Property_Value))
    is
    begin
       if Program.Aqua_Object /= null then
@@ -2252,7 +2257,7 @@ package body Aquarius.Programs is
    overriding procedure Set_Property
      (Program  : in out Program_Tree_Type;
       Name     : in     String;
-      Value    : in     Aqua.Word)
+      Value    : in     Aqua.Values.Property_Value)
    is
    begin
       Check_Aqua_Primitives;
