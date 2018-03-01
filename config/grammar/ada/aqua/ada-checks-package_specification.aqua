@@ -10,6 +10,10 @@ feature
          Set_Name (Child.Identifiers)
          Entity := Create_Entity (Child, Local_Name, Full_Name, "package", Top_Level)
          
+         across Child.Reference as Ref loop
+            Ref.Tree.Cross_Reference ("/", Entity, Ref.Entity, "reference")
+         end
+         
          Put_Line ("New package: " & Full_Name)
       end
       
