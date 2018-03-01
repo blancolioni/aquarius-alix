@@ -19,6 +19,7 @@ with Aquarius.Types;
 with Aquarius.Trees;
 
 with Aqua.Objects;
+with Aqua.Values;
 
 with Tagatha.Fragments;
 
@@ -540,12 +541,12 @@ private
    overriding procedure Set_Property
      (Program  : in out Program_Tree_Type;
       Name     : in     String;
-      Value    : in     Aqua.Word);
+      Value    : in     Aqua.Values.Property_Value);
 
    overriding function Get_Property
      (Program  : in out Program_Tree_Type;
       Name     : in String)
-      return Aqua.Word;
+      return Aqua.Values.Property_Value;
 
    overriding function Has_Property
      (Program  : in Program_Tree_Type;
@@ -555,8 +556,8 @@ private
    overriding procedure Scan_Properties
      (Program  : in Program_Tree_Type;
       Process  : not null access
-        procedure (Property_Name : String;
-                   Property_Value : Aqua.Word));
+        procedure (Name : String;
+                   Value : Aqua.Values.Property_Value));
 
    overriding function Show
      (Program        : Program_Tree_Type;
