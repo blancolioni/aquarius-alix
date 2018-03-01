@@ -1,3 +1,4 @@
+with Ada.Exceptions;
 with Ada.Text_IO;
 
 with Komnenos.Entities.Tables;
@@ -761,6 +762,7 @@ package body Ack.Semantic is
          begin
             if Target_Class /= null
               and then Target_Class.Behaviour = Ack.Classes.Aqua_Primitive
+              and then Get_Type (Expression) /= null
               and then Target_Class.Link_Name
                 /= Get_Type (Expression).Link_Name
             then
@@ -773,6 +775,14 @@ package body Ack.Semantic is
                   Node_Table (Expression).Field (6) := Node;
                end;
             end if;
+         exception
+            when E : others =>
+               Ada.Text_IO.Put_Line
+                 (Ada.Text_IO.Standard_Error,
+                  Get_Program (Expression).Show_Location
+                  & ": "
+                  & Ada.Exceptions.Exception_Message (E));
+               raise;
          end;
       end if;
    end Analyse_Expression;
