@@ -703,8 +703,8 @@ package body Ack.Features is
                           External_Alias
                             (Dot_Index + 1 .. External_Alias'Last);
    begin
-      Feature.Property := False;
-      Feature.Routine := True;
+      Feature.Property := External_Type = "aqua_property";
+      Feature.Routine := not Feature.Property;
       Feature.External := True;
       if Feature.Value_Type /= null then
          Feature.Has_Result := True;

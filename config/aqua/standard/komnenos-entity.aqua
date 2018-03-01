@@ -1,2 +1,10 @@
-class Komnenos.Entity
+note
+   Behaviour: Aqua_Primitive
+   
+class Komnenos.Entity 
+
+feature
+
+   Name   : String external "aqua_property"
+   
 end
