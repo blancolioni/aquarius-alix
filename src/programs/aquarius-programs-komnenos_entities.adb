@@ -162,6 +162,16 @@ package body Aquarius.Programs.Komnenos_Entities is
       Arguments : Aqua.Array_Of_Words)
       return Aqua.Word;
 
+   function Handle_Cross_Reference
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
+   function Handle_Get_Entity
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
    ------------------
    -- Add_Handlers --
    ------------------
@@ -172,6 +182,14 @@ package body Aquarius.Programs.Komnenos_Entities is
         (Name           => "tree__create_entity",
          Argument_Count => 6,
          Handler        => Handle_Create_Entity'Access);
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__cross_reference",
+         Argument_Count => 5,
+         Handler        => Handle_Cross_Reference'Access);
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__find_entity",
+         Argument_Count => 4,
+         Handler        => Handle_Get_Entity'Access);
    end Add_Handlers;
 
    ------------------------
@@ -361,13 +379,13 @@ package body Aquarius.Programs.Komnenos_Entities is
             Result : Komnenos.Entities.Entity_Reference;
          begin
             Entity.Create
-              (Key          => Key,
-               Identifier   => Name,
-               Full_Name    => Qualified_Name,
-               Class_Name   => Class_Name,
-               Path         => File_Name,
-               Display_Text => Name,
-               Description  => File_Name);
+              (Key              => Key,
+               Identifier       => Name,
+               Full_Name        => Qualified_Name,
+               Class_Name       => Class_Name,
+               Path             => File_Name,
+               Display_Text     => Name,
+               Description      => File_Name);
 
             Entity.Top_Level := Top_Level;
             Entity.Defining_Name := Program_Tree (Defining_Name);
@@ -786,6 +804,68 @@ package body Aquarius.Programs.Komnenos_Entities is
    begin
       return Context.To_Word (Entity);
    end Handle_Create_Entity;
+
+   ----------------------------
+   -- Handle_Cross_Reference --
+   ----------------------------
+
+   function Handle_Cross_Reference
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      use Komnenos.Entities;
+      Referrer_Tree     : constant Program_Tree :=
+                            Program_Tree
+                              (Context.To_External_Object (Arguments (1)));
+      Table_Name        : constant String :=
+                            Context.To_String (Arguments (2));
+      Referrer_Entity   : constant Entity_Reference :=
+                            Entity_Reference
+                              (Context.To_External_Object (Arguments (3)));
+      Referenced_Entity : constant Entity_Reference :=
+                            Entity_Reference
+                              (Context.To_External_Object (Arguments (4)));
+      Ref_Type          : constant String :=
+                            Context.To_String (Arguments (5));
+   begin
+      Komnenos.Entities.Tables.Table (Table_Name).Add_Cross_Reference
+        (Item      => Referenced_Entity,
+         Referrer  => Referrer_Entity,
+         File_Name =>
+           Aquarius.Names.To_String (Referrer_Tree.Source_File_Name),
+         Line      => Referrer_Tree.Source_Line,
+         Column    => Referrer_Tree.Source_Column,
+         Ref_Type  => Ref_Type);
+      return 1;
+   end Handle_Cross_Reference;
+
+   -----------------------
+   -- Handle_Get_Entity --
+   -----------------------
+
+   function Handle_Get_Entity
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      use Komnenos.Entities;
+      Table_Name        : constant String :=
+                            Context.To_String (Arguments (2));
+      Entity_Name       : constant String :=
+                            Context.To_String (Arguments (3));
+      Class_Name        : constant String :=
+                            Context.To_String (Arguments (4));
+      Entity            : constant Entity_Reference :=
+                            Komnenos.Entities.Tables.Table (Table_Name)
+                            .Find (Entity_Name, Class_Name);
+   begin
+      if Entity = null then
+         return 0;
+      else
+         return Context.To_Word (Entity);
+      end if;
+   end Handle_Get_Entity;
 
    ----------------------
    -- Insert_Character --
