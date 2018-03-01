@@ -863,7 +863,8 @@ package body Aquarius.Programs.Komnenos_Entities is
       if Entity = null then
          return 0;
       else
-         return Context.To_Word (Entity);
+         return Context.Return_Class_Instance
+           ("komnenos__entity", Entity);
       end if;
    end Handle_Get_Entity;
 
