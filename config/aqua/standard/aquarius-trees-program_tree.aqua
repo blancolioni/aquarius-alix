@@ -5,9 +5,11 @@ class Aquarius.Trees.Program_Tree
       
 feature
 
-   Name   : String external "aqua"
-   Text   : String external "aqua"
-
+   Name               : String external "aqua"
+   Text               : String external "aqua"
+   Image              : String external "aqua"
+   Concatenated_Image : String external "aqua"
+   
    Parent : detachable Aquarius.Trees.Program_Tree
       external "aqua"
 
