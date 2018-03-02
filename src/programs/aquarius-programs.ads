@@ -505,6 +505,11 @@ private
          Aqua_Reference    : Aqua.External_Reference := 0;
       end record;
 
+   overriding function Class_Name
+     (It : Program_Tree_Type)
+      return String
+   is ("Program_Tree");
+
    --  override of Add_Child so that properties get copied from
    --  parent to child.
    --  NB: Always add the child to the tree BEFORE doing anything
@@ -592,6 +597,11 @@ private
       end record;
 
    overriding function Name
+     (It : Root_Program_Tree_Iterator)
+      return String
+   is ("[program-tree-iterator]");
+
+   overriding function Class_Name
      (It : Root_Program_Tree_Iterator)
       return String
    is ("[program-tree-iterator]");
