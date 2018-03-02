@@ -1,6 +1,7 @@
 private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Strings.Fixed.Hash;
 private with Aqua.Iterators;
+private with Aqua.Execution;
 
 with Komnenos.Source;
 
@@ -634,5 +635,10 @@ private
      (It : Root_Program_Tree_Iterator)
       return Aqua.Word
    is (0);
+
+   function To_Program_Tree
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Value   : Aqua.Word)
+      return Program_Tree;
 
 end Aquarius.Programs;
