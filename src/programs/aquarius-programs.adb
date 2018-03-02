@@ -12,7 +12,6 @@ with Aquarius.Trees.Properties;
 with Aquarius.Programs.Aqua_Tagatha;
 with Aquarius.Programs.Komnenos_Entities;
 
-with Aqua.Execution;
 with Aqua.Primitives;
 with Aqua.Words;
 
@@ -84,6 +83,11 @@ package body Aquarius.Programs is
 
    function Aqua_Tree_Concatenated_Image
      (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
+   function Aqua_Tree_Image
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Aqua.Array_Of_Words)
       return Aqua.Word;
 
@@ -311,6 +315,22 @@ package body Aquarius.Programs is
       return 0;
    end Aqua_Tree_Error;
 
+   ---------------------
+   -- Aqua_Tree_Image --
+   ---------------------
+
+   function Aqua_Tree_Image
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      Tree : constant Program_Tree :=
+               Program_Tree
+                 (Context.To_External_Object (Arguments (1)));
+   begin
+      return Context.To_String_Word (Tree.Image);
+   end Aqua_Tree_Image;
+
    ----------------------------------
    -- Aqua_Tree_Inherited_Property --
    ----------------------------------
@@ -448,6 +468,11 @@ package body Aquarius.Programs is
         (Name           => "tree__concatenated_image",
          Argument_Count => 1,
          Handler        => Aqua_Tree_Concatenated_Image'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__image",
+         Argument_Count => 1,
+         Handler        => Aqua_Tree_Image'Access);
 
       Aqua.Primitives.New_Primitive_Function
         (Name           => "tree__text",
@@ -2531,6 +2556,20 @@ package body Aquarius.Programs is
          return Item.Syntax.Non_Terminal_Name;
       end if;
    end Text;
+
+   ---------------------
+   -- To_Program_Tree --
+   ---------------------
+
+   function To_Program_Tree
+     (Context : in out Aqua.Execution.Execution_Interface'Class;
+      Value   : Aqua.Word)
+      return Program_Tree
+   is
+   begin
+      return Context.To_Class_Instance
+        ("aquarius__trees__program_tree", Value);
+   end To_Program_Tree;
 
    ------------------
    -- Update_Entry --
