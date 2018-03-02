@@ -464,9 +464,7 @@ package body Ack.Features is
             Output_Stack_Words => 0,
             Changed_Registers  => "pv");
 
-         if Feature.Has_Result then
-            Unit.Push_Register ("pv");
-         end if;
+         Unit.Push_Register ("pv");
 
          return;
       end if;
