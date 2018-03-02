@@ -802,7 +802,7 @@ package body Aquarius.Programs.Komnenos_Entities is
                      Entity_Spec      => Spec,
                      Entity_Body      => null);
    begin
-      return Context.To_Word (Entity);
+      return Context.Return_Class_Instance ("komnenos__entity", Entity);
    end Handle_Create_Entity;
 
    ----------------------------
