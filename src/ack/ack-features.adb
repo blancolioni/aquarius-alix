@@ -191,8 +191,6 @@ package body Ack.Features is
    is
       Arg_Count    : constant Natural :=
                        1 + Natural (Feature.Arguments.Length);
-      Frame_Count  : constant Natural :=
-                       Natural (Feature.Locals.Length);
       Result_Count : constant Natural :=
                        (if Feature.Value_Type /= null
                         then 1 else 0);
@@ -203,10 +201,16 @@ package body Ack.Features is
       Exit_Label       : constant Positive := Unit.Next_Label;
    begin
       if Feature.Routine then
+
+         --  Don't allocate a frame, because we do it later
+         --  by pushing zeroes onto the stack.  We don't need
+         --  to worry about popping the frame off at the end
+         --  of the routine, because this is done when we
+         --  transfer the frame pointer to the stack pointer.
          Unit.Begin_Routine
            (Name           => Feature.Link_Name,
             Argument_Words => Arg_Count,
-            Frame_Words    => Frame_Count,
+            Frame_Words    => 0,
             Result_Words   => Result_Count,
             Global         => True);
 
