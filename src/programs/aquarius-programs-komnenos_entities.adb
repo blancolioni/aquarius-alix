@@ -780,11 +780,9 @@ package body Aquarius.Programs.Komnenos_Entities is
    is
       use type Aqua.Word;
       Spec           : constant Program_Tree :=
-                         Program_Tree
-                           (Context.To_External_Object (Arguments (1)));
+                         To_Program_Tree (Context, Arguments (1));
       Defining_Name  : constant Program_Tree :=
-                         Program_Tree
-                           (Context.To_External_Object (Arguments (2)));
+                         To_Program_Tree (Context, Arguments (2));
       Name           : constant String := Context.To_String (Arguments (3));
       Qualified_Name : constant String := Context.To_String (Arguments (4));
       Class_Name     : constant String := Context.To_String (Arguments (5));
@@ -816,16 +814,13 @@ package body Aquarius.Programs.Komnenos_Entities is
    is
       use Komnenos.Entities;
       Referrer_Tree     : constant Program_Tree :=
-                            Program_Tree
-                              (Context.To_External_Object (Arguments (1)));
+                            To_Program_Tree (Context, Arguments (1));
       Table_Name        : constant String :=
                             Context.To_String (Arguments (2));
       Referrer_Entity   : constant Entity_Reference :=
-                            Entity_Reference
-                              (Context.To_External_Object (Arguments (3)));
+                            To_Entity (Context, Arguments (3));
       Referenced_Entity : constant Entity_Reference :=
-                            Entity_Reference
-                              (Context.To_External_Object (Arguments (4)));
+                            To_Entity (Context, Arguments (4));
       Ref_Type          : constant String :=
                             Context.To_String (Arguments (5));
    begin
