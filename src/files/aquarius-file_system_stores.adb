@@ -197,6 +197,7 @@ package body Aquarius.File_System_Stores is
                               & Simple_Name (File_Name)
                               & ": "
                               & Ada.Exceptions.Exception_Message (E));
+                           raise;
                      end;
                   end if;
                else

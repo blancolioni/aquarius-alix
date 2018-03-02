@@ -210,6 +210,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
          Ada.Text_IO.Put_Line
            (Ada.Text_IO.Standard_Error,
             Ada.Exceptions.Exception_Message (E));
+         raise;
    end Execute;
 
    -------------
@@ -248,6 +249,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
             & Parent_Tree.Name & "/" & Child_Tree.Name
             & ": "
             & Ada.Exceptions.Exception_Message (E));
+         raise;
    end Execute;
 
    -----------------------------
