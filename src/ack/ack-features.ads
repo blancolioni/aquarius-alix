@@ -33,6 +33,10 @@ package Ack.Features is
      (Feature : Feature_Entity_Record'Class)
       return Boolean;
 
+   function Is_External_Routine
+     (Feature : Feature_Entity_Record'Class)
+      return Boolean;
+
    procedure Set_Result_Type
      (Feature     : in out Feature_Entity_Record'Class;
       Result_Type : not null access Ack.Types.Type_Entity_Record'Class);
@@ -186,6 +190,11 @@ private
      (Feature : Feature_Entity_Record'Class)
       return Boolean
    is (Feature.Property);
+
+   function Is_External_Routine
+     (Feature : Feature_Entity_Record'Class)
+      return Boolean
+   is (Feature.External and then not Feature.Property);
 
    function Is_Feature
      (Entity : not null access constant Root_Entity_Type'Class)
