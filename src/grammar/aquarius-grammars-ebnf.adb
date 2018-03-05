@@ -1,5 +1,8 @@
 with Komnenos.Entities.Maps;
+with Komnenos.Entities.Tables;
 
+with Aquarius.Config_Paths;
+with Aquarius.File_System_Stores;
 with Aquarius.Grammars.Builtin;
 with Aquarius.Syntax;
 with Aquarius.Trees;
@@ -7,6 +10,8 @@ with Aquarius.Trees;
 with Aquarius.Programs.Komnenos_Entities;
 
 package body Aquarius.Grammars.EBNF is
+
+   procedure Create_EBNF_Table;
 
    procedure Create_Terminals
      (Grammar : Aquarius.Grammars.Aquarius_Grammar);
@@ -26,6 +31,7 @@ package body Aquarius.Grammars.EBNF is
       Internal : constant Aquarius.Trees.Tree :=
         Aquarius.Trees.Internal_Declaration;
    begin
+      Create_EBNF_Table;
       Add_Non_Terminal (Grammar, "source-file",
                         New_Repeat (Grammar.Frame, Internal, True, null),
                         Grammar.Reference_Name (Internal, "definition"));
@@ -37,6 +43,30 @@ package body Aquarius.Grammars.EBNF is
 
       return Grammar;
    end Create_EBNF_Grammar;
+
+   -----------------------
+   -- Create_EBNF_Table --
+   -----------------------
+
+   procedure Create_EBNF_Table is
+      Class_Store : Aquarius.File_System_Stores.Root_File_System_Store;
+   begin
+      Class_Store.Create
+        (Aquarius.Config_Paths.Config_File ("grammar"));
+      Class_Store.Add_Folder (".");
+      Class_Store.Add_Extension ("ebnf");
+
+      declare
+         Table : constant Komnenos.Entities.Entity_Table_Access :=
+                   new Komnenos.Entities.Entity_Table;
+         Store : constant Komnenos.Entities.Program_Store_Access :=
+                   new Aquarius.File_System_Stores.Root_File_System_Store'
+                     (Class_Store);
+      begin
+         Table.Set_Program_Store (Store);
+         Komnenos.Entities.Tables.Set_Table ("ebnf", Table);
+      end;
+   end Create_EBNF_Table;
 
    --------------------------
    -- Create_Non_Terminals --
@@ -269,8 +299,9 @@ package body Aquarius.Grammars.EBNF is
    ---------------------
 
    procedure Cross_Reference
-     (UI  : Komnenos.UI.Komnenos_UI;
-      Top : Aquarius.Programs.Program_Tree)
+     (Table : not null access
+        Komnenos.Entities.Entity_Table_Interface'Class;
+      Top   : Aquarius.Programs.Program_Tree)
    is
       Map : Komnenos.Entities.Maps.Map;
       Path : constant String :=
@@ -311,7 +342,7 @@ package body Aquarius.Grammars.EBNF is
                   Entity := Map.Element (Rule.First_Child.First_Child.Text);
                end if;
 
-               UI.Add_Cross_Reference
+               Table.Add_Cross_Reference
                  (Item      => Map.Element (Tree.Text),
                   Referrer  => Entity,
                   File_Name => Path,
@@ -341,7 +372,7 @@ package body Aquarius.Grammars.EBNF is
                Name         : constant String := Defined_Name.Text;
                Entity  : constant Komnenos.Entities.Entity_Reference :=
                                 Create_Aquarius_Source_Entity
-                                  (Table            => UI,
+                                  (Table            => Table,
                                    Name             => Name,
                                    Qualified_Name   => Name,
                                    Class_Name       => "rule",

@@ -3,6 +3,8 @@ with Ada.Exceptions;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
+with Komnenos.Entities.Tables;
+
 with Aquarius.Actions;
 with Aquarius.Grammars.Manager;
 with Aquarius.Loader;
@@ -130,9 +132,26 @@ package body Aquarius.File_System_Stores is
      (Store : not null access Root_File_System_Store)
    is
 
+      procedure Create_Table
+        (Name : String);
+
       procedure Scan_Folder
         (Path    : String;
          Recurse : Boolean);
+
+      ------------------
+      -- Create_Table --
+      ------------------
+
+      procedure Create_Table
+        (Name : String)
+      is
+         Table : constant Komnenos.Entities.Entity_Table_Access :=
+                   new Komnenos.Entities.Entity_Table;
+      begin
+         Table.Set_Program_Store (Store);
+         Komnenos.Entities.Tables.Set_Table (Name, Table);
+      end Create_Table;
 
       -------------
       -- Recurse --
@@ -212,6 +231,9 @@ package body Aquarius.File_System_Stores is
       end Scan_Folder;
 
    begin
+
+      Create_Table ("/");
+
       if Store.Folders.Is_Empty then
          Scan_Folder (Aquarius.Names.To_String (Store.Base_Path), True);
       else
