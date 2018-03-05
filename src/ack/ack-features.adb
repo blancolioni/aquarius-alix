@@ -447,8 +447,8 @@ package body Ack.Features is
          return;
       end if;
 
-      if Feature.Definition_Class.Link_Name
-        = "aquarius__trees__program_tree"
+      if Feature.Is_External_Routine
+        and then Feature.Definition_Class.Aqua_Primitive_Behaviour
       then
          Unit.Native_Operation
            ("get_property " & Feature.Definition_Class.Link_Name & ",0",
