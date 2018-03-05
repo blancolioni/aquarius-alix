@@ -12,8 +12,13 @@ package Ack.Classes is
    type Class_Entity is access all Class_Entity_Record'Class;
    type Constant_Class_Entity is access constant Class_Entity_Record'Class;
 
-   function Behaviour (Class : Class_Entity_Record'Class)
-                       return Class_Behaviour;
+   function Behaviour
+     (Class : Class_Entity_Record'Class)
+      return Class_Behaviour;
+
+   function Aqua_Primitive_Behaviour
+     (Class : Class_Entity_Record'Class)
+      return Boolean;
 
    function Class_Declaration_Context
      (Class : Class_Entity_Record'Class)
@@ -292,6 +297,11 @@ private
    function Behaviour (Class : Class_Entity_Record'Class)
                        return Class_Behaviour
    is (Class.Behaviour);
+
+   function Aqua_Primitive_Behaviour
+     (Class : Class_Entity_Record'Class)
+      return Boolean
+   is (Class.Behaviour = Aqua_Primitive);
 
    function Deferred
      (Class : Class_Entity_Record'Class)
