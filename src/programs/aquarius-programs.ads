@@ -3,6 +3,8 @@ private with Ada.Strings.Fixed.Hash;
 private with Aqua.Iterators;
 private with Aqua.Execution;
 
+private with WL.String_Maps;
+
 with Komnenos.Source;
 
 with Aquarius.Actions;
@@ -277,12 +279,9 @@ package Aquarius.Programs is
      (Item : Program_Tree_Type'Class)
       return Boolean;
 
-   overriding
-   function Image (Item : Program_Tree_Type)
-                  return String;
-   overriding
-   function Name (Item : Program_Tree_Type)
-                 return String;
+   overriding function Image (Item : Program_Tree_Type) return String;
+
+   overriding function Name (Item : Program_Tree_Type) return String;
 
    function Path_Image (Item : Program_Tree_Type) return String;
 
@@ -460,6 +459,11 @@ private
    type Aqua_Object_Access is
      access all Aqua.Objects.Root_Object_Type'Class;
 
+   package String_Property_Maps is
+     new WL.String_Maps (String);
+
+   Name_Property         : constant String := "name";
+
    type Program_Tree_Type is
      new Aquarius.Trees.Root_Tree_Type
      and Aquarius.Actions.Actionable
@@ -502,6 +506,7 @@ private
          Offset_Rule       : Aquarius.Source.Source_Position;
          Render_Class      : Aquarius.Syntax.Syntax_Tree;
          Fragment          : Tagatha.Fragments.Tagatha_Fragment;
+         String_Props      : String_Property_Maps.Map;
          Aqua_Object       : Aqua_Object_Access;
          Aqua_Reference    : Aqua.External_Reference := 0;
       end record;
@@ -588,6 +593,9 @@ private
      (Source : not null access Program_Tree_Type)
       return access Komnenos.Source.Source_Tree_Interface'Class
    is (Source.Program_Root);
+
+   overriding function Name (Item : Program_Tree_Type) return String
+   is (Item.String_Props.Element (Name_Property));
 
    type Root_Program_Tree_Iterator is
      new Aqua.Iterators.Aqua_Iterator_Interface with

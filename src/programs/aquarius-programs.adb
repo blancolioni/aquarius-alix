@@ -61,6 +61,7 @@ package body Aquarius.Programs is
       Render_Class         => null,
       Fragment             => Tagatha.Fragments.Empty_Fragment,
       Aqua_Object          => null,
+      String_Props         => String_Property_Maps.Empty_Map,
       Aqua_Reference       => 0);
 
    --  After a node is changed, update any entry it references
@@ -1204,6 +1205,11 @@ package body Aquarius.Programs is
 
       Check_Aqua_Primitives;
 
+      if Program.String_Props.Contains (Name) then
+         return Aqua.Values.To_String_Value
+           (Program.String_Props.Element (Name));
+      end if;
+
       if Program.Aqua_Object = null then
          Program.Aqua_Object := new Aqua.Objects.Root_Object_Type;
       end if;
@@ -1688,19 +1694,6 @@ package body Aquarius.Programs is
       end if;
    end Minimum_Indent;
 
-   ----------
-   -- Name --
-   ----------
-
-   overriding
-   function Name (Item : Program_Tree_Type)
-                 return String
-   is
-   begin
-      pragma Assert (not Item.Free);
-      return Item.Syntax.Name;
-   end Name;
-
    --------------------
    -- New_Error_Tree --
    --------------------
@@ -1770,6 +1763,8 @@ package body Aquarius.Programs is
                        Keep_Parent => True, Keep_Siblings => True);
       Result.Syntax         := Syntax;
       Result.Indent_Rule    := Syntax.Has_Indent_Rule;
+      Result.String_Props.Insert (Name_Property, Syntax.Name);
+
       if Syntax.Has_Render_Class then
          Result.Render_Class := Syntax;
       end if;
