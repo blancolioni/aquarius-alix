@@ -10,11 +10,14 @@ feature
    Reference   : Aqua.Containers.Linked_List[Ada.Entity_Reference]
    Identifiers : String_List
    
-   After_Identifier (Id : String)
+   After_Identifier (Child : Ada.Checks.Identifier)
       local
          Ref : Ada.Entity_Reference
+         Id  : String
       do
          Context := New_Context
+         Id := Child.Text
+         
          if attached Context then
             New_Context := Find_Entity ("/", Id, "")
          else
@@ -26,7 +29,7 @@ feature
          end
          if attached New_Context then
             create Ref
-            Ref.Make (Id, New_Context, Current)
+            Ref.Make (Id, New_Context, Child)
             Reference.Append (Ref)
          end
          Identifiers.Append (Id)
