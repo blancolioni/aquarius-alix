@@ -102,6 +102,11 @@ package body Aquarius.Programs is
       Arguments : Aqua.Array_Of_Words)
       return Aqua.Word;
 
+   function Aqua_Tree_Standard_Text
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
    function Aqua_Tree_Right_Sibling
      (Context : in out Aqua.Execution.Execution_Interface'Class;
       Arguments : Aqua.Array_Of_Words)
@@ -405,6 +410,22 @@ package body Aquarius.Programs is
       end if;
    end Aqua_Tree_Right_Sibling;
 
+   -----------------------------
+   -- Aqua_Tree_Standard_Text --
+   -----------------------------
+
+   function Aqua_Tree_Standard_Text
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      Tree : constant Program_Tree :=
+               Program_Tree
+                 (Context.To_External_Object (Arguments (1)));
+   begin
+      return Context.To_String_Word (Tree.Standard_Text);
+   end Aqua_Tree_Standard_Text;
+
    --------------------
    -- Aqua_Tree_Text --
    --------------------
@@ -479,6 +500,11 @@ package body Aquarius.Programs is
         (Name           => "tree__text",
          Argument_Count => 1,
          Handler        => Aqua_Tree_Text'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__standard_text",
+         Argument_Count => 1,
+         Handler        => Aqua_Tree_Standard_Text'Access);
 
       Aqua.Primitives.New_Primitive_Function
         (Name           => "tree__choice",
