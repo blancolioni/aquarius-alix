@@ -4,7 +4,7 @@ with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
-with Komnenos.UI;
+with Komnenos.Entities.Tables;
 
 with Aquarius.Configuration;
 with Aquarius.Grammars.EBNF;
@@ -189,14 +189,8 @@ package body Aquarius.Grammars.Manager is
       Aquarius.Trees.Properties.Set_Grammar (EBNF.all, Result);
       EBNF_Grammar.Run_Actions ("analyse", EBNF);
 
-      declare
-         use type Komnenos.UI.Komnenos_UI;
-      begin
-         if False and then Komnenos.UI.Current_UI /= null then
-            Aquarius.Grammars.EBNF.Cross_Reference
-              (Komnenos.UI.Current_UI, EBNF);
-         end if;
-      end;
+      Aquarius.Grammars.EBNF.Cross_Reference
+        (Komnenos.Entities.Tables.Table ("ebnf"), EBNF);
 
       declare
          use Aquarius.Messages;

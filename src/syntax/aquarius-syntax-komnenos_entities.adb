@@ -321,7 +321,7 @@ package body Aquarius.Syntax.Komnenos_Entities is
                    Label_Text  => Name,
                    Label_Style => Non_Terminal_Style,
                    Link        =>
-                     Komnenos.UI.Current_UI.Get
+                     Komnenos.UI.Current_UI.Main_Table.Get
                        (Get_Key
                           (Entity.Grammar.Name,
                            Name)));
@@ -658,7 +658,7 @@ package body Aquarius.Syntax.Komnenos_Entities is
            and then Syntax.Name /= ""
          then
             Put (Context, Syntax.Name, Non_Terminal_Style,
-                 Komnenos.UI.Current_UI.Get
+                 Komnenos.UI.Current_UI.Main_Table.Get
                    (Get_Key
                       (Entity.Grammar.Name,
                        Syntax.Name)));

@@ -39,8 +39,8 @@ with Komnenos.UI;
 with Komnenos.UI.Sessions;
 
 --  with Komnenos.Entities.Source.Aquarius_Source;
-with Komnenos.Entities.Aqua_Entities;
-with Komnenos.Entities.Tables;
+--  with Komnenos.Entities.Aqua_Entities;
+--  with Komnenos.Entities.Tables;
 
 procedure Aquarius.Driver is
 
@@ -391,15 +391,15 @@ begin
          Load_Session : Boolean := True;
       begin
 
-         Komnenos.Entities.Tables.Set_Table ("/", UI);
+--           Komnenos.Entities.Tables.Set_Table ("/", UI);
 
          UI.Load_Style_Sheet
            (Aquarius.Config_Paths.Config_File
               ("styles/default.css"));
 
-         if False then
-            Komnenos.Entities.Aqua_Entities.Create_Aqua_Object (UI);
-         end if;
+--           if False then
+--              Komnenos.Entities.Aqua_Entities.Create_Aqua_Object (UI);
+--           end if;
 
          if Command_Line.Project_Name /= "" then
             declare
@@ -418,7 +418,7 @@ begin
                                (Name);
             begin
                Aquarius.Grammars.UI.Load_Grammar
-                 (Grammar, UI);
+                 (Grammar, UI.Main_Table);
                Load_Session := False;
             end;
          end if;

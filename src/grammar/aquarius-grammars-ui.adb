@@ -8,11 +8,11 @@ with Aquarius.Syntax.Komnenos_Entities;
 package body Aquarius.Grammars.UI is
 
    procedure Bind_Grammar_Actions
-     (Target  : Komnenos.UI.Komnenos_UI;
+     (Target  : Komnenos.Entities.Entity_Table_Access;
       Grammar : Aquarius_Grammar);
 
    procedure Bind_Action_File
-     (Target      : Komnenos.UI.Komnenos_UI;
+     (Target      : Komnenos.Entities.Entity_Table_Access;
       Grammar     : Aquarius_Grammar;
       Group       : Aquarius.Actions.Action_Group;
       Action_File : Aquarius.Programs.Program_Tree);
@@ -22,7 +22,7 @@ package body Aquarius.Grammars.UI is
    ----------------------
 
    procedure Bind_Action_File
-     (Target      : Komnenos.UI.Komnenos_UI;
+     (Target      : Komnenos.Entities.Entity_Table_Access;
       Grammar     : Aquarius_Grammar;
       Group       : Aquarius.Actions.Action_Group;
       Action_File : Aquarius.Programs.Program_Tree)
@@ -130,7 +130,7 @@ package body Aquarius.Grammars.UI is
    --------------------------
 
    procedure Bind_Grammar_Actions
-     (Target  : Komnenos.UI.Komnenos_UI;
+     (Target  : Komnenos.Entities.Entity_Table_Access;
       Grammar : Aquarius_Grammar)
    is
 
@@ -161,7 +161,8 @@ package body Aquarius.Grammars.UI is
 
    procedure Load_Grammar
      (Grammar : Aquarius_Grammar;
-      Target  : Komnenos.UI.Komnenos_UI)
+      Target  : not null access
+        Komnenos.Entities.Entity_Table_Interface'Class)
    is
    begin
       for Non_Terminal of Grammar.Non_Terminals loop
@@ -169,7 +170,8 @@ package body Aquarius.Grammars.UI is
            (Target, Grammar.Name, Non_Terminal);
       end loop;
 
-      Bind_Grammar_Actions (Target, Grammar);
+      Bind_Grammar_Actions (Komnenos.Entities.Entity_Table_Access (Target),
+                            Grammar);
 
    end Load_Grammar;
 
