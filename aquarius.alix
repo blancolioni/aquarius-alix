@@ -7,7 +7,6 @@ source_dir = src/code
 source_dir = src/composition
 source_dir = src/debug
 source_dir = src/driver
-source_dir = src/drys
 source_dir = src/ebnf
 source_dir = src/editor
 source_dir = src/entries
