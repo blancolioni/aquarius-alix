@@ -188,6 +188,17 @@ package body Ack.Bindings is
 
                      Ada.Text_IO.Put_Line
                        (Action_File,
+                        "   if child." & Child_Type.Link_Name
+                        & ".aquarius__trees__program_tree then");
+                     Ada.Text_IO.Put_Line
+                       (Action_File,
+                        "      child." & Child_Type.Link_Name
+                        & ".aquarius__trees__program_tree := child");
+                     Ada.Text_IO.Put_Line
+                       (Action_File, "   end if");
+
+                     Ada.Text_IO.Put_Line
+                       (Action_File,
                         "   call "
                         & "tree." & Group_Property & "."
                         & Class.Link_Name
