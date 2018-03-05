@@ -147,9 +147,9 @@ package body Aquarius.File_System_Stores is
         (Name : String)
       is
          Table : constant Komnenos.Entities.Entity_Table_Access :=
-                   new Komnenos.Entities.Entity_Table;
+                   Komnenos.Entities.New_Table
+                     (Name, Store);
       begin
-         Table.Set_Program_Store (Store);
          Komnenos.Entities.Tables.Set_Table (Name, Table);
       end Create_Table;
 

@@ -57,13 +57,13 @@ package body Aquarius.Grammars.EBNF is
       Class_Store.Add_Extension ("ebnf");
 
       declare
-         Table : constant Komnenos.Entities.Entity_Table_Access :=
-                   new Komnenos.Entities.Entity_Table;
          Store : constant Komnenos.Entities.Program_Store_Access :=
                    new Aquarius.File_System_Stores.Root_File_System_Store'
                      (Class_Store);
+         Table : constant Komnenos.Entities.Entity_Table_Access :=
+                   Komnenos.Entities.New_Table
+                     ("ebnf", Store);
       begin
-         Table.Set_Program_Store (Store);
          Komnenos.Entities.Tables.Set_Table ("ebnf", Table);
       end;
    end Create_EBNF_Table;

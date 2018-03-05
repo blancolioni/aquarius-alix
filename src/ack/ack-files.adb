@@ -43,9 +43,9 @@ package body Ack.Files is
 
          declare
             Table : constant Komnenos.Entities.Entity_Table_Access :=
-                      new Komnenos.Entities.Entity_Table;
+                      Komnenos.Entities.New_Table
+                        ("aqua", Class_Store);
          begin
-            Table.Set_Program_Store (Class_Store);
             Komnenos.Entities.Tables.Set_Table
               ("aqua", Table);
          end;
