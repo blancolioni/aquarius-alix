@@ -28,6 +28,13 @@ with Tagatha.Fragments;
 
 package Aquarius.Programs is
 
+   type Local_Environment_Interface is interface;
+
+   function Environment_Name
+     (Local : Local_Environment_Interface)
+      return String
+      is abstract;
+
    type Program_Tree_Type is
      new Aquarius.Trees.Root_Tree_Type
      and Aquarius.Actions.Actionable
@@ -43,17 +50,26 @@ package Aquarius.Programs is
    type Array_Of_Program_Trees is array (Positive range <>) of Program_Tree;
    Empty_Program_Tree_Array : Array_Of_Program_Trees (1 .. 0);
 
-   function New_Program_Tree (Syntax   : Aquarius.Syntax.Syntax_Tree)
-                             return Program_Tree;
+   function New_Program_Tree
+     (Syntax   : Aquarius.Syntax.Syntax_Tree)
+      return Program_Tree;
 
-   function New_Program (Syntax   : Aquarius.Syntax.Syntax_Tree;
-                         Source   : Aquarius.Source.Source_File)
-                        return Program_Tree;
+   function New_Program
+     (Syntax   : Aquarius.Syntax.Syntax_Tree;
+      Source   : Aquarius.Source.Source_File)
+      return Program_Tree;
 
-   function New_Error_Tree (Position : Aquarius.Source.Source_Position;
-                            Syntax   : Aquarius.Syntax.Syntax_Tree;
-                            Message  : String)
-                           return Program_Tree;
+   function New_Program_Root
+     (Syntax   : Aquarius.Syntax.Syntax_Tree;
+      Source   : Aquarius.Source.Source_File;
+      Environment : not null access Local_Environment_Interface'Class)
+      return Program_Tree;
+
+   function New_Error_Tree
+     (Position : Aquarius.Source.Source_Position;
+      Syntax   : Aquarius.Syntax.Syntax_Tree;
+      Message  : String)
+      return Program_Tree;
 
    --  Syntax_Index: return the child number of the tree, excluding
    --  repeated nodes.  I.e. the child number of the syntax of the
@@ -157,6 +173,15 @@ package Aquarius.Programs is
 
    overriding
    function Standard_Text (Item : Program_Tree_Type) return String;
+
+   function Local_Environment
+     (Item : in out Program_Tree_Type'Class)
+      return access Local_Environment_Interface'Class;
+
+   function Local_Environment_Name
+     (Item : in out Program_Tree_Type'Class)
+      return String
+   is (Item.Local_Environment.Environment_Name);
 
    function Layout_Start_Position (Item : Program_Tree_Type)
                                   return Aquarius.Layout.Position;
@@ -430,7 +455,8 @@ package Aquarius.Programs is
      (Tree     : Program_Tree_Type'Class)
      return Tagatha.Fragments.Tagatha_Fragment;
 
-   type Root_Program_Tree_Store is interface;
+   type Root_Program_Tree_Store is interface
+     and Local_Environment_Interface;
 
    function Get_Program (From      : not null access Root_Program_Tree_Store;
                          File_Name : in String)
@@ -488,6 +514,7 @@ private
          Have_Symbol_Table : Boolean;
          Is_Declaration    : Boolean;
          Has_Position      : Boolean;
+         Has_Environment   : Boolean;
          Self              : Program_Tree;
          Source_File       : Aquarius.Source.Source_File;
          Source_File_Name  : Aquarius.Names.Aquarius_Name;
@@ -506,6 +533,7 @@ private
          Offset_Rule       : Aquarius.Source.Source_Position;
          Render_Class      : Aquarius.Syntax.Syntax_Tree;
          Fragment          : Tagatha.Fragments.Tagatha_Fragment;
+         Local_Env         : access Local_Environment_Interface'Class;
          String_Props      : String_Property_Maps.Map;
          Aqua_Object       : Aqua_Object_Access;
          Aqua_Reference    : Aqua.External_Reference := 0;
