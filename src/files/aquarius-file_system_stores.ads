@@ -41,6 +41,10 @@ package Aquarius.File_System_Stores is
       return String
    is (File_System_Store_Name);
 
+   overriding function Program_Store_Name
+     (Store  : Root_File_System_Store)
+      return String;
+
    overriding procedure To_Config
      (Item : Root_File_System_Store;
       Config : in out Tropos.Configuration);
@@ -91,6 +95,7 @@ private
      and Komnenos.Session_Objects.Session_Object_Interface
      and Aquarius.Programs.Root_Program_Tree_Store with
       record
+         Store_Name      : Aquarius.Names.Aquarius_Name;
          Base_Path       : Aquarius.Names.Aquarius_Name;
          Folders         : String_Vectors.Vector;
          Extensions      : Aquarius.Names.Sets.Name_Set;
@@ -99,6 +104,16 @@ private
 
    overriding procedure Save
      (Store : not null access Root_File_System_Store);
+
+   overriding function Environment_Name
+     (Store  : Root_File_System_Store)
+      return String
+   is (Aquarius.Names.To_String (Store.Store_Name));
+
+   overriding function Program_Store_Name
+     (Store  : Root_File_System_Store)
+      return String
+   is (Aquarius.Names.To_String (Store.Store_Name));
 
    function Get_Program_Position
      (Store : Root_File_System_Store'Class;
