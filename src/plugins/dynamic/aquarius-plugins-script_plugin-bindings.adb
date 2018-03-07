@@ -198,7 +198,8 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                       Executor.Plugin.Executor.To_Word (Tree);
    begin
       Executor.Plugin.Executor.Execute
-        (Executor.Start,
+        (Tree.Local_Environment_Name,
+         Executor.Start,
          (Komnenos_Arg, Top_Arg, Tree_Arg));
    exception
       when E : others =>
@@ -238,7 +239,8 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                         (Child_Tree);
    begin
       Executor.Plugin.Executor.Execute
-        (Executor.Start,
+        (Parent_Tree.Local_Environment_Name,
+         Executor.Start,
          (Komnenos_Arg, Top_Arg, Parent_Arg, Child_Arg));
    exception
       when E : others =>

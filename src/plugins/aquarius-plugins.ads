@@ -29,6 +29,11 @@ package Aquarius.Plugins is
                     return String
       is abstract;
 
+   overriding
+   function Environment_Name
+     (Plugin : Aquarius_Plugin_Type)
+      return String;
+
    procedure Load (Plugin  : not null access Aquarius_Plugin_Type;
                    Grammar : in     Aquarius.Grammars.Aquarius_Grammar);
 
@@ -202,5 +207,11 @@ private
      (Plugin : Aquarius_Plugin_Type'Class;
       Path : String)
      return Aquarius.Programs.Program_Tree;
+
+   overriding
+   function Environment_Name
+     (Plugin : Aquarius_Plugin_Type)
+      return String
+   is (Aquarius_Plugin_Type'Class (Plugin).Name);
 
 end Aquarius.Plugins;
