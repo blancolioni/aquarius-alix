@@ -247,6 +247,16 @@ private
       return String
    is ("aquarius_project");
 
+   overriding function Environment_Name
+     (Project : Aquarius_Project_Type)
+      return String
+   is (Aquarius.Names.To_String (Project.Name));
+
+   overriding function Program_Store_Name
+     (Project : Aquarius_Project_Type)
+      return String
+   is (Aquarius.Names.To_String (Project.Name));
+
    overriding procedure To_Config
      (Item : Aquarius_Project_Type;
       Config : in out Tropos.Configuration)

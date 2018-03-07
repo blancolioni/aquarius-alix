@@ -364,7 +364,7 @@ package body Aquarius.Configuration is
       Config_File  : constant Aquarius.Programs.Program_Tree :=
                        Aquarius.Loader.Load_From_File
                          (Grammar    => Grammar,
-                          Project    =>
+                          Store      =>
                             Aquarius.Projects.New_Default_Project
                               (Aquarius_Config_File),
                           Interactor =>

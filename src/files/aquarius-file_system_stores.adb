@@ -18,8 +18,10 @@ package body Aquarius.File_System_Stores is
    function New_File_System_Store
      return access Komnenos.Session_Objects.Session_Object_Interface'Class;
 
-   function Load_Program (Path : String)
-                           return Aquarius.Programs.Program_Tree;
+   function Load_Program
+     (Store : not null access Root_File_System_Store'Class;
+      Path  : String)
+      return Aquarius.Programs.Program_Tree;
 
    -------------------
    -- Add_Extension --
@@ -68,6 +70,10 @@ package body Aquarius.File_System_Stores is
    is
    begin
       Ada.Text_IO.Put_Line ("Loading: file system store");
+      Item.Store_Name :=
+        Aquarius.Names.To_Aquarius_Name
+          (Config.Get ("name"));
+      Ada.Text_IO.Put_Line ("  name: " & Config.Get ("name"));
       Item.Base_Path :=
         Aquarius.Names.To_Aquarius_Name (Config.Get ("base_path"));
       Ada.Text_IO.Put_Line ("  base path: " & Config.Get ("base_path"));
@@ -132,26 +138,9 @@ package body Aquarius.File_System_Stores is
      (Store : not null access Root_File_System_Store)
    is
 
-      procedure Create_Table
-        (Name : String);
-
       procedure Scan_Folder
         (Path    : String;
          Recurse : Boolean);
-
-      ------------------
-      -- Create_Table --
-      ------------------
-
-      procedure Create_Table
-        (Name : String)
-      is
-         Table : constant Komnenos.Entities.Entity_Table_Access :=
-                   Komnenos.Entities.New_Table
-                     (Name, Store);
-      begin
-         Komnenos.Entities.Tables.Set_Table (Name, Table);
-      end Create_Table;
 
       -------------
       -- Recurse --
@@ -196,7 +185,7 @@ package body Aquarius.File_System_Stores is
                         declare
                            use Aquarius.Programs;
                            Program : constant Program_Tree :=
-                                       Load_Program (File_Name);
+                                       Store.Load_Program (File_Name);
                            New_Item : Program_Info;
                         begin
                            if Program /= null then
@@ -232,7 +221,9 @@ package body Aquarius.File_System_Stores is
 
    begin
 
-      Create_Table ("/");
+      Komnenos.Entities.Tables.New_Table
+        (Name  => Store.Program_Store_Name,
+         Store => Store);
 
       if Store.Folders.Is_Empty then
          Scan_Folder (Aquarius.Names.To_String (Store.Base_Path), True);
@@ -268,16 +259,20 @@ package body Aquarius.File_System_Stores is
    -- Load_Program --
    ------------------
 
-   function Load_Program (Path : String)
-                          return Aquarius.Programs.Program_Tree
+   function Load_Program
+     (Store : not null access Root_File_System_Store'Class;
+      Path  : String)
+      return Aquarius.Programs.Program_Tree
    is
       Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
                   Aquarius.Grammars.Manager.Get_Grammar_For_File
                     (Path);
       Program : constant Aquarius.Programs.Program_Tree :=
                   Aquarius.Loader.Load_From_File
-                    (Grammar, Path);
+                    (Grammar, Store, Path);
    begin
+      Komnenos.Entities.Tables.Set_Active_Table
+        (Komnenos.Entities.Tables.Table (Store.Program_Store_Name));
       Grammar.Run_Action_Trigger (Program, Aquarius.Actions.Semantic_Trigger);
       return Program;
    end Load_Program;
@@ -396,6 +391,7 @@ package body Aquarius.File_System_Stores is
       end Add_Extension;
 
    begin
+      Config.Add ("name", Item.Program_Store_Name);
       Config.Add ("base_path",
                   Aquarius.Names.To_String (Item.Base_Path));
       if not Item.Folders.Is_Empty then
