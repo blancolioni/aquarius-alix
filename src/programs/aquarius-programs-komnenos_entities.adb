@@ -790,7 +790,9 @@ package body Aquarius.Programs.Komnenos_Entities is
                          Arguments (6) /= 0;
       Entity  : constant Komnenos.Entities.Entity_Reference :=
                   Create_Aquarius_Source_Entity
-                    (Table            => Komnenos.Entities.Tables.Table ("/"),
+                    (Table            =>
+                                   Komnenos.Entities.Tables.Table
+                                     (Context.Environment_Name),
                      Name             => Name,
                      Qualified_Name   => Qualified_Name,
                      Class_Name       => Class_Name,
@@ -815,14 +817,13 @@ package body Aquarius.Programs.Komnenos_Entities is
       use Komnenos.Entities;
       Referrer_Tree     : constant Program_Tree :=
                             To_Program_Tree (Context, Arguments (1));
-      Table_Name        : constant String :=
-                            Context.To_String (Arguments (2));
+      Table_Name        : constant String := Context.Environment_Name;
       Referrer_Entity   : constant Entity_Reference :=
-                            To_Entity (Context, Arguments (3));
+                            To_Entity (Context, Arguments (2));
       Referenced_Entity : constant Entity_Reference :=
-                            To_Entity (Context, Arguments (4));
+                            To_Entity (Context, Arguments (3));
       Ref_Type          : constant String :=
-                            Context.To_String (Arguments (5));
+                            Context.To_String (Arguments (4));
    begin
 
       Ada.Text_IO.Put_Line
@@ -855,11 +856,11 @@ package body Aquarius.Programs.Komnenos_Entities is
    is
       use Komnenos.Entities;
       Table_Name        : constant String :=
-                            Context.To_String (Arguments (2));
+                            Context.Environment_Name;
       Entity_Name       : constant String :=
-                            Context.To_String (Arguments (3));
+                            Context.To_String (Arguments (2));
       Class_Name        : constant String :=
-                            Context.To_String (Arguments (4));
+                            Context.To_String (Arguments (3));
       Entity            : constant Entity_Reference :=
                             Komnenos.Entities.Tables.Table (Table_Name)
                             .Find (Entity_Name, Class_Name);
