@@ -837,8 +837,7 @@ package body Aquarius.Programs.Komnenos_Entities is
       Komnenos.Entities.Tables.Table (Table_Name).Add_Cross_Reference
         (Item      => Referenced_Entity,
          Referrer  => Referrer_Entity,
-         File_Name =>
-           Aquarius.Names.To_String (Referrer_Tree.Source_File_Name),
+         File_Name => Source_File_Name (Referrer_Tree.all),
          Line      => Referrer_Tree.Source_Line,
          Column    => Referrer_Tree.Source_Column,
          Ref_Type  => Ref_Type);
@@ -994,8 +993,9 @@ package body Aquarius.Programs.Komnenos_Entities is
 
       Entity.Buffer_Changed := True;
 
-      Komnenos.Entities.Tables.Table ("/").Program_Store.On_Edit
-        (Entity.Compilation_Unit);
+      Komnenos.Entities.Tables.Table (Tree.Local_Environment_Name)
+        .Program_Store.On_Edit
+          (Entity.Compilation_Unit);
 
    end Insert_Character;
 
@@ -1168,11 +1168,12 @@ package body Aquarius.Programs.Komnenos_Entities is
    is
       use Komnenos;
       use type Aquarius.Programs.Program_Tree;
+      Program  : constant Aquarius.Programs.Program_Tree := Entity.Entity_Tree;
       Renderer : Aquarius.Rendering.Aquarius_Renderer :=
                    Aquarius.Rendering.Komnenos_Renderer.Fragment_Renderer
                      (Komnenos.Fragments.Text_Fragment (Visual),
-                      Komnenos.Entities.Tables.Table ("/"));
-      Program  : constant Aquarius.Programs.Program_Tree := Entity.Entity_Tree;
+                      Komnenos.Entities.Tables.Table
+                        (Program.Local_Environment_Name));
       Tree_Cursor : constant Aquarius.Trees.Cursors.Cursor :=
                       Aquarius.Programs.Parser.Get_Cursor
                         (Entity.Parse_Context);

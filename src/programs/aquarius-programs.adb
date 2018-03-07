@@ -442,9 +442,6 @@ package body Aquarius.Programs is
                  (Context.To_External_Object (Arguments (1)));
       Text : constant String := Tree.Text;
    begin
-      Ada.Text_IO.Put_Line ("Tree: " & Tree.Image);
-      Ada.Text_IO.Put_Line ("Text: " & Text);
-
       return Context.To_String_Word (Text);
    end Aqua_Tree_Text;
 
