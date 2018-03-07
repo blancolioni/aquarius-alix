@@ -42,6 +42,7 @@ package body Aquarius.Programs is
       Have_Symbol_Table    => False,
       Is_Declaration       => False,
       Has_Position         => False,
+      Has_Environment      => False,
       Self                 => null,
       Source_File          => Aquarius.Source.No_Source_File,
       Source_File_Name     => Aquarius.Names.Null_Aquarius_Name,
@@ -60,6 +61,7 @@ package body Aquarius.Programs is
       Offset_Rule          => Aquarius.Source.No_Source_Position,
       Render_Class         => null,
       Fragment             => Tagatha.Fragments.Empty_Fragment,
+      Local_Env            => null,
       Aqua_Object          => null,
       String_Props         => String_Property_Maps.Empty_Map,
       Aqua_Reference       => 0);
@@ -438,8 +440,12 @@ package body Aquarius.Programs is
       Tree : constant Program_Tree :=
                  Program_Tree
                  (Context.To_External_Object (Arguments (1)));
+      Text : constant String := Tree.Text;
    begin
-      return Context.To_String_Word (Tree.Text);
+      Ada.Text_IO.Put_Line ("Tree: " & Tree.Image);
+      Ada.Text_IO.Put_Line ("Text: " & Text);
+
+      return Context.To_String_Word (Text);
    end Aqua_Tree_Text;
 
    -----------------------
@@ -1680,6 +1686,29 @@ package body Aquarius.Programs is
       return Item.Start_Position;
    end Layout_Start_Position;
 
+   function Local_Environment
+     (Item : in out Program_Tree_Type'Class)
+      return access Local_Environment_Interface'Class
+   is
+   begin
+      if Item.Has_Environment then
+         return Item.Local_Env;
+      elsif Item.Program_Parent /= null then
+         declare
+            Result : constant access Local_Environment_Interface'Class :=
+                       Item.Program_Parent.Local_Environment;
+         begin
+            Item.Local_Env := Result;
+            Item.Has_Environment := True;
+            return Result;
+         end;
+      else
+         Item.Has_Environment := True;
+         Item.Local_Env := null;
+         return null;
+      end if;
+   end Local_Environment;
+
    ---------------------
    -- Location_Column --
    ---------------------
@@ -1765,6 +1794,23 @@ package body Aquarius.Programs is
           (Aquarius.Source.Get_Full_Path (Source));
       return Result;
    end New_Program;
+
+   ----------------------
+   -- New_Program_Root --
+   ----------------------
+
+   function New_Program_Root
+     (Syntax      : Aquarius.Syntax.Syntax_Tree;
+      Source      : Aquarius.Source.Source_File;
+      Environment : not null access Local_Environment_Interface'Class)
+      return Program_Tree
+   is
+   begin
+      return Root : constant Program_Tree := New_Program (Syntax, Source) do
+         Root.Has_Environment := True;
+         Root.Local_Env := Environment;
+      end return;
+   end New_Program_Root;
 
    ----------------------
    -- New_Program_Tree --
