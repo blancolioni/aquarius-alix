@@ -22,14 +22,12 @@ feature
                   Top_Level            : Boolean) : Komnenos.Entity
       external "aqua" alias "tree__create_entity"
    
-   Find_Entity (Table_Name     : String
-                Entity_Name    : String
+   Find_Entity (Entity_Name    : String
                 Class_Name     : String) : Komnenos.Entity
       external "aqua" alias "tree__find_entity"
    
    
-   Cross_Reference (Table_Name        : String
-                    Referrer_Entity   : Komnenos.Entity
+   Cross_Reference (Referrer_Entity   : Komnenos.Entity
                     Referenced_Entity : Komnenos.Entity
                     Reference_Type    : String)
       external "aqua" alias "tree__cross_reference"
