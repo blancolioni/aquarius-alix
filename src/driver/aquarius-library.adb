@@ -7,6 +7,7 @@ with Aquarius.Programs;
 with Aquarius.Trees.Properties;
 
 with Komnenos.Connectors;
+with Komnenos.Entities.Tables;
 with Komnenos.Fragments;
 
 with Aqua.Execution;
@@ -52,6 +53,10 @@ package body Aquarius.Library is
       Aquarius.File_System_Stores.Register;
       Komnenos.Fragments.Register;
       Komnenos.Connectors.Register;
+
+      Komnenos.Entities.Tables.New_Table
+        (Name  => "/",
+         Store => Komnenos.Entities.Null_Program_Store);
 
       Aqua.Primitives.New_Primitive_Function
         (Name           => "tree__load_file",
