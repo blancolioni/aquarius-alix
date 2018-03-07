@@ -19,10 +19,10 @@ feature
          Id := Child.Text
          
          if attached Context then
-            New_Context := Find_Entity ("/", Id, "")
+            New_Context := Find_Entity (Id, "")
          else
             if Identifiers.Is_Empty then
-               New_Context := Find_Entity ("/", Id, "")
+               New_Context := Find_Entity (Id, "")
             else
                Error ("undefined: " & Identifiers.Last_Element)
             end
