@@ -33,7 +33,7 @@ package body Aquarius.Loader is
 
    function Load
      (Grammar    : in Aquarius.Grammars.Aquarius_Grammar;
-      Project    : not null access Projects.Aquarius_Project_Type'Class;
+      Store      : not null access Programs.Root_Program_Tree_Store'Class;
       Interactor : not null access Aquarius.Interaction.Interactor'Class;
       UI         : Aquarius.UI.Aquarius_UI;
       Path       : in String)
@@ -99,7 +99,7 @@ package body Aquarius.Loader is
 
    function Load
      (Grammar    : in     Aquarius.Grammars.Aquarius_Grammar;
-      Project    : not null access Projects.Aquarius_Project_Type'Class;
+      Store      : not null access Programs.Root_Program_Tree_Store'Class;
       Interactor : not null access Aquarius.Interaction.Interactor'Class;
       UI         : Aquarius.UI.Aquarius_UI;
       Path       : in     String)
@@ -112,7 +112,7 @@ package body Aquarius.Loader is
       File : constant Aquarius.Source.Source_File :=
         Aquarius.Source.File_System.Read_File (Path);
       Result : constant Aquarius.Programs.Program_Tree :=
-        Aquarius.Programs.New_Program (Defn, File);
+        Aquarius.Programs.New_Program_Root (Defn, File, Store);
       Source_Pos : Aquarius.Source.Source_Position :=
         Aquarius.Source.Get_Start (File);
       Context    : Parse_Context;
@@ -150,9 +150,6 @@ package body Aquarius.Loader is
       Aquarius.Trees.Properties.Set_Grammar (Result.all, Grammar);
       Aquarius.Trees.Properties.Set_Interactor (Result.all, Interactor);
       Aquarius.Trees.Properties.Set_UI (Result.all, UI);
-      Aquarius.Trees.Properties.Set_Project
-        (Result.all,
-         Aquarius.Projects.Aquarius_Project (Project));
 
       Initialise_Parse_Context (Context, Grammar, Result,
                                 Interactive => False);
@@ -364,18 +361,14 @@ package body Aquarius.Loader is
 
    function Load_From_File
      (Grammar    : in     Aquarius.Grammars.Aquarius_Grammar;
-      Project    : not null access Programs.Root_Program_Tree_Store'Class;
+      Store      : not null access Programs.Root_Program_Tree_Store'Class;
       Interactor : not null access Interaction.Interactor'Class;
       UI         : Aquarius.UI.Aquarius_UI;
       Path       : in     String)
      return Aquarius.Programs.Program_Tree
    is
    begin
-      --  type conversion to project will be fixed once we
-      --  change the project property to a Program_Store one
-      return Load (Grammar,
-                   Aquarius.Projects.Aquarius_Project (Project),
-                   Interactor, UI, Path);
+      return Load (Grammar, Store, Interactor, UI, Path);
 
    exception
 
@@ -383,6 +376,25 @@ package body Aquarius.Loader is
          Ada.Text_IO.Put_Line (Path & ": file not found");
          return null;
 
+   end Load_From_File;
+
+   --------------------
+   -- Load_From_File --
+   --------------------
+
+   function Load_From_File
+     (Grammar    : in     Aquarius.Grammars.Aquarius_Grammar;
+      Store      : not null access Programs.Root_Program_Tree_Store'Class;
+      Path       : in     String)
+      return Aquarius.Programs.Program_Tree
+   is
+   begin
+      return Load_From_File
+        (Grammar    => Grammar,
+         Store      => Store,
+         Interactor => Interaction.Console.Console_Interactor,
+         UI         => Aquarius.UI.Console.Console_UI,
+         Path       => Path);
    end Load_From_File;
 
    --------------------
@@ -431,7 +443,7 @@ package body Aquarius.Loader is
                                        Destination_Path => Destination_Path);
                   return Load_From_File
                     (Grammar    => Grammar,
-                     Project    => Projects.New_Empty_Project (UI),
+                     Store      => Projects.New_Empty_Project (UI),
                      Interactor => Interaction.Console.Console_Interactor,
                      UI         => UI,
                      Path       => Destination_Path);
@@ -441,7 +453,7 @@ package body Aquarius.Loader is
       end;
       return Load_From_File
         (Grammar    => Grammar,
-         Project    => Projects.New_Empty_Project (UI),
+         Store      => Projects.New_Empty_Project (UI),
          Interactor => Interaction.Console.Console_Interactor,
          UI         => UI,
          Path       => Path);
@@ -453,7 +465,7 @@ package body Aquarius.Loader is
 
    function Load_From_File
      (Grammar    : in     Aquarius.Grammars.Aquarius_Grammar;
-      Project    : not null access Programs.Root_Program_Tree_Store'Class;
+      Store      : not null access Programs.Root_Program_Tree_Store'Class;
       UI         : Aquarius.UI.Aquarius_UI;
       Path       : in     String)
      return Aquarius.Programs.Program_Tree
@@ -461,7 +473,7 @@ package body Aquarius.Loader is
    begin
       return Load_From_File
         (Grammar    => Grammar,
-         Project    => Project,
+         Store      => Store,
          Interactor => Interaction.Console.Console_Interactor,
          UI         => UI,
          Path       => Path);
