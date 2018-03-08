@@ -29,6 +29,11 @@ package Aquarius.File_System_Stores is
       Name   : String)
       return Aquarius.Programs.Program_Tree;
 
+   overriding function Find_File
+     (Store  : Root_File_System_Store;
+      Name   : String)
+      return String;
+
    overriding procedure Load
      (Store : not null access Root_File_System_Store);
 
