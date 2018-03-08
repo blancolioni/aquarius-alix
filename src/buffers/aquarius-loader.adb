@@ -443,7 +443,7 @@ package body Aquarius.Loader is
                                        Destination_Path => Destination_Path);
                   return Load_From_File
                     (Grammar    => Grammar,
-                     Store      => Projects.New_Empty_Project (UI),
+                     Store      => Projects.New_Empty_Project (UI, Path),
                      Interactor => Interaction.Console.Console_Interactor,
                      UI         => UI,
                      Path       => Destination_Path);
@@ -453,7 +453,7 @@ package body Aquarius.Loader is
       end;
       return Load_From_File
         (Grammar    => Grammar,
-         Store      => Projects.New_Empty_Project (UI),
+         Store      => Projects.New_Empty_Project (UI, Path),
          Interactor => Interaction.Console.Console_Interactor,
          UI         => UI,
          Path       => Path);

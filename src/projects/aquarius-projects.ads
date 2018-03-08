@@ -92,8 +92,9 @@ package Aquarius.Projects is
      return Aquarius_Project;
 
    function New_Empty_Project
-     (UI : Aquarius.UI.Aquarius_UI)
-     return Aquarius_Project;
+     (UI   : Aquarius.UI.Aquarius_UI;
+      Name : String)
+      return Aquarius_Project;
 
    function New_Default_Project
      (For_File  : String;

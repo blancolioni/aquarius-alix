@@ -2,6 +2,8 @@ with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
+with Komnenos.Entities.Tables;
+
 with Aquarius.Config_Paths;
 
 with Aquarius.Configuration;
@@ -311,11 +313,16 @@ package body Aquarius.Projects is
    overriding procedure Load
      (Project : not null access Aquarius_Project_Type)
    is
-      Buffer : constant Aquarius.Buffers.Aquarius_Buffer :=
-                 Project.Get_Main_Buffer;
-      pragma Unreferenced (Buffer);
    begin
-      null;
+      Komnenos.Entities.Tables.New_Table
+        (Name  => Project.Program_Store_Name,
+         Store => Project);
+      declare
+         Buffer : constant Aquarius.Buffers.Aquarius_Buffer :=
+                    Project.Get_Main_Buffer;
+      begin
+         pragma Unreferenced (Buffer);
+      end;
    end Load;
 
    ---------------------
@@ -503,7 +510,7 @@ package body Aquarius.Projects is
       return Aquarius_Project
    is
       Result : constant Aquarius_Project :=
-                 New_Project ("Default",
+                 New_Project (Ada.Directories.Base_Name (For_File),
                               Ada.Directories.Containing_Directory (For_File),
                               UI);
    begin
@@ -519,11 +526,12 @@ package body Aquarius.Projects is
    -----------------------
 
    function New_Empty_Project
-     (UI : Aquarius.UI.Aquarius_UI)
-     return Aquarius_Project
+     (UI   : Aquarius.UI.Aquarius_UI;
+      Name : String)
+      return Aquarius_Project
    is
    begin
-      return New_Project ("Default", ".", UI);
+      return New_Project (Name, ".", UI);
    end New_Empty_Project;
 
    ------------------------
@@ -583,7 +591,14 @@ package body Aquarius.Projects is
                                                  Directory);
       Result.Project_UI := UI;
       Result.References := Aquarius.References.New_Reference_List;
-      return new Aquarius_Project_Type'(Result);
+
+      declare
+         Project : constant Aquarius_Project :=
+                     new Aquarius_Project_Type'(Result);
+      begin
+         Komnenos.Entities.Tables.New_Table (Name, Project);
+         return Project;
+      end;
    end New_Project;
 
    -----------------
