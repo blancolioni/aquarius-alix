@@ -37,6 +37,11 @@ package Aquarius.Projects is
       File_Name : String)
       return Aquarius.Programs.Program_Tree;
 
+   overriding function Find_File
+     (Project   : Aquarius_Project_Type;
+      File_Name : String)
+      return String;
+
    overriding procedure Load
      (Project : not null access Aquarius_Project_Type);
 

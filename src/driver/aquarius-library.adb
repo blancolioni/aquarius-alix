@@ -27,6 +27,11 @@ package body Aquarius.Library is
       Arguments : Aqua.Array_Of_Words)
       return Aqua.Word;
 
+   function Find_File
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word;
+
    --------------------
    -- Enable_Plugins --
    --------------------
@@ -35,6 +40,29 @@ package body Aquarius.Library is
    begin
       Local_Options (Plugins_Enabled) := Enabled;
    end Enable_Plugins;
+
+   ---------------
+   -- Find_File --
+   ---------------
+
+   function Find_File
+     (Context   : in out Aqua.Execution.Execution_Interface'Class;
+      Arguments : Aqua.Array_Of_Words)
+      return Aqua.Word
+   is
+      Program : constant Aquarius.Programs.Program_Tree :=
+                  Aquarius.Programs.Program_Tree
+                    (Context.To_External_Object (Arguments (1)));
+      Table   : constant Komnenos.Entities.Entity_Table_Access :=
+                  Komnenos.Entities.Tables.Table
+                    (Program.Local_Environment_Name);
+      Name    : constant String :=
+                  Context.To_String (Arguments (2));
+      Path    : constant String :=
+                  Table.Program_Store.Find_File (Name);
+   begin
+      return Context.To_String_Word (Path);
+   end Find_File;
 
    ----------------
    -- Initialise --
@@ -62,6 +90,11 @@ package body Aquarius.Library is
         (Name           => "tree__load_file",
          Argument_Count => 2,
          Handler        => Load_File'Access);
+
+      Aqua.Primitives.New_Primitive_Function
+        (Name           => "tree__find_file",
+         Argument_Count => 2,
+         Handler        => Find_File'Access);
 
    end Initialise;
 

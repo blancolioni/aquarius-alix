@@ -131,6 +131,21 @@ package body Aquarius.Projects is
       return Result (1 .. Count);
    end Filter_Entries;
 
+   ---------------
+   -- Find_File --
+   ---------------
+
+   overriding function Find_File
+     (Project   : Aquarius_Project_Type;
+      File_Name : String)
+      return String
+   is
+   begin
+      return Aquarius.Source.File_System.Find_File
+        (Project.Search_Path,
+         File_Name);
+   end Find_File;
+
    ----------------
    -- Get_Buffer --
    ----------------

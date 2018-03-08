@@ -60,6 +60,24 @@ package body Aquarius.File_System_Stores is
         Aquarius.Names.To_Aquarius_Name (Base_Path);
    end Create;
 
+   ---------------
+   -- Find_File --
+   ---------------
+
+   overriding function Find_File
+     (Store  : Root_File_System_Store;
+      Name   : String)
+      return String
+   is
+   begin
+      if Store.Loaded_Programs.Contains (Name) then
+         return Ada.Strings.Unbounded.To_String
+           (Store.Loaded_Programs (Name).Path);
+      else
+         return "";
+      end if;
+   end Find_File;
+
    -----------------
    -- From_Config --
    -----------------
