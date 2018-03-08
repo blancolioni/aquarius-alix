@@ -72,11 +72,13 @@ package body Aquarius.File_System_Stores is
       Ada.Text_IO.Put_Line ("Loading: file system store");
       Item.Store_Name :=
         Aquarius.Names.To_Aquarius_Name
-          (Config.Get ("name"));
-      Ada.Text_IO.Put_Line ("  name: " & Config.Get ("name"));
+          (Config.Get ("name", "unnamed session"));
+      Ada.Text_IO.Put_Line
+        ("  name: " & Aquarius.Names.To_String (Item.Store_Name));
       Item.Base_Path :=
-        Aquarius.Names.To_Aquarius_Name (Config.Get ("base_path"));
-      Ada.Text_IO.Put_Line ("  base path: " & Config.Get ("base_path"));
+        Aquarius.Names.To_Aquarius_Name (Config.Get ("base_path", "."));
+      Ada.Text_IO.Put_Line
+        ("  base path: " & Aquarius.Names.To_String (Item.Base_Path));
       if Config.Contains ("folders") then
          Ada.Text_IO.Put_Line ("Folders:");
          for Folder_Config of Config.Child ("folders") loop
