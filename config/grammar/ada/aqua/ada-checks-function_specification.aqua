@@ -1,5 +1,5 @@
 class Ada.Checks.Function_Specification inherit
-   Ada.Checks.Specification
+   Ada.Specification
    Aquarius.Trees.Program_Tree
    Aqua.Text_IO
    

@@ -1,5 +1,5 @@
 class Ada.Checks.Basic_Declaration inherit
-   Ada.Checks.Declared
+   Ada.Declared
    
 feature
 
