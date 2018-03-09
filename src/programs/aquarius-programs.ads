@@ -542,7 +542,7 @@ private
    overriding function Class_Name
      (It : Program_Tree_Type)
       return String
-   is ("Program_Tree");
+   is ("aquarius__trees__program_tree");
 
    --  override of Add_Child so that properties get copied from
    --  parent to child.
