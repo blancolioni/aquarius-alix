@@ -10,9 +10,7 @@ feature
    After_Defining_Program_Unit_Name (Child : Ada.Checks.Defining_Program_Unit_Name)
       do
          Copy (Library_Spec)
-         Put_Line ("Ada.Checks: checking parent units for " & Full_Name)
-         Put_Line ("current entity: " & Entity.Name)
-
+         
          across Child.Reference as Ref loop
             Ref.Tree.Cross_Reference (Entity, Ref.Entity, "reference")
          end
