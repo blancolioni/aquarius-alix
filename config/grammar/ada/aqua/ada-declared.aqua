@@ -13,6 +13,14 @@ feature
          Local_Name := Ids.Last_Element
       end
       
+   Copy (D : Ada.Declared)
+      do
+         Full_Name  := D.Full_Name
+         Local_Name := D.Local_Name
+         Entity     := D.Entity
+         Top_Level  := D.Top_Level
+      end
+      
    Set_Top_Level
       do
          Top_Level := True
