@@ -5,7 +5,6 @@ with Ada.Text_IO;
 
 with Komnenos.Entities.Tables;
 
-with Aquarius.Actions;
 with Aquarius.Grammars.Manager;
 with Aquarius.Loader;
 with Aquarius.Plugins.Manager;
@@ -260,16 +259,8 @@ package body Aquarius.File_System_Stores is
          end loop;
       end if;
 
-      for Info of Store.Loaded_Programs loop
-         declare
-            Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
-                        Aquarius.Trees.Properties.Get_Grammar
-                          (Info.Root);
-         begin
-            Grammar.Run_Action_Trigger
-              (Info.Root, Aquarius.Actions.Project_Trigger);
-         end;
-      end loop;
+      Store.Run_Actions (Aquarius.Actions.Semantic_Trigger);
+      Store.Run_Actions (Aquarius.Actions.Project_Trigger);
 
       Aquarius.Plugins.Manager.Loaded_Plugin_Report;
 
@@ -293,7 +284,8 @@ package body Aquarius.File_System_Stores is
    begin
       Komnenos.Entities.Tables.Set_Active_Table
         (Komnenos.Entities.Tables.Table (Store.Program_Store_Name));
-      Grammar.Run_Action_Trigger (Program, Aquarius.Actions.Semantic_Trigger);
+      Grammar.Run_Action_Trigger
+        (Program, Aquarius.Actions.Loaded_Trigger);
       return Program;
    end Load_Program;
 
@@ -355,6 +347,29 @@ package body Aquarius.File_System_Stores is
       Komnenos.Session_Objects.Register_Session_Object
         (File_System_Store_Name, New_File_System_Store'Access);
    end Register;
+
+   -----------------
+   -- Run_Actions --
+   -----------------
+
+   procedure Run_Actions
+     (Store   : Root_File_System_Store'Class;
+      Trigger : Aquarius.Actions.Action_Execution_Trigger)
+   is
+   begin
+      Komnenos.Entities.Tables.Set_Active_Table
+        (Komnenos.Entities.Tables.Table (Store.Program_Store_Name));
+      for Info of Store.Loaded_Programs loop
+         declare
+            Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
+                        Aquarius.Trees.Properties.Get_Grammar
+                          (Info.Root);
+         begin
+            Grammar.Run_Action_Trigger (Info.Root, Trigger);
+         end;
+      end loop;
+
+   end Run_Actions;
 
    ----------
    -- Save --
