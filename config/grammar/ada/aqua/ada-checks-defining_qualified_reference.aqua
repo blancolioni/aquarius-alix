@@ -23,14 +23,14 @@ feature
          else
             if Identifiers.Is_Empty then
                New_Context := Find_Entity (Id, "")
+               if attached New_Context then
+                  create Ref
+                  Ref.Make (Id, New_Context, Child)
+                  Reference.Append (Ref)
+               end
             else
                Error ("undefined: " & Identifiers.Last_Element)
             end
-         end
-         if attached New_Context then
-            create Ref
-            Ref.Make (Id, New_Context, Child)
-            Reference.Append (Ref)
          end
          Identifiers.Append (Id)
       end
