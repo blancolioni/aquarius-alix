@@ -1,18 +1,18 @@
 class Ada.Checks.Package_Specification inherit
    Aqua.Text_IO
    Aquarius.Trees.Program_Tree
-   Ada.Library.Package_Specification
+   Ada.Specification
    
 feature
 
+   Library_Spec : Ada.Library.Package_Specification
+   
    After_Defining_Program_Unit_Name (Child : Ada.Checks.Defining_Program_Unit_Name)
       do
+         Copy (Library_Spec)
          Put_Line ("Ada.Checks: checking parent units for " & Full_Name)
-         if attached Entity then
-            Put_Line ("current entity: " & Entity.Name)
-         else
-            Put_Line ("no entity")
-         end
+         Put_Line ("current entity: " & Entity.Name)
+
          across Child.Reference as Ref loop
             Ref.Tree.Cross_Reference (Entity, Ref.Entity, "reference")
          end
