@@ -15,6 +15,10 @@ package Aquarius.Actions is
    --  Changed_Trigger: actions performed when changes are made to
    --  a node, e.g. renaming an identifier
 
+   --  Loaded_Trigger: executed after a tree is loaded following
+   --  a successful parse.  Intended to bind the tree to its top-level
+   --  entity.
+
    --  Semantic_Trigger: the action is executed when the tree is
    --  being checked.  This normally happens after the parse is
    --  finished, or when new nodes are added.
@@ -48,6 +52,7 @@ package Aquarius.Actions is
    type Action_Execution_Trigger is
      (Parse_Trigger,
       Changed_Trigger,
+      Loaded_Trigger,
       Semantic_Trigger,
       Project_Trigger,
       Code_Trigger,
