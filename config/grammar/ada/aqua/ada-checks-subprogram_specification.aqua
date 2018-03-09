@@ -1,5 +1,5 @@
 class Ada.Checks.Subprogram_Specification inherit
-   Ada.Checks.Specification
+   Ada.Specification
    
 feature
 

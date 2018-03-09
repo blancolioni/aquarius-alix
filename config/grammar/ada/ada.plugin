@@ -1,5 +1,6 @@
 plugin Ada version 0.1 is
 
+   group library : loaded;
    group checks : semantic;
    
    --  group references : project;

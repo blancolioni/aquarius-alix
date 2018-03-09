@@ -1,6 +1,4 @@
 class Ada.Entity_Reference
-inherit
-   Aqua.Text_IO
    
 feature
    Name      : String
@@ -14,6 +12,5 @@ feature
          Name := Ref_Name
          Tree := Ref_Tree
          Entity := Ref_Entity
-         Put_Line ("New reference to " & Ref_Name & " at " & Ref_Tree.Concatenated_Image)
       end
 end
