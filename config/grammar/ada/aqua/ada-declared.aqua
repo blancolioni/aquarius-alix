@@ -1,4 +1,4 @@
-class Ada.Checks.Declared
+class Ada.Declared
    
 feature
 
@@ -18,7 +18,7 @@ feature
          Top_Level := True
       end
       
-   Copy_Top_Level (To : Ada.Checks.Declared)
+   Copy_Top_Level (To : Ada.Declared)
       do
          if Top_Level then
             To.Set_Top_Level

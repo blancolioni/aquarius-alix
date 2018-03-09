@@ -1,5 +1,5 @@
-class Ada.Checks.Specification inherit
-   Ada.Checks.Declared
+class Ada.Specification inherit
+   Ada.Declared
 
 feature
 
@@ -10,7 +10,7 @@ feature
          Part_Of_Body := True
       end
       
-   Copy_To (To : Ada.Checks.Specification)
+   Copy_To (To : Ada.Specification)
       do
          Copy_Top_Level (To)
          if Part_Of_Body then
