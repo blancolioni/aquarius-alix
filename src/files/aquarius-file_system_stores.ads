@@ -6,6 +6,7 @@ private with Ada.Strings.Unbounded;
 
 with Tropos;
 
+private with Aquarius.Actions;
 private with Aquarius.Names.Sets;
 with Aquarius.Programs;
 
@@ -124,5 +125,9 @@ private
      (Store : Root_File_System_Store'Class;
       Root  : Aquarius.Programs.Program_Tree)
      return Program_Maps.Cursor;
+
+   procedure Run_Actions
+     (Store   : Root_File_System_Store'Class;
+      Trigger : Aquarius.Actions.Action_Execution_Trigger);
 
 end Aquarius.File_System_Stores;
