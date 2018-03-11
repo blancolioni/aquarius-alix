@@ -162,7 +162,9 @@ package body Aquarius.Grammars.Manager is
          return EBNF_Grammar;
       end if;
 
-      return Load_Grammar_From_File (Name, Path & Name & ".ebnf");
+      return Load_Grammar_From_File
+        (Name => Name,
+         Path => Ada.Directories.Compose (Path, Name & ".ebnf"));
    end Load_Grammar;
 
    ----------------------------

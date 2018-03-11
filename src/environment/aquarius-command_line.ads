@@ -17,6 +17,7 @@ package Aquarius.Command_Line is
    function Enable_Debug return String;
    function Project_Name return String;
    function Plugin_Name  return String;
+   function Plugin_Path  return String;
    function Session_File return String;
    function Edit_Plugin return String;
 

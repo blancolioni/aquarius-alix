@@ -1,3 +1,4 @@
+with Aquarius.Command_Line;
 with Aquarius.Configuration;
 with Aquarius.File_System_Stores;
 with Aquarius.Grammars;
@@ -72,8 +73,12 @@ package body Aquarius.Library is
      (Enable_Plugins         : Boolean := True;
       Show_Paths_In_Messages : Boolean := False)
    is
+      Plugin_Path : constant String := Aquarius.Command_Line.Plugin_Path;
    begin
       Aquarius.Configuration.Load_Configuration;
+      if Plugin_Path /= "" then
+         Aquarius.Configuration.Add_Grammar_Path (Plugin_Path);
+      end if;
       Aqua.IO.Set_IO_Path (Aquarius.Paths.Scratch_Path);
       Aqua.Primitives.Init.Create_Primitives;
       Local_Options (Plugins_Enabled) := Enable_Plugins;
