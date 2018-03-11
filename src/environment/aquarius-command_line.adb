@@ -217,6 +217,15 @@ package body Aquarius.Command_Line is
       return Get_Argument ("", "plugin");
    end Plugin_Name;
 
+   -----------------
+   -- Plugin_Path --
+   -----------------
+
+   function Plugin_Path  return String is
+   begin
+      return Get_Argument ("", "plugin-dir");
+   end Plugin_Path;
+
    ------------------
    -- Project_Name --
    ------------------

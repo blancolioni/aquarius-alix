@@ -1,3 +1,4 @@
+with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Containers.Vectors;
 with Ada.Directories;
 --  with Ada.Environment_Variables;
@@ -24,6 +25,11 @@ package body Aquarius.Configuration is
 
    Local_Theme_Configuration : Tropos.Configuration;
    Have_Theme_Configuration  : Boolean := False;
+
+   package Grammar_Path_Lists is
+     new Ada.Containers.Indefinite_Doubly_Linked_Lists (String);
+
+   Grammar_Paths : Grammar_Path_Lists.List;
 
    function Config_Folder_Path return String;
 
@@ -56,6 +62,15 @@ package body Aquarius.Configuration is
    function Follow_Path (Start : Cursor;
                          Path  : String)
                         return Cursor;
+
+   ----------------------
+   -- Add_Grammar_Path --
+   ----------------------
+
+   procedure Add_Grammar_Path (Path : String) is
+   begin
+      Grammar_Paths.Append (Path);
+   end Add_Grammar_Path;
 
    --------------------------
    -- Aquarius_Config_File --
@@ -241,8 +256,22 @@ package body Aquarius.Configuration is
    ----------------------
 
    function Get_Grammar_Path (Grammar_Name : String) return String is
+      Default : constant String :=
+                  Config_Folder_Path & "/grammar/" & Grammar_Name & "/";
    begin
-      return Config_Folder_Path & "/grammar/" & Grammar_Name & "/";
+      for Path of Grammar_Paths loop
+         declare
+            Override : constant String :=
+                         Ada.Directories.Compose
+                           (Path, Grammar_Name);
+         begin
+            if Ada.Directories.Exists (Override) then
+               Ada.Text_IO.Put_Line ("using plugin override: " & Override);
+               return Override;
+            end if;
+         end;
+      end loop;
+      return Default;
    end Get_Grammar_Path;
 
    ----------------------
