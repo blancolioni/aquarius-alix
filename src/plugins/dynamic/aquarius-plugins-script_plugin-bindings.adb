@@ -5,7 +5,7 @@ with Ada.Exceptions;
 with Ada.Text_IO;
 
 --  with Aquarius.Actions.Interpreter;
-with Aquarius.Config_Paths;
+with Aquarius.Configuration;
 with Aquarius.Grammars.Manager;
 with Aquarius.Loader;
 with Aquarius.Messages.Console;
@@ -287,9 +287,10 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                                     & "-action_bindings",
                                     "action");
             Base_Aqua_Path   : constant String :=
-                                 Aquarius.Config_Paths.Config_File
-                                   ("grammar/" & Grammar.Name
-                                    & "/aqua/");
+                                 Ada.Directories.Compose
+                                   (Aquarius.Configuration.Get_Grammar_Path
+                                      (Grammar.Name),
+                                    "aqua");
 
          begin
             if Ack.Bindings.Load_Ack_Binding
