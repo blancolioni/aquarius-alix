@@ -19,6 +19,7 @@ package body Ack.Generate.Primitives is
 
    procedure Generate_Equal (Unit : in out Tagatha.Units.Tagatha_Unit);
    procedure Generate_Not_Equal (Unit : in out Tagatha.Units.Tagatha_Unit);
+   procedure Generate_Add (Unit : in out Tagatha.Units.Tagatha_Unit);
    procedure Generate_Join (Unit : in out Tagatha.Units.Tagatha_Unit);
 
    -----------------------
@@ -34,6 +35,8 @@ package body Ack.Generate.Primitives is
                        with Unreferenced;
       String_Type : constant Ack.Types.Type_Entity :=
                    Ack.Types.Get_Top_Level_Type ("string");
+      Integer_Type  : constant Ack.Types.Type_Entity :=
+                        Ack.Types.Get_Top_Level_Type ("integer");
 
       procedure Add
         (Name      : String;
@@ -61,7 +64,17 @@ package body Ack.Generate.Primitives is
       Add ("=", Any_Type, Generate_Equal'Access);
       Add ("/=", Any_Type, Generate_Not_Equal'Access);
       Add ("&", String_Type, Generate_Join'Access);
+      Add ("+", Integer_Type, Generate_Add'Access);
    end Create_Primitives;
+
+   ------------------
+   -- Generate_Add --
+   ------------------
+
+   procedure Generate_Add (Unit : in out Tagatha.Units.Tagatha_Unit) is
+   begin
+      Unit.Operate (Tagatha.Op_Add);
+   end Generate_Add;
 
    --------------------
    -- Generate_Equal --
