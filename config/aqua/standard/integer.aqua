@@ -4,4 +4,6 @@ expanded class Integer
 feature
    To_String : String external "aqua"
    
+   Plus alias "+" (Right : Integer) : Integer
+   
 end
