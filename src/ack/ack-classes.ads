@@ -123,6 +123,14 @@ package Ack.Classes is
       return Ack.Features.Feature_Entity
      with Pre => Class.Has_Aliased_Feature (Alias);
 
+   procedure Scan_Conforming_Child_Ancestors
+     (Class : not null access constant Class_Entity_Record'Class;
+      Child : not null access constant Class_Entity_Record'Class;
+      Process : not null access
+        procedure (Ancestor_Class : not null access constant
+                     Class_Entity_Record'Class;
+                   Call_Name      : String));
+
    procedure Scan_Ancestors
      (Class            : not null access constant Class_Entity_Record'Class;
       Proper_Ancestors : Boolean;
@@ -211,16 +219,17 @@ private
    type Class_Entity_Record is
      new Root_Entity_Type with
       record
-         Generic_Class     : Boolean := False;
-         Deferred          : Boolean := False;
-         Expanded          : Boolean := False;
-         Frozen            : Boolean := False;
-         Behaviour         : Class_Behaviour := Normal;
-         Inherited_Types   : List_Of_Inherited_Type_Records.List;
-         Inherited_List    : List_Of_Class_Entities.List;
-         Class_Features    : List_Of_Feature_Entities.List;
-         Formal_Arguments  : List_Of_Entities.List;
-         Notes             : Notes_Map.Map;
+         Generic_Class           : Boolean := False;
+         Deferred                : Boolean := False;
+         Expanded                : Boolean := False;
+         Frozen                  : Boolean := False;
+         Behaviour               : Class_Behaviour := Normal;
+         Conforming_Child_Action : Name_Id := No_Name;
+         Inherited_Types         : List_Of_Inherited_Type_Records.List;
+         Inherited_List          : List_Of_Class_Entities.List;
+         Class_Features          : List_Of_Feature_Entities.List;
+         Formal_Arguments        : List_Of_Entities.List;
+         Notes                   : Notes_Map.Map;
       end record;
 
    overriding function Description
