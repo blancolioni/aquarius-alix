@@ -5,3 +5,5 @@ feature
    Put_Line (S : String) external "aqua" alias "io.put_line"
    New_Line external "aqua" alias "io.new_line"
    Set_Output (Path : String) external "aqua" alias "io.set_output"
+   Set_Col (Col : Integer) external "aqua" alias "io.set_col"
+   Col : Integer external "aqua" alias "io.col"
