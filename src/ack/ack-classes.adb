@@ -63,6 +63,8 @@ package body Ack.Classes is
             raise Constraint_Error with
               "invalid behaviour: " & Value;
          end if;
+      elsif Name = "conforming_child_node" then
+         Class.Conforming_Child_Action := Get_Name_Id (Value);
       end if;
    end Add_Note;
 
@@ -622,6 +624,44 @@ package body Ack.Classes is
          Process (Class);
       end if;
    end Scan_Ancestors;
+
+   -------------------------------------
+   -- Scan_Conforming_Child_Ancestors --
+   -------------------------------------
+
+   procedure Scan_Conforming_Child_Ancestors
+     (Class   : not null access constant Class_Entity_Record'Class;
+      Child   : not null access constant Class_Entity_Record'Class;
+      Process : not null access
+        procedure (Ancestor_Class : not null access constant
+                     Class_Entity_Record'Class;
+                   Call_Name      : String))
+   is
+      procedure Check_Conforming_Child
+        (Ancestor : not null access constant
+           Class_Entity_Record'Class);
+
+      ----------------------------
+      -- Check_Conforming_Child --
+      ----------------------------
+
+      procedure Check_Conforming_Child
+        (Ancestor : not null access constant
+           Class_Entity_Record'Class)
+      is
+         Action_Name : constant Name_Id := Ancestor.Conforming_Child_Action;
+      begin
+         if Action_Name /= No_Name
+           and then Child.Conforms_To (Ancestor)
+         then
+            Process (Ancestor,
+                     To_Standard_String (Action_Name));
+         end if;
+      end Check_Conforming_Child;
+
+   begin
+      Class.Scan_Ancestors (False, Check_Conforming_Child'Access);
+   end Scan_Conforming_Child_Ancestors;
 
    -------------------
    -- Scan_Features --

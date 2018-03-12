@@ -197,6 +197,43 @@ package body Ack.Bindings is
                      Ada.Text_IO.Put_Line
                        (Action_File, "   end if");
 
+                     if Position_Name = "before" then
+                        declare
+                           procedure Call_With_Conforming_Child
+                             (Ancestor_Class : not null access constant
+                                Ack.Classes.Class_Entity_Record'Class;
+                              Call_Name      : String);
+
+                           --------------------------------
+                           -- Call_With_Conforming_Child --
+                           --------------------------------
+
+                           procedure Call_With_Conforming_Child
+                             (Ancestor_Class : not null access constant
+                                Ack.Classes.Class_Entity_Record'Class;
+                              Call_Name      : String)
+                           is
+                           begin
+                              Ada.Text_IO.Put_Line
+                                (Action_File,
+                                 "   call "
+                                 & "tree." & Group_Property & "."
+                                 & Ancestor_Class.Link_Name
+                                 & "."
+                                 & Call_Name
+                                 & "(tree." & Group_Property & ","
+                                 & "child." & Child_Type.Link_Name & ");");
+                           end Call_With_Conforming_Child;
+
+                        begin
+                           Class.Scan_Conforming_Child_Ancestors
+                             (Child     =>
+                                Ack.Types.Type_Entity (Child_Type).Class,
+                              Process   =>
+                                Call_With_Conforming_Child'Access);
+                        end;
+                     end if;
+
                      Ada.Text_IO.Put_Line
                        (Action_File,
                         "   call "
