@@ -1,4 +1,7 @@
 expanded class Integer
   -- inherit Comparable
+
+feature
+   To_String : String external "aqua"
    
 end

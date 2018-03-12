@@ -469,6 +469,20 @@ package body Ack.Features is
          return;
       end if;
 
+      if Feature.Is_External_Routine
+        and then Feature.Definition_Class.Expanded
+      then
+         Unit.Native_Operation
+           ("get_property " & Feature.Standard_Name & ","
+            & Natural'Image (Feature.Argument_Count),
+            Input_Stack_Words  => 0,
+            Output_Stack_Words => 0,
+            Changed_Registers  => "pv");
+
+         Unit.Push_Register ("pv");
+         return;
+      end if;
+
       if Feature.Routine
         or else (Feature.Property
                  and then not Feature_Type.Detachable
