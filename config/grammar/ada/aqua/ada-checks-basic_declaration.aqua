@@ -1,11 +1,4 @@
 class Ada.Checks.Basic_Declaration inherit
    Ada.Declared
-   
-feature
-
-   Before_Subprogram_Declaration (Child : Ada.Checks.Subprogram_Declaration)
-      do
-         Copy_Top_Level (Child)
-      end
 
 end
