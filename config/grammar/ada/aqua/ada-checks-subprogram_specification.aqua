@@ -3,16 +3,6 @@ class Ada.Checks.Subprogram_Specification inherit
    
 feature
 
-   Before_Procedure_Specification (Child : Ada.Checks.Procedure_Specification)
-      do
-         Copy_To (Child)
-      end
-
-   Before_Function_Specification (Child : Ada.Checks.Procedure_Specification)
-      do
-         Copy_To (Child)
-      end
-
    After_Procedure_Specification (Child : Ada.Checks.Procedure_Specification)
       do
          Full_Name := Child.Full_Name
