@@ -10,6 +10,10 @@ private package Ack.Bindings.Actions is
       Process : not null access
         procedure (Tree_Name : String));
 
+   procedure Add_Tree
+     (Table     : in out Ack_Binding_Table;
+      Tree_Name : String);
+
    procedure Create_Binding
      (Table             : in out Ack_Binding_Table;
       Parent_Tree_Name  : String;

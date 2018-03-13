@@ -1,5 +1,19 @@
 package body Ack.Bindings.Actions is
 
+   --------------
+   -- Add_Tree --
+   --------------
+
+   procedure Add_Tree
+     (Table     : in out Ack_Binding_Table;
+      Tree_Name : String)
+   is
+   begin
+      if not Table.Map.Contains (Tree_Name) then
+         Table.Map.Insert (Tree_Name, Child_Binding_Maps.Empty_Map);
+      end if;
+   end Add_Tree;
+
    --------------------
    -- Create_Binding --
    --------------------
