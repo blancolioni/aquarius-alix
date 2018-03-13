@@ -14,4 +14,8 @@ package Ack.Bindings is
       Trigger          : Aquarius.Actions.Action_Execution_Trigger)
       return Boolean;
 
+private
+
+   type Binding_Position is (Before, After);
+
 end Ack.Bindings;
