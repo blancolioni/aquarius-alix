@@ -253,6 +253,17 @@ package Aquarius.Grammars is
       return String
      with Pre => Grammar.Have_Block_Comment;
 
+   function Have_Syntax
+     (Grammar : Aquarius_Grammar_Record'Class;
+      Name    : String)
+      return Boolean;
+
+   function Get_Syntax
+     (Grammar : Aquarius_Grammar_Record'Class;
+      Name    : String)
+      return Aquarius.Syntax.Syntax_Tree
+     with Pre => Grammar.Have_Syntax (Name);
+
    not overriding
    function Make_Program_Tree
      (Grammar : not null access Aquarius_Grammar_Record;
@@ -367,5 +378,20 @@ private
       Name          : in String;
       Definition    : in Aquarius.Syntax.Syntax_Tree;
       Children      : in Array_Of_Syntax_Trees);
+
+   function Have_Syntax
+     (Grammar : Aquarius_Grammar_Record'Class;
+      Name    : String)
+      return Boolean
+   is (Grammar.Non_Terminals.Contains (Name)
+       or else Grammar.Terminals.Contains (Name));
+
+   function Get_Syntax
+     (Grammar : Aquarius_Grammar_Record'Class;
+      Name    : String)
+      return Aquarius.Syntax.Syntax_Tree
+   is (if Grammar.Non_Terminals.Contains (Name)
+       then Grammar.Non_Terminals.Element (Name)
+       else Grammar.Terminals.Element (Name));
 
 end Aquarius.Grammars;
