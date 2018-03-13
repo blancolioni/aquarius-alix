@@ -128,7 +128,7 @@ package body Ack.Bindings is
 
          if Position_Name = ""
            or else not Grammar.Have_Syntax (Parent_Tree)
-           or else (Child_Tree /= ""
+           or else (Child_Tree /= "" and then Child_Tree /= "node"
                     and then not Grammar.Have_Syntax (Child_Tree))
          then
             return;
@@ -486,9 +486,31 @@ package body Ack.Bindings is
       procedure Load_Class
         (Directory_Entry : Ada.Directories.Directory_Entry_Type)
       is
+         Source_Path : constant String :=
+                         Ada.Directories.Full_Name (Directory_Entry);
+         Source_Name : constant String :=
+                         Ada.Directories.Base_Name
+                           (Source_Path);
+         Match_Name  : constant String :=
+                         Grammar.Name
+                         & "-"
+                         & Aquarius.Actions.Action_Group_Name (Group)
+                       & "-";
+         Tree_Name   : constant String :=
+                         (if Source_Name'Length > Match_Name'Length
+                          and then Source_Name (1 .. Match_Name'Length)
+                          = Match_Name
+                          then Source_Name (Match_Name'Length + 1
+                            .. Source_Name'Last)
+                            else "");
       begin
+         References.Clear;
+         if Tree_Name /= "" then
+            Ack.Bindings.Actions.Add_Tree (Binding_Table, Tree_Name);
+         end if;
+
          Ack.Compile.Compile_Class
-           (Ada.Directories.Full_Name (Directory_Entry), Image,
+           (Source_Path, Image,
             Add_Feature_Binding'Access);
       end Load_Class;
 
