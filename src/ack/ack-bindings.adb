@@ -16,7 +16,8 @@ with Aquarius.Trees;
 
 package body Ack.Bindings is
 
-   Report_Calls : constant Boolean := False;
+   Report_Calls          : constant Boolean := False;
+   Report_Implicit_Calls : constant Boolean := False;
 
    package Link_Name_To_Class_Maps is
      new WL.String_Maps
@@ -407,6 +408,18 @@ package body Ack.Bindings is
                   Child_Link_Name  => Child_Class.Link_Name,
                   Position         => Before);
                First_Call := False;
+            end if;
+
+            if Report_Implicit_Calls then
+               Ada.Text_IO.Put_Line
+                 (Action_File,
+                  "   IO.Put_Line ("""
+                  & Call_Name
+                  & ": "
+                  & Parent_Class.Standard_Name
+                  & "/"
+                  & Child_Class.Standard_Name
+                  & """)");
             end if;
 
             Ada.Text_IO.Put_Line
