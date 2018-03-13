@@ -3,16 +3,6 @@ class Ada.Library.Subprogram_Specification inherit
    
 feature
 
-   Before_Procedure_Specification (Child : Ada.Library.Procedure_Specification)
-      do
-         Copy_To (Child)
-      end
-
-   Before_Function_Specification (Child : Ada.Library.Procedure_Specification)
-      do
-         Copy_To (Child)
-      end
-
    After_Procedure_Specification (Child : Ada.Library.Procedure_Specification)
       do
          Full_Name := Child.Full_Name
