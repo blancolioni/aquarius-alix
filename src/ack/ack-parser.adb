@@ -93,6 +93,38 @@ package body Ack.Parser is
                                  Import_Inherited'Access)))
    with Pre => From.Name = "inheritance";
 
+   function Import_Feature_Name
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     with Pre => From.Name = "feature_name";
+
+   function Import_Creation_Procedure
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is (Import_Feature_Name (From.Program_Child ("feature_name")))
+   with Pre => From.Name = "creation_procedure";
+
+   function Import_Creation_Clause
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is (New_Node
+       (N_Creation_Clause, From,
+        List =>
+           Import_List
+          (From.Program_Child ("creation_procedure_list"),
+           "creation_procedure",
+           Import_Creation_Procedure'Access)))
+   with Pre => From.Name = "creation_clause";
+
+   function Import_Creators
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is (New_Node
+       (N_Creators, From,
+        List => Import_List
+          (From, "creation_clause", Import_Creation_Clause'Access)))
+   with Pre => From.Name = "creators";
+
    function Import_Features
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
@@ -121,11 +153,6 @@ package body Ack.Parser is
    function Import_Extended_Feature_Name
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id;
-
-   function Import_Feature_Name
-     (From : Aquarius.Programs.Program_Tree)
-      return Node_Id
-     with Pre => From.Name = "feature_name";
 
    function Import_Feature_Alias
      (From : Aquarius.Programs.Program_Tree)
@@ -266,6 +293,11 @@ package body Ack.Parser is
       return Node_Id
      with Pre => From.Name = "creation_instruction";
 
+   function Import_Explicit_Creation_Call
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     with Pre => From.Name = "explicit_creation_call";
+
    function Import_Conditional
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
@@ -371,8 +403,10 @@ package body Ack.Parser is
       Inheritance_Node : constant Node_Id :=
                            Import_Optional_Child
                              (From, "inheritance", Import_Inheritance'Access);
-      Creators_Node : constant Node_Id := No_Node;
-      Features_Node : constant Node_Id :=
+      Creators_Node : constant Node_Id :=
+                           Import_Optional_Child
+                             (From, "creators", Import_Creators'Access);
+      Features_Node    : constant Node_Id :=
                         Import_Optional_Child
                              (From, "features", Import_Features'Access);
       Invariant_Node : constant Node_Id := No_Node;
@@ -535,6 +569,12 @@ package body Ack.Parser is
                                ("variable");
       Identifier_Tree    : constant Program_Tree :=
                              Variable_Tree.Program_Child ("identifier");
+      Explict_Call       : constant Node_Id :=
+                             Import_Optional_Child
+                               (Parent     => Creation_Call_Tree,
+                                Child_Name => "explicit_creation_call",
+                                Import     =>
+                                  Import_Explicit_Creation_Call'Access);
    begin
       return New_Node (N_Creation_Instruction, From,
                        Field_1 =>
@@ -543,7 +583,8 @@ package body Ack.Parser is
                             Field_1 =>
                               New_Node
                                 (N_Variable, Variable_Tree,
-                                 Name => Get_Name_Id (Identifier_Tree.Text))));
+                                 Name => Get_Name_Id (Identifier_Tree.Text)),
+                            Field_2 => Explict_Call));
    end Import_Creation_Instruction;
 
    -----------------------------
@@ -632,6 +673,25 @@ package body Ack.Parser is
                        List => List);
 
    end Import_Entity_Declaration_List;
+
+   -----------------------------------
+   -- Import_Explicit_Creation_Call --
+   -----------------------------------
+
+   function Import_Explicit_Creation_Call
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+      use Aquarius.Programs;
+      Id : constant Program_Tree := From.Program_Child ("identifier");
+   begin
+      return New_Node (N_Explicit_Creation_Call, From,
+                       Name => Get_Name_Id (Id.Text),
+                       Field_2 =>
+                         Import_Optional_Child
+                           (From, "actuals",
+                            Expressions.Import_Actual_Arguments'Access));
+   end Import_Explicit_Creation_Call;
 
    ----------------------------------
    -- Import_Extended_Feature_Name --

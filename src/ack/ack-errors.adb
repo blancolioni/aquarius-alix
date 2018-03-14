@@ -43,6 +43,10 @@ package body Ack.Errors is
             return To_String (Get_Name (Node))
               & " is not defined in "
               & Get_Error_Entity (Node).Description;
+         when E_Not_A_Create_Feature =>
+            return To_String (Get_Name (Node))
+              & " is not a creator for "
+              & Get_Error_Entity (Node).Description;
          when E_Missing_Redefinition =>
             return "missing declaration for redefined feature "
               & To_String (Get_Name (Node));

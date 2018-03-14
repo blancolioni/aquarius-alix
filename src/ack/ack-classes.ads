@@ -1,3 +1,5 @@
+private with WL.String_Sets;
+
 with Ack.Features;
 limited with Ack.Types;
 
@@ -28,7 +30,11 @@ package Ack.Classes is
      (Class : in out Class_Entity_Record'Class;
       Feature : not null access Ack.Features.Feature_Entity_Record'Class);
 
-   procedure Add_Note
+   procedure Add_Creator
+     (Class : in out Class_Entity_Record'Class;
+      Name  : Name_Id);
+
+      procedure Add_Note
      (Class : in out Class_Entity_Record'Class;
       Name  : String;
       Value : String);
@@ -230,6 +236,7 @@ private
          Class_Features          : List_Of_Feature_Entities.List;
          Formal_Arguments        : List_Of_Entities.List;
          Notes                   : Notes_Map.Map;
+         Creators                : WL.String_Sets.Set;
       end record;
 
    overriding function Description
