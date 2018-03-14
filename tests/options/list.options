@@ -1,0 +1,9 @@
+package List.Options is
+
+   All_Files        : Boolean with "all", 'a';
+   Almost_All_Files : Boolean with 'A';
+   Author           : Boolean := True;
+   Escape           : Boolean := False with 'b';
+   Tab_Size         : Natural := 8 with "tabsize", 'T';
+   
+end List.Options;
