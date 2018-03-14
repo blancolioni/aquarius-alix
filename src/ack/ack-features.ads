@@ -29,6 +29,10 @@ package Ack.Features is
      (Feature : Feature_Entity_Record'Class)
       return Name_Id;
 
+   function Is_Creator
+     (Feature : Feature_Entity_Record'Class)
+      return Boolean;
+
    function Is_Property
      (Feature : Feature_Entity_Record'Class)
       return Boolean;
@@ -47,6 +51,9 @@ package Ack.Features is
      with Pre => Kind (Routine_Node) = N_Internal;
 
    procedure Set_Deferred
+     (Feature     : in out Feature_Entity_Record'Class);
+
+   procedure Set_Creator
      (Feature     : in out Feature_Entity_Record'Class);
 
    procedure Set_Redefined
@@ -131,6 +138,7 @@ private
          Explicit_Value      : Boolean := False;
          Deferred            : Boolean := False;
          External            : Boolean := False;
+         Creator             : Boolean := False;
          Has_Result          : Boolean := False;
          Has_Current         : Boolean := False;
          Once                : Boolean := False;
@@ -190,6 +198,11 @@ private
      (Feature : Feature_Entity_Record'Class)
       return Boolean
    is (Feature.Property);
+
+   function Is_Creator
+     (Feature : Feature_Entity_Record'Class)
+      return Boolean
+   is (Feature.Creator);
 
    function Is_External_Routine
      (Feature : Feature_Entity_Record'Class)

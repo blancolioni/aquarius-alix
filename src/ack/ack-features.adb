@@ -617,6 +617,17 @@ package body Ack.Features is
       end if;
    end Scan_Original_Classes;
 
+   -----------------
+   -- Set_Creator --
+   -----------------
+
+   procedure Set_Creator
+     (Feature     : in out Feature_Entity_Record'Class)
+   is
+   begin
+      Feature.Creator := True;
+   end Set_Creator;
+
    -----------------------
    -- Set_Default_Value --
    -----------------------

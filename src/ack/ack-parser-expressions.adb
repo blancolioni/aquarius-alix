@@ -93,6 +93,18 @@ package body Ack.Parser.Expressions is
       return Node;
    end Generic_Import;
 
+   -----------------------------
+   -- Import_Actual_Arguments --
+   -----------------------------
+
+   function Import_Actual_Arguments
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+   begin
+      return Import_Actual_List (From.Program_Child ("actual_list"));
+   end Import_Actual_Arguments;
+
    ----------------------------
    -- Import_Attachment_Test --
    ----------------------------
@@ -240,16 +252,11 @@ package body Ack.Parser.Expressions is
    is
       use Aquarius.Programs;
 
-      function Import_Actuals
-        (Actuals_Tree : Program_Tree)
-         return Node_Id
-      is (Import_Actual_List (Actuals_Tree.Program_Child ("actual_list")));
-
       Id : constant String := From.Program_Child ("identifier").Text;
       Actual_Node : constant Node_Id :=
                       Import_Optional_Child
                         (From, "actuals",
-                         Import_Actuals'Access);
+                         Import_Actual_Arguments'Access);
    begin
       return New_Node (N_Precursor_Element, From,
                        Name => Get_Name_Id (Id),

@@ -10,6 +10,9 @@ with Ack.Types;
 
 with Ack.Generate.Primitives;
 
+with Ada.Text_IO;
+with Ack.IO;
+
 package body Ack.Generate is
 
    Report_Allocation : constant Boolean := False;
@@ -362,12 +365,50 @@ package body Ack.Generate is
      (Unit     : in out Tagatha.Units.Tagatha_Unit;
       Creation : Node_Id)
    is
+      Call_Node : constant Node_Id := Creation_Call (Creation);
+      Explicit_Call_Node : constant Node_Id :=
+                             Explicit_Creation_Call (Call_Node);
    begin
+
       Unit.Call
         (Get_Entity (Creation).Get_Type.Link_Name
          & "$allocate");
       Unit.Push_Register ("r0");
       Get_Entity (Creation).Pop_Entity (Unit);
+
+      if Explicit_Call_Node in Real_Node_Id then
+         declare
+            Actual_List_Node : constant Node_Id :=
+                                 Actual_List (Explicit_Call_Node);
+            Actual_List      : constant List_Id :=
+                                 (if Actual_List_Node /= No_Node
+                                  then Node_Table.Element
+                                    (Actual_List_Node).List
+                                  else No_List);
+            Actuals_Node_List : constant List_Of_Nodes.List :=
+                                  (if Actual_List = No_List
+                                   then List_Of_Nodes.Empty_List
+                                   else List_Table.Element (Actual_List)
+                                   .List);
+         begin
+            for Item of reverse Actuals_Node_List loop
+               Generate_Expression (Unit, Item);
+            end loop;
+         end;
+
+         Get_Entity (Creation).Push_Entity (False, Unit);
+         Get_Entity (Explicit_Call_Node).Push_Entity
+           (Have_Context => True,
+            Unit         => Unit);
+         Unit.Drop;
+      end if;
+
+   exception
+      when others =>
+         Ada.Text_IO.Put_Line ("no entity in this tree:");
+         Ack.IO.Put_Line (Creation);
+         raise;
+
    end Generate_Creation;
 
    -----------------------------

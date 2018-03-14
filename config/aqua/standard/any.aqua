@@ -1,6 +1,12 @@
 class Any
 
+create
+   default_create
+   
 feature
+
+   default_create do end
+   
    Void : None
    
    Reference_Equal alias "=" (Other : Any) : Boolean 

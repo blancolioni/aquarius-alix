@@ -431,6 +431,22 @@ package body Ack is
       Node_Table (Node).Entity := Entity_Type (Entity);
    end Set_Entity;
 
+   --------------------------------
+   -- Set_Explicit_Creation_Call --
+   --------------------------------
+
+   procedure Set_Explicit_Creation_Call
+     (N    : Node_Id;
+      Name : Name_Id)
+   is
+      Call : constant Node_Id :=
+               New_Node (Kind => N_Explicit_Creation_Call,
+                         From => Get_Program (N),
+                         Name => Name);
+   begin
+      Node_Table (N).Field (2) := Call;
+   end Set_Explicit_Creation_Call;
+
    -------------------------
    -- Set_Implicit_Entity --
    -------------------------

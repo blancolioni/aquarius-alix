@@ -17,6 +17,19 @@ package body Ack.Classes is
       Unit  : in out Tagatha.Units.Tagatha_Unit);
 
    -----------------
+   -- Add_Creator --
+   -----------------
+
+   procedure Add_Creator
+     (Class : in out Class_Entity_Record'Class;
+      Name  : Name_Id)
+   is
+   begin
+      Class.Creators.Insert
+        (To_Standard_String (Name));
+   end Add_Creator;
+
+   -----------------
    -- Add_Feature --
    -----------------
 
@@ -27,6 +40,9 @@ package body Ack.Classes is
    begin
       Class.Class_Features.Append (Feature);
       Root_Entity_Type (Class).Insert (Feature);
+      if Class.Creators.Contains (Feature.Standard_Name) then
+         Feature.Set_Creator;
+      end if;
    end Add_Feature;
 
    ------------------------
@@ -528,6 +544,7 @@ package body Ack.Classes is
                      (if Class_Name = "string"
                       then new String_Class_Record
                       else new Class_Entity_Record);
+
    begin
       Result.Create
         (Name, Declaration,

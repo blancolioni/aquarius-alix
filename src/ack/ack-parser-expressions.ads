@@ -15,4 +15,9 @@ private package Ack.Parser.Expressions is
       return Node_Id
      with Pre => From.Name = "precursor";
 
+   function Import_Actual_Arguments
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     with Pre => From.Name = "actuals";
+
 end Ack.Parser.Expressions;

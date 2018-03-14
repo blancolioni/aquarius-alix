@@ -155,6 +155,49 @@ package body Ack.Semantic is
       Expression_Type : access Root_Entity_Type'Class;
       Precursor       : Node_Id);
 
+   procedure Analyse_Actual_Arguments
+     (Class            : Ack.Classes.Class_Entity;
+      Container        : not null access Root_Entity_Type'Class;
+      Entity           : Entity_Type;
+      Actual_List_Node : Node_Id);
+
+   ------------------------------
+   -- Analyse_Actual_Arguments --
+   ------------------------------
+
+   procedure Analyse_Actual_Arguments
+     (Class            : Ack.Classes.Class_Entity;
+      Container        : not null access Root_Entity_Type'Class;
+      Entity           : Entity_Type;
+      Actual_List_Node : Node_Id)
+   is
+   begin
+      if Actual_List_Node /= No_Node then
+         declare
+            Actuals : constant Array_Of_Nodes :=
+                        To_Array
+                          (Node_Table.Element
+                             (Actual_List_Node).List);
+         begin
+            if Entity.Argument_Count = 0 then
+               Error (Actual_List_Node, E_Does_Not_Accept_Arguments);
+            elsif Actuals'Length > Entity.Argument_Count then
+               Error (Actual_List_Node, E_Too_Many_Arguments);
+            elsif Actuals'Length < Entity.Argument_Count then
+               Error (Actual_List_Node, E_Insufficient_Arguments);
+            else
+               for I in Actuals'Range loop
+                  Analyse_Expression
+                    (Class           => Class,
+                     Container       => Container,
+                     Expression_Type => Entity.Argument (I).Get_Type,
+                     Expression      => Actuals (I));
+               end loop;
+            end if;
+         end;
+      end if;
+   end Analyse_Actual_Arguments;
+
    ---------------------------
    -- Analyse_Anchored_Type --
    ---------------------------
@@ -203,6 +246,7 @@ package body Ack.Semantic is
    is
       Notes_Node       : constant Node_Id := Notes (Node);
       Inheritance_Node : constant Node_Id := Inheritance (Node);
+      Creators_Node    : constant Node_Id := Class_Creators (Node);
       Features_Node    : constant Node_Id := Class_Features (Node);
       Class            : constant Ack.Classes.Class_Entity :=
                            Analyse_Class_Header (Node, Class_Header (Node));
@@ -215,6 +259,40 @@ package body Ack.Semantic is
 
       if Notes_Node in Real_Node_Id then
          Analyse_Notes (Class, Notes_Node);
+      end if;
+
+      if Creators_Node in Real_Node_Id then
+         declare
+            procedure Add_Creator_Clause
+              (Node : Node_Id);
+
+            ------------------------
+            -- Add_Creator_Clause --
+            ------------------------
+
+            procedure Add_Creator_Clause
+              (Node : Node_Id)
+            is
+               procedure Add_Creator_Name (Creator_Node : Node_Id);
+
+               ----------------------
+               -- Add_Creator_Name --
+               ----------------------
+
+               procedure Add_Creator_Name (Creator_Node : Node_Id) is
+               begin
+                  Class.Add_Creator
+                    (Get_Name (Creator_Node));
+               end Add_Creator_Name;
+
+            begin
+               Scan (Creator_List (Node), Add_Creator_Name'Access);
+            end Add_Creator_Clause;
+
+         begin
+            Scan (Creator_Clauses (Creators_Node),
+                  Add_Creator_Clause'Access);
+         end;
       end if;
 
       if Features_Node in Real_Node_Id then
@@ -603,16 +681,52 @@ package body Ack.Semantic is
       Container : not null access Root_Entity_Type'Class;
       Creation  : Node_Id)
    is
-      pragma Unreferenced (Class);
-      Call_Node     : constant Node_Id := Creation_Call (Creation);
-      Variable_Node : constant Node_Id := Variable (Call_Node);
-      Name          : constant Name_Id := Get_Name (Variable_Node);
+      Call_Node          : constant Node_Id := Creation_Call (Creation);
+      Explicit_Call_Node : constant Node_Id :=
+                             Explicit_Creation_Call (Call_Node);
+      Variable_Node      : constant Node_Id := Variable (Call_Node);
+      Name               : constant Name_Id := Get_Name (Variable_Node);
+      Created_Entity     : constant Entity_Type :=
+                             (if Container.Contains (Name)
+                              then Container.Get (Name) else null);
+      Creator_Name       : Name_Id;
    begin
-      if not Container.Contains (Name) then
+
+      if Created_Entity = null then
+         Ada.Text_IO.Put_Line ("undeclared: " & To_Standard_String (Name));
          Error (Creation, E_Undeclared_Name);
-      else
-         Set_Entity (Creation, Container.Get (Name));
+         return;
       end if;
+
+      Set_Entity (Creation, Created_Entity);
+
+      if Explicit_Call_Node in Real_Node_Id then
+         Creator_Name := Get_Name (Explicit_Call_Node);
+         if Created_Entity.Get_Type.Contains (Creator_Name) then
+            declare
+               Creator : constant Entity_Type :=
+                           Created_Entity.Get_Type.Get (Creator_Name);
+            begin
+               Set_Entity (Explicit_Call_Node, Creator);
+               if Creator.all not in Ack.Features.Feature_Entity_Record'Class
+                 or else not Ack.Features.Feature_Entity (Creator).Is_Creator
+               then
+                  Error (Explicit_Call_Node, E_Not_A_Create_Feature,
+                         Created_Entity.Get_Type);
+               else
+                  Analyse_Actual_Arguments
+                    (Class            => Class,
+                     Container        => Container,
+                     Entity           => Creator,
+                     Actual_List_Node => Actual_List (Explicit_Call_Node));
+               end if;
+            end;
+         else
+            Error (Explicit_Call_Node, E_Not_Defined_In,
+                   Entity_Type (Container));
+         end if;
+      end if;
+
    end Analyse_Creation;
 
    -------------------------------

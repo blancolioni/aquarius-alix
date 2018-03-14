@@ -1,4 +1,7 @@
 class Ada.Entity_Reference
+
+create
+   Make
    
 feature
    Name      : String

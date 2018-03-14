@@ -34,6 +34,8 @@ package Ack is
       N_Redefine,
       N_Rename,
       N_Select,
+      N_Creators,
+      N_Creation_Clause,
       N_Features,
       N_Feature_Clause,
       N_Feature_Declaration,
@@ -102,6 +104,7 @@ package Ack is
       E_Undeclared_Name,
       E_Redefined_Name,
       E_Not_Defined_In,
+      E_Not_A_Create_Feature,
       E_Missing_Redefinition,
       E_No_Component,
       E_No_Child,
@@ -121,7 +124,8 @@ package Ack is
 
    No_Node : constant Node_Id;
 
-   function Kind (Node : Node_Id) return Node_Kind;
+   function Kind (Node : Node_Id) return Node_Kind
+     with Pre => Node /= No_Node;
 
    type List_Id is private;
 
@@ -372,6 +376,7 @@ package Ack is
        Kind (N) in N_Identifier | N_Feature_Name | N_Feature_Alias | N_Variable
                  | N_Integer_Constant | N_String_Constant | N_Boolean_Constant
                  | N_Effective_Routine | N_Precursor_Element
+                 | N_Explicit_Creation_Call
                  | N_Formal_Generic_Name | N_Get_Property
                  | N_Attachment_Test | N_Iteration | N_Operator
                  | N_Note_Name | N_Note_Item;
@@ -381,6 +386,15 @@ package Ack is
 
    function Get_Type (N : Node_Id) return Entity_Type;
    function Has_Type (N : Node_Id) return Boolean;
+
+   function Class_Creators (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Class_Declaration;
+
+   function Creator_Clauses (N : Node_Id) return List_Id
+     with Pre => Kind (N) = N_Creators;
+
+   function Creator_List (N : Node_Id) return List_Id
+     with Pre => Kind (N) = N_Creation_Clause;
 
    function Class_Features (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Class_Declaration;
@@ -456,8 +470,22 @@ package Ack is
    function Creation_Call (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Creation_Instruction;
 
+   function Explicit_Creation_Call (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Creation_Call,
+     Post => Explicit_Creation_Call'Result = No_Node
+     or else Kind (Explicit_Creation_Call'Result)
+     = N_Explicit_Creation_Call;
+
+   procedure Set_Explicit_Creation_Call
+     (N    : Node_Id;
+      Name : Name_Id)
+     with Pre => Kind (N) = N_Creation_Call
+     and then Explicit_Creation_Call (N) = No_Node,
+     Post => Explicit_Creation_Call (N) /= No_Node
+     and then Get_Name (Explicit_Creation_Call (N)) = Name;
+
    function Actual_List (N : Node_Id) return Node_Id
-     with Pre => Kind (N) = N_Precursor_Element;
+     with Pre => Kind (N) in N_Precursor_Element | N_Explicit_Creation_Call;
 
    function Constant_Value (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Constant
@@ -740,6 +768,15 @@ private
    function Get_Type (N : Node_Id) return Entity_Type
    is (Node_Table.Element (N).Node_Type);
 
+   function Class_Creators (N : Node_Id) return Node_Id
+   is (Node_Table.Element (N).Field (4));
+
+   function Creator_Clauses (N : Node_Id) return List_Id
+   is (Node_Table.Element (N).List);
+
+   function Creator_List (N : Node_Id) return List_Id
+   is (Node_Table.Element (N).List);
+
    function Class_Features (N : Node_Id) return Node_Id
    is (Node_Table.Element (N).Field (5));
 
@@ -763,6 +800,9 @@ private
 
    function Creation_Call (N : Node_Id) return Node_Id
    is (Field_1 (N));
+
+   function Explicit_Creation_Call (N : Node_Id) return Node_Id
+   is (Field_2 (N));
 
    function Expression (N : Node_Id) return Node_Id
    is (if Kind (N) = N_Assignment
