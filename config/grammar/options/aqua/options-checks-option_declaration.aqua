@@ -12,9 +12,9 @@ feature
          Option_Entry.Set_Type (Type.Name)
       end
       
-   After_Numeric_Literal (Child : String)
+   After_Default_Value (Child : Options.Checks.Default_Value)
       do
-         Option_Entry.Set_Default_Value (Child)
+         Option_Entry.Set_Default_Value (Child.Value_Image)
       end
       
    Before_List_Of_Aspects (Child : List_Of_Aspects)
