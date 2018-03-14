@@ -398,7 +398,7 @@ creation_call ::=
          variable [ explicit_creation_call ]
          
 explicit_creation_call ::=
-         [ '.' identifier ] [ actuals ]
+         '.' identifier [ actuals ]
 	 
 assignment ::=
          variable ':=' expression
