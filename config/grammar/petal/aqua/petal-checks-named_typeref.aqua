@@ -4,7 +4,7 @@ inherit
    Petal.Context
    
 feature
-   Entry : Petal.Entry
+   Entry : detachable Petal.Entry
    
 feature
 
