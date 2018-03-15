@@ -1,24 +1,23 @@
 class Petal.Checks.List_Of_Declarations
 inherit 
    Petal.Context
-   Petal.Entry_Table
    Aqua.Text_IO
 
 feature
 
-   Before_Declaration (Child : Petal.Checks.Declaration)
+   Before_Node 
+   local
+      Local_Context : Petal.Entry_Table
    do
-      Copy_Context (Child)
+      create Local_Context
+      Local_Context.Make ("list-of-declarations", Context)
+      Context := Local_Context
    end
-  
+   
    After_Declaration (Child : Petal.Checks.Declaration)
       do
          if attached Child.Entry as E then
-            Entry_List.Append (E)
-            if E.Constant then
-               Put_Line ("constant: " & E.Declared_Name)
-            else
-               Put_Line ("declaration: " & E.Declared_Name)
+            Context.Insert (E)
          end
       end
       

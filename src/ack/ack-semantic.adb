@@ -1183,8 +1183,12 @@ package body Ack.Semantic is
       Container : not null access Root_Entity_Type'Class;
       Loop_Node : Node_Id)
    is
-      Iteration_Node : constant Node_Id := Iteration (Loop_Node);
-      Loop_Body_Node : constant Node_Id := Loop_Body (Loop_Node);
+      Iteration_Node      : constant Node_Id := Loop_Iteration (Loop_Node);
+      Initialization_Node : constant Node_Id :=
+                              Loop_Initialization (Loop_Node);
+      Exit_Condition_Node : constant Node_Id :=
+                              Loop_Exit_Condition (Loop_Node);
+      Loop_Body_Node      : constant Node_Id := Loop_Body (Loop_Node);
    begin
       if Iteration_Node /= No_Node then
          declare
@@ -1228,6 +1232,21 @@ package body Ack.Semantic is
                Container.Add_Implicit (Implicit);
             end;
          end;
+      else
+         if Exit_Condition_Node = No_Node then
+            Error (Loop_Node, E_Missing_Exit_Condition);
+         end if;
+      end if;
+
+      if Initialization_Node /= No_Node then
+         Analyse_Compound (Class, Container, Compound (Initialization_Node));
+      end if;
+
+      if Exit_Condition_Node /= No_Node then
+         Analyse_Expression
+           (Class, Container,
+            Get_Top_Level_Type ("boolean"),
+            Expression (Exit_Condition_Node));
       end if;
 
       Analyse_Compound (Class, Container, Compound (Loop_Body_Node));

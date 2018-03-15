@@ -1,6 +1,10 @@
 class Petal.Entry_Table
-
+inherit
+   Aqua.Text_IO
+   
 feature
+   Table_Name : String
+   
    Entry_List : Aqua.Containers.Linked_List[Petal.Entry]
    Parent : detachable Petal.Entry_Table
    
@@ -9,11 +13,19 @@ feature
          Entry_List := List
       end
    
-   Set_Parent (P : PEtal.Entry_Table)
+   Set_Parent (P : Petal.Entry_Table)
    do
       Parent := P
    end
    
+   Make (Name : String
+         P    : Entry_Table)
+      do
+         Table_Name := Name
+         Parent     := P
+         Put_Line ("New table: " & Name)
+      end
+      
 feature
 
    Insert (Entry : Petal.Entry)
@@ -23,15 +35,17 @@ feature
       
    Find (Name : String) : detachable Petal.Entry
    local
-      Lower_Name : String := Name.To_Lower
+      Lower_Name : String
    do
+      Lower_Name := Name.To_Lower
       across Entry_List as E loop
-         if E.Name = Name then
+         if E.Name = Lower_Name then
             Result := E
          end
       end
-      if Result = Void then
-         if Parent /= Void then
+      if attached Result then
+      else
+         if attached Parent then 
             Result := Parent.Find (Name)
          end
       end

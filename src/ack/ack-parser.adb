@@ -1052,7 +1052,9 @@ package body Ack.Parser is
       function Import_Initialization
         (Tree : Aquarius.Programs.Program_Tree)
          return Node_Id
-      is (No_Node);
+      is (New_Node (N_Initialization, Tree,
+                    Field_1 =>
+                       Import_Compound (Tree.Program_Child ("compound"))));
 
       function Import_Invariant
         (Tree : Aquarius.Programs.Program_Tree)
@@ -1062,7 +1064,11 @@ package body Ack.Parser is
       function Import_Exit_Condition
         (Tree : Aquarius.Programs.Program_Tree)
          return Node_Id
-      is (No_Node);
+      is (New_Node (N_Exit_Condition, Tree,
+                    Field_1 =>
+                       Expressions.Import_Expression
+                      (Tree.Program_Child ("boolean_expression")
+                       .Program_Child ("expression"))));
 
       function Import_Variant
         (Tree : Aquarius.Programs.Program_Tree)
