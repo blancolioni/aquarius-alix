@@ -382,8 +382,10 @@ package body Ack.Parser is
       use Aquarius.Programs;
       Tag_Mark : constant Program_Tree := From.Program_Child ("tag_mark");
       Tag      : constant Name_Id :=
-                   (if Tag_Mark /= null and then Tag_Mark.Text /= ""
-                    then Get_Name_Id (Tag_Mark.Text)
+                   (if Tag_Mark /= null
+                    then Get_Name_Id
+                      (Tag_Mark.Program_Child ("tag")
+                       .Concatenate_Children)
                     else No_Name);
       Clause   : constant Program_Tree :=
                    From.Program_Child ("unlabeled_assertion_clause");

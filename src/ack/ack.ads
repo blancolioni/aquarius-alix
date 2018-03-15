@@ -80,6 +80,7 @@ package Ack is
       N_Precursor,
       N_Operator,
       N_Attachment_Test,
+      N_Old,
       N_Constant,
       N_String_Constant,
       N_Integer_Constant,
@@ -456,7 +457,7 @@ package Ack is
      with Pre => Kind (N) = N_Routine;
 
    function Postcondition (N : Node_Id) return Node_Id
-     with Pre => Kind (N) = N_Postcondition;
+     with Pre => Kind (N) = N_Routine;
 
    function Assertion (N : Node_Id) return Node_Id
      with Pre => Kind (N) in N_Precondition | N_Postcondition;
@@ -490,7 +491,7 @@ package Ack is
 
    function Expression (N : Node_Id) return Node_Id
      with Pre => Kind (N) in N_Assignment | N_Iteration | N_Exit_Condition
-     | N_Assertion_Clause;
+     | N_Assertion_Clause | N_Old;
 
    function Creation_Call (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Creation_Instruction;
