@@ -1,0 +1,30 @@
+class Petal.Checks.Object_Reference
+inherit
+   Aquarius.Trees.Program_Tree
+   Petal.Context
+   
+feature
+
+   Entry : detachable Petal.Entry
+   
+feature
+
+   Before_Node
+      do
+         Local_Context := Context
+      end
+      
+   After_Identifier (Id : String)
+      do
+         Entry := Local_Context.Find (Id)
+         if attached Entry then
+         else
+            Error (Local_Context.Table_Name & ": undeclared: " & Id)
+         end
+      end
+      
+feature {None}
+
+   Local_Context : Petal.Entry_Table
+   
+end

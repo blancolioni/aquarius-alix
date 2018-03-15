@@ -1,0 +1,5 @@
+class Petal.Checks.Invocation_Arguments
+inherit
+   Petal.Context
+
+end

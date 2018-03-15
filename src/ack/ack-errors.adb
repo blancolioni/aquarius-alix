@@ -50,6 +50,8 @@ package body Ack.Errors is
          when E_Missing_Redefinition =>
             return "missing declaration for redefined feature "
               & To_String (Get_Name (Node));
+         when E_Missing_Exit_Condition =>
+            return "loop requires an exit condition";
          when E_No_Child               =>
             return "child class not found";
          when E_No_Component           =>

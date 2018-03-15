@@ -1,0 +1,26 @@
+class Petal.Checks.Formal_Arguments
+inherit 
+   Petal.Context
+   Petal.Entry_Table
+   Aqua.Text_IO
+   
+feature
+
+   
+   Before_Node 
+   local
+      Argument_Context : Petal.Entry_Table
+   do
+      create Argument_Context
+      Argument_Context.Make ("formal-arguments", Context)
+      Context := Argument_Context
+   end
+     
+   After_Formal_Argument (Child : Petal.Checks.Formal_Argument)
+   do
+      if attached Child.Entry then
+         Context.Insert (Child.Entry)
+      end
+   end
+  
+end

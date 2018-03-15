@@ -1,0 +1,20 @@
+class Petal.Checks.Invoke_Statement
+inherit 
+   Petal.Context
+   Aqua.Text_IO
+
+feature
+   Invoke : Petal.Statements.Invoke
+   
+feature
+
+   After_Cap_And_Endpoint (Child : Petal.Checks.Cap_And_Endpoint)
+      do
+         if attached Child.Cap_Entry then 
+            create Invoke
+            Invoke.Make (Child.Cap_Entry, Child.Endpoint)
+            Put_Line ("invoke: " & Child.Cap_Entry.Name & "/" & Child.Endpoint.To_String)
+         end
+      end
+
+end

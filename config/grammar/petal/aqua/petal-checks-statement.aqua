@@ -1,0 +1,5 @@
+class Petal.Checks.Statement
+inherit 
+   Petal.Context
+
+end

@@ -1,5 +1,16 @@
 class Petal.Type.Capability
 inherit
-   Petal.Type
+   Petal.Type --  overriding Name end
    
+feature
+
+   Make_Capability_Type
+      do
+         Name := "capability"
+      end
+
+--   Name : String
+--      do
+--         Result := "capability"
+--      end   
 end
