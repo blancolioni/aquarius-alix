@@ -163,11 +163,11 @@ package body Ack is
    procedure Error
      (Node   : Node_Id;
       Kind   : Error_Kind;
-      Entity : Entity_Type := null)
+      Entity : access constant Root_Entity_Type'Class := null)
    is
    begin
       Node_Table (Node).Error := Kind;
-      Node_Table (Node).Error_Entity := Entity;
+      Node_Table (Node).Error_Entity := Constant_Entity_Type (Entity);
    end Error;
 
    ------------------
