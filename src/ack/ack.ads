@@ -108,6 +108,7 @@ package Ack is
       E_Missing_Redefinition,
       E_No_Component,
       E_No_Child,
+      E_Missing_Exit_Condition,
       E_Id_List_With_Arguments,
       E_Id_List_With_No_Type,
       E_Id_List_With_Routine,
@@ -456,7 +457,7 @@ package Ack is
      with Pre => Kind (N) = N_Internal;
 
    function Compound (N : Node_Id) return Node_Id
-     with Pre => Kind (N) in N_Internal | N_Loop_Body;
+     with Pre => Kind (N) in N_Internal | N_Loop_Body | N_Initialization;
 
    function Instructions (N : Node_Id) return List_Id
      with Pre => Kind (N) = N_Compound;
@@ -465,7 +466,7 @@ package Ack is
      with Pre => Kind (N) in N_Assignment | N_Creation_Call;
 
    function Expression (N : Node_Id) return Node_Id
-     with Pre => Kind (N) in N_Assignment | N_Iteration;
+     with Pre => Kind (N) in N_Assignment | N_Iteration | N_Exit_Condition;
 
    function Creation_Call (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Creation_Instruction;
@@ -494,14 +495,34 @@ package Ack is
    function Boolean_Value (N : Node_Id) return Boolean
      with Pre => Kind (N) = N_Boolean_Constant;
 
-   function Iteration (N : Node_Id) return Node_Id
+   function Loop_Iteration (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Loop,
-     Post => Iteration'Result = No_Node
-       or else Kind (Iteration'Result) = N_Iteration;
+     Post => Loop_Iteration'Result = No_Node
+       or else Kind (Loop_Iteration'Result) = N_Iteration;
+
+   function Loop_Initialization (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Loop,
+     Post => Loop_Initialization'Result = No_Node
+     or else Kind (Loop_Initialization'Result) = N_Initialization;
+
+   function Loop_Invariant (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Loop,
+     Post => Loop_Invariant'Result = No_Node
+     or else Kind (Loop_Invariant'Result) = N_Invariant;
+
+   function Loop_Exit_Condition (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Loop,
+     Post => Loop_Exit_Condition'Result = No_Node
+     or else Kind (Loop_Exit_Condition'Result) = N_Exit_Condition;
 
    function Loop_Body (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Loop,
      Post => Kind (Loop_Body'Result) = N_Loop_Body;
+
+   function Loop_Variant (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Loop,
+     Post => Loop_Variant'Result = No_Node
+     or else Kind (Loop_Variant'Result) = N_Variant;
 
    function Get_Property (N : Node_Id) return Node_Id
      with Pre => Kind (N) in N_Expression_Node;
@@ -817,11 +838,23 @@ private
    function Boolean_Value (N : Node_Id) return Boolean
    is (To_Standard_String (Get_Name (N)) = "true");
 
-   function Iteration (N : Node_Id) return Node_Id
+   function Loop_Iteration (N : Node_Id) return Node_Id
    is (Field_1 (N));
+
+   function Loop_Initialization (N : Node_Id) return Node_Id
+   is (Field_2 (N));
+
+   function Loop_Invariant (N : Node_Id) return Node_Id
+   is (Field_3 (N));
+
+   function Loop_Exit_Condition (N : Node_Id) return Node_Id
+   is (Field_4 (N));
 
    function Loop_Body (N : Node_Id) return Node_Id
    is (Field_5 (N));
+
+   function Loop_Variant (N : Node_Id) return Node_Id
+   is (Field_6 (N));
 
    function Get_Property (N : Node_Id) return Node_Id
    is (Field_6 (N));

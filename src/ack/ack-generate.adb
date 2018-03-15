@@ -568,11 +568,20 @@ package body Ack.Generate is
      (Unit      : in out Tagatha.Units.Tagatha_Unit;
       Loop_Node : Node_Id)
    is
-      Iteration_Node : constant Node_Id := Iteration (Loop_Node);
-      Loop_Body_Node : constant Node_Id := Loop_Body (Loop_Node);
-      Top_Label      : constant Positive := Unit.Next_Label;
-      Out_Label      : constant Positive := Unit.Next_Label;
+      Iteration_Node      : constant Node_Id := Loop_Iteration (Loop_Node);
+      Initialization_Node : constant Node_Id :=
+                              Loop_Initialization (Loop_Node);
+      Exit_Condition_Node : constant Node_Id :=
+                              Loop_Exit_Condition (Loop_Node);
+      Loop_Body_Node      : constant Node_Id := Loop_Body (Loop_Node);
+      Top_Label           : constant Positive := Unit.Next_Label;
+      Out_Label           : constant Positive := Unit.Next_Label;
    begin
+
+      if Initialization_Node /= No_Node then
+         Generate_Compound (Unit, Compound (Initialization_Node));
+      end if;
+
       if Iteration_Node /= No_Node then
          declare
             Expression_Node : constant Node_Id := Expression (Iteration_Node);
@@ -626,6 +635,12 @@ package body Ack.Generate is
       end if;
 
       Unit.Label (Top_Label);
+
+      if Exit_Condition_Node /= No_Node then
+         Generate_Expression (Unit, Expression (Exit_Condition_Node));
+         Unit.Operate (Tagatha.Op_Test);
+         Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
+      end if;
 
       Generate_Compound (Unit, Compound (Loop_Body_Node));
 
