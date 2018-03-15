@@ -1,4 +1,5 @@
 with Ada.Text_IO;
+with Ack.IO;
 
 with Komnenos.Entities.Tables;
 
@@ -107,6 +108,11 @@ package body Ack.Semantic is
       Type_Node : Node_Id)
      with Pre => Kind (Type_Node) = N_Anchored_Type;
 
+   procedure Analyse_Assertion
+     (Class     : Ack.Classes.Class_Entity;
+      Container : not null access Root_Entity_Type'Class;
+      Assertion : Node_Id);
+
    procedure Analyse_Effective_Routine
      (Class     : Ack.Classes.Class_Entity;
       Container : not null access Root_Entity_Type'Class;
@@ -209,6 +215,20 @@ package body Ack.Semantic is
    begin
       null;
    end Analyse_Anchored_Type;
+
+   -----------------------
+   -- Analyse_Assertion --
+   -----------------------
+
+   procedure Analyse_Assertion
+     (Class     : Ack.Classes.Class_Entity;
+      Container : not null access Root_Entity_Type'Class;
+      Assertion : Node_Id)
+   is
+      pragma Unreferenced (Class, Container);
+   begin
+      Ack.IO.Put_Line (Assertion);
+   end Analyse_Assertion;
 
    ------------------------
    -- Analyse_Assignment --
@@ -923,18 +943,26 @@ package body Ack.Semantic is
       Effective       : constant Boolean :=
                           Routine_Feature and then not Deferred
                                 and then Kind (Value_Node) = N_Routine;
-      Locals_Node     : constant Node_Id :=
-                          (if Value_Node = No_Node then No_Node
-                           else Local_Declarations (Value_Node));
-      Effective_Node  : constant Node_Id :=
-                          (if Effective then Effective_Routine (Value_Node)
+      Precondition_Node : constant Node_Id :=
+                            (if Routine_Feature
+                             then Precondition (Value_Node)
+                             else No_Node);
+      Postcondition_Node : constant Node_Id :=
+                             (if Routine_Feature
+                              then Precondition (Value_Node)
+                              else No_Node);
+      Locals_Node        : constant Node_Id :=
+                             (if Value_Node = No_Node then No_Node
+                              else Local_Declarations (Value_Node));
+      Effective_Node     : constant Node_Id :=
+                             (if Effective then Effective_Routine (Value_Node)
                            else No_Node);
-      Internal        : constant Boolean :=
+      Internal           : constant Boolean :=
+                             Effective
+                                 and then Kind (Effective_Node) = N_Internal;
+      External           : constant Boolean :=
                           Effective
-                              and then Kind (Effective_Node) = N_Internal;
-      External        : constant Boolean :=
-                          Effective
-                              and then Kind (Effective_Node) = N_External;
+                                 and then Kind (Effective_Node) = N_External;
    begin
 
       for Node of List_Table.Element (Names).List loop
@@ -972,6 +1000,16 @@ package body Ack.Semantic is
             end if;
 
             Entity.Bind;
+
+            if Precondition_Node /= No_Node then
+               Analyse_Assertion (Class, Entity,
+                                  Assertion (Precondition_Node));
+            end if;
+
+            if Postcondition_Node /= No_Node then
+               Analyse_Assertion (Class, Entity,
+                                  Assertion (Postcondition_Node));
+            end if;
 
             if Internal then
                Analyse_Effective_Routine (Class, Entity, Effective_Node);
