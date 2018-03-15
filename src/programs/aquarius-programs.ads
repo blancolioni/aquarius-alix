@@ -516,6 +516,7 @@ private
          Has_Position      : Boolean;
          Has_Environment   : Boolean;
          Self              : Program_Tree;
+         Tree_Name         : Aquarius.Names.Aquarius_Name;
          Source_File       : Aquarius.Source.Source_File;
          Source_File_Name  : Aquarius.Names.Aquarius_Name;
          Msg_Level         : Aquarius.Messages.Message_Level;
@@ -623,7 +624,7 @@ private
    is (Source.Program_Root);
 
    overriding function Name (Item : Program_Tree_Type) return String
-   is (Item.String_Props.Element (Name_Property));
+   is (Aquarius.Names.To_String (Item.Tree_Name));
 
    type Root_Program_Tree_Iterator is
      new Aqua.Iterators.Aqua_Iterator_Interface with

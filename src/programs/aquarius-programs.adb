@@ -45,6 +45,7 @@ package body Aquarius.Programs is
       Has_Environment      => False,
       Self                 => null,
       Source_File          => Aquarius.Source.No_Source_File,
+      Tree_Name            => Aquarius.Names.Null_Aquarius_Name,
       Source_File_Name     => Aquarius.Names.Null_Aquarius_Name,
       Msg_Level            => Aquarius.Messages.No_Message,
       Vertical_Gap         => 0,
@@ -1234,10 +1235,15 @@ package body Aquarius.Programs is
 
       Check_Aqua_Primitives;
 
-      if Program.String_Props.Contains (Name) then
-         return Aqua.Values.To_String_Value
-           (Program.String_Props.Element (Name));
-      end if;
+      declare
+         Position : constant String_Property_Maps.Cursor :=
+                      Program.String_Props.Find (Name);
+      begin
+         if String_Property_Maps.Has_Element (Position) then
+            return Aqua.Values.To_String_Value
+              (String_Property_Maps.Element (Position));
+         end if;
+      end;
 
       if Program.Aqua_Object = null then
          Program.Aqua_Object := new Aqua.Objects.Root_Object_Type;
@@ -1832,6 +1838,7 @@ package body Aquarius.Programs is
                        Keep_Parent => True, Keep_Siblings => True);
       Result.Syntax         := Syntax;
       Result.Indent_Rule    := Syntax.Has_Indent_Rule;
+      Result.Tree_Name      := Aquarius.Names.To_Aquarius_Name (Syntax.Name);
       Result.String_Props.Insert (Name_Property, Syntax.Name);
 
       if Syntax.Has_Render_Class then
