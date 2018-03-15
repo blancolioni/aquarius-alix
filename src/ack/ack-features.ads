@@ -33,6 +33,10 @@ package Ack.Features is
      (Feature : Feature_Entity_Record'Class)
       return Boolean;
 
+   function Is_Deferred
+     (Feature : Feature_Entity_Record'Class)
+      return Boolean;
+
    function Is_Property
      (Feature : Feature_Entity_Record'Class)
       return Boolean;
@@ -203,6 +207,11 @@ private
      (Feature : Feature_Entity_Record'Class)
       return Boolean
    is (Feature.Creator);
+
+   function Is_Deferred
+     (Feature : Feature_Entity_Record'Class)
+      return Boolean
+   is (Feature.Deferred);
 
    function Is_External_Routine
      (Feature : Feature_Entity_Record'Class)

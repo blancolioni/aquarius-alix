@@ -343,6 +343,34 @@ package body Ack.Semantic is
                            Analyse_Feature_Body'Access);
       end if;
 
+      if not Class.Deferred then
+         declare
+            procedure Check_Effective
+              (Feature : not null access constant
+                 Ack.Features.Feature_Entity_Record'Class);
+
+            ---------------------
+            -- Check_Effective --
+            ---------------------
+
+            procedure Check_Effective
+              (Feature : not null access constant
+                 Ack.Features.Feature_Entity_Record'Class)
+            is
+            begin
+               if Feature.Is_Deferred then
+                  Error
+                    (Node   => Class.Declaration_Node,
+                     Kind   => E_Requires_Definition,
+                     Entity => Constant_Entity_Type (Feature));
+               end if;
+            end Check_Effective;
+
+         begin
+            Class.Scan_Features (Check_Effective'Access);
+         end;
+      end if;
+
       if Trace_Class_Analysis then
          Ada.Text_IO.Put_Line
            ("Finished: " & Class.Qualified_Name);

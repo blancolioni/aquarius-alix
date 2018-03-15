@@ -118,6 +118,7 @@ package Ack is
       E_Does_Not_Accept_Arguments,
       E_Ignored_Return_Value,
       E_Requires_Value,
+      E_Requires_Definition,
       E_Illegal_Redefinition
      );
 
@@ -174,6 +175,7 @@ package Ack is
    type Root_Entity_Type is abstract tagged private;
 
    type Entity_Type is access all Root_Entity_Type'Class;
+   type Constant_Entity_Type is access constant Root_Entity_Type'Class;
 
    function Standard_Name (Entity : Root_Entity_Type'Class) return String;
    function Declared_Name (Entity : Root_Entity_Type'Class) return String;
@@ -306,7 +308,7 @@ package Ack is
 
    function Get_Error_Entity
      (Node : Node_Id)
-      return Entity_Type;
+      return Constant_Entity_Type;
 
    procedure Scan_Errors
      (Top     : Node_Id;
@@ -317,7 +319,7 @@ package Ack is
    procedure Error
      (Node   : Node_Id;
       Kind   : Error_Kind;
-      Entity : Entity_Type := null);
+      Entity : access constant Root_Entity_Type'Class := null);
 
    function Get_Program
      (N : Node_Id)
@@ -578,7 +580,7 @@ private
          Entity          : Entity_Type := null;
          Node_Type       : Entity_Type := null;
          Error           : Error_Kind := E_No_Error;
-         Error_Entity    : Entity_Type := null;
+         Error_Entity    : Constant_Entity_Type := null;
          Integer_Value   : Integer;
          Label           : Natural := 0;
       end record;
@@ -871,7 +873,7 @@ private
 
    function Get_Error_Entity
      (Node : Node_Id)
-      return Entity_Type
+      return Constant_Entity_Type
    is (Node_Table.Element (Node).Error_Entity);
 
    function New_Node

@@ -34,7 +34,7 @@ package Ack.Classes is
      (Class : in out Class_Entity_Record'Class;
       Name  : Name_Id);
 
-      procedure Add_Note
+   procedure Add_Note
      (Class : in out Class_Entity_Record'Class;
       Name  : String;
       Value : String);
