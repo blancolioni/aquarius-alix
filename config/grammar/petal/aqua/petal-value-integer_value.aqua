@@ -1,0 +1,14 @@
+class Petal.Value.Integer_Value
+   inherit Petal.Value
+   
+feature
+   Make (Value : Integer)
+     do
+        I_Value := Value
+     end
+
+feature
+
+   I_Value : Integer
+   
+end

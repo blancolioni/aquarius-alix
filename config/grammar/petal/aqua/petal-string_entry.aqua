@@ -1,0 +1,15 @@
+class Petal.String_Entry
+create
+   Make
+   
+feature
+   Text  : String
+   Label : String
+   
+   Make (Entry_Text, Entry_Label : String)
+      do
+         Text := Entry_Text
+         Label := Entry_Label
+      end
+      
+end

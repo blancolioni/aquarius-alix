@@ -1,0 +1,5 @@
+class Petal.Checks.Sequence_Of_Statements
+inherit 
+   Petal.Context
+
+end

@@ -1,4 +1,4 @@
-class Petal.Checks.Expression
+class Petal.Checks.Relation
 inherit
    Petal.Context
    
