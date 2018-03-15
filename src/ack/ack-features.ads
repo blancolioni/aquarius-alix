@@ -83,6 +83,16 @@ package Ack.Features is
       Name_Node  : in     Node_Id;
       Local_Type : not null access Ack.Types.Type_Entity_Record'Class);
 
+   procedure Add_Precondition
+     (Feature   : in out Feature_Entity_Record'Class;
+      Tag       : Name_Id;
+      Condition : Node_Id);
+
+   procedure Add_Postcondition
+     (Feature   : in out Feature_Entity_Record'Class;
+      Tag       : Name_Id;
+      Condition : Node_Id);
+
    overriding procedure Add_Implicit
      (Feature    : in out Feature_Entity_Record;
       Implicit_Entity : not null access Root_Entity_Type'Class);
@@ -134,6 +144,15 @@ private
      new Ada.Containers.Vectors
        (Positive, Ack.Variables.Variable_Entity, Ack.Variables."=");
 
+   type Assertion_Record is
+      record
+         Tag  : Name_Id;
+         Node : Node_Id;
+      end record;
+
+   package Assertion_Record_Lists is
+     new Ada.Containers.Doubly_Linked_Lists (Assertion_Record);
+
    type Feature_Entity_Record is
      new Root_Entity_Type with
       record
@@ -154,6 +173,8 @@ private
          External_Label      : Ada.Strings.Unbounded.Unbounded_String;
          Arguments           : Variable_Vectors.Vector;
          Locals              : Variable_Vectors.Vector;
+         Preconditions       : Assertion_Record_Lists.List;
+         Postconditions      : Assertion_Record_Lists.List;
          Routine_Node        : Node_Id;
          Explicit_Value_Node : Node_Id;
          Local_Count         : Natural := 0;
