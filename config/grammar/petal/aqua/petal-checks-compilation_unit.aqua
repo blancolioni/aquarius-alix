@@ -1,0 +1,12 @@
+class Petal.Checks.Compilation_Unit
+inherit
+   Petal.Top_Level
+   
+feature
+
+   Before_Top_Level_Procedure_Declaration (Child : Petal.Checks.Top_Level_Procedure_Declaration)
+      do
+         Child.Set_Context (Standard)
+      end
+   
+end

@@ -1,25 +1,43 @@
 class Petal.Top_Level
 inherit
    Petal.Entry_Table
-      
+   Aqua.Text_IO
+   
 feature
    
    Standard : Petal.Entry_Table
    once
+      Put_Line ("creating standard table")
+      create Result
       Create_Standard_Table (Result)
    end
    
 feature
+
    Create_Standard_Table (Table : Petal.Entry_Table)
+   local
+      NL_Value : Petal.Value.String_Value
    do
+
+      Table.Make ("standard", Void)
+      
       create Capability_Type
-      create Capability_Entry
-      Capability_Entry.Create_Type_Entry ("Capability", Capability_Type, Void)
+      Capability_Type.Make_Capability_Type
+      create Capability_Entry.Create_Type_Entry ("Capability", Capability_Type, Void)
       Table.Entry_List.Append (Capability_Entry)
       
-      create String_Type
-      create String_Entry
-      String_Entry.Create_Type_Entry ("String", String_Type, Void)
+      create String_Type.Make_Type ("string")
+      String_Type.Make_Type ("string")
+      create String_Entry.Create_Type_Entry ("String", String_Type, Void)
+      Table.Entry_List.Append (String_Entry)
+      
+      create Page_Type.Make_Type ("page")
+      create Page_Entry.Create_Type_Entry ("Page", Page_Type, Void)
+      Table.Entry_List.Append (Page_Entry)
+   
+      create NL_Value.Make ("%N")
+      create NL_Entry.Create_Value_Entry ("nl", NL_Value, String_Type)
+      Table.Entry_List.Append (NL_Entry)
       
    end
    
@@ -27,4 +45,9 @@ feature
    Capability_Entry : Entry
    String_Type      : Petal.Type
    String_Entry     : Entry
+   Page_Type        : Petal.Type
+   Page_Entry       : Entry
+   
+   NL_Entry         : Entry
+   
 end

@@ -28,7 +28,8 @@ top_level_procedure_declaration ::= 'procedure' qualified_identifier [ formal_ar
 sequence_of_statements ::= < statement ';' >
 
 statement ::= null_statement | assignment_statement | call_statement | declare_statement
-
+            | invoke_statement
+            
 null_statement ::= 'null'
 
 declare_statement ::= 'declare' list_of_declarations 'begin' sequence_of_statements 'end'
@@ -36,6 +37,14 @@ declare_statement ::= 'declare' list_of_declarations 'begin' sequence_of_stateme
 call_statement ::= object_reference
 
 assignment_statement ::= object_reference ':=' expression
+
+invoke_statement ::= 'invoke' cap_and_endpoint [ invocation_arguments ]
+
+cap_and_endpoint ::= identifier [ '/' numeric_literal ]
+
+invocation_arguments ::= 'with' < invocation_argument / ',' >
+
+invocation_argument ::= identifier '=>' expression
 
 expression ::=
     relation { boolean_operator relation }
@@ -64,7 +73,21 @@ unary_primary_operator ::= 'abs' | 'not'
 
 multiplying_operator ::= '*' | '/' | 'mod' | 'rem'
 
-primary ::= numeric_literal | character_literal | string_literal | interface_reference | object_reference
+primary ::= numeric_literal
+          | character_literal 
+          | string_literal 
+          | interface_reference 
+          | object_reference
+          | aggregate
+          | sub_expression
+          
+sub_expression ::= '(' expression ')'
+
+aggregate ::= '(' aggregate_item ',' aggregate_item_list ')'
+
+aggregate_item ::= expression
+
+aggregate_item_list ::= < aggregate_item / ',' >
 
 interface_reference ::= 'interface' qualified_identifier
 

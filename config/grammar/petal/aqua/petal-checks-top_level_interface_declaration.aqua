@@ -2,6 +2,7 @@ class Petal.Checks.Top_Level_Interface_Declaration
 inherit
    Aqua.Text_IO
    Petal.Declaration
+   Petal.Top_Level
    
 feature
 
@@ -13,11 +14,6 @@ feature
          create Entry
          create Interface
          Entry.Create_Entry (Child.Identifiers.Last_Element, Void, Interface)
-      end
-      
-   Before_List_Of_Declarations (Child : Petal.Checks.List_Of_Declarations)
-      do
-         Child.Set_Entry_List (Interface.Elements)
       end
       
 end

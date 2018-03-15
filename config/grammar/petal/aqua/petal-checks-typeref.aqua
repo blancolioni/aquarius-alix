@@ -4,20 +4,17 @@ inherit
    Petal.Context
    
 feature
-   Type_Entry : Petal.Entry
-   Type       : Petal.Type
+   Type_Entry : detachable Petal.Entry
+   Type       : detachable Petal.Type
    
 feature
 
-   Before_Named_Typeref (Child : Petal.Checks.Named_Typeref) 
-   do
-      Copy_Context (Child)
-   end
-   
    After_Named_Typeref (Ref : Petal.Checks.Named_Typeref)
    do
       Type_Entry := Ref.Entry
-      Type := Type_Entry.Type
+      if attached Type_Entry then 
+         Type := Type_Entry.Type
+      end
    end
 
 end
