@@ -1,0 +1,36 @@
+class Petal.Checks.Cap_And_Endpoint
+inherit 
+   Petal.Context
+   Aqua.Text_IO
+   Aquarius.Trees.Program_Tree
+   
+feature
+
+   Cap_Entry : detachable Petal.Entry
+   Endpoint  : Integer
+   
+   Before_Node
+     do
+        Endpoint := 1
+     end
+     
+   After_Identifier (Id : String)
+      do
+         Cap_Entry := Context.Find (Id)
+         if attached Cap_Entry then
+            if attached Cap_Entry.Type then
+               if Cap_Entry.Type.Name.To_Lower = "capability" then
+               else
+                  Error ("expected a capability, but found " & Cap_Entry.Name & " of type " & Cap_Entry.Type.Name)
+               end
+            end
+         else
+            Error ("invoke: no such capability: " & Id)
+         end
+      end
+
+   After_Numeric_Literal (Num : String)
+      do
+         Endpoint := Num.To_Integer
+      end
+end

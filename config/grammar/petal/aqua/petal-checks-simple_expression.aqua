@@ -1,0 +1,5 @@
+class Petal.Checks.Simple_Expression
+inherit
+   Petal.Context
+   
+end

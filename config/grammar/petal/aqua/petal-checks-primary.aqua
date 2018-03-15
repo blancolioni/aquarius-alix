@@ -1,0 +1,41 @@
+class Petal.Checks.Primary
+inherit
+   Petal.Context
+   
+feature
+
+   Value : detachable Petal.Value
+   
+feature
+
+   After_Numeric_Literal (Image : String)
+      local
+         X : Petal.Value.Integer_Value
+      do
+         create X
+         X.Make (Image.To_Integer)
+         Value := X
+      end
+      
+   After_String_Literal (Image : String)
+      local
+         X : Petal.Value.String_Value
+      do
+         create X
+         X.Make (Image)
+         Value := X
+         String_Literals.Insert (Image)
+      end
+      
+   After_Object_Reference (Child : Petal.Checks.Object_Reference)
+      local
+         X : Petal.Value.Entry_Value
+      do
+         if attached Child.Entry then
+            create X
+            X.Make (Child.Entry)
+            Value := X
+         end
+      end
+            
+end

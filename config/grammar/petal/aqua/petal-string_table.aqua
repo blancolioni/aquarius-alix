@@ -1,0 +1,64 @@
+class Petal.String_Table
+inherit
+   Aqua.Text_IO
+   
+feature
+   
+   Insert (S : String)
+      local
+         Found : Boolean
+      do
+         across Table as Entry
+         from
+            Found := False
+         until 
+            Found
+         loop
+            Found := Entry.Text = S
+         end
+         
+         if Found then
+         else
+            Next_Index := Next_Index + 1
+            New_Entry (S, "S" & Next_Index.To_String) 
+         end
+      end
+         
+   Label (S : String) : String
+      do
+         across Table as Entry
+         until Result /= Void
+         loop
+            if Entry.Text = S then
+               Result := Entry.Label
+            end
+         end
+      end
+      
+   Declare_Strings
+      do
+         across Table as Entry loop
+            Set_Col (4)
+            Put (Entry.Label)
+            Set_Col (8)
+            Put (": constant String := ")
+            Put (Entry.Text)
+            Put (";")
+            New_Line
+         end
+      end
+      
+feature {None}
+
+   New_Entry (S : String; Label : String)
+      local
+         E : Petal.String_Entry
+      do
+         create E.Make (S, Label)
+         Table.Append (E)
+      end
+      
+   Next_Index : Integer
+   Table      : Aqua.Containers.Linked_List[Petal.String_Entry]
+   
+end
