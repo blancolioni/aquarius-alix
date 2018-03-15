@@ -1,5 +1,4 @@
 with Ada.Text_IO;
-with Ack.IO;
 
 with Komnenos.Entities.Tables;
 
@@ -143,6 +142,11 @@ package body Ack.Semantic is
       Container : not null access Root_Entity_Type'Class;
       Loop_Node : Node_Id);
 
+   procedure Analyse_Boolean_Expression
+     (Class           : Ack.Classes.Class_Entity;
+      Container       : not null access Root_Entity_Type'Class;
+      Expression      : Node_Id);
+
    procedure Analyse_Expression
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
@@ -225,9 +229,20 @@ package body Ack.Semantic is
       Container : not null access Root_Entity_Type'Class;
       Assertion : Node_Id)
    is
-      pragma Unreferenced (Class, Container);
+
+      procedure Analyse_Clause (Clause : Node_Id);
+
+      --------------------
+      -- Analyse_Clause --
+      --------------------
+
+      procedure Analyse_Clause (Clause : Node_Id) is
+      begin
+         Analyse_Boolean_Expression (Class, Container, Expression (Clause));
+      end Analyse_Clause;
+
    begin
-      Ack.IO.Put_Line (Assertion);
+      Scan (Assertion_Clauses (Assertion), Analyse_Clause'Access);
    end Analyse_Assertion;
 
    ------------------------
@@ -256,6 +271,22 @@ package body Ack.Semantic is
       end if;
 
    end Analyse_Assignment;
+
+   --------------------------------
+   -- Analyse_Boolean_Expression --
+   --------------------------------
+
+   procedure Analyse_Boolean_Expression
+     (Class           : Ack.Classes.Class_Entity;
+      Container       : not null access Root_Entity_Type'Class;
+      Expression      : Node_Id)
+   is
+   begin
+      Analyse_Expression
+        (Class, Container,
+         Get_Top_Level_Type ("boolean"),
+         Expression);
+   end Analyse_Boolean_Expression;
 
    -------------------------------
    -- Analyse_Class_Declaration --
@@ -701,9 +732,8 @@ package body Ack.Semantic is
          Compound  : constant Node_Id := Field_2 (Element);
       begin
          if Condition /= No_Node then
-            Analyse_Expression
+            Analyse_Boolean_Expression
               (Class, Container,
-               Get_Top_Level_Type ("boolean"),
                Condition);
             if Implicit_Entity (Condition) then
                Container.Add_Implicit (Get_Entity (Condition));
@@ -860,14 +890,18 @@ package body Ack.Semantic is
       Expression_Type : access Root_Entity_Type'Class;
       Expression      : Node_Id)
    is
+      K : constant Node_Kind := Kind (Expression);
    begin
-      case N_Expression_Node (Kind (Expression)) is
+      case N_Expression_Node (K) is
          when N_Operator =>
             Analyse_Operator
               (Class, Container, Expression_Type, Expression);
          when N_Precursor =>
             Analyse_Precursor
               (Class, Container, Expression_Type, Expression);
+         when N_Old =>
+            Analyse_Expression (Class, Container, Expression_Type,
+                                Ack.Expression (Expression));
          when N_Attachment_Test =>
             Analyse_Expression (Class, Container,
                                 Get_Top_Level_Type ("any"),
@@ -949,7 +983,7 @@ package body Ack.Semantic is
                              else No_Node);
       Postcondition_Node : constant Node_Id :=
                              (if Routine_Feature
-                              then Precondition (Value_Node)
+                              then Postcondition (Value_Node)
                               else No_Node);
       Locals_Node        : constant Node_Id :=
                              (if Value_Node = No_Node then No_Node
@@ -1309,9 +1343,8 @@ package body Ack.Semantic is
       end if;
 
       if Exit_Condition_Node /= No_Node then
-         Analyse_Expression
+         Analyse_Boolean_Expression
            (Class, Container,
-            Get_Top_Level_Type ("boolean"),
             Expression (Exit_Condition_Node));
       end if;
 
