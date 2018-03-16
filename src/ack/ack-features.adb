@@ -1,4 +1,5 @@
 with Ada.Strings.Fixed;
+with Ada.Text_IO;
 
 with Tagatha.Operands;
 
@@ -239,6 +240,26 @@ package body Ack.Features is
             Frame_Words    => 0,
             Result_Words   => Result_Count,
             Global         => True);
+
+         if Feature.Declaration_Context.Monitor_Preconditions then
+            for Clause of Feature.Preconditions loop
+               Ada.Text_IO.Put_Line
+                 (Feature.Link_Name & ": generating precondition: "
+                  & To_String (Clause.Tag));
+               declare
+                  Out_Label : constant Positive := Unit.Next_Label;
+               begin
+                  Ack.Generate.Generate_Expression (Unit, Clause.Node);
+                  Unit.Operate (Tagatha.Op_Test);
+                  Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
+                  Unit.Push_Text
+                    ("assertion failure: "
+                     & To_String (Clause.Tag));
+                  Unit.Native_Operation ("halt");
+                  Unit.Label (Out_Label);
+               end;
+            end loop;
+         end if;
 
          if Feature.External then
             declare
