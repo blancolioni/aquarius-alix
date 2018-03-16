@@ -71,8 +71,8 @@ feature
       Table := To
       Has_Table := True
    ensure
-      Has_Table
-      Table /= Void
+      Table_Was_Set: Has_Table
+      Table_Was_Allocated: Table /= Void
    end
       
    Qualified_Name : String
