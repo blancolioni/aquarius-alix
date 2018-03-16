@@ -99,7 +99,7 @@ package body Ack.Features is
                            Feature.Declaration_Node,
                            Ack.Types.New_Class_Type
                              (Feature.Declaration_Node,
-                              Feature.Definition_Class,
+                              Feature.Effective_Class,
                               Detachable => False));
          begin
             Current.Set_Attached;
@@ -138,18 +138,6 @@ package body Ack.Features is
       Feature.Local_Count := Next_Local - 1;
    end Bind;
 
-   ----------------------
-   -- Definition_Class --
-   ----------------------
-
-   function Definition_Class
-     (Feature : Feature_Entity_Record'Class)
-      return access constant Ack.Classes.Class_Entity_Record'Class
-   is
-   begin
-      return Feature.Definition_Class;
-   end Definition_Class;
-
    -----------------
    -- Description --
    -----------------
@@ -162,6 +150,18 @@ package body Ack.Features is
       return Root_Entity_Type (Feature).Description
         & " parent " & Feature.Declaration_Context.Full_Name;
    end Description;
+
+   ---------------------
+   -- Effective_Class --
+   ---------------------
+
+   function Effective_Class
+     (Feature : Feature_Entity_Record'Class)
+      return access constant Ack.Classes.Class_Entity_Record'Class
+   is
+   begin
+      return Feature.Effective_Class;
+   end Effective_Class;
 
    ---------------
    -- Full_Name --
@@ -382,7 +382,7 @@ package body Ack.Features is
             Parent_Environment => Class,
             Context            => Class);
          Feature.Alias := Alias;
-         Feature.Definition_Class := Class;
+         Feature.Effective_Class := Class;
          Feature.Property := True;
       end return;
    end New_Feature;
@@ -398,7 +398,7 @@ package body Ack.Features is
       pragma Assert (Feature.Property);
       Original_Class : constant Ack.Classes.Class_Entity :=
                          (if Feature.Original_Classes.Is_Empty
-                          then Feature.Definition_Class
+                          then Feature.Effective_Class
                           else Ack.Classes.Class_Entity
                             (Feature.Original_Classes.First_Element));
    begin
@@ -427,7 +427,7 @@ package body Ack.Features is
    is
       Original_Class : constant Ack.Classes.Class_Entity :=
                          (if Feature.Original_Classes.Is_Empty
-                          then Feature.Definition_Class
+                          then Feature.Effective_Class
                           else Ack.Classes.Class_Entity
                             (Feature.Original_Classes.First_Element));
       Feature_Type   : constant Ack.Types.Type_Entity :=
@@ -458,7 +458,7 @@ package body Ack.Features is
 
       Unit.Pop_Register ("op");
 
-      if Feature.Definition_Class.Standard_Name = "string" then
+      if Feature.Effective_Class.Standard_Name = "string" then
          Unit.Native_Operation
            ("get_property " & Feature.Standard_Name & ","
             & Natural'Image (Feature.Argument_Count),
@@ -474,10 +474,10 @@ package body Ack.Features is
       end if;
 
       if Feature.Is_External_Routine
-        and then Feature.Definition_Class.Aqua_Primitive_Behaviour
+        and then Feature.Effective_Class.Aqua_Primitive_Behaviour
       then
          Unit.Native_Operation
-           ("get_property " & Feature.Definition_Class.Link_Name & ",0",
+           ("get_property " & Feature.Effective_Class.Link_Name & ",0",
             Input_Stack_Words  => 0,
             Output_Stack_Words => 0,
             Changed_Registers  => "pv");
@@ -496,7 +496,7 @@ package body Ack.Features is
       end if;
 
       if Feature.Is_External_Routine
-        and then Feature.Definition_Class.Expanded
+        and then Feature.Effective_Class.Expanded
       then
          Unit.Native_Operation
            ("get_property " & Feature.Standard_Name & ","
@@ -630,11 +630,10 @@ package body Ack.Features is
    is
    begin
       if Feature.Original_Classes.Is_Empty then
-         if Feature.Definition_Class = null then
-            --  deferred
+         if Feature.Is_Deferred then
             null;
          else
-            Process (Feature.Definition_Class);
+            Process (Feature.Effective_Class);
          end if;
       else
          for Class of Feature.Original_Classes loop
@@ -692,7 +691,7 @@ package body Ack.Features is
          elsif Feature.Routine then
             Unit.Push_Operand
               (Tagatha.Operands.External_Operand
-                 (Feature.Definition_Class.Link_Name
+                 (Feature.Effective_Class.Link_Name
                   & "__" & Feature.Standard_Name,
                   True),
                Tagatha.Default_Size);
@@ -720,7 +719,10 @@ package body Ack.Features is
    begin
       Feature.Property := False;
       Feature.Deferred := True;
-      Feature.Definition_Class := null;
+      Feature.Effective_Class := null;
+      if Feature.Value_Type /= null then
+         Feature.Has_Result := True;
+      end if;
    end Set_Deferred;
 
    ------------------------
@@ -801,7 +803,7 @@ package body Ack.Features is
    is
    begin
       Feature.Value_Type := Entity_Type (Result_Type);
-      if Feature.Routine or else Feature.External then
+      if Feature.Routine or else Feature.External or else Feature.Deferred then
          Feature.Has_Result := True;
       end if;
    end Set_Result_Type;
