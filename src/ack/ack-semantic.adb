@@ -305,6 +305,11 @@ package body Ack.Semantic is
                            Analyse_Feature_Name'Access);
       end if;
 
+      if Trace_Class_Analysis then
+         Ada.Text_IO.Put_Line
+           ("Analysing inheritance: " & Class.Qualified_Name);
+      end if;
+
       if Inheritance_Node /= No_Node then
          Analyse_Inheritance (Class, Inheritance_Node);
       elsif Class.Standard_Name /= "any" then
@@ -1337,6 +1342,10 @@ package body Ack.Semantic is
          Expression      => Left);
       Left_Type := Ack.Types.Type_Entity (Get_Type (Left));
 
+      if Left_Type /= null then
+         Left_Type.Check_Bound;
+      end if;
+
       if Left_Type = null then
          null;
       elsif not Left_Type.Has_Aliased_Feature (Operator) then
@@ -1406,6 +1415,8 @@ package body Ack.Semantic is
             Stop := True;
             return;
          end if;
+
+         Local_Table.Check_Bound;
 
          if not Local_Table.Contains (Name) then
             Error (Precursor_Element, E_Undeclared_Name);
