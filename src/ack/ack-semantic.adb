@@ -1310,9 +1310,10 @@ package body Ack.Semantic is
                Iterable_Type  : constant Type_Entity :=
                                   Type_Entity
                                     (Get_Type (Expression_Node));
-               Inherited_Type : constant Type_Entity :=
-                                  Iterable_Type.Get_Ancestor_Type
-                                    (Forward_Iterable);
+               Inherited_Type           : constant access constant
+                 Type_Entity_Record'Class :=
+                   Iterable_Type.Get_Ancestor_Type
+                     (Forward_Iterable);
                Implicit_Type      : constant Ack.Types.Type_Entity :=
                                       Inherited_Type.Generic_Binding (1);
                Implicit           : constant Ack.Variables.Variable_Entity :=
