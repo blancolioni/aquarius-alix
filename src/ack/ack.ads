@@ -243,6 +243,7 @@ package Ack is
       return Boolean
    is (False);
 
+   procedure Check_Bound (Entity : in out Root_Entity_Type) is null;
    procedure Bind (Entity : in out Root_Entity_Type) is null;
 
    procedure Push_Entity

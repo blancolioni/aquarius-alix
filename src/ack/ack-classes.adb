@@ -154,7 +154,21 @@ package body Ack.Classes is
       for Inherited of Class.Inherited_Types loop
          Scan_Hierarchy (Inherited.Inherited_Type.Class);
       end loop;
+      Class.Bound := True;
    end Bind;
+
+   -----------------
+   -- Check_Bound --
+   -----------------
+
+   overriding procedure Check_Bound
+     (Class : in out Class_Entity_Record)
+   is
+   begin
+      if not Class.Bound then
+         Class.Bind;
+      end if;
+   end Check_Bound;
 
    -----------------
    -- Conforms_To --
