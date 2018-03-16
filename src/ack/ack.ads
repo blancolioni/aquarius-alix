@@ -215,6 +215,27 @@ package Ack is
      (Entity : Root_Entity_Type'Class)
       return Assertion_Monitoring_Level;
 
+   function Monitor
+     (Entity    : Root_Entity_Type'Class;
+      Assertion : Assertion_Monitoring_Level)
+      return Boolean
+   is (Entity.Assertion_Monitoring >= Assertion);
+
+   function Monitor_Preconditions
+     (Entity : Root_Entity_Type'Class)
+      return Boolean
+   is (Entity.Monitor (Monitor_Preconditions));
+
+   function Monitor_Postconditions
+     (Entity : Root_Entity_Type'Class)
+      return Boolean
+   is (Entity.Monitor (Monitor_Postconditions));
+
+   function Monitor_Class_Invariants
+     (Entity : Root_Entity_Type'Class)
+      return Boolean
+   is (Entity.Monitor (Monitor_Class_Invariants));
+
    procedure Set_Assertion_Monitoring
      (Entity : in out Root_Entity_Type'Class;
       Level  : Assertion_Monitoring_Level);

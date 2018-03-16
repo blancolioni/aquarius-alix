@@ -43,10 +43,6 @@ package body Ack.Generate is
      (Unit      : in out Tagatha.Units.Tagatha_Unit;
       Loop_Node : Node_Id);
 
-   procedure Generate_Expression
-     (Unit       : in out Tagatha.Units.Tagatha_Unit;
-      Expression : Node_Id);
-
    procedure Generate_Operator_Expression
      (Unit          : in out Tagatha.Units.Tagatha_Unit;
       Operator_Node : Node_Id);
