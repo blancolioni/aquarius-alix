@@ -35,6 +35,19 @@ package body Ack.Types is
    end Allocate;
 
    -----------------
+   -- Check_Bound --
+   -----------------
+
+   overriding procedure Check_Bound
+     (Typ : in out Type_Entity_Record)
+   is
+   begin
+      if not Typ.Generic_Formal then
+         Typ.Class.Check_Bound;
+      end if;
+   end Check_Bound;
+
+   -----------------
    -- Conforms_To --
    -----------------
 

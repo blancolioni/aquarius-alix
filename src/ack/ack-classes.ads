@@ -100,6 +100,9 @@ package Ack.Classes is
       Index : Positive)
       return access constant Ack.Types.Type_Entity_Record'Class;
 
+   overriding procedure Check_Bound
+     (Class : in out Class_Entity_Record);
+
    overriding procedure Bind
      (Class : in out Class_Entity_Record);
 
@@ -229,6 +232,7 @@ private
          Deferred                : Boolean := False;
          Expanded                : Boolean := False;
          Frozen                  : Boolean := False;
+         Bound                   : Boolean := False;
          Behaviour               : Class_Behaviour := Normal;
          Conforming_Child_Action : Name_Id := No_Name;
          Inherited_Types         : List_Of_Inherited_Type_Records.List;
