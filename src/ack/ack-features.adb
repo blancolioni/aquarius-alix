@@ -55,6 +55,32 @@ package body Ack.Features is
            (Get_Name (Name_Node), Name_Node, Local_Type));
    end Add_Local;
 
+   -----------------------
+   -- Add_Postcondition --
+   -----------------------
+
+   procedure Add_Postcondition
+     (Feature   : in out Feature_Entity_Record'Class;
+      Tag       : Name_Id;
+      Condition : Node_Id)
+   is
+   begin
+      Feature.Postconditions.Append ((Tag, Condition));
+   end Add_Postcondition;
+
+   ----------------------
+   -- Add_Precondition --
+   ----------------------
+
+   procedure Add_Precondition
+     (Feature   : in out Feature_Entity_Record'Class;
+      Tag       : Name_Id;
+      Condition : Node_Id)
+   is
+   begin
+      Feature.Preconditions.Append ((Tag, Condition));
+   end Add_Precondition;
+
    ----------
    -- Bind --
    ----------

@@ -236,7 +236,7 @@ tag ::=
          identifier
 	 
 old ::=
-         'old' expression
+         'old' primary
 	 
 only ::=
          'only' [ feature_list ]
@@ -447,7 +447,7 @@ primary ::= manifest_constant
          | object_test
 	 
 boolean_operator ::=
-	'and' | 'and' 'then' | 'or' | 'or' 'else' | 'xor'
+	'and' | 'and' 'then' | 'or' | 'or' 'else' | 'xor' | 'implies'
 
 relational_operator ::= '=' | '/=' | '<' | '<=' | '>' | '>='
 

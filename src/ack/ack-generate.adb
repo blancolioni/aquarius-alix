@@ -502,6 +502,8 @@ package body Ack.Generate is
             Generate_Precursor (Unit, Expression);
          when N_Attachment_Test =>
             Generate_Expression (Unit, Field_1 (Expression));
+         when N_Old =>
+            Generate_Expression (Unit, Field_1 (Expression));
          when N_Constant =>
             declare
                Value : constant Node_Id := Constant_Value (Expression);

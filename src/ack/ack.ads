@@ -45,6 +45,8 @@ package Ack is
       N_Entity_Declaration_Group_List,
       N_Entity_Declaration_Group,
       N_Identifier_List,
+      N_Assertion,
+      N_Assertion_Clause,
       N_Class_Type,
       N_Anchored_Type,
       N_Extended_Feature_Name,
@@ -53,7 +55,10 @@ package Ack is
       N_Feature_Value,
       N_Explicit_Value,
       N_Routine,
+      N_Precondition,
       N_Local_Declarations,
+      N_Postcondition,
+      N_Rescue,
       N_Internal,
       N_External,
       N_Explicit_Creation_Type,
@@ -75,6 +80,7 @@ package Ack is
       N_Precursor,
       N_Operator,
       N_Attachment_Test,
+      N_Old,
       N_Constant,
       N_String_Constant,
       N_Integer_Constant,
@@ -383,7 +389,7 @@ package Ack is
                  | N_Explicit_Creation_Call
                  | N_Formal_Generic_Name | N_Get_Property
                  | N_Attachment_Test | N_Iteration | N_Operator
-                 | N_Note_Name | N_Note_Item;
+                 | N_Note_Name | N_Note_Item | N_Assertion_Clause;
 
    function Get_Entity (N : Node_Id) return Entity_Type;
    function Has_Entity (N : Node_Id) return Boolean;
@@ -448,6 +454,21 @@ package Ack is
    function Feature_Alias (N : Node_Id) return Node_Id
      with Pre => Kind (N) in N_External | N_Extended_Feature_Name;
 
+   function Precondition (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Routine;
+
+   function Postcondition (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Routine;
+
+   function Assertion (N : Node_Id) return Node_Id
+     with Pre => Kind (N) in N_Precondition | N_Postcondition;
+
+   function Assertion_Clauses (N : Node_Id) return List_Id
+     with Pre => Kind (N) = N_Assertion;
+
+   function Rescue (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Rescue;
+
    function Local_Declarations (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Routine,
      Post => Local_Declarations'Result = No_Node
@@ -460,7 +481,8 @@ package Ack is
      with Pre => Kind (N) = N_Internal;
 
    function Compound (N : Node_Id) return Node_Id
-     with Pre => Kind (N) in N_Internal | N_Loop_Body | N_Initialization;
+     with Pre => Kind (N) in
+     N_Internal | N_Loop_Body | N_Initialization | N_Rescue;
 
    function Instructions (N : Node_Id) return List_Id
      with Pre => Kind (N) = N_Compound;
@@ -469,7 +491,8 @@ package Ack is
      with Pre => Kind (N) in N_Assignment | N_Creation_Call;
 
    function Expression (N : Node_Id) return Node_Id
-     with Pre => Kind (N) in N_Assignment | N_Iteration | N_Exit_Condition;
+     with Pre => Kind (N) in N_Assignment | N_Iteration | N_Exit_Condition
+     | N_Assertion_Clause | N_Old;
 
    function Creation_Call (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Creation_Instruction;
@@ -768,8 +791,23 @@ private
    function Value_Type (N : Node_Id) return Node_Id
    is (Node_Table.Element (N).Field (2));
 
+   function Assertion (N : Node_Id) return Node_Id
+   is (Field_1 (N));
+
+   function Assertion_Clauses (N : Node_Id) return List_Id
+   is (Node_Table.Element (N).List);
+
+   function Precondition (N : Node_Id) return Node_Id
+   is (Field_1 (N));
+
    function Local_Declarations (N : Node_Id) return Node_Id
    is (Field_2 (N));
+
+   function Postcondition (N : Node_Id) return Node_Id
+   is (Field_4 (N));
+
+   function Rescue (N : Node_Id) return Node_Id
+   is (Field_5 (N));
 
    function Value (N : Node_Id) return Node_Id
    is (Node_Table.Element (N).Field (3));
