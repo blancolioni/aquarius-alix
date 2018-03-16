@@ -1,6 +1,6 @@
 private with Ada.Containers.Doubly_Linked_Lists;
 
-limited with Ack.Classes;
+with Ack.Classes;
 with Ack.Features;
 
 package Ack.Types is
@@ -39,6 +39,7 @@ package Ack.Types is
       return Boolean;
 
    type Type_Entity is access all Type_Entity_Record'Class;
+   type Constant_Type_Entity is access constant Type_Entity_Record'Class;
 
    function Generic_Binding
      (Typ   : Type_Entity_Record'Class;
@@ -47,8 +48,9 @@ package Ack.Types is
 
    function Get_Ancestor_Type
      (Typ   : not null access constant Type_Entity_Record'Class;
-      Ancestor : not null access Ack.Classes.Class_Entity_Record'Class)
-      return Type_Entity;
+      Ancestor : not null access constant
+        Ack.Classes.Class_Entity_Record'Class)
+      return access constant Type_Entity_Record'Class;
 
    function Has_Type_Entity
      (Node : Node_Id)
@@ -65,29 +67,28 @@ package Ack.Types is
    Empty_Type_Array : Array_Of_Types (1 .. 0);
 
    function New_Class_Type
-     (Node            : Node_Id;
-      Class           : not null access
-        Ack.Classes.Class_Entity_Record'Class;
-      Detachable      : Boolean)
+     (Node       : Node_Id;
+      Class      : Ack.Classes.Class_Entity;
+      Detachable : Boolean)
       return Type_Entity;
 
    function Instantiate_Generic_Class
      (Node            : Node_Id;
-      Generic_Class   : not null access Ack.Classes.Class_Entity_Record'Class;
+      Generic_Class   : Ack.Classes.Class_Entity;
       Generic_Actuals : Array_Of_Types;
       Detachable      : Boolean)
       return Type_Entity;
 
    function Update_Type_Instantiation
-     (Instantiated_Type : not null access Type_Entity_Record'Class;
+     (Instantiated_Type : not null access constant Type_Entity_Record'Class;
       Type_With_Bindings : not null access constant
         Type_Entity_Record'Class)
-      return Type_Entity;
+      return Constant_Type_Entity;
 
    function New_Generic_Formal_Type
      (Name          : Name_Id;
       Node          : Node_Id;
-      Generic_Class : not null access Ack.Classes.Class_Entity_Record'Class;
+      Generic_Class : Ack.Classes.Class_Entity;
       Constraints   : Array_Of_Types := Empty_Type_Array)
       return Type_Entity;
 
@@ -100,8 +101,6 @@ package Ack.Types is
       return Type_Entity;
 
 private
-
-   type Constant_Type_Entity is access constant Type_Entity_Record'Class;
 
    type Generic_Argument_Binding is
       record
@@ -118,7 +117,7 @@ private
    type Type_Entity_Record is
      new Root_Entity_Type with
       record
-         Class            : access Ack.Classes.Class_Entity_Record'Class;
+         Class            : Ack.Classes.Class_Entity;
          Generic_Bindings : List_Of_Generic_Bindings.List;
          Constraints      : List_Of_Constraints.List;
          Generic_Formal   : Boolean := False;
