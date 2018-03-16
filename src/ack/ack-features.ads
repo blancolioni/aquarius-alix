@@ -21,10 +21,6 @@ package Ack.Features is
         procedure (Class : not null access constant
                      Ack.Classes.Class_Entity_Record'Class));
 
-   function Definition_Class
-     (Feature : Feature_Entity_Record'Class)
-     return access constant Ack.Classes.Class_Entity_Record'Class;
-
    function Alias
      (Feature : Feature_Entity_Record'Class)
       return Name_Id;
@@ -44,6 +40,11 @@ package Ack.Features is
    function Is_External_Routine
      (Feature : Feature_Entity_Record'Class)
       return Boolean;
+
+   function Effective_Class
+     (Feature : Feature_Entity_Record'Class)
+      return access constant Ack.Classes.Class_Entity_Record'Class
+     with Pre => not Feature.Is_Deferred;
 
    procedure Set_Result_Type
      (Feature     : in out Feature_Entity_Record'Class;
@@ -167,7 +168,7 @@ private
          Once                : Boolean := False;
          Alias               : Name_Id;
          Original_Classes    : List_Of_Entities.List;
-         Definition_Class    : access Ack.Classes.Class_Entity_Record'Class;
+         Effective_Class     : access Ack.Classes.Class_Entity_Record'Class;
          External_Object     : Ada.Strings.Unbounded.Unbounded_String;
          External_Type       : Ada.Strings.Unbounded.Unbounded_String;
          External_Label      : Ada.Strings.Unbounded.Unbounded_String;
@@ -178,7 +179,10 @@ private
          Routine_Node        : Node_Id;
          Explicit_Value_Node : Node_Id;
          Local_Count         : Natural := 0;
-      end record;
+      end record
+     with Invariant =>
+       Feature_Entity_Record.Deferred or else
+       Feature_Entity_Record.Effective_Class /= null;
 
    overriding function Instantiate
      (Entity             : not null access Feature_Entity_Record;

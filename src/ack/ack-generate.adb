@@ -218,7 +218,8 @@ package body Ack.Generate is
            (Feature : not null access constant
               Ack.Features.Feature_Entity_Record'Class)
             return Boolean
-         is (Feature.Definition_Class = Entity);
+         is (not Feature.Is_Deferred
+             and then Feature.Effective_Class = Entity);
 
          procedure Generate_Feature
            (Feature : not null access constant
