@@ -178,6 +178,35 @@ package body Ack.Parser is
       return Node_Id
      with Pre => From.Name = "declaration_body";
 
+   function Import_Precondition
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     with Pre => From.Name = "precondition";
+
+   function Import_Postcondition
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     with Pre => From.Name = "postcondition";
+
+   function Import_Rescue
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     with Pre => From.Name = "rescue";
+
+   function Import_Assertion_Clause
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     with Pre => From.Name = "assertion_clause";
+
+   function Import_Assertion
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is (New_Node (N_Assertion, From,
+                 List =>
+                    Import_List (From, "assertion_clause",
+                                 Import_Assertion_Clause'Access)))
+   with Pre => From.Name = "assertion";
+
    function Import_Local_Declarations
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
@@ -341,6 +370,34 @@ package body Ack.Parser is
       return Import_Class_Declaration
         (Program.Program_Child ("class_declaration"));
    end Import;
+
+   -----------------------------
+   -- Import_Assertion_Clause --
+   -----------------------------
+
+   function Import_Assertion_Clause
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+      use Aquarius.Programs;
+      Tag_Mark : constant Program_Tree := From.Program_Child ("tag_mark");
+      Tag      : constant Name_Id :=
+                   (if Tag_Mark /= null
+                    then Get_Name_Id
+                      (Tag_Mark.Program_Child ("tag")
+                       .Concatenate_Children)
+                    else No_Name);
+      Clause   : constant Program_Tree :=
+                   From.Program_Child ("unlabeled_assertion_clause");
+      Expr     : constant Program_Tree :=
+                   Clause.Program_Child ("boolean_expression");
+   begin
+      return New_Node
+        (Kind => N_Assertion_Clause, From => From, Name => Tag,
+         Field_1 =>
+           Expressions.Import_Expression
+             (Expr.Program_Child ("expression")));
+   end Import_Assertion_Clause;
 
    -----------------------
    -- Import_Assignment --
@@ -1203,6 +1260,48 @@ package body Ack.Parser is
       return No_Node;
    end Import_Optional_Child;
 
+   --------------------------
+   -- Import_Postcondition --
+   --------------------------
+
+   function Import_Postcondition
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+   begin
+      return New_Node (N_Postcondition, From,
+                       Field_1 =>
+                         Import_Assertion (From.Program_Child ("assertion")));
+   end Import_Postcondition;
+
+   -------------------------
+   -- Import_Precondition --
+   -------------------------
+
+   function Import_Precondition
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+   begin
+      return New_Node (N_Precondition, From,
+                       Field_1 =>
+                         Import_Assertion (From.Program_Child ("assertion")));
+   end Import_Precondition;
+
+   -------------------
+   -- Import_Rescue --
+   -------------------
+
+   function Import_Rescue
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+   begin
+      return New_Node (N_Rescue, From,
+                       Field_1 =>
+                         Import_Compound (From.Program_Child ("compound")));
+   end Import_Rescue;
+
    --------------------
    -- Import_Routine --
    --------------------
@@ -1211,18 +1310,33 @@ package body Ack.Parser is
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
    is
+      Precondition       : constant Node_Id :=
+                             Import_Optional_Child
+                               (From, "precondition",
+                                Import_Precondition'Access);
       Local_Declarations : constant Node_Id :=
                              Import_Optional_Child
                                (From, "local_declarations",
                                 Import_Local_Declarations'Access);
-      Feature_Body : constant Node_Id :=
-                       Import_Feature_Body
+      Feature_Body       : constant Node_Id :=
+                             Import_Feature_Body
                                (From.Program_Child ("feature_body"));
+      Postcondition      : constant Node_Id :=
+                             Import_Optional_Child
+                               (From, "postcondition",
+                                Import_Postcondition'Access);
+      Rescue             : constant Node_Id :=
+                             Import_Optional_Child
+                               (From, "rescue",
+                                Import_Rescue'Access);
    begin
       return New_Node (N_Routine, From,
                        Deferred => Feature_Body = No_Node,
+                       Field_1  => Precondition,
                        Field_2  => Local_Declarations,
-                       Field_3  => Feature_Body);
+                       Field_3  => Feature_Body,
+                       Field_4  => Postcondition,
+                       Field_5  => Rescue);
    end Import_Routine;
 
    ----------------------------

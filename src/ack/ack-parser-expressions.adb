@@ -279,6 +279,11 @@ package body Ack.Parser.Expressions is
          return Import_Manifest_Constant (Choice);
       elsif Choice.Name = "precursor" then
          return Import_Precursor (Choice);
+      elsif Choice.Name = "old" then
+         return New_Node (N_Old, From,
+                          Field_1 =>
+                            Import_Primary
+                              (Choice.Program_Child ("primary")));
       elsif Choice.First_Child.Text = "(" then
          return Import_Expression (Choice.Program_Child ("expression"));
       else
