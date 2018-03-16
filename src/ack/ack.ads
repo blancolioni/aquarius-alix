@@ -128,6 +128,18 @@ package Ack is
       E_Illegal_Redefinition
      );
 
+   type Assertion_Monitoring_Level is
+     (Monitor_None,
+      Monitor_Preconditions,
+      Monitor_Postconditions,
+      Monitor_Class_Invariants,
+      Monitor_All);
+
+   procedure Set_Default_Monitoring_Level
+     (Level : Assertion_Monitoring_Level);
+
+   function Default_Monitoring_Level return Assertion_Monitoring_Level;
+
    type Node_Id is private;
 
    No_Node : constant Node_Id;
@@ -198,6 +210,14 @@ package Ack is
 
    function Description (Entity : Root_Entity_Type) return String
    is (Root_Entity_Type'Class (Entity).Qualified_Name);
+
+   function Assertion_Monitoring
+     (Entity : Root_Entity_Type'Class)
+      return Assertion_Monitoring_Level;
+
+   procedure Set_Assertion_Monitoring
+     (Entity : in out Root_Entity_Type'Class;
+      Level  : Assertion_Monitoring_Level);
 
    function Conforms_To
      (Class : not null access constant Root_Entity_Type;
@@ -998,14 +1018,16 @@ private
 
    type Root_Entity_Type is abstract tagged
       record
-         Name                : Ada.Strings.Unbounded.Unbounded_String;
-         Source_Name         : Ada.Strings.Unbounded.Unbounded_String;
-         Declaration_Node    : Node_Id;
-         Declaration_Context : Entity_Type;
-         Value_Type          : Entity_Type;
-         Children            : Entity_Table;
-         Parent_Environment  : Entity_Type;
-         Attached            : Boolean := False;
+         Name                 : Ada.Strings.Unbounded.Unbounded_String;
+         Source_Name          : Ada.Strings.Unbounded.Unbounded_String;
+         Declaration_Node     : Node_Id;
+         Declaration_Context  : Entity_Type;
+         Value_Type           : Entity_Type;
+         Children             : Entity_Table;
+         Parent_Environment   : Entity_Type;
+         Attached             : Boolean := False;
+         Has_Monitoring_Level : Boolean := False;
+         Monitoring_Level     : Assertion_Monitoring_Level;
       end record;
 
    function Has_Context
@@ -1050,6 +1072,15 @@ private
       return String
    is (Entity.Base_File_Name & "-" & To_Standard_String (Child_Name));
 
+   function Assertion_Monitoring
+     (Entity : Root_Entity_Type'Class)
+      return Assertion_Monitoring_Level
+   is (if Entity.Has_Monitoring_Level
+       then Entity.Monitoring_Level
+       elsif Entity.Has_Context
+       then Entity.Declaration_Context.Assertion_Monitoring
+       else Default_Monitoring_Level);
+
    function Has_Type
      (Entity : Root_Entity_Type'Class)
       return Boolean
@@ -1077,5 +1108,11 @@ private
       Table              : Boolean;
       Parent_Environment : access Root_Entity_Type'Class := null;
       Context            : access Root_Entity_Type'Class := null);
+
+   Local_Default_Monitoring_Level : Assertion_Monitoring_Level :=
+                                      Monitor_All;
+
+   function Default_Monitoring_Level return Assertion_Monitoring_Level
+   is (Local_Default_Monitoring_Level);
 
 end Ack;
