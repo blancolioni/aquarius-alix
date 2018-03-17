@@ -66,7 +66,7 @@ feature
    
    Set_Table (To : Petal.Entry_Table)
    require
-      not Has_Table
+      Not_Already_Set: not Has_Table
    do
       Table := To
       Has_Table := True
