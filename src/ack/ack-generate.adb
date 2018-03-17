@@ -725,7 +725,7 @@ package body Ack.Generate is
          end;
       else
          if Right /= No_Node then
-         Generate_Expression (Unit, Right);
+            Generate_Expression (Unit, Right);
          end if;
 
          if not Ack.Generate.Primitives.Generate_Operator
