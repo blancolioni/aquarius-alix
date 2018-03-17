@@ -1,5 +1,4 @@
 with Ada.Strings.Fixed;
-with Ada.Text_IO;
 
 with Tagatha.Operands;
 
