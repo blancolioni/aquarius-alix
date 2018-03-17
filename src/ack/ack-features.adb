@@ -243,9 +243,6 @@ package body Ack.Features is
 
          if Feature.Declaration_Context.Monitor_Preconditions then
             for Clause of Feature.Preconditions loop
-               Ada.Text_IO.Put_Line
-                 (Feature.Link_Name & ": generating precondition: "
-                  & To_String (Clause.Tag));
                declare
                   Out_Label : constant Positive := Unit.Next_Label;
                begin
@@ -253,8 +250,10 @@ package body Ack.Features is
                   Unit.Operate (Tagatha.Op_Test);
                   Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
                   Unit.Push_Text
-                    ("assertion failure: "
-                     & To_String (Clause.Tag));
+                    ("assertion failure in precondition of "
+                     & Feature.Qualified_Name
+                     & (if Clause.Tag = No_Name then ""
+                       else ": " & To_String (Clause.Tag)));
                   Unit.Native_Operation ("halt");
                   Unit.Label (Out_Label);
                end;

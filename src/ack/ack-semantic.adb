@@ -110,7 +110,10 @@ package body Ack.Semantic is
    procedure Analyse_Assertion
      (Class     : Ack.Classes.Class_Entity;
       Container : not null access Root_Entity_Type'Class;
-      Assertion : Node_Id);
+      Assertion : Node_Id;
+      Process   : not null access
+        procedure (Tag : Name_Id;
+                   Condition : Node_Id));
 
    procedure Analyse_Effective_Routine
      (Class     : Ack.Classes.Class_Entity;
@@ -227,7 +230,10 @@ package body Ack.Semantic is
    procedure Analyse_Assertion
      (Class     : Ack.Classes.Class_Entity;
       Container : not null access Root_Entity_Type'Class;
-      Assertion : Node_Id)
+      Assertion : Node_Id;
+      Process   : not null access
+        procedure (Tag : Name_Id;
+                   Condition : Node_Id))
    is
 
       procedure Analyse_Clause (Clause : Node_Id);
@@ -239,6 +245,7 @@ package body Ack.Semantic is
       procedure Analyse_Clause (Clause : Node_Id) is
       begin
          Analyse_Boolean_Expression (Class, Container, Expression (Clause));
+         Process (Get_Name (Clause), Expression (Clause));
       end Analyse_Clause;
 
    begin
@@ -1041,13 +1048,53 @@ package body Ack.Semantic is
             Entity.Bind;
 
             if Precondition_Node /= No_Node then
-               Analyse_Assertion (Class, Entity,
-                                  Assertion (Precondition_Node));
+               declare
+                  procedure Add_Precondition
+                    (Tag        : Name_Id;
+                     Expression : Node_Id);
+
+                  ----------------------
+                  -- Add_Precondition --
+                  ----------------------
+
+                  procedure Add_Precondition
+                    (Tag        : Name_Id;
+                     Expression : Node_Id)
+                  is
+                  begin
+                     Entity.Add_Precondition (Tag, Expression);
+                  end Add_Precondition;
+
+               begin
+                  Analyse_Assertion (Class, Entity,
+                                     Assertion (Precondition_Node),
+                                     Add_Precondition'Access);
+               end;
             end if;
 
             if Postcondition_Node /= No_Node then
-               Analyse_Assertion (Class, Entity,
-                                  Assertion (Postcondition_Node));
+               declare
+                  procedure Add_Postcondition
+                    (Tag        : Name_Id;
+                     Expression : Node_Id);
+
+                  -----------------------
+                  -- Add_Postcondition --
+                  -----------------------
+
+                  procedure Add_Postcondition
+                    (Tag        : Name_Id;
+                     Expression : Node_Id)
+                  is
+                  begin
+                     Entity.Add_Postcondition (Tag, Expression);
+                  end Add_Postcondition;
+
+               begin
+                  Analyse_Assertion (Class, Entity,
+                                     Assertion (Postcondition_Node),
+                                     Add_Postcondition'Access);
+               end;
             end if;
 
             if Internal then
