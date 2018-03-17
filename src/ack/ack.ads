@@ -45,6 +45,8 @@ package Ack is
       N_Entity_Declaration_Group_List,
       N_Entity_Declaration_Group,
       N_Identifier_List,
+      N_Assertion,
+      N_Assertion_Clause,
       N_Class_Type,
       N_Anchored_Type,
       N_Extended_Feature_Name,
@@ -53,7 +55,10 @@ package Ack is
       N_Feature_Value,
       N_Explicit_Value,
       N_Routine,
+      N_Precondition,
       N_Local_Declarations,
+      N_Postcondition,
+      N_Rescue,
       N_Internal,
       N_External,
       N_Explicit_Creation_Type,
@@ -75,6 +80,7 @@ package Ack is
       N_Precursor,
       N_Operator,
       N_Attachment_Test,
+      N_Old,
       N_Constant,
       N_String_Constant,
       N_Integer_Constant,
@@ -121,6 +127,18 @@ package Ack is
       E_Requires_Definition,
       E_Illegal_Redefinition
      );
+
+   type Assertion_Monitoring_Level is
+     (Monitor_None,
+      Monitor_Preconditions,
+      Monitor_Postconditions,
+      Monitor_Class_Invariants,
+      Monitor_All);
+
+   procedure Set_Default_Monitoring_Level
+     (Level : Assertion_Monitoring_Level);
+
+   function Default_Monitoring_Level return Assertion_Monitoring_Level;
 
    type Node_Id is private;
 
@@ -192,6 +210,35 @@ package Ack is
 
    function Description (Entity : Root_Entity_Type) return String
    is (Root_Entity_Type'Class (Entity).Qualified_Name);
+
+   function Assertion_Monitoring
+     (Entity : Root_Entity_Type'Class)
+      return Assertion_Monitoring_Level;
+
+   function Monitor
+     (Entity    : Root_Entity_Type'Class;
+      Assertion : Assertion_Monitoring_Level)
+      return Boolean
+   is (Entity.Assertion_Monitoring >= Assertion);
+
+   function Monitor_Preconditions
+     (Entity : Root_Entity_Type'Class)
+      return Boolean
+   is (Entity.Monitor (Monitor_Preconditions));
+
+   function Monitor_Postconditions
+     (Entity : Root_Entity_Type'Class)
+      return Boolean
+   is (Entity.Monitor (Monitor_Postconditions));
+
+   function Monitor_Class_Invariants
+     (Entity : Root_Entity_Type'Class)
+      return Boolean
+   is (Entity.Monitor (Monitor_Class_Invariants));
+
+   procedure Set_Assertion_Monitoring
+     (Entity : in out Root_Entity_Type'Class;
+      Level  : Assertion_Monitoring_Level);
 
    function Conforms_To
      (Class : not null access constant Root_Entity_Type;
@@ -383,7 +430,7 @@ package Ack is
                  | N_Explicit_Creation_Call
                  | N_Formal_Generic_Name | N_Get_Property
                  | N_Attachment_Test | N_Iteration | N_Operator
-                 | N_Note_Name | N_Note_Item;
+                 | N_Note_Name | N_Note_Item | N_Assertion_Clause;
 
    function Get_Entity (N : Node_Id) return Entity_Type;
    function Has_Entity (N : Node_Id) return Boolean;
@@ -448,6 +495,21 @@ package Ack is
    function Feature_Alias (N : Node_Id) return Node_Id
      with Pre => Kind (N) in N_External | N_Extended_Feature_Name;
 
+   function Precondition (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Routine;
+
+   function Postcondition (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Routine;
+
+   function Assertion (N : Node_Id) return Node_Id
+     with Pre => Kind (N) in N_Precondition | N_Postcondition;
+
+   function Assertion_Clauses (N : Node_Id) return List_Id
+     with Pre => Kind (N) = N_Assertion;
+
+   function Rescue (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Rescue;
+
    function Local_Declarations (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Routine,
      Post => Local_Declarations'Result = No_Node
@@ -460,7 +522,8 @@ package Ack is
      with Pre => Kind (N) = N_Internal;
 
    function Compound (N : Node_Id) return Node_Id
-     with Pre => Kind (N) in N_Internal | N_Loop_Body | N_Initialization;
+     with Pre => Kind (N) in
+     N_Internal | N_Loop_Body | N_Initialization | N_Rescue;
 
    function Instructions (N : Node_Id) return List_Id
      with Pre => Kind (N) = N_Compound;
@@ -469,7 +532,8 @@ package Ack is
      with Pre => Kind (N) in N_Assignment | N_Creation_Call;
 
    function Expression (N : Node_Id) return Node_Id
-     with Pre => Kind (N) in N_Assignment | N_Iteration | N_Exit_Condition;
+     with Pre => Kind (N) in N_Assignment | N_Iteration | N_Exit_Condition
+     | N_Assertion_Clause | N_Old;
 
    function Creation_Call (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Creation_Instruction;
@@ -768,8 +832,23 @@ private
    function Value_Type (N : Node_Id) return Node_Id
    is (Node_Table.Element (N).Field (2));
 
+   function Assertion (N : Node_Id) return Node_Id
+   is (Field_1 (N));
+
+   function Assertion_Clauses (N : Node_Id) return List_Id
+   is (Node_Table.Element (N).List);
+
+   function Precondition (N : Node_Id) return Node_Id
+   is (Field_1 (N));
+
    function Local_Declarations (N : Node_Id) return Node_Id
    is (Field_2 (N));
+
+   function Postcondition (N : Node_Id) return Node_Id
+   is (Field_4 (N));
+
+   function Rescue (N : Node_Id) return Node_Id
+   is (Field_5 (N));
 
    function Value (N : Node_Id) return Node_Id
    is (Node_Table.Element (N).Field (3));
@@ -960,14 +1039,16 @@ private
 
    type Root_Entity_Type is abstract tagged
       record
-         Name                : Ada.Strings.Unbounded.Unbounded_String;
-         Source_Name         : Ada.Strings.Unbounded.Unbounded_String;
-         Declaration_Node    : Node_Id;
-         Declaration_Context : Entity_Type;
-         Value_Type          : Entity_Type;
-         Children            : Entity_Table;
-         Parent_Environment  : Entity_Type;
-         Attached            : Boolean := False;
+         Name                 : Ada.Strings.Unbounded.Unbounded_String;
+         Source_Name          : Ada.Strings.Unbounded.Unbounded_String;
+         Declaration_Node     : Node_Id;
+         Declaration_Context  : Entity_Type;
+         Value_Type           : Entity_Type;
+         Children             : Entity_Table;
+         Parent_Environment   : Entity_Type;
+         Attached             : Boolean := False;
+         Has_Monitoring_Level : Boolean := False;
+         Monitoring_Level     : Assertion_Monitoring_Level;
       end record;
 
    function Has_Context
@@ -1012,6 +1093,15 @@ private
       return String
    is (Entity.Base_File_Name & "-" & To_Standard_String (Child_Name));
 
+   function Assertion_Monitoring
+     (Entity : Root_Entity_Type'Class)
+      return Assertion_Monitoring_Level
+   is (if Entity.Has_Monitoring_Level
+       then Entity.Monitoring_Level
+       elsif Entity.Has_Context
+       then Entity.Declaration_Context.Assertion_Monitoring
+       else Default_Monitoring_Level);
+
    function Has_Type
      (Entity : Root_Entity_Type'Class)
       return Boolean
@@ -1039,5 +1129,11 @@ private
       Table              : Boolean;
       Parent_Environment : access Root_Entity_Type'Class := null;
       Context            : access Root_Entity_Type'Class := null);
+
+   Local_Default_Monitoring_Level : Assertion_Monitoring_Level :=
+                                      Monitor_All;
+
+   function Default_Monitoring_Level return Assertion_Monitoring_Level
+   is (Local_Default_Monitoring_Level);
 
 end Ack;

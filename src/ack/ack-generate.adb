@@ -43,10 +43,6 @@ package body Ack.Generate is
      (Unit      : in out Tagatha.Units.Tagatha_Unit;
       Loop_Node : Node_Id);
 
-   procedure Generate_Expression
-     (Unit       : in out Tagatha.Units.Tagatha_Unit;
-      Expression : Node_Id);
-
    procedure Generate_Operator_Expression
      (Unit          : in out Tagatha.Units.Tagatha_Unit;
       Operator_Node : Node_Id);
@@ -218,7 +214,8 @@ package body Ack.Generate is
            (Feature : not null access constant
               Ack.Features.Feature_Entity_Record'Class)
             return Boolean
-         is (Feature.Definition_Class = Entity);
+         is (not Feature.Is_Deferred
+             and then Feature.Effective_Class = Entity);
 
          procedure Generate_Feature
            (Feature : not null access constant
@@ -501,6 +498,8 @@ package body Ack.Generate is
          when N_Precursor =>
             Generate_Precursor (Unit, Expression);
          when N_Attachment_Test =>
+            Generate_Expression (Unit, Field_1 (Expression));
+         when N_Old =>
             Generate_Expression (Unit, Field_1 (Expression));
          when N_Constant =>
             declare
