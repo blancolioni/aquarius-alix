@@ -724,7 +724,9 @@ package body Ack.Generate is
             Unit.Label (Leave);
          end;
       else
+         if Right /= No_Node then
          Generate_Expression (Unit, Right);
+         end if;
 
          if not Ack.Generate.Primitives.Generate_Operator
            (Unit      => Unit,
