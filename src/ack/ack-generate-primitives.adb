@@ -82,16 +82,8 @@ package body Ack.Generate.Primitives is
    --------------------
 
    procedure Generate_Equal (Unit : in out Tagatha.Units.Tagatha_Unit) is
-      Label : constant Positive := Unit.Next_Label;
    begin
-      Unit.Push (0);
-      Unit.Pop_Register ("r0");
-      Unit.Operate (Tagatha.Op_Compare);
-      Unit.Jump (Label, Tagatha.C_Not_Equal);
-      Unit.Push (1);
-      Unit.Pop_Register ("r0");
-      Unit.Label (Label);
-      Unit.Push_Register ("r0");
+      Unit.Operate (Tagatha.Op_Equal);
    end Generate_Equal;
 
    -------------------
@@ -103,6 +95,10 @@ package body Ack.Generate.Primitives is
       Unit.Operate (Tagatha.Op_Add);
    end Generate_Join;
 
+   ------------------
+   -- Generate_Not --
+   ------------------
+
    procedure Generate_Not (Unit : in out Tagatha.Units.Tagatha_Unit) is
    begin
       Unit.Operate (Tagatha.Op_Not);
@@ -113,16 +109,8 @@ package body Ack.Generate.Primitives is
    ------------------------
 
    procedure Generate_Not_Equal (Unit : in out Tagatha.Units.Tagatha_Unit) is
-      Label : constant Positive := Unit.Next_Label;
    begin
-      Unit.Push (0);
-      Unit.Pop_Register ("r0");
-      Unit.Operate (Tagatha.Op_Compare);
-      Unit.Jump (Label, Tagatha.C_Equal);
-      Unit.Push (1);
-      Unit.Pop_Register ("r0");
-      Unit.Label (Label);
-      Unit.Push_Register ("r0");
+      Unit.Operate (Tagatha.Op_Not_Equal);
    end Generate_Not_Equal;
 
    -----------------------
