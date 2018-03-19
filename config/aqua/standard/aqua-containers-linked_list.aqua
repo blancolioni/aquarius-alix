@@ -24,14 +24,14 @@ feature
       
    First_Element : G
       require
-         not Is_Empty
+         Not_Empty: not Is_Empty
       do
          Result := First_Cell.Item
       end
       
    Last_Element : G
       require
-         not Is_Empty
+         Not_Empty: not Is_Empty
       do
          Result := Last_Cell.Item
       end
