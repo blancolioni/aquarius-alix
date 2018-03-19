@@ -66,6 +66,7 @@ package body Ack.Features is
    is
    begin
       Feature.Postconditions.Append ((Tag, Condition));
+
    end Add_Postcondition;
 
    ----------------------
@@ -249,10 +250,12 @@ package body Ack.Features is
                   Unit.Operate (Tagatha.Op_Test);
                   Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
                   Unit.Push_Text
-                    ("assertion failure in precondition of "
+                    (Get_Program (Clause.Node).Show_Location
+                     & ": assertion failure in precondition of "
                      & Feature.Qualified_Name
                      & (if Clause.Tag = No_Name then ""
                        else ": " & To_String (Clause.Tag)));
+                  Unit.Pop_Register ("r0");
                   Unit.Native_Operation ("halt");
                   Unit.Label (Out_Label);
                end;
@@ -325,8 +328,37 @@ package body Ack.Features is
             for I in 1 .. Feature.Local_Count loop
                Unit.Push (0);
             end loop;
+
+            if Feature.Monitor_Postconditions then
+               for Old of Feature.Olds loop
+                  Ack.Generate.Generate_Expression (Unit, Old);
+               end loop;
+            end if;
+
             Ack.Generate.Generate_Compound
               (Unit, Compound (Feature.Routine_Node));
+
+            if Feature.Monitor_Postconditions then
+               for Clause of Feature.Postconditions loop
+                  declare
+                     Out_Label : constant Positive := Unit.Next_Label;
+                  begin
+                     Ack.Generate.Generate_Expression (Unit, Clause.Node);
+                     Unit.Operate (Tagatha.Op_Test);
+                     Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
+                     Unit.Push_Text
+                       (Get_Program (Clause.Node).Show_Location
+                        & ": assertion failure in postcondition of "
+                        & Feature.Qualified_Name
+                        & (if Clause.Tag = No_Name then ""
+                          else ": " & To_String (Clause.Tag)));
+                     Unit.Pop_Register ("r0");
+                     Unit.Native_Operation ("halt");
+                     Unit.Label (Out_Label);
+                  end;
+               end loop;
+            end if;
+
          end if;
 
          if Feature.Has_Result then
@@ -621,6 +653,30 @@ package body Ack.Features is
 
    end Push_Entity;
 
+   --------------------
+   -- Push_Old_Value --
+   --------------------
+
+   overriding procedure Push_Old_Value
+     (Feature : in out Feature_Entity_Record;
+      Unit    : in out Tagatha.Units.Tagatha_Unit;
+      Node    : Node_Id)
+   is
+   begin
+      for I in 1 .. Feature.Olds.Last_Index loop
+         if Feature.Olds.Element (I) = Node then
+            Unit.Push_Local
+              (Tagatha.Local_Offset
+                 (Feature.Local_Count
+                  + (if Feature.Has_Result then 1 else 0)
+                  + I));
+            return;
+         end if;
+      end loop;
+      raise Constraint_Error with
+        "can't find old value";
+   end Push_Old_Value;
+
    ---------------------
    -- Remove_Implicit --
    ---------------------
@@ -636,6 +692,23 @@ package body Ack.Features is
          Feature.Local_Count := Feature.Local_Count - 1;
       end if;
    end Remove_Implicit;
+
+   --------------------
+   -- Save_Old_Value --
+   --------------------
+
+   overriding procedure Save_Old_Value
+     (Feature : in out Feature_Entity_Record;
+      Node    : Node_Id)
+   is
+   begin
+      for N of Feature.Olds loop
+         if N = Node then
+            return;
+         end if;
+      end loop;
+      Feature.Olds.Append (Node);
+   end Save_Old_Value;
 
    ---------------------------
    -- Scan_Original_Classes --
