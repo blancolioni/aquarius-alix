@@ -290,6 +290,17 @@ package Ack is
       return Boolean
    is (False);
 
+   procedure Save_Old_Value
+     (Entity : in out Root_Entity_Type;
+      Node   : Node_Id)
+   is null;
+
+   procedure Push_Old_Value
+     (Entity : in out Root_Entity_Type;
+      Unit   : in out Tagatha.Units.Tagatha_Unit;
+      Node   : Node_Id)
+   is null;
+
    procedure Check_Bound (Entity : in out Root_Entity_Type) is null;
    procedure Bind (Entity : in out Root_Entity_Type) is null;
 

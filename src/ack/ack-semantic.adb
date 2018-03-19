@@ -914,6 +914,7 @@ package body Ack.Semantic is
          when N_Old =>
             Analyse_Expression (Class, Container, Expression_Type,
                                 Ack.Expression (Expression));
+            Container.Save_Old_Value (Ack.Expression (Expression));
          when N_Attachment_Test =>
             Analyse_Expression (Class, Container,
                                 Get_Top_Level_Type ("any"),

@@ -15,6 +15,15 @@ package Ack.Features is
    overriding procedure Bind
      (Feature : in out Feature_Entity_Record);
 
+   overriding procedure Save_Old_Value
+     (Feature : in out Feature_Entity_Record;
+      Node    : Node_Id);
+
+   overriding procedure Push_Old_Value
+     (Feature : in out Feature_Entity_Record;
+      Unit    : in out Tagatha.Units.Tagatha_Unit;
+      Node    : Node_Id);
+
    procedure Scan_Original_Classes
      (Feature : Feature_Entity_Record'Class;
       Process : not null access
@@ -145,6 +154,9 @@ private
      new Ada.Containers.Vectors
        (Positive, Ack.Variables.Variable_Entity, Ack.Variables."=");
 
+   package Old_Value_Vectors is
+     new Ada.Containers.Vectors (Positive, Node_Id);
+
    type Assertion_Record is
       record
          Tag  : Name_Id;
@@ -174,6 +186,7 @@ private
          External_Label      : Ada.Strings.Unbounded.Unbounded_String;
          Arguments           : Variable_Vectors.Vector;
          Locals              : Variable_Vectors.Vector;
+         Olds                : Old_Value_Vectors.Vector;
          Preconditions       : Assertion_Record_Lists.List;
          Postconditions      : Assertion_Record_Lists.List;
          Routine_Node        : Node_Id;
