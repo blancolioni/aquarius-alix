@@ -83,7 +83,8 @@ single_operand_instruction ::=
 
 double_operand_instruction ::=
      'mov' | 'cmp' | 'add' | 'sub' | 'mul' | 'div' | 'mod' | 'and' | 'or' | 'xor'
-
+   | 'seq' | 'sne' | 'sgt' | 'slt' | 'sge' | 'sle'
+  
 branch_instruction ::= 
           'br' | 'bne' | 'beq' | 'bge' | 'blt' | 'bgt' | 'ble'
          | 'bpl' | 'bmi' | 'bhi' | 'blos' 
