@@ -34,7 +34,7 @@ package Ack.Classes is
      (Class : in out Class_Entity_Record'Class;
       Name  : Name_Id);
 
-      procedure Add_Note
+   procedure Add_Note
      (Class : in out Class_Entity_Record'Class;
       Name  : String;
       Value : String);
@@ -99,6 +99,9 @@ package Ack.Classes is
      (Class : Class_Entity_Record'Class;
       Index : Positive)
       return access constant Ack.Types.Type_Entity_Record'Class;
+
+   overriding procedure Check_Bound
+     (Class : in out Class_Entity_Record);
 
    overriding procedure Bind
      (Class : in out Class_Entity_Record);
@@ -180,12 +183,15 @@ package Ack.Classes is
      with Pre => Kind (Node) in
      N_Class_Declaration | N_Class_Header | N_Class_Name;
 
+   type Class_Type_Access is
+     access constant Ack.Types.Type_Entity_Record'Class;
+
    function Get_Ancestor_Type
      (Descendent_Class : Class_Entity_Record'Class;
       Descendent_Type  : not null access constant
         Ack.Types.Type_Entity_Record'Class;
       Ancestor_Class   : not null access constant Class_Entity_Record'Class)
-      return access Ack.Types.Type_Entity_Record'Class;
+      return Class_Type_Access;
 
    function Get_Top_Level_Class
      (Name : String)
@@ -229,6 +235,7 @@ private
          Deferred                : Boolean := False;
          Expanded                : Boolean := False;
          Frozen                  : Boolean := False;
+         Bound                   : Boolean := False;
          Behaviour               : Class_Behaviour := Normal;
          Conforming_Child_Action : Name_Id := No_Name;
          Inherited_Types         : List_Of_Inherited_Type_Records.List;

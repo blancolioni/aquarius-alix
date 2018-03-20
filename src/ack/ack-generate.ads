@@ -7,4 +7,8 @@ package Ack.Generate is
      (Unit    : in out Tagatha.Units.Tagatha_Unit;
       Node    : Node_Id);
 
+   procedure Generate_Expression
+     (Unit       : in out Tagatha.Units.Tagatha_Unit;
+      Expression : Node_Id);
+
 end Ack.Generate;

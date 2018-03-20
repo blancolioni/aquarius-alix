@@ -1,0 +1,9 @@
+deferred class Petal.Value
+
+feature
+
+   To_String : String
+      deferred
+      end
+      
+end

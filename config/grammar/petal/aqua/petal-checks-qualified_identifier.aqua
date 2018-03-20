@@ -1,7 +1,6 @@
 class Petal.Checks.Qualified_Identifier
 inherit
    Aquarius.Trees.Program_Tree
-   Aqua.Text_IO
    
 feature
 
@@ -20,27 +19,35 @@ feature
       Current_Context : detachable Petal.Entry_Table
       Current_Entry   : detachable Petal.Entry
       Has_Error       : Boolean
+      First           : Boolean
    do
       Current_Context := Context
+      First := True
       if Identifiers.Is_Empty then
-         Put_Line ("identifiers are empty")
       else
-      across Identifiers as Id loop
-         Put_Line (Id)
-         if Has_Error then
-         elsif Id = Void then
-            Error ("id is void")
-         elsif Current_Context = Void then
-            Error ("invalid prefix in selected component '" & Id & "'")
-         else
-            Current_Entry := Current_Context.Find (Id)
-            if Current_Entry.Has_Table then
-               Current_Context := Current_Entry.Table
+         across Identifiers as Id loop
+            if Has_Error then
+            elsif attached Current_Context then
+               Current_Entry := Current_Context.Find (Id)
+               if attached Current_Entry then
+                  if Current_Entry.Has_Table then
+                     Current_Context := Current_Entry.Table
+                  else
+                     Current_Context := Void
+                  end
+               else
+                  if First then
+                     Error ("undeclared: " & Id)
+                  else
+                     Error ("invalid prefix in selected component " & Id)
+                  end
+               end
             else
-               Current_Context := Void
+               Error ("invalid prefix in selected component " & Id)
             end
+            First := False
          end
       end
-      end
+      Result := Current_Entry
    end
 end

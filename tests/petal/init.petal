@@ -1,41 +1,35 @@
 procedure Init
-  (Launch_Cap : interface Launch_Boot_Module;
-   Copy_Cap   : interface Cap_Copy;
-   Memory_Map : interface Memory_Map;
-   Save_Caps  : interface Save_Caps)
+  (Meta_Cap    : Capability;
+   Launch_Cap  : Capability;
+   Copy_Cap    : Capability;
+   Create_Cap  : Capability)
 is
-   Console_Module : constant := 2;
-   Memory_Module  : constant := 3;
-   Storage_Module : constant := 4;
-   
-   Console_Writer : interface Stream_Writer;
-   Memory_Server  : interface Memory;
-   Root_Storage   : interface Storage;
+   Memory_Buffer   : Page;
+   Memory_Cap      : Capability;
+   Console_Process : Capability;
+   Console_Write   : Capability;
+   Mem_Process     : Capability;
    
 begin
 
-   declare
-      Console_Process : constant interface Process :=
-        Launch_Cap.Launch (Console_Module);
-   begin
-      Console_Writer := 
-        Copy_Cap.Copy_Cap (Console_Process, interface Stream_Writer);
-   end;
-   
-   declare
-      Memory_Process : constant interface Process :=
-        Launch_Cap.Launch (Memory_Module, Console_Writer, Memory_Map);
-   begin
-      Memory_Server := Copy_Cap.Copy_Cap (Memory_Process, interface Memory);
-   end;
+   invoke Meta_Cap/3 with
+      Send => (Memory_Buffer, 1),
+      Recv => Memory_Cap;
+   invoke Launch_Cap with
+      Send => (2, Meta_Cap),
+      Recv => Console_Process;
+   invoke Copy_Cap with
+      Send => (Console_Process, 0),
+      Recv => Console_Write;
 
-   declare
-      Storage_Process : constant interface Storage :=
-        Launch_Cap.Launch (Storage_Module, Console_Writer);
-   begin
-      Root_Storage := Copy_Cap.Copy_Cap (Storage_Process, interface Storage);
-   end;
-      
-   Save_Caps.Save (Console_Writer, Memory_Server);
+   invoke Console_Write with
+      Send_String => (Memory_Buffer, Memory_Cap, "init: created console" & NL);
+
+   invoke Launch_Cap with
+      Send => (3, Meta_Cap, Console_Write),
+      Recv => Mem_Process;
+   
+   invoke Console_Write with
+      Send_String => (Memory_Buffer, Memory_Cap, "init: created mem" & NL);
    
 end Init;

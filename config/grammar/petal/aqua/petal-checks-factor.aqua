@@ -1,0 +1,5 @@
+class Petal.Checks.Factor
+inherit
+   Petal.Context
+   
+end

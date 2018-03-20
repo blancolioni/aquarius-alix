@@ -1,0 +1,41 @@
+procedure Init
+  (Launch_Cap : interface Launch_Boot_Module;
+   Copy_Cap   : interface Cap_Copy;
+   Memory_Map : interface Memory_Map;
+   Save_Caps  : interface Save_Caps)
+is
+   Console_Module : constant := 2;
+   Memory_Module  : constant := 3;
+   Storage_Module : constant := 4;
+   
+   Console_Writer : interface Stream_Writer;
+   Memory_Server  : interface Memory;
+   Root_Storage   : interface Storage;
+   
+begin
+
+   declare
+      Console_Process : constant interface Process :=
+        Launch_Cap.Launch (Console_Module);
+   begin
+      Console_Writer := 
+        Copy_Cap.Copy_Cap (Console_Process, interface Stream_Writer);
+   end;
+   
+   declare
+      Memory_Process : constant interface Process :=
+        Launch_Cap.Launch (Memory_Module, Console_Writer, Memory_Map);
+   begin
+      Memory_Server := Copy_Cap.Copy_Cap (Memory_Process, interface Memory);
+   end;
+
+   declare
+      Storage_Process : constant interface Storage :=
+        Launch_Cap.Launch (Storage_Module, Console_Writer);
+   begin
+      Root_Storage := Copy_Cap.Copy_Cap (Storage_Process, interface Storage);
+   end;
+      
+   Save_Caps.Save (Console_Writer, Memory_Server);
+   
+end Init;

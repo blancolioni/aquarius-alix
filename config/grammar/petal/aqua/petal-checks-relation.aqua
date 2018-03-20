@@ -1,0 +1,5 @@
+class Petal.Checks.Relation
+inherit
+   Petal.Context
+   
+end

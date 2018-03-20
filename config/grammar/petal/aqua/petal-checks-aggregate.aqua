@@ -1,0 +1,5 @@
+class Petal.Checks.Aggregate
+inherit
+   Petal.Context
+   
+end

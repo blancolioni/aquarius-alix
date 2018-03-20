@@ -2,17 +2,22 @@ deferred class Petal.Entry
 inherit
    Aqua.Text_IO
    
+create
+   Create_Constant_Entry, Create_Value_Entry, Create_Type_Entry, Create_Object_Entry
+   
 feature
 
    Name          : String
    Declared_Name : String
    Parent        : detachable Petal.Entry
    Type          : detachable Petal.Type
-   Constant      : Boolean
+   Is_Constant   : Boolean
    Is_Type       : Boolean
+   Is_Value      : Boolean
    Has_Table     : Boolean
    Table         : Petal.Entry_Table
    Initialiser   : detachable Petal.Checks.Expression
+   Value         : detachable Petal.Value
    
    Create_Entry (Entry_Name    : String
                  Entry_Parent  : detachable Petal.Entry
@@ -30,8 +35,17 @@ feature
                           Entry_Type        : detachable Petal.Type)
    do
       Create_Entry (Entry_Name, Entry_Parent, Entry_Type)
-      Constant := True
+      Is_Constant := True
       Initialiser := Entry_Initialiser
+   end
+   
+   Create_Value_Entry (Entry_Name        : String
+                       Entry_Value       : Petal.Value
+                       Entry_Type        : detachable Petal.Type)
+   do
+      Create_Entry (Entry_Name, Void, Entry_Type)
+      Is_Value := True
+      Value := Entry_Value
    end
    
    Create_Type_Entry (Entry_Name    : String
@@ -42,15 +56,23 @@ feature
       Is_Type := True
    end
    
+   Create_Object_Entry (Entry_Name        : String
+                        Entry_Type        : detachable Petal.Type
+                        Entry_Initialiser : Petal.Checks.Expression)
+   do
+      Create_Entry (Entry_Name, Void, Entry_Type)
+      Initialiser := Entry_Initialiser
+   end
+   
    Set_Table (To : Petal.Entry_Table)
    require
-      not Has_Table
+      Not_Already_Set: not Has_Table
    do
       Table := To
       Has_Table := True
    ensure
-      Has_Table
-      Table /= Void
+      Table_Was_Set: Has_Table
+      Table_Was_Allocated: Table /= Void
    end
       
    Qualified_Name : String

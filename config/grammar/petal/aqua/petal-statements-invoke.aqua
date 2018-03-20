@@ -1,0 +1,22 @@
+class Petal.Statements.Invoke
+
+feature
+
+   Make (Cap : Petal.Entry
+         EP  : Integer)
+      do
+         Cap_Entry := Cap
+         Endpoint  := EP
+      end
+      
+feature --  arguments to invocation
+
+   Send : Aqua.Containers.Linked_List[Petal.Value]
+   Recv : Aqua.Containers.Linked_List[Petal.Value]
+   
+feature {None}
+
+   Cap_Entry : Petal.Entry
+   Endpoint  : Integer
+   
+end
