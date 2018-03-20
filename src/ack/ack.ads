@@ -555,6 +555,12 @@ package Ack is
      or else Kind (Explicit_Creation_Call'Result)
      = N_Explicit_Creation_Call;
 
+   function Explicit_Creation_Type (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Creation_Instruction,
+     Post => Explicit_Creation_Type'Result = No_Node
+     or else Kind (Explicit_Creation_Type'Result)
+     in N_Type;
+
    procedure Set_Explicit_Creation_Call
      (N    : Node_Id;
       Name : Name_Id)
@@ -911,6 +917,9 @@ private
 
    function Variable (N : Node_Id) return Node_Id
    is (Field_1 (N));
+
+   function Explicit_Creation_Type (N : Node_Id) return Node_Id
+   is (Field_2 (N));
 
    function Creation_Call (N : Node_Id) return Node_Id
    is (Field_1 (N));

@@ -771,6 +771,8 @@ package body Ack.Semantic is
       Container : not null access Root_Entity_Type'Class;
       Creation  : Node_Id)
    is
+      Explicit_Type_Node : constant Node_Id :=
+                             Explicit_Creation_Type (Creation);
       Call_Node          : constant Node_Id := Creation_Call (Creation);
       Explicit_Call_Node : constant Node_Id :=
                              Explicit_Creation_Call (Call_Node);
@@ -779,30 +781,39 @@ package body Ack.Semantic is
       Created_Entity     : constant Entity_Type :=
                              (if Container.Contains (Name)
                               then Container.Get (Name) else null);
+      Created_Type       : Entity_Type;
       Creator_Name       : Name_Id;
    begin
 
       if Created_Entity = null then
-         Ada.Text_IO.Put_Line ("undeclared: " & To_Standard_String (Name));
          Error (Creation, E_Undeclared_Name);
          return;
       end if;
 
       Set_Entity (Creation, Created_Entity);
 
+      Created_Type := Created_Entity.Get_Type;
+
+      if Explicit_Type_Node in Real_Node_Id then
+         Analyse_Type (Class, Explicit_Type_Node);
+         if Get_Entity (Explicit_Type_Node) /= null then
+            Created_Type := Get_Entity (Explicit_Type_Node);
+         end if;
+      end if;
+
       if Explicit_Call_Node in Real_Node_Id then
          Creator_Name := Get_Name (Explicit_Call_Node);
-         if Created_Entity.Get_Type.Contains (Creator_Name) then
+         if Created_Type.Contains (Creator_Name) then
             declare
                Creator : constant Entity_Type :=
-                           Created_Entity.Get_Type.Get (Creator_Name);
+                           Created_Type.Get (Creator_Name);
             begin
                Set_Entity (Explicit_Call_Node, Creator);
                if Creator.all not in Ack.Features.Feature_Entity_Record'Class
                  or else not Ack.Features.Feature_Entity (Creator).Is_Creator
                then
                   Error (Explicit_Call_Node, E_Not_A_Create_Feature,
-                         Created_Entity.Get_Type);
+                         Created_Type);
                else
                   Analyse_Actual_Arguments
                     (Class            => Class,
@@ -813,7 +824,7 @@ package body Ack.Semantic is
             end;
          else
             Error (Explicit_Call_Node, E_Not_Defined_In,
-                   Entity_Type (Container));
+                   Created_Type);
          end if;
       end if;
 

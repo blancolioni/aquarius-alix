@@ -327,6 +327,11 @@ package body Ack.Parser is
       return Node_Id
      with Pre => From.Name = "explicit_creation_call";
 
+   function Import_Explicit_Creation_Type
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     with Pre => From.Name = "explicit_creation_type";
+
    function Import_Conditional
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
@@ -626,6 +631,10 @@ package body Ack.Parser is
                                ("variable");
       Identifier_Tree    : constant Program_Tree :=
                              Variable_Tree.Program_Child ("identifier");
+      Explicit_Type      : constant Node_Id :=
+                             Import_Optional_Child
+                               (From, "explicit_creation_type",
+                                Import_Explicit_Creation_Type'Access);
       Explict_Call       : constant Node_Id :=
                              Import_Optional_Child
                                (Parent     => Creation_Call_Tree,
@@ -641,7 +650,8 @@ package body Ack.Parser is
                               New_Node
                                 (N_Variable, Variable_Tree,
                                  Name => Get_Name_Id (Identifier_Tree.Text)),
-                            Field_2 => Explict_Call));
+                            Field_2 => Explict_Call),
+                       Field_2 => Explicit_Type);
    end Import_Creation_Instruction;
 
    -----------------------------
@@ -749,6 +759,18 @@ package body Ack.Parser is
                            (From, "actuals",
                             Expressions.Import_Actual_Arguments'Access));
    end Import_Explicit_Creation_Call;
+
+   -----------------------------------
+   -- Import_Explicit_Creation_Type --
+   -----------------------------------
+
+   function Import_Explicit_Creation_Type
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+   begin
+      return Import_Type (From.Program_Child ("type"));
+   end Import_Explicit_Creation_Type;
 
    ----------------------------------
    -- Import_Extended_Feature_Name --

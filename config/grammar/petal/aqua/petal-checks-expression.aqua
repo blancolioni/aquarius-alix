@@ -1,5 +1,22 @@
 class Petal.Checks.Expression
 inherit
    Petal.Context
+   Petal.Expression
+   
+feature
+
+   After_Relation (Child : Petal.Checks.Relation)
+      local
+         Op : Petal.Value
+      do
+         if attached Value then
+            --  create {Petal.Value.Operator_Value} Op.Make (Operator_Name, Value, Child.Value)
+         else
+            Value := Child.Value
+         end
+      end
+      
+feature
+   Operator_Name : String
    
 end
