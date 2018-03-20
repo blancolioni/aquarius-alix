@@ -396,6 +396,19 @@ package body Ack is
       Depth_First_Scan (Top, Process_Node'Access);
    end Scan_Errors;
 
+   ------------------------------
+   -- Set_Assertion_Monitoring --
+   ------------------------------
+
+   procedure Set_Assertion_Monitoring
+     (Entity : in out Root_Entity_Type'Class;
+      Level  : Assertion_Monitoring_Level)
+   is
+   begin
+      Entity.Has_Monitoring_Level := True;
+      Entity.Monitoring_Level := Level;
+   end Set_Assertion_Monitoring;
+
    ------------------
    -- Set_Attached --
    ------------------
@@ -418,6 +431,17 @@ package body Ack is
    begin
       Node_Table (N).Integer_Value := Count;
    end Set_Declaration_Count;
+
+   ----------------------------------
+   -- Set_Default_Monitoring_Level --
+   ----------------------------------
+
+   procedure Set_Default_Monitoring_Level
+     (Level : Assertion_Monitoring_Level)
+   is
+   begin
+      Local_Default_Monitoring_Level := Level;
+   end Set_Default_Monitoring_Level;
 
    ----------------
    -- Set_Entity --

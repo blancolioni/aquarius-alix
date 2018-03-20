@@ -166,6 +166,9 @@ package body Ack.Classes is
    is
    begin
       if not Class.Bound then
+         if Trace_Classes then
+            Ada.Text_IO.Put_Line ("auto-binding: " & Class.Description);
+         end if;
          Class.Bind;
       end if;
    end Check_Bound;
@@ -380,13 +383,13 @@ package body Ack.Classes is
       Descendent_Type  : not null access constant
         Ack.Types.Type_Entity_Record'Class;
       Ancestor_Class   : not null access constant Class_Entity_Record'Class)
-      return access Ack.Types.Type_Entity_Record'Class
+      return Class_Type_Access
    is
       function Get
         (Current_Type : not null access constant
            Ack.Types.Type_Entity_Record'Class;
          Current_Class : Class_Entity_Record'Class)
-         return Ack.Types.Type_Entity;
+         return Class_Type_Access;
 
       ---------
       -- Get --
@@ -396,14 +399,14 @@ package body Ack.Classes is
         (Current_Type  : not null access constant
            Ack.Types.Type_Entity_Record'Class;
          Current_Class : Class_Entity_Record'Class)
-         return Ack.Types.Type_Entity
+         return Class_Type_Access
       is
          use type Ack.Types.Type_Entity;
-         Result : Ack.Types.Type_Entity := null;
+         Result : Class_Type_Access;
       begin
          for Inherited of Current_Class.Inherited_Types loop
             if Inherited.Inherited_Type.Class = Ancestor_Class then
-               Result := Ack.Types.Type_Entity (Inherited.Inherited_Type);
+               Result := Class_Type_Access (Inherited.Inherited_Type);
                exit;
             end if;
          end loop;
@@ -411,13 +414,12 @@ package body Ack.Classes is
          if Result = null then
             for Inherited of Current_Class.Inherited_Types loop
                declare
-                  Ancestor : constant access
-                    Ack.Types.Type_Entity_Record'Class :=
+                  Ancestor : constant Class_Type_Access :=
                       Get (Inherited.Inherited_Type,
                            Inherited.Inherited_Type.Class.all);
                begin
                   if Ancestor /= null then
-                     Result := Ack.Types.Type_Entity (Ancestor);
+                     Result := Ancestor;
                      exit;
                   end if;
                end;
@@ -426,14 +428,16 @@ package body Ack.Classes is
 
          if Result /= null then
             Result :=
-              Ack.Types.Update_Type_Instantiation
-                (Result, Current_Type);
+              Class_Type_Access
+                (Result.Update_Type_Instantiation (Current_Type));
          end if;
+
          return Result;
       end Get;
 
    begin
-      return Get (Descendent_Type, Descendent_Class);
+      return Ancestor : constant Class_Type_Access :=
+        Get (Descendent_Type, Descendent_Class);
    end Get_Ancestor_Type;
 
    ----------------------
