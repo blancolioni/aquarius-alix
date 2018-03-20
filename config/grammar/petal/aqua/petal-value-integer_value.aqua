@@ -5,11 +5,15 @@ feature
    Make (Value : Integer)
      do
         I_Value := Value
+     ensure
+        I_Value = Value
      end
 
    To_String : String
       do
          Result := I_Value.To_String
+      ensure
+         Result = I_Value.To_String
       end
 
 feature

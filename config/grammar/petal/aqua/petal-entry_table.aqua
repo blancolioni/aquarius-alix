@@ -31,6 +31,7 @@ feature
    Insert (Entry : Petal.Entry)
    do
       Entry_List.Append (Entry)
+      Entry.Set_Table (Current)
    end
       
    Find (Name : String) : detachable Petal.Entry

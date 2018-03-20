@@ -9,6 +9,8 @@ feature
      end
 
    To_String : String
+      require
+         Not_Void: S_Value /= Void 
       do
          Result := S_Value
       end
