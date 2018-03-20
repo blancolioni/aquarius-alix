@@ -16,7 +16,7 @@ feature
    Is_Value      : Boolean
    Has_Table     : Boolean
    Table         : Petal.Entry_Table
-   Initialiser   : detachable Petal.Checks.Expression
+   Initialiser   : detachable Aquarius.Trees.Program_Tree
    Value         : detachable Petal.Value
    
    Create_Entry (Entry_Name    : String
@@ -30,7 +30,7 @@ feature
    end
 
    Create_Constant_Entry (Entry_Name        : String
-                          Entry_Initialiser : Petal.Checks.Expression
+                          Entry_Initialiser : Aquarius.Trees.Program_Tree
                           Entry_Parent      : detachable Petal.Entry
                           Entry_Type        : detachable Petal.Type)
    do
@@ -58,7 +58,7 @@ feature
    
    Create_Object_Entry (Entry_Name        : String
                         Entry_Type        : detachable Petal.Type
-                        Entry_Initialiser : Petal.Checks.Expression)
+                        Entry_Initialiser : Aquarius.Trees.Program_Tree)
    do
       Create_Entry (Entry_Name, Void, Entry_Type)
       Initialiser := Entry_Initialiser
