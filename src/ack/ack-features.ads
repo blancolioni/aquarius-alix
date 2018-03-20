@@ -180,6 +180,7 @@ private
          Once                : Boolean := False;
          Alias               : Name_Id;
          Original_Classes    : List_Of_Entities.List;
+         Definition_Class    : access Ack.Classes.Class_Entity_Record'Class;
          Effective_Class     : access Ack.Classes.Class_Entity_Record'Class;
          External_Object     : Ada.Strings.Unbounded.Unbounded_String;
          External_Type       : Ada.Strings.Unbounded.Unbounded_String;
