@@ -1,0 +1,25 @@
+class Options.Checks.Default_Value
+
+feature
+   Value_Image : String
+   
+   After_Numeric_Literal (Literal : String)
+      do
+         Value_Image := Literal
+      end
+      
+   After_Character_Literal (Literal : String)
+      do
+         Value_Image := Literal
+      end
+      
+   After_String_Literal (Literal : String)
+      do
+         Value_Image := Literal
+      end
+      
+   After_Identifier (Id : String)
+      do
+         Value_Image := Id
+      end
+end

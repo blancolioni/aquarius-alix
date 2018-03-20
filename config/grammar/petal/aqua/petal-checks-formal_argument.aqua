@@ -1,0 +1,30 @@
+class Petal.Checks.Formal_Argument
+inherit 
+   Petal.Context
+   Petal.Entry_Table
+   
+feature
+
+   Name  : String
+   Type  : detachable Petal.Type
+   Entry : detachable Petal.Entry
+   
+   After_Identifier (Id : String)
+   do
+      Name := Id
+   end
+     
+   After_Typeref (Child : Petal.Checks.Typeref)
+   do
+      Type := Child.Type
+   end
+   
+   After_Node
+   do
+      if attached Type then
+         create Entry
+         Entry.Create_Object_Entry (Name, Type, Void)
+      end
+   end
+   
+end

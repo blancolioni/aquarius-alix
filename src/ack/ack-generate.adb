@@ -43,10 +43,6 @@ package body Ack.Generate is
      (Unit      : in out Tagatha.Units.Tagatha_Unit;
       Loop_Node : Node_Id);
 
-   procedure Generate_Expression
-     (Unit       : in out Tagatha.Units.Tagatha_Unit;
-      Expression : Node_Id);
-
    procedure Generate_Operator_Expression
      (Unit          : in out Tagatha.Units.Tagatha_Unit;
       Operator_Node : Node_Id);
@@ -218,7 +214,8 @@ package body Ack.Generate is
            (Feature : not null access constant
               Ack.Features.Feature_Entity_Record'Class)
             return Boolean
-         is (Feature.Definition_Class = Entity);
+         is (not Feature.Is_Deferred
+             and then Feature.Effective_Class = Entity);
 
          procedure Generate_Feature
            (Feature : not null access constant
@@ -502,6 +499,8 @@ package body Ack.Generate is
             Generate_Precursor (Unit, Expression);
          when N_Attachment_Test =>
             Generate_Expression (Unit, Field_1 (Expression));
+         when N_Old =>
+            Generate_Expression (Unit, Field_1 (Expression));
          when N_Constant =>
             declare
                Value : constant Node_Id := Constant_Value (Expression);
@@ -568,11 +567,20 @@ package body Ack.Generate is
      (Unit      : in out Tagatha.Units.Tagatha_Unit;
       Loop_Node : Node_Id)
    is
-      Iteration_Node : constant Node_Id := Iteration (Loop_Node);
-      Loop_Body_Node : constant Node_Id := Loop_Body (Loop_Node);
-      Top_Label      : constant Positive := Unit.Next_Label;
-      Out_Label      : constant Positive := Unit.Next_Label;
+      Iteration_Node      : constant Node_Id := Loop_Iteration (Loop_Node);
+      Initialization_Node : constant Node_Id :=
+                              Loop_Initialization (Loop_Node);
+      Exit_Condition_Node : constant Node_Id :=
+                              Loop_Exit_Condition (Loop_Node);
+      Loop_Body_Node      : constant Node_Id := Loop_Body (Loop_Node);
+      Top_Label           : constant Positive := Unit.Next_Label;
+      Out_Label           : constant Positive := Unit.Next_Label;
    begin
+
+      if Initialization_Node /= No_Node then
+         Generate_Compound (Unit, Compound (Initialization_Node));
+      end if;
+
       if Iteration_Node /= No_Node then
          declare
             Expression_Node : constant Node_Id := Expression (Iteration_Node);
@@ -626,6 +634,12 @@ package body Ack.Generate is
       end if;
 
       Unit.Label (Top_Label);
+
+      if Exit_Condition_Node /= No_Node then
+         Generate_Expression (Unit, Expression (Exit_Condition_Node));
+         Unit.Operate (Tagatha.Op_Test);
+         Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
+      end if;
 
       Generate_Compound (Unit, Compound (Loop_Body_Node));
 
@@ -709,7 +723,9 @@ package body Ack.Generate is
             Unit.Label (Leave);
          end;
       else
-         Generate_Expression (Unit, Right);
+         if Right /= No_Node then
+            Generate_Expression (Unit, Right);
+         end if;
 
          if not Ack.Generate.Primitives.Generate_Operator
            (Unit      => Unit,

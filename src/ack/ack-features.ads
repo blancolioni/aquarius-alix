@@ -15,21 +15,30 @@ package Ack.Features is
    overriding procedure Bind
      (Feature : in out Feature_Entity_Record);
 
+   overriding procedure Save_Old_Value
+     (Feature : in out Feature_Entity_Record;
+      Node    : Node_Id);
+
+   overriding procedure Push_Old_Value
+     (Feature : in out Feature_Entity_Record;
+      Unit    : in out Tagatha.Units.Tagatha_Unit;
+      Node    : Node_Id);
+
    procedure Scan_Original_Classes
      (Feature : Feature_Entity_Record'Class;
       Process : not null access
         procedure (Class : not null access constant
                      Ack.Classes.Class_Entity_Record'Class));
 
-   function Definition_Class
-     (Feature : Feature_Entity_Record'Class)
-     return access constant Ack.Classes.Class_Entity_Record'Class;
-
    function Alias
      (Feature : Feature_Entity_Record'Class)
       return Name_Id;
 
    function Is_Creator
+     (Feature : Feature_Entity_Record'Class)
+      return Boolean;
+
+   function Is_Deferred
      (Feature : Feature_Entity_Record'Class)
       return Boolean;
 
@@ -40,6 +49,11 @@ package Ack.Features is
    function Is_External_Routine
      (Feature : Feature_Entity_Record'Class)
       return Boolean;
+
+   function Effective_Class
+     (Feature : Feature_Entity_Record'Class)
+      return access constant Ack.Classes.Class_Entity_Record'Class
+     with Pre => not Feature.Is_Deferred;
 
    procedure Set_Result_Type
      (Feature     : in out Feature_Entity_Record'Class;
@@ -78,6 +92,16 @@ package Ack.Features is
      (Feature    : in out Feature_Entity_Record'Class;
       Name_Node  : in     Node_Id;
       Local_Type : not null access Ack.Types.Type_Entity_Record'Class);
+
+   procedure Add_Precondition
+     (Feature   : in out Feature_Entity_Record'Class;
+      Tag       : Name_Id;
+      Condition : Node_Id);
+
+   procedure Add_Postcondition
+     (Feature   : in out Feature_Entity_Record'Class;
+      Tag       : Name_Id;
+      Condition : Node_Id);
 
    overriding procedure Add_Implicit
      (Feature    : in out Feature_Entity_Record;
@@ -130,6 +154,18 @@ private
      new Ada.Containers.Vectors
        (Positive, Ack.Variables.Variable_Entity, Ack.Variables."=");
 
+   package Old_Value_Vectors is
+     new Ada.Containers.Vectors (Positive, Node_Id);
+
+   type Assertion_Record is
+      record
+         Tag  : Name_Id;
+         Node : Node_Id;
+      end record;
+
+   package Assertion_Record_Lists is
+     new Ada.Containers.Doubly_Linked_Lists (Assertion_Record);
+
    type Feature_Entity_Record is
      new Root_Entity_Type with
       record
@@ -144,16 +180,22 @@ private
          Once                : Boolean := False;
          Alias               : Name_Id;
          Original_Classes    : List_Of_Entities.List;
-         Definition_Class    : access Ack.Classes.Class_Entity_Record'Class;
+         Effective_Class     : access Ack.Classes.Class_Entity_Record'Class;
          External_Object     : Ada.Strings.Unbounded.Unbounded_String;
          External_Type       : Ada.Strings.Unbounded.Unbounded_String;
          External_Label      : Ada.Strings.Unbounded.Unbounded_String;
          Arguments           : Variable_Vectors.Vector;
          Locals              : Variable_Vectors.Vector;
+         Olds                : Old_Value_Vectors.Vector;
+         Preconditions       : Assertion_Record_Lists.List;
+         Postconditions      : Assertion_Record_Lists.List;
          Routine_Node        : Node_Id;
          Explicit_Value_Node : Node_Id;
          Local_Count         : Natural := 0;
-      end record;
+      end record
+     with Invariant =>
+       Feature_Entity_Record.Deferred or else
+       Feature_Entity_Record.Effective_Class /= null;
 
    overriding function Instantiate
      (Entity             : not null access Feature_Entity_Record;
@@ -203,6 +245,11 @@ private
      (Feature : Feature_Entity_Record'Class)
       return Boolean
    is (Feature.Creator);
+
+   function Is_Deferred
+     (Feature : Feature_Entity_Record'Class)
+      return Boolean
+   is (Feature.Deferred);
 
    function Is_External_Routine
      (Feature : Feature_Entity_Record'Class)

@@ -236,7 +236,7 @@ tag ::=
          identifier
 	 
 old ::=
-         'old' expression
+         'old' primary
 	 
 only ::=
          'only' [ feature_list ]
@@ -354,12 +354,14 @@ type_interval ::=
          manifest_type '..' manifest_type
 	 
 loop ::=
-         [iteration] [initialization] [ invariant ] [exit_condition] loop_body [ variant ] 'end'
-	
+         iteration [initialization] [ invariant ] [exit_condition] loop_body [ variant ] 'end'
+       | initialization [ invariant ] [exit_condition] loop_body [ variant ] 'end'
+       
 iteration ::= 'across' expression 'as' identifier
     
 initialization ::=
          'from' compound
+         
 exit_condition ::=
          'until' until_expression
 
@@ -445,7 +447,7 @@ primary ::= manifest_constant
          | object_test
 	 
 boolean_operator ::=
-	'and' | 'and' 'then' | 'or' | 'or' 'else' | 'xor'
+	'and' | 'and' 'then' | 'or' | 'or' 'else' | 'xor' | 'implies'
 
 relational_operator ::= '=' | '/=' | '<' | '<=' | '>' | '>='
 
