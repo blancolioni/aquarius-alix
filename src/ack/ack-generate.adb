@@ -363,13 +363,18 @@ package body Ack.Generate is
       Creation : Node_Id)
    is
       Call_Node : constant Node_Id := Creation_Call (Creation);
+      Explicit_Type_Node : constant Node_Id :=
+                             Explicit_Creation_Type (Creation);
       Explicit_Call_Node : constant Node_Id :=
                              Explicit_Creation_Call (Call_Node);
+      Creation_Type      : constant Entity_Type :=
+                             (if Explicit_Type_Node in Real_Node_Id
+                              then Get_Entity (Explicit_Type_Node)
+                              else Get_Entity (Creation).Get_Type);
    begin
 
       Unit.Call
-        (Get_Entity (Creation).Get_Type.Link_Name
-         & "$allocate");
+        (Creation_Type.Link_Name & "$allocate");
       Unit.Push_Register ("r0");
       Get_Entity (Creation).Pop_Entity (Unit);
 
