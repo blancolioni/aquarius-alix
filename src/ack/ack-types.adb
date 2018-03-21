@@ -88,6 +88,20 @@ package body Ack.Types is
         or else (Recursive and then Typ.Class.Contains (Name));
    end Contains;
 
+   --------------
+   -- Deferred --
+   --------------
+
+   overriding function Deferred
+     (Typ : Type_Entity_Record)
+      return Boolean
+   is
+      use type Ack.Classes.Class_Entity;
+   begin
+      return Typ.Class /= null
+        and then Typ.Class.Deferred;
+   end Deferred;
+
    -----------------
    -- Description --
    -----------------
@@ -219,7 +233,7 @@ package body Ack.Types is
                            Ack.Classes.Constant_Class_Entity (Typ.Class);
          begin
 
-            if not Feature.Is_Deferred
+            if not Feature.Deferred
               and then Feature.Effective_Class /= Type_Class
             then
                Ancestor_Type :=

@@ -38,8 +38,8 @@ package Ack.Features is
      (Feature : Feature_Entity_Record'Class)
       return Boolean;
 
-   function Is_Deferred
-     (Feature : Feature_Entity_Record'Class)
+   overriding function Deferred
+     (Feature : Feature_Entity_Record)
       return Boolean;
 
    function Is_Property
@@ -53,7 +53,7 @@ package Ack.Features is
    function Effective_Class
      (Feature : Feature_Entity_Record'Class)
       return access constant Ack.Classes.Class_Entity_Record'Class
-     with Pre => not Feature.Is_Deferred;
+     with Pre => not Feature.Deferred;
 
    procedure Set_Result_Type
      (Feature     : in out Feature_Entity_Record'Class;
@@ -172,7 +172,7 @@ private
          Routine             : Boolean := False;
          Property            : Boolean := False;
          Explicit_Value      : Boolean := False;
-         Deferred            : Boolean := False;
+         Deferred_Feature    : Boolean := False;
          External            : Boolean := False;
          Creator             : Boolean := False;
          Has_Result          : Boolean := False;
@@ -247,10 +247,10 @@ private
       return Boolean
    is (Feature.Creator);
 
-   function Is_Deferred
-     (Feature : Feature_Entity_Record'Class)
+   overriding function Deferred
+     (Feature : Feature_Entity_Record)
       return Boolean
-   is (Feature.Deferred);
+   is (Feature.Deferred_Feature);
 
    function Is_External_Routine
      (Feature : Feature_Entity_Record'Class)

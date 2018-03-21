@@ -38,6 +38,10 @@ package Ack.Types is
      (Typ : Type_Entity_Record'Class)
       return Boolean;
 
+   overriding function Deferred
+     (Typ : Type_Entity_Record)
+      return Boolean;
+
    type Type_Entity is access all Type_Entity_Record'Class;
    type Constant_Type_Entity is access constant Type_Entity_Record'Class;
 
