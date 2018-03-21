@@ -1,4 +1,4 @@
-deferred class Petal.Type
+class Petal.Type
 create
    Make_Type
 feature
