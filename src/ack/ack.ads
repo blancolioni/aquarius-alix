@@ -192,6 +192,11 @@ package Ack is
 
    type Root_Entity_Type is abstract tagged private;
 
+   function Deferred
+     (Entity : Root_Entity_Type)
+      return Boolean
+   is abstract;
+
    type Entity_Type is access all Root_Entity_Type'Class;
    type Constant_Entity_Type is access constant Root_Entity_Type'Class;
 

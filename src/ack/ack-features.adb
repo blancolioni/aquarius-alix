@@ -595,6 +595,7 @@ package body Ack.Features is
       elsif Feature.Property then
          if not Feature.Get_Type.Detachable
            and then not Feature_Type.Expanded
+           and then not Feature_Type.Deferred
            and then not Feature.Attached
          then
 
@@ -723,7 +724,7 @@ package body Ack.Features is
    is
    begin
       if Feature.Original_Classes.Is_Empty then
-         if Feature.Is_Deferred then
+         if Feature.Deferred then
             null;
          else
             Process (Feature.Effective_Class);
@@ -811,7 +812,8 @@ package body Ack.Features is
    is
    begin
       Feature.Property := False;
-      Feature.Deferred := True;
+      Feature.Routine := True;
+      Feature.Deferred_Feature := True;
       Feature.Effective_Class := null;
       if Feature.Value_Type /= null then
          Feature.Has_Result := True;
@@ -883,6 +885,7 @@ package body Ack.Features is
       Original    : not null access Ack.Classes.Class_Entity_Record'Class)
    is
    begin
+      Feature.Property := False;
       Feature.Definition_Class := Original;
       Feature.Original_Classes.Append (Original);
    end Set_Redefined;

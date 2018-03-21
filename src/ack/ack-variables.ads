@@ -3,6 +3,11 @@ package Ack.Variables is
    type Variable_Entity_Record is
      new Root_Entity_Type with private;
 
+   overriding function Deferred
+     (Entity : Variable_Entity_Record)
+      return Boolean
+   is (False);
+
    procedure Set_Offset
      (Variable : in out Variable_Entity_Record'Class;
       Offset   : Positive);
