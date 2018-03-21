@@ -421,7 +421,7 @@ package body Ack.Semantic is
                  Ack.Features.Feature_Entity_Record'Class)
             is
             begin
-               if Feature.Is_Deferred then
+               if Feature.Deferred then
                   Error
                     (Node   => Class.Declaration_Node,
                      Kind   => E_Requires_Definition,
@@ -798,7 +798,12 @@ package body Ack.Semantic is
          Analyse_Type (Class, Explicit_Type_Node);
          if Get_Entity (Explicit_Type_Node) /= null then
             Created_Type := Get_Entity (Explicit_Type_Node);
+            if Created_Type.Deferred then
+               Error (Explicit_Type_Node, E_Create_Deferred_Class);
+            end if;
          end if;
+      elsif Created_Type.Deferred then
+         Error (Creation, E_Create_Deferred_Class);
       end if;
 
       if Explicit_Call_Node in Real_Node_Id then
