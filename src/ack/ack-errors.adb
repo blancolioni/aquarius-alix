@@ -47,6 +47,8 @@ package body Ack.Errors is
             return To_String (Get_Name (Node))
               & " is not a creator for "
               & Get_Error_Entity (Node).Description;
+         when E_Create_Deferred_Class =>
+            return "cannot create instance of deferred class";
          when E_Missing_Redefinition =>
             return "missing declaration for redefined feature "
               & To_String (Get_Name (Node));
