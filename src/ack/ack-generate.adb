@@ -205,8 +205,19 @@ package body Ack.Generate is
         ("io ="
          & Natural'Image (16#3000_0004#));
 
-      Generate_Allocator (Unit, Entity);
-      Generate_Default_Create (Unit, Entity);
+      Unit.Begin_Routine
+        (Entity.Link_Name & "$init",
+         Argument_Words => 0,
+         Frame_Words    => 0,
+         Result_Words   => 1,
+         Global         => True);
+
+      Unit.End_Routine;
+
+      if not Entity.Deferred then
+         Generate_Allocator (Unit, Entity);
+         Generate_Default_Create (Unit, Entity);
+      end if;
 
       declare
 
@@ -214,7 +225,7 @@ package body Ack.Generate is
            (Feature : not null access constant
               Ack.Features.Feature_Entity_Record'Class)
             return Boolean
-         is (not Feature.Is_Deferred
+         is (not Feature.Deferred
              and then Feature.Effective_Class = Entity);
 
          procedure Generate_Feature

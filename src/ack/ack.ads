@@ -111,6 +111,7 @@ package Ack is
       E_Redefined_Name,
       E_Not_Defined_In,
       E_Not_A_Create_Feature,
+      E_Create_Deferred_Class,
       E_Missing_Redefinition,
       E_No_Component,
       E_No_Child,
@@ -191,6 +192,11 @@ package Ack is
       return String;
 
    type Root_Entity_Type is abstract tagged private;
+
+   function Deferred
+     (Entity : Root_Entity_Type)
+      return Boolean
+   is abstract;
 
    type Entity_Type is access all Root_Entity_Type'Class;
    type Constant_Entity_Type is access constant Root_Entity_Type'Class;
