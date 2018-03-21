@@ -6,6 +6,8 @@ feature
    Make (Value : String)
      do
         S_Value := Value
+     ensure
+        Initialized: S_Value = Value
      end
 
    To_String : String
