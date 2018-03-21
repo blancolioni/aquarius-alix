@@ -3,4 +3,27 @@ inherit
    Petal.Context
    Petal.Expression
    
+feature
+
+   After_Simple_Expression (Child : Petal.Checks.Simple_Expression)
+      local
+         Op : Petal.Value
+      do
+         if attached Value then
+            create {Petal.Value.Operator_Value} Op.Make (Operator_Name, Value, Child.Value)
+            Value := Op
+         else
+            Value := Child.Value
+         end
+      end
+      
+   After_Relational_Operator (Child : Petal.Checks.Relational_Operator)
+      do
+         Operator_Name := Child.Concatenated_Image
+      end
+      
+feature
+   Operator_Name : String
+   
+   
 end

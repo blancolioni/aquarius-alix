@@ -762,7 +762,7 @@ package body Ack.Classes is
      (Class : in out Class_Entity_Record'Class)
    is
    begin
-      Class.Deferred := True;
+      Class.Deferred_Class := True;
    end Set_Deferred;
 
    ------------------

@@ -434,6 +434,7 @@ package body Ack.Features is
             Context            => Class);
          Feature.Alias := Alias;
          Feature.Effective_Class := Class;
+         Feature.Definition_Class := Class;
          Feature.Property := True;
       end return;
    end New_Feature;
@@ -477,13 +478,11 @@ package body Ack.Features is
       Unit         : in out Tagatha.Units.Tagatha_Unit)
    is
       Original_Class : constant Ack.Classes.Class_Entity :=
-                         (if Feature.Original_Classes.Is_Empty
-                          then Feature.Effective_Class
-                          else Ack.Classes.Class_Entity
-                            (Feature.Original_Classes.First_Element));
+                         Feature.Definition_Class;
       Feature_Type   : constant Ack.Types.Type_Entity :=
                          Ack.Types.Type_Entity (Feature.Get_Type);
    begin
+
       if Feature.Standard_Name = "void" then
          Unit.Push (0);
          return;
@@ -509,7 +508,9 @@ package body Ack.Features is
 
       Unit.Pop_Register ("op");
 
-      if Feature.Effective_Class.Standard_Name = "string" then
+      if not Feature.Deferred
+        and then Feature.Effective_Class.Standard_Name = "string"
+      then
          Unit.Native_Operation
            ("get_property " & Feature.Standard_Name & ","
             & Natural'Image (Feature.Argument_Count),
@@ -594,6 +595,7 @@ package body Ack.Features is
       elsif Feature.Property then
          if not Feature.Get_Type.Detachable
            and then not Feature_Type.Expanded
+           and then not Feature_Type.Deferred
            and then not Feature.Attached
          then
 
@@ -722,7 +724,7 @@ package body Ack.Features is
    is
    begin
       if Feature.Original_Classes.Is_Empty then
-         if Feature.Is_Deferred then
+         if Feature.Deferred then
             null;
          else
             Process (Feature.Effective_Class);
@@ -810,7 +812,8 @@ package body Ack.Features is
    is
    begin
       Feature.Property := False;
-      Feature.Deferred := True;
+      Feature.Routine := True;
+      Feature.Deferred_Feature := True;
       Feature.Effective_Class := null;
       if Feature.Value_Type /= null then
          Feature.Has_Result := True;
@@ -882,6 +885,8 @@ package body Ack.Features is
       Original    : not null access Ack.Classes.Class_Entity_Record'Class)
    is
    begin
+      Feature.Property := False;
+      Feature.Definition_Class := Original;
       Feature.Original_Classes.Append (Original);
    end Set_Redefined;
 

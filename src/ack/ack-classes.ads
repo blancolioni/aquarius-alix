@@ -50,8 +50,8 @@ package Ack.Classes is
       return String
      with Pre => Class.Has_Note (Name);
 
-   function Deferred
-     (Class : Class_Entity_Record'Class)
+   overriding function Deferred
+     (Class : Class_Entity_Record)
       return Boolean;
 
    function Expanded
@@ -232,7 +232,7 @@ private
      new Root_Entity_Type with
       record
          Generic_Class           : Boolean := False;
-         Deferred                : Boolean := False;
+         Deferred_Class          : Boolean := False;
          Expanded                : Boolean := False;
          Frozen                  : Boolean := False;
          Bound                   : Boolean := False;
@@ -326,10 +326,10 @@ private
       return Boolean
    is (Class.Behaviour = Aqua_Primitive);
 
-   function Deferred
-     (Class : Class_Entity_Record'Class)
+   overriding function Deferred
+     (Class : Class_Entity_Record)
       return Boolean
-   is (Class.Deferred);
+   is (Class.Deferred_Class);
 
    function Expanded
      (Class : Class_Entity_Record'Class)

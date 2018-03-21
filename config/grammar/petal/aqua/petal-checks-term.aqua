@@ -1,5 +1,28 @@
 class Petal.Checks.Term
 inherit
    Petal.Context
+   Petal.Expression
+   
+feature
+
+   After_Factor (Child : Petal.Checks.Factor)
+      local
+         Op : Petal.Value
+      do
+         if attached Value then
+            create {Petal.Value.Operator_Value} Op.Make (Operator_Name, Value, Child.Value)
+            Value := Op
+         else
+            Value := Child.Value
+         end
+      end
+      
+   After_Multiplying_Operator (Child : Petal.Checks.Multiplying_Operator)
+      do
+         Operator_Name := Child.Concatenated_Image
+      end
+      
+feature
+   Operator_Name : String
    
 end

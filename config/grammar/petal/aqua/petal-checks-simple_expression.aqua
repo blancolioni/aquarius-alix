@@ -1,5 +1,28 @@
 class Petal.Checks.Simple_Expression
 inherit
    Petal.Context
+   Petal.Expression
+   
+feature
+
+   After_Term (Child : Petal.Checks.Term)
+      local
+         Op : Petal.Value
+      do
+         if attached Value then
+            create {Petal.Value.Operator_Value} Op.Make (Operator_Name, Value, Child.Value)
+            Value := Op
+         else
+            Value := Child.Value
+         end
+      end
+      
+   After_Binary_Adding_Operator (Child : Petal.Checks.Binary_Adding_Operator)
+      do
+         Operator_Name := Child.Concatenated_Image
+      end
+      
+feature
+   Operator_Name : String
    
 end
