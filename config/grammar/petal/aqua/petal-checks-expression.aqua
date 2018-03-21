@@ -12,6 +12,7 @@ feature
       do
          if attached Value then
             create {Petal.Value.Operator_Value} Op.Make (Operator_Name, Value, Child.Value)
+            Value := Op
          else
             Value := Child.Value
          end

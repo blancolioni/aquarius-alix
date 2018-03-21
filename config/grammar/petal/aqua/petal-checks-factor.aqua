@@ -1,5 +1,13 @@
 class Petal.Checks.Factor
 inherit
    Petal.Context
+   Petal.Expression
    
+feature
+
+   After_Primary (Child : Petal.Checks.Primary)
+      do
+         Value := Child.Value
+      end
+      
 end
