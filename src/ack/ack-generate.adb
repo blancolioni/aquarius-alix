@@ -71,6 +71,8 @@ package body Ack.Generate is
 
       use type Ack.Classes.Class_Entity;
 
+      Current_Property : Name_Id := No_Name;
+
       procedure Set_Value
         (Feature : not null access constant
            Ack.Features.Feature_Entity_Record'Class);
@@ -114,7 +116,7 @@ package body Ack.Generate is
            Ack.Features.Feature_Entity_Record'Class)
       is
       begin
-         Feature.Set_Default_Value (Unit);
+         Feature.Set_Default_Value (Current_Property, Unit);
       end Set_Value;
 
    begin
