@@ -561,12 +561,16 @@ package body Ack.Features is
          return;
       end if;
 
-      if Feature.Routine
-        or else (Feature.Property
-                 and then not Feature_Type.Detachable
-                 and then not Feature_Type.Expanded
-                 and then not Feature.Attached)
+      if Feature.Property
+        and then not Feature_Type.Detachable
+        and then not Feature_Type.Expanded
+        and then not Feature_Type.Deferred
+        and then not Feature.Attached
       then
+         --  Save op in case we have to allocate
+         Unit.Push_Register ("op");
+      elsif Feature.Routine then
+         --  Push "Current"
          Unit.Push_Register ("op");
       end if;
 
