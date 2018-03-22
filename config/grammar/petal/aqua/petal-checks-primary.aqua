@@ -13,7 +13,6 @@ feature
    After_String_Literal (Image : String)
       do
          create { Petal.Value.String_Value } Value.Make (Image)
-         String_Literals.Insert (Image)
       end
       
    After_Object_Reference (Child : Petal.Checks.Object_Reference)
@@ -25,6 +24,16 @@ feature
                create { Petal.Value.Entry_Value } Value.Make (Child.Entry)
             end 
          end
+      end
+      
+   After_Sub_Expression (Child : Petal.Checks.Sub_Expression)
+      do
+         Value := Child.Value
+      end
+            
+   After_Aggregate (Child : Petal.Checks.Aggregate)
+      do
+         Value := Child.Value
       end
             
 end

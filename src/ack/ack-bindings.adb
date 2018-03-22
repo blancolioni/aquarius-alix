@@ -18,6 +18,7 @@ package body Ack.Bindings is
 
    Report_Calls          : constant Boolean := False;
    Report_Implicit_Calls : constant Boolean := False;
+   Report_Class_Load     : constant Boolean := False;
 
    package Link_Name_To_Class_Maps is
      new WL.String_Maps
@@ -517,6 +518,10 @@ package body Ack.Bindings is
                             .. Source_Name'Last)
                             else "");
       begin
+         if Report_Class_Load then
+            Ada.Text_IO.Put_Line ("loading: " & Source_Name);
+         end if;
+
          References.Clear;
          if Tree_Name /= "" then
             Ack.Bindings.Actions.Add_Tree (Binding_Table, Tree_Name);

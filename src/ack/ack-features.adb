@@ -561,12 +561,16 @@ package body Ack.Features is
          return;
       end if;
 
-      if Feature.Routine
-        or else (Feature.Property
-                 and then not Feature_Type.Detachable
-                 and then not Feature_Type.Expanded
-                 and then not Feature.Attached)
+      if Feature.Property
+        and then not Feature_Type.Detachable
+        and then not Feature_Type.Expanded
+        and then not Feature_Type.Deferred
+        and then not Feature.Attached
       then
+         --  Save op in case we have to allocate
+         Unit.Push_Register ("op");
+      elsif Feature.Routine then
+         --  Push "Current"
          Unit.Push_Register ("op");
       end if;
 
@@ -752,9 +756,11 @@ package body Ack.Features is
    -----------------------
 
    procedure Set_Default_Value
-     (Feature : Feature_Entity_Record;
-      Unit    : in out Tagatha.Units.Tagatha_Unit)
+     (Feature          : Feature_Entity_Record;
+      Current_Property : in out Name_Id;
+      Unit             : in out Tagatha.Units.Tagatha_Unit)
    is
+
       procedure Set (Class : not null access constant
                        Ack.Classes.Class_Entity_Record'Class);
 
@@ -766,16 +772,21 @@ package body Ack.Features is
                        Ack.Classes.Class_Entity_Record'Class)
       is
       begin
-         Unit.Push_Register ("agg");
-         Unit.Pop_Register ("op");
-         Unit.Native_Operation
-           ("get_property "
-            & Class.Link_Name & ",0",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-         Unit.Push_Register ("pv");
-         Unit.Pop_Register ("op");
+         if Current_Property = No_Name
+           or else Class.Link_Name /= To_Standard_String (Current_Property)
+         then
+            Unit.Push_Register ("agg");
+            Unit.Pop_Register ("op");
+            Unit.Native_Operation
+              ("get_property "
+               & Class.Link_Name & ",0",
+               Input_Stack_Words  => 0,
+               Output_Stack_Words => 0,
+               Changed_Registers  => "pv");
+            Unit.Push_Register ("pv");
+            Unit.Pop_Register ("op");
+            Current_Property := Get_Name_Id (Class.Link_Name);
+         end if;
 
          if Feature.Property then
             Unit.Push (0);

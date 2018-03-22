@@ -1,13 +1,23 @@
 class Aqua.Containers.Linked_List[G]
    inherit Aqua.Containers.Forward_Iterable[G]
               redefine First end
-   
+           Aqua.Containers.Container[G]
+              redefine Clear end
+              
 feature{Aqua.Containers.Linked_List_Iterator}
 
    First_Cell : detachable Aqua.Containers.Linkable[G]
    Last_Cell  : detachable Aqua.Containers.Linkable[G]
    
 feature
+
+   Clear
+      do
+         First_Cell := Void
+         Last_Cell  := Void
+      ensure
+         Is_Empty
+      end
 
    Is_Empty : Boolean
       do
