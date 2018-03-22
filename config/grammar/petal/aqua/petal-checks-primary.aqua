@@ -26,5 +26,15 @@ feature
             end 
          end
       end
+      
+   After_Sub_Expression (Child : Petal.Checks.Sub_Expression)
+      do
+         Value := Child.Value
+      end
+            
+   After_Aggregate (Child : Petal.Checks.Aggregate)
+      do
+         Value := Child.Value
+      end
             
 end
