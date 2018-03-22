@@ -384,7 +384,8 @@ package Ack is
    procedure Error
      (Node   : Node_Id;
       Kind   : Error_Kind;
-      Entity : access constant Root_Entity_Type'Class := null);
+      Entity : access constant Root_Entity_Type'Class := null)
+     with Pre => Kind /= E_Undeclared_Name or else Has_Name (Node);
 
    function Get_Program
      (N : Node_Id)
@@ -439,15 +440,18 @@ package Ack is
    function Identifiers (N : Node_Id) return List_Id
      with Pre => Kind (N) in N_Class_Name | N_Entity_Declaration_Group;
 
-   function Get_Name (N : Node_Id) return Name_Id
-     with Pre =>
-       Kind (N) in N_Identifier | N_Feature_Name | N_Feature_Alias | N_Variable
-                 | N_Integer_Constant | N_String_Constant | N_Boolean_Constant
+   function Has_Name (N : Node_Id) return Boolean
+   is (Kind (N) in N_Identifier | N_Feature_Name | N_Feature_Alias
+         | N_Variable | N_Integer_Constant | N_String_Constant
+         | N_Boolean_Constant
                  | N_Effective_Routine | N_Precursor_Element
                  | N_Explicit_Creation_Call
                  | N_Formal_Generic_Name | N_Get_Property
                  | N_Attachment_Test | N_Iteration | N_Operator
-                 | N_Note_Name | N_Note_Item | N_Assertion_Clause;
+         | N_Note_Name | N_Note_Item | N_Assertion_Clause);
+
+   function Get_Name (N : Node_Id) return Name_Id
+     with Pre => Has_Name (N);
 
    function Get_Entity (N : Node_Id) return Entity_Type;
    function Has_Entity (N : Node_Id) return Boolean;
