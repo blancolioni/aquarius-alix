@@ -4,37 +4,13 @@ inherit
    
 feature
    
-   Insert (S : String)
-      local
-         Found : Boolean
+   Insert (S : Petal.Value) : String
       do
-         across Table as Entry
-         from
-            Found := False
-         until 
-            Found
-         loop
-            Found := Entry.Text = S
-         end
-         
-         if Found then
-         else
-            Next_Index := Next_Index + 1
-            New_Entry (S, "S" & Next_Index.To_String) 
-         end
+         Next_Index := Next_Index + 1
+         Result := "S" & Next_Index.To_String
+         New_Entry (S, Result) 
       end
          
-   Label (S : String) : String
-      do
-         across Table as Entry
-         until Result /= Void
-         loop
-            if Entry.Text = S then
-               Result := Entry.Label
-            end
-         end
-      end
-      
    Declare_Strings
       do
          across Table as Entry loop
@@ -42,7 +18,7 @@ feature
             Put (Entry.Label)
             Set_Col (8)
             Put (": constant String := ")
-            Put (Entry.Text)
+            Put (Entry.Value.To_String)
             Put (";")
             New_Line
          end
@@ -50,7 +26,7 @@ feature
       
 feature {None}
 
-   New_Entry (S : String; Label : String)
+   New_Entry (S : Petal.Value; Label : String)
       local
          E : Petal.String_Entry
       do

@@ -13,7 +13,6 @@ feature
    After_String_Literal (Image : String)
       do
          create { Petal.Value.String_Value } Value.Make (Image)
-         String_Literals.Insert (Image)
       end
       
    After_Object_Reference (Child : Petal.Checks.Object_Reference)
