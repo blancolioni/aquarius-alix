@@ -786,7 +786,7 @@ package body Ack.Semantic is
    begin
 
       if Created_Entity = null then
-         Error (Creation, E_Undeclared_Name);
+         Error (Variable_Node, E_Undeclared_Name);
          return;
       end if;
 
