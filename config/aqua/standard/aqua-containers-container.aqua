@@ -1,27 +1,15 @@
 deferred class Aqua.Containers.Container [Element]
 
-   First_Element : Element
-      require
-         Not_Empty: not Is_Empty
-      deferred
-      end
-      
-   Last_Element : Element
-      require
-         Not_Empty: not Is_Empty
-      deferred
-      end
-      
+feature
+
    Is_Empty : Boolean
       deferred
-      ensure
-         Empty_Is_Zero_Length: Result = (Length = 0)
       end
       
-   Length : Natural
+   Clear
       deferred
       ensure
-         Zero_Length_Is_Empty: (Result = 0) = Is_Empty
+         Is_Empty
       end
-      
+
 end
