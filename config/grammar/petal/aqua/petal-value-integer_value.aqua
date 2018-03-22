@@ -1,12 +1,11 @@
 class Petal.Value.Integer_Value
-inherit Petal.Value redefine To_String end Aqua.Text_IO
+inherit Petal.Value redefine To_String end
 create Make
    
 feature
    Make (Value : Integer)
      do
         I_Value := Value
-        Put_Line ("integer value: " & Value.To_String & " " & I_Value.To_String)
      ensure
         I_Value = Value
      end
