@@ -290,7 +290,13 @@ package body Ack.Types is
         Ack.Classes.Class_Entity_Record'Class)
       return access constant Type_Entity_Record'Class
    is
+      use Ack.Classes;
    begin
+      if Constant_Class_Entity (Typ.Class)
+        = Constant_Class_Entity (Ancestor)
+      then
+         return Typ;
+      end if;
       return Typ.Class.Get_Ancestor_Type (Typ, Ancestor);
    end Get_Ancestor_Type;
 
