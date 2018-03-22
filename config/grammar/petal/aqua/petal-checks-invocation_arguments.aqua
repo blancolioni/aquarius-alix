@@ -2,4 +2,20 @@ class Petal.Checks.Invocation_Arguments
 inherit
    Petal.Context
 
+feature
+
+   Invoke : Petal.Statements.Invoke
+   
+   Set_Invoke_Statement (S : Petal.Statements.Invoke)
+      do
+         Invoke := S
+      end
+
+feature
+
+   Before_Invocation_Argument (Child : Petal.Checks.Invocation_Argument)
+      do 
+         Child.Set_Invoke_Statement (Invoke)      
+      end
+      
 end

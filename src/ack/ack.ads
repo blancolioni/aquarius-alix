@@ -126,7 +126,8 @@ package Ack is
       E_Ignored_Return_Value,
       E_Requires_Value,
       E_Requires_Definition,
-      E_Illegal_Redefinition
+      E_Illegal_Redefinition,
+      E_Not_An_Iterator
      );
 
    type Assertion_Monitoring_Level is

@@ -14,6 +14,15 @@ package body Aquarius.Command_Line is
                          return String
      with Pre => Short_Name /= "" or else Long_Name /= "";
 
+   -----------------------
+   -- Ack_Write_Listing --
+   -----------------------
+
+   function Ack_Write_Listing return Boolean is
+   begin
+      return Get_Flag ("", "ack-write-listing");
+   end Ack_Write_Listing;
+
    ------------
    -- Action --
    ------------

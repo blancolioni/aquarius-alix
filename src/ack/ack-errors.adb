@@ -95,6 +95,9 @@ package body Ack.Errors is
          when E_Illegal_Redefinition =>
             return "illegal redefinition of "
               & Get_Error_Entity (Node).Declared_Name;
+         when E_Not_An_Iterator =>
+            return "type " & Get_Error_Entity (Node).Declared_Name
+              & " is not traversable";
       end case;
    end Error_Message;
 

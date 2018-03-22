@@ -1,4 +1,4 @@
-class Petal.Checks.Aggregate_Item
+class Petal.Checks.Sub_Expression
 inherit
    Petal.Context
    Petal.Expression

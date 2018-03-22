@@ -2,6 +2,7 @@ with Tagatha.Operands;
 with Tagatha.Units;
 with Tagatha.Units.Listing;
 
+with Aquarius.Command_Line;
 with Aquarius.Config_Paths;
 
 with Ack.Classes;
@@ -16,7 +17,6 @@ with Ack.IO;
 package body Ack.Generate is
 
    Report_Allocation : constant Boolean := False;
-   Write_Listing     : constant Boolean := False;
 
    procedure Generate_Allocator
      (Unit  : in out Tagatha.Units.Tagatha_Unit;
@@ -71,6 +71,8 @@ package body Ack.Generate is
 
       use type Ack.Classes.Class_Entity;
 
+      Current_Property : Name_Id := No_Name;
+
       procedure Set_Value
         (Feature : not null access constant
            Ack.Features.Feature_Entity_Record'Class);
@@ -114,7 +116,7 @@ package body Ack.Generate is
            Ack.Features.Feature_Entity_Record'Class)
       is
       begin
-         Feature.Set_Default_Value (Unit);
+         Feature.Set_Default_Value (Current_Property, Unit);
       end Set_Value;
 
    begin
@@ -253,7 +255,7 @@ package body Ack.Generate is
 
       Unit.Finish_Unit;
 
-      if Write_Listing then
+      if Aquarius.Command_Line.Ack_Write_Listing then
          Tagatha.Units.Listing.Write_Command_Listing (Unit);
          Tagatha.Units.Listing.Write_Transfer_Listing (Unit);
       end if;
