@@ -11,10 +11,13 @@ feature
    After_Cap_And_Endpoint (Child : Petal.Checks.Cap_And_Endpoint)
       do
          if attached Child.Cap_Entry then 
-            create Invoke
-            Invoke.Make (Child.Cap_Entry, Child.Endpoint)
-            Put_Line ("invoke: " & Child.Cap_Entry.Name & "/" & Child.Endpoint.To_String)
+            create Invoke.Make (Child.Cap_Entry, Child.Endpoint)
          end
       end
 
+   Before_Invocation_Arguments (Child : Petal.Checks.Invocation_Arguments)
+      do
+         Child.Set_Invoke_Statement (Invoke)
+      end
+            
 end
