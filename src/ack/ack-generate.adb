@@ -692,7 +692,9 @@ package body Ack.Generate is
 
       Generate_Compound (Unit, Compound (Loop_Body_Node));
 
-      if Iteration_Node /= No_Node then
+      if Iteration_Node = No_Node then
+         Unit.Jump (Top_Label, Tagatha.C_Always);
+      else
          Unit.Pop_Register ("op");
          Unit.Push_Register ("op");
          Unit.Push_Register ("op");
