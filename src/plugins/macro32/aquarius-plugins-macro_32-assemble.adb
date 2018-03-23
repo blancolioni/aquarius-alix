@@ -263,7 +263,13 @@ package body Aquarius.Plugins.Macro_32.Assemble is
             Assembly.Bind_Action (Group_Name, Position = "before",
                                   Parent, Child);
          end;
-
+      elsif Name = "start" then
+         declare
+            Start : constant String :=
+                      Arguments (1).Chosen_Tree.Text;
+         begin
+            Assembly.Set_Start_Label (Start);
+         end;
       elsif Name = "source_file" then
          Assembly.Set_Source_File
            (Arguments (1).Chosen_Tree.Text);
