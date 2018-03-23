@@ -13,4 +13,8 @@ package Ack.Compile is
                    Feature      : not null access constant
                      Root_Entity_Type'Class));
 
+   procedure Load_Root_Class
+     (Source_Path : String;
+      To_Image    : Aqua.Images.Image_Type);
+
 end Ack.Compile;
