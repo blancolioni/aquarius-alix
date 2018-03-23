@@ -181,7 +181,8 @@ package body Ack.Generate is
    --------------------------------
 
    procedure Generate_Class_Declaration
-     (Node : Node_Id)
+     (Node : Node_Id;
+      Root : Boolean)
    is
       Unit : Tagatha.Units.Tagatha_Unit;
       Entity : constant Ack.Classes.Class_Entity :=
@@ -206,6 +207,36 @@ package body Ack.Generate is
       Unit.Directive
         ("io ="
          & Natural'Image (16#3000_0004#));
+
+      if Root then
+         Unit.Directive (".start " & Entity.Link_Name & "$main");
+         Unit.Begin_Routine
+           (Name           => Entity.Link_Name & "$main",
+            Argument_Words => 0,
+            Frame_Words    => 0,
+            Result_Words   => 0,
+            Global         => True);
+         Unit.Call (Entity.Link_Name & "$allocate");
+         Unit.Push_Register ("r0");
+         Unit.Pop_Register ("op");
+         Unit.Push_Register ("op");
+         Unit.Native_Operation
+           ("get_property " & Entity.Link_Name & ",0",
+            Input_Stack_Words  => 0,
+            Output_Stack_Words => 0,
+            Changed_Registers  => "pv");
+         Unit.Push_Register ("pv");
+         Unit.Pop_Register ("op");
+         Unit.Native_Operation
+           ("get_property make,0",
+            Input_Stack_Words  => 0,
+            Output_Stack_Words => 0,
+            Changed_Registers  => "pv");
+         Unit.Push_Register ("pv");
+         Unit.Indirect_Call;
+         Unit.Drop;
+         Unit.End_Routine;
+      end if;
 
       Unit.Begin_Routine
         (Entity.Link_Name & "$init",

@@ -24,10 +24,21 @@ package body Ack.Compile is
 
    procedure Load_Class
      (Source_Path : String;
-      To_Image    : Aqua.Images.Image_Type);
+      To_Image    : Aqua.Images.Image_Type;
+      Root        : Boolean := False);
 
    procedure Generate_Object_Code
      (Base_Name   : String);
+
+   procedure Compile_Class
+     (Source_Path      : String;
+      To_Image         : Aqua.Images.Image_Type;
+      Root_Class       : Boolean;
+      Feature_Callback : access
+        procedure (Class        : not null access constant
+                     Ack.Classes.Class_Entity_Record'Class;
+                   Feature      : not null access constant
+                     Root_Entity_Type'Class));
 
    -------------------
    -- Compile_Class --
@@ -36,6 +47,7 @@ package body Ack.Compile is
    procedure Compile_Class
      (Source_Path : String;
       To_Image    : Aqua.Images.Image_Type;
+      Root_Class  : Boolean;
       Feature_Callback : access
         procedure (Class        : not null access constant
                      Ack.Classes.Class_Entity_Record'Class;
@@ -46,7 +58,7 @@ package body Ack.Compile is
                     Ada.Directories.Base_Name (Source_Path);
    begin
       if not Class_Object_Paths.Contains (Base_Name) then
-         Load_Class (Source_Path, To_Image);
+         Load_Class (Source_Path, To_Image, Root_Class);
 
          if not Ack.Errors.Has_Errors then
 
@@ -103,6 +115,23 @@ package body Ack.Compile is
 
    end Compile_Class;
 
+   -------------------
+   -- Compile_Class --
+   -------------------
+
+   procedure Compile_Class
+     (Source_Path      : String;
+      To_Image         : Aqua.Images.Image_Type;
+      Feature_Callback : access
+        procedure (Class        : not null access constant
+                     Ack.Classes.Class_Entity_Record'Class;
+                   Feature      : not null access constant
+                     Root_Entity_Type'Class))
+   is
+   begin
+      Compile_Class (Source_Path, To_Image, False, Feature_Callback);
+   end Compile_Class;
+
    --------------------------
    -- Generate_Object_Code --
    --------------------------
@@ -130,7 +159,8 @@ package body Ack.Compile is
 
    procedure Load_Class
      (Source_Path : String;
-      To_Image    : Aqua.Images.Image_Type)
+      To_Image    : Aqua.Images.Image_Type;
+      Root        : Boolean := False)
    is
       Base_Name : constant String :=
                     Ada.Directories.Base_Name (Source_Path);
@@ -180,7 +210,7 @@ package body Ack.Compile is
                   Ada.Text_IO.Put_Line
                     ("generating " & Base_Name);
                   Ack.Generate.Generate_Class_Declaration
-                    (Loaded_Classes.Element (Base_Name));
+                    (Loaded_Classes.Element (Base_Name), Root);
 
                   Generate_Object_Code (Base_Name);
                end if;
@@ -194,5 +224,20 @@ package body Ack.Compile is
       end if;
 
    end Load_Class;
+
+   ---------------------
+   -- Load_Root_Class --
+   ---------------------
+
+   procedure Load_Root_Class
+     (Source_Path : String;
+      To_Image    : Aqua.Images.Image_Type)
+   is
+   begin
+      Compile_Class (Source_Path, To_Image,
+                     Root_Class => True,
+                     Feature_Callback => null);
+      To_Image.Link;
+   end Load_Root_Class;
 
 end Ack.Compile;
