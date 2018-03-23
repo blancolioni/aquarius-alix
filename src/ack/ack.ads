@@ -445,10 +445,10 @@ package Ack is
    is (Kind (N) in N_Identifier | N_Feature_Name | N_Feature_Alias
          | N_Variable | N_Integer_Constant | N_String_Constant
          | N_Boolean_Constant
-                 | N_Effective_Routine | N_Precursor_Element
-                 | N_Explicit_Creation_Call
-                 | N_Formal_Generic_Name | N_Get_Property
-                 | N_Attachment_Test | N_Iteration | N_Operator
+         | N_Effective_Routine | N_Precursor_Element
+         | N_Explicit_Creation_Call
+         | N_Formal_Generic_Name | N_Get_Property
+         | N_Attachment_Test | N_Iteration | N_Operator
          | N_Note_Name | N_Note_Item | N_Assertion_Clause);
 
    function Get_Name (N : Node_Id) return Name_Id

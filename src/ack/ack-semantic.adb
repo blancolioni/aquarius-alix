@@ -1435,6 +1435,83 @@ package body Ack.Semantic is
       Notes : Node_Id)
    is
       List : constant List_Id := Node_Table.Element (Notes).List;
+
+      function To_String
+        (List : List_Id)
+         return String;
+
+      ---------------
+      -- To_String --
+      ---------------
+
+      function To_String
+        (List : List_Id)
+         return String
+      is
+         use Ada.Strings.Unbounded;
+         Result : Unbounded_String;
+
+         procedure Add_Note_Item
+           (Note_Item : Node_Id)
+           with Pre => Kind (Note_Item) = N_Note_Item;
+
+         procedure Add_Note_Text
+           (Text : String);
+
+         -------------------
+         -- Add_Note_Item --
+         -------------------
+
+         procedure Add_Note_Item
+           (Note_Item : Node_Id)
+         is
+            Item : constant Node_Id := Field_1 (Note_Item);
+         begin
+            if Kind (Item) = N_Identifier then
+               Add_Note_Text (To_String (Get_Name (Item)));
+            elsif Kind (Item) = N_Constant then
+               declare
+                  Value : constant Node_Id := Field_2 (Item);
+               begin
+                  case N_Constant_Value (Kind (Value)) is
+                     when N_String_Constant =>
+                        Add_Note_Text (To_String (Get_Name (Value)));
+                     when N_Integer_Constant =>
+                        Add_Note_Text (To_String (Get_Name (Value)));
+                     when N_Boolean_Constant =>
+                        Add_Note_Text (if Boolean_Value (Value)
+                                       then "True" else "False");
+                  end case;
+               end;
+            else
+               raise Constraint_Error with
+               Get_Program (Item).Show_Location
+                 & ": expected an identifier or a constant, but found "
+                 & Node_Kind'Image (Kind (Item));
+            end if;
+         end Add_Note_Item;
+
+         -------------------
+         -- Add_Note_Text --
+         -------------------
+
+         procedure Add_Note_Text
+           (Text : String)
+         is
+         begin
+            if Result = Null_Unbounded_String then
+               Result := To_Unbounded_String (Text);
+            else
+               Result := Result & Character'Val (10)
+                 & Text;
+            end if;
+         end Add_Note_Text;
+
+      begin
+         Scan (List, Add_Note_Item'Access);
+         return To_String (Result);
+      end To_String;
+
    begin
       for Note of List_Table.Element (List).List loop
          declare
@@ -1442,12 +1519,10 @@ package body Ack.Semantic is
             Value : constant Node_Id := Note_Value (Note);
             Value_List : constant List_Id :=
                            Node_Table.Element (Value).List;
-            First_Value : constant Node_Id :=
-                            List_Table.Element (Value_List).List.First_Element;
          begin
             Class.Add_Note
               (Name  => To_Standard_String (Name),
-               Value => To_Standard_String (Get_Name (Field_1 (First_Value))));
+               Value => To_String (Value_List));
          end;
       end loop;
    end Analyse_Notes;
