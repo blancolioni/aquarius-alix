@@ -1,0 +1,36 @@
+class 
+   Test
+inherit
+   Aqua.Text_IO
+   
+feature
+
+   Test_List : Aqua.Containers.Linked_List [Unit_Test]
+   
+   Create_Test_List
+      local
+         T : Unit_Test
+      do
+         create { Test_Class_Load } T
+         Test_List.Append (T)
+         create { Test_Simple_Loop } T
+         Test_List.Append (T)
+      end
+
+   Make
+      do
+         Create_Test_List
+         Put_Line ("Running tests ...")
+         across Test_List as T loop
+            Put (T.Name)
+            Set_Col (20)
+            T.Execute
+            if T.Success then
+               Put_Line ("PASS")
+            else
+               Put_Line ("FAIL: " & T.Fail_Message)
+            end
+         end
+      end
+
+end
