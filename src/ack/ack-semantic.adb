@@ -1292,11 +1292,13 @@ package body Ack.Semantic is
       ------------------
 
       procedure Set_Redefine (Node : Node_Id) is
+         Name : constant Name_Id := Get_Name (Node);
       begin
-         if Inherited_Class.Has_Feature (Get_Name (Node)) then
-            if Class.Has_Feature (Get_Name (Node)) then
-               Class.Feature (Get_Name (Node)).Set_Redefined
-                 (Inherited_Class);
+         if Inherited_Class.Has_Feature (Name) then
+            if Class.Has_Feature (Name) then
+               Class.Feature (Name).Set_Redefined
+                 (Original_Feature =>
+                    Inherited_Class.Feature (Name));
             else
                Error (Node, E_Missing_Redefinition,
                       Entity_Type (Inherited_Class));

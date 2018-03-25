@@ -71,8 +71,9 @@ package Ack.Features is
      (Feature     : in out Feature_Entity_Record'Class);
 
    procedure Set_Redefined
-     (Feature     : in out Feature_Entity_Record'Class;
-      Original    : not null access Ack.Classes.Class_Entity_Record'Class);
+     (Feature          : in out Feature_Entity_Record'Class;
+      Original_Feature : not null access constant
+        Feature_Entity_Record'Class);
 
    procedure Set_External
      (Feature        : in out Feature_Entity_Record'Class;
