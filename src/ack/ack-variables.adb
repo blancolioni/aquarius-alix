@@ -124,14 +124,14 @@ package body Ack.Variables is
                Unit.Pop_Register ("op");
                Unit.Push_Register ("op");
                Unit.Native_Operation
-                 ("get_property aqua__containers__forward_iterator, 0",
+                 ("get_property aqua__iteration_cursor, 0",
                   Input_Stack_Words  => 0,
                   Output_Stack_Words => 0,
                   Changed_Registers  => "pv");
                Unit.Push_Register ("pv");
                Unit.Pop_Register ("op");
                Unit.Native_Operation
-                 ("get_property item, 0",
+                 ("get_property element, 0",
                   Input_Stack_Words  => 0,
                   Output_Stack_Words => 0,
                   Changed_Registers  => "pv");

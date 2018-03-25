@@ -16,7 +16,7 @@ feature
          Next.Put (Other)
       ensure
          Have_Next: Next /= Void
-         Chained: Next.Item = Other
+         Chained: Next.Element = Other
       end
       
    Remove_Next

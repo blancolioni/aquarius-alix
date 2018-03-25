@@ -2,11 +2,11 @@ class Aqua.Containers.Cell[G]
 
 feature
 
-   Item : G
+   Element : G
    
    Put (V : G) 
       do
-         Item := V
+         Element := V
       ensure
-         Item_Put: Item = V
+         Element_Put: Element = V
       end
