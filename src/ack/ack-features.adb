@@ -892,13 +892,16 @@ package body Ack.Features is
    -------------------
 
    procedure Set_Redefined
-     (Feature     : in out Feature_Entity_Record'Class;
-      Original    : not null access Ack.Classes.Class_Entity_Record'Class)
+     (Feature          : in out Feature_Entity_Record'Class;
+      Original_Feature : not null access constant
+        Feature_Entity_Record'Class)
    is
    begin
       Feature.Property := False;
-      Feature.Definition_Class := Original;
-      Feature.Original_Classes.Append (Original);
+      Feature.Definition_Class :=
+        Original_Feature.Definition_Class;
+      Feature.Original_Classes.Append
+        (Original_Feature.Definition_Class);
    end Set_Redefined;
 
    ---------------------
