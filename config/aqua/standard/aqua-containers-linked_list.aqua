@@ -1,6 +1,6 @@
 class Aqua.Containers.Linked_List[G]
    inherit Aqua.Containers.Forward_Iterable[G]
-              redefine First end
+              redefine New_Cursor end
            Aqua.Containers.Container[G]
               redefine Clear end
               
@@ -23,10 +23,10 @@ feature
       do
          Result := First_Cell = Void
       ensure
-         Result = (First_Cell = Void)
+         Definition_Of_Is_Empty: Result = (First_Cell = Void)
       end
 
-   First : Linked_List_Iterator[G]
+   New_Cursor : Linked_List_Iterator[G]
       do
          create Result
          Result.Make (Current)
@@ -36,14 +36,14 @@ feature
       require
          Not_Empty: not Is_Empty
       do
-         Result := First_Cell.Item
+         Result := First_Cell.Element
       end
       
    Last_Element : G
       require
          Not_Empty: not Is_Empty
       do
-         Result := Last_Cell.Item
+         Result := Last_Cell.Element
       end
       
    Append (New_Item : G)

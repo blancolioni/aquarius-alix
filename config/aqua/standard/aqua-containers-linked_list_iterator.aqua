@@ -1,13 +1,13 @@
-class Aqua.Containers.Linked_List_Iterator [Element] inherit
-   Aqua.Containers.Forward_Iterator[Element]
-      redefine Item, Next, At_Start, At_End, Off_End end
+class Aqua.Containers.Linked_List_Iterator [Element_Type] inherit
+   Aqua.Containers.Forward_Iterator[Element_Type]
+      redefine Element, Next, At_Start, At_End, After end
          
    create
       Make
       
 feature{Aqua.Containers.Linked_List}
 
-   Make (List : Aqua.Containers.Linked_List[Element]) 
+   Make (List : Aqua.Containers.Linked_List[Element_Type]) 
       do
          Current_List := List
          Current_Linkable := Current_List.First_Cell
@@ -15,9 +15,9 @@ feature{Aqua.Containers.Linked_List}
    
 feature
 
-   Item : Element
+   Element : Element_Type
       do
-         Result := Current_Linkable.Item
+         Result := Current_Linkable.Element
       end
       
    Next
@@ -35,14 +35,14 @@ feature
          Result := Current_Linkable /= Void and then Current_Linkable = Current_List.Last_Cell
       end
       
-   Off_End : Boolean
+   After : Boolean
       do
          Result := Current_Linkable = Void
       end
    
 feature{None}
 
-   Current_Linkable : detachable Aqua.Containers.Linkable[Element]
-   Current_List     : Aqua.Containers.Linked_List[Element]
+   Current_Linkable : detachable Aqua.Containers.Linkable[Element_Type]
+   Current_List     : Aqua.Containers.Linked_List[Element_Type]
    
 end

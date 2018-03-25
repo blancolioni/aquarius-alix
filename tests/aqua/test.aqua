@@ -13,9 +13,9 @@ feature
       do
          create { Test_Class_Load } T
          Test_List.Append (T)
-         create { Test_Simple_Loop } T
-         Test_List.Append (T)
          create { Test_Manual_Iterator } T
+         Test_List.Append (T)
+         create { Test_Simple_Loop } T
          Test_List.Append (T)
       end
 

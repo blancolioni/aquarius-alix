@@ -636,18 +636,18 @@ package body Ack.Generate is
          begin
             Generate_Expression (Unit, Expression_Node);
             Unit.Pop_Register ("r0");
-            Unit.Push_Register ("r0");  --  'current' argument to First
+            Unit.Push_Register ("r0");  --  'current' argument to New_Cursor
             Unit.Push_Register ("r0");  --  sent to op
             Unit.Pop_Register ("op");
             Unit.Native_Operation
-              ("get_property aqua__containers__forward_iterable, 0",
+              ("get_property aqua__iterable, 0",
                Input_Stack_Words  => 0,
                Output_Stack_Words => 0,
                Changed_Registers  => "pv");
             Unit.Push_Register ("pv");
             Unit.Pop_Register ("op");
             Unit.Native_Operation
-              ("get_property first, 0",
+              ("get_property new_cursor, 0",
                Input_Stack_Words  => 0,
                Output_Stack_Words => 0,
                Changed_Registers  => "pv");
@@ -663,14 +663,14 @@ package body Ack.Generate is
          Unit.Push_Register ("op");
          Unit.Push_Register ("op");
          Unit.Native_Operation
-           ("get_property aqua__containers__forward_iterator, 0",
+           ("get_property aqua__iteration_cursor, 0",
             Input_Stack_Words  => 0,
             Output_Stack_Words => 0,
             Changed_Registers  => "pv");
          Unit.Push_Register ("pv");
          Unit.Pop_Register ("op");
          Unit.Native_Operation
-           ("get_property off_end, 0",
+           ("get_property after, 0",
             Input_Stack_Words  => 0,
             Output_Stack_Words => 0,
             Changed_Registers  => "pv");
@@ -699,7 +699,7 @@ package body Ack.Generate is
          Unit.Push_Register ("op");
          Unit.Push_Register ("op");
          Unit.Native_Operation
-           ("get_property aqua__containers__forward_iterator, 0",
+           ("get_property aqua__iteration_cursor, 0",
             Input_Stack_Words  => 0,
             Output_Stack_Words => 0,
             Changed_Registers  => "pv");
@@ -717,14 +717,14 @@ package body Ack.Generate is
          Unit.Push_Register ("op");
          Unit.Push_Register ("op");
          Unit.Native_Operation
-           ("get_property aqua__containers__forward_iterator, 0",
+           ("get_property aqua__iteration_cursor, 0",
             Input_Stack_Words  => 0,
             Output_Stack_Words => 0,
             Changed_Registers  => "pv");
          Unit.Push_Register ("pv");
          Unit.Pop_Register ("op");
          Unit.Native_Operation
-           ("get_property off_end, 0",
+           ("get_property after, 0",
             Input_Stack_Words  => 0,
             Output_Stack_Words => 0,
             Changed_Registers  => "pv");

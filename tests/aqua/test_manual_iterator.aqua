@@ -27,11 +27,11 @@ feature
          Sum := 0
          
          from
-            It := Vs.First
+            It := Vs.New_Cursor
          until
-            It.Off_End
+            It.After
          loop
-            Sum := Sum + It.Item
+            Sum := Sum + It.Element
             It.Next
          end
          
