@@ -68,12 +68,14 @@ package body Ack.Classes is
       Name  : String;
       Value : String)
    is
+      Std : constant String :=
+              Ada.Characters.Handling.To_Lower (Value);
    begin
       Class.Notes.Insert (Name, Value);
       if Name = "behaviour" then
-         if Value = "normal" then
+         if Std = "normal" then
             Class.Behaviour := Normal;
-         elsif Value = "aqua_primitive" then
+         elsif Std = "aqua_primitive" then
             Class.Behaviour := Aqua_Primitive;
          else
             raise Constraint_Error with
