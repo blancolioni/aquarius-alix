@@ -243,14 +243,14 @@ package body Ack.Features is
             Result_Words   => Result_Count,
             Global         => True);
 
-         Unit.Directive (".exception "
-                         & Feature.Link_Name
-                         & " "
-                         & Rescue_Label
-                         & " "
-                         & Rescue_Label);
-
          if Feature.Rescue_Node in Real_Node_Id then
+            Unit.Directive (".exception "
+                            & Feature.Link_Name
+                            & " "
+                            & Rescue_Label
+                            & " "
+                            & Rescue_Label);
+
             Unit.Label (Feature.Link_Name & "$retry");
          end if;
 
@@ -269,7 +269,13 @@ package body Ack.Features is
                      & (if Clause.Tag = No_Name then ""
                        else ": " & To_String (Clause.Tag)));
                   Unit.Pop_Register ("r0");
-                  Unit.Jump (Rescue_Label);
+                  if Feature.Rescue_Node in Real_Node_Id then
+                     Unit.Jump (Rescue_Label);
+                  else
+                     Unit.Push_Register ("pc");
+                     Unit.Native_Operation ("trap 15", 0, 0, "");
+                  end if;
+
                   Unit.Label (Out_Label);
                end;
             end loop;
@@ -366,7 +372,12 @@ package body Ack.Features is
                         & (if Clause.Tag = No_Name then ""
                           else ": " & To_String (Clause.Tag)));
                      Unit.Pop_Register ("r0");
-                     Unit.Jump (Rescue_Label);
+                     if Feature.Rescue_Node in Real_Node_Id then
+                        Unit.Jump (Rescue_Label);
+                     else
+                        Unit.Push_Register ("pc");
+                        Unit.Native_Operation ("trap 15", 0, 0, "");
+                     end if;
                      Unit.Label (Out_Label);
                   end;
                end loop;
@@ -388,7 +399,7 @@ package body Ack.Features is
 
          Unit.Jump (Exit_Label, Tagatha.C_Always);
 
-         Unit.Label (Feature.Link_Name & "$rescue", True);
+         Unit.Label (Feature.Link_Name & "$rescue", Export => True);
          if Feature.Rescue_Node in Real_Node_Id then
             Unit.Set_Property ("retry_label", Feature.Link_Name & "$retry");
             Ack.Generate.Generate_Compound
