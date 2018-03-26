@@ -145,6 +145,17 @@ package body Ack.Semantic is
       Container : not null access Root_Entity_Type'Class;
       Loop_Node : Node_Id);
 
+   procedure Analyse_Check
+     (Class     : Ack.Classes.Class_Entity;
+      Container : not null access Root_Entity_Type'Class;
+      Check     : Node_Id)
+   is null;
+
+   procedure Analyse_Retry
+     (Class      : Ack.Classes.Class_Entity;
+      Container  : not null access Root_Entity_Type'Class;
+      Retry      : Node_Id);
+
    procedure Analyse_Boolean_Expression
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
@@ -717,6 +728,10 @@ package body Ack.Semantic is
                   Container       => Container,
                   Expression_Type => null,
                   Precursor       => Node);
+            when N_Check =>
+               Analyse_Check (Class, Container, Node);
+            when N_Retry =>
+               Analyse_Retry (Class, Container, Node);
          end case;
       end Analyse;
 
@@ -1014,6 +1029,10 @@ package body Ack.Semantic is
                              (if Routine_Feature
                               then Postcondition (Value_Node)
                               else No_Node);
+      Rescue_Node        : constant Node_Id :=
+                             (if Routine_Feature
+                              then Rescue (Value_Node)
+                              else No_Node);
       Locals_Node        : constant Node_Id :=
                              (if Value_Node = No_Node then No_Node
                               else Local_Declarations (Value_Node));
@@ -1112,6 +1131,11 @@ package body Ack.Semantic is
                                      Assertion (Postcondition_Node),
                                      Add_Postcondition'Access);
                end;
+            end if;
+
+            if Rescue_Node /= No_Node then
+               Analyse_Compound (Class, Entity, Compound (Rescue_Node));
+               Entity.Set_Rescue_Node (Rescue_Node);
             end if;
 
             if Internal then
@@ -1704,6 +1728,19 @@ package body Ack.Semantic is
 
    end Analyse_Precursor;
 
+   -------------------
+   -- Analyse_Retry --
+   -------------------
+
+   procedure Analyse_Retry
+     (Class      : Ack.Classes.Class_Entity;
+      Container  : not null access Root_Entity_Type'Class;
+      Retry      : Node_Id)
+   is
+   begin
+      null;
+   end Analyse_Retry;
+
    ------------------
    -- Analyse_Type --
    ------------------
@@ -1720,6 +1757,10 @@ package body Ack.Semantic is
             Analyse_Anchored_Type (Class, Type_Node);
       end case;
    end Analyse_Type;
+
+   ----------------------
+   -- Forward_Iterable --
+   ----------------------
 
    function Forward_Iterable return Ack.Classes.Class_Entity is
       Container_Name    : constant Name_Id := Get_Name_Id ("containers");

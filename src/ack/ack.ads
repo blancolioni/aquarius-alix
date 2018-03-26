@@ -77,6 +77,8 @@ package Ack is
       N_Creation_Instruction,
       N_Conditional,
       N_Loop,
+      N_Check,
+      N_Retry,
       N_Precursor,
       N_Operator,
       N_Attachment_Test,
@@ -530,7 +532,7 @@ package Ack is
      with Pre => Kind (N) = N_Assertion;
 
    function Rescue (N : Node_Id) return Node_Id
-     with Pre => Kind (N) = N_Rescue;
+     with Pre => Kind (N) = N_Routine;
 
    function Local_Declarations (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Routine,
@@ -666,6 +668,7 @@ private
          Single          : Boolean    := False;
          Once            : Boolean    := False;
          Detachable      : Boolean    := False;
+         Inherited       : Boolean    := False;
          Implicit_Entity : Boolean    := False;
          Field           : Node_Field_Array := (others => No_Node);
          List            : List_Id    := No_List;
@@ -987,6 +990,12 @@ private
       return Constant_Entity_Type
    is (Node_Table.Element (Node).Error_Entity);
 
+   function Require_Else (Node : Node_Id) return Boolean
+   is (Node_Table.Element (Node).Inherited);
+
+   function Ensure_Then (Node : Node_Id) return Boolean
+   is (Node_Table.Element (Node).Inherited);
+
    function New_Node
      (Kind       : Node_Kind;
       From       : Aquarius.Programs.Program_Tree;
@@ -996,6 +1005,7 @@ private
       Defining   : Boolean     := False;
       Once       : Boolean     := False;
       Detachable : Boolean     := False;
+      Inherited  : Boolean     := False;
       Field_1    : Node_Id     := No_Node;
       Field_2    : Node_Id     := No_Node;
       Field_3    : Node_Id     := No_Node;
