@@ -22,19 +22,42 @@ feature
       end
 
    Make
+      local
+         Number_Of_Tests : Integer
+         Passed_Tests    : Integer
+         Failed_Tests    : Integer
       do
          Create_Test_List
          Put_Line ("Running tests ...")
          across Test_List as T loop
+            Number_Of_Tests := Number_Of_Tests + 1
             Put (T.Name)
             Set_Col (30)
             T.Execute
             if T.Success then
                Put_Line ("PASS")
+               Passed_Tests := Passed_Tests + 1
             else
                Put_Line ("FAIL: " & T.Fail_Message)
+               Failed_Tests := Failed_Tests + 1
             end
          end
+      
+         Put_Line ("Tests: " & Number_Of_Tests.To_String
+                  & "; passed: " & Passed_Tests.To_String
+                  & "; failed: " & Failed_Tests.To_String)
+         
       end
 
+feature {None}
+
+   N_Items (N : Integer; Item : String) : String
+      do
+         if N = 1 then
+            Result := N.To_String & " " & Item
+         else
+            Result := N.To_String & " " & Item & "s"
+         end
+      end
+      
 end
