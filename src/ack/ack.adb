@@ -268,6 +268,7 @@ package body Ack is
       Defining   : Boolean     := False;
       Once       : Boolean     := False;
       Detachable : Boolean     := False;
+      Inherited  : Boolean     := False;
       Field_1    : Node_Id     := No_Node;
       Field_2    : Node_Id     := No_Node;
       Field_3    : Node_Id     := No_Node;
@@ -286,7 +287,8 @@ package body Ack is
               (Kind => Kind, From => From, Deferred => Deferred,
                Expanded => Expanded, Frozen => Frozen,
                Defining => Defining, Single => False, Once => Once,
-               Detachable => Detachable, Implicit_Entity => False,
+               Detachable      => Detachable, Inherited => Inherited,
+               Implicit_Entity => False,
                Field    =>
                  (1 => Field_1,
                   2 => Field_2,
