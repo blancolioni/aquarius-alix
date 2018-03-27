@@ -226,6 +226,8 @@ package body Ack.Features is
       Once_Value_Label : constant String :=
                            "once_value$" & Feature.Link_Name;
       Exit_Label       : constant Positive := Unit.Next_Label;
+      Rescue_Label     : constant String :=
+                          Feature.Link_Name & "$rescue";
    begin
       if Feature.Routine then
 
@@ -240,6 +242,17 @@ package body Ack.Features is
             Frame_Words    => 0,
             Result_Words   => Result_Count,
             Global         => True);
+
+         if Feature.Rescue_Node in Real_Node_Id then
+            Unit.Directive (".exception "
+                            & Feature.Link_Name
+                            & " "
+                            & Rescue_Label
+                            & " "
+                            & Rescue_Label);
+
+            Unit.Label (Feature.Link_Name & "$retry");
+         end if;
 
          if Feature.Declaration_Context.Monitor_Preconditions then
             for Clause of Feature.Preconditions loop
@@ -256,7 +269,13 @@ package body Ack.Features is
                      & (if Clause.Tag = No_Name then ""
                        else ": " & To_String (Clause.Tag)));
                   Unit.Pop_Register ("r0");
-                  Unit.Native_Operation ("halt");
+                  if Feature.Rescue_Node in Real_Node_Id then
+                     Unit.Jump (Rescue_Label);
+                  else
+                     Unit.Push_Register ("pc");
+                     Unit.Native_Operation ("trap 15", 0, 0, "");
+                  end if;
+
                   Unit.Label (Out_Label);
                end;
             end loop;
@@ -353,7 +372,12 @@ package body Ack.Features is
                         & (if Clause.Tag = No_Name then ""
                           else ": " & To_String (Clause.Tag)));
                      Unit.Pop_Register ("r0");
-                     Unit.Native_Operation ("halt");
+                     if Feature.Rescue_Node in Real_Node_Id then
+                        Unit.Jump (Rescue_Label);
+                     else
+                        Unit.Push_Register ("pc");
+                        Unit.Native_Operation ("trap 15", 0, 0, "");
+                     end if;
                      Unit.Label (Out_Label);
                   end;
                end loop;
@@ -372,6 +396,20 @@ package body Ack.Features is
             Unit.Push_Local (1);
             Unit.Pop_Result;
          end if;
+
+         Unit.Jump (Exit_Label, Tagatha.C_Always);
+
+         Unit.Label (Feature.Link_Name & "$rescue", Export => True);
+         if Feature.Rescue_Node in Real_Node_Id then
+            Unit.Set_Property ("retry_label", Feature.Link_Name & "$retry");
+            Ack.Generate.Generate_Compound
+              (Unit, Compound (Feature.Rescue_Node));
+            Unit.Clear_Property ("retry_label");
+         end if;
+
+         Unit.Native_Operation ("mov fp, sp", 0, 0, "sp");
+         Unit.Native_Operation ("mov (sp)+, fp", 1, 0, "sp,fp");
+         Unit.Native_Operation ("trap 15", 1, 0, "r0");
 
          Unit.Label (Exit_Label);
          Unit.End_Routine;
@@ -903,6 +941,18 @@ package body Ack.Features is
       Feature.Original_Classes.Append
         (Original_Feature.Definition_Class);
    end Set_Redefined;
+
+   ---------------------
+   -- Set_Rescue_Node --
+   ---------------------
+
+   procedure Set_Rescue_Node
+     (Feature : in out Feature_Entity_Record'Class;
+      Node    : Node_Id)
+   is
+   begin
+      Feature.Rescue_Node := Node;
+   end Set_Rescue_Node;
 
    ---------------------
    -- Set_Result_Type --

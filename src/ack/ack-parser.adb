@@ -342,6 +342,17 @@ package body Ack.Parser is
       return Node_Id
    with Pre => From.Name = "loop";
 
+   function Import_Check
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     with Pre => From.Name = "check";
+
+   function Import_Retry
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     is (New_Node (N_Retry, From))
+     with Pre => From.Name = "retry";
+
    function Import_Variable
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
@@ -420,6 +431,20 @@ package body Ack.Parser is
            Ack.Parser.Expressions.Import_Expression
              (From.Program_Child ("expression")));
    end Import_Assignment;
+
+   ------------------
+   -- Import_Check --
+   ------------------
+
+   function Import_Check
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+   begin
+      return New_Node
+        (N_Check, From,
+         Field_1 => Import_Assertion (From.Program_Child ("assertion")));
+   end Import_Check;
 
    -------------------
    -- Import_Choice --
@@ -1032,6 +1057,8 @@ package body Ack.Parser is
                     Import_Creation_Instruction'Access);
             Insert ("conditional", Import_Conditional'Access);
             Insert ("loop", Import_Loop'Access);
+            Insert ("check", Import_Check'Access);
+            Insert ("retry", Import_Retry'Access);
             Insert ("precursor", Expressions.Import_Precursor'Access);
          end;
       end if;
@@ -1304,8 +1331,14 @@ package body Ack.Parser is
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
    is
+      use type Aquarius.Programs.Program_Tree;
+      Require_Else : constant Aquarius.Programs.Program_Tree :=
+                       From.Program_Child ("else");
    begin
       return New_Node (N_Precondition, From,
+                       Inherited =>
+                         Require_Else /= null
+                       and then Require_Else.Is_Filled,
                        Field_1 =>
                          Import_Assertion (From.Program_Child ("assertion")));
    end Import_Precondition;

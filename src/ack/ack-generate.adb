@@ -51,6 +51,15 @@ package body Ack.Generate is
      (Unit      : in out Tagatha.Units.Tagatha_Unit;
       Precursor : Node_Id);
 
+   procedure Generate_Check
+     (Unit  : in out Tagatha.Units.Tagatha_Unit;
+      Check : Node_Id)
+   is null;
+
+   procedure Generate_Retry
+     (Unit  : in out Tagatha.Units.Tagatha_Unit;
+      Retry : Node_Id);
+
    procedure Generate_Set_Value
      (Unit    : in out Tagatha.Units.Tagatha_Unit;
       Node    : Node_Id);
@@ -332,6 +341,10 @@ package body Ack.Generate is
             when N_Precursor =>
                Generate_Precursor (Unit, Instruction);
                Unit.Drop;
+            when N_Check =>
+               Generate_Check (Unit, Instruction);
+            when N_Retry =>
+               Generate_Retry (Unit, Instruction);
          end case;
       end Generate_Instruction;
 
@@ -877,6 +890,25 @@ package body Ack.Generate is
       end loop;
 
    end Generate_Precursor;
+
+   --------------------
+   -- Generate_Retry --
+   --------------------
+
+   procedure Generate_Retry
+     (Unit  : in out Tagatha.Units.Tagatha_Unit;
+      Retry : Node_Id)
+   is
+      Target : constant String := Unit.Get_Property ("retry_label");
+   begin
+      if Target /= "" then
+         Unit.Jump (Target);
+      else
+         raise Constraint_Error with
+         Get_Program (Retry).Show_Location
+           & ": expected to be in a rescue context";
+      end if;
+   end Generate_Retry;
 
    ------------------------
    -- Generate_Set_Value --

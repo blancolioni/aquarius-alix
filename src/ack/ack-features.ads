@@ -104,6 +104,10 @@ package Ack.Features is
       Tag       : Name_Id;
       Condition : Node_Id);
 
+   procedure Set_Rescue_Node
+     (Feature : in out Feature_Entity_Record'Class;
+      Node    : Node_Id);
+
    overriding procedure Add_Implicit
      (Feature    : in out Feature_Entity_Record;
       Implicit_Entity : not null access Root_Entity_Type'Class);
@@ -194,6 +198,7 @@ private
          Postconditions      : Assertion_Record_Lists.List;
          Routine_Node        : Node_Id;
          Explicit_Value_Node : Node_Id;
+         Rescue_Node         : Node_Id;
          Local_Count         : Natural := 0;
       end record
      with Invariant =>
