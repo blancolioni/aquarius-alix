@@ -180,9 +180,7 @@ begin
    if Command_Line.Clear_Cache then
       Clear_Cache;
       Ada.Text_IO.Put_Line ("Finished clearing cache");
-      if Aquarius.Command_Line.Ack_Execute_Root = "" then
-         return;
-      end if;
+      return;
    end if;
 
    Komnenos.Themes.Load_Theme
