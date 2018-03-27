@@ -139,6 +139,61 @@ package body Ack.Features is
       Feature.Local_Count := Next_Local - 1;
    end Bind;
 
+   ------------------------
+   -- Check_Precondition --
+   ------------------------
+
+   procedure Check_Precondition
+     (Feature       : Feature_Entity_Record'Class;
+      Unit          : in out Tagatha.Units.Tagatha_Unit;
+      Success_Label : Positive;
+      Fail_Label    : Natural)
+   is
+   begin
+      if Feature.Redefined_Feature /= null then
+         declare
+            Ancestor_Fail : constant Positive := Unit.Next_Label;
+         begin
+            Feature.Redefined_Feature.Check_Precondition
+              (Unit          => Unit,
+               Success_Label => Success_Label,
+               Fail_Label    => Ancestor_Fail);
+            Unit.Label (Ancestor_Fail);
+         end;
+      end if;
+
+      for Clause of Feature.Preconditions loop
+         declare
+            Out_Label : constant Positive := Unit.Next_Label;
+         begin
+            Ack.Generate.Generate_Expression (Unit, Clause.Node);
+            Unit.Operate (Tagatha.Op_Test);
+            Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
+
+            if Fail_Label > 0 then
+               Unit.Jump (Fail_Label, Tagatha.C_Always);
+            else
+               Unit.Push_Text
+                 (Get_Program (Clause.Node).Show_Location
+                  & ": assertion failure in precondition of "
+                  & Feature.Qualified_Name
+                  & (if Clause.Tag = No_Name then ""
+                    else ": " & To_String (Clause.Tag)));
+               Unit.Pop_Register ("r0");
+
+               if Feature.Rescue_Node in Real_Node_Id then
+                  Unit.Jump (Feature.Link_Name & "$rescue");
+               else
+                  Unit.Push_Register ("pc");
+                  Unit.Native_Operation ("trap 15", 0, 0, "");
+               end if;
+            end if;
+
+            Unit.Label (Out_Label);
+         end;
+      end loop;
+   end Check_Precondition;
+
    -----------------
    -- Description --
    -----------------
@@ -255,30 +310,16 @@ package body Ack.Features is
          end if;
 
          if Feature.Declaration_Context.Monitor_Preconditions then
-            for Clause of Feature.Preconditions loop
-               declare
-                  Out_Label : constant Positive := Unit.Next_Label;
-               begin
-                  Ack.Generate.Generate_Expression (Unit, Clause.Node);
-                  Unit.Operate (Tagatha.Op_Test);
-                  Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
-                  Unit.Push_Text
-                    (Get_Program (Clause.Node).Show_Location
-                     & ": assertion failure in precondition of "
-                     & Feature.Qualified_Name
-                     & (if Clause.Tag = No_Name then ""
-                       else ": " & To_String (Clause.Tag)));
-                  Unit.Pop_Register ("r0");
-                  if Feature.Rescue_Node in Real_Node_Id then
-                     Unit.Jump (Rescue_Label);
-                  else
-                     Unit.Push_Register ("pc");
-                     Unit.Native_Operation ("trap 15", 0, 0, "");
-                  end if;
+            declare
+               Success_Label : constant Positive := Unit.Next_Label;
+            begin
+               Feature.Check_Precondition
+                 (Unit          => Unit,
+                  Success_Label => Success_Label,
+                  Fail_Label    => 0);
+               Unit.Label (Success_Label);
+            end;
 
-                  Unit.Label (Out_Label);
-               end;
-            end loop;
          end if;
 
          if Feature.External then
@@ -940,6 +981,8 @@ package body Ack.Features is
         Original_Feature.Definition_Class;
       Feature.Original_Classes.Append
         (Original_Feature.Definition_Class);
+      Feature.Redefined_Feature :=
+        Constant_Feature_Entity (Original_Feature);
    end Set_Redefined;
 
    ---------------------

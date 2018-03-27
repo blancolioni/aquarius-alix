@@ -1,0 +1,50 @@
+class Aqua.Containers.List_Map[Key,Element]
+   inherit Aqua.Containers.Linked_List(List_Map_Element[Key,Element])
+           Aqua.Containers.Map[Key,Element]
+              redefine Contains, Item, Insert, Delete, Replace end
+              
+feature
+
+   Contains (K : Key) : Boolean
+      do
+         Result := Internal_Find (K) /= Void
+      end
+   
+   Item (K : Key) : Element
+      do
+         Result := Internal_Find (K)
+      end
+      
+   Insert (K : Key; E : Element)
+      local
+         New_Element : Aqua.Containers.List_Map_Element[Key,Element]
+      do
+         create New_Element.Make (K, E)
+         Append (New_Element)
+      end
+      
+    Delete (K : Key)
+      require
+         Contains (K)
+      local
+         Old_List : List_Map[Key,Element]
+      do
+         Old_List := Current
+         Clear
+         across Old_List as Item loop
+            if Item.Key /= K then
+               Append (Item)
+            end
+         end
+      end
+      
+    Replace (K : Key; E : Element)
+       do
+          across Current as Item loop
+             if Item.Key = K then
+                Item.Set_Element (E)
+             end
+          end
+       end
+      
+end

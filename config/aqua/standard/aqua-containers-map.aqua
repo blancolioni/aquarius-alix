@@ -1,0 +1,43 @@
+deferred class Aqua.Containers.Map[Key,Element]
+
+feature
+
+   Contains (K : Key) : Boolean
+      deferred
+      end
+   
+   Item (K : Key) : Element
+      require
+         Contains (K)
+      deferred
+      end
+      
+   Insert (K : Key; E : Element)
+      require
+         not Contains (K)
+      deferred
+      ensure
+         Key_Inserted: Contains (K)
+         Element_Inserted: Item (K) = E
+      end
+      
+    Delete (K : Key)
+      require
+         Contains (K)
+      deferred
+      ensure
+         not Contains (K)
+      end
+      
+    Replace (K : Key; E : Element)
+       require
+          Contains (K)
+       do
+          Delete (K)
+          Insert (K, E)
+       ensure
+          Contains (K)
+          Item (K) = Element
+       end
+      
+end

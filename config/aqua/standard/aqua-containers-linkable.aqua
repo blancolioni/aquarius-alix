@@ -26,3 +26,16 @@ feature
          Not_Chained: Next = Void
       end
       
+feature { Aqua.Containers.Linked_List_Iterator }
+    
+    Delete_Next
+       do
+          Next := Next.Next
+       end
+
+    Join (Other : Linkable [G])
+       do
+          Next := Other
+       end
+    
+end

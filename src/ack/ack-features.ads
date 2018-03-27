@@ -129,6 +129,7 @@ package Ack.Features is
       Unit    : in out Tagatha.Units.Tagatha_Unit);
 
    type Feature_Entity is access all Feature_Entity_Record'Class;
+   type Constant_Feature_Entity is access constant Feature_Entity_Record'Class;
 
    function New_Feature
      (Name        : Name_Id;
@@ -188,6 +189,7 @@ private
          Original_Classes    : List_Of_Entities.List;
          Definition_Class    : access Ack.Classes.Class_Entity_Record'Class;
          Effective_Class     : access Ack.Classes.Class_Entity_Record'Class;
+         Redefined_Feature   : Constant_Feature_Entity;
          External_Object     : Ada.Strings.Unbounded.Unbounded_String;
          External_Type       : Ada.Strings.Unbounded.Unbounded_String;
          External_Label      : Ada.Strings.Unbounded.Unbounded_String;
@@ -238,6 +240,12 @@ private
    overriding procedure Pop_Entity
      (Feature : Feature_Entity_Record;
       Unit    : in out Tagatha.Units.Tagatha_Unit);
+
+   procedure Check_Precondition
+     (Feature       : Feature_Entity_Record'Class;
+      Unit          : in out Tagatha.Units.Tagatha_Unit;
+      Success_Label : Positive;
+      Fail_Label    : Natural);
 
    function Alias
      (Feature : Feature_Entity_Record'Class)
