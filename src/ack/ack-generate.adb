@@ -786,6 +786,32 @@ package body Ack.Generate is
             Generate_Expression (Unit, Right);
             Unit.Label (Leave);
          end;
+      elsif Operator = Get_Name_Id ("orelse") then
+         declare
+            Maybe : constant Positive := Unit.Next_Label;
+            Leave : constant Positive := Unit.Next_Label;
+         begin
+            Unit.Operate (Tagatha.Op_Test);
+            Unit.Jump (Maybe, Tagatha.C_Equal);
+            Unit.Push (1);
+            Unit.Jump (Leave);
+            Unit.Label (Maybe);
+            Generate_Expression (Unit, Right);
+            Unit.Label (Leave);
+         end;
+      elsif Operator = Get_Name_Id ("implies") then
+         declare
+            Maybe : constant Positive := Unit.Next_Label;
+            Leave : constant Positive := Unit.Next_Label;
+         begin
+            Unit.Operate (Tagatha.Op_Test);
+            Unit.Jump (Maybe, Tagatha.C_Not_Equal);
+            Unit.Push (1);
+            Unit.Jump (Leave);
+            Unit.Label (Maybe);
+            Generate_Expression (Unit, Right);
+            Unit.Label (Leave);
+         end;
       else
          if Right /= No_Node then
             Generate_Expression (Unit, Right);
