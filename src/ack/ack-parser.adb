@@ -248,6 +248,11 @@ package body Ack.Parser is
       return Node_Id is (No_Node)
    with Pre => From.Name = "anchored";
 
+   function Import_Tuple_Type
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   with Pre => From.Name = "tuple_type";
+
    function Import_Actual_Generics
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
@@ -1428,6 +1433,22 @@ package body Ack.Parser is
       return Result (1 .. Count);
    end Import_String_Constant;
 
+   -----------------------
+   -- Import_Tuple_Type --
+   -----------------------
+
+   function Import_Tuple_Type
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+   begin
+      return Node : constant Node_Id :=
+        New_Node (N_Tuple_Type, From,
+                  List =>
+                    Import_List
+                      (From, "type", Import_Type'Access));
+   end Import_Tuple_Type;
+
    -----------------
    -- Import_Type --
    -----------------
@@ -1444,6 +1465,8 @@ package body Ack.Parser is
          Choice_Node := Import_Class_Type (Choice_Tree);
       elsif Choice_Tree.Name = "anchored" then
          Choice_Node := Import_Anchored (Choice_Tree);
+      elsif Choice_Tree.Name = "tuple_type" then
+         Choice_Node := Import_Tuple_Type (Choice_Tree);
       else
          raise Constraint_Error with
            "invalid type choice: " & Choice_Tree.Name;

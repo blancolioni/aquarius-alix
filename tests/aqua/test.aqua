@@ -25,6 +25,8 @@ feature
          Test_List.Append (T)
          create { Test_Weaker_Precondition } T
          Test_List.Append (T)
+         create { Test_Simple_Tuples } T
+         Test_List.Append (T)
       end
 
    Make

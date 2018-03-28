@@ -63,7 +63,7 @@ package Ack.Types is
    function Get_Type_Entity
      (Node : Node_Id)
       return Type_Entity
-     with Pre => Kind (Node) in N_Class_Name | N_Class_Type
+     with Pre => Kind (Node) in N_Class_Name | N_Class_Type | N_Tuple_Type
      and then Has_Type_Entity (Node);
 
    type Array_Of_Types is array (Positive range <>) of Type_Entity;

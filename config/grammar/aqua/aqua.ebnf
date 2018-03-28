@@ -265,10 +265,14 @@ undefine ::=
 type ::=
          class_type
       |  anchored
+      |  tuple_type
       
 class_type ::=
          [ attachment_mark ] class_name [ actual_generics ]
 	 
+tuple_type ::=
+  '(' < type / ',' > ')'
+  
 attachment_mark ::=
          'detachable'
       |  'attached'
@@ -442,7 +446,7 @@ factor ::= [ unary_primary_operator ] primary
 
 primary ::= manifest_constant
          | precursor
-	     | '(' expression ')'
+	     | '(' < expression / ',' > ')'
 	     | old
          | object_test
 	 
