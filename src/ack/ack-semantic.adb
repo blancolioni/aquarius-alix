@@ -31,6 +31,15 @@ package body Ack.Semantic is
      (Name : String)
       return Ack.Types.Type_Entity;
 
+   type Tuple_Arity_Range is range 2 .. 20;
+
+   Tuple_Classes : array (Tuple_Arity_Range) of Ack.Classes.Class_Entity :=
+                     (others => null);
+
+   function Load_Tuple_Class
+     (Arity : Tuple_Arity_Range)
+      return Ack.Classes.Class_Entity;
+
    function Forward_Iterable return Ack.Classes.Class_Entity;
 
    function Analyse_Class_Header
@@ -107,6 +116,11 @@ package body Ack.Semantic is
       Type_Node : Node_Id)
      with Pre => Kind (Type_Node) = N_Anchored_Type;
 
+   procedure Analyse_Tuple_Type
+     (Class     : Ack.Classes.Class_Entity;
+      Type_Node : Node_Id)
+     with Pre => Kind (Type_Node) = N_Tuple_Type;
+
    procedure Analyse_Assertion
      (Class     : Ack.Classes.Class_Entity;
       Container : not null access Root_Entity_Type'Class;
@@ -178,6 +192,12 @@ package body Ack.Semantic is
       Container       : not null access Root_Entity_Type'Class;
       Expression_Type : access Root_Entity_Type'Class;
       Precursor       : Node_Id);
+
+   procedure Analyse_Tuple_Expression
+     (Class           : Ack.Classes.Class_Entity;
+      Container       : not null access Root_Entity_Type'Class;
+      Expression_Type : access Root_Entity_Type'Class;
+      Expression      : Node_Id);
 
    procedure Analyse_Actual_Arguments
      (Class            : Ack.Classes.Class_Entity;
@@ -946,6 +966,9 @@ package body Ack.Semantic is
             Analyse_Expression (Class, Container, Expression_Type,
                                 Ack.Expression (Expression));
             Container.Save_Old_Value (Ack.Expression (Expression));
+         when N_Tuple =>
+            Analyse_Tuple_Expression
+              (Class, Container, Expression_Type, Expression);
          when N_Attachment_Test =>
             Analyse_Expression (Class, Container,
                                 Get_Top_Level_Type ("any"),
@@ -1741,6 +1764,111 @@ package body Ack.Semantic is
       null;
    end Analyse_Retry;
 
+   ------------------------------
+   -- Analyse_Tuple_Expression --
+   ------------------------------
+
+   procedure Analyse_Tuple_Expression
+     (Class           : Ack.Classes.Class_Entity;
+      Container       : not null access Root_Entity_Type'Class;
+      Expression_Type : access Root_Entity_Type'Class;
+      Expression      : Node_Id)
+   is
+      use type Ack.Classes.Class_Entity;
+      use type Ack.Types.Type_Entity;
+      Expr_Nodes : constant Array_Of_Nodes :=
+                     To_Array
+                       (Tuple_Expression_List (Expression));
+      Expr_Count : constant Natural :=
+                     Expr_Nodes'Length;
+      Tuple_Arity  : constant Tuple_Arity_Range :=
+                       Tuple_Arity_Range (Expr_Count);
+      Expr_Type_Entity : constant Ack.Types.Type_Entity :=
+                           Ack.Types.Type_Entity (Expression_Type);
+      Actual_Types : Ack.Types.Array_Of_Types (Expr_Nodes'Range);
+      Tuple_Class  : Ack.Classes.Class_Entity renames
+                       Tuple_Classes (Tuple_Arity);
+      Type_Entity   : Ack.Types.Type_Entity := null;
+   begin
+
+      if Tuple_Class = null then
+         Tuple_Class := Load_Tuple_Class (Tuple_Arity);
+      end if;
+
+      if not Ack.Types.Type_Entity (Expression_Type).Class.Conforms_To
+        (Tuple_Class)
+      then
+         Error (Expression, E_Type_Error, Tuple_Class);
+         return;
+      end if;
+
+      for I in Expr_Nodes'Range loop
+         Analyse_Expression
+           (Class, Container,
+            Expr_Type_Entity.Generic_Binding (I), Expr_Nodes (I));
+         Actual_Types (I) :=
+           Ack.Types.Type_Entity (Get_Type (Expr_Nodes (I)));
+      end loop;
+
+      Type_Entity :=
+        Ack.Types.Instantiate_Generic_Class
+          (Node            => Expression,
+           Generic_Class   => Tuple_Class,
+           Generic_Actuals => Actual_Types,
+           Detachable      => False);
+
+      if Type_Entity /= null then
+         Set_Type (Expression, Type_Entity);
+      end if;
+
+   end Analyse_Tuple_Expression;
+
+   ------------------------
+   -- Analyse_Tuple_Type --
+   ------------------------
+
+   procedure Analyse_Tuple_Type
+     (Class     : Ack.Classes.Class_Entity;
+      Type_Node : Node_Id)
+   is
+      use type Ack.Classes.Class_Entity;
+      use type Ack.Types.Type_Entity;
+      Actual_Nodes : constant Array_Of_Nodes :=
+                       To_Array
+                         (Tuple_Argument_List (Type_Node));
+      Actual_Count : constant Natural :=
+                       Actual_Nodes'Length;
+      Tuple_Arity  : constant Tuple_Arity_Range :=
+                       Tuple_Arity_Range (Actual_Count);
+      Actual_Types : Ack.Types.Array_Of_Types (Actual_Nodes'Range);
+      Tuple_Class  : Ack.Classes.Class_Entity renames
+                       Tuple_Classes (Tuple_Arity);
+      Type_Entity   : Ack.Types.Type_Entity := null;
+   begin
+      if Tuple_Class = null then
+         Tuple_Class := Load_Tuple_Class (Tuple_Arity);
+      end if;
+
+      for I in Actual_Nodes'Range loop
+         Analyse_Type (Class, Actual_Nodes (I));
+         Actual_Types (I) := Ack.Types.Get_Type_Entity (Actual_Nodes (I));
+      end loop;
+
+      Type_Entity :=
+        Ack.Types.Instantiate_Generic_Class
+          (Node            => Type_Node,
+           Generic_Class   => Tuple_Class,
+           Generic_Actuals => Actual_Types,
+           Detachable      => False);
+
+      if Type_Entity /= null then
+         Set_Entity (Type_Node, Type_Entity);
+      else
+         Set_Entity (Type_Node, Get_Top_Level_Type ("any"));
+      end if;
+
+   end Analyse_Tuple_Type;
+
    ------------------
    -- Analyse_Type --
    ------------------
@@ -1755,6 +1883,8 @@ package body Ack.Semantic is
             Analyse_Class_Type (Class, Type_Node);
          when N_Anchored_Type =>
             Analyse_Anchored_Type (Class, Type_Node);
+         when N_Tuple_Type =>
+            Analyse_Tuple_Type (Class, Type_Node);
       end case;
    end Analyse_Type;
 
@@ -1881,5 +2011,25 @@ package body Ack.Semantic is
       end if;
 
    end Load_Class;
+
+   ----------------------
+   -- Load_Tuple_Class --
+   ----------------------
+
+   function Load_Tuple_Class
+     (Arity : Tuple_Arity_Range)
+      return Ack.Classes.Class_Entity
+   is
+      Aqua_Class   : constant Ack.Classes.Class_Entity :=
+                       Load_Class (null,
+                                   Ack.Environment.Top_Level,
+                                   Get_Name_Id ("aqua"));
+      Arity_Image  : constant String := Tuple_Arity_Range'Image (Arity);
+      Tuple_Name   : constant String :=
+                       "tuple" & Arity_Image (2 .. Arity_Image'Last);
+   begin
+      return Load_Class (null, Aqua_Class,
+                         Get_Name_Id (Tuple_Name));
+   end Load_Tuple_Class;
 
 end Ack.Semantic;
