@@ -49,6 +49,7 @@ package Ack is
       N_Assertion_Clause,
       N_Class_Type,
       N_Anchored_Type,
+      N_Tuple_Type,
       N_Extended_Feature_Name,
       N_Feature_Name,
       N_Feature_Alias,
@@ -83,6 +84,7 @@ package Ack is
       N_Operator,
       N_Attachment_Test,
       N_Old,
+      N_Tuple,
       N_Constant,
       N_String_Constant,
       N_Integer_Constant,
@@ -94,7 +96,7 @@ package Ack is
       N_Get_Property);
 
    subtype N_Type is Node_Kind range
-     N_Class_Type .. N_Anchored_Type;
+     N_Class_Type .. N_Tuple_Type;
 
    subtype N_Instruction is Node_Kind range
      N_Assignment .. N_Precursor;
@@ -585,6 +587,9 @@ package Ack is
    function Actual_List (N : Node_Id) return Node_Id
      with Pre => Kind (N) in N_Precursor_Element | N_Explicit_Creation_Call;
 
+   function Tuple_Expression_List (N : Node_Id) return List_Id
+     with Pre => Kind (N) = N_Tuple;
+
    function Constant_Value (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Constant
      or else Kind (N) = N_Explicit_Value;
@@ -794,6 +799,10 @@ private
    is (Node_Table (N).List)
    with Pre => Kind (N) = N_Actual_Generics;
 
+   function Tuple_Argument_List (N : Node_Id) return List_Id
+   is (Node_Table.Element (N).List)
+   with Pre => Kind (N) = N_Tuple_Type;
+
    function Formal_Generics (N : Node_Id) return Node_Id
    is (Field_3 (N));
 
@@ -947,6 +956,9 @@ private
 
    function Actual_List (N : Node_Id) return Node_Id
    is (Field_2 (N));
+
+   function Tuple_Expression_List (N : Node_Id) return List_Id
+   is (Node_Table.Element (N).List);
 
    function Constant_Value (N : Node_Id) return Node_Id
    is (Field_2 (N));
