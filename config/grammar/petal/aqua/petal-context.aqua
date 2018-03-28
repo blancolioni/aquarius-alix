@@ -4,14 +4,14 @@ note
 class Petal.Context
 feature
    Context         : Petal.Entry_Table
-   String_Literals : Petal.String_Table
+   String_Literals : Aqua.Containers.Map [String, Petal.Value]
    
    Set_Context (To : Petal.Entry_Table)
    do
       Context := To
    end
    
-   Set_String_Table (To : Petal.String_Table)
+   Set_String_Table (To : Aqua.Containers.Map [String, Petal.Value])
       do
          String_Literals := To
       end
