@@ -23,6 +23,8 @@ feature
          Test_List.Append (T)
          create { Test_Boolean_Implies } T
          Test_List.Append (T)
+         create { Test_Weaker_Precondition } T
+         Test_List.Append (T)
       end
 
    Make
