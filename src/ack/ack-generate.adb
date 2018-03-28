@@ -771,13 +771,12 @@ package body Ack.Generate is
       Right     : constant Node_Id := Field_2 (Operator_Node);
    begin
 
-      Generate_Expression (Unit, Left);
-
       if Operator = Get_Name_Id ("andthen") then
          declare
             Maybe : constant Positive := Unit.Next_Label;
             Leave : constant Positive := Unit.Next_Label;
          begin
+            Generate_Expression (Unit, Left);
             Unit.Operate (Tagatha.Op_Test);
             Unit.Jump (Maybe, Tagatha.C_Not_Equal);
             Unit.Push (0);
@@ -791,6 +790,7 @@ package body Ack.Generate is
             Maybe : constant Positive := Unit.Next_Label;
             Leave : constant Positive := Unit.Next_Label;
          begin
+            Generate_Expression (Unit, Left);
             Unit.Operate (Tagatha.Op_Test);
             Unit.Jump (Maybe, Tagatha.C_Equal);
             Unit.Push (1);
@@ -800,19 +800,12 @@ package body Ack.Generate is
             Unit.Label (Leave);
          end;
       elsif Operator = Get_Name_Id ("implies") then
-         declare
-            Maybe : constant Positive := Unit.Next_Label;
-            Leave : constant Positive := Unit.Next_Label;
-         begin
-            Unit.Operate (Tagatha.Op_Test);
-            Unit.Jump (Maybe, Tagatha.C_Not_Equal);
-            Unit.Push (1);
-            Unit.Jump (Leave);
-            Unit.Label (Maybe);
-            Generate_Expression (Unit, Right);
-            Unit.Label (Leave);
-         end;
+         Generate_Expression (Unit, Left);
+         Unit.Operate (Tagatha.Op_Not);
+         Generate_Expression (Unit, Right);
+         Unit.Operate (Tagatha.Op_Or);
       else
+         Generate_Expression (Unit, Left);
          if Right /= No_Node then
             Generate_Expression (Unit, Right);
          end if;
