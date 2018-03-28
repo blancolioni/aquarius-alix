@@ -89,26 +89,24 @@ package body Ack.Features is
    overriding procedure Bind
      (Feature : in out Feature_Entity_Record)
    is
+      use type Ack.Classes.Class_Entity;
       Next_Argument : Positive := 1;
       Next_Local    : Positive := 1;
-   begin
-      if Feature.Has_Current then
-         declare
-            Current : constant Ack.Variables.Variable_Entity :=
+      Current       : constant Ack.Variables.Variable_Entity :=
                         Ack.Variables.New_Argument_Entity
                           (Get_Name_Id ("Current"),
                            Feature.Declaration_Node,
                            Ack.Types.New_Class_Type
                              (Feature.Declaration_Node,
-                              Feature.Effective_Class,
+                              (if Feature.Effective_Class = null
+                               then Feature.Definition_Class
+                               else Feature.Effective_Class),
                               Detachable => False));
-         begin
-            Current.Set_Attached;
-            Current.Set_Offset (1);
-            Feature.Insert (Current);
-            Next_Argument := 2;
-         end;
-      end if;
+   begin
+      Current.Set_Attached;
+      Current.Set_Offset (1);
+      Feature.Insert (Current);
+      Next_Argument := 2;
 
       for Argument of Feature.Arguments loop
          Argument.Set_Offset (Next_Argument);
@@ -192,6 +190,7 @@ package body Ack.Features is
             Unit.Label (Out_Label);
          end;
       end loop;
+      Unit.Jump (Success_Label);
    end Check_Precondition;
 
    -----------------
