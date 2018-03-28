@@ -183,6 +183,10 @@ begin
       return;
    end if;
 
+   if Command_Line.Aqua_Trace_Code then
+      Aqua.CPU.Set_Option ("trace-code", "true");
+   end if;
+
    Komnenos.Themes.Load_Theme
      (Tropos.Reader.Read_Config
         (Komnenos.Paths.Config_File ("themes/default.theme")));
