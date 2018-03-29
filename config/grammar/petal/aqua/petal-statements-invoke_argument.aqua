@@ -1,0 +1,5 @@
+deferred class Petal.Statements.Invoke_Argument
+
+feature
+   
+end

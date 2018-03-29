@@ -22,10 +22,14 @@ feature
       end
 
    After_Expression (Child : Petal.Checks.Expression)
+      local
+         Proc : Petal.Value_Processor.Extract_String_Arguments
       do
          if attached Child.Value as E then
             if Argument_Name = "send_string" then
-               String_Literals.Insert (Child.Value)
+               create Proc
+               Child.Value.Scan_Value (Proc) 
+               String_Literals.Insert (Proc.Sent_String)
             end
          end 
       end

@@ -12,4 +12,10 @@ feature
       do
          Label := L
       end
+      
+   Scan_Value (Processor : Petal.Value_Processor)
+      do 
+         Processor.Process (Current)
+end
+      
 end

@@ -1,0 +1,10 @@
+deferred class
+   Petal.Value_Processor
+   
+feature
+
+   Process (V : Petal.Value)
+      deferred
+      end
+      
+end
