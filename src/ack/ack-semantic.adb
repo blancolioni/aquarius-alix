@@ -2035,10 +2035,10 @@ package body Ack.Semantic is
       Aqua_Class   : constant Ack.Classes.Class_Entity :=
                        Load_Class (null,
                                    Ack.Environment.Top_Level,
-                                   Get_Name_Id ("aqua"));
+                                   Get_Name_Id ("Aqua"));
       Arity_Image  : constant String := Tuple_Arity_Range'Image (Arity);
       Tuple_Name   : constant String :=
-                       "tuple" & Arity_Image (2 .. Arity_Image'Last);
+                       "Tuple" & Arity_Image (2 .. Arity_Image'Last);
    begin
       return Load_Class (null, Aqua_Class,
                          Get_Name_Id (Tuple_Name));
