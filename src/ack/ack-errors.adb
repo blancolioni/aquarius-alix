@@ -80,7 +80,7 @@ package body Ack.Errors is
                     then Get_Entity (Node).Declared_Name
                     else "[no entity]")
                  & (if Value_Type = null then " with no type"
-                    else " of type " & Value_Type.Qualified_Name);
+                    else " of type " & Value_Type.Description);
             end;
          when E_Insufficient_Arguments =>
             return "not enough arguments";
