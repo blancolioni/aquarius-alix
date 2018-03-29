@@ -2,8 +2,8 @@ note
    description:
       "Containers whose items are accessible through keys"
 
-deferred class 
-   Aqua.Containers.Map [Key_Type, Element_Type]
+class 
+   Aqua.Containers.Table [Key_Type, Element_Type]
 
 inherit
    Aqua.Containers.Container [Element_Type]
@@ -43,7 +43,7 @@ feature
          Key_Deleted: not Contains_Key (key)
       end
       
-   Replace (K : Key_Type; E : Element_Type)
+   Replace (K : Key; E : Element)
        require
           Contains_Key: Contains_Key (K)
        do

@@ -45,6 +45,10 @@ package Ack.Types is
    type Type_Entity is access all Type_Entity_Record'Class;
    type Constant_Type_Entity is access constant Type_Entity_Record'Class;
 
+   function Generic_Binding_Count
+     (Typ : Type_Entity_Record'Class)
+      return Natural;
+
    function Generic_Binding
      (Typ   : Type_Entity_Record'Class;
       Index : Positive)
@@ -185,5 +189,10 @@ private
       return Boolean
    is (Has_Entity (Node)
        and then Get_Entity (Node).all in Type_Entity_Record'Class);
+
+   function Generic_Binding_Count
+     (Typ : Type_Entity_Record'Class)
+      return Natural
+   is (Natural (Typ.Generic_Bindings.Length));
 
 end Ack.Types;
