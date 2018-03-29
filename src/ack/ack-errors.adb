@@ -34,8 +34,14 @@ package body Ack.Errors is
          when E_No_Error               =>
             return "no error";
          when E_Undeclared_Name        =>
-            return "undeclared: "
-              & To_String (Get_Name (Node));
+            if Get_Error_Entity (Node) /= null then
+               return To_String (Get_Name (Node))
+                 & " not declared in "
+                 & Get_Error_Entity (Node).Description;
+            else
+               return "undeclared: "
+                 & To_String (Get_Name (Node));
+            end if;
          when E_Redefined_Name =>
             return "redefinition of "
               & Get_Entity (Node).Description;
@@ -47,9 +53,13 @@ package body Ack.Errors is
             return To_String (Get_Name (Node))
               & " is not a creator for "
               & Get_Error_Entity (Node).Description;
+         when E_Create_Deferred_Class =>
+            return "cannot create instance of deferred class";
          when E_Missing_Redefinition =>
             return "missing declaration for redefined feature "
               & To_String (Get_Name (Node));
+         when E_Missing_Exit_Condition =>
+            return "loop requires an exit condition";
          when E_No_Child               =>
             return "child class not found";
          when E_No_Component           =>
@@ -65,14 +75,18 @@ package body Ack.Errors is
          when E_Type_Error             =>
             declare
                Value_Type : constant Entity_Type :=
-                              Get_Entity (Node).Value_Type;
+                              (if Has_Entity (Node)
+                               then Get_Entity (Node).Value_Type
+                               else null);
             begin
                return "expected type derived from "
                  & Get_Error_Entity (Node).Description
                  & " but found "
-                 & Get_Entity (Node).Declared_Name
+                 & (if Has_Entity (Node)
+                    then Get_Entity (Node).Declared_Name
+                    else "[no entity]")
                  & (if Value_Type = null then " with no type"
-                    else " of type " & Value_Type.Qualified_Name);
+                    else " of type " & Value_Type.Description);
             end;
          when E_Insufficient_Arguments =>
             return "not enough arguments";
@@ -84,9 +98,16 @@ package body Ack.Errors is
             return "entity does not accept arguments";
          when E_Requires_Value =>
             return "feature requires a body";
+         when E_Requires_Definition =>
+            return Get_Entity (Node).Declared_Name
+              & " must implement deferred feature "
+              & Get_Error_Entity (Node).Description;
          when E_Illegal_Redefinition =>
             return "illegal redefinition of "
               & Get_Error_Entity (Node).Declared_Name;
+         when E_Not_An_Iterator =>
+            return "type " & Get_Error_Entity (Node).Declared_Name
+              & " is not traversable";
       end case;
    end Error_Message;
 

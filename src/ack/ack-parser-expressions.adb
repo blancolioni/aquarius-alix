@@ -272,6 +272,7 @@ package body Ack.Parser.Expressions is
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
    is
+      use Aquarius.Programs;
       Choice : constant Aquarius.Programs.Program_Tree :=
                  From.Chosen_Tree;
    begin
@@ -279,8 +280,26 @@ package body Ack.Parser.Expressions is
          return Import_Manifest_Constant (Choice);
       elsif Choice.Name = "precursor" then
          return Import_Precursor (Choice);
+      elsif Choice.Name = "old" then
+         return New_Node (N_Old, From,
+                          Field_1 =>
+                            Import_Primary
+                              (Choice.Program_Child ("primary")));
       elsif Choice.First_Child.Text = "(" then
-         return Import_Expression (Choice.Program_Child ("expression"));
+         declare
+            Exprs : constant Array_Of_Program_Trees :=
+                      Choice.Direct_Children ("expression");
+         begin
+            if Exprs'Length = 1 then
+               return Import_Expression (Exprs (Exprs'First));
+            else
+               return New_Node (N_Tuple, From,
+                                List =>
+                                  Import_List
+                                    (From, "expression",
+                                     Import_Expression'Access));
+            end if;
+         end;
       else
          return No_Node;
       end if;

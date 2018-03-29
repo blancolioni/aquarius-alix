@@ -24,6 +24,11 @@ package Aquarius.Command_Line is
    function Line_Length  return Positive;
    function Enable_Plugins return Boolean;
 
+   function Ack_Write_Listing return Boolean;
+   function Ack_Execute_Root return String;
+
+   function Aqua_Trace_Code return Boolean;
+
    function Extra_Arguments return String;
 
 end Aquarius.Command_Line;

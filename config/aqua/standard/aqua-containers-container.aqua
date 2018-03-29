@@ -1,27 +1,21 @@
-deferred class Aqua.Containers.Container [Element]
+note
+   description: "Data structures of the most general kind, used to hold zero or more items."
+   
+deferred class 
+   Aqua.Containers.Container [G]
 
-   First_Element : Element
-      require
-         Not_Empty: not Is_Empty
+feature  --  Access
+
+   Contains (Element : G) : Boolean
       deferred
+      ensure
+         Not_Found_In_Empty: Result implies not Is_Empty
       end
-      
-   Last_Element : Element
-      require
-         Not_Empty: not Is_Empty
-      deferred
-      end
-      
+
+feature  --  Status
+
    Is_Empty : Boolean
       deferred
-      ensure
-         Empty_Is_Zero_Length: Result = (Length = 0)
-      end
-      
-   Length : Natural
-      deferred
-      ensure
-         Zero_Length_Is_Empty: (Result = 0) = Is_Empty
       end
       
 end

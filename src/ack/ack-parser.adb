@@ -178,6 +178,35 @@ package body Ack.Parser is
       return Node_Id
      with Pre => From.Name = "declaration_body";
 
+   function Import_Precondition
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     with Pre => From.Name = "precondition";
+
+   function Import_Postcondition
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     with Pre => From.Name = "postcondition";
+
+   function Import_Rescue
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     with Pre => From.Name = "rescue";
+
+   function Import_Assertion_Clause
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     with Pre => From.Name = "assertion_clause";
+
+   function Import_Assertion
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is (New_Node (N_Assertion, From,
+                 List =>
+                    Import_List (From, "assertion_clause",
+                                 Import_Assertion_Clause'Access)))
+   with Pre => From.Name = "assertion";
+
    function Import_Local_Declarations
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
@@ -218,6 +247,11 @@ package body Ack.Parser is
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id is (No_Node)
    with Pre => From.Name = "anchored";
+
+   function Import_Tuple_Type
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   with Pre => From.Name = "tuple_type";
 
    function Import_Actual_Generics
      (From : Aquarius.Programs.Program_Tree)
@@ -298,6 +332,11 @@ package body Ack.Parser is
       return Node_Id
      with Pre => From.Name = "explicit_creation_call";
 
+   function Import_Explicit_Creation_Type
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     with Pre => From.Name = "explicit_creation_type";
+
    function Import_Conditional
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
@@ -307,6 +346,17 @@ package body Ack.Parser is
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
    with Pre => From.Name = "loop";
+
+   function Import_Check
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     with Pre => From.Name = "check";
+
+   function Import_Retry
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+     is (New_Node (N_Retry, From))
+     with Pre => From.Name = "retry";
 
    function Import_Variable
      (From : Aquarius.Programs.Program_Tree)
@@ -342,6 +392,34 @@ package body Ack.Parser is
         (Program.Program_Child ("class_declaration"));
    end Import;
 
+   -----------------------------
+   -- Import_Assertion_Clause --
+   -----------------------------
+
+   function Import_Assertion_Clause
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+      use Aquarius.Programs;
+      Tag_Mark : constant Program_Tree := From.Program_Child ("tag_mark");
+      Tag      : constant Name_Id :=
+                   (if Tag_Mark /= null
+                    then Get_Name_Id
+                      (Tag_Mark.Program_Child ("tag")
+                       .Concatenate_Children)
+                    else No_Name);
+      Clause   : constant Program_Tree :=
+                   From.Program_Child ("unlabeled_assertion_clause");
+      Expr     : constant Program_Tree :=
+                   Clause.Program_Child ("boolean_expression");
+   begin
+      return New_Node
+        (Kind => N_Assertion_Clause, From => From, Name => Tag,
+         Field_1 =>
+           Expressions.Import_Expression
+             (Expr.Program_Child ("expression")));
+   end Import_Assertion_Clause;
+
    -----------------------
    -- Import_Assignment --
    -----------------------
@@ -358,6 +436,20 @@ package body Ack.Parser is
            Ack.Parser.Expressions.Import_Expression
              (From.Program_Child ("expression")));
    end Import_Assignment;
+
+   ------------------
+   -- Import_Check --
+   ------------------
+
+   function Import_Check
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+   begin
+      return New_Node
+        (N_Check, From,
+         Field_1 => Import_Assertion (From.Program_Child ("assertion")));
+   end Import_Check;
 
    -------------------
    -- Import_Choice --
@@ -569,6 +661,10 @@ package body Ack.Parser is
                                ("variable");
       Identifier_Tree    : constant Program_Tree :=
                              Variable_Tree.Program_Child ("identifier");
+      Explicit_Type      : constant Node_Id :=
+                             Import_Optional_Child
+                               (From, "explicit_creation_type",
+                                Import_Explicit_Creation_Type'Access);
       Explict_Call       : constant Node_Id :=
                              Import_Optional_Child
                                (Parent     => Creation_Call_Tree,
@@ -584,7 +680,8 @@ package body Ack.Parser is
                               New_Node
                                 (N_Variable, Variable_Tree,
                                  Name => Get_Name_Id (Identifier_Tree.Text)),
-                            Field_2 => Explict_Call));
+                            Field_2 => Explict_Call),
+                       Field_2 => Explicit_Type);
    end Import_Creation_Instruction;
 
    -----------------------------
@@ -692,6 +789,18 @@ package body Ack.Parser is
                            (From, "actuals",
                             Expressions.Import_Actual_Arguments'Access));
    end Import_Explicit_Creation_Call;
+
+   -----------------------------------
+   -- Import_Explicit_Creation_Type --
+   -----------------------------------
+
+   function Import_Explicit_Creation_Type
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+   begin
+      return Import_Type (From.Program_Child ("type"));
+   end Import_Explicit_Creation_Type;
 
    ----------------------------------
    -- Import_Extended_Feature_Name --
@@ -953,6 +1062,8 @@ package body Ack.Parser is
                     Import_Creation_Instruction'Access);
             Insert ("conditional", Import_Conditional'Access);
             Insert ("loop", Import_Loop'Access);
+            Insert ("check", Import_Check'Access);
+            Insert ("retry", Import_Retry'Access);
             Insert ("precursor", Expressions.Import_Precursor'Access);
          end;
       end if;
@@ -1052,7 +1163,9 @@ package body Ack.Parser is
       function Import_Initialization
         (Tree : Aquarius.Programs.Program_Tree)
          return Node_Id
-      is (No_Node);
+      is (New_Node (N_Initialization, Tree,
+                    Field_1 =>
+                       Import_Compound (Tree.Program_Child ("compound"))));
 
       function Import_Invariant
         (Tree : Aquarius.Programs.Program_Tree)
@@ -1062,7 +1175,11 @@ package body Ack.Parser is
       function Import_Exit_Condition
         (Tree : Aquarius.Programs.Program_Tree)
          return Node_Id
-      is (No_Node);
+      is (New_Node (N_Exit_Condition, Tree,
+                    Field_1 =>
+                       Expressions.Import_Expression
+                      (Tree.Program_Child ("boolean_expression")
+                       .Program_Child ("expression"))));
 
       function Import_Variant
         (Tree : Aquarius.Programs.Program_Tree)
@@ -1197,6 +1314,54 @@ package body Ack.Parser is
       return No_Node;
    end Import_Optional_Child;
 
+   --------------------------
+   -- Import_Postcondition --
+   --------------------------
+
+   function Import_Postcondition
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+   begin
+      return New_Node (N_Postcondition, From,
+                       Field_1 =>
+                         Import_Assertion (From.Program_Child ("assertion")));
+   end Import_Postcondition;
+
+   -------------------------
+   -- Import_Precondition --
+   -------------------------
+
+   function Import_Precondition
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+      use type Aquarius.Programs.Program_Tree;
+      Require_Else : constant Aquarius.Programs.Program_Tree :=
+                       From.Program_Child ("else");
+   begin
+      return New_Node (N_Precondition, From,
+                       Inherited =>
+                         Require_Else /= null
+                       and then Require_Else.Is_Filled,
+                       Field_1 =>
+                         Import_Assertion (From.Program_Child ("assertion")));
+   end Import_Precondition;
+
+   -------------------
+   -- Import_Rescue --
+   -------------------
+
+   function Import_Rescue
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+   begin
+      return New_Node (N_Rescue, From,
+                       Field_1 =>
+                         Import_Compound (From.Program_Child ("compound")));
+   end Import_Rescue;
+
    --------------------
    -- Import_Routine --
    --------------------
@@ -1205,18 +1370,33 @@ package body Ack.Parser is
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
    is
+      Precondition       : constant Node_Id :=
+                             Import_Optional_Child
+                               (From, "precondition",
+                                Import_Precondition'Access);
       Local_Declarations : constant Node_Id :=
                              Import_Optional_Child
                                (From, "local_declarations",
                                 Import_Local_Declarations'Access);
-      Feature_Body : constant Node_Id :=
-                       Import_Feature_Body
+      Feature_Body       : constant Node_Id :=
+                             Import_Feature_Body
                                (From.Program_Child ("feature_body"));
+      Postcondition      : constant Node_Id :=
+                             Import_Optional_Child
+                               (From, "postcondition",
+                                Import_Postcondition'Access);
+      Rescue             : constant Node_Id :=
+                             Import_Optional_Child
+                               (From, "rescue",
+                                Import_Rescue'Access);
    begin
       return New_Node (N_Routine, From,
                        Deferred => Feature_Body = No_Node,
+                       Field_1  => Precondition,
                        Field_2  => Local_Declarations,
-                       Field_3  => Feature_Body);
+                       Field_3  => Feature_Body,
+                       Field_4  => Postcondition,
+                       Field_5  => Rescue);
    end Import_Routine;
 
    ----------------------------
@@ -1253,6 +1433,22 @@ package body Ack.Parser is
       return Result (1 .. Count);
    end Import_String_Constant;
 
+   -----------------------
+   -- Import_Tuple_Type --
+   -----------------------
+
+   function Import_Tuple_Type
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+   begin
+      return Node : constant Node_Id :=
+        New_Node (N_Tuple_Type, From,
+                  List =>
+                    Import_List
+                      (From, "type", Import_Type'Access));
+   end Import_Tuple_Type;
+
    -----------------
    -- Import_Type --
    -----------------
@@ -1269,6 +1465,8 @@ package body Ack.Parser is
          Choice_Node := Import_Class_Type (Choice_Tree);
       elsif Choice_Tree.Name = "anchored" then
          Choice_Node := Import_Anchored (Choice_Tree);
+      elsif Choice_Tree.Name = "tuple_type" then
+         Choice_Node := Import_Tuple_Type (Choice_Tree);
       else
          raise Constraint_Error with
            "invalid type choice: " & Choice_Tree.Name;

@@ -14,6 +14,24 @@ package body Aquarius.Command_Line is
                          return String
      with Pre => Short_Name /= "" or else Long_Name /= "";
 
+   ----------------------
+   -- Ack_Execute_Root --
+   ----------------------
+
+   function Ack_Execute_Root return String is
+   begin
+      return Get_Argument ("", "ack-execute-root");
+   end Ack_Execute_Root;
+
+   -----------------------
+   -- Ack_Write_Listing --
+   -----------------------
+
+   function Ack_Write_Listing return Boolean is
+   begin
+      return Get_Flag ("", "ack-write-listing");
+   end Ack_Write_Listing;
+
    ------------
    -- Action --
    ------------
@@ -22,6 +40,15 @@ package body Aquarius.Command_Line is
    begin
       return Get_Argument ("a", "action");
    end Action;
+
+   ---------------------
+   -- Aqua_Trace_Code --
+   ---------------------
+
+   function Aqua_Trace_Code return Boolean is
+   begin
+      return Get_Flag ("", "aqua-trace-code");
+   end Aqua_Trace_Code;
 
    -----------------
    -- Clear_Cache --

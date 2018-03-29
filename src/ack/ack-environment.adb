@@ -3,6 +3,11 @@ package body Ack.Environment is
    type Top_Level_Entity_Record is
      new Root_Entity_Type with null record;
 
+   overriding function Deferred
+     (Entity : Top_Level_Entity_Record)
+      return Boolean
+   is (False);
+
    overriding function Base_Child_File_Name
      (Entity     : Top_Level_Entity_Record;
       Child_Name : Name_Id)

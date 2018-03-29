@@ -1,41 +1,39 @@
 class Petal.Checks.Primary
 inherit
    Petal.Context
-   
-feature
-
-   Value : detachable Petal.Value
+   Petal.Expression
    
 feature
 
    After_Numeric_Literal (Image : String)
-      local
-         X : Petal.Value.Integer_Value
       do
-         create X
-         X.Make (Image.To_Integer)
-         Value := X
+         create { Petal.Value.Integer_Value } Value.Make (Image.To_Integer)
       end
       
    After_String_Literal (Image : String)
-      local
-         X : Petal.Value.String_Value
       do
-         create X
-         X.Make (Image)
-         Value := X
-         String_Literals.Insert (Image)
+         create { Petal.Value.String_Value } Value.Make (Image)
       end
       
    After_Object_Reference (Child : Petal.Checks.Object_Reference)
-      local
-         X : Petal.Value.Entry_Value
       do
          if attached Child.Entry then
-            create X
-            X.Make (Child.Entry)
-            Value := X
+            if Child.Entry.Is_Value then
+               Value := Child.Entry.Value
+            else
+               create { Petal.Value.Entry_Value } Value.Make (Child.Entry)
+            end 
          end
+      end
+      
+   After_Sub_Expression (Child : Petal.Checks.Sub_Expression)
+      do
+         Value := Child.Value
+      end
+            
+   After_Aggregate (Child : Petal.Checks.Aggregate)
+      do
+         Value := Child.Value
       end
             
 end

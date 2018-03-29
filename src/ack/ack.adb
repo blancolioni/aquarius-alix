@@ -163,11 +163,11 @@ package body Ack is
    procedure Error
      (Node   : Node_Id;
       Kind   : Error_Kind;
-      Entity : Entity_Type := null)
+      Entity : access constant Root_Entity_Type'Class := null)
    is
    begin
       Node_Table (Node).Error := Kind;
-      Node_Table (Node).Error_Entity := Entity;
+      Node_Table (Node).Error_Entity := Constant_Entity_Type (Entity);
    end Error;
 
    ------------------
@@ -268,6 +268,7 @@ package body Ack is
       Defining   : Boolean     := False;
       Once       : Boolean     := False;
       Detachable : Boolean     := False;
+      Inherited  : Boolean     := False;
       Field_1    : Node_Id     := No_Node;
       Field_2    : Node_Id     := No_Node;
       Field_3    : Node_Id     := No_Node;
@@ -286,7 +287,8 @@ package body Ack is
               (Kind => Kind, From => From, Deferred => Deferred,
                Expanded => Expanded, Frozen => Frozen,
                Defining => Defining, Single => False, Once => Once,
-               Detachable => Detachable, Implicit_Entity => False,
+               Detachable      => Detachable, Inherited => Inherited,
+               Implicit_Entity => False,
                Field    =>
                  (1 => Field_1,
                   2 => Field_2,
@@ -396,6 +398,19 @@ package body Ack is
       Depth_First_Scan (Top, Process_Node'Access);
    end Scan_Errors;
 
+   ------------------------------
+   -- Set_Assertion_Monitoring --
+   ------------------------------
+
+   procedure Set_Assertion_Monitoring
+     (Entity : in out Root_Entity_Type'Class;
+      Level  : Assertion_Monitoring_Level)
+   is
+   begin
+      Entity.Has_Monitoring_Level := True;
+      Entity.Monitoring_Level := Level;
+   end Set_Assertion_Monitoring;
+
    ------------------
    -- Set_Attached --
    ------------------
@@ -418,6 +433,17 @@ package body Ack is
    begin
       Node_Table (N).Integer_Value := Count;
    end Set_Declaration_Count;
+
+   ----------------------------------
+   -- Set_Default_Monitoring_Level --
+   ----------------------------------
+
+   procedure Set_Default_Monitoring_Level
+     (Level : Assertion_Monitoring_Level)
+   is
+   begin
+      Local_Default_Monitoring_Level := Level;
+   end Set_Default_Monitoring_Level;
 
    ----------------
    -- Set_Entity --

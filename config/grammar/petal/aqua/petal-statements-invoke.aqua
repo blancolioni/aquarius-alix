@@ -1,5 +1,7 @@
 class Petal.Statements.Invoke
-
+create
+   Make
+   
 feature
 
    Make (Cap : Petal.Entry
@@ -11,8 +13,9 @@ feature
       
 feature --  arguments to invocation
 
-   Send : Aqua.Containers.Linked_List[Petal.Value]
-   Recv : Aqua.Containers.Linked_List[Petal.Value]
+   Send        : Aqua.Containers.Linked_List[Petal.Value]
+   Recv        : Aqua.Containers.Linked_List[Petal.Value]
+   Send_String : Aqua.Containers.Linked_List[Petal.Value]
    
 feature {None}
 
