@@ -202,6 +202,7 @@ begin
            (Source_Path => Aquarius.Command_Line.Ack_Execute_Root,
             To_Image    => Image);
          CPU.Run;
+         CPU.Report;
       end;
    elsif Aquarius.Command_Line.Filter then
 
