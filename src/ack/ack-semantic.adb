@@ -31,6 +31,15 @@ package body Ack.Semantic is
      (Name : String)
       return Ack.Types.Type_Entity;
 
+   type Tuple_Arity_Range is range 2 .. 20;
+
+   Tuple_Classes : array (Tuple_Arity_Range) of Ack.Classes.Class_Entity :=
+                     (others => null);
+
+   function Load_Tuple_Class
+     (Arity : Tuple_Arity_Range)
+      return Ack.Classes.Class_Entity;
+
    function Forward_Iterable return Ack.Classes.Class_Entity;
 
    function Analyse_Class_Header
@@ -107,6 +116,19 @@ package body Ack.Semantic is
       Type_Node : Node_Id)
      with Pre => Kind (Type_Node) = N_Anchored_Type;
 
+   procedure Analyse_Tuple_Type
+     (Class     : Ack.Classes.Class_Entity;
+      Type_Node : Node_Id)
+     with Pre => Kind (Type_Node) = N_Tuple_Type;
+
+   procedure Analyse_Assertion
+     (Class     : Ack.Classes.Class_Entity;
+      Container : not null access Root_Entity_Type'Class;
+      Assertion : Node_Id;
+      Process   : not null access
+        procedure (Tag : Name_Id;
+                   Condition : Node_Id));
+
    procedure Analyse_Effective_Routine
      (Class     : Ack.Classes.Class_Entity;
       Container : not null access Root_Entity_Type'Class;
@@ -137,6 +159,22 @@ package body Ack.Semantic is
       Container : not null access Root_Entity_Type'Class;
       Loop_Node : Node_Id);
 
+   procedure Analyse_Check
+     (Class     : Ack.Classes.Class_Entity;
+      Container : not null access Root_Entity_Type'Class;
+      Check     : Node_Id)
+   is null;
+
+   procedure Analyse_Retry
+     (Class      : Ack.Classes.Class_Entity;
+      Container  : not null access Root_Entity_Type'Class;
+      Retry      : Node_Id);
+
+   procedure Analyse_Boolean_Expression
+     (Class           : Ack.Classes.Class_Entity;
+      Container       : not null access Root_Entity_Type'Class;
+      Expression      : Node_Id);
+
    procedure Analyse_Expression
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
@@ -154,6 +192,12 @@ package body Ack.Semantic is
       Container       : not null access Root_Entity_Type'Class;
       Expression_Type : access Root_Entity_Type'Class;
       Precursor       : Node_Id);
+
+   procedure Analyse_Tuple_Expression
+     (Class           : Ack.Classes.Class_Entity;
+      Container       : not null access Root_Entity_Type'Class;
+      Expression_Type : access Root_Entity_Type'Class;
+      Expression      : Node_Id);
 
    procedure Analyse_Actual_Arguments
      (Class            : Ack.Classes.Class_Entity;
@@ -210,6 +254,35 @@ package body Ack.Semantic is
       null;
    end Analyse_Anchored_Type;
 
+   -----------------------
+   -- Analyse_Assertion --
+   -----------------------
+
+   procedure Analyse_Assertion
+     (Class     : Ack.Classes.Class_Entity;
+      Container : not null access Root_Entity_Type'Class;
+      Assertion : Node_Id;
+      Process   : not null access
+        procedure (Tag : Name_Id;
+                   Condition : Node_Id))
+   is
+
+      procedure Analyse_Clause (Clause : Node_Id);
+
+      --------------------
+      -- Analyse_Clause --
+      --------------------
+
+      procedure Analyse_Clause (Clause : Node_Id) is
+      begin
+         Analyse_Boolean_Expression (Class, Container, Expression (Clause));
+         Process (Get_Name (Clause), Expression (Clause));
+      end Analyse_Clause;
+
+   begin
+      Scan (Assertion_Clauses (Assertion), Analyse_Clause'Access);
+   end Analyse_Assertion;
+
    ------------------------
    -- Analyse_Assignment --
    ------------------------
@@ -236,6 +309,22 @@ package body Ack.Semantic is
       end if;
 
    end Analyse_Assignment;
+
+   --------------------------------
+   -- Analyse_Boolean_Expression --
+   --------------------------------
+
+   procedure Analyse_Boolean_Expression
+     (Class           : Ack.Classes.Class_Entity;
+      Container       : not null access Root_Entity_Type'Class;
+      Expression      : Node_Id)
+   is
+   begin
+      Analyse_Expression
+        (Class, Container,
+         Get_Top_Level_Type ("boolean"),
+         Expression);
+   end Analyse_Boolean_Expression;
 
    -------------------------------
    -- Analyse_Class_Declaration --
@@ -305,6 +394,11 @@ package body Ack.Semantic is
                            Analyse_Feature_Name'Access);
       end if;
 
+      if Trace_Class_Analysis then
+         Ada.Text_IO.Put_Line
+           ("Analysing inheritance: " & Class.Qualified_Name);
+      end if;
+
       if Inheritance_Node /= No_Node then
          Analyse_Inheritance (Class, Inheritance_Node);
       elsif Class.Standard_Name /= "any" then
@@ -341,6 +435,34 @@ package body Ack.Semantic is
          end if;
          Analyse_Features (Class, Features_Node,
                            Analyse_Feature_Body'Access);
+      end if;
+
+      if not Class.Deferred then
+         declare
+            procedure Check_Effective
+              (Feature : not null access constant
+                 Ack.Features.Feature_Entity_Record'Class);
+
+            ---------------------
+            -- Check_Effective --
+            ---------------------
+
+            procedure Check_Effective
+              (Feature : not null access constant
+                 Ack.Features.Feature_Entity_Record'Class)
+            is
+            begin
+               if Feature.Deferred then
+                  Error
+                    (Node   => Class.Declaration_Node,
+                     Kind   => E_Requires_Definition,
+                     Entity => Constant_Entity_Type (Feature));
+               end if;
+            end Check_Effective;
+
+         begin
+            Class.Scan_Features (Check_Effective'Access);
+         end;
       end if;
 
       if Trace_Class_Analysis then
@@ -544,7 +666,7 @@ package body Ack.Semantic is
 
       if Ack.Types.Has_Type_Entity (Name_Node) then
          Type_Entity := Ack.Types.Get_Type_Entity (Name_Node);
-      else
+      elsif Ack.Classes.Has_Class_Entity (Name_Node) then
          Class_Entity := Ack.Classes.Get_Class_Entity (Name_Node);
 
          if Generics_Node = No_Node then
@@ -626,6 +748,10 @@ package body Ack.Semantic is
                   Container       => Container,
                   Expression_Type => null,
                   Precursor       => Node);
+            when N_Check =>
+               Analyse_Check (Class, Container, Node);
+            when N_Retry =>
+               Analyse_Retry (Class, Container, Node);
          end case;
       end Analyse;
 
@@ -653,9 +779,8 @@ package body Ack.Semantic is
          Compound  : constant Node_Id := Field_2 (Element);
       begin
          if Condition /= No_Node then
-            Analyse_Expression
+            Analyse_Boolean_Expression
               (Class, Container,
-               Get_Top_Level_Type ("boolean"),
                Condition);
             if Implicit_Entity (Condition) then
                Container.Add_Implicit (Get_Entity (Condition));
@@ -681,6 +806,8 @@ package body Ack.Semantic is
       Container : not null access Root_Entity_Type'Class;
       Creation  : Node_Id)
    is
+      Explicit_Type_Node : constant Node_Id :=
+                             Explicit_Creation_Type (Creation);
       Call_Node          : constant Node_Id := Creation_Call (Creation);
       Explicit_Call_Node : constant Node_Id :=
                              Explicit_Creation_Call (Call_Node);
@@ -689,30 +816,44 @@ package body Ack.Semantic is
       Created_Entity     : constant Entity_Type :=
                              (if Container.Contains (Name)
                               then Container.Get (Name) else null);
+      Created_Type       : Entity_Type;
       Creator_Name       : Name_Id;
    begin
 
       if Created_Entity = null then
-         Ada.Text_IO.Put_Line ("undeclared: " & To_Standard_String (Name));
-         Error (Creation, E_Undeclared_Name);
+         Error (Variable_Node, E_Undeclared_Name);
          return;
       end if;
 
       Set_Entity (Creation, Created_Entity);
 
+      Created_Type := Created_Entity.Get_Type;
+
+      if Explicit_Type_Node in Real_Node_Id then
+         Analyse_Type (Class, Explicit_Type_Node);
+         if Get_Entity (Explicit_Type_Node) /= null then
+            Created_Type := Get_Entity (Explicit_Type_Node);
+            if Created_Type.Deferred then
+               Error (Explicit_Type_Node, E_Create_Deferred_Class);
+            end if;
+         end if;
+      elsif Created_Type.Deferred then
+         Error (Creation, E_Create_Deferred_Class);
+      end if;
+
       if Explicit_Call_Node in Real_Node_Id then
          Creator_Name := Get_Name (Explicit_Call_Node);
-         if Created_Entity.Get_Type.Contains (Creator_Name) then
+         if Created_Type.Contains (Creator_Name) then
             declare
                Creator : constant Entity_Type :=
-                           Created_Entity.Get_Type.Get (Creator_Name);
+                           Created_Type.Get (Creator_Name);
             begin
                Set_Entity (Explicit_Call_Node, Creator);
                if Creator.all not in Ack.Features.Feature_Entity_Record'Class
                  or else not Ack.Features.Feature_Entity (Creator).Is_Creator
                then
                   Error (Explicit_Call_Node, E_Not_A_Create_Feature,
-                         Created_Entity.Get_Type);
+                         Created_Type);
                else
                   Analyse_Actual_Arguments
                     (Class            => Class,
@@ -723,7 +864,7 @@ package body Ack.Semantic is
             end;
          else
             Error (Explicit_Call_Node, E_Not_Defined_In,
-                   Entity_Type (Container));
+                   Created_Type);
          end if;
       end if;
 
@@ -812,13 +953,21 @@ package body Ack.Semantic is
       Expression_Type : access Root_Entity_Type'Class;
       Expression      : Node_Id)
    is
+      K : constant Node_Kind := Kind (Expression);
    begin
-      case N_Expression_Node (Kind (Expression)) is
+      case N_Expression_Node (K) is
          when N_Operator =>
             Analyse_Operator
               (Class, Container, Expression_Type, Expression);
          when N_Precursor =>
             Analyse_Precursor
+              (Class, Container, Expression_Type, Expression);
+         when N_Old =>
+            Analyse_Expression (Class, Container, Expression_Type,
+                                Ack.Expression (Expression));
+            Container.Save_Old_Value (Ack.Expression (Expression));
+         when N_Tuple =>
+            Analyse_Tuple_Expression
               (Class, Container, Expression_Type, Expression);
          when N_Attachment_Test =>
             Analyse_Expression (Class, Container,
@@ -895,18 +1044,30 @@ package body Ack.Semantic is
       Effective       : constant Boolean :=
                           Routine_Feature and then not Deferred
                                 and then Kind (Value_Node) = N_Routine;
-      Locals_Node     : constant Node_Id :=
-                          (if Value_Node = No_Node then No_Node
-                           else Local_Declarations (Value_Node));
-      Effective_Node  : constant Node_Id :=
-                          (if Effective then Effective_Routine (Value_Node)
+      Precondition_Node : constant Node_Id :=
+                            (if Routine_Feature
+                             then Precondition (Value_Node)
+                             else No_Node);
+      Postcondition_Node : constant Node_Id :=
+                             (if Routine_Feature
+                              then Postcondition (Value_Node)
+                              else No_Node);
+      Rescue_Node        : constant Node_Id :=
+                             (if Routine_Feature
+                              then Rescue (Value_Node)
+                              else No_Node);
+      Locals_Node        : constant Node_Id :=
+                             (if Value_Node = No_Node then No_Node
+                              else Local_Declarations (Value_Node));
+      Effective_Node     : constant Node_Id :=
+                             (if Effective then Effective_Routine (Value_Node)
                            else No_Node);
-      Internal        : constant Boolean :=
+      Internal           : constant Boolean :=
+                             Effective
+                                 and then Kind (Effective_Node) = N_Internal;
+      External           : constant Boolean :=
                           Effective
-                              and then Kind (Effective_Node) = N_Internal;
-      External        : constant Boolean :=
-                          Effective
-                              and then Kind (Effective_Node) = N_External;
+                                 and then Kind (Effective_Node) = N_External;
    begin
 
       for Node of List_Table.Element (Names).List loop
@@ -944,6 +1105,61 @@ package body Ack.Semantic is
             end if;
 
             Entity.Bind;
+
+            if Precondition_Node /= No_Node then
+               declare
+                  procedure Add_Precondition
+                    (Tag        : Name_Id;
+                     Expression : Node_Id);
+
+                  ----------------------
+                  -- Add_Precondition --
+                  ----------------------
+
+                  procedure Add_Precondition
+                    (Tag        : Name_Id;
+                     Expression : Node_Id)
+                  is
+                  begin
+                     Entity.Add_Precondition (Tag, Expression);
+                  end Add_Precondition;
+
+               begin
+                  Analyse_Assertion (Class, Entity,
+                                     Assertion (Precondition_Node),
+                                     Add_Precondition'Access);
+               end;
+            end if;
+
+            if Postcondition_Node /= No_Node then
+               declare
+                  procedure Add_Postcondition
+                    (Tag        : Name_Id;
+                     Expression : Node_Id);
+
+                  -----------------------
+                  -- Add_Postcondition --
+                  -----------------------
+
+                  procedure Add_Postcondition
+                    (Tag        : Name_Id;
+                     Expression : Node_Id)
+                  is
+                  begin
+                     Entity.Add_Postcondition (Tag, Expression);
+                  end Add_Postcondition;
+
+               begin
+                  Analyse_Assertion (Class, Entity,
+                                     Assertion (Postcondition_Node),
+                                     Add_Postcondition'Access);
+               end;
+            end if;
+
+            if Rescue_Node /= No_Node then
+               Analyse_Compound (Class, Entity, Compound (Rescue_Node));
+               Entity.Set_Rescue_Node (Rescue_Node);
+            end if;
 
             if Internal then
                Analyse_Effective_Routine (Class, Entity, Effective_Node);
@@ -1123,11 +1339,13 @@ package body Ack.Semantic is
       ------------------
 
       procedure Set_Redefine (Node : Node_Id) is
+         Name : constant Name_Id := Get_Name (Node);
       begin
-         if Inherited_Class.Has_Feature (Get_Name (Node)) then
-            if Class.Has_Feature (Get_Name (Node)) then
-               Class.Feature (Get_Name (Node)).Set_Redefined
-                 (Inherited_Class);
+         if Inherited_Class.Has_Feature (Name) then
+            if Class.Has_Feature (Name) then
+               Class.Feature (Name).Set_Redefined
+                 (Original_Feature =>
+                    Inherited_Class.Feature (Name));
             else
                Error (Node, E_Missing_Redefinition,
                       Entity_Type (Inherited_Class));
@@ -1183,8 +1401,12 @@ package body Ack.Semantic is
       Container : not null access Root_Entity_Type'Class;
       Loop_Node : Node_Id)
    is
-      Iteration_Node : constant Node_Id := Iteration (Loop_Node);
-      Loop_Body_Node : constant Node_Id := Loop_Body (Loop_Node);
+      Iteration_Node      : constant Node_Id := Loop_Iteration (Loop_Node);
+      Initialization_Node : constant Node_Id :=
+                              Loop_Initialization (Loop_Node);
+      Exit_Condition_Node : constant Node_Id :=
+                              Loop_Exit_Condition (Loop_Node);
+      Loop_Body_Node      : constant Node_Id := Loop_Body (Loop_Node);
    begin
       if Iteration_Node /= No_Node then
          declare
@@ -1201,9 +1423,10 @@ package body Ack.Semantic is
                Iterable_Type  : constant Type_Entity :=
                                   Type_Entity
                                     (Get_Type (Expression_Node));
-               Inherited_Type : constant Type_Entity :=
-                                  Iterable_Type.Get_Ancestor_Type
-                                    (Forward_Iterable);
+               Inherited_Type           : constant access constant
+                 Type_Entity_Record'Class :=
+                   Iterable_Type.Get_Ancestor_Type
+                     (Forward_Iterable);
                Implicit_Type      : constant Ack.Types.Type_Entity :=
                                       Inherited_Type.Generic_Binding (1);
                Implicit           : constant Ack.Variables.Variable_Entity :=
@@ -1213,21 +1436,26 @@ package body Ack.Semantic is
                                          Node       => Iteration_Node,
                                          Local_Type => Implicit_Type);
             begin
-               if False then
-                  Ada.Text_IO.Put_Line
-                    ("iteration: iterable = " & Iterable_Type.Description);
-                  Ada.Text_IO.Put_Line
-                    ("iteration: inherited = " & Inherited_Type.Description);
-                  Ada.Text_IO.Put_Line
-                    ("iteration: implicit = " & Implicit_Type.Description);
-               end if;
-
                Implicit.Set_Attached;
                Set_Entity (Iteration_Node, Implicit);
                Set_Implicit_Entity (Iteration_Node);
                Container.Add_Implicit (Implicit);
             end;
          end;
+      else
+         if Exit_Condition_Node = No_Node then
+            Error (Loop_Node, E_Missing_Exit_Condition);
+         end if;
+      end if;
+
+      if Initialization_Node /= No_Node then
+         Analyse_Compound (Class, Container, Compound (Initialization_Node));
+      end if;
+
+      if Exit_Condition_Node /= No_Node then
+         Analyse_Boolean_Expression
+           (Class, Container,
+            Expression (Exit_Condition_Node));
       end if;
 
       Analyse_Compound (Class, Container, Compound (Loop_Body_Node));
@@ -1247,6 +1475,83 @@ package body Ack.Semantic is
       Notes : Node_Id)
    is
       List : constant List_Id := Node_Table.Element (Notes).List;
+
+      function To_String
+        (List : List_Id)
+         return String;
+
+      ---------------
+      -- To_String --
+      ---------------
+
+      function To_String
+        (List : List_Id)
+         return String
+      is
+         use Ada.Strings.Unbounded;
+         Result : Unbounded_String;
+
+         procedure Add_Note_Item
+           (Note_Item : Node_Id)
+           with Pre => Kind (Note_Item) = N_Note_Item;
+
+         procedure Add_Note_Text
+           (Text : String);
+
+         -------------------
+         -- Add_Note_Item --
+         -------------------
+
+         procedure Add_Note_Item
+           (Note_Item : Node_Id)
+         is
+            Item : constant Node_Id := Field_1 (Note_Item);
+         begin
+            if Kind (Item) = N_Identifier then
+               Add_Note_Text (To_String (Get_Name (Item)));
+            elsif Kind (Item) = N_Constant then
+               declare
+                  Value : constant Node_Id := Field_2 (Item);
+               begin
+                  case N_Constant_Value (Kind (Value)) is
+                     when N_String_Constant =>
+                        Add_Note_Text (To_String (Get_Name (Value)));
+                     when N_Integer_Constant =>
+                        Add_Note_Text (To_String (Get_Name (Value)));
+                     when N_Boolean_Constant =>
+                        Add_Note_Text (if Boolean_Value (Value)
+                                       then "True" else "False");
+                  end case;
+               end;
+            else
+               raise Constraint_Error with
+               Get_Program (Item).Show_Location
+                 & ": expected an identifier or a constant, but found "
+                 & Node_Kind'Image (Kind (Item));
+            end if;
+         end Add_Note_Item;
+
+         -------------------
+         -- Add_Note_Text --
+         -------------------
+
+         procedure Add_Note_Text
+           (Text : String)
+         is
+         begin
+            if Result = Null_Unbounded_String then
+               Result := To_Unbounded_String (Text);
+            else
+               Result := Result & Character'Val (10)
+                 & Text;
+            end if;
+         end Add_Note_Text;
+
+      begin
+         Scan (List, Add_Note_Item'Access);
+         return To_String (Result);
+      end To_String;
+
    begin
       for Note of List_Table.Element (List).List loop
          declare
@@ -1254,12 +1559,10 @@ package body Ack.Semantic is
             Value : constant Node_Id := Note_Value (Note);
             Value_List : constant List_Id :=
                            Node_Table.Element (Value).List;
-            First_Value : constant Node_Id :=
-                            List_Table.Element (Value_List).List.First_Element;
          begin
             Class.Add_Note
               (Name  => To_Standard_String (Name),
-               Value => To_Standard_String (Get_Name (Field_1 (First_Value))));
+               Value => To_String (Value_List));
          end;
       end loop;
    end Analyse_Notes;
@@ -1289,6 +1592,10 @@ package body Ack.Semantic is
          Expression_Type => Get_Top_Level_Type ("any"),
          Expression      => Left);
       Left_Type := Ack.Types.Type_Entity (Get_Type (Left));
+
+      if Left_Type /= null then
+         Left_Type.Check_Bound;
+      end if;
 
       if Left_Type = null then
          null;
@@ -1360,8 +1667,10 @@ package body Ack.Semantic is
             return;
          end if;
 
+         Local_Table.Check_Bound;
+
          if not Local_Table.Contains (Name) then
-            Error (Precursor_Element, E_Undeclared_Name);
+            Error (Precursor_Element, E_Undeclared_Name, Local_Table);
             Stop := True;
             return;
          end if;
@@ -1433,6 +1742,136 @@ package body Ack.Semantic is
 
    end Analyse_Precursor;
 
+   -------------------
+   -- Analyse_Retry --
+   -------------------
+
+   procedure Analyse_Retry
+     (Class      : Ack.Classes.Class_Entity;
+      Container  : not null access Root_Entity_Type'Class;
+      Retry      : Node_Id)
+   is
+   begin
+      null;
+   end Analyse_Retry;
+
+   ------------------------------
+   -- Analyse_Tuple_Expression --
+   ------------------------------
+
+   procedure Analyse_Tuple_Expression
+     (Class           : Ack.Classes.Class_Entity;
+      Container       : not null access Root_Entity_Type'Class;
+      Expression_Type : access Root_Entity_Type'Class;
+      Expression      : Node_Id)
+   is
+      use type Ack.Classes.Class_Entity;
+      use type Ack.Types.Type_Entity;
+      Expr_Nodes : constant Array_Of_Nodes :=
+                     To_Array
+                       (Tuple_Expression_List (Expression));
+      Expr_Count : constant Natural :=
+                     Expr_Nodes'Length;
+      Expr_Type    : constant Ack.Types.Type_Entity :=
+                       Ack.Types.Type_Entity (Expression_Type);
+      Tuple_Arity  : constant Tuple_Arity_Range :=
+                       Tuple_Arity_Range (Expr_Count);
+      Expr_Type_Entity : constant Ack.Types.Type_Entity :=
+                           Ack.Types.Type_Entity (Expression_Type);
+      Actual_Types : Ack.Types.Array_Of_Types (Expr_Nodes'Range);
+      Tuple_Class  : Ack.Classes.Class_Entity renames
+                       Tuple_Classes (Tuple_Arity);
+      Type_Entity   : Ack.Types.Type_Entity := null;
+   begin
+
+      if Tuple_Class = null then
+         Tuple_Class := Load_Tuple_Class (Tuple_Arity);
+      end if;
+
+      if Expr_Type.Class /= null
+        and then not Expr_Type.Class.Conforms_To (Tuple_Class)
+      then
+         Error (Expression, E_Type_Error, Tuple_Class);
+         return;
+      end if;
+
+      if Expr_Type_Entity.Generic_Binding_Count = 0 then
+         Error (Expression, E_Type_Error, Expr_Type_Entity);
+         return;
+      end if;
+
+      if Expr_Type_Entity.Generic_Binding_Count /= Expr_Nodes'Length then
+         Error (Expression, E_Type_Error, Expr_Type_Entity);
+         return;
+      end if;
+
+      for I in Expr_Nodes'Range loop
+         Analyse_Expression
+           (Class, Container,
+            Expr_Type_Entity.Generic_Binding (I), Expr_Nodes (I));
+         Actual_Types (I) :=
+           Ack.Types.Type_Entity (Get_Type (Expr_Nodes (I)));
+      end loop;
+
+      Type_Entity :=
+        Ack.Types.Instantiate_Generic_Class
+          (Node            => Expression,
+           Generic_Class   => Tuple_Class,
+           Generic_Actuals => Actual_Types,
+           Detachable      => False);
+
+      if Type_Entity /= null then
+         Set_Type (Expression, Type_Entity);
+      end if;
+
+   end Analyse_Tuple_Expression;
+
+   ------------------------
+   -- Analyse_Tuple_Type --
+   ------------------------
+
+   procedure Analyse_Tuple_Type
+     (Class     : Ack.Classes.Class_Entity;
+      Type_Node : Node_Id)
+   is
+      use type Ack.Classes.Class_Entity;
+      use type Ack.Types.Type_Entity;
+      Actual_Nodes : constant Array_Of_Nodes :=
+                       To_Array
+                         (Tuple_Argument_List (Type_Node));
+      Actual_Count : constant Natural :=
+                       Actual_Nodes'Length;
+      Tuple_Arity  : constant Tuple_Arity_Range :=
+                       Tuple_Arity_Range (Actual_Count);
+      Actual_Types : Ack.Types.Array_Of_Types (Actual_Nodes'Range);
+      Tuple_Class  : Ack.Classes.Class_Entity renames
+                       Tuple_Classes (Tuple_Arity);
+      Type_Entity   : Ack.Types.Type_Entity := null;
+   begin
+      if Tuple_Class = null then
+         Tuple_Class := Load_Tuple_Class (Tuple_Arity);
+      end if;
+
+      for I in Actual_Nodes'Range loop
+         Analyse_Type (Class, Actual_Nodes (I));
+         Actual_Types (I) := Ack.Types.Get_Type_Entity (Actual_Nodes (I));
+      end loop;
+
+      Type_Entity :=
+        Ack.Types.Instantiate_Generic_Class
+          (Node            => Type_Node,
+           Generic_Class   => Tuple_Class,
+           Generic_Actuals => Actual_Types,
+           Detachable      => False);
+
+      if Type_Entity /= null then
+         Set_Entity (Type_Node, Type_Entity);
+      else
+         Set_Entity (Type_Node, Get_Top_Level_Type ("any"));
+      end if;
+
+   end Analyse_Tuple_Type;
+
    ------------------
    -- Analyse_Type --
    ------------------
@@ -1447,8 +1886,14 @@ package body Ack.Semantic is
             Analyse_Class_Type (Class, Type_Node);
          when N_Anchored_Type =>
             Analyse_Anchored_Type (Class, Type_Node);
+         when N_Tuple_Type =>
+            Analyse_Tuple_Type (Class, Type_Node);
       end case;
    end Analyse_Type;
+
+   ----------------------
+   -- Forward_Iterable --
+   ----------------------
 
    function Forward_Iterable return Ack.Classes.Class_Entity is
       Container_Name    : constant Name_Id := Get_Name_Id ("containers");
@@ -1569,5 +2014,25 @@ package body Ack.Semantic is
       end if;
 
    end Load_Class;
+
+   ----------------------
+   -- Load_Tuple_Class --
+   ----------------------
+
+   function Load_Tuple_Class
+     (Arity : Tuple_Arity_Range)
+      return Ack.Classes.Class_Entity
+   is
+      Aqua_Class   : constant Ack.Classes.Class_Entity :=
+                       Load_Class (null,
+                                   Ack.Environment.Top_Level,
+                                   Get_Name_Id ("Aqua"));
+      Arity_Image  : constant String := Tuple_Arity_Range'Image (Arity);
+      Tuple_Name   : constant String :=
+                       "Tuple" & Arity_Image (2 .. Arity_Image'Last);
+   begin
+      return Load_Class (null, Aqua_Class,
+                         Get_Name_Id (Tuple_Name));
+   end Load_Tuple_Class;
 
 end Ack.Semantic;

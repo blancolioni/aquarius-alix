@@ -1,3 +1,15 @@
-class Petal.Value
+deferred class Petal.Value
 
+feature
+
+   To_String : String
+      deferred
+      end
+      
+   Label : String
+   
+   Set_Label (L : String)
+      do
+         Label := L
+      end
 end

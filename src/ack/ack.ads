@@ -45,15 +45,21 @@ package Ack is
       N_Entity_Declaration_Group_List,
       N_Entity_Declaration_Group,
       N_Identifier_List,
+      N_Assertion,
+      N_Assertion_Clause,
       N_Class_Type,
       N_Anchored_Type,
+      N_Tuple_Type,
       N_Extended_Feature_Name,
       N_Feature_Name,
       N_Feature_Alias,
       N_Feature_Value,
       N_Explicit_Value,
       N_Routine,
+      N_Precondition,
       N_Local_Declarations,
+      N_Postcondition,
+      N_Rescue,
       N_Internal,
       N_External,
       N_Explicit_Creation_Type,
@@ -72,9 +78,13 @@ package Ack is
       N_Creation_Instruction,
       N_Conditional,
       N_Loop,
+      N_Check,
+      N_Retry,
       N_Precursor,
       N_Operator,
       N_Attachment_Test,
+      N_Old,
+      N_Tuple,
       N_Constant,
       N_String_Constant,
       N_Integer_Constant,
@@ -86,7 +96,7 @@ package Ack is
       N_Get_Property);
 
    subtype N_Type is Node_Kind range
-     N_Class_Type .. N_Anchored_Type;
+     N_Class_Type .. N_Tuple_Type;
 
    subtype N_Instruction is Node_Kind range
      N_Assignment .. N_Precursor;
@@ -105,9 +115,11 @@ package Ack is
       E_Redefined_Name,
       E_Not_Defined_In,
       E_Not_A_Create_Feature,
+      E_Create_Deferred_Class,
       E_Missing_Redefinition,
       E_No_Component,
       E_No_Child,
+      E_Missing_Exit_Condition,
       E_Id_List_With_Arguments,
       E_Id_List_With_No_Type,
       E_Id_List_With_Routine,
@@ -117,8 +129,22 @@ package Ack is
       E_Does_Not_Accept_Arguments,
       E_Ignored_Return_Value,
       E_Requires_Value,
-      E_Illegal_Redefinition
+      E_Requires_Definition,
+      E_Illegal_Redefinition,
+      E_Not_An_Iterator
      );
+
+   type Assertion_Monitoring_Level is
+     (Monitor_None,
+      Monitor_Preconditions,
+      Monitor_Postconditions,
+      Monitor_Class_Invariants,
+      Monitor_All);
+
+   procedure Set_Default_Monitoring_Level
+     (Level : Assertion_Monitoring_Level);
+
+   function Default_Monitoring_Level return Assertion_Monitoring_Level;
 
    type Node_Id is private;
 
@@ -172,7 +198,13 @@ package Ack is
 
    type Root_Entity_Type is abstract tagged private;
 
+   function Deferred
+     (Entity : Root_Entity_Type)
+      return Boolean
+   is abstract;
+
    type Entity_Type is access all Root_Entity_Type'Class;
+   type Constant_Entity_Type is access constant Root_Entity_Type'Class;
 
    function Standard_Name (Entity : Root_Entity_Type'Class) return String;
    function Declared_Name (Entity : Root_Entity_Type'Class) return String;
@@ -189,6 +221,35 @@ package Ack is
 
    function Description (Entity : Root_Entity_Type) return String
    is (Root_Entity_Type'Class (Entity).Qualified_Name);
+
+   function Assertion_Monitoring
+     (Entity : Root_Entity_Type'Class)
+      return Assertion_Monitoring_Level;
+
+   function Monitor
+     (Entity    : Root_Entity_Type'Class;
+      Assertion : Assertion_Monitoring_Level)
+      return Boolean
+   is (Entity.Assertion_Monitoring >= Assertion);
+
+   function Monitor_Preconditions
+     (Entity : Root_Entity_Type'Class)
+      return Boolean
+   is (Entity.Monitor (Monitor_Preconditions));
+
+   function Monitor_Postconditions
+     (Entity : Root_Entity_Type'Class)
+      return Boolean
+   is (Entity.Monitor (Monitor_Postconditions));
+
+   function Monitor_Class_Invariants
+     (Entity : Root_Entity_Type'Class)
+      return Boolean
+   is (Entity.Monitor (Monitor_Class_Invariants));
+
+   procedure Set_Assertion_Monitoring
+     (Entity : in out Root_Entity_Type'Class;
+      Level  : Assertion_Monitoring_Level);
 
    function Conforms_To
      (Class : not null access constant Root_Entity_Type;
@@ -240,6 +301,18 @@ package Ack is
       return Boolean
    is (False);
 
+   procedure Save_Old_Value
+     (Entity : in out Root_Entity_Type;
+      Node   : Node_Id)
+   is null;
+
+   procedure Push_Old_Value
+     (Entity : in out Root_Entity_Type;
+      Unit   : in out Tagatha.Units.Tagatha_Unit;
+      Node   : Node_Id)
+   is null;
+
+   procedure Check_Bound (Entity : in out Root_Entity_Type) is null;
    procedure Bind (Entity : in out Root_Entity_Type) is null;
 
    procedure Push_Entity
@@ -305,7 +378,7 @@ package Ack is
 
    function Get_Error_Entity
      (Node : Node_Id)
-      return Entity_Type;
+      return Constant_Entity_Type;
 
    procedure Scan_Errors
      (Top     : Node_Id;
@@ -316,7 +389,8 @@ package Ack is
    procedure Error
      (Node   : Node_Id;
       Kind   : Error_Kind;
-      Entity : Entity_Type := null);
+      Entity : access constant Root_Entity_Type'Class := null)
+     with Pre => Kind /= E_Undeclared_Name or else Has_Name (Node);
 
    function Get_Program
      (N : Node_Id)
@@ -371,15 +445,18 @@ package Ack is
    function Identifiers (N : Node_Id) return List_Id
      with Pre => Kind (N) in N_Class_Name | N_Entity_Declaration_Group;
 
+   function Has_Name (N : Node_Id) return Boolean
+   is (Kind (N) in N_Identifier | N_Feature_Name | N_Feature_Alias
+         | N_Variable | N_Integer_Constant | N_String_Constant
+         | N_Boolean_Constant
+         | N_Effective_Routine | N_Precursor_Element
+         | N_Explicit_Creation_Call
+         | N_Formal_Generic_Name | N_Get_Property
+         | N_Attachment_Test | N_Iteration | N_Operator
+         | N_Note_Name | N_Note_Item | N_Assertion_Clause);
+
    function Get_Name (N : Node_Id) return Name_Id
-     with Pre =>
-       Kind (N) in N_Identifier | N_Feature_Name | N_Feature_Alias | N_Variable
-                 | N_Integer_Constant | N_String_Constant | N_Boolean_Constant
-                 | N_Effective_Routine | N_Precursor_Element
-                 | N_Explicit_Creation_Call
-                 | N_Formal_Generic_Name | N_Get_Property
-                 | N_Attachment_Test | N_Iteration | N_Operator
-                 | N_Note_Name | N_Note_Item;
+     with Pre => Has_Name (N);
 
    function Get_Entity (N : Node_Id) return Entity_Type;
    function Has_Entity (N : Node_Id) return Boolean;
@@ -444,6 +521,21 @@ package Ack is
    function Feature_Alias (N : Node_Id) return Node_Id
      with Pre => Kind (N) in N_External | N_Extended_Feature_Name;
 
+   function Precondition (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Routine;
+
+   function Postcondition (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Routine;
+
+   function Assertion (N : Node_Id) return Node_Id
+     with Pre => Kind (N) in N_Precondition | N_Postcondition;
+
+   function Assertion_Clauses (N : Node_Id) return List_Id
+     with Pre => Kind (N) = N_Assertion;
+
+   function Rescue (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Routine;
+
    function Local_Declarations (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Routine,
      Post => Local_Declarations'Result = No_Node
@@ -456,7 +548,8 @@ package Ack is
      with Pre => Kind (N) = N_Internal;
 
    function Compound (N : Node_Id) return Node_Id
-     with Pre => Kind (N) in N_Internal | N_Loop_Body;
+     with Pre => Kind (N) in
+     N_Internal | N_Loop_Body | N_Initialization | N_Rescue;
 
    function Instructions (N : Node_Id) return List_Id
      with Pre => Kind (N) = N_Compound;
@@ -465,7 +558,8 @@ package Ack is
      with Pre => Kind (N) in N_Assignment | N_Creation_Call;
 
    function Expression (N : Node_Id) return Node_Id
-     with Pre => Kind (N) in N_Assignment | N_Iteration;
+     with Pre => Kind (N) in N_Assignment | N_Iteration | N_Exit_Condition
+     | N_Assertion_Clause | N_Old;
 
    function Creation_Call (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Creation_Instruction;
@@ -475,6 +569,12 @@ package Ack is
      Post => Explicit_Creation_Call'Result = No_Node
      or else Kind (Explicit_Creation_Call'Result)
      = N_Explicit_Creation_Call;
+
+   function Explicit_Creation_Type (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Creation_Instruction,
+     Post => Explicit_Creation_Type'Result = No_Node
+     or else Kind (Explicit_Creation_Type'Result)
+     in N_Type;
 
    procedure Set_Explicit_Creation_Call
      (N    : Node_Id;
@@ -487,6 +587,9 @@ package Ack is
    function Actual_List (N : Node_Id) return Node_Id
      with Pre => Kind (N) in N_Precursor_Element | N_Explicit_Creation_Call;
 
+   function Tuple_Expression_List (N : Node_Id) return List_Id
+     with Pre => Kind (N) = N_Tuple;
+
    function Constant_Value (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Constant
      or else Kind (N) = N_Explicit_Value;
@@ -494,14 +597,34 @@ package Ack is
    function Boolean_Value (N : Node_Id) return Boolean
      with Pre => Kind (N) = N_Boolean_Constant;
 
-   function Iteration (N : Node_Id) return Node_Id
+   function Loop_Iteration (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Loop,
-     Post => Iteration'Result = No_Node
-       or else Kind (Iteration'Result) = N_Iteration;
+     Post => Loop_Iteration'Result = No_Node
+       or else Kind (Loop_Iteration'Result) = N_Iteration;
+
+   function Loop_Initialization (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Loop,
+     Post => Loop_Initialization'Result = No_Node
+     or else Kind (Loop_Initialization'Result) = N_Initialization;
+
+   function Loop_Invariant (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Loop,
+     Post => Loop_Invariant'Result = No_Node
+     or else Kind (Loop_Invariant'Result) = N_Invariant;
+
+   function Loop_Exit_Condition (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Loop,
+     Post => Loop_Exit_Condition'Result = No_Node
+     or else Kind (Loop_Exit_Condition'Result) = N_Exit_Condition;
 
    function Loop_Body (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Loop,
      Post => Kind (Loop_Body'Result) = N_Loop_Body;
+
+   function Loop_Variant (N : Node_Id) return Node_Id
+     with Pre => Kind (N) = N_Loop,
+     Post => Loop_Variant'Result = No_Node
+     or else Kind (Loop_Variant'Result) = N_Variant;
 
    function Get_Property (N : Node_Id) return Node_Id
      with Pre => Kind (N) in N_Expression_Node;
@@ -550,6 +673,7 @@ private
          Single          : Boolean    := False;
          Once            : Boolean    := False;
          Detachable      : Boolean    := False;
+         Inherited       : Boolean    := False;
          Implicit_Entity : Boolean    := False;
          Field           : Node_Field_Array := (others => No_Node);
          List            : List_Id    := No_List;
@@ -557,7 +681,7 @@ private
          Entity          : Entity_Type := null;
          Node_Type       : Entity_Type := null;
          Error           : Error_Kind := E_No_Error;
-         Error_Entity    : Entity_Type := null;
+         Error_Entity    : Constant_Entity_Type := null;
          Integer_Value   : Integer;
          Label           : Natural := 0;
       end record;
@@ -675,6 +799,10 @@ private
    is (Node_Table (N).List)
    with Pre => Kind (N) = N_Actual_Generics;
 
+   function Tuple_Argument_List (N : Node_Id) return List_Id
+   is (Node_Table.Element (N).List)
+   with Pre => Kind (N) = N_Tuple_Type;
+
    function Formal_Generics (N : Node_Id) return Node_Id
    is (Field_3 (N));
 
@@ -744,8 +872,23 @@ private
    function Value_Type (N : Node_Id) return Node_Id
    is (Node_Table.Element (N).Field (2));
 
+   function Assertion (N : Node_Id) return Node_Id
+   is (Field_1 (N));
+
+   function Assertion_Clauses (N : Node_Id) return List_Id
+   is (Node_Table.Element (N).List);
+
+   function Precondition (N : Node_Id) return Node_Id
+   is (Field_1 (N));
+
    function Local_Declarations (N : Node_Id) return Node_Id
    is (Field_2 (N));
+
+   function Postcondition (N : Node_Id) return Node_Id
+   is (Field_4 (N));
+
+   function Rescue (N : Node_Id) return Node_Id
+   is (Field_5 (N));
 
    function Value (N : Node_Id) return Node_Id
    is (Node_Table.Element (N).Field (3));
@@ -798,6 +941,9 @@ private
    function Variable (N : Node_Id) return Node_Id
    is (Field_1 (N));
 
+   function Explicit_Creation_Type (N : Node_Id) return Node_Id
+   is (Field_2 (N));
+
    function Creation_Call (N : Node_Id) return Node_Id
    is (Field_1 (N));
 
@@ -811,17 +957,32 @@ private
    function Actual_List (N : Node_Id) return Node_Id
    is (Field_2 (N));
 
+   function Tuple_Expression_List (N : Node_Id) return List_Id
+   is (Node_Table.Element (N).List);
+
    function Constant_Value (N : Node_Id) return Node_Id
    is (Field_2 (N));
 
    function Boolean_Value (N : Node_Id) return Boolean
    is (To_Standard_String (Get_Name (N)) = "true");
 
-   function Iteration (N : Node_Id) return Node_Id
+   function Loop_Iteration (N : Node_Id) return Node_Id
    is (Field_1 (N));
+
+   function Loop_Initialization (N : Node_Id) return Node_Id
+   is (Field_2 (N));
+
+   function Loop_Invariant (N : Node_Id) return Node_Id
+   is (Field_3 (N));
+
+   function Loop_Exit_Condition (N : Node_Id) return Node_Id
+   is (Field_4 (N));
 
    function Loop_Body (N : Node_Id) return Node_Id
    is (Field_5 (N));
+
+   function Loop_Variant (N : Node_Id) return Node_Id
+   is (Field_6 (N));
 
    function Get_Property (N : Node_Id) return Node_Id
    is (Field_6 (N));
@@ -838,8 +999,14 @@ private
 
    function Get_Error_Entity
      (Node : Node_Id)
-      return Entity_Type
+      return Constant_Entity_Type
    is (Node_Table.Element (Node).Error_Entity);
+
+   function Require_Else (Node : Node_Id) return Boolean
+   is (Node_Table.Element (Node).Inherited);
+
+   function Ensure_Then (Node : Node_Id) return Boolean
+   is (Node_Table.Element (Node).Inherited);
 
    function New_Node
      (Kind       : Node_Kind;
@@ -850,6 +1017,7 @@ private
       Defining   : Boolean     := False;
       Once       : Boolean     := False;
       Detachable : Boolean     := False;
+      Inherited  : Boolean     := False;
       Field_1    : Node_Id     := No_Node;
       Field_2    : Node_Id     := No_Node;
       Field_3    : Node_Id     := No_Node;
@@ -924,14 +1092,16 @@ private
 
    type Root_Entity_Type is abstract tagged
       record
-         Name                : Ada.Strings.Unbounded.Unbounded_String;
-         Source_Name         : Ada.Strings.Unbounded.Unbounded_String;
-         Declaration_Node    : Node_Id;
-         Declaration_Context : Entity_Type;
-         Value_Type          : Entity_Type;
-         Children            : Entity_Table;
-         Parent_Environment  : Entity_Type;
-         Attached            : Boolean := False;
+         Name                 : Ada.Strings.Unbounded.Unbounded_String;
+         Source_Name          : Ada.Strings.Unbounded.Unbounded_String;
+         Declaration_Node     : Node_Id;
+         Declaration_Context  : Entity_Type;
+         Value_Type           : Entity_Type;
+         Children             : Entity_Table;
+         Parent_Environment   : Entity_Type;
+         Attached             : Boolean := False;
+         Has_Monitoring_Level : Boolean := False;
+         Monitoring_Level     : Assertion_Monitoring_Level;
       end record;
 
    function Has_Context
@@ -976,6 +1146,15 @@ private
       return String
    is (Entity.Base_File_Name & "-" & To_Standard_String (Child_Name));
 
+   function Assertion_Monitoring
+     (Entity : Root_Entity_Type'Class)
+      return Assertion_Monitoring_Level
+   is (if Entity.Has_Monitoring_Level
+       then Entity.Monitoring_Level
+       elsif Entity.Has_Context
+       then Entity.Declaration_Context.Assertion_Monitoring
+       else Default_Monitoring_Level);
+
    function Has_Type
      (Entity : Root_Entity_Type'Class)
       return Boolean
@@ -1003,5 +1182,11 @@ private
       Table              : Boolean;
       Parent_Environment : access Root_Entity_Type'Class := null;
       Context            : access Root_Entity_Type'Class := null);
+
+   Local_Default_Monitoring_Level : Assertion_Monitoring_Level :=
+                                      Monitor_All;
+
+   function Default_Monitoring_Level return Assertion_Monitoring_Level
+   is (Local_Default_Monitoring_Level);
 
 end Ack;

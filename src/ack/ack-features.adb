@@ -55,6 +55,33 @@ package body Ack.Features is
            (Get_Name (Name_Node), Name_Node, Local_Type));
    end Add_Local;
 
+   -----------------------
+   -- Add_Postcondition --
+   -----------------------
+
+   procedure Add_Postcondition
+     (Feature   : in out Feature_Entity_Record'Class;
+      Tag       : Name_Id;
+      Condition : Node_Id)
+   is
+   begin
+      Feature.Postconditions.Append ((Tag, Condition));
+
+   end Add_Postcondition;
+
+   ----------------------
+   -- Add_Precondition --
+   ----------------------
+
+   procedure Add_Precondition
+     (Feature   : in out Feature_Entity_Record'Class;
+      Tag       : Name_Id;
+      Condition : Node_Id)
+   is
+   begin
+      Feature.Preconditions.Append ((Tag, Condition));
+   end Add_Precondition;
+
    ----------
    -- Bind --
    ----------
@@ -62,26 +89,24 @@ package body Ack.Features is
    overriding procedure Bind
      (Feature : in out Feature_Entity_Record)
    is
+      use type Ack.Classes.Class_Entity;
       Next_Argument : Positive := 1;
       Next_Local    : Positive := 1;
-   begin
-      if Feature.Has_Current then
-         declare
-            Current : constant Ack.Variables.Variable_Entity :=
+      Current       : constant Ack.Variables.Variable_Entity :=
                         Ack.Variables.New_Argument_Entity
                           (Get_Name_Id ("Current"),
                            Feature.Declaration_Node,
                            Ack.Types.New_Class_Type
                              (Feature.Declaration_Node,
-                              Feature.Definition_Class,
+                              (if Feature.Effective_Class = null
+                               then Feature.Definition_Class
+                               else Feature.Effective_Class),
                               Detachable => False));
-         begin
-            Current.Set_Attached;
-            Current.Set_Offset (1);
-            Feature.Insert (Current);
-            Next_Argument := 2;
-         end;
-      end if;
+   begin
+      Current.Set_Attached;
+      Current.Set_Offset (1);
+      Feature.Insert (Current);
+      Next_Argument := 2;
 
       for Argument of Feature.Arguments loop
          Argument.Set_Offset (Next_Argument);
@@ -112,17 +137,61 @@ package body Ack.Features is
       Feature.Local_Count := Next_Local - 1;
    end Bind;
 
-   ----------------------
-   -- Definition_Class --
-   ----------------------
+   ------------------------
+   -- Check_Precondition --
+   ------------------------
 
-   function Definition_Class
-     (Feature : Feature_Entity_Record'Class)
-      return access constant Ack.Classes.Class_Entity_Record'Class
+   procedure Check_Precondition
+     (Feature       : Feature_Entity_Record'Class;
+      Unit          : in out Tagatha.Units.Tagatha_Unit;
+      Success_Label : Positive;
+      Fail_Label    : Natural)
    is
    begin
-      return Feature.Definition_Class;
-   end Definition_Class;
+      if Feature.Redefined_Feature /= null then
+         declare
+            Ancestor_Fail : constant Positive := Unit.Next_Label;
+         begin
+            Feature.Redefined_Feature.Check_Precondition
+              (Unit          => Unit,
+               Success_Label => Success_Label,
+               Fail_Label    => Ancestor_Fail);
+            Unit.Label (Ancestor_Fail);
+         end;
+      end if;
+
+      for Clause of Feature.Preconditions loop
+         declare
+            Out_Label : constant Positive := Unit.Next_Label;
+         begin
+            Ack.Generate.Generate_Expression (Unit, Clause.Node);
+            Unit.Operate (Tagatha.Op_Test);
+            Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
+
+            if Fail_Label > 0 then
+               Unit.Jump (Fail_Label, Tagatha.C_Always);
+            else
+               Unit.Push_Text
+                 (Get_Program (Clause.Node).Show_Location
+                  & ": assertion failure in precondition of "
+                  & Feature.Qualified_Name
+                  & (if Clause.Tag = No_Name then ""
+                    else ": " & To_String (Clause.Tag)));
+               Unit.Pop_Register ("r0");
+
+               if Feature.Rescue_Node in Real_Node_Id then
+                  Unit.Jump (Feature.Link_Name & "$rescue");
+               else
+                  Unit.Push_Register ("pc");
+                  Unit.Native_Operation ("trap 15", 0, 0, "");
+               end if;
+            end if;
+
+            Unit.Label (Out_Label);
+         end;
+      end loop;
+      Unit.Jump (Success_Label);
+   end Check_Precondition;
 
    -----------------
    -- Description --
@@ -136,6 +205,18 @@ package body Ack.Features is
       return Root_Entity_Type (Feature).Description
         & " parent " & Feature.Declaration_Context.Full_Name;
    end Description;
+
+   ---------------------
+   -- Effective_Class --
+   ---------------------
+
+   function Effective_Class
+     (Feature : Feature_Entity_Record'Class)
+      return access constant Ack.Classes.Class_Entity_Record'Class
+   is
+   begin
+      return Feature.Effective_Class;
+   end Effective_Class;
 
    ---------------
    -- Full_Name --
@@ -199,6 +280,8 @@ package body Ack.Features is
       Once_Value_Label : constant String :=
                            "once_value$" & Feature.Link_Name;
       Exit_Label       : constant Positive := Unit.Next_Label;
+      Rescue_Label     : constant String :=
+                          Feature.Link_Name & "$rescue";
    begin
       if Feature.Routine then
 
@@ -213,6 +296,30 @@ package body Ack.Features is
             Frame_Words    => 0,
             Result_Words   => Result_Count,
             Global         => True);
+
+         if Feature.Rescue_Node in Real_Node_Id then
+            Unit.Directive (".exception "
+                            & Feature.Link_Name
+                            & " "
+                            & Rescue_Label
+                            & " "
+                            & Rescue_Label);
+
+            Unit.Label (Feature.Link_Name & "$retry");
+         end if;
+
+         if Feature.Declaration_Context.Monitor_Preconditions then
+            declare
+               Success_Label : constant Positive := Unit.Next_Label;
+            begin
+               Feature.Check_Precondition
+                 (Unit          => Unit,
+                  Success_Label => Success_Label,
+                  Fail_Label    => 0);
+               Unit.Label (Success_Label);
+            end;
+
+         end if;
 
          if Feature.External then
             declare
@@ -280,8 +387,42 @@ package body Ack.Features is
             for I in 1 .. Feature.Local_Count loop
                Unit.Push (0);
             end loop;
+
+            if Feature.Monitor_Postconditions then
+               for Old of Feature.Olds loop
+                  Ack.Generate.Generate_Expression (Unit, Old);
+               end loop;
+            end if;
+
             Ack.Generate.Generate_Compound
               (Unit, Compound (Feature.Routine_Node));
+
+            if Feature.Monitor_Postconditions then
+               for Clause of Feature.Postconditions loop
+                  declare
+                     Out_Label : constant Positive := Unit.Next_Label;
+                  begin
+                     Ack.Generate.Generate_Expression (Unit, Clause.Node);
+                     Unit.Operate (Tagatha.Op_Test);
+                     Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
+                     Unit.Push_Text
+                       (Get_Program (Clause.Node).Show_Location
+                        & ": assertion failure in postcondition of "
+                        & Feature.Qualified_Name
+                        & (if Clause.Tag = No_Name then ""
+                          else ": " & To_String (Clause.Tag)));
+                     Unit.Pop_Register ("r0");
+                     if Feature.Rescue_Node in Real_Node_Id then
+                        Unit.Jump (Rescue_Label);
+                     else
+                        Unit.Push_Register ("pc");
+                        Unit.Native_Operation ("trap 15", 0, 0, "");
+                     end if;
+                     Unit.Label (Out_Label);
+                  end;
+               end loop;
+            end if;
+
          end if;
 
          if Feature.Has_Result then
@@ -295,6 +436,20 @@ package body Ack.Features is
             Unit.Push_Local (1);
             Unit.Pop_Result;
          end if;
+
+         Unit.Jump (Exit_Label, Tagatha.C_Always);
+
+         Unit.Label (Feature.Link_Name & "$rescue", Export => True);
+         if Feature.Rescue_Node in Real_Node_Id then
+            Unit.Set_Property ("retry_label", Feature.Link_Name & "$retry");
+            Ack.Generate.Generate_Compound
+              (Unit, Compound (Feature.Rescue_Node));
+            Unit.Clear_Property ("retry_label");
+         end if;
+
+         Unit.Native_Operation ("mov fp, sp", 0, 0, "sp");
+         Unit.Native_Operation ("mov (sp)+, fp", 1, 0, "sp,fp");
+         Unit.Native_Operation ("trap 15", 1, 0, "r0");
 
          Unit.Label (Exit_Label);
          Unit.End_Routine;
@@ -356,6 +511,7 @@ package body Ack.Features is
             Parent_Environment => Class,
             Context            => Class);
          Feature.Alias := Alias;
+         Feature.Effective_Class := Class;
          Feature.Definition_Class := Class;
          Feature.Property := True;
       end return;
@@ -372,7 +528,7 @@ package body Ack.Features is
       pragma Assert (Feature.Property);
       Original_Class : constant Ack.Classes.Class_Entity :=
                          (if Feature.Original_Classes.Is_Empty
-                          then Feature.Definition_Class
+                          then Feature.Effective_Class
                           else Ack.Classes.Class_Entity
                             (Feature.Original_Classes.First_Element));
    begin
@@ -400,13 +556,11 @@ package body Ack.Features is
       Unit         : in out Tagatha.Units.Tagatha_Unit)
    is
       Original_Class : constant Ack.Classes.Class_Entity :=
-                         (if Feature.Original_Classes.Is_Empty
-                          then Feature.Definition_Class
-                          else Ack.Classes.Class_Entity
-                            (Feature.Original_Classes.First_Element));
+                         Feature.Definition_Class;
       Feature_Type   : constant Ack.Types.Type_Entity :=
                          Ack.Types.Type_Entity (Feature.Get_Type);
    begin
+
       if Feature.Standard_Name = "void" then
          Unit.Push (0);
          return;
@@ -432,7 +586,9 @@ package body Ack.Features is
 
       Unit.Pop_Register ("op");
 
-      if Feature.Definition_Class.Standard_Name = "string" then
+      if not Feature.Deferred
+        and then Feature.Effective_Class.Standard_Name = "string"
+      then
          Unit.Native_Operation
            ("get_property " & Feature.Standard_Name & ","
             & Natural'Image (Feature.Argument_Count),
@@ -448,10 +604,10 @@ package body Ack.Features is
       end if;
 
       if Feature.Is_External_Routine
-        and then Feature.Definition_Class.Aqua_Primitive_Behaviour
+        and then Feature.Effective_Class.Aqua_Primitive_Behaviour
       then
          Unit.Native_Operation
-           ("get_property " & Feature.Definition_Class.Link_Name & ",0",
+           ("get_property " & Feature.Effective_Class.Link_Name & ",0",
             Input_Stack_Words  => 0,
             Output_Stack_Words => 0,
             Changed_Registers  => "pv");
@@ -470,7 +626,7 @@ package body Ack.Features is
       end if;
 
       if Feature.Is_External_Routine
-        and then Feature.Definition_Class.Expanded
+        and then Feature.Effective_Class.Expanded
       then
          Unit.Native_Operation
            ("get_property " & Feature.Standard_Name & ","
@@ -483,12 +639,16 @@ package body Ack.Features is
          return;
       end if;
 
-      if Feature.Routine
-        or else (Feature.Property
-                 and then not Feature_Type.Detachable
-                 and then not Feature_Type.Expanded
-                 and then not Feature.Attached)
+      if Feature.Property
+        and then not Feature_Type.Detachable
+        and then not Feature_Type.Expanded
+        and then not Feature_Type.Deferred
+        and then not Feature.Attached
       then
+         --  Save op in case we have to allocate
+         Unit.Push_Register ("op");
+      elsif Feature.Routine then
+         --  Push "Current"
          Unit.Push_Register ("op");
       end if;
 
@@ -517,6 +677,7 @@ package body Ack.Features is
       elsif Feature.Property then
          if not Feature.Get_Type.Detachable
            and then not Feature_Type.Expanded
+           and then not Feature_Type.Deferred
            and then not Feature.Attached
          then
 
@@ -576,6 +737,30 @@ package body Ack.Features is
 
    end Push_Entity;
 
+   --------------------
+   -- Push_Old_Value --
+   --------------------
+
+   overriding procedure Push_Old_Value
+     (Feature : in out Feature_Entity_Record;
+      Unit    : in out Tagatha.Units.Tagatha_Unit;
+      Node    : Node_Id)
+   is
+   begin
+      for I in 1 .. Feature.Olds.Last_Index loop
+         if Feature.Olds.Element (I) = Node then
+            Unit.Push_Local
+              (Tagatha.Local_Offset
+                 (Feature.Local_Count
+                  + (if Feature.Has_Result then 1 else 0)
+                  + I));
+            return;
+         end if;
+      end loop;
+      raise Constraint_Error with
+        "can't find old value";
+   end Push_Old_Value;
+
    ---------------------
    -- Remove_Implicit --
    ---------------------
@@ -592,6 +777,23 @@ package body Ack.Features is
       end if;
    end Remove_Implicit;
 
+   --------------------
+   -- Save_Old_Value --
+   --------------------
+
+   overriding procedure Save_Old_Value
+     (Feature : in out Feature_Entity_Record;
+      Node    : Node_Id)
+   is
+   begin
+      for N of Feature.Olds loop
+         if N = Node then
+            return;
+         end if;
+      end loop;
+      Feature.Olds.Append (Node);
+   end Save_Old_Value;
+
    ---------------------------
    -- Scan_Original_Classes --
    ---------------------------
@@ -604,11 +806,10 @@ package body Ack.Features is
    is
    begin
       if Feature.Original_Classes.Is_Empty then
-         if Feature.Definition_Class = null then
-            --  deferred
+         if Feature.Deferred then
             null;
          else
-            Process (Feature.Definition_Class);
+            Process (Feature.Effective_Class);
          end if;
       else
          for Class of Feature.Original_Classes loop
@@ -633,9 +834,11 @@ package body Ack.Features is
    -----------------------
 
    procedure Set_Default_Value
-     (Feature : Feature_Entity_Record;
-      Unit    : in out Tagatha.Units.Tagatha_Unit)
+     (Feature          : Feature_Entity_Record;
+      Current_Property : in out Name_Id;
+      Unit             : in out Tagatha.Units.Tagatha_Unit)
    is
+
       procedure Set (Class : not null access constant
                        Ack.Classes.Class_Entity_Record'Class);
 
@@ -647,16 +850,21 @@ package body Ack.Features is
                        Ack.Classes.Class_Entity_Record'Class)
       is
       begin
-         Unit.Push_Register ("agg");
-         Unit.Pop_Register ("op");
-         Unit.Native_Operation
-           ("get_property "
-            & Class.Link_Name & ",0",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-         Unit.Push_Register ("pv");
-         Unit.Pop_Register ("op");
+         if Current_Property = No_Name
+           or else Class.Link_Name /= To_Standard_String (Current_Property)
+         then
+            Unit.Push_Register ("agg");
+            Unit.Pop_Register ("op");
+            Unit.Native_Operation
+              ("get_property "
+               & Class.Link_Name & ",0",
+               Input_Stack_Words  => 0,
+               Output_Stack_Words => 0,
+               Changed_Registers  => "pv");
+            Unit.Push_Register ("pv");
+            Unit.Pop_Register ("op");
+            Current_Property := Get_Name_Id (Class.Link_Name);
+         end if;
 
          if Feature.Property then
             Unit.Push (0);
@@ -666,7 +874,7 @@ package body Ack.Features is
          elsif Feature.Routine then
             Unit.Push_Operand
               (Tagatha.Operands.External_Operand
-                 (Feature.Definition_Class.Link_Name
+                 (Feature.Effective_Class.Link_Name
                   & "__" & Feature.Standard_Name,
                   True),
                Tagatha.Default_Size);
@@ -693,8 +901,12 @@ package body Ack.Features is
    is
    begin
       Feature.Property := False;
-      Feature.Deferred := True;
-      Feature.Definition_Class := null;
+      Feature.Routine := True;
+      Feature.Deferred_Feature := True;
+      Feature.Effective_Class := null;
+      if Feature.Value_Type /= null then
+         Feature.Has_Result := True;
+      end if;
    end Set_Deferred;
 
    ------------------------
@@ -758,12 +970,31 @@ package body Ack.Features is
    -------------------
 
    procedure Set_Redefined
-     (Feature     : in out Feature_Entity_Record'Class;
-      Original    : not null access Ack.Classes.Class_Entity_Record'Class)
+     (Feature          : in out Feature_Entity_Record'Class;
+      Original_Feature : not null access constant
+        Feature_Entity_Record'Class)
    is
    begin
-      Feature.Original_Classes.Append (Original);
+      Feature.Property := False;
+      Feature.Definition_Class :=
+        Original_Feature.Definition_Class;
+      Feature.Original_Classes.Append
+        (Original_Feature.Definition_Class);
+      Feature.Redefined_Feature :=
+        Constant_Feature_Entity (Original_Feature);
    end Set_Redefined;
+
+   ---------------------
+   -- Set_Rescue_Node --
+   ---------------------
+
+   procedure Set_Rescue_Node
+     (Feature : in out Feature_Entity_Record'Class;
+      Node    : Node_Id)
+   is
+   begin
+      Feature.Rescue_Node := Node;
+   end Set_Rescue_Node;
 
    ---------------------
    -- Set_Result_Type --
@@ -775,7 +1006,7 @@ package body Ack.Features is
    is
    begin
       Feature.Value_Type := Entity_Type (Result_Type);
-      if Feature.Routine or else Feature.External then
+      if Feature.Routine or else Feature.External or else Feature.Deferred then
          Feature.Has_Result := True;
       end if;
    end Set_Result_Type;

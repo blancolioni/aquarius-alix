@@ -28,9 +28,13 @@ with Aquarius.Grammars.UI;
 with Ack.Errors;
 with Ack.IO;
 
+with Ack.Compile;
 with Ack.Parser;
 with Ack.Semantic;
 with Ack.Generate;
+
+with Aqua.CPU;
+with Aqua.Images;
 
 with Komnenos.Logging;
 with Komnenos.Paths;
@@ -179,13 +183,28 @@ begin
       return;
    end if;
 
+   if Command_Line.Aqua_Trace_Code then
+      Aqua.CPU.Set_Option ("trace-code", "true");
+   end if;
+
    Komnenos.Themes.Load_Theme
      (Tropos.Reader.Read_Config
         (Komnenos.Paths.Config_File ("themes/default.theme")));
 
    Aquarius.Target.Manager.Set_Target (Aquarius.Command_Line.Target);
 
-   if Aquarius.Command_Line.Filter then
+   if Aquarius.Command_Line.Ack_Execute_Root /= "" then
+      declare
+         Image : constant Aqua.Images.Image_Type := Aqua.Images.New_Image;
+         CPU   : Aqua.CPU.Aqua_CPU_Type (Image, null);
+      begin
+         Ack.Compile.Load_Root_Class
+           (Source_Path => Aquarius.Command_Line.Ack_Execute_Root,
+            To_Image    => Image);
+         CPU.Run;
+         CPU.Report;
+      end;
+   elsif Aquarius.Command_Line.Filter then
 
       if Aquarius.Command_Line.Input_File = "" then
          Ada.Text_IO.Put_Line ("no input file specified");
@@ -282,7 +301,7 @@ begin
                        Highest_Level (List) <= Warning
                      then
                         Ack.Generate.Generate_Class_Declaration
-                          (Node);
+                          (Node, False);
                      end if;
                   end;
 

@@ -1,5 +1,13 @@
 class Petal.Checks.Aggregate_Item
 inherit
    Petal.Context
+   Petal.Expression
    
+feature
+
+   After_Expression (Child : Petal.Checks.Expression)
+      do
+         Value := Child.Value
+      end
+
 end

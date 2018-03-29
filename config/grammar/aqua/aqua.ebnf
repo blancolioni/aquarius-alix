@@ -236,7 +236,7 @@ tag ::=
          identifier
 	 
 old ::=
-         'old' expression
+         'old' primary
 	 
 only ::=
          'only' [ feature_list ]
@@ -265,10 +265,14 @@ undefine ::=
 type ::=
          class_type
       |  anchored
+      |  tuple_type
       
 class_type ::=
          [ attachment_mark ] class_name [ actual_generics ]
 	 
+tuple_type ::=
+  '(' < type / ',' > ')'
+  
 attachment_mark ::=
          'detachable'
       |  'attached'
@@ -354,12 +358,14 @@ type_interval ::=
          manifest_type '..' manifest_type
 	 
 loop ::=
-         [iteration] [initialization] [ invariant ] [exit_condition] loop_body [ variant ] 'end'
-	
+         iteration [initialization] [ invariant ] [exit_condition] loop_body [ variant ] 'end'
+       | initialization [ invariant ] [exit_condition] loop_body [ variant ] 'end'
+       
 iteration ::= 'across' expression 'as' identifier
     
 initialization ::=
          'from' compound
+         
 exit_condition ::=
          'until' until_expression
 
@@ -440,12 +446,12 @@ factor ::= [ unary_primary_operator ] primary
 
 primary ::= manifest_constant
          | precursor
-	     | '(' expression ')'
+	     | '(' < expression / ',' > ')'
 	     | old
          | object_test
 	 
 boolean_operator ::=
-	'and' | 'and' 'then' | 'or' | 'or' 'else' | 'xor'
+	'and' | 'and' 'then' | 'or' | 'or' 'else' | 'xor' | 'implies'
 
 relational_operator ::= '=' | '/=' | '<' | '<=' | '>' | '>='
 

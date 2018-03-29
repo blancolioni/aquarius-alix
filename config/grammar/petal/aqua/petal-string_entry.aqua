@@ -3,12 +3,12 @@ create
    Make
    
 feature
-   Text  : String
+   Value : Petal.Value
    Label : String
    
-   Make (Entry_Text, Entry_Label : String)
+   Make (Entry_Text : Petal.Value; Entry_Label : String)
       do
-         Text := Entry_Text
+         Value := Entry_Text
          Label := Entry_Label
       end
       

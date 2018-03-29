@@ -1,0 +1,5 @@
+class Petal.Checks.Relational_Operator
+inherit
+   Aquarius.Trees.Program_Tree
+   
+end

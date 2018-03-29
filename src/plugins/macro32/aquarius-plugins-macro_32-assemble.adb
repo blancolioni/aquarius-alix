@@ -263,7 +263,24 @@ package body Aquarius.Plugins.Macro_32.Assemble is
             Assembly.Bind_Action (Group_Name, Position = "before",
                                   Parent, Child);
          end;
-
+      elsif Name = "exception" then
+         declare
+            Base    : constant String := Arguments (1).Chosen_Tree.Text;
+            Bound   : constant String := Arguments (2).Chosen_Tree.Text;
+            Handler : constant String := Arguments (3).Chosen_Tree.Text;
+         begin
+            Assembly.Exception_Handler
+              (Base_Label    => Base,
+               Bound_Label   => Bound,
+               Handler_Label => Handler);
+         end;
+      elsif Name = "start" then
+         declare
+            Start : constant String :=
+                      Arguments (1).Chosen_Tree.Text;
+         begin
+            Assembly.Set_Start_Label (Start);
+         end;
       elsif Name = "source_file" then
          Assembly.Set_Source_File
            (Arguments (1).Chosen_Tree.Text);

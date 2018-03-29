@@ -8,5 +8,6 @@ feature
    Boolean_Or_Then alias "orelse" (Other : Boolean) : Boolean
    Boolean_Implies alias "implies" (Other : Boolean) : Boolean
    Boolean_Xor alias "xor" (Other : Boolean) : Boolean
+   Boolean_Not alias "not" : Boolean
    
 end

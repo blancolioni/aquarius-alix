@@ -16,7 +16,7 @@ feature
 
    Create_Standard_Table (Table : Petal.Entry_Table)
    local
-      NL_Value : Petal.Value.String_Value
+      NL_Value : Petal.Value.Character_Value
    do
 
       Table.Make ("standard", Void)
@@ -35,7 +35,7 @@ feature
       create Page_Entry.Create_Type_Entry ("Page", Page_Type, Void)
       Table.Entry_List.Append (Page_Entry)
    
-      create NL_Value.Make ("%N")
+      create NL_Value.Make (10)
       create NL_Entry.Create_Value_Entry ("nl", NL_Value, String_Type)
       Table.Entry_List.Append (NL_Entry)
       

@@ -6,4 +6,9 @@ feature
    
    Plus alias "+" (Right : Integer) : Integer
    
+   GE alias ">=" (Right : Integer) : Boolean
+   LE alias "<=" (Right : Integer) : Boolean
+   GT alias ">" (Right : Integer) : Boolean
+   LT alias "<" (Right : Integer) : Boolean
+   
 end
