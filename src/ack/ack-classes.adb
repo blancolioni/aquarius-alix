@@ -367,6 +367,14 @@ package body Ack.Classes is
       if Root_Entity_Type (Class.all).Contains (Name, False) then
          return Root_Entity_Type (Class.all).Get (Name);
       else
+         for Inherited of Class.Inherited_Types loop
+            if Inherited.Inherited_Type.Contains (Name, False)
+              or else Inherited.Inherited_Type.Class.Contains (Name, False)
+            then
+               return Inherited.Inherited_Type.Get (Name);
+            end if;
+         end loop;
+
          for Inherited of Class.Inherited_List loop
             if Inherited.Contains (Name, False) then
                return Inherited.Get (Name);
