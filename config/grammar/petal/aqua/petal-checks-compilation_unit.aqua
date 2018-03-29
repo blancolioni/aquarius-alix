@@ -5,7 +5,11 @@ inherit
 feature
 
    Before_Top_Level_Procedure_Declaration (Child : Petal.Checks.Top_Level_Procedure_Declaration)
+      local
+         String_Lits : Aqua.Containers.List_Map [String, Petal.Value]
       do
+         create String_Lits
+         Child.Set_String_Table (String_Lits)
          Child.Set_Context (Standard)
       end
    

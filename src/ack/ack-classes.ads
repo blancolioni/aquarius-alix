@@ -180,8 +180,7 @@ package Ack.Classes is
    function Get_Class_Entity
      (Node : Node_Id)
       return Class_Entity
-     with Pre => Kind (Node) in
-     N_Class_Declaration | N_Class_Header | N_Class_Name;
+     with Pre => Has_Class_Entity (Node);
 
    type Class_Type_Access is
      access constant Ack.Types.Type_Entity_Record'Class;

@@ -666,7 +666,7 @@ package body Ack.Semantic is
 
       if Ack.Types.Has_Type_Entity (Name_Node) then
          Type_Entity := Ack.Types.Get_Type_Entity (Name_Node);
-      else
+      elsif Ack.Classes.Has_Class_Entity (Name_Node) then
          Class_Entity := Ack.Classes.Get_Class_Entity (Name_Node);
 
          if Generics_Node = No_Node then
@@ -1781,6 +1781,8 @@ package body Ack.Semantic is
                        (Tuple_Expression_List (Expression));
       Expr_Count : constant Natural :=
                      Expr_Nodes'Length;
+      Expr_Type    : constant Ack.Types.Type_Entity :=
+                       Ack.Types.Type_Entity (Expression_Type);
       Tuple_Arity  : constant Tuple_Arity_Range :=
                        Tuple_Arity_Range (Expr_Count);
       Expr_Type_Entity : constant Ack.Types.Type_Entity :=
@@ -1795,10 +1797,20 @@ package body Ack.Semantic is
          Tuple_Class := Load_Tuple_Class (Tuple_Arity);
       end if;
 
-      if not Ack.Types.Type_Entity (Expression_Type).Class.Conforms_To
-        (Tuple_Class)
+      if Expr_Type.Class /= null
+        and then not Expr_Type.Class.Conforms_To (Tuple_Class)
       then
          Error (Expression, E_Type_Error, Tuple_Class);
+         return;
+      end if;
+
+      if Expr_Type_Entity.Generic_Binding_Count = 0 then
+         Error (Expression, E_Type_Error, Expr_Type_Entity);
+         return;
+      end if;
+
+      if Expr_Type_Entity.Generic_Binding_Count /= Expr_Nodes'Length then
+         Error (Expression, E_Type_Error, Expr_Type_Entity);
          return;
       end if;
 
@@ -2023,10 +2035,10 @@ package body Ack.Semantic is
       Aqua_Class   : constant Ack.Classes.Class_Entity :=
                        Load_Class (null,
                                    Ack.Environment.Top_Level,
-                                   Get_Name_Id ("aqua"));
+                                   Get_Name_Id ("Aqua"));
       Arity_Image  : constant String := Tuple_Arity_Range'Image (Arity);
       Tuple_Name   : constant String :=
-                       "tuple" & Arity_Image (2 .. Arity_Image'Last);
+                       "Tuple" & Arity_Image (2 .. Arity_Image'Last);
    begin
       return Load_Class (null, Aqua_Class,
                          Get_Name_Id (Tuple_Name));

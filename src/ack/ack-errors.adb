@@ -69,14 +69,18 @@ package body Ack.Errors is
          when E_Type_Error             =>
             declare
                Value_Type : constant Entity_Type :=
-                              Get_Entity (Node).Value_Type;
+                              (if Has_Entity (Node)
+                               then Get_Entity (Node).Value_Type
+                               else null);
             begin
                return "expected type derived from "
                  & Get_Error_Entity (Node).Description
                  & " but found "
-                 & Get_Entity (Node).Declared_Name
+                 & (if Has_Entity (Node)
+                    then Get_Entity (Node).Declared_Name
+                    else "[no entity]")
                  & (if Value_Type = null then " with no type"
-                    else " of type " & Value_Type.Qualified_Name);
+                    else " of type " & Value_Type.Description);
             end;
          when E_Insufficient_Arguments =>
             return "not enough arguments";
