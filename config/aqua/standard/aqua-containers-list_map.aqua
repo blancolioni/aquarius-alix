@@ -22,7 +22,7 @@ feature
          Append ((K, E))
       end
       
-    Delete (K : Key_Type)
+   Delete (K : Key_Type)
       local
          It : Aqua.Containers.Linked_List_Iterator [(Key_Type, Element_Type)]
          Found : Boolean

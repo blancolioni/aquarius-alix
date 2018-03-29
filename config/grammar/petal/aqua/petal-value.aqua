@@ -6,4 +6,10 @@ feature
       deferred
       end
       
+   Label : String
+   
+   Set_Label (L : String)
+      do
+         Label := L
+      end
 end
