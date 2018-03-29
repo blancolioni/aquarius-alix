@@ -18,13 +18,15 @@ feature
 
    Before_Identifier (Id : String)
       do
-         Argument_Name := Id
+         Argument_Name := Id.To_Lower
       end
 
    After_Expression (Child : Petal.Checks.Expression)
       do
          if attached Child.Value as E then
-            Put_Line ("arg: " & Argument_Name & " => " & Child.Value.To_String)
+            if Argument_Name = "send_string" then
+               String_Literals.Insert (Child.Value)
+            end
          end 
       end
 end

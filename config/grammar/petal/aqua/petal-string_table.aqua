@@ -4,37 +4,48 @@ inherit
    
 feature
    
-   Insert (S : Petal.Value) : String
+   Insert (S : Petal.Value)
+      local
+         Label : String
       do
          Next_Index := Next_Index + 1
-         Result := "S" & Next_Index.To_String
-         New_Entry (S, Result) 
+         Label := "S" & Next_Index.To_String
+         New_Entry (Label, S) 
+         S.Set_Label (Label)
       end
          
    Declare_Strings
+      local
+         Index : Integer
+         Key   : String
       do
-         across Table as Entry loop
+         from
+            Index := 1
+         invariant
+            Index <= Next_Index
+         until
+            Index > Next_Index
+         loop
+            Key := "S" & Index.To_String
             Set_Col (4)
-            Put (Entry.Label)
+            Put (Key)
             Set_Col (8)
             Put (": constant String := ")
-            Put (Entry.Value.To_String)
+            Put (Table.Element (Key).To_String)
             Put (";")
             New_Line
+            Index := Index + 1
          end
       end
       
 feature {None}
 
-   New_Entry (S : Petal.Value; Label : String)
-      local
-         E : Petal.String_Entry
+   New_Entry (Label : String; S : Petal.Value)
       do
-         create E.Make (S, Label)
-         Table.Append (E)
+         Table.Insert (Label, S)
       end
       
-   Next_Index : Integer
-   Table      : Aqua.Containers.Linked_List[Petal.String_Entry]
+   Table       : Aqua.Containers.List_Map [String, Petal.Value]
+   Next_Index  : Integer
    
 end
