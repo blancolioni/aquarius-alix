@@ -1436,15 +1436,6 @@ package body Ack.Semantic is
                                          Node       => Iteration_Node,
                                          Local_Type => Implicit_Type);
             begin
-               if False then
-                  Ada.Text_IO.Put_Line
-                    ("iteration: iterable = " & Iterable_Type.Description);
-                  Ada.Text_IO.Put_Line
-                    ("iteration: inherited = " & Inherited_Type.Description);
-                  Ada.Text_IO.Put_Line
-                    ("iteration: implicit = " & Implicit_Type.Description);
-               end if;
-
                Implicit.Set_Attached;
                Set_Entity (Iteration_Node, Implicit);
                Set_Implicit_Entity (Iteration_Node);
@@ -1679,7 +1670,7 @@ package body Ack.Semantic is
          Local_Table.Check_Bound;
 
          if not Local_Table.Contains (Name) then
-            Error (Precursor_Element, E_Undeclared_Name);
+            Error (Precursor_Element, E_Undeclared_Name, Local_Table);
             Stop := True;
             return;
          end if;

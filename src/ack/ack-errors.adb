@@ -34,8 +34,14 @@ package body Ack.Errors is
          when E_No_Error               =>
             return "no error";
          when E_Undeclared_Name        =>
-            return "undeclared: "
-              & To_String (Get_Name (Node));
+            if Get_Error_Entity (Node) /= null then
+               return To_String (Get_Name (Node))
+                 & " not declared in "
+                 & Get_Error_Entity (Node).Description;
+            else
+               return "undeclared: "
+                 & To_String (Get_Name (Node));
+            end if;
          when E_Redefined_Name =>
             return "redefinition of "
               & Get_Entity (Node).Description;
