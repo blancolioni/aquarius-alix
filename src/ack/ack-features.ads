@@ -55,6 +55,10 @@ package Ack.Features is
       return access constant Ack.Classes.Class_Entity_Record'Class
      with Pre => not Feature.Deferred;
 
+   function Definition_Class
+     (Feature : Feature_Entity_Record'Class)
+      return access constant Ack.Classes.Class_Entity_Record'Class;
+
    procedure Set_Result_Type
      (Feature     : in out Feature_Entity_Record'Class;
       Result_Type : not null access Ack.Types.Type_Entity_Record'Class);
@@ -286,5 +290,10 @@ private
      (Node    : Node_Id)
       return Feature_Entity
    is (Feature_Entity (Get_Entity (Node)));
+
+   function Definition_Class
+     (Feature : Feature_Entity_Record'Class)
+      return access constant Ack.Classes.Class_Entity_Record'Class
+   is (Feature.Definition_Class);
 
 end Ack.Features;

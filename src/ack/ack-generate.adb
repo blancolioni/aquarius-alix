@@ -9,6 +9,7 @@ with Ack.Classes;
 with Ack.Features;
 with Ack.Types;
 
+with Ack.Classes.Layout;
 with Ack.Generate.Primitives;
 
 with Ada.Text_IO;
@@ -187,6 +188,8 @@ package body Ack.Generate is
       Unit.Pop_Result;
       Unit.End_Routine;
 
+      Ack.Classes.Layout.Generate_Object_Allocator (Unit, Class);
+
    end Generate_Allocator;
 
    --------------------------------
@@ -259,6 +262,9 @@ package body Ack.Generate is
          Global         => True);
 
       Unit.End_Routine;
+
+      Ack.Classes.Layout.Generate_Virtual_Table
+        (Unit, Ack.Classes.Constant_Class_Entity (Entity));
 
       if not Entity.Deferred then
          Generate_Allocator (Unit, Entity);

@@ -656,8 +656,8 @@ package body Ack.Classes is
             then
                Scanned.Insert
                  (Inherited.Inherited_Type.Class.Qualified_Name, True);
-               Process (Inherited.Inherited_Type.Class);
                Scan (Inherited.Inherited_Type.Class);
+               Process (Inherited.Inherited_Type.Class);
             end if;
          end loop;
       end Scan;
