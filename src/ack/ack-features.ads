@@ -198,9 +198,9 @@ private
          Olds                : Old_Value_Vectors.Vector;
          Preconditions       : Assertion_Record_Lists.List;
          Postconditions      : Assertion_Record_Lists.List;
-         Routine_Node        : Node_Id;
-         Explicit_Value_Node : Node_Id;
-         Rescue_Node         : Node_Id;
+         Routine_Node        : Node_Id := No_Node;
+         Explicit_Value_Node : Node_Id := No_Node;
+         Rescue_Node         : Node_Id := No_Node;
          Local_Count         : Natural := 0;
       end record
      with Invariant =>
