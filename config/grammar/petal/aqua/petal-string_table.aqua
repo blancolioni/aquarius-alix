@@ -30,7 +30,9 @@ feature
             Set_Col (4)
             Put (Key)
             Set_Col (8)
-            Put (": constant String := ")
+            Put (": aliased constant String :=")
+            New_Line
+            Set_Col (12)
             Put (Table.Element (Key).To_String)
             Put (";")
             New_Line
