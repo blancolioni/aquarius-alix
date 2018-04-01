@@ -116,19 +116,32 @@ package body Ack.Classes.Layout is
                if Feature.Definition_Class = Constant_Class_Entity (Base) then
                   --  class Any has no ancestors, so First
                   --  can still be true here
-                  Layout.Entries.Append
-                    (Layout_Entry'
-                       (Entry_Type  => Feature_Address,
-                        Label       =>
-                          (if First
-                           then Get_Name_Id
-                             (Class.Link_Name
-                              & "$" & Base.Link_Name & "$vt")
-                           else No_Name),
-                        Feature     =>
-                          Ack.Features.Constant_Feature_Entity
-                            (Class.Feature
-                                 (Get_Name_Id (Feature.Standard_Name)))));
+                  if Feature.Deferred then
+                     Layout.Entries.Append
+                       (Layout_Entry'
+                          (Entry_Type  => Internal_Offset,
+                           Label       =>
+                             (if First
+                              then Get_Name_Id
+                                (Class.Link_Name
+                                 & "$" & Base.Link_Name & "$vt")
+                              else No_Name),
+                           Word_Offset => 0));
+                  else
+                     Layout.Entries.Append
+                       (Layout_Entry'
+                          (Entry_Type  => Feature_Address,
+                           Label       =>
+                             (if First
+                              then Get_Name_Id
+                                (Class.Link_Name
+                                 & "$" & Base.Link_Name & "$vt")
+                              else No_Name),
+                           Feature     =>
+                             Ack.Features.Constant_Feature_Entity
+                               (Class.Feature
+                                    (Get_Name_Id (Feature.Standard_Name)))));
+                  end if;
                   First := False;
                end if;
             end loop;
