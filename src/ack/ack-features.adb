@@ -283,7 +283,24 @@ package body Ack.Features is
       Rescue_Label     : constant String :=
                           Feature.Link_Name & "$rescue";
    begin
-      if Feature.Routine then
+      if Feature.Property then
+         --  Generate a property routine, in case it redefines
+         --  an actual routine
+
+         Unit.Begin_Routine
+           (Name           => Feature.Link_Name,
+            Argument_Words => 1,
+            Frame_Words    => 0,
+            Result_Words   => 1,
+            Global         => True);
+
+         Feature.Push_Entity (False, Unit);
+
+         Unit.Pop_Result;
+
+         Unit.End_Routine;
+
+      elsif Feature.Routine then
 
          --  Don't allocate a frame, because we do it later
          --  by pushing zeroes onto the stack.  We don't need
