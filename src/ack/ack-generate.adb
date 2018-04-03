@@ -189,8 +189,6 @@ package body Ack.Generate is
       Unit.Pop_Result;
       Unit.End_Routine;
 
-      Class.Generate_Object_Allocator (Unit);
-
    end Generate_Allocator;
 
    --------------------------------
@@ -261,8 +259,14 @@ package body Ack.Generate is
       Entity.Generate_Virtual_Table (Unit);
 
       if not Entity.Deferred then
-         Generate_Allocator (Unit, Entity);
-         Generate_Default_Create (Unit, Entity);
+         Entity.Generate_Object_Allocator (Unit);
+      end if;
+
+      if False then
+         if not Entity.Deferred then
+            Generate_Allocator (Unit, Entity);
+            Generate_Default_Create (Unit, Entity);
+         end if;
       end if;
 
       declare

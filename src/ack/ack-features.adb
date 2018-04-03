@@ -22,6 +22,7 @@ package body Ack.Features is
       Feature.Arguments.Append
         (Ack.Variables.New_Argument_Entity
            (Get_Name (Name_Node), Name_Node, Arg_Type));
+      Feature.Property := False;
    end Add_Argument;
 
    ------------------
@@ -526,6 +527,24 @@ package body Ack.Features is
 
    end Instantiate;
 
+   --------------------------
+   -- Is_Property_Of_Class --
+   --------------------------
+
+   function Is_Property_Of_Class
+     (Feature : Feature_Entity_Record'Class;
+      Class   : not null access constant
+        Ack.Classes.Class_Entity_Record'Class)
+      return Boolean
+   is
+      use Ack.Classes;
+   begin
+      return not Feature.Deferred
+        and then Feature.Is_Property
+        and then Constant_Class_Entity (Feature.Active_Class)
+        = Constant_Class_Entity (Class);
+   end Is_Property_Of_Class;
+
    -----------------
    -- New_Feature --
    -----------------
@@ -538,6 +557,8 @@ package body Ack.Features is
       return Feature_Entity
    is
    begin
+      Ada.Text_IO.Put_Line
+        ("New feature: " & Class.Qualified_Name & "." & To_String (Name));
       return Feature : constant Feature_Entity := new Feature_Entity_Record do
          Feature.Create
            (Name, Declaration,
@@ -691,17 +712,17 @@ package body Ack.Features is
 
          --  create suitable Current
          Unit.Push_Register ("op");
-         Push_Offset
-           (Unit,
-            Current.Ancestor_Table_Offset
-              (Feature.Definition_Class));
-         Unit.Operate (Tagatha.Op_Add);
 
          --  push feature address from virtual table
          Unit.Pop_Register ("op");
          Unit.Push_Register ("op");
          Unit.Push_Register ("op");
          Unit.Dereference;
+         Push_Offset
+           (Unit,
+            Current.Ancestor_Table_Offset
+              (Feature.Definition_Class));
+         Unit.Operate (Tagatha.Op_Add);
          Push_Offset (Unit, Feature.Virtual_Table_Offset);
          Unit.Operate (Tagatha.Op_Add);
          Unit.Dereference;
