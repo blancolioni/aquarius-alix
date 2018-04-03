@@ -28,6 +28,8 @@ package body Ack.Generate is
 
    procedure Generate_Feature
      (Unit    : in out Tagatha.Units.Tagatha_Unit;
+      Class   : not null access constant
+        Ack.Classes.Class_Entity_Record'Class;
       Feature : not null access constant
         Ack.Features.Feature_Entity_Record'Class);
 
@@ -187,6 +189,8 @@ package body Ack.Generate is
       Unit.Pop_Result;
       Unit.End_Routine;
 
+      Class.Generate_Object_Allocator (Unit);
+
    end Generate_Allocator;
 
    --------------------------------
@@ -229,23 +233,17 @@ package body Ack.Generate is
             Frame_Words    => 0,
             Result_Words   => 0,
             Global         => True);
-         Unit.Call (Entity.Link_Name & "$allocate");
+         Unit.Call (Entity.Link_Name & "$create");
          Unit.Push_Register ("r0");
          Unit.Pop_Register ("op");
          Unit.Push_Register ("op");
-         Unit.Native_Operation
-           ("get_property " & Entity.Link_Name & ",0",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-         Unit.Push_Register ("pv");
-         Unit.Pop_Register ("op");
-         Unit.Native_Operation
-           ("get_property make,0",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-         Unit.Push_Register ("pv");
+         Unit.Push_Register ("op");
+         Unit.Dereference;
+         Push_Offset
+           (Unit,
+            Entity.Feature (Get_Name_Id ("make")).Virtual_Table_Offset);
+         Unit.Operate (Tagatha.Op_Add);
+         Unit.Dereference;
          Unit.Indirect_Call;
          Unit.Drop;
          Unit.End_Routine;
@@ -259,6 +257,8 @@ package body Ack.Generate is
          Global         => True);
 
       Unit.End_Routine;
+
+      Entity.Generate_Virtual_Table (Unit);
 
       if not Entity.Deferred then
          Generate_Allocator (Unit, Entity);
@@ -287,7 +287,7 @@ package body Ack.Generate is
               Ack.Features.Feature_Entity_Record'Class)
          is
          begin
-            Generate_Feature (Unit, Feature);
+            Generate_Feature (Unit, Entity, Feature);
          end Generate_Feature;
 
       begin
@@ -435,7 +435,7 @@ package body Ack.Generate is
    begin
 
       Unit.Call
-        (Creation_Type.Link_Name & "$allocate");
+        (Creation_Type.Link_Name & "$create");
       Unit.Push_Register ("r0");
       Get_Entity (Creation).Pop_Entity (Unit);
 
@@ -459,10 +459,16 @@ package body Ack.Generate is
             end loop;
          end;
 
-         Get_Entity (Creation).Push_Entity (False, Unit);
-         Get_Entity (Explicit_Call_Node).Push_Entity
-           (Have_Context => True,
+         Get_Entity (Creation).Push_Entity
+           (Have_Current => False,
+            Context      => Get_Context (Creation),
             Unit         => Unit);
+
+         Get_Entity (Explicit_Call_Node).Push_Entity
+           (Have_Current => True,
+            Context      => Get_Context (Creation),
+            Unit         => Unit);
+
          Unit.Drop;
       end if;
 
@@ -602,11 +608,13 @@ package body Ack.Generate is
 
    procedure Generate_Feature
      (Unit    : in out Tagatha.Units.Tagatha_Unit;
+      Class   : not null access constant
+        Ack.Classes.Class_Entity_Record'Class;
       Feature : not null access constant
         Ack.Features.Feature_Entity_Record'Class)
    is
    begin
-      Feature.Generate_Routine (Unit);
+      Feature.Generate_Routine (Class, Unit);
    end Generate_Feature;
 
    ---------------------------
@@ -880,7 +888,8 @@ package body Ack.Generate is
          Entity : constant Entity_Type := Get_Entity (Element);
       begin
          Entity.Push_Entity
-           (Have_Context => Element /= First_Element,
+           (Have_Current => Element /= First_Element,
+            Context      => Get_Context (Element),
             Unit         => Unit);
       end Process;
 
