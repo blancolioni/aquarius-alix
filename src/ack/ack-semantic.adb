@@ -1,5 +1,7 @@
 with Ada.Text_IO;
 
+with WL.String_Sets;
+
 with Komnenos.Entities.Tables;
 
 with Aquarius.Loader;
@@ -1332,7 +1334,27 @@ package body Ack.Semantic is
       Inherited_Type  : Ack.Types.Type_Entity;
       Inherited_Class : Ack.Classes.Class_Entity;
 
+      Redefined_Features : WL.String_Sets.Set;
+
       procedure Set_Redefine (Node : Node_Id);
+
+      procedure Check_Redefined
+        (Feature : not null access constant
+           Ack.Features.Feature_Entity_Record'Class);
+
+      ---------------------
+      -- Check_Redefined --
+      ---------------------
+
+      procedure Check_Redefined
+        (Feature : not null access constant
+           Ack.Features.Feature_Entity_Record'Class)
+      is
+      begin
+         if not Redefined_Features.Contains (Feature.Standard_Name) then
+            Error (Inherit, E_Missing_Redefine, Feature);
+         end if;
+      end Check_Redefined;
 
       ------------------
       -- Set_Redefine --
@@ -1341,6 +1363,7 @@ package body Ack.Semantic is
       procedure Set_Redefine (Node : Node_Id) is
          Name : constant Name_Id := Get_Name (Node);
       begin
+         Redefined_Features.Insert (To_Standard_String (Name));
          if Inherited_Class.Has_Feature (Name) then
             if Class.Has_Feature (Name) then
                Class.Feature (Name).Set_Redefined
@@ -1366,6 +1389,11 @@ package body Ack.Semantic is
 
       Class.Inherit (Inherited_Type);
       Scan (Redefine_List, Set_Redefine'Access);
+
+      if not Class.Deferred then
+         Inherited_Class.Scan_Deferred_Features
+           (Check_Redefined'Access);
+      end if;
 
    end Analyse_Inherit;
 

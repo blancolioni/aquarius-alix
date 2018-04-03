@@ -163,6 +163,12 @@ package Ack.Classes is
         procedure (Feature : not null access constant
                      Ack.Features.Feature_Entity_Record'Class));
 
+   procedure Scan_Deferred_Features
+     (Class   : Class_Entity_Record'Class;
+      Process : not null access
+        procedure (Feature : not null access constant
+                     Ack.Features.Feature_Entity_Record'Class));
+
    procedure Add_Generic_Formal
      (Class  : in out Class_Entity_Record'Class;
       Formal : not null access Ack.Types.Type_Entity_Record'Class);

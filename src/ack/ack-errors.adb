@@ -55,6 +55,10 @@ package body Ack.Errors is
               & Get_Error_Entity (Node).Description;
          when E_Create_Deferred_Class =>
             return "cannot create instance of deferred class";
+         when E_Missing_Redefine =>
+            return "deferred feature '"
+              & Get_Error_Entity (Node).Declared_Name
+              & "' must appear in redefine clause";
          when E_Missing_Redefinition =>
             return "missing declaration for redefined feature "
               & To_String (Get_Name (Node));

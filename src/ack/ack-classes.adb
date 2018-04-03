@@ -708,6 +708,26 @@ package body Ack.Classes is
       Class.Scan_Ancestors (False, Check_Conforming_Child'Access);
    end Scan_Conforming_Child_Ancestors;
 
+   ----------------------------
+   -- Scan_Deferred_Features --
+   ----------------------------
+
+   procedure Scan_Deferred_Features
+     (Class   : Class_Entity_Record'Class;
+      Process : not null access
+        procedure (Feature : not null access constant
+                     Ack.Features.Feature_Entity_Record'Class))
+   is
+      function Is_Deferred
+        (Feature : not null access constant
+           Ack.Features.Feature_Entity_Record'Class)
+         return Boolean
+      is (Feature.Deferred);
+
+   begin
+      Class.Scan_Features (Is_Deferred'Access, Process);
+   end Scan_Deferred_Features;
+
    -------------------
    -- Scan_Features --
    -------------------
