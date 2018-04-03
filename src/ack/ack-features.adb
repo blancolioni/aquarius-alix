@@ -553,6 +553,7 @@ package body Ack.Features is
      (Name        : Name_Id;
       Alias       : Name_Id;
       Declaration : Node_Id;
+      Property    : Boolean;
       Class       : not null access Ack.Classes.Class_Entity_Record'Class)
       return Feature_Entity
    is
@@ -568,7 +569,7 @@ package body Ack.Features is
          Feature.Alias := Alias;
          Feature.Effective_Class := Class;
          Feature.Definition_Class := Class;
-         Feature.Property := True;
+         Feature.Property := Property;
       end return;
    end New_Feature;
 
