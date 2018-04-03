@@ -76,7 +76,7 @@ package Ack.Types is
 
    function New_Class_Type
      (Node       : Node_Id;
-      Class      : Ack.Classes.Class_Entity;
+      Class      : not null access Ack.Classes.Class_Entity_Record'Class;
       Detachable : Boolean)
       return Type_Entity;
 
@@ -133,6 +133,11 @@ private
          Anchored         : Boolean := False;
       end record;
 
+   overriding function Class_Context
+     (Typ : not null access constant Type_Entity_Record)
+      return Constant_Entity_Type
+   is (Constant_Entity_Type (Typ.Class));
+
    overriding function Instantiate
      (Entity             : not null access Type_Entity_Record;
       Type_Instantiation : not null access
@@ -177,7 +182,7 @@ private
       Unit : in out Tagatha.Units.Tagatha_Unit);
 
    overriding procedure Check_Bound
-     (Typ : in out Type_Entity_Record);
+     (Typ : not null access Type_Entity_Record);
 
    function Class
      (Typ : Type_Entity_Record'Class)

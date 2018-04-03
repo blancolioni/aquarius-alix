@@ -37,7 +37,7 @@ package body Ack.Types is
    -----------------
 
    overriding procedure Check_Bound
-     (Typ : in out Type_Entity_Record)
+     (Typ : not null access Type_Entity_Record)
    is
    begin
       if not Typ.Generic_Formal then
@@ -440,15 +440,15 @@ package body Ack.Types is
    --------------------
 
    function New_Class_Type
-     (Node            : Node_Id;
-      Class           : Ack.Classes.Class_Entity;
-      Detachable      : Boolean)
+     (Node       : Node_Id;
+      Class      : not null access Ack.Classes.Class_Entity_Record'Class;
+      Detachable : Boolean)
       return Type_Entity
    is
    begin
       return Result : constant Type_Entity := new Type_Entity_Record'
         (Root_Entity_Type with
-         Class               => Class,
+         Class               => Ack.Classes.Class_Entity (Class),
          Generic_Bindings    => <>,
          Constraints         => <>,
          Generic_Formal      => False,

@@ -11,6 +11,7 @@ feature
       local
          T : Unit_Test
       do
+         create Test_List
          create { Test_Class_Load } T
          Test_List.Append (T)
          create { Test_Manual_Iterator } T
@@ -26,6 +27,8 @@ feature
          create { Test_Weaker_Precondition } T
          Test_List.Append (T)
          create { Test_Simple_Tuples } T
+         Test_List.Append (T)
+         create { Test_Diamond_Inheritance } T
          Test_List.Append (T)
       end
 
