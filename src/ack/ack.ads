@@ -196,6 +196,14 @@ package Ack is
      (Name : Name_Id)
       return String;
 
+   type Byte_Offset is new Natural;
+   type Word_Offset is new Natural;
+   type Bit_Offset is new Natural;
+
+   procedure Push_Offset
+     (Unit   : in out Tagatha.Units.Tagatha_Unit;
+      Offset : Word_Offset);
+
    type Root_Entity_Type is abstract tagged private;
 
    function Deferred
@@ -206,10 +214,16 @@ package Ack is
    type Entity_Type is access all Root_Entity_Type'Class;
    type Constant_Entity_Type is access constant Root_Entity_Type'Class;
 
+   function Class_Context
+     (Entity : not null access constant Root_Entity_Type)
+      return Constant_Entity_Type
+      is abstract;
+
    function Standard_Name (Entity : Root_Entity_Type'Class) return String;
    function Declared_Name (Entity : Root_Entity_Type'Class) return String;
    function Qualified_Name (Entity : Root_Entity_Type'Class) return String;
    function Link_Name (Entity : Root_Entity_Type) return String;
+   function Link_Name_Id (Entity : Root_Entity_Type) return Name_Id;
    function Base_File_Name (Entity : Root_Entity_Type'Class) return String;
    function Base_Child_File_Name
      (Entity     : Root_Entity_Type;
@@ -312,13 +326,14 @@ package Ack is
       Node   : Node_Id)
    is null;
 
-   procedure Check_Bound (Entity : in out Root_Entity_Type) is null;
-   procedure Bind (Entity : in out Root_Entity_Type) is null;
+   procedure Check_Bound (Entity : not null access Root_Entity_Type) is null;
+   procedure Bind (Entity : not null access Root_Entity_Type) is null;
 
    procedure Push_Entity
-     (Entity       : Root_Entity_Type;
-      Have_Context : Boolean;
-      Unit         : in out Tagatha.Units.Tagatha_Unit)
+     (Entity        : Root_Entity_Type;
+      Have_Current  : Boolean;
+      Context       : not null access constant Root_Entity_Type'Class;
+      Unit          : in out Tagatha.Units.Tagatha_Unit)
    is null;
 
    procedure Pop_Entity
@@ -460,6 +475,9 @@ package Ack is
 
    function Get_Entity (N : Node_Id) return Entity_Type;
    function Has_Entity (N : Node_Id) return Boolean;
+
+   function Get_Context (N : Node_Id) return Constant_Entity_Type;
+   function Has_Context (N : Node_Id) return Boolean;
 
    function Get_Type (N : Node_Id) return Entity_Type;
    function Has_Type (N : Node_Id) return Boolean;
@@ -679,6 +697,7 @@ private
          List            : List_Id    := No_List;
          Name            : Name_Id    := No_Name;
          Entity          : Entity_Type := null;
+         Context         : Constant_Entity_Type := null;
          Node_Type       : Entity_Type := null;
          Error           : Error_Kind := E_No_Error;
          Error_Entity    : Constant_Entity_Type := null;
@@ -905,6 +924,12 @@ private
    function Get_Entity (N : Node_Id) return Entity_Type
    is (Node_Table.Element (N).Entity);
 
+   function Has_Context (N : Node_Id) return Boolean
+   is (Node_Table.Element (N).Context /= null);
+
+   function Get_Context (N : Node_Id) return Constant_Entity_Type
+   is (Node_Table.Element (N).Context);
+
    function Has_Type (N : Node_Id) return Boolean
    is (Node_Table.Element (N).Node_Type /= null);
 
@@ -1034,6 +1059,11 @@ private
       Process : not null access
         procedure (Node : Node_Id));
 
+   procedure Set_Context
+     (Node    : Real_Node_Id;
+      Context : not null access constant Root_Entity_Type'Class)
+     with Pre => Get_Context (Node) = null;
+
    procedure Set_Entity
      (Node : Real_Node_Id;
       Entity : not null access Root_Entity_Type'Class)
@@ -1136,6 +1166,9 @@ private
 
    function Link_Name (Entity : Root_Entity_Type) return String
    is (Entity.Context_Name ("__", True));
+
+   function Link_Name_Id (Entity : Root_Entity_Type) return Name_Id
+   is (Get_Name_Id (Entity.Context_Name ("__", True)));
 
    function Base_File_Name (Entity : Root_Entity_Type'Class) return String
    is (Entity.Context_Name ("-", True));

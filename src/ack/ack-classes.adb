@@ -1,6 +1,6 @@
 with Ada.Text_IO;
 
---  with Tagatha.Operands;
+with Tagatha.Operands;
 
 with Ack.Environment;
 with Ack.Types;
@@ -126,12 +126,37 @@ package body Ack.Classes is
       Unit.Push_Text ("");
    end Allocate;
 
+   ---------------------------
+   -- Ancestor_Table_Offset --
+   ---------------------------
+
+   function Ancestor_Table_Offset
+     (Class    : Class_Entity_Record'Class;
+      Ancestor : not null access constant Class_Entity_Record'Class)
+      return Word_Offset
+   is
+   begin
+      if Class.Link_Name = Ancestor.Link_Name then
+         return 0;
+      else
+         for Item of Class.Ancestor_List loop
+            if Item.Ancestor_Name = Ancestor.Link_Name_Id then
+               return Item.Table_Offset;
+            end if;
+         end loop;
+         raise Constraint_Error with
+         Ancestor.Qualified_Name
+           & " not found in ancestor table of "
+           & Class.Qualified_Name;
+      end if;
+   end Ancestor_Table_Offset;
+
    ----------
    -- Bind --
    ----------
 
    overriding procedure Bind
-     (Class : in out Class_Entity_Record)
+     (Class : not null access Class_Entity_Record)
    is
       procedure Scan_Hierarchy (Top : Class_Entity);
 
@@ -156,6 +181,7 @@ package body Ack.Classes is
       for Inherited of Class.Inherited_Types loop
          Scan_Hierarchy (Inherited.Inherited_Type.Class);
       end loop;
+
       Class.Bound := True;
    end Bind;
 
@@ -164,7 +190,7 @@ package body Ack.Classes is
    -----------------
 
    overriding procedure Check_Bound
-     (Class : in out Class_Entity_Record)
+     (Class : not null access Class_Entity_Record)
    is
    begin
       if not Class.Bound then
@@ -261,6 +287,195 @@ package body Ack.Classes is
       end if;
    end Contains;
 
+   --------------------------
+   -- Create_Object_Layout --
+   --------------------------
+
+   procedure Create_Object_Layout
+     (Class : not null access Class_Entity_Record'Class)
+   is
+
+      Layout : Object_Layout renames Class.Object_Record;
+
+      procedure Add (Item : Layout_Entry);
+
+      procedure Add_Properties
+        (Base : not null access constant Class_Entity_Record'Class);
+
+      ---------
+      -- Add --
+      ---------
+
+      procedure Add (Item : Layout_Entry) is
+      begin
+         Layout.Entries.Append (Item);
+      end Add;
+
+      --------------------
+      -- Add_Properties --
+      --------------------
+
+      procedure Add_Properties
+        (Base : not null access constant Class_Entity_Record'Class)
+      is
+         Offset : Word_Offset := 0;
+      begin
+         for Feature of Base.Class_Features loop
+            if Feature.Is_Property
+              and then Constant_Class_Entity (Feature.Active_Class)
+              = Constant_Class_Entity (Base)
+            then
+               Offset := Offset + 1;
+               Feature.Set_Property_Offset (Offset);
+               Add ((Property_Value, No_Name,
+                    Ack.Features.Constant_Feature_Entity (Feature)));
+            end if;
+         end loop;
+      end Add_Properties;
+
+   begin
+      Add ((Table_Link, No_Name, Constant_Class_Entity (Class)));
+      Add_Properties (Class);
+   end Create_Object_Layout;
+
+   ---------------------------------
+   -- Create_Virtual_Table_Layout --
+   ---------------------------------
+
+   procedure Create_Virtual_Table_Layout
+     (Class : not null access Class_Entity_Record'Class)
+   is
+      type Base_Table_Record is
+         record
+            Offset : Natural;
+         end record;
+      package Base_Table_Maps is
+        new WL.String_Maps (Base_Table_Record);
+
+      Layout         : Virtual_Table_Layout renames Class.Virtual_Table;
+
+      Bases          : Base_Table_Maps.Map;
+      Feature_Offset : Word_Offset;
+
+      procedure Add_Virtual_Table
+        (Base : not null access constant Class_Entity_Record'Class);
+
+      -----------------------
+      -- Add_Virtual_Table --
+      -----------------------
+
+      procedure Add_Virtual_Table
+        (Base : not null access constant Class_Entity_Record'Class)
+      is
+         procedure Add_Link
+           (To : not null access constant Class_Entity_Record'Class);
+
+         --------------
+         -- Add_Link --
+         --------------
+
+         procedure Add_Link
+           (To : not null access constant Class_Entity_Record'Class)
+         is
+         begin
+            Layout.Entries.Append
+              (Layout_Entry'
+                 (Entry_Type  => Label_Link,
+                  Label       =>
+                    Get_Name_Id (Base.Link_Name),
+                  Link_Name   =>
+                    Get_Name_Id
+                      (Class.Link_Name
+                       & "$" & To.Link_Name & "$vt")));
+            Feature_Offset := Feature_Offset + 1;
+         end Add_Link;
+
+      begin
+         if not Bases.Contains (Base.Link_Name) then
+            Bases.Insert
+              (Key      => Base.Link_Name,
+               New_Item =>
+                 Base_Table_Record'
+                   (Offset => Natural (Layout.Entries.Length)));
+
+            Feature_Offset := 0;
+
+            Base.Scan_Ancestors
+              (Proper_Ancestors => True,
+               Process          => Add_Link'Access);
+
+            for Feature of Base.Class_Features loop
+               if Feature.Definition_Class.Link_Name
+                 = Base.Link_Name
+               then
+                  --  class Any has no ancestors, so First
+                  --  can still be true here
+
+                  Feature.Set_Virtual_Table_Offset (Feature_Offset);
+
+                  declare
+                     Class_Feature : constant Ack.Features.Feature_Entity :=
+                                       Class.Feature
+                                         (Get_Name_Id
+                                            (Feature.Standard_Name));
+                  begin
+                     Class_Feature.Set_Virtual_Table_Offset
+                       (Feature_Offset);
+
+                     if Class_Feature.Deferred then
+                        Layout.Entries.Append
+                          (Layout_Entry'
+                             (Entry_Type  => Internal_Offset,
+                              Label       => Get_Name_Id (Base.Link_Name),
+                              Word_Offset => 0));
+                     else
+                        Layout.Entries.Append
+                          (Layout_Entry'
+                             (Entry_Type  => Feature_Address,
+                              Label       => Get_Name_Id (Base.Link_Name),
+                              Feature     =>
+                                Ack.Features.Constant_Feature_Entity
+                                  (Class_Feature)));
+                     end if;
+                  end;
+
+                  Feature_Offset := Feature_Offset + 1;
+               end if;
+            end loop;
+
+            Base.Scan_Ancestors
+              (Proper_Ancestors => True,
+               Process          => Add_Virtual_Table'Access);
+
+         end if;
+      end Add_Virtual_Table;
+
+   begin
+      Add_Virtual_Table (Class);
+      Class.Scan_Ancestors
+        (Proper_Ancestors => True,
+         Process          => Add_Virtual_Table'Access);
+
+      declare
+         Offset : Word_Offset := 0;
+         Labels : WL.String_Sets.Set;
+      begin
+         for Item of Layout.Entries loop
+            if Item.Label /= No_Name
+              and then not Labels.Contains (To_Standard_String (Item.Label))
+            then
+               Labels.Insert (To_Standard_String (Item.Label));
+               Class.Ancestor_List.Append
+                 (Ancestor_Class_Record'
+                    (Ancestor_Name => Item.Label,
+                     Table_Offset  => Offset));
+            end if;
+            Offset := Offset + 1;
+         end loop;
+      end;
+
+   end Create_Virtual_Table_Layout;
+
    -------------
    -- Feature --
    -------------
@@ -320,6 +535,111 @@ package body Ack.Classes is
 
       return null;
    end Find_Feature;
+
+   -------------------------------
+   -- Generate_Object_Allocator --
+   -------------------------------
+
+   procedure Generate_Object_Allocator
+     (Class  : not null access constant Class_Entity_Record'Class;
+      Unit   : in out Tagatha.Units.Tagatha_Unit)
+   is
+      use type Tagatha.Tagatha_Integer;
+      Layout : Object_Layout renames Class.Object_Record;
+   begin
+      Unit.Begin_Routine
+        (Name           => Class.Link_Name & "$create",
+         Argument_Words => 0,
+         Frame_Words    => 0,
+         Result_Words   => 0,
+         Global         => True);
+      Unit.Push (Tagatha.Tagatha_Integer (Layout.Entries.Length) * 4);
+      Unit.Pop_Register ("r0");
+      Unit.Call ("__allocate");
+      Unit.Push_Register ("r0");
+      Unit.Pop_Register ("r1");
+
+      for Item of Layout.Entries loop
+         case Item.Entry_Type is
+            when Property_Value =>
+               Unit.Push (0);
+            when Internal_Offset =>
+               Unit.Push (Tagatha.Tagatha_Integer (Item.Word_Offset * 4));
+            when Table_Link =>
+               Unit.Push_Operand
+                 (Tagatha.Operands.External_Operand
+                    (Item.Table_Class.Link_Name & "$vt",
+                     Immediate => True),
+                  Size => Tagatha.Default_Size);
+            when Feature_Address =>
+               Unit.Push_Operand
+                 (Tagatha.Operands.External_Operand
+                    (Item.Feature.Link_Name,
+                     Immediate => True),
+                  Size => Tagatha.Default_Size);
+            when Label_Link =>
+               Unit.Push_Operand
+                 (Tagatha.Operands.External_Operand
+                    (To_Standard_String (Item.Link_Name),
+                     Immediate => True),
+                  Size => Tagatha.Default_Size);
+
+         end case;
+
+         Unit.Pop_Operand
+           (Tagatha.Operands.Register_Operand
+              ("r1", Dereference => True, Postinc => True),
+            Tagatha.Default_Size);
+      end loop;
+
+      Unit.End_Routine;
+   end Generate_Object_Allocator;
+
+   ----------------------------
+   -- Generate_Virtual_Table --
+   ----------------------------
+
+   procedure Generate_Virtual_Table
+     (Class  : not null access constant Class_Entity_Record'Class;
+      Unit   : in out Tagatha.Units.Tagatha_Unit)
+   is
+      Layout : Virtual_Table_Layout renames Class.Virtual_Table;
+      Labels : WL.String_Sets.Set;
+      Offset : Word_Offset := 0;
+   begin
+      Unit.Segment (Tagatha.Read_Only);
+      Unit.Label (Class.Link_Name & "$vt");
+      for Item of Layout.Entries loop
+         if Item.Label /= No_Name
+           and then not Labels.Contains (To_Standard_String (Item.Label))
+         then
+            Unit.Label (Class.Link_Name
+                        & "$" & To_Standard_String (Item.Label)
+                        & "$vt");
+            Labels.Insert (To_Standard_String (Item.Label));
+         end if;
+
+         case Item.Entry_Type is
+            when Property_Value =>
+               Unit.Data (0);
+            when Internal_Offset =>
+               Unit.Data (Tagatha.Tagatha_Integer (Item.Word_Offset * 4));
+            when Table_Link =>
+               Unit.Data
+                 (Label_Name => Item.Table_Class.Link_Name & "$vt");
+            when Feature_Address =>
+               Unit.Data
+                 (Label_Name => Item.Feature.Link_Name);
+            when Label_Link =>
+               Unit.Data
+                 (Label_Name => To_Standard_String (Item.Link_Name));
+         end case;
+
+         Offset := Offset + 1;
+
+      end loop;
+      Unit.Segment (Tagatha.Executable);
+   end Generate_Virtual_Table;
 
    --------------------
    -- Generic_Formal --

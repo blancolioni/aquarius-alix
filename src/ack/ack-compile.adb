@@ -10,8 +10,6 @@ with Ack.Features;
 
 with Ack.Errors;
 
-with Ack.Classes.Layout;
-
 with Aquarius.Config_Paths;
 with Aquarius.Loader;
 with Aquarius.Messages;
@@ -174,6 +172,9 @@ package body Ack.Compile is
    begin
       if not Class_Object_Paths.Contains (Base_Name) then
          if not Loaded_Classes.Contains (Base_Name) then
+            Ada.Text_IO.Put_Line
+              ("Loading: " & Base_Name);
+
             declare
                Source_Program : constant Aquarius.Programs.Program_Tree :=
                                   Aquarius.Loader.Load_From_File
@@ -197,6 +198,9 @@ package body Ack.Compile is
                      end if;
                   end if;
                end;
+
+               Ada.Text_IO.Put_Line
+                 ("Finished: " & Base_Name);
 
                Loaded_Classes.Insert (Base_Name, Node);
             end;
@@ -228,28 +232,6 @@ package body Ack.Compile is
             end;
          end if;
 
-      end if;
-
-      if False then
-         declare
-            Class         : constant Ack.Classes.Class_Entity :=
-                              Ack.Classes.Get_Class_Entity
-                                (Loaded_Classes.Element (Base_Name));
-            Object_Layout : constant Ack.Classes.Layout.Object_Layout :=
-                              Ack.Classes.Layout.Create_Object_Layout
-                                (Class);
-            Table_Layout  : constant Ack.Classes.Layout.Virtual_Table_Layout :=
-                              Ack.Classes.Layout.Create_Virtual_Table_Layout
-                                (Class);
-         begin
-            Ada.Text_IO.Put_Line ("CLASS: " & Class.Qualified_Name);
-            Ada.Text_IO.Put_Line ("OBJECT LAYOUT");
-            Ack.Classes.Layout.Write (Object_Layout);
-            Ada.Text_IO.New_Line;
-            Ada.Text_IO.Put_Line ("VIRTUAL TABLE LAYOUT");
-            Ack.Classes.Layout.Write (Table_Layout);
-            Ada.Text_IO.New_Line;
-         end;
       end if;
 
    end Load_Class;

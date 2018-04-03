@@ -11,6 +11,7 @@ feature
       local
          T : Unit_Test
       do
+         create Test_List
          create { Test_Class_Load } T
          Test_List.Append (T)
          create { Test_Manual_Iterator } T
