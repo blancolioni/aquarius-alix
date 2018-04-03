@@ -170,6 +170,7 @@ package Ack.Features is
      (Name        : Name_Id;
       Alias       : Name_Id;
       Declaration : Node_Id;
+      Property    : Boolean;
       Class       : not null access Ack.Classes.Class_Entity_Record'Class)
       return Feature_Entity;
 
