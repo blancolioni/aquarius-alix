@@ -3,9 +3,9 @@ class Aqua.Containers.Linked_List[G]
               redefine New_Cursor end
            Aqua.Containers.Sequence [G]
               redefine 
-                 Clear, Contains, Delete, Delete_All, Delete_First,
+                 Append, Clear, Contains, Delete, Delete_All, Delete_First,
                  Include, Insert, Is_Empty, Can_Include, Can_Delete,
-                 Occurrences
+                 Occurrences, First_Element, Last_Element
               end
               
 feature{Aqua.Containers.Linked_List_Iterator}
