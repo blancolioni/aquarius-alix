@@ -46,6 +46,12 @@ package Ack.Features is
      (Feature : Feature_Entity_Record'Class)
       return Boolean;
 
+   function Is_Property_Of_Class
+     (Feature : Feature_Entity_Record'Class;
+      Class   : not null access constant
+        Ack.Classes.Class_Entity_Record'Class)
+      return Boolean;
+
    function Is_External_Routine
      (Feature : Feature_Entity_Record'Class)
       return Boolean;
