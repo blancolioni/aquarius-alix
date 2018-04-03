@@ -467,6 +467,14 @@ package body Ack.Semantic is
 
       if Trace_Class_Analysis then
          Ada.Text_IO.Put_Line
+           ("  virtual and object tables: " & Class.Qualified_Name);
+      end if;
+
+      Class.Create_Virtual_Table_Layout;
+      Class.Create_Object_Layout;
+
+      if Trace_Class_Analysis then
+         Ada.Text_IO.Put_Line
            ("Finished: " & Class.Qualified_Name);
       end if;
 
@@ -825,6 +833,7 @@ package body Ack.Semantic is
          return;
       end if;
 
+      Set_Context (Creation, Container);
       Set_Entity (Creation, Created_Entity);
 
       Created_Type := Created_Entity.Get_Type;
@@ -1344,7 +1353,8 @@ package body Ack.Semantic is
          if Inherited_Class.Has_Feature (Name) then
             if Class.Has_Feature (Name) then
                Class.Feature (Name).Set_Redefined
-                 (Original_Feature =>
+                 (Class            => Class,
+                  Original_Feature =>
                     Inherited_Class.Feature (Name));
             else
                Error (Node, E_Missing_Redefinition,
@@ -1708,6 +1718,7 @@ package body Ack.Semantic is
             end if;
 
             Set_Entity (Precursor_Element, Entity);
+            Set_Context (Precursor_Element, Local_Table.Class_Context);
             Value_Entity := Entity;
             Value_Type := Value_Entity.Get_Type;
             Local_Table := Value_Type;

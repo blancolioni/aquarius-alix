@@ -25,6 +25,10 @@ feature
       
    Execute
       do
+         Put_Line (A.a1 & " " & A.a2 & " " & A.a3 & " " & A.a4)
+         Put_Line (B.a1 & " " & B.a2 & " " & B.a3 & " " & B.a4)
+         Put_Line (C.a1 & " " & C.a2 & " " & C.a3 & " " & C.a4)
+         Put_Line (D.a1 & " " & D.a2 & " " & D.a3 & " " & D.a4)
          Success := Value = 10
          if not Success then
             Fail_Message := "Expected Value = 10; found " & Value.To_String

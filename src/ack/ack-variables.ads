@@ -48,6 +48,13 @@ private
          Iterator : Boolean := False;
       end record;
 
+   overriding function Class_Context
+     (Variable : not null access constant Variable_Entity_Record)
+      return Constant_Entity_Type
+   is (raise Constraint_Error
+         with "variable " & Variable.Declared_Name
+       & " does not have a class context");
+
    overriding function Instantiate
      (Entity             : not null access Variable_Entity_Record;
       Type_Instantiation : not null access
@@ -55,10 +62,11 @@ private
       return Entity_Type;
 
    overriding procedure Push_Entity
-     (Variable     : Variable_Entity_Record;
-      Have_Context : Boolean;
-      Unit         : in out Tagatha.Units.Tagatha_Unit)
-     with Pre => not Have_Context;
+     (Variable      : Variable_Entity_Record;
+      Have_Current  : Boolean;
+      Context       : not null access constant Root_Entity_Type'Class;
+      Unit          : in out Tagatha.Units.Tagatha_Unit)
+     with Pre => not Have_Current;
 
    overriding procedure Pop_Entity
      (Variable : Variable_Entity_Record;

@@ -296,16 +296,29 @@ package body Ack is
                   4 => Field_4,
                   5 => Field_5,
                   6 => Field_6),
-               List       => List,
-               Name       => Name,
-               Integer_Value => 0,
-               Entity        => Entity,
-               Node_Type     => null,
-               Error_Entity  => null,
-               Error         => E_No_Error,
-               Label         => 0));
+               List            => List,
+               Name            => Name,
+               Integer_Value   => 0,
+               Entity          => Entity,
+               Context         => null,
+               Node_Type       => null,
+               Error_Entity    => null,
+               Error           => E_No_Error,
+               Label           => 0));
       end return;
    end New_Node;
+
+   -----------------
+   -- Push_Offset --
+   -----------------
+
+   procedure Push_Offset
+     (Unit   : in out Tagatha.Units.Tagatha_Unit;
+      Offset : Word_Offset)
+   is
+   begin
+      Unit.Push (Tagatha.Tagatha_Integer (Offset * 4));
+   end Push_Offset;
 
    ---------------------
    -- Remove_Implicit --
@@ -421,6 +434,18 @@ package body Ack is
    begin
       Entity.Attached := True;
    end Set_Attached;
+
+   -----------------
+   -- Set_Context --
+   -----------------
+
+   procedure Set_Context
+     (Node    : Real_Node_Id;
+      Context : not null access constant Root_Entity_Type'Class)
+   is
+   begin
+      Node_Table (Node).Context := Constant_Entity_Type (Context);
+   end Set_Context;
 
    ---------------------------
    -- Set_Declaration_Count --

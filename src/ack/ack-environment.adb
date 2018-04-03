@@ -8,6 +8,12 @@ package body Ack.Environment is
       return Boolean
    is (False);
 
+   overriding function Class_Context
+     (Top : not null access constant Top_Level_Entity_Record)
+      return Constant_Entity_Type
+   is (raise Constraint_Error with
+         "top level has no class context");
+
    overriding function Base_Child_File_Name
      (Entity     : Top_Level_Entity_Record;
       Child_Name : Name_Id)
