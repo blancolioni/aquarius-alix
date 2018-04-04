@@ -1091,8 +1091,6 @@ package body Ack.Semantic is
                        Ack.Features.Get_Feature_Entity (Node);
          begin
 
-            Ada.Text_IO.Put_Line ("Analysing: " & Entity.Declared_Name);
-
             if Locals_Node /= No_Node then
                Analyse_Entity_Declaration_Groups
                  (Class      => Class,
@@ -1109,10 +1107,8 @@ package body Ack.Semantic is
             elsif Deferred then
                Entity.Set_Deferred;
             elsif Internal then
-               Ada.Text_IO.Put_Line ("routine");
                Entity.Set_Routine (Effective_Node);
             elsif External then
-               Ada.Text_IO.Put_Line ("external");
                Entity.Set_External
                  (External_Type  =>
                     To_Standard_String (Get_Name (Effective_Node)),
@@ -1121,8 +1117,6 @@ package body Ack.Semantic is
                      then Entity.Standard_Name
                      else To_String
                        (Get_Name (Feature_Alias (Effective_Node)))));
-            else
-               Ada.Text_IO.Put_Line ("weird non-feature");
             end if;
 
             Entity.Bind;

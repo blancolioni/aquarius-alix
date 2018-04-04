@@ -93,6 +93,18 @@ package Ack.Classes is
       Feature_Name : Name_Id)
       return Boolean;
 
+   function Is_Descendent_Of
+     (Class             : Class_Entity_Record'Class;
+      Ancestor          : not null access constant Class_Entity_Record'Class)
+      return Boolean;
+
+   function Is_Proper_Descendent_Of
+     (Class             : Class_Entity_Record'Class;
+      Ancestor          : not null access constant Class_Entity_Record'Class)
+      return Boolean
+   is (Class.Link_Name /= Ancestor.Link_Name
+       and then Class.Is_Descendent_Of (Ancestor));
+
    function Generic_Formal_Count
      (Class : Class_Entity_Record'Class)
       return Natural;
