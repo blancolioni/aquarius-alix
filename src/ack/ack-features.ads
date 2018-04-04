@@ -77,10 +77,12 @@ package Ack.Features is
    procedure Set_Routine
      (Feature      : in out Feature_Entity_Record'Class;
       Routine_Node : Node_Id)
-     with Pre => Kind (Routine_Node) = N_Internal;
+     with Pre => Kind (Routine_Node) = N_Internal
+     and then not Feature.Is_Property;
 
    procedure Set_Deferred
-     (Feature     : in out Feature_Entity_Record'Class);
+     (Feature     : in out Feature_Entity_Record'Class)
+     with Pre => not Feature.Is_Property;
 
    procedure Set_Creator
      (Feature     : in out Feature_Entity_Record'Class);
@@ -90,7 +92,8 @@ package Ack.Features is
       Class            : not null access
         Ack.Classes.Class_Entity_Record'Class;
       Original_Feature : not null access constant
-        Feature_Entity_Record'Class);
+        Feature_Entity_Record'Class)
+       with Pre => not Original_Feature.Is_Property;
 
    procedure Set_External
      (Feature        : in out Feature_Entity_Record'Class;
@@ -104,7 +107,8 @@ package Ack.Features is
    procedure Add_Argument
      (Feature   : in out Feature_Entity_Record'Class;
       Name_Node : in     Node_Id;
-      Arg_Type  : not null access Ack.Types.Type_Entity_Record'Class);
+      Arg_Type  : not null access Ack.Types.Type_Entity_Record'Class)
+     with Pre => not Feature.Is_Property;
 
    procedure Add_Local
      (Feature    : in out Feature_Entity_Record'Class;
