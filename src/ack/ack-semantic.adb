@@ -1726,6 +1726,12 @@ package body Ack.Semantic is
                                  Actual_List (Precursor_Element);
          begin
 
+            Ada.Text_IO.Put_Line
+              (Get_Program (Precursor_Element).Show_Location
+               & ": " & Entity.Declared_Name
+               & "; class context "
+               & Local_Table.Class_Context.Qualified_Name);
+
             if Actual_List_Node /= No_Node then
                declare
                   Actuals : constant Array_Of_Nodes :=

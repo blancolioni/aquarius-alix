@@ -351,6 +351,10 @@ package body Ack.Classes is
       is
          Start : constant Word_Offset := Offset;
       begin
+         Ada.Text_IO.Put_Line
+           (Layout.Class.Qualified_Name
+            & ": object record start:"
+            & Word_Offset'Image (Offset * 4));
          Layout.Object_Start := Offset;
          Layout.Object_Entry := Object_Layout.Last_Index + 1;
          Object_Layout.Append ((No_Name, Table_Link_Name (Layout.Class), 0));
@@ -402,7 +406,9 @@ package body Ack.Classes is
                      & "/"
                      & Base.Class.Qualified_Name
                      & " table offset:"
-                     & Offset'Img);
+                     & Offset'Img
+                     & "; base object start:"
+                     & Word_Offset'Image (Base.Object_Start));
                   Class.Ancestor_List.Append
                     (Ancestor_Class_Record'
                        (Ancestor_Name => Base.Class.Link_Name_Id,
