@@ -3,6 +3,6 @@ class String
 feature
    To_Lower : String external "aqua"
    To_Integer : Integer external "aqua"
-   Join alias "&" (Right : String) : String
+   Join alias "&" (Right : String) : String external "aqua"
    Replace (Search_Text, Replacement_Text : String) : String external "aqua"
 end

@@ -272,6 +272,18 @@ package body Ack.Compile is
         (Aquarius.Config_Paths.Config_File
            ("aqua/libaqua/allocate.m32"),
          To_Image);
+      Load_Library_File
+        (Aquarius.Config_Paths.Config_File
+           ("aqua/libaqua/libany.m32"),
+         To_Image);
+      Load_Library_File
+        (Aquarius.Config_Paths.Config_File
+           ("aqua/libaqua/libboolean.m32"),
+         To_Image);
+      Load_Library_File
+        (Aquarius.Config_Paths.Config_File
+           ("aqua/libaqua/libinteger.m32"),
+         To_Image);
       To_Image.Link;
    end Load_Root_Class;
 

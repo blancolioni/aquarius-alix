@@ -296,7 +296,6 @@ package body Ack.Features is
       Exit_Label       : constant Positive := Unit.Next_Label;
       Rescue_Label     : constant String :=
                            Feature.Link_Name & "$rescue";
-      pragma Unreferenced (Class);
    begin
       if Feature.Property then
          --  Generate a property routine, in case it redefines
@@ -331,6 +330,17 @@ package body Ack.Features is
             Frame_Words    => 0,
             Result_Words   => Result_Count,
             Global         => True);
+
+         --  restore Current to our needs
+
+         if Feature.Definition_Class /= Class then
+            Unit.Push_Argument (1);
+            Unit.Push_Argument (1);
+            Unit.Dereference;
+            Unit.Dereference;
+            Unit.Operate (Tagatha.Op_Sub);
+            Unit.Pop_Argument (1);
+         end if;
 
          if Feature.Rescue_Node in Real_Node_Id then
             Unit.Directive (".exception "
@@ -558,8 +568,6 @@ package body Ack.Features is
       return Feature_Entity
    is
    begin
-      Ada.Text_IO.Put_Line
-        ("New feature: " & Class.Qualified_Name & "." & To_String (Name));
       return Feature : constant Feature_Entity := new Feature_Entity_Record do
          Feature.Create
            (Name, Declaration,
@@ -687,11 +695,25 @@ package body Ack.Features is
          return;
       end if;
 
-      if Feature.Is_Property then
+      --  Create current
+      Unit.Push_Register ("op");
+
+      if Feature.Definition_Class /= Current then
          Unit.Push_Register ("op");
+         Unit.Dereference;
+         Push_Offset
+           (Unit,
+            Current.Ancestor_Table_Offset (Feature.Definition_Class));
+         Unit.Operate (Tagatha.Op_Add);
+         Unit.Dereference;
+         Unit.Operate (Tagatha.Op_Add);
+      end if;
+
+      if Feature.Is_Property then
          Push_Offset (Unit, Feature.Property_Offset);
          Unit.Operate (Tagatha.Op_Add);
          Unit.Dereference;
+
       else
 
          Ada.Text_IO.Put_Line
@@ -711,19 +733,11 @@ package body Ack.Features is
             & Word_Offset'Image
               (Feature.Virtual_Table_Offset * 4));
 
-         --  create suitable Current
-         Unit.Push_Register ("op");
-
          --  push feature address from virtual table
          Unit.Pop_Register ("op");
          Unit.Push_Register ("op");
          Unit.Push_Register ("op");
          Unit.Dereference;
-         Push_Offset
-           (Unit,
-            Current.Ancestor_Table_Offset
-              (Feature.Definition_Class));
-         Unit.Operate (Tagatha.Op_Add);
          Push_Offset (Unit, Feature.Virtual_Table_Offset);
          Unit.Operate (Tagatha.Op_Add);
          Unit.Dereference;

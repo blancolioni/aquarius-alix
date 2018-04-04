@@ -349,26 +349,19 @@ package body Ack.Classes is
         (Offset : in out Word_Offset;
          Layout : in out Class_Layout_Record)
       is
-         Start : constant Word_Offset := Offset + 1;
+         Start : constant Word_Offset := Offset;
       begin
          Layout.Object_Start := Offset;
          Layout.Object_Entry := Object_Layout.Last_Index + 1;
          Object_Layout.Append ((No_Name, Table_Link_Name (Layout.Class), 0));
-         Class.Ancestor_List.Append
-           (Ancestor_Class_Record'
-              (Ancestor_Name => Layout.Class.Link_Name_Id,
-               Table_Offset  => Offset));
          Offset := Offset + 1;
 
          for Feature of Layout.Class.Class_Features loop
             if Feature.Is_Property_Of_Class (Layout.Class) then
-               Ada.Text_IO.Put_Line
-                 ("property: "
-                  & Class.Qualified_Name
-                  & "/"
-                  & Layout.Class.Qualified_Name
-                  & "." & Feature.Declared_Name);
                Feature.Set_Property_Offset (Offset - Start);
+               Ada.Text_IO.Put_Line
+                 (Feature.Qualified_Name & ": property offset:"
+                  & Word_Offset'Image (Offset - Start));
                Object_Layout.Append
                  ((No_Name, No_Name, 0));
                Offset := Offset + 1;
@@ -385,16 +378,61 @@ package body Ack.Classes is
         (Offset : in out Word_Offset;
          Layout : Class_Layout_Record)
       is
+         Start      : constant Word_Offset := Offset;
          Entry_Name : Name_Id :=
                         Table_Link_Name (Layout.Class);
 
       begin
+
+         Table_Layout.Append ((Entry_Name, No_Name, Layout.Object_Start));
+         Entry_Name := No_Name;
+         Offset := Offset + 1;
+
          for Base_Index of Layout.Bases loop
-            Table_Layout.Append
-              ((Entry_Name, No_Name,
-               Class_Vector.Element (Base_Index).Object_Start));
-            Entry_Name := No_Name;
+            declare
+               Base : constant Class_Layout_Record :=
+                        Class_Vector.Element (Base_Index);
+            begin
+               Table_Layout.Append
+                 ((Entry_Name, No_Name, Base.Object_Start));
+               Entry_Name := No_Name;
+               if Layout.Class = Class then
+                  Ada.Text_IO.Put_Line
+                    (Class.Qualified_Name
+                     & "/"
+                     & Base.Class.Qualified_Name
+                     & " table offset:"
+                     & Offset'Img);
+                  Class.Ancestor_List.Append
+                    (Ancestor_Class_Record'
+                       (Ancestor_Name => Base.Class.Link_Name_Id,
+                        Table_Offset  => Offset));
+               end if;
+            end;
             Offset := Offset + 1;
+         end loop;
+         for Feature of Layout.Class.Class_Features loop
+            if Feature.Definition_Class = Layout.Class then
+               Ada.Text_IO.Put_Line
+                 (Feature.Qualified_Name & ": virtual table offset:"
+                  & Word_Offset'Image (Offset - Start));
+               declare
+                  Class_Feature : constant Ack.Features.Feature_Entity :=
+                                    Class.Feature
+                                      (Get_Name_Id
+                                         (Feature.Standard_Name));
+               begin
+                  Class_Feature.Set_Virtual_Table_Offset (Offset - Start);
+                  if Class_Feature.Deferred then
+                     Table_Layout.Append ((Entry_Name, No_Name, 0));
+                  else
+                     Table_Layout.Append
+                       ((Entry_Name, Class_Feature.Link_Name_Id, 0));
+                  end if;
+               end;
+               Entry_Name := No_Name;
+               Offset := Offset + 1;
+            end if;
          end loop;
       end Create_Virtual_Table_Entry;
 
@@ -419,7 +457,7 @@ package body Ack.Classes is
          begin
             for J in 1 .. Class_Vector.Last_Index loop
                if J /= I
-                 and then Descendent.Conforms_To
+                 and then Descendent.Is_Proper_Descendent_Of
                    (Class_Vector.Element (J).Class)
                then
                   Bases.Append (J);
@@ -432,7 +470,7 @@ package body Ack.Classes is
       declare
          Offset : Word_Offset := 0;
       begin
-         for Base of Class_Vector loop
+         for Base of reverse Class_Vector loop
             Create_Virtual_Table_Entry (Offset, Base);
          end loop;
       end;
@@ -523,9 +561,6 @@ package body Ack.Classes is
       Unit.Pop_Register ("r1");
 
       for Item of Layout loop
-         Ada.Text_IO.Put_Line
-           ("object: "
-            & Class.Qualified_Name);
          if Item.Reference /= No_Name then
             Unit.Push_Operand
               (Tagatha.Operands.External_Operand
@@ -768,6 +803,28 @@ package body Ack.Classes is
         ((Inherited_Type => Ack.Types.Type_Entity (Inherited_Type),
           others          => <>));
    end Inherit;
+
+   ----------------------
+   -- Is_Descendent_Of --
+   ----------------------
+
+   function Is_Descendent_Of
+     (Class             : Class_Entity_Record'Class;
+      Ancestor          : not null access constant Class_Entity_Record'Class)
+      return Boolean
+   is
+   begin
+      if Ancestor.Link_Name = Class.Link_Name then
+         return True;
+      else
+         for Parent of Class.Inherited_List loop
+            if Parent.Is_Descendent_Of (Ancestor) then
+               return True;
+            end if;
+         end loop;
+         return False;
+      end if;
+   end Is_Descendent_Of;
 
    ---------------------
    -- Is_Redefinition --

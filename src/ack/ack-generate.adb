@@ -891,6 +891,11 @@ package body Ack.Generate is
       is
          Entity : constant Entity_Type := Get_Entity (Element);
       begin
+         Ada.Text_IO.Put_Line
+           ("push: " & Entity.Qualified_Name
+            & "; context: "
+            & Get_Context (Element).Qualified_Name);
+
          Entity.Push_Entity
            (Have_Current => Element /= First_Element,
             Context      => Get_Context (Element),
@@ -979,7 +984,7 @@ package body Ack.Generate is
    begin
       Unit.Push_Register ("agg");
       Unit.Call
-        (Tuple_Type.Link_Name & "$allocate");
+        (Tuple_Type.Link_Name & "$create");
       Unit.Push_Register ("r0");
       Unit.Pop_Register ("agg");
 

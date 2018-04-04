@@ -1,0 +1,18 @@
+.export any__reference_equal
+any__reference_equal:
+    mov fp, -(sp)
+    mov sp, fp
+    seq 8(fp), 12(fp), r0
+    mov fp, sp
+    mov (sp)+, fp
+    rts
+    
+.export any__reference_not_equal
+any__reference_not_equal:
+    mov fp, -(sp)
+    mov sp, fp
+    sne 8(fp), 12(fp), r0
+    mov fp, sp
+    mov (sp)+, fp
+    rts
+    

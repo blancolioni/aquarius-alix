@@ -1,0 +1,31 @@
+.export  boolean__boolean_and
+ boolean__boolean_and:
+    and 4(sp), 8(sp), r0
+    rts
+    
+.export  boolean__boolean_and_then
+ boolean__boolean_and_then:
+    and 4(sp), 8(sp), r0
+    rts
+    
+.export  boolean__boolean_or
+ boolean__boolean_or:
+    or 4(sp), 8(sp), r0
+    rts
+    
+.export  boolean__boolean_or_else
+ boolean__boolean_or_else:
+    or 4(sp), 8(sp), r0
+    rts
+    
+.export  boolean__boolean_xor
+ boolean__boolean_xor:
+    xor 4(sp), 8(sp), r0
+    rts
+
+.export  boolean__boolean_implies
+ boolean__boolean_implies:
+    seq 8(sp),#0,r0
+    or 4(sp),r0
+    rts
+    
