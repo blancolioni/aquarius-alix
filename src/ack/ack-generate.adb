@@ -892,8 +892,9 @@ package body Ack.Generate is
          Entity : constant Entity_Type := Get_Entity (Element);
       begin
          Ada.Text_IO.Put_Line
-           ("push: " & Entity.Qualified_Name
-            & "; context: "
+           (Get_Program (Element).Show_Location
+            & ": push " & Entity.Qualified_Name
+            & "; class context "
             & Get_Context (Element).Qualified_Name);
 
          Entity.Push_Entity
