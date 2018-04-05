@@ -747,7 +747,7 @@ package body Ack.Features is
          Unit.Dereference;
          Unit.Indirect_Call;
 
-         Unit.Drop;   --  drop current
+--         Unit.Drop;   --  drop current
          for I in 1 .. Feature.Argument_Count loop
             Unit.Drop;
          end loop;
