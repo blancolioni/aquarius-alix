@@ -151,15 +151,17 @@ package body Ack.Features is
    is
    begin
       if Feature.Redefined_Feature /= null then
-         declare
-            Ancestor_Fail : constant Positive := Unit.Next_Label;
-         begin
-            Feature.Redefined_Feature.Check_Precondition
-              (Unit          => Unit,
-               Success_Label => Success_Label,
-               Fail_Label    => Ancestor_Fail);
-            Unit.Label (Ancestor_Fail);
-         end;
+         if False then
+            declare
+               Ancestor_Fail : constant Positive := Unit.Next_Label;
+            begin
+               Feature.Redefined_Feature.Check_Precondition
+                 (Unit          => Unit,
+                  Success_Label => Success_Label,
+                  Fail_Label    => Ancestor_Fail);
+               Unit.Label (Ancestor_Fail);
+            end;
+         end if;
       end if;
 
       for Clause of Feature.Preconditions loop
@@ -716,22 +718,24 @@ package body Ack.Features is
 
       else
 
-         Ada.Text_IO.Put_Line
-           ("generating feature call: "
-            & Feature.Link_Name);
-         Ada.Text_IO.Put_Line
-           ("   current class: " & Current.Qualified_Name);
-         Ada.Text_IO.Put_Line
-           ("   feature class: " & Feature.Definition_Class.Qualified_Name);
-         Ada.Text_IO.Put_Line
-           ("   feature class offset:"
-            & Word_Offset'Image
-              (Current.Ancestor_Table_Offset
-                   (Feature.Definition_Class) * 4));
-         Ada.Text_IO.Put_Line
-           ("   feature offset:"
-            & Word_Offset'Image
-              (Feature.Virtual_Table_Offset * 4));
+         if False then
+            Ada.Text_IO.Put_Line
+              ("generating feature call: "
+               & Feature.Link_Name);
+            Ada.Text_IO.Put_Line
+              ("   current class: " & Current.Qualified_Name);
+            Ada.Text_IO.Put_Line
+              ("   feature class: " & Feature.Definition_Class.Qualified_Name);
+            Ada.Text_IO.Put_Line
+              ("   feature class offset:"
+               & Word_Offset'Image
+                 (Current.Ancestor_Table_Offset
+                      (Feature.Definition_Class) * 4));
+            Ada.Text_IO.Put_Line
+              ("   feature offset:"
+               & Word_Offset'Image
+                 (Feature.Virtual_Table_Offset * 4));
+         end if;
 
          --  push feature address from virtual table
          Unit.Pop_Register ("op");
