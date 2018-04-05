@@ -297,6 +297,9 @@ package body Ack.Classes is
       Table_Layout   : Virtual_Table_Layout renames Class.Virtual_Table;
       Object_Layout  : Virtual_Table_Layout renames Class.Object_Record;
 
+      Table_Log : Ada.Text_IO.File_Type;
+      Object_Log : Ada.Text_IO.File_Type;
+
       function Table_Link_Name (Base : Constant_Class_Entity) return Name_Id
       is (Get_Name_Id
           (Class.Link_Name & "$" & Base.Link_Name & "$" & "vptr"));
@@ -354,10 +357,15 @@ package body Ack.Classes is
          Ada.Text_IO.Put_Line
            (Layout.Class.Qualified_Name
             & ": object record start:"
-            & Word_Offset'Image (Offset * 4));
+            & Image (Offset));
          Layout.Object_Start := Offset;
          Layout.Object_Entry := Object_Layout.Last_Index + 1;
          Object_Layout.Append ((No_Name, Table_Link_Name (Layout.Class), 0));
+
+         Ada.Text_IO.Put_Line
+           (Object_Log,
+            Image (Offset) & ": vptr " & Layout.Class.Qualified_Name);
+
          Offset := Offset + 1;
 
          for Feature of Layout.Class.Class_Features loop
@@ -365,9 +373,12 @@ package body Ack.Classes is
                Feature.Set_Property_Offset (Offset - Start);
                Ada.Text_IO.Put_Line
                  (Feature.Qualified_Name & ": property offset:"
-                  & Word_Offset'Image (Offset - Start));
+                  & Image (Offset - Start));
                Object_Layout.Append
                  ((No_Name, No_Name, 0));
+               Ada.Text_IO.Put_Line
+                 (Object_Log,
+                  Image (Offset) & ": prop " & Feature.Declared_Name);
                Offset := Offset + 1;
             end if;
          end loop;
@@ -385,11 +396,13 @@ package body Ack.Classes is
          Start      : constant Word_Offset := Offset;
          Entry_Name : Name_Id :=
                         Table_Link_Name (Layout.Class);
-
       begin
-
          Table_Layout.Append ((Entry_Name, No_Name, Layout.Object_Start));
          Entry_Name := No_Name;
+         Ada.Text_IO.Put_Line
+           (Table_Log,
+            Image (Offset) & ": " & Image  (Layout.Object_Start)
+            & ": start " & Layout.Class.Qualified_Name);
          Offset := Offset + 1;
 
          for Base_Index of Layout.Bases loop
@@ -399,6 +412,11 @@ package body Ack.Classes is
             begin
                Table_Layout.Append
                  ((Entry_Name, No_Name, Base.Object_Start));
+               Ada.Text_IO.Put_Line
+                 (Table_Log,
+                  Image (Offset) & ": " & Image  (Base.Object_Start)
+                  & ": start " & Layout.Class.Declared_Name
+                  & "/" & Base.Class.Declared_Name);
                Entry_Name := No_Name;
                if Layout.Class = Class then
                   Ada.Text_IO.Put_Line
@@ -406,22 +424,23 @@ package body Ack.Classes is
                      & "/"
                      & Base.Class.Qualified_Name
                      & " table offset:"
-                     & Offset'Img
+                     & Image (Offset)
                      & "; base object start:"
-                     & Word_Offset'Image (Base.Object_Start));
+                     & Image (Base.Object_Start));
                   Class.Ancestor_List.Append
                     (Ancestor_Class_Record'
                        (Ancestor_Name => Base.Class.Link_Name_Id,
                         Table_Offset  => Offset));
                end if;
+
+               Offset := Offset + 1;
             end;
-            Offset := Offset + 1;
          end loop;
          for Feature of Layout.Class.Class_Features loop
             if Feature.Definition_Class = Layout.Class then
                Ada.Text_IO.Put_Line
                  (Feature.Qualified_Name & ": virtual table offset:"
-                  & Word_Offset'Image (Offset - Start));
+                  & Image (Offset - Start));
                declare
                   Class_Feature : constant Ack.Features.Feature_Entity :=
                                     Class.Feature
@@ -430,8 +449,16 @@ package body Ack.Classes is
                begin
                   Class_Feature.Set_Virtual_Table_Offset (Offset - Start);
                   if Class_Feature.Deferred then
+                     Ada.Text_IO.Put_Line
+                       (Table_Log,
+                        Image (Offset) & ": deferred "
+                        & Class_Feature.Declared_Name);
                      Table_Layout.Append ((Entry_Name, No_Name, 0));
                   else
+                     Ada.Text_IO.Put_Line
+                       (Table_Log,
+                        Image (Offset) & ": "
+                        & Class_Feature.Link_Name);
                      Table_Layout.Append
                        ((Entry_Name, Class_Feature.Link_Name_Id, 0));
                   end if;
@@ -443,6 +470,11 @@ package body Ack.Classes is
       end Create_Virtual_Table_Entry;
 
    begin
+      Ada.Text_IO.Create (Table_Log, Ada.Text_IO.Out_File,
+                          "./logs/" & Class.Qualified_Name & "--vt.txt");
+      Ada.Text_IO.Create (Object_Log, Ada.Text_IO.Out_File,
+                          "./logs/" & Class.Qualified_Name & "--or.txt");
+
       Class.Scan_Ancestors
         (Proper_Ancestors => False,
          Process          => Add_Base_Class'Access);
@@ -480,6 +512,9 @@ package body Ack.Classes is
             Create_Virtual_Table_Entry (Offset, Base);
          end loop;
       end;
+
+      Ada.Text_IO.Close (Object_Log);
+      Ada.Text_IO.Close (Table_Log);
 
    end Create_Memory_Layout;
 
