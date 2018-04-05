@@ -230,6 +230,22 @@ package body Ack is
       end if;
    end Get_Name_Id;
 
+   -----------
+   -- Image --
+   -----------
+
+   function Image (Offset : Word_Offset) return String is
+      Hex : constant String := "0123456789ABCDEF";
+      It  : Word_Offset := Offset * 4;
+   begin
+      return S : String (1 .. 4) do
+         for Ch of reverse S loop
+            Ch := Hex (Natural (It mod 16) + 1);
+            It := It / 16;
+         end loop;
+      end return;
+   end Image;
+
    ------------
    -- Insert --
    ------------

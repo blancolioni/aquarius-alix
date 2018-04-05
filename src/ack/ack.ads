@@ -198,7 +198,11 @@ package Ack is
       return String;
 
    type Byte_Offset is new Natural;
+
    type Word_Offset is new Natural;
+
+   function Image (Offset : Word_Offset) return String;
+
    type Bit_Offset is new Natural;
 
    procedure Push_Offset
