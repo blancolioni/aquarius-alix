@@ -25,6 +25,7 @@ package Aquarius.Command_Line is
    function Enable_Plugins return Boolean;
 
    function Ack_Write_Listing return Boolean;
+   function Ack_Write_Tables return Boolean;
    function Ack_Execute_Root return String;
 
    function Aqua_Trace_Code return Boolean;
