@@ -95,6 +95,52 @@ package body Ack is
       return False;
    end Contains_Name;
 
+   ----------
+   -- Copy --
+   ----------
+
+   function Copy (Node : Node_Id) return Node_Id is
+   begin
+      if Node not in Real_Node_Id then
+         return Node;
+      else
+         declare
+            New_Record : Node_Record :=
+                           Node_Table.Element (Node);
+         begin
+            for Field of New_Record.Field loop
+               Field := Copy (Field);
+            end loop;
+
+            New_Record.List := Copy (New_Record.List);
+            New_Record.Entity := null;
+            New_Record.Context := null;
+            New_Record.Node_Type := null;
+            New_Record.Error := E_No_Error;
+            New_Record.Error_Entity := null;
+            New_Record.Integer_Value := 0;
+            New_Record.Label := 0;
+            Node_Table.Append (New_Record);
+            return Node_Table.Last_Index;
+         end;
+      end if;
+   end Copy;
+
+   ----------
+   -- Copy --
+   ----------
+
+   function Copy (List : List_Id) return List_Id is
+      New_List : List_Record;
+      Old_List : constant List_Record :=  List_Table.Element (List);
+   begin
+      for Item of Old_List.List loop
+         New_List.List.Append (Copy (Item));
+      end loop;
+      List_Table.Append (New_List);
+      return List_Table.Last_Index;
+   end Copy;
+
    ------------
    -- Create --
    ------------
@@ -548,6 +594,17 @@ package body Ack is
    begin
       Node_Table (Node).Node_Type := Entity_Type (Entity);
    end Set_Type;
+
+   ----------------------
+   -- Set_Write_Tables --
+   ----------------------
+
+   procedure Set_Write_Tables
+     (Write_Tables : Boolean)
+   is
+   begin
+      Local_Write_Tables := Write_Tables;
+   end Set_Write_Tables;
 
    --------------
    -- To_Array --

@@ -1627,9 +1627,6 @@ package body Ack.Semantic is
       Right     : constant Node_Id := Field_2 (Operator_Node);
       Left_Type : Ack.Types.Type_Entity;
    begin
---        Ada.Text_IO.Put_Line
---          (Get_Program (Left).Show_Location
---               & ": analysing: " & To_String (Operator));
       Analyse_Expression
         (Class           => Class,
          Container       => Container,
@@ -1725,12 +1722,6 @@ package body Ack.Semantic is
             Actual_List_Node : constant Node_Id :=
                                  Actual_List (Precursor_Element);
          begin
-
-            Ada.Text_IO.Put_Line
-              (Get_Program (Precursor_Element).Show_Location
-               & ": " & Entity.Declared_Name
-               & "; class context "
-               & Local_Table.Class_Context.Qualified_Name);
 
             if Actual_List_Node /= No_Node then
                declare

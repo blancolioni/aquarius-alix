@@ -147,12 +147,17 @@ package Ack is
 
    function Default_Monitoring_Level return Assertion_Monitoring_Level;
 
+   procedure Set_Write_Tables
+     (Write_Tables : Boolean);
+
    type Node_Id is private;
 
    No_Node : constant Node_Id;
 
    function Kind (Node : Node_Id) return Node_Kind
      with Pre => Node /= No_Node;
+
+   function Copy (Node : Node_Id) return Node_Id;
 
    type List_Id is private;
 
@@ -718,6 +723,8 @@ private
          List : List_Of_Nodes.List;
       end record;
 
+   function Copy (List : List_Id) return List_Id;
+
 --     package List_Of_Entities is
 --       new Ada.Containers.Doubly_Linked_Lists (Entity_Type);
 --
@@ -1226,5 +1233,7 @@ private
 
    function Default_Monitoring_Level return Assertion_Monitoring_Level
    is (Local_Default_Monitoring_Level);
+
+   Local_Write_Tables : Boolean := False;
 
 end Ack;
