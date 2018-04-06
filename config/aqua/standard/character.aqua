@@ -1,3 +1,11 @@
-expanded class Character
+expanded class 
+   Character
 
+feature
+
+   To_Upper_Case : Character
+   To_Lower_Case : Character
+   
+   Is_White_Space : Boolean
+   
 end
