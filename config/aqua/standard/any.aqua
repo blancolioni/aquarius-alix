@@ -11,7 +11,7 @@ feature
    
    Void : None
    
-   Reference_Equal alias "=" (Other : Any) : Boolean 
-   Reference_Not_Equal alias "/=" (Other : Any) : Boolean
+   Reference_Equal alias "=" (Other : Any) : Boolean external "aqua"
+   Reference_Not_Equal alias "/=" (Other : Any) : Boolean external "aqua"
 
 end
