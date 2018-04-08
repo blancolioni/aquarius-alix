@@ -1085,6 +1085,13 @@ package body Ack.Semantic is
                                  and then Kind (Effective_Node) = N_External;
    begin
 
+      if not Property_Feature_Node (Feature)
+        and then not Value_Feature
+        and then not Routine_Feature
+      then
+         Error (Feature, E_Requires_Body);
+      end if;
+
       for Node of List_Table.Element (Names).List loop
          declare
             Entity : constant Ack.Features.Feature_Entity :=
