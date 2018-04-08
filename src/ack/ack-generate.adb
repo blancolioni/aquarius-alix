@@ -18,6 +18,10 @@ package body Ack.Generate is
 
    Report_Allocation : constant Boolean := False;
 
+   String_Label_Index : Natural := 0;
+
+   function Next_String_Label return String;
+
    procedure Generate_Allocator
      (Unit  : in out Tagatha.Units.Tagatha_Unit;
       Class : not null access Ack.Classes.Class_Entity_Record'Class);
@@ -585,8 +589,22 @@ package body Ack.Generate is
             begin
                case N_Constant_Value (Kind (Value)) is
                   when N_String_Constant =>
-                     Unit.Push_Text
-                       (To_String (Get_Name (Value)));
+                     declare
+                        Label : constant String := Next_String_Label;
+                        Text  : constant String :=
+                                  To_String (Get_Name (Value));
+                     begin
+                        Unit.Segment (Tagatha.Read_Only);
+                        Unit.Label (Label);
+                        Unit.Data (Text'Length);
+
+                        for Ch of Text loop
+                           Unit.Data (Character'Pos (Ch));
+                        end loop;
+
+                        Unit.Segment (Tagatha.Executable);
+                        Unit.Push_Label (Label);
+                     end;
                   when N_Integer_Constant =>
                      Unit.Push
                        (Tagatha.Tagatha_Integer'Value
@@ -618,7 +636,9 @@ package body Ack.Generate is
         Ack.Features.Feature_Entity_Record'Class)
    is
    begin
-      Feature.Generate_Routine (Class, Unit);
+      if not Feature.Is_External_Routine then
+         Feature.Generate_Routine (Class, Unit);
+      end if;
    end Generate_Feature;
 
    ---------------------------
@@ -1009,5 +1029,16 @@ package body Ack.Generate is
       end loop;
       Unit.Push_Register ("agg");
    end Generate_Tuple_Expression;
+
+   -----------------------
+   -- Next_String_Label --
+   -----------------------
+
+   function Next_String_Label return String is
+      S : constant String := Natural'Image (String_Label_Index);
+   begin
+      String_Label_Index := String_Label_Index + 1;
+      return "_string_literal_" & S (2 .. S'Last);
+   end Next_String_Label;
 
 end Ack.Generate;
