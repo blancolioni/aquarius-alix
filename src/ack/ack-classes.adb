@@ -40,6 +40,11 @@ package body Ack.Classes is
    begin
       Class.Class_Features.Append (Feature);
       Root_Entity_Type (Class).Insert (Feature);
+      if Class.Expanded
+        and then Feature.Is_Property
+      then
+         Class.Frame_Words := Class.Frame_Words + 1;
+      end if;
       if Class.Creators.Contains (Feature.Standard_Name) then
          Feature.Set_Creator;
       end if;
@@ -363,11 +368,15 @@ package body Ack.Classes is
       begin
          Layout.Object_Start := Offset;
          Layout.Object_Entry := Object_Layout.Last_Index + 1;
-         Object_Layout.Append ((No_Name, Table_Link_Name (Layout.Class), 0));
 
-         Put_Log
-           (Object_Log, Offset, "vptr " & Layout.Class.Qualified_Name);
-         Offset := Offset + 1;
+         if not Layout.Class.Expanded then
+            Object_Layout.Append
+              ((No_Name, Table_Link_Name (Layout.Class), 0));
+
+            Put_Log
+              (Object_Log, Offset, "vptr " & Layout.Class.Qualified_Name);
+            Offset := Offset + 1;
+         end if;
 
          for Feature of Layout.Class.Class_Features loop
             if Feature.Is_Property_Of_Class (Layout.Class) then
@@ -453,6 +462,7 @@ package body Ack.Classes is
                Offset := Offset + 1;
             end if;
          end loop;
+
       end Create_Virtual_Table_Entry;
 
       ---------
@@ -516,13 +526,16 @@ package body Ack.Classes is
          end;
       end loop;
 
-      declare
-         Offset : Word_Offset := 0;
-      begin
-         for Base of reverse Class_Vector loop
-            Create_Virtual_Table_Entry (Offset, Base);
-         end loop;
-      end;
+      if not Class.Expanded then
+
+         declare
+            Offset : Word_Offset := 0;
+         begin
+            for Base of reverse Class_Vector loop
+               Create_Virtual_Table_Entry (Offset, Base);
+            end loop;
+         end;
+      end if;
 
       if Log then
          Ada.Text_IO.Close (Object_Log);
@@ -953,6 +966,7 @@ package body Ack.Classes is
          Table              => True,
          Parent_Environment => Ack.Environment.Top_Level,
          Context            => Context);
+      Result.Frame_Words := 1;
       return Result;
    end New_Class;
 
@@ -1178,6 +1192,7 @@ package body Ack.Classes is
    is
    begin
       Class.Expanded := True;
+      Class.Frame_Words := 0;
    end Set_Expanded;
 
    ----------------

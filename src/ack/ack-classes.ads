@@ -73,6 +73,10 @@ package Ack.Classes is
    procedure Set_Frozen
      (Class : in out Class_Entity_Record'Class);
 
+   function Frame_Words
+     (Class : Class_Entity_Record'Class)
+      return Natural;
+
    procedure Inherit
      (Class           : in out Class_Entity_Record'Class;
       Inherited_Type : not null access Ack.Types.Type_Entity_Record'Class);
@@ -294,6 +298,7 @@ private
          Bound                   : Boolean := False;
          Behaviour               : Class_Behaviour := Normal;
          Conforming_Child_Action : Name_Id := No_Name;
+         Frame_Words             : Natural := 0;
          Inherited_Types         : List_Of_Inherited_Type_Records.List;
          Inherited_List          : List_Of_Class_Entities.List;
          Ancestor_List           : Ancestor_Class_Lists.List;
@@ -404,5 +409,10 @@ private
      (Class : Class_Entity_Record'Class)
       return Boolean
    is (Class.Frozen);
+
+   function Frame_Words
+     (Class : Class_Entity_Record'Class)
+      return Natural
+   is (Class.Frame_Words);
 
 end Ack.Classes;
