@@ -1,4 +1,3 @@
-with Tagatha.Operands;
 with Tagatha.Units;
 with Tagatha.Units.Listing;
 
@@ -15,16 +14,6 @@ with Ada.Text_IO;
 with Ack.IO;
 
 package body Ack.Generate is
-
-   Report_Allocation : constant Boolean := False;
-
-   procedure Generate_Allocator
-     (Unit  : in out Tagatha.Units.Tagatha_Unit;
-      Class : not null access Ack.Classes.Class_Entity_Record'Class);
-
-   procedure Generate_Default_Create
-     (Unit  : in out Tagatha.Units.Tagatha_Unit;
-      Class : not null access Ack.Classes.Class_Entity_Record'Class);
 
    procedure Generate_Feature
      (Unit    : in out Tagatha.Units.Tagatha_Unit;
@@ -74,122 +63,6 @@ package body Ack.Generate is
      (Unit    : in out Tagatha.Units.Tagatha_Unit;
       Node    : Node_Id)
      with Pre => Kind (Node) = N_Get_Property;
-
-   ------------------------
-   -- Generate_Allocator --
-   ------------------------
-
-   procedure Generate_Allocator
-     (Unit  : in out Tagatha.Units.Tagatha_Unit;
-      Class : not null access Ack.Classes.Class_Entity_Record'Class)
-   is
-
-      use type Ack.Classes.Class_Entity;
-
-      Current_Property : Name_Id := No_Name;
-
-      procedure Set_Value
-        (Feature : not null access constant
-           Ack.Features.Feature_Entity_Record'Class);
-
-      procedure Generate_Local_Allocator
-        (Ancestor_Class : not null access
-           constant Ack.Classes.Class_Entity_Record'Class);
-
-      ------------------------------
-      -- Generate_Local_Allocator --
-      ------------------------------
-
-      procedure Generate_Local_Allocator
-        (Ancestor_Class : not null access
-           constant Ack.Classes.Class_Entity_Record'Class)
-      is
-      begin
-         Unit.Push_Operand
-           (Tagatha.Operands.External_Operand ("map", True),
-            Tagatha.Default_Size);
-         Unit.Pop_Register ("op");
-         Unit.Native_Operation
-           ("allocate",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "op");
-         Unit.Push_Register ("op");
-         Unit.Pop_Register ("pv");
-         Unit.Push_Register ("agg");
-         Unit.Pop_Register ("op");
-         Unit.Native_Operation
-           ("set_property " & Ancestor_Class.Link_Name);
-      end Generate_Local_Allocator;
-
-      ---------------
-      -- Set_Value --
-      ---------------
-
-      procedure Set_Value
-        (Feature : not null access constant
-           Ack.Features.Feature_Entity_Record'Class)
-      is
-      begin
-         Feature.Set_Default_Value (Current_Property, Unit);
-      end Set_Value;
-
-   begin
-      Unit.Begin_Routine
-        (Class.Link_Name & "$allocate",
-         Argument_Words => 0,
-         Frame_Words    => 0,
-         Result_Words   => 1,
-         Global         => True);
-
-      if Report_Allocation then
-         Unit.Push_Text ("allocating: " & Class.Full_Name);
-         Unit.Push_Operand
-           (Tagatha.Operands.External_Operand ("io", True),
-            Tagatha.Default_Size);
-         Unit.Pop_Register ("op");
-         Unit.Native_Operation
-           ("get_property put_line,1",
-            Input_Stack_Words  => 1,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-      end if;
-
-      Unit.Push_Operand
-        (Tagatha.Operands.External_Operand ("map", True),
-         Tagatha.Default_Size);
-      Unit.Pop_Register ("op");
-      Unit.Native_Operation
-        ("allocate",
-         Input_Stack_Words  => 0,
-         Output_Stack_Words => 0,
-         Changed_Registers  => "op");
-      Unit.Push_Register ("op");
-      Unit.Push_Register ("op");
-      Unit.Pop_Register ("agg");
-
-      Class.Scan_Ancestors (Proper_Ancestors => False,
-                            Process          =>
-                              Generate_Local_Allocator'Access);
-      Class.Scan_Features (Set_Value'Access);
-
-      if Report_Allocation then
-         Unit.Push_Text ("finished allocating: " & Class.Full_Name);
-         Unit.Push_Operand
-           (Tagatha.Operands.External_Operand ("io", True),
-            Tagatha.Default_Size);
-         Unit.Pop_Register ("op");
-         Unit.Native_Operation
-           ("get_property put_line,1",
-            Input_Stack_Words  => 1,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-      end if;
-
-      Unit.Pop_Result;
-      Unit.End_Routine;
-
-   end Generate_Allocator;
 
    --------------------------------
    -- Generate_Class_Declaration --
@@ -256,17 +129,12 @@ package body Ack.Generate is
 
       Unit.End_Routine;
 
-      Entity.Generate_Virtual_Table (Unit);
-
-      if not Entity.Deferred then
-         Entity.Generate_Object_Allocator (Unit);
+      if not Entity.Expanded then
+         Entity.Generate_Virtual_Table (Unit);
       end if;
 
-      if False then
-         if not Entity.Deferred then
-            Generate_Allocator (Unit, Entity);
-            Generate_Default_Create (Unit, Entity);
-         end if;
+      if not Entity.Deferred and then not Entity.Expanded then
+         Entity.Generate_Object_Allocator (Unit);
       end if;
 
       declare
@@ -483,78 +351,6 @@ package body Ack.Generate is
          raise;
 
    end Generate_Creation;
-
-   -----------------------------
-   -- Generate_Default_Create --
-   -----------------------------
-
-   procedure Generate_Default_Create
-     (Unit  : in out Tagatha.Units.Tagatha_Unit;
-      Class : not null access Ack.Classes.Class_Entity_Record'Class)
-   is
-      procedure Clear_Feature_Value
-        (Feature : not null access constant
-           Ack.Features.Feature_Entity_Record'Class);
-
-      -------------------------
-      -- Clear_Feature_Value --
-      -------------------------
-
-      procedure Clear_Feature_Value
-        (Feature : not null access constant
-           Ack.Features.Feature_Entity_Record'Class)
-      is
-
-         procedure Clear_Value_In_Class
-           (Class : not null access constant
-              Ack.Classes.Class_Entity_Record'Class);
-
-         --------------------------
-         -- Clear_Value_In_Class --
-         --------------------------
-
-         procedure Clear_Value_In_Class
-           (Class : not null access constant
-              Ack.Classes.Class_Entity_Record'Class)
-         is
-         begin
-            Unit.Push_Register ("r0");
-            Unit.Pop_Register ("op");
-            Unit.Native_Operation
-              ("get_property " & Class.Link_Name & ",0",
-               Input_Stack_Words  => 0,
-               Output_Stack_Words => 0,
-               Changed_Registers  => "pv");
-
-            Unit.Push_Register ("pv");
-            Unit.Pop_Register ("op");
-
-            Unit.Push (0);
-            Unit.Pop_Register ("pv");
-            Unit.Native_Operation
-              ("set_property " & Feature.Standard_Name);
-         end Clear_Value_In_Class;
-
-      begin
-         Feature.Scan_Original_Classes (Clear_Value_In_Class'Access);
-      end Clear_Feature_Value;
-
-   begin
-      Unit.Begin_Routine
-        (Class.Link_Name & "$default_create",
-         Argument_Words => 1,
-         Frame_Words    => 0,
-         Result_Words   => 0,
-         Global         => True);
-
-      Unit.Push_Argument (1);
-      Unit.Pop_Register ("r0");
-
-      Class.Scan_Features (Clear_Feature_Value'Access);
-
-      Unit.End_Routine;
-
-   end Generate_Default_Create;
 
    -------------------------
    -- Generate_Expression --
