@@ -1,4 +1,20 @@
+note
+   Behavior      : Aqua_Internal_Class
+   Category      : Modular_Type
+   Modulus_Power : 32
+   
 expanded class 
    System.Word_32
 
+inherit
+   Aqua.Algebra.Additive
+      redefine Zero, Add, Subtract end
+   
+feature
+
+   Zero : Word_32 external "intrinsic"
+   
+   Add      alias "+" (Right : Word_32) : Word_32 external "intrinsic"
+   Subtract alias "-" (Right : Word_32) : Word_32 external "intrinsic"
+      
 end

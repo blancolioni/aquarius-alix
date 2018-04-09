@@ -2,13 +2,18 @@ expanded class
    Integer
    
 inherit  
-   Aqua.Algebra.Additive redefine Plus end
+   Aqua.Algebra.Numeric redefine Add, Subtract, Negate, Zero end
    Aqua.Algebra.Eq redefine Equal end
-  
+   
 feature
    To_String : String external "aqua"
    
-   Plus alias "+" (Right : Integer) : Integer external "intrinsic"
+   Add alias "+" (Right : Integer) : Integer external "intrinsic"
+   Subtract alias "-" (Right : Integer) : Integer external "intrinsic"
+   Negate : Integer external "intrinsic"
+      
+   Zero : Integer external "intrinsic"
+   
    Equal alias "=" (Right : Integer) : Boolean external "intrinsic"
 
    GE alias ">=" (Right : Integer) : Boolean external "aqua"

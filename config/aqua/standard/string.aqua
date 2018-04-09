@@ -5,4 +5,16 @@ feature
    To_Integer : Integer external "aqua"
    Join alias "&" (Right : String) : String external "aqua"
    Replace (Search_Text, Replacement_Text : String) : String external "aqua"
+   
+feature { None }  --  string literals
+
+   Create_From_String_Literal (Addr : System.Address)
+      do
+         create Block.Make_From_Base_With_Length (Addr)
+      end
+      
+feature { None }
+
+   Block : System.Memory.Block
+   Can_Change : Boolean
 end

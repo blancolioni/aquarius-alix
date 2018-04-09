@@ -1,0 +1,36 @@
+class 
+   System.Memory.Block_32
+
+create
+   Make_From_Base_And_Bound, Make_From_Base_With_Length
+   
+feature
+   Make_From_Base_And_Bound (Map_Base, Map_Bound : System.Address)
+      do
+         Base := Map_Base
+         Bound := Map_Bound
+         Count := (Map_Bound - Map_Base) / 4
+      end
+      
+   Make_From_Base_With_Length (Map_Base : System.Address)
+      local
+         Length : System.Word_32
+         Mem    : System.Memory.Mem
+      do
+         Length := Mem.Get_Word_32 (Map_Base)
+         Make_From_Base_And_Bound (Map_Base + 4, Map_Base + 4 * (Length + 1))
+      end
+      
+feature
+   Base    : System.Address
+   Bound   : System.Address
+   Count   : Word_32
+   
+feature  --  get/put
+
+   Put (Addr : System.Address; Value : System.Word_32) external "intrinsic"
+   Get (Addr : System.Address) : System.Word_32 external "intrinsic"
+
+   Get_At (Offset : System.Word_32) : System.Word_32 external "intrinsic"
+   
+end
