@@ -116,6 +116,7 @@ package Ack is
       E_Not_Defined_In,
       E_Not_A_Create_Feature,
       E_Create_Deferred_Class,
+      E_Requires_Body,
       E_Missing_Redefine,
       E_Missing_Redefinition,
       E_No_Component,
