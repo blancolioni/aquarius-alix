@@ -44,6 +44,11 @@ package body Ack.Semantic is
 
    function Forward_Iterable return Ack.Classes.Class_Entity;
 
+   function Property_Feature_Node
+     (Node : Node_Id)
+     return Boolean
+     with Pre => Kind (Node) = N_Feature_Declaration;
+
    function Analyse_Class_Header
      (Class  : Node_Id;
       Header : Node_Id)
@@ -63,9 +68,9 @@ package body Ack.Semantic is
       Notes : Node_Id);
 
    procedure Analyse_Feature_Name
-     (Class   : Ack.Classes.Class_Entity;
-      Exports : Node_Id;
-      Feature : Node_Id)
+     (Class    : Ack.Classes.Class_Entity;
+      Exports  : Node_Id;
+      Feature  : Node_Id)
      with Pre => Kind (Feature) = N_Feature_Declaration;
 
    procedure Analyse_Feature_Header
@@ -474,6 +479,13 @@ package body Ack.Semantic is
 
       if Trace_Class_Analysis then
          Ada.Text_IO.Put_Line
+           ("  virtual and object tables: " & Class.Qualified_Name);
+      end if;
+
+      Class.Create_Memory_Layout;
+
+      if Trace_Class_Analysis then
+         Ada.Text_IO.Put_Line
            ("Finished: " & Class.Qualified_Name);
       end if;
 
@@ -832,6 +844,7 @@ package body Ack.Semantic is
          return;
       end if;
 
+      Set_Context (Creation, Container);
       Set_Entity (Creation, Created_Entity);
 
       Created_Type := Created_Entity.Get_Type;
@@ -1234,9 +1247,9 @@ package body Ack.Semantic is
    --------------------------
 
    procedure Analyse_Feature_Name
-     (Class   : Ack.Classes.Class_Entity;
-      Exports : Node_Id;
-      Feature : Node_Id)
+     (Class    : Ack.Classes.Class_Entity;
+      Exports  : Node_Id;
+      Feature  : Node_Id)
    is
       pragma Unreferenced (Exports);
       Names        : constant List_Id := New_Feature_List (Feature);
@@ -1257,6 +1270,8 @@ package body Ack.Semantic is
                                      (Name        => Get_Name (Name_Node),
                                       Alias       => Alias,
                                       Declaration => Node,
+                                      Property    =>
+                                        Property_Feature_Node (Feature),
                                       Class       => Class);
          begin
             if Entity.Standard_Name = "void"
@@ -1292,9 +1307,9 @@ package body Ack.Semantic is
                              Feature_Declarations (Clause_Node);
          begin
             for Feature_Node of List_Table.Element (Feature_List).List loop
-               Analyse (Class   => Class,
-                        Exports => No_Node,
-                        Node    => Feature_Node);
+               Analyse (Class    => Class,
+                        Exports  => No_Node,
+                        Node     => Feature_Node);
             end loop;
          end;
       end loop;
@@ -1377,7 +1392,8 @@ package body Ack.Semantic is
          if Inherited_Class.Has_Feature (Name) then
             if Class.Has_Feature (Name) then
                Class.Feature (Name).Set_Redefined
-                 (Original_Feature =>
+                 (Class            => Class,
+                  Original_Feature =>
                     Inherited_Class.Feature (Name));
             else
                Error (Node, E_Missing_Redefinition,
@@ -1623,9 +1639,6 @@ package body Ack.Semantic is
       Right     : constant Node_Id := Field_2 (Operator_Node);
       Left_Type : Ack.Types.Type_Entity;
    begin
---        Ada.Text_IO.Put_Line
---          (Get_Program (Left).Show_Location
---               & ": analysing: " & To_String (Operator));
       Analyse_Expression
         (Class           => Class,
          Container       => Container,
@@ -1748,6 +1761,7 @@ package body Ack.Semantic is
             end if;
 
             Set_Entity (Precursor_Element, Entity);
+            Set_Context (Precursor_Element, Local_Table.Class_Context);
             Value_Entity := Entity;
             Value_Type := Value_Entity.Get_Type;
             Local_Table := Value_Type;
@@ -2074,5 +2088,34 @@ package body Ack.Semantic is
       return Load_Class (null, Aqua_Class,
                          Get_Name_Id (Tuple_Name));
    end Load_Tuple_Class;
+
+   ---------------------------
+   -- Property_Feature_Node --
+   ---------------------------
+
+   function Property_Feature_Node
+     (Node : Node_Id)
+      return Boolean
+   is
+      Dec_Body        : constant Node_Id := Declaration_Body (Node);
+      Value_Node      : constant Node_Id := Value (Dec_Body);
+      Value_Feature   : constant Boolean :=
+                          Value_Node /= No_Node
+                              and then Kind (Value_Node) = N_Explicit_Value;
+      Routine_Feature : constant Boolean :=
+                          Value_Node /= No_Node
+                              and then Kind (Value_Node) = N_Routine;
+      Deferred        : constant Boolean :=
+                          Routine_Feature
+                              and then Node_Table.Element
+                                (Value_Node).Deferred;
+      Arg_Node        : constant Node_Id := Formal_Arguments (Dec_Body);
+      Type_Node       : constant Node_Id := Value_Type (Dec_Body);
+   begin
+      return not Deferred
+        and then not Routine_Feature
+        and then not Value_Feature
+        and then Arg_Node = No_Node and then Type_Node /= No_Node;
+   end Property_Feature_Node;
 
 end Ack.Semantic;

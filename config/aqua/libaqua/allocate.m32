@@ -1,0 +1,21 @@
+.data
+__heap_start:
+   .word 0
+   
+__heap_top:
+   .word 0
+   
+.export __allocate
+__allocate:
+   mov r1, -(sp)
+   mov r0, r1
+   mov __heap_top, r0
+   bne L1
+   trap 1
+   mov r0, __heap_start
+   mov r0, __heap_top
+L1:
+   add r0, r1, __heap_top
+   mov (sp)+, r1
+   rts
+   

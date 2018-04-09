@@ -13,7 +13,7 @@ package Ack.Features is
      new Root_Entity_Type with private;
 
    overriding procedure Bind
-     (Feature : in out Feature_Entity_Record);
+     (Feature : not null access Feature_Entity_Record);
 
    overriding procedure Save_Old_Value
      (Feature : in out Feature_Entity_Record;
@@ -46,6 +46,12 @@ package Ack.Features is
      (Feature : Feature_Entity_Record'Class)
       return Boolean;
 
+   function Is_Property_Of_Class
+     (Feature : Feature_Entity_Record'Class;
+      Class   : not null access constant
+        Ack.Classes.Class_Entity_Record'Class)
+      return Boolean;
+
    function Is_External_Routine
      (Feature : Feature_Entity_Record'Class)
       return Boolean;
@@ -55,6 +61,15 @@ package Ack.Features is
       return access constant Ack.Classes.Class_Entity_Record'Class
      with Pre => not Feature.Deferred;
 
+   function Definition_Class
+     (Feature : Feature_Entity_Record'Class)
+      return access constant Ack.Classes.Class_Entity_Record'Class;
+
+   function Active_Class
+     (Feature : Feature_Entity_Record'Class)
+      return access constant Ack.Classes.Class_Entity_Record'Class;
+   --  The class being used to generate this feature
+
    procedure Set_Result_Type
      (Feature     : in out Feature_Entity_Record'Class;
       Result_Type : not null access Ack.Types.Type_Entity_Record'Class);
@@ -62,18 +77,23 @@ package Ack.Features is
    procedure Set_Routine
      (Feature      : in out Feature_Entity_Record'Class;
       Routine_Node : Node_Id)
-     with Pre => Kind (Routine_Node) = N_Internal;
+     with Pre => Kind (Routine_Node) = N_Internal
+     and then not Feature.Is_Property;
 
    procedure Set_Deferred
-     (Feature     : in out Feature_Entity_Record'Class);
+     (Feature     : in out Feature_Entity_Record'Class)
+     with Pre => not Feature.Is_Property;
 
    procedure Set_Creator
      (Feature     : in out Feature_Entity_Record'Class);
 
    procedure Set_Redefined
      (Feature          : in out Feature_Entity_Record'Class;
+      Class            : not null access
+        Ack.Classes.Class_Entity_Record'Class;
       Original_Feature : not null access constant
-        Feature_Entity_Record'Class);
+        Feature_Entity_Record'Class)
+       with Pre => not Original_Feature.Is_Property;
 
    procedure Set_External
      (Feature        : in out Feature_Entity_Record'Class;
@@ -87,7 +107,8 @@ package Ack.Features is
    procedure Add_Argument
      (Feature   : in out Feature_Entity_Record'Class;
       Name_Node : in     Node_Id;
-      Arg_Type  : not null access Ack.Types.Type_Entity_Record'Class);
+      Arg_Type  : not null access Ack.Types.Type_Entity_Record'Class)
+     with Pre => not Feature.Is_Property;
 
    procedure Add_Local
      (Feature    : in out Feature_Entity_Record'Class;
@@ -108,6 +129,23 @@ package Ack.Features is
      (Feature : in out Feature_Entity_Record'Class;
       Node    : Node_Id);
 
+   function Virtual_Table_Offset
+     (Feature : Feature_Entity_Record'Class)
+      return Word_Offset;
+
+   procedure Set_Virtual_Table_Offset
+     (Feature : in out Feature_Entity_Record'Class;
+      Offset  : Word_Offset);
+
+   function Property_Offset
+     (Feature : Feature_Entity_Record'Class)
+      return Word_Offset
+     with Pre => Feature.Is_Property;
+
+   procedure Set_Property_Offset
+     (Feature : in out Feature_Entity_Record'Class;
+      Offset  : Word_Offset);
+
    overriding procedure Add_Implicit
      (Feature    : in out Feature_Entity_Record;
       Implicit_Entity : not null access Root_Entity_Type'Class);
@@ -126,6 +164,7 @@ package Ack.Features is
 
    procedure Generate_Routine
      (Feature : Feature_Entity_Record'Class;
+      Class   : not null access constant Ack.Classes.Class_Entity_Record'Class;
       Unit    : in out Tagatha.Units.Tagatha_Unit);
 
    type Feature_Entity is access all Feature_Entity_Record'Class;
@@ -135,6 +174,7 @@ package Ack.Features is
      (Name        : Name_Id;
       Alias       : Name_Id;
       Declaration : Node_Id;
+      Property    : Boolean;
       Class       : not null access Ack.Classes.Class_Entity_Record'Class)
       return Feature_Entity;
 
@@ -176,36 +216,43 @@ private
    type Feature_Entity_Record is
      new Root_Entity_Type with
       record
-         Routine             : Boolean := False;
-         Property            : Boolean := False;
-         Explicit_Value      : Boolean := False;
-         Deferred_Feature    : Boolean := False;
-         External            : Boolean := False;
-         Creator             : Boolean := False;
-         Has_Result          : Boolean := False;
-         Has_Current         : Boolean := False;
-         Once                : Boolean := False;
-         Alias               : Name_Id;
-         Original_Classes    : List_Of_Entities.List;
-         Definition_Class    : access Ack.Classes.Class_Entity_Record'Class;
-         Effective_Class     : access Ack.Classes.Class_Entity_Record'Class;
-         Redefined_Feature   : Constant_Feature_Entity;
-         External_Object     : Ada.Strings.Unbounded.Unbounded_String;
-         External_Type       : Ada.Strings.Unbounded.Unbounded_String;
-         External_Label      : Ada.Strings.Unbounded.Unbounded_String;
-         Arguments           : Variable_Vectors.Vector;
-         Locals              : Variable_Vectors.Vector;
-         Olds                : Old_Value_Vectors.Vector;
-         Preconditions       : Assertion_Record_Lists.List;
-         Postconditions      : Assertion_Record_Lists.List;
-         Routine_Node        : Node_Id := No_Node;
-         Explicit_Value_Node : Node_Id := No_Node;
-         Rescue_Node         : Node_Id := No_Node;
-         Local_Count         : Natural := 0;
+         Routine              : Boolean := False;
+         Property             : Boolean := False;
+         Explicit_Value       : Boolean := False;
+         Deferred_Feature     : Boolean := False;
+         External             : Boolean := False;
+         Creator              : Boolean := False;
+         Has_Result           : Boolean := False;
+         Has_Current          : Boolean := False;
+         Once                 : Boolean := False;
+         Virtual_Table_Offset : Word_Offset := 0;
+         Property_Offset      : Word_Offset := 0;
+         Alias                : Name_Id;
+         Original_Classes     : List_Of_Entities.List;
+         Definition_Class     : access Ack.Classes.Class_Entity_Record'Class;
+         Effective_Class      : access Ack.Classes.Class_Entity_Record'Class;
+         Redefined_Class      : access Ack.Classes.Class_Entity_Record'Class;
+         Redefined_Feature    : Constant_Feature_Entity;
+         External_Object      : Ada.Strings.Unbounded.Unbounded_String;
+         External_Type        : Ada.Strings.Unbounded.Unbounded_String;
+         External_Label       : Ada.Strings.Unbounded.Unbounded_String;
+         Arguments            : Variable_Vectors.Vector;
+         Locals               : Variable_Vectors.Vector;
+         Olds                 : Old_Value_Vectors.Vector;
+         Preconditions        : Assertion_Record_Lists.List;
+         Postconditions       : Assertion_Record_Lists.List;
+         Routine_Node         : Node_Id := No_Node;
+         Explicit_Value_Node  : Node_Id := No_Node;
+         Rescue_Node          : Node_Id := No_Node;
+         Local_Count          : Natural := 0;
       end record
      with Invariant =>
        Feature_Entity_Record.Deferred or else
        Feature_Entity_Record.Effective_Class /= null;
+
+   overriding function Class_Context
+     (Feature : not null access constant Feature_Entity_Record)
+      return Constant_Entity_Type;
 
    overriding function Instantiate
      (Entity             : not null access Feature_Entity_Record;
@@ -233,9 +280,10 @@ private
       return String;
 
    overriding procedure Push_Entity
-     (Feature      : Feature_Entity_Record;
-      Have_Context : Boolean;
-      Unit         : in out Tagatha.Units.Tagatha_Unit);
+     (Feature       : Feature_Entity_Record;
+      Have_Current  : Boolean;
+      Context       : not null access constant Root_Entity_Type'Class;
+      Unit          : in out Tagatha.Units.Tagatha_Unit);
 
    overriding procedure Pop_Entity
      (Feature : Feature_Entity_Record;
@@ -286,5 +334,27 @@ private
      (Node    : Node_Id)
       return Feature_Entity
    is (Feature_Entity (Get_Entity (Node)));
+
+   function Definition_Class
+     (Feature : Feature_Entity_Record'Class)
+      return access constant Ack.Classes.Class_Entity_Record'Class
+   is (Feature.Definition_Class);
+
+   function Virtual_Table_Offset
+     (Feature : Feature_Entity_Record'Class)
+      return Word_Offset
+   is (Feature.Virtual_Table_Offset);
+
+   function Property_Offset
+     (Feature : Feature_Entity_Record'Class)
+      return Word_Offset
+   is (Feature.Property_Offset);
+
+   function Active_Class
+     (Feature : Feature_Entity_Record'Class)
+      return access constant Ack.Classes.Class_Entity_Record'Class
+   is (if Feature.Redefined_Class /= null
+       then Feature.Redefined_Class
+       else Feature.Definition_Class);
 
 end Ack.Features;

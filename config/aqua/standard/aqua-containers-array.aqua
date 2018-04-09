@@ -1,9 +1,11 @@
-class Aqua.Containers.Array[T]
+class 
+   Aqua.Containers.Array [Element_Type]
 
+inherit
+   Aqua.Containers.Map [Integer, Element_Type]
+      redefine Contains_Key, Element, Insert, Delete, Replace
+      
 feature
-
-   Item (Index : Integer) : T
-      external "aqua" alias "array.get"
 
    Lower, Upper : Integer
 
@@ -13,4 +15,11 @@ feature
       ensure
          Consistent_With_Bounds: Result = Upper - Lower + 1
       end         
+      
+   Contains_Key (Key : Integer) : Boolean
+      do
+         Result := Key >= Lower and then Key <= Upper
+      end
+      
+
 end

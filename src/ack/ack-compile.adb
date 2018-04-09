@@ -10,6 +10,7 @@ with Ack.Features;
 
 with Ack.Errors;
 
+with Aquarius.Config_Paths;
 with Aquarius.Loader;
 with Aquarius.Messages;
 with Aquarius.Messages.Console;
@@ -29,6 +30,10 @@ package body Ack.Compile is
 
    procedure Generate_Object_Code
      (Base_Name   : String);
+
+   procedure Load_Library_File
+     (Path  : String;
+      Image : Aqua.Images.Image_Type);
 
    procedure Compile_Class
      (Source_Path      : String;
@@ -167,6 +172,9 @@ package body Ack.Compile is
    begin
       if not Class_Object_Paths.Contains (Base_Name) then
          if not Loaded_Classes.Contains (Base_Name) then
+            Ada.Text_IO.Put_Line
+              ("Loading: " & Base_Name);
+
             declare
                Source_Program : constant Aquarius.Programs.Program_Tree :=
                                   Aquarius.Loader.Load_From_File
@@ -190,6 +198,9 @@ package body Ack.Compile is
                      end if;
                   end if;
                end;
+
+               Ada.Text_IO.Put_Line
+                 ("Finished: " & Base_Name);
 
                Loaded_Classes.Insert (Base_Name, Node);
             end;
@@ -225,6 +236,26 @@ package body Ack.Compile is
 
    end Load_Class;
 
+   -----------------------
+   -- Load_Library_File --
+   -----------------------
+
+   procedure Load_Library_File
+     (Path  : String;
+      Image : Aqua.Images.Image_Type)
+   is
+      Assembly_Program : constant Aquarius.Programs.Program_Tree :=
+                           Aquarius.Loader.Load_From_File
+                             (Path);
+      Assembly_Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
+                           Aquarius.Grammars.Manager.Get_Grammar_For_File
+                             (Path);
+   begin
+      Assembly_Grammar.Run_Action_Trigger
+        (Assembly_Program, Aquarius.Actions.Semantic_Trigger);
+      Image.Load (Ada.Directories.Base_Name (Path) & ".o32");
+   end Load_Library_File;
+
    ---------------------
    -- Load_Root_Class --
    ---------------------
@@ -237,6 +268,22 @@ package body Ack.Compile is
       Compile_Class (Source_Path, To_Image,
                      Root_Class => True,
                      Feature_Callback => null);
+      Load_Library_File
+        (Aquarius.Config_Paths.Config_File
+           ("aqua/libaqua/allocate.m32"),
+         To_Image);
+      Load_Library_File
+        (Aquarius.Config_Paths.Config_File
+           ("aqua/libaqua/libany.m32"),
+         To_Image);
+      Load_Library_File
+        (Aquarius.Config_Paths.Config_File
+           ("aqua/libaqua/libboolean.m32"),
+         To_Image);
+      Load_Library_File
+        (Aquarius.Config_Paths.Config_File
+           ("aqua/libaqua/libinteger.m32"),
+         To_Image);
       To_Image.Link;
    end Load_Root_Class;
 

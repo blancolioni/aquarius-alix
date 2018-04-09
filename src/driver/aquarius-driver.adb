@@ -187,6 +187,10 @@ begin
       Aqua.CPU.Set_Option ("trace-code", "true");
    end if;
 
+   if Command_Line.Ack_Write_Tables then
+      Ack.Set_Write_Tables (True);
+   end if;
+
    Komnenos.Themes.Load_Theme
      (Tropos.Reader.Read_Config
         (Komnenos.Paths.Config_File ("themes/default.theme")));
