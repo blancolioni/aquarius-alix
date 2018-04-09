@@ -1,7 +1,33 @@
-expanded class System.Address
+expanded class 
+   System.Address
 
+inherit
+   Aqua.Algebra.Additive
+      redefine Add, Subtract, Zero end
+      
+feature
+   
+   Zero : Address
+      do
+         Result.Set_Internal (0)
+      end
+      
+   Add (Right : like Current) : like Current
+      do
+         Result.Set_Internal (Internal + Right.Internal)
+      end
+      
+   Subtract (Right : like Current) : like Current
+      do
+         Result.Set_Internal (Internal - Right.Internal)
+      end
+      
 feature { None }
 
    Internal : System.Word_32
    
+   Set_Internal (I : System.Word_32)
+      do
+         Internal := I
+      end
 end

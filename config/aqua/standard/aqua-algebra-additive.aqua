@@ -3,8 +3,22 @@ deferred class
 
 feature
 
-   Plus (Right : like Current) : like Current
+   Zero : Additive
+      deferred
+      end
+      
+   Add (Right : like Current) : like Current
       deferred
       end
 
+   Subtract (Right : like Current) : like Current
+      do
+         Result := Add (Right.Negate)
+      end
+   
+   Negate : Additive
+      do
+         Result := Zero.Subtract (Current)
+      end
+      
 end

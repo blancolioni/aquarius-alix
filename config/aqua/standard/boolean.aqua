@@ -1,3 +1,6 @@
+note
+   Aqua_Size_Bits : 1
+   
 expanded class Boolean
 
 feature
