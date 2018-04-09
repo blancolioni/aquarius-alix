@@ -1,0 +1,7 @@
+expanded class System.Address
+
+feature { None }
+
+   Internal : System.Word_32
+   
+end
