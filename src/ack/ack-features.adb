@@ -94,21 +94,24 @@ package body Ack.Features is
       use type Ack.Classes.Class_Entity;
       Next_Argument : Positive := 1;
       Next_Local    : Positive := 1;
+      Current_Class : constant Ack.Classes.Class_Entity :=
+                        Ack.Classes.Class_Entity
+                          (if Feature.Effective_Class = null
+                           then Feature.Definition_Class
+                           else Feature.Effective_Class);
       Current       : constant Ack.Variables.Variable_Entity :=
                         Ack.Variables.New_Argument_Entity
-                          (Get_Name_Id ("Current"),
-                           Feature.Declaration_Node,
-                           Ack.Types.New_Class_Type
-                             (Feature.Declaration_Node,
-                              (if Feature.Effective_Class = null
-                               then Feature.Definition_Class
-                               else Feature.Effective_Class),
-                              Detachable => False));
+                          (Name          => Get_Name_Id ("Current"),
+                           Node          => Feature.Declaration_Node,
+                           Argument_Type =>
+                             Ack.Types.New_Class_Type
+                               (Feature.Declaration_Node, Current_Class,
+                                Detachable => False));
    begin
       Current.Set_Attached;
-      Current.Set_Offset (1);
+      Current.Set_Offset (Current_Class.Frame_Words);
       Feature.Insert (Current);
-      Next_Argument := 2;
+      Next_Argument := Current_Class.Frame_Words + 1;
 
       for Argument of Feature.Arguments loop
          Argument.Set_Offset (Next_Argument);
