@@ -252,8 +252,13 @@ package body Ack.Semantic is
      (Class     : Ack.Classes.Class_Entity;
       Type_Node : Node_Id)
    is
+      Feature_Name : constant Name_Id :=
+                       Get_Name (Type_Node);
+      Type_Entity  : constant Ack.Types.Type_Entity :=
+                       Ack.Types.New_Anchored_Type
+                         (Type_Node, Class, Feature_Name);
    begin
-      null;
+      Set_Entity (Type_Node, Type_Entity);
    end Analyse_Anchored_Type;
 
    -----------------------
@@ -932,11 +937,16 @@ package body Ack.Semantic is
       begin
          if Type_Node /= No_Node then
             Analyse_Type (Class, Type_Node);
-         end if;
-
-         if Has_Entity (Type_Node) then
-            Type_Entity := Ack.Types.Get_Type_Entity (Type_Node);
-            Scan (Ids, Insert_Id'Access);
+            if Has_Entity (Type_Node) then
+               Type_Entity := Ack.Types.Get_Type_Entity (Type_Node);
+               Scan (Ids, Insert_Id'Access);
+            end if;
+         else
+            Ada.Text_IO.Put_Line
+              ("null type node for "
+               & Class.Qualified_Name
+               & "." & Feature.Declared_Name
+               & " argument");
          end if;
 
       end Insert_Group;
@@ -1187,7 +1197,7 @@ package body Ack.Semantic is
       Type_Node    : constant Node_Id := Value_Type (Dec_Body);
    begin
       if Type_Node /= No_Node then
-         Analyse_Class_Type (Class, Type_Node);
+         Analyse_Type (Class, Type_Node);
       end if;
 
       for Node of List_Table.Element (Names).List loop
@@ -1382,17 +1392,19 @@ package body Ack.Semantic is
 
       Analyse_Class_Type (Class, Class_Type);
 
-      Inherited_Type := Ack.Types.Get_Type_Entity (Class_Type);
-      Inherited_Class := Inherited_Type.Class;
+      if Ack.Types.Has_Type_Entity (Class_Type) then
+         Inherited_Type := Ack.Types.Get_Type_Entity (Class_Type);
+         Inherited_Class := Inherited_Type.Class;
 
-      Set_Entity (Inherit, Inherited_Type);
+         Set_Entity (Inherit, Inherited_Type);
 
-      Class.Inherit (Inherited_Type);
-      Scan (Redefine_List, Set_Redefine'Access);
+         Class.Inherit (Inherited_Type);
+         Scan (Redefine_List, Set_Redefine'Access);
 
-      if not Class.Deferred then
-         Inherited_Class.Scan_Deferred_Features
-           (Check_Redefined'Access);
+         if not Class.Deferred then
+            Inherited_Class.Scan_Deferred_Features
+              (Check_Redefined'Access);
+         end if;
       end if;
 
    end Analyse_Inherit;

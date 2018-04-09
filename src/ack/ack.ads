@@ -452,6 +452,7 @@ package Ack is
          | N_Boolean_Constant
          | N_Effective_Routine | N_Precursor_Element
          | N_Explicit_Creation_Call
+         | N_Anchored_Type
          | N_Formal_Generic_Name | N_Get_Property
          | N_Attachment_Test | N_Iteration | N_Operator
          | N_Note_Name | N_Note_Item | N_Assertion_Clause);

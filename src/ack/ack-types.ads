@@ -67,7 +67,8 @@ package Ack.Types is
    function Get_Type_Entity
      (Node : Node_Id)
       return Type_Entity
-     with Pre => Kind (Node) in N_Class_Name | N_Class_Type | N_Tuple_Type
+     with Pre => Kind (Node) in
+     N_Class_Name | N_Class_Type | N_Tuple_Type | N_Anchored_Type
      and then Has_Type_Entity (Node);
 
    type Array_Of_Types is array (Positive range <>) of Type_Entity;
@@ -78,6 +79,12 @@ package Ack.Types is
      (Node       : Node_Id;
       Class      : Ack.Classes.Class_Entity;
       Detachable : Boolean)
+      return Type_Entity;
+
+   function New_Anchored_Type
+     (Node       : Node_Id;
+      Class      : not null access Ack.Classes.Class_Entity_Record'Class;
+      Anchor     : Name_Id)
       return Type_Entity;
 
    function Instantiate_Generic_Class
@@ -128,6 +135,8 @@ private
          Class            : Ack.Classes.Class_Entity;
          Generic_Bindings : List_Of_Generic_Bindings.List;
          Constraints      : List_Of_Constraints.List;
+         Anchored_Name    : Name_Id := No_Name;
+         Anchored_Entity  : Entity_Type;
          Generic_Formal   : Boolean := False;
          Detachable       : Boolean := False;
          Anchored         : Boolean := False;
