@@ -1,14 +1,23 @@
-expanded class Integer
-  -- inherit Comparable
-
+expanded class 
+   Integer
+   
+inherit  
+   Aqua.Algebra.Additive redefine Plus end
+   Aqua.Algebra.Eq redefine Equal end
+  
 feature
    To_String : String external "aqua"
    
-   Add alias "+" (Right : Integer) : Integer external "aqua"
-   
+   Plus alias "+" (Right : Integer) : Integer external "intrinsic"
+   Equal alias "=" (Right : Integer) : Boolean external "intrinsic"
+
    GE alias ">=" (Right : Integer) : Boolean external "aqua"
    LE alias "<=" (Right : Integer) : Boolean external "aqua"
    GT alias ">" (Right : Integer) : Boolean external "aqua"
    LT alias "<" (Right : Integer) : Boolean external "aqua"
+   
+feature { None }
+
+   Internal : System.Word_32
    
 end
