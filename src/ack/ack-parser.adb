@@ -245,7 +245,7 @@ package body Ack.Parser is
 
    function Import_Anchored
      (From : Aquarius.Programs.Program_Tree)
-      return Node_Id is (No_Node)
+      return Node_Id
    with Pre => From.Name = "anchored";
 
    function Import_Tuple_Type
@@ -391,6 +391,28 @@ package body Ack.Parser is
       return Import_Class_Declaration
         (Program.Program_Child ("class_declaration"));
    end Import;
+
+   ---------------------
+   -- Import_Anchored --
+   ---------------------
+
+   function Import_Anchored
+     (From : Aquarius.Programs.Program_Tree)
+      return Node_Id
+   is
+      use Aquarius.Programs;
+      Feature_Name : constant String :=
+                       From.Program_Child ("feature_name")
+                       .Program_Child ("identifier")
+                       .Text;
+   begin
+      return Node : constant Node_Id :=
+        New_Node (N_Anchored_Type, From,
+                  Name => Get_Name_Id (Feature_Name))
+      do
+         null;
+      end return;
+   end Import_Anchored;
 
    -----------------------------
    -- Import_Assertion_Clause --

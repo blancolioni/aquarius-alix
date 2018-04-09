@@ -405,6 +405,8 @@ package body Ack.Types is
          Class               => Generic_Class,
          Generic_Bindings    => <>,
          Constraints         => <>,
+         Anchored_Name       => No_Name,
+         Anchored_Entity     => null,
          Generic_Formal      => False,
          Detachable          => Detachable,
          Anchored            => False)
@@ -435,6 +437,29 @@ package body Ack.Types is
       return Typ.Class.Link_Name;
    end Link_Name;
 
+   function New_Anchored_Type
+     (Node       : Node_Id;
+      Class      : not null access Ack.Classes.Class_Entity_Record'Class;
+      Anchor     : Name_Id)
+      return Type_Entity
+   is
+   begin
+      return Result : constant Type_Entity := new Type_Entity_Record'
+        (Root_Entity_Type with
+           Class               => Ack.Classes.Class_Entity (Class),
+         Generic_Bindings    => <>,
+         Constraints         => <>,
+         Anchored_Name       => Anchor,
+         Anchored_Entity     => null,
+         Generic_Formal      => False,
+         Detachable          => False,
+         Anchored            => True)
+      do
+         Result.Create (Get_Name_Id (Class.Declared_Name), Node,
+                        Table => True);
+      end return;
+   end New_Anchored_Type;
+
    --------------------
    -- New_Class_Type --
    --------------------
@@ -451,6 +476,8 @@ package body Ack.Types is
          Class               => Class,
          Generic_Bindings    => <>,
          Constraints         => <>,
+         Anchored_Name       => <>,
+         Anchored_Entity     => <>,
          Generic_Formal      => False,
          Detachable          => Detachable,
          Anchored            => False)
@@ -477,6 +504,8 @@ package body Ack.Types is
          Class               => null,
          Generic_Bindings    => <>,
          Constraints         => <>,
+         Anchored_Name       => <>,
+         Anchored_Entity     => <>,
          Generic_Formal      => False,
          Detachable          => False,
          Anchored            => False)
