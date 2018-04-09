@@ -1667,6 +1667,13 @@ package body Ack.Semantic is
                         Left_Type.Aliased_Feature (Operator);
          begin
             pragma Assert (Feature.Argument_Count in 0 .. 1);
+            if not Feature.Has_Type then
+               raise Constraint_Error with
+                 "attempted to treat non-value feature "
+                 & Feature.Qualified_Name
+                 & " as an operator";
+            end if;
+
             if Feature.Argument_Count = 0 then
                if Right /= No_Node then
                   Error (Right, E_Too_Many_Arguments);
