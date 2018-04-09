@@ -109,8 +109,11 @@ package body Ack.Features is
                                 Detachable => False));
    begin
       Current.Set_Attached;
-      Current.Set_Offset (Current_Class.Frame_Words);
-      Feature.Insert (Current);
+      if Current_Class.Frame_Words > 0 then
+         Current.Set_Offset (Current_Class.Frame_Words);
+         Feature.Insert (Current);
+      end if;
+
       Next_Argument := Current_Class.Frame_Words + 1;
 
       for Argument of Feature.Arguments loop
