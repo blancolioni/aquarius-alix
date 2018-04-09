@@ -4,11 +4,11 @@ expanded class Integer
 feature
    To_String : String external "aqua"
    
-   Plus alias "+" (Right : Integer) : Integer
+   Add alias "+" (Right : Integer) : Integer external "aqua"
    
-   GE alias ">=" (Right : Integer) : Boolean
-   LE alias "<=" (Right : Integer) : Boolean
-   GT alias ">" (Right : Integer) : Boolean
-   LT alias "<" (Right : Integer) : Boolean
+   GE alias ">=" (Right : Integer) : Boolean external "aqua"
+   LE alias "<=" (Right : Integer) : Boolean external "aqua"
+   GT alias ">" (Right : Integer) : Boolean external "aqua"
+   LT alias "<" (Right : Integer) : Boolean external "aqua"
    
 end

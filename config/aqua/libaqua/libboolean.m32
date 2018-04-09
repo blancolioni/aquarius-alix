@@ -24,8 +24,12 @@
     rts
 
 .export  boolean__boolean_implies
- boolean__boolean_implies:
+boolean__boolean_implies:
     seq 8(sp),#0,r0
     or 4(sp),r0
     rts
-    
+
+.export  boolean__boolean_not
+boolean__boolean_not:
+    seq 8(sp),#0,r0
+    rts
