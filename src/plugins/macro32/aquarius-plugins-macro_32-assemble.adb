@@ -281,6 +281,18 @@ package body Aquarius.Plugins.Macro_32.Assemble is
          begin
             Assembly.Set_Start_Label (Start);
          end;
+      elsif Name = "word" then
+         for Arg of Arguments loop
+            if Arg.Chosen_Tree.Name = "identifier" then
+               Assembly.Append_Word
+                 (Assembly.Reference_Label (Arg.Chosen_Tree.Text, False));
+            elsif Arg.Chosen_Tree.Name = "integer" then
+               Assembly.Append_Word (Aqua.Word'Value (Arg.Chosen_Tree.Text));
+            else
+               raise Constraint_Error with
+                 "cannot append word: " & Arg.Chosen_Tree.Name;
+            end if;
+         end loop;
       elsif Name = "source_file" then
          Assembly.Set_Source_File
            (Arguments (1).Chosen_Tree.Text);

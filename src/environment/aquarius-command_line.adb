@@ -32,6 +32,15 @@ package body Aquarius.Command_Line is
       return Get_Flag ("", "ack-write-listing");
    end Ack_Write_Listing;
 
+   ----------------------
+   -- Ack_Write_Tables --
+   ----------------------
+
+   function Ack_Write_Tables return Boolean is
+   begin
+      return Get_Flag ("", "ack-write-tables");
+   end Ack_Write_Tables;
+
    ------------
    -- Action --
    ------------

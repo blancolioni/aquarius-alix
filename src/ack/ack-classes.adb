@@ -1,6 +1,6 @@
 with Ada.Text_IO;
 
---  with Tagatha.Operands;
+with Tagatha.Operands;
 
 with Ack.Environment;
 with Ack.Types;
@@ -109,7 +109,7 @@ package body Ack.Classes is
    is
    begin
       Unit.Call
-        (Class_Entity_Record'Class (Class).Link_Name & "$allocate");
+        (Class_Entity_Record'Class (Class).Link_Name & "$create");
       Unit.Push_Result;
    end Allocate;
 
@@ -126,12 +126,37 @@ package body Ack.Classes is
       Unit.Push_Text ("");
    end Allocate;
 
+   ---------------------------
+   -- Ancestor_Table_Offset --
+   ---------------------------
+
+   function Ancestor_Table_Offset
+     (Class    : Class_Entity_Record'Class;
+      Ancestor : not null access constant Class_Entity_Record'Class)
+      return Word_Offset
+   is
+   begin
+      if Class.Link_Name = Ancestor.Link_Name then
+         return 0;
+      else
+         for Item of Class.Ancestor_List loop
+            if Item.Ancestor_Name = Ancestor.Link_Name_Id then
+               return Item.Table_Offset;
+            end if;
+         end loop;
+         raise Constraint_Error with
+         Ancestor.Qualified_Name
+           & " not found in ancestor table of "
+           & Class.Qualified_Name;
+      end if;
+   end Ancestor_Table_Offset;
+
    ----------
    -- Bind --
    ----------
 
    overriding procedure Bind
-     (Class : in out Class_Entity_Record)
+     (Class : not null access Class_Entity_Record)
    is
       procedure Scan_Hierarchy (Top : Class_Entity);
 
@@ -156,6 +181,7 @@ package body Ack.Classes is
       for Inherited of Class.Inherited_Types loop
          Scan_Hierarchy (Inherited.Inherited_Type.Class);
       end loop;
+
       Class.Bound := True;
    end Bind;
 
@@ -164,7 +190,7 @@ package body Ack.Classes is
    -----------------
 
    overriding procedure Check_Bound
-     (Class : in out Class_Entity_Record)
+     (Class : not null access Class_Entity_Record)
    is
    begin
       if not Class.Bound then
@@ -261,6 +287,250 @@ package body Ack.Classes is
       end if;
    end Contains;
 
+   --------------------------
+   -- Create_Memory_Layout --
+   --------------------------
+
+   procedure Create_Memory_Layout
+     (Class : not null access Class_Entity_Record'Class)
+   is
+      Table_Layout   : Virtual_Table_Layout renames Class.Virtual_Table;
+      Object_Layout  : Virtual_Table_Layout renames Class.Object_Record;
+
+      Log : Boolean := Local_Write_Tables;
+
+      Table_Log : Ada.Text_IO.File_Type;
+      Object_Log : Ada.Text_IO.File_Type;
+
+      procedure Put_Log
+        (File   : Ada.Text_IO.File_Type;
+         Offset : Word_Offset;
+         Value  : String);
+
+      function Table_Link_Name (Base : Constant_Class_Entity) return Name_Id
+      is (Get_Name_Id
+          (Class.Link_Name & "$" & Base.Link_Name & "$" & "vptr"));
+
+      package Base_Class_Vectors is
+        new Ada.Containers.Vectors (Positive, Positive);
+
+      type Class_Layout_Record is
+         record
+            Class        : Constant_Class_Entity;
+            Object_Start : Word_Offset   := 0;
+            Table_Start  : Word_Offset   := 0;
+            Object_Entry : Positive      := 1;
+            Table_Entry  : Positive      := 1;
+            Bases        : Base_Class_Vectors.Vector;
+         end record;
+
+      package Class_Layout_Vectors is
+        new Ada.Containers.Vectors (Positive, Class_Layout_Record);
+
+      Class_Vector : Class_Layout_Vectors.Vector;
+
+      procedure Add_Base_Class
+        (Base : not null access constant Class_Entity_Record'Class);
+
+      procedure Create_Object_Record_Entry
+        (Offset : in out Word_Offset;
+         Layout : in out Class_Layout_Record);
+
+      procedure Create_Virtual_Table_Entry
+        (Offset : in out Word_Offset;
+         Layout : Class_Layout_Record);
+
+      --------------------
+      -- Add_Base_Class --
+      --------------------
+
+      procedure Add_Base_Class
+        (Base : not null access constant Class_Entity_Record'Class)
+      is
+      begin
+         Class_Vector.Append ((Constant_Class_Entity (Base), others => <>));
+      end Add_Base_Class;
+
+      --------------------------------
+      -- Create_Object_Record_Entry --
+      --------------------------------
+
+      procedure Create_Object_Record_Entry
+        (Offset : in out Word_Offset;
+         Layout : in out Class_Layout_Record)
+      is
+         Start : constant Word_Offset := Offset;
+      begin
+         Layout.Object_Start := Offset;
+         Layout.Object_Entry := Object_Layout.Last_Index + 1;
+         Object_Layout.Append ((No_Name, Table_Link_Name (Layout.Class), 0));
+
+         Put_Log
+           (Object_Log, Offset, "vptr " & Layout.Class.Qualified_Name);
+         Offset := Offset + 1;
+
+         for Feature of Layout.Class.Class_Features loop
+            if Feature.Is_Property_Of_Class (Layout.Class) then
+               Feature.Set_Property_Offset (Offset - Start);
+               Object_Layout.Append
+                 ((No_Name, No_Name, 0));
+               Put_Log
+                 (Object_Log, Offset,
+                  "prop " & Feature.Declared_Name);
+               Offset := Offset + 1;
+            end if;
+         end loop;
+
+      end Create_Object_Record_Entry;
+
+      --------------------------------
+      -- Create_Virtual_Table_Entry --
+      --------------------------------
+
+      procedure Create_Virtual_Table_Entry
+        (Offset : in out Word_Offset;
+         Layout : Class_Layout_Record)
+      is
+         Start      : constant Word_Offset := Offset;
+         Entry_Name : Name_Id :=
+                        Table_Link_Name (Layout.Class);
+      begin
+         Table_Layout.Append ((Entry_Name, No_Name, Layout.Object_Start));
+         Entry_Name := No_Name;
+         Put_Log
+           (Table_Log, Offset,
+            Image  (Layout.Object_Start)
+            & ": start " & Layout.Class.Qualified_Name);
+         Offset := Offset + 1;
+
+         for Base_Index of Layout.Bases loop
+            declare
+               Base : constant Class_Layout_Record :=
+                        Class_Vector.Element (Base_Index);
+            begin
+               Table_Layout.Append
+                 ((Entry_Name, No_Name, Base.Object_Start));
+               Put_Log
+                 (Table_Log, Offset,
+                  Image  (Base.Object_Start)
+                  & ": start " & Layout.Class.Declared_Name
+                  & "/" & Base.Class.Declared_Name);
+               Entry_Name := No_Name;
+               if Layout.Class = Class then
+                  Class.Ancestor_List.Append
+                    (Ancestor_Class_Record'
+                       (Ancestor_Name => Base.Class.Link_Name_Id,
+                        Table_Offset  => Offset));
+               end if;
+
+               Offset := Offset + 1;
+            end;
+         end loop;
+         for Feature of Layout.Class.Class_Features loop
+            if Feature.Definition_Class = Layout.Class then
+               declare
+                  Class_Feature : constant Ack.Features.Feature_Entity :=
+                                    Class.Feature
+                                      (Get_Name_Id
+                                         (Feature.Standard_Name));
+               begin
+                  Class_Feature.Set_Virtual_Table_Offset (Offset - Start);
+                  if Class_Feature.Deferred then
+                     Put_Log
+                       (Table_Log, Offset,
+                        "deferred "
+                        & Class_Feature.Declared_Name);
+                     Table_Layout.Append ((Entry_Name, No_Name, 0));
+                  else
+                     Put_Log
+                       (Table_Log, Offset,
+                        Class_Feature.Link_Name);
+                     Table_Layout.Append
+                       ((Entry_Name, Class_Feature.Link_Name_Id, 0));
+                  end if;
+               end;
+               Entry_Name := No_Name;
+               Offset := Offset + 1;
+            end if;
+         end loop;
+      end Create_Virtual_Table_Entry;
+
+      ---------
+      -- Log --
+      ---------
+
+      procedure Put_Log
+        (File   : Ada.Text_IO.File_Type;
+         Offset : Word_Offset;
+         Value  : String)
+      is
+      begin
+         if Log then
+            Ada.Text_IO.Put_Line
+              (File, Image (Offset) & ": " & Value);
+         end if;
+      end Put_Log;
+
+   begin
+      if Log then
+         begin
+            Ada.Text_IO.Create
+              (Table_Log, Ada.Text_IO.Out_File,
+               "./logs/" & Class.Qualified_Name & "--vt.txt");
+            Ada.Text_IO.Create
+              (Object_Log, Ada.Text_IO.Out_File,
+               "./logs/" & Class.Qualified_Name & "--or.txt");
+         exception
+            when Ada.Text_IO.Name_Error =>
+               Log := False;
+         end;
+      end if;
+
+      Class.Scan_Ancestors
+        (Proper_Ancestors => False,
+         Process          => Add_Base_Class'Access);
+
+      declare
+         Offset : Word_Offset := 0;
+      begin
+         for Base of reverse Class_Vector loop
+            Create_Object_Record_Entry (Offset, Base);
+         end loop;
+      end;
+
+      for I in 1 .. Class_Vector.Last_Index loop
+         declare
+            Descendent : constant Constant_Class_Entity :=
+                           Class_Vector.Element (I).Class;
+            Bases : Base_Class_Vectors.Vector;
+         begin
+            for J in 1 .. Class_Vector.Last_Index loop
+               if J /= I
+                 and then Descendent.Is_Proper_Descendent_Of
+                   (Class_Vector.Element (J).Class)
+               then
+                  Bases.Append (J);
+               end if;
+            end loop;
+            Class_Vector (I).Bases := Bases;
+         end;
+      end loop;
+
+      declare
+         Offset : Word_Offset := 0;
+      begin
+         for Base of reverse Class_Vector loop
+            Create_Virtual_Table_Entry (Offset, Base);
+         end loop;
+      end;
+
+      if Log then
+         Ada.Text_IO.Close (Object_Log);
+         Ada.Text_IO.Close (Table_Log);
+      end if;
+
+   end Create_Memory_Layout;
+
    -------------
    -- Feature --
    -------------
@@ -320,6 +590,88 @@ package body Ack.Classes is
 
       return null;
    end Find_Feature;
+
+   -------------------------------
+   -- Generate_Object_Allocator --
+   -------------------------------
+
+   procedure Generate_Object_Allocator
+     (Class  : not null access constant Class_Entity_Record'Class;
+      Unit   : in out Tagatha.Units.Tagatha_Unit)
+   is
+      use type Tagatha.Tagatha_Integer;
+      Layout : Virtual_Table_Layout renames Class.Object_Record;
+   begin
+      Unit.Begin_Routine
+        (Name           => Class.Link_Name & "$create",
+         Argument_Words => 0,
+         Frame_Words    => 0,
+         Result_Words   => 0,
+         Global         => True);
+      Unit.Push (Tagatha.Tagatha_Integer (Layout.Length) * 4);
+      Unit.Pop_Register ("r0");
+      Unit.Call ("__allocate");
+      Unit.Push_Register ("r0");
+      Unit.Pop_Register ("r1");
+
+      for Item of Layout loop
+         if Item.Reference /= No_Name then
+            Unit.Push_Operand
+              (Tagatha.Operands.External_Operand
+                 (To_Standard_String (Item.Reference),
+                  Immediate => True),
+               Size => Tagatha.Default_Size);
+            if Item.Offset /= 0 then
+               Push_Offset (Unit, Item.Offset);
+               Unit.Operate (Tagatha.Op_Add);
+            end if;
+         else
+            Push_Offset (Unit, Item.Offset);
+         end if;
+
+         Unit.Pop_Operand
+           (Tagatha.Operands.Register_Operand
+              ("r1", Dereference => True, Postinc => True),
+            Tagatha.Default_Size);
+      end loop;
+
+      Unit.End_Routine;
+   end Generate_Object_Allocator;
+
+   ----------------------------
+   -- Generate_Virtual_Table --
+   ----------------------------
+
+   procedure Generate_Virtual_Table
+     (Class  : not null access constant Class_Entity_Record'Class;
+      Unit   : in out Tagatha.Units.Tagatha_Unit)
+   is
+      Layout : Virtual_Table_Layout renames Class.Virtual_Table;
+      Labels : WL.String_Sets.Set;
+      Offset : Word_Offset := 0;
+   begin
+      Unit.Segment (Tagatha.Read_Only);
+      Unit.Label (Class.Link_Name & "$vt");
+      for Item of Layout loop
+         if Item.Name /= No_Name
+           and then not Labels.Contains (To_Standard_String (Item.Name))
+         then
+            Unit.Label (To_Standard_String (Item.Name));
+            Labels.Insert (To_Standard_String (Item.Name));
+         end if;
+
+         if Item.Reference /= No_Name then
+            Unit.Data
+              (Label_Name => To_Standard_String (Item.Reference));
+         else
+            Unit.Data (Tagatha.Tagatha_Integer (Item.Offset * 4));
+         end if;
+
+         Offset := Offset + 1;
+
+      end loop;
+      Unit.Segment (Tagatha.Executable);
+   end Generate_Virtual_Table;
 
    --------------------
    -- Generic_Formal --
@@ -506,6 +858,28 @@ package body Ack.Classes is
           others          => <>));
    end Inherit;
 
+   ----------------------
+   -- Is_Descendent_Of --
+   ----------------------
+
+   function Is_Descendent_Of
+     (Class             : Class_Entity_Record'Class;
+      Ancestor          : not null access constant Class_Entity_Record'Class)
+      return Boolean
+   is
+   begin
+      if Ancestor.Link_Name = Class.Link_Name then
+         return True;
+      else
+         for Parent of Class.Inherited_List loop
+            if Parent.Is_Descendent_Of (Ancestor) then
+               return True;
+            end if;
+         end loop;
+         return False;
+      end if;
+   end Is_Descendent_Of;
+
    ---------------------
    -- Is_Redefinition --
    ---------------------
@@ -656,8 +1030,8 @@ package body Ack.Classes is
             then
                Scanned.Insert
                  (Inherited.Inherited_Type.Class.Qualified_Name, True);
-               Process (Inherited.Inherited_Type.Class);
                Scan (Inherited.Inherited_Type.Class);
+               Process (Inherited.Inherited_Type.Class);
             end if;
          end loop;
       end Scan;
