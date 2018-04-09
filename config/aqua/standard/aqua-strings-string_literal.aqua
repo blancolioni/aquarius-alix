@@ -1,0 +1,11 @@
+class
+   Aqua.Strings.String_Literal
+   
+feature { None }
+
+   Create_From_Address (Addr : System.Address) external "aqua"   
+   Location  : System.Address
+   Length    : Integer
+   Mem       : System.Memory
+   
+end

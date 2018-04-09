@@ -1,0 +1,14 @@
+class 
+   System.Memory
+
+feature  --  get/put
+
+   Put_Word_32 (Addr : System.Address; Value : System.Word_32) external "intrinsic"
+   Get_Word_32 (From : System.Address) : System.Word_32 external "intrinsic"
+   
+feature { None }
+
+   Poke (Addr : System.Address; Value : System.Word_8) external "intrinsic"
+   Peek (Addr : System.Address) : System.Word_8 external "intrinsic"
+   
+end
