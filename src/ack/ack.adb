@@ -583,6 +583,17 @@ package body Ack is
       Node_Table (Node).Label := Value;
    end Set_Label;
 
+   ---------------
+   -- Set_Trace --
+   ---------------
+
+   procedure Set_Trace
+     (Class_Analysis : Boolean)
+   is
+   begin
+      Trace_Class_Analysis := Class_Analysis;
+   end Set_Trace;
+
    --------------
    -- Set_Type --
    --------------
