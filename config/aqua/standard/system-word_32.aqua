@@ -9,7 +9,7 @@ inherit
    Aqua.Algebra.Additive
       redefine Zero, Add, Subtract end
    Aqua.Integral
-      redefine Make_With_Integer_Literal end
+      redefine Make_With_Integer_Literal, Convert_From end
       
 feature
 
@@ -19,5 +19,6 @@ feature
    Subtract alias "-" (Right : Word_32) : Word_32 external "intrinsic"
       
    Make_With_Integer_Literal (Literal : Aqua.Integer_Literal) external "intrinsic"
+   Convert_From (Other : Aqua.Integral) external "intrinsic"
          
 end
