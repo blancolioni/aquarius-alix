@@ -4,16 +4,17 @@ expanded class
 inherit  
    Aqua.Algebra.Numeric redefine Add, Subtract, Negate, Zero end
    Aqua.Algebra.Eq redefine Equal end
+   Aqua.Integral redefine Make_With_Integer_Literal end
    
 feature
    To_String : String external "aqua"
    
-   Add alias "+" (Right : Integer) : Integer external "intrinsic"
-   Subtract alias "-" (Right : Integer) : Integer external "intrinsic"
+   Add (Right : Integer) : Integer external "intrinsic"
+   Subtract (Right : Integer) : Integer external "intrinsic"
    Negate : Integer external "intrinsic"
       
    Zero : Integer external "intrinsic"
-   
+    
    Equal alias "=" (Right : Integer) : Boolean external "intrinsic"
 
    GE alias ">=" (Right : Integer) : Boolean external "aqua"
@@ -21,8 +22,10 @@ feature
    GT alias ">" (Right : Integer) : Boolean external "aqua"
    LT alias "<" (Right : Integer) : Boolean external "aqua"
    
+   Make_With_Integer_Literal (Literal : Aqua.Integer_Literal) external "intrinsic"
+   
 feature { None }
 
-   Internal : System.Word_32
+   Internal : System.Internal_Frame_Word
    
 end

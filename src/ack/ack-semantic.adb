@@ -23,6 +23,8 @@ package body Ack.Semantic is
 
    Trace_Class_Analysis : constant Boolean := False;
 
+   Local_Integral_Type  : Ack.Types.Type_Entity := null;
+
    function Load_Class
      (Referrer : Aquarius.Programs.Program_Tree;
       Parent   : not null access Root_Entity_Type'Class;
@@ -43,6 +45,13 @@ package body Ack.Semantic is
       return Ack.Classes.Class_Entity;
 
    function Forward_Iterable return Ack.Classes.Class_Entity;
+
+   function Type_Integral (Node : Node_Id) return Ack.Types.Type_Entity;
+   function Type_String return Ack.Types.Type_Entity
+   is (Get_Top_Level_Type ("string"));
+
+   function Type_Boolean return Ack.Types.Type_Entity
+   is (Get_Top_Level_Type ("boolean"));
 
    function Property_Feature_Node
      (Node : Node_Id)
@@ -1019,24 +1028,32 @@ package body Ack.Semantic is
             declare
                use type Ack.Classes.Class_Entity;
                Value     : constant Node_Id := Constant_Value (Expression);
-               Type_Name : constant String :=
+               Value_Type : constant Ack.Types.Type_Entity :=
                               (case N_Constant_Value (Kind (Value)) is
                                   when N_String_Constant  =>
-                                     "string",
+                                     Type_String,
                                   when N_Integer_Constant =>
-                                     "integer",
+                                     Type_Integral (Value),
                                   when N_Boolean_Constant =>
-                                     "boolean");
-               Value_Type : constant Ack.Types.Type_Entity :=
-                              Get_Top_Level_Type (Type_Name);
+                                     Type_Boolean);
             begin
-               Set_Type (Expression, Value_Type);
-               Set_Entity (Expression, Value_Type);
                if Expression_Type = null then
                   Error (Value, E_Ignored_Return_Value);
-               elsif not  Value_Type.Conforms_To (Expression_Type) then
-                  Error (Expression, E_Type_Error,
-                         Entity_Type (Expression_Type));
+               else
+                  if Kind (Value) = N_Integer_Constant then
+                     Set_Type (Expression, Expression_Type);
+                     Set_Entity (Expression, Expression_Type);
+                     if not Expression_Type.Conforms_To (Value_Type) then
+                        Error (Expression, E_Type_Error, Value_Type);
+                     end if;
+                  else
+                     Set_Type (Expression, Value_Type);
+                     Set_Entity (Expression, Value_Type);
+                     if not  Value_Type.Conforms_To (Expression_Type) then
+                        Error (Expression, E_Type_Error,
+                               Entity_Type (Expression_Type));
+                     end if;
+                  end if;
                end if;
             end;
       end case;
@@ -2154,5 +2171,36 @@ package body Ack.Semantic is
         and then not Value_Feature
         and then Arg_Node = No_Node and then Type_Node /= No_Node;
    end Property_Feature_Node;
+
+   -------------------
+   -- Type_Integral --
+   -------------------
+
+   function Type_Integral
+     (Node : Node_Id)
+      return Ack.Types.Type_Entity
+   is
+      use type Ack.Types.Type_Entity;
+   begin
+      if Local_Integral_Type = null then
+         declare
+            Aqua_Entity     : constant Ack.Classes.Class_Entity :=
+                                Ack.Classes.Get_Top_Level_Class ("aqua");
+            Integral_Name   : constant String := "integral";
+            Integral_Entity : constant Ack.Classes.Class_Entity :=
+                                (if Aqua_Entity.Contains (Integral_Name)
+                                 then Ack.Classes.Class_Entity
+                                   (Aqua_Entity.Get (Integral_Name))
+                                   else Load_Class
+                                   (Get_Program (Aqua_Entity.Declaration_Node),
+                                    Aqua_Entity, Get_Name_Id (Integral_Name)));
+         begin
+            Local_Integral_Type :=
+              Ack.Types.New_Class_Type (Node, Integral_Entity, False);
+         end;
+      end if;
+
+      return Local_Integral_Type;
+   end Type_Integral;
 
 end Ack.Semantic;
