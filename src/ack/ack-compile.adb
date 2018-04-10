@@ -1,5 +1,6 @@
 with Ada.Calendar;
 with Ada.Directories;
+with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with Ack.Parser;
@@ -268,22 +269,40 @@ package body Ack.Compile is
       Compile_Class (Source_Path, To_Image,
                      Root_Class => True,
                      Feature_Callback => null);
-      Load_Library_File
-        (Aquarius.Config_Paths.Config_File
-           ("aqua/libaqua/allocate.m32"),
-         To_Image);
-      Load_Library_File
-        (Aquarius.Config_Paths.Config_File
-           ("aqua/libaqua/libany.m32"),
-         To_Image);
-      Load_Library_File
-        (Aquarius.Config_Paths.Config_File
-           ("aqua/libaqua/libboolean.m32"),
-         To_Image);
-      Load_Library_File
-        (Aquarius.Config_Paths.Config_File
-           ("aqua/libaqua/libinteger.m32"),
-         To_Image);
+
+      declare
+         use Ada.Text_IO;
+         Link_Config : Ada.Text_IO.File_Type;
+      begin
+         Open (Link_Config, In_File,
+               Aquarius.Config_Paths.Config_File
+                 ("aqua/link.config"));
+
+         while not End_Of_File (Link_Config) loop
+            declare
+               Line : constant String :=
+                        Ada.Strings.Fixed.Trim
+                          (Get_Line (Link_Config),
+                           Ada.Strings.Both);
+               Path : constant String :=
+                        Aquarius.Config_Paths.Config_File
+                          ("aqua/libaqua/" & Line & ".m32");
+            begin
+               if Line /= ""
+                 and then Line (Line'First) /= '#'
+               then
+                  if not Ada.Directories.Exists (Path) then
+                     Put_Line
+                       (Standard_Error,
+                        Line & ": cannot open");
+                  else
+                     Load_Library_File (Path, To_Image);
+                  end if;
+               end if;
+            end;
+         end loop;
+      end;
+
       To_Image.Link;
    end Load_Root_Class;
 
