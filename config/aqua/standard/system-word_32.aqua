@@ -18,7 +18,7 @@ feature
    Add      alias "+" (Right : Word_32) : Word_32 external "intrinsic"
    Subtract alias "-" (Right : Word_32) : Word_32 external "intrinsic"
       
-   Make_With_Integer_Literal (Literal : Aqua.Integer_Literal) external "intrinsic"
-   Convert_From (Other : Aqua.Integral) external "intrinsic"
+   Make_With_Integer_Literal (Literal : Aqua.Integer_Literal) external "intrinsic" alias "nop"
+   Convert_From (Other : Aqua.Integral) external "intrinsic" alias "nop"
          
 end

@@ -267,7 +267,9 @@ package body Ack is
       return Name_Id
    is
    begin
-      if Name_Map.Contains (Name) then
+      if Name = "" then
+         return No_Name;
+      elsif Name_Map.Contains (Name) then
          return Name_Map.Element (Name);
       else
          Name_Table.Append (Name);

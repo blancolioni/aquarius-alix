@@ -34,6 +34,7 @@ with Ack.Semantic;
 with Ack.Generate;
 
 with Aqua.CPU;
+with Aqua.Drivers;
 with Aqua.Images;
 
 with Komnenos.Logging;
@@ -205,6 +206,10 @@ begin
          Image : constant Aqua.Images.Image_Type := Aqua.Images.New_Image;
          CPU   : Aqua.CPU.Aqua_CPU_Type (Image, null);
       begin
+         Image.Install_Driver
+           (Start  => 16#0100#,
+            Driver => Aqua.Drivers.Text_Writer);
+
          Ack.Compile.Load_Root_Class
            (Source_Path => Aquarius.Command_Line.Ack_Execute_Root,
             To_Image    => Image);

@@ -225,6 +225,7 @@ private
          Has_Result           : Boolean := False;
          Has_Current          : Boolean := False;
          Once                 : Boolean := False;
+         Intrinsic            : Boolean := False;
          Virtual_Table_Offset : Word_Offset := 0;
          Property_Offset      : Word_Offset := 0;
          Alias                : Name_Id;
@@ -233,9 +234,9 @@ private
          Effective_Class      : access Ack.Classes.Class_Entity_Record'Class;
          Redefined_Class      : access Ack.Classes.Class_Entity_Record'Class;
          Redefined_Feature    : Constant_Feature_Entity;
-         External_Object      : Ada.Strings.Unbounded.Unbounded_String;
-         External_Type        : Ada.Strings.Unbounded.Unbounded_String;
-         External_Label       : Ada.Strings.Unbounded.Unbounded_String;
+         External_Object      : Name_Id;
+         External_Type        : Name_Id;
+         External_Label       : Name_Id;
          Arguments            : Variable_Vectors.Vector;
          Locals               : Variable_Vectors.Vector;
          Olds                 : Old_Value_Vectors.Vector;
