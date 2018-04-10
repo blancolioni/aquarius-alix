@@ -1659,12 +1659,14 @@ package body Ack.Semantic is
 
       if Left_Type = null then
          null;
-      elsif not Left_Type.Has_Aliased_Feature (Operator) then
+      elsif not Left_Type.Has_Aliased_Feature (Operator, Right /= No_Node) then
          Error (Operator_Node, E_Undeclared_Name);
       else
          declare
             Feature : constant Ack.Features.Feature_Entity :=
-                        Left_Type.Aliased_Feature (Operator);
+                        Left_Type.Aliased_Feature
+                          (Alias => Operator,
+                           Infix => Right /= No_Node);
          begin
             pragma Assert (Feature.Argument_Count in 0 .. 1);
             if not Feature.Has_Type then
