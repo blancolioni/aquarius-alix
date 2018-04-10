@@ -1684,15 +1684,36 @@ package body Ack.Semantic is
                if Right = No_Node then
                   Error (Operator_Node, E_Insufficient_Arguments);
                else
-                  Analyse_Expression
-                    (Class, Container, Feature.Argument (1).Get_Type, Right);
+                  declare
+                     Argument_Type : constant Ack.Types.Type_Entity :=
+                                       Ack.Types.Type_Entity
+                                         (Feature.Argument (1).Get_Type);
+                     Expected_Type : constant Ack.Types.Type_Entity :=
+                                       Ack.Types.Get_Concrete_Type
+                                         (Of_Type => Argument_Type,
+                                          Current => Left_Type,
+                                          Feature => Feature);
+                  begin
+                     Analyse_Expression
+                       (Class, Container, Expected_Type, Right);
+                  end;
                end if;
             end if;
-            Set_Type (Operator_Node, Feature.Get_Type);
-            if not Feature.Get_Type.Conforms_To (Expression_Type) then
-               Error (Operator_Node, E_Type_Error,
-                      Entity_Type (Expression_Type));
-            end if;
+
+            declare
+               Result_Type : constant Ack.Types.Type_Entity :=
+                               Ack.Types.Get_Concrete_Type
+                                 (Of_Type => Ack.Types.Type_Entity
+                                    (Feature.Get_Type),
+                                  Current => Left_Type,
+                                  Feature => Feature);
+            begin
+               Set_Type (Operator_Node, Result_Type);
+               if not Result_Type.Conforms_To (Expression_Type) then
+                  Error (Operator_Node, E_Type_Error,
+                         Entity_Type (Expression_Type));
+               end if;
+            end;
          end;
       end if;
 
