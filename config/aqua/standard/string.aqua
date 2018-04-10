@@ -15,6 +15,6 @@ feature { None }  --  string literals
       
 feature { None }
 
-   Block : System.Memory.Block
+   Block : System.Memory.Block_32
    Can_Change : Boolean
 end

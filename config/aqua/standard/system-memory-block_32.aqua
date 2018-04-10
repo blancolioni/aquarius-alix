@@ -9,7 +9,7 @@ feature
       do
          Base := Map_Base
          Bound := Map_Bound
-         Count := (Map_Bound - Map_Base) / 4
+         Count := Map_Base.Word_Count (Map_Bound)
       end
       
    Make_From_Base_With_Length (Map_Base : System.Address)
@@ -18,7 +18,7 @@ feature
          Mem    : System.Memory.Mem
       do
          Length := Mem.Get_Word_32 (Map_Base)
-         Make_From_Base_And_Bound (Map_Base + 4, Map_Base + 4 * (Length + 1))
+         Make_From_Base_And_Bound (Map_Base.Offset_Words (1), Map_Base.Offset_Words (Length + 1))
       end
       
 feature
