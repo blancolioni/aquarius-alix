@@ -141,14 +141,16 @@ package Ack.Classes is
 
    function Has_Aliased_Feature
      (Class : not null access constant Class_Entity_Record'Class;
-      Alias : Name_Id)
+      Alias : Name_Id;
+      Infix : Boolean)
       return Boolean;
 
    function Aliased_Feature
      (Class : not null access constant Class_Entity_Record'Class;
-      Alias : Name_Id)
+      Alias : Name_Id;
+      Infix : Boolean)
       return Ack.Features.Feature_Entity
-     with Pre => Class.Has_Aliased_Feature (Alias);
+     with Pre => Class.Has_Aliased_Feature (Alias, Infix);
 
    procedure Scan_Conforming_Child_Ancestors
      (Class : not null access constant Class_Entity_Record'Class;
@@ -371,7 +373,8 @@ private
 
    function Find_Aliased_Feature
      (Class   : Class_Entity_Record'Class;
-      Alias   : Name_Id)
+      Alias   : Name_Id;
+      Infix   : Boolean)
       return Ack.Features.Feature_Entity;
 
    function Has_Note
