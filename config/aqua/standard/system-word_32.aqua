@@ -9,7 +9,9 @@ expanded class
 inherit
    Aqua.Algebra.Additive
       redefine Zero, Add, Subtract end
-   
+   Aqua.Integral
+      redefine Make_With_Integer_Literal end
+      
 feature
 
    Zero : Word_32 external "intrinsic"
@@ -17,4 +19,6 @@ feature
    Add      alias "+" (Right : Word_32) : Word_32 external "intrinsic"
    Subtract alias "-" (Right : Word_32) : Word_32 external "intrinsic"
       
+   Make_With_Integer_Literal (Literal : Aqua.Integer_Literal) external "intrinsic"
+         
 end
