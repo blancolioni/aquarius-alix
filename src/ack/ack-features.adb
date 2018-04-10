@@ -6,6 +6,8 @@ with Ack.Classes;
 with Ack.Generate;
 with Ack.Types;
 
+with Ack.Generate.Primitives;
+
 package body Ack.Features is
 
    ------------------
@@ -607,6 +609,7 @@ package body Ack.Features is
 
       if Feature.Definition_Class /= Current
         and then not Current.Expanded
+        and then not Feature.Intrinsic
       then
          Unit.Push_Register ("op");
          Unit.Dereference;
@@ -618,13 +621,14 @@ package body Ack.Features is
          Unit.Operate (Tagatha.Op_Add);
       end if;
 
-      if Feature.Is_Property then
+      if Feature.Intrinsic then
+         Ack.Generate.Primitives.Generate_Intrinsic
+           (Unit, Feature.External_Label);
+      elsif Feature.Is_Property then
          Push_Offset (Unit, Feature.Property_Offset);
          Unit.Operate (Tagatha.Op_Add);
          Unit.Dereference;
-
       else
-
          if Current.Expanded then
             Unit.Call (Feature.Link_Name);
          else
@@ -857,14 +861,15 @@ package body Ack.Features is
                             (Dot_Index + 1 .. External_Alias'Last);
    begin
       Feature.Property := External_Type = "aqua_property";
+      Feature.Intrinsic := External_Type = "intrinsic";
       Feature.Routine := not Feature.Property;
       Feature.External := True;
       if Feature.Value_Type /= null then
          Feature.Has_Result := True;
       end if;
-      Feature.External_Object := +External_Object;
-      Feature.External_Type := +External_Type;
-      Feature.External_Label := +External_Label;
+      Feature.External_Object := Get_Name_Id (External_Object);
+      Feature.External_Type := Get_Name_Id (External_Type);
+      Feature.External_Label := Get_Name_Id (External_Label);
    end Set_External;
 
    ------------------------

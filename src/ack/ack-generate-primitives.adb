@@ -14,7 +14,16 @@ package body Ack.Generate.Primitives is
      new Ada.Containers.Doubly_Linked_Lists (Primitive_Operator_Record);
 
    Primitive_Operators : Primitive_Operator_Lists.List;
-   Have_Standard_Primitives : Boolean := False;
+
+   type Intrinsic_Feature_Generator is access
+     procedure (Unit : in out Tagatha.Units.Tagatha_Unit);
+
+   package Intrinsic_Feature_Maps is
+     new WL.String_Maps (Intrinsic_Feature_Generator);
+
+   Intrinsic_Features : Intrinsic_Feature_Maps.Map;
+
+   Have_Primitives : Boolean := False;
 
    procedure Create_Primitives;
 
@@ -35,6 +44,10 @@ package body Ack.Generate.Primitives is
    procedure Generate_Add (Unit : in out Tagatha.Units.Tagatha_Unit);
    procedure Generate_Subtract (Unit : in out Tagatha.Units.Tagatha_Unit);
    procedure Generate_Join (Unit : in out Tagatha.Units.Tagatha_Unit);
+
+   procedure Generate_Intrinsic_Nop
+     (Unit : in out Tagatha.Units.Tagatha_Unit)
+   is null;
 
    --------------------------------
    -- Create_Integral_Primitives --
@@ -99,6 +112,10 @@ package body Ack.Generate.Primitives is
          Left_Type : Ack.Types.Type_Entity;
          Generator : Primitive_Operator_Generator);
 
+      procedure Add
+        (Name      : String;
+         Generator : Intrinsic_Feature_Generator);
+
       ---------
       -- Add --
       ---------
@@ -114,6 +131,18 @@ package body Ack.Generate.Primitives is
               (Operator  => Get_Name_Id (Name),
                Left_Type => Left_Type,
                Generator => Generator));
+      end Add;
+
+      ---------
+      -- Add --
+      ---------
+
+      procedure Add
+        (Name      : String;
+         Generator : Intrinsic_Feature_Generator)
+      is
+      begin
+         Intrinsic_Features.Insert (Name, Generator);
       end Add;
 
    begin
@@ -133,6 +162,11 @@ package body Ack.Generate.Primitives is
 
       Add ("&", String_Type, Generate_Join'Access);
       Add ("+", Integer_Type, Generate_Add'Access);
+
+      Add ("nop", Generate_Intrinsic_Nop'Access);
+
+      Have_Primitives := True;
+
    end Create_Primitives;
 
    ------------------
@@ -198,6 +232,27 @@ package body Ack.Generate.Primitives is
       Unit.Label (Out_Label);
    end Generate_Implies;
 
+   ------------------------
+   -- Generate_Intrinsic --
+   ------------------------
+
+   procedure Generate_Intrinsic
+     (Unit : in out Tagatha.Units.Tagatha_Unit;
+      Name : Name_Id)
+   is
+   begin
+      if not Have_Primitives then
+         Create_Primitives;
+      end if;
+
+      if Intrinsic_Features.Contains (To_Standard_String (Name)) then
+         Intrinsic_Features.Element (To_Standard_String (Name)) (Unit);
+      else
+         raise Constraint_Error with
+           "no such intrinsic: " & To_Standard_String (Name);
+      end if;
+   end Generate_Intrinsic;
+
    -------------------
    -- Generate_Join --
    -------------------
@@ -254,9 +309,8 @@ package body Ack.Generate.Primitives is
       return Boolean
    is
    begin
-      if not Have_Standard_Primitives then
+      if not Have_Primitives then
          Create_Primitives;
-         Have_Standard_Primitives := True;
       end if;
 
       for Rec of Primitive_Operators loop

@@ -1,5 +1,8 @@
 expanded class 
    System.Address
+inherit
+   Aqua.Integral 
+      redefine Make_With_Integer_Literal, Convert_From end
    
 feature
 
@@ -7,8 +10,18 @@ feature
 
    Word_Count (Bound : System.Address) : Word_32 external "intrinsic"
    
+   Make_With_Integer_Literal (Literal : Aqua.Integer_Literal)
+     do
+        Value.Make_With_Integer_Literal (Literal)
+     end
+     
+   Convert_From (Other : Aqua.Integral)
+      do
+         Value.Convert_From (Other)
+      end
+      
 feature { None }
 
-   Internal : System.Internal_Frame_Word
+   Value : Word_32
    
 end

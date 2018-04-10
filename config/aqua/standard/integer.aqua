@@ -2,7 +2,7 @@ expanded class
    Integer
    
 inherit  
-   Aqua.Algebra.Numeric redefine Add, Subtract, Negate, Zero end
+   Aqua.Algebra.Additive redefine Add, Subtract, Negate, Zero end
    Aqua.Algebra.Eq redefine Equal end
    Aqua.Integral redefine Make_With_Integer_Literal, Convert_From end
    
@@ -13,7 +13,11 @@ feature
    Subtract (Right : Integer) : Integer external "intrinsic"
    Negate : Integer external "intrinsic"
       
-   Zero : Integer external "intrinsic"
+   Zero : Integer
+      do
+         Result := 0
+      end
+      
     
    Equal alias "=" (Right : Integer) : Boolean external "intrinsic"
 
