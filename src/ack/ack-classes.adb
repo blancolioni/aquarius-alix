@@ -86,6 +86,8 @@ package body Ack.Classes is
             raise Constraint_Error with
               "invalid behaviour: " & Value;
          end if;
+      elsif Name = "frame_size" then
+         Class.Frame_Words := Natural'Value (Value);
       elsif Name = "conforming_child_node" then
          Class.Conforming_Child_Action := Get_Name_Id (Value);
       end if;
