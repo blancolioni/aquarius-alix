@@ -8,4 +8,8 @@ feature
      deferred
      end
      
+   Convert_From (Other : Aqua.Integral)
+      deferred
+      end
+      
 end

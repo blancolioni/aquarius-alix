@@ -4,7 +4,7 @@ expanded class
 inherit  
    Aqua.Algebra.Numeric redefine Add, Subtract, Negate, Zero end
    Aqua.Algebra.Eq redefine Equal end
-   Aqua.Integral redefine Make_With_Integer_Literal end
+   Aqua.Integral redefine Make_With_Integer_Literal, Convert_From end
    
 feature
    To_String : String external "aqua"
@@ -24,6 +24,8 @@ feature
    
    Make_With_Integer_Literal (Literal : Aqua.Integer_Literal) external "intrinsic"
    
+   Convert_From (Other : Aqua.Integral) external "intrinsic"
+         
 feature { None }
 
    Internal : System.Internal_Frame_Word
