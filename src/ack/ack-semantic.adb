@@ -15,6 +15,8 @@ with Ack.Features;
 with Ack.Types;
 with Ack.Variables;
 
+with Ack.Generate.Primitives;
+
 with Ack.Environment;
 
 with Ack.Errors;
@@ -1643,6 +1645,21 @@ package body Ack.Semantic is
             Class.Add_Note
               (Name  => To_Standard_String (Name),
                Value => To_String (Value_List));
+
+            if To_Standard_String (Name) = "aqua_modular_type" then
+               declare
+                  Modulus : Positive;
+               begin
+                  Modulus := Positive'Value (To_String (Value_List));
+                  Class.Set_Modulus (Modulus);
+                  Ack.Generate.Primitives.Create_Integral_Primitives (Class);
+               exception
+                  when Constraint_Error =>
+                     raise Constraint_Error with
+                     Get_Program (Value).Show_Location
+                       & ": positive integer required for modulus bits";
+               end;
+            end if;
          end;
       end loop;
    end Analyse_Notes;
