@@ -1,8 +1,14 @@
-class 
+expanded class 
    System.Drivers.Text_Writer
    
 feature
 
-   
+   Put (Ch : Character)
+      local
+         Mem : System.Memory.Mem
+      do
+         Mem.Put_Word_32 (260, Ch.UTF_32_Code)
+         Mem.Put_Word_32 (256, 1)
+      end
    
 end
