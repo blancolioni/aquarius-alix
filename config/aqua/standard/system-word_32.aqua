@@ -1,7 +1,6 @@
 note
-   Behavior      : Aqua_Internal_Class
-   Category      : Modular_Type
-   Modulus_Power : 32
+   Behavior          : Aqua_Internal_Class
+   Aqua_Modular_Type : 32
    
 expanded class 
    System.Word_32
