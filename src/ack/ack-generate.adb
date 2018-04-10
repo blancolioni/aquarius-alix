@@ -337,12 +337,12 @@ package body Ack.Generate is
 
          Get_Entity (Creation).Push_Entity
            (Have_Current => False,
-            Context      => Get_Context (Creation),
+            Context      => Get_Context (Creation).Class_Context,
             Unit         => Unit);
 
          Get_Entity (Explicit_Call_Node).Push_Entity
            (Have_Current => True,
-            Context      => Get_Context (Creation),
+            Context      => Creation_Type.Class_Context,
             Unit         => Unit);
 
          Unit.Drop;
@@ -651,8 +651,10 @@ package body Ack.Generate is
          then
             raise Constraint_Error with
             Get_Program (Operator_Node).Show_Location
-              & "custom operators ("
+              & ": custom operators ("
               & To_String (Operator)
+              & "/"
+              & Get_Type (Left).Qualified_Name
               & ") not implemented yet";
          end if;
       end if;
