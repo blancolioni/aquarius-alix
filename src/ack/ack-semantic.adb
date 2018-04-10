@@ -23,8 +23,6 @@ with Ack.Errors;
 
 package body Ack.Semantic is
 
-   Trace_Class_Analysis : constant Boolean := False;
-
    Local_Integral_Type  : Ack.Types.Type_Entity := null;
 
    function Load_Class

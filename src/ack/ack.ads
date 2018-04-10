@@ -151,6 +151,9 @@ package Ack is
    procedure Set_Write_Tables
      (Write_Tables : Boolean);
 
+   procedure Set_Trace
+     (Class_Analysis : Boolean);
+
    type Node_Id is private;
 
    No_Node : constant Node_Id;
@@ -1236,6 +1239,7 @@ private
    function Default_Monitoring_Level return Assertion_Monitoring_Level
    is (Local_Default_Monitoring_Level);
 
-   Local_Write_Tables : Boolean := False;
+   Local_Write_Tables   : Boolean := False;
+   Trace_Class_Analysis : Boolean := False;
 
 end Ack;

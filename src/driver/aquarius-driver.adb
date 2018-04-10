@@ -191,6 +191,9 @@ begin
       Ack.Set_Write_Tables (True);
    end if;
 
+   Ack.Set_Trace
+     (Class_Analysis => Command_Line.Ack_Trace_Class_Analysis);
+
    Komnenos.Themes.Load_Theme
      (Tropos.Reader.Read_Config
         (Komnenos.Paths.Config_File ("themes/default.theme")));
