@@ -2,7 +2,7 @@ class
    System.Memory.Block_32
 
 create
-   Make_From_Base_And_Bound, Make_From_Base_With_Length
+   Make_From_Base_And_Bound, Make_From_Base_With_Length, Allocate_Count
    
 feature
    Make_From_Base_And_Bound (Map_Base, Map_Bound : System.Address)
@@ -21,6 +21,19 @@ feature
          Make_From_Base_And_Bound (Map_Base.Offset_Words (1), Map_Base.Offset_Words (Length + 1))
       end
       
+   Allocate_Count (Request : System.Word_32)
+      local
+         Mem : System.Memory.Mem
+      do
+         Count := Request
+         Base := Mem.Allocate (Count)
+         Bound := Base.Offset_Words (Count)
+      end
+         
+   Copy (To_Block : Block_32
+         Start    : Word_32)
+         external "aqua"
+         
 feature
    Base    : System.Address
    Bound   : System.Address
@@ -28,9 +41,7 @@ feature
    
 feature  --  get/put
 
-   Put (Addr : System.Address; Value : System.Word_32) external "intrinsic"
-   Get (Addr : System.Address) : System.Word_32 external "intrinsic"
-
-   Get_At (Offset : System.Word_32) : System.Word_32 external "intrinsic"
+   Put (Offset : System.Word_32; Value : System.Word_32) external "intrinsic"
+   Get (Offset : System.Word_32) : System.Word_32 external "intrinsic"
    
 end

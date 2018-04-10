@@ -1,11 +1,43 @@
 class String
 
+create
+    Create_With_Size
+
 feature
-   To_Lower : String external "aqua"
-   To_Integer : Integer external "aqua"
-   Join alias "&" (Right : String) : String external "aqua"
-   Replace (Search_Text, Replacement_Text : String) : String external "aqua"
+
+--   To_Lower : String external "aqua"
+--   To_Integer : Integer external "aqua"
+
+   Join alias "&" (Right : String) : String
    
+      do
+         create Result.Create_With_Size (Block.Count + Right.Block.Count)
+         Block.Copy (Result.Block, 0)
+         Right.Block.Copy (Result.Block, Block.Count)
+      end
+      
+--   Replace (Search_Text, Replacement_Text : String) : String external "aqua"
+   
+feature
+
+   Length : Integer
+      do
+         Result.Convert_From (Block.Count)
+      end
+
+   Element (Index : Integer) : Character
+      require
+         Positive_Index : Index >= 1
+         Index_In_Range : Index <= Length
+      local
+         I : System.Word_32
+         W : System.Word_32
+      do
+         I.Convert_From (Index)
+         W := Block.Get (I)
+         Result.Create_From_UTF_32 (W)
+      end
+         
 feature { None }  --  string literals
 
    Create_From_String_Literal (Addr : System.Address)
@@ -13,6 +45,13 @@ feature { None }  --  string literals
          create Block.Make_From_Base_With_Length (Addr)
       end
       
+feature { None }
+
+   Create_With_Size (Size : System.Word_32)
+      do
+         create Block.Allocate_Count (Size)
+      end
+
 feature { None }
 
    Block : System.Memory.Block_32
