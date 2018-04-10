@@ -7,11 +7,11 @@ feature
       deferred
       end
       
-   Add (Right : like Current) : like Current
+   Add alias "+" (Right : like Current) : like Current
       deferred
       end
 
-   Subtract (Right : like Current) : like Current
+   Subtract alias "-"  (Right : like Current) : like Current
       do
          Result := Add (Right.Negate)
       end
