@@ -1212,4 +1212,16 @@ package body Ack.Classes is
       Class.Frozen := True;
    end Set_Frozen;
 
+   -----------------
+   -- Set_Modulus --
+   -----------------
+
+   procedure Set_Modulus
+     (Class   : in out Class_Entity_Record'Class;
+      Modulus : Positive)
+   is
+   begin
+      Class.Modulus := Modulus;
+   end Set_Modulus;
+
 end Ack.Classes;

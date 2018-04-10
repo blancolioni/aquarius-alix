@@ -238,6 +238,10 @@ package Ack.Classes is
      (Name : String)
       return Class_Entity;
 
+   procedure Set_Modulus
+     (Class   : in out Class_Entity_Record'Class;
+      Modulus : Positive);
+
 private
 
    type Ancestor_Class_Record is
@@ -301,6 +305,7 @@ private
          Behaviour               : Class_Behaviour := Normal;
          Conforming_Child_Action : Name_Id := No_Name;
          Frame_Words             : Natural := 0;
+         Modulus                 : Natural := 0;
          Inherited_Types         : List_Of_Inherited_Type_Records.List;
          Inherited_List          : List_Of_Class_Entities.List;
          Ancestor_List           : Ancestor_Class_Lists.List;
