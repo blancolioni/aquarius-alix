@@ -79,7 +79,8 @@ package Ack.Types is
 
    function New_Class_Type
      (Node       : Node_Id;
-      Class      : not null access Ack.Classes.Class_Entity_Record'Class;
+      Class      : not null access
+        Ack.Classes.Class_Entity_Record'Class;
       Detachable : Boolean)
       return Type_Entity;
 
@@ -107,6 +108,13 @@ package Ack.Types is
       Node          : Node_Id;
       Generic_Class : Ack.Classes.Class_Entity;
       Constraints   : Array_Of_Types := Empty_Type_Array)
+      return Type_Entity;
+
+   function Get_Concrete_Type
+     (Of_Type : not null access Type_Entity_Record'Class;
+      Current : not null access Type_Entity_Record'Class;
+      Feature : not null access constant
+        Ack.Features.Feature_Entity_Record'Class)
       return Type_Entity;
 
    function Get_Class_Type
