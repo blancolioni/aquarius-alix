@@ -99,11 +99,12 @@ package body Ack.Classes is
 
    function Aliased_Feature
      (Class : not null access constant Class_Entity_Record'Class;
-      Alias : Name_Id)
+      Alias : Name_Id;
+      Infix : Boolean)
       return Ack.Features.Feature_Entity
    is
    begin
-      return Class.Find_Aliased_Feature (Alias);
+      return Class.Find_Aliased_Feature (Alias, Infix);
    end Aliased_Feature;
 
    --------------
@@ -565,13 +566,15 @@ package body Ack.Classes is
 
    function Find_Aliased_Feature
      (Class   : Class_Entity_Record'Class;
-      Alias   : Name_Id)
+      Alias   : Name_Id;
+      Infix   : Boolean)
       return Ack.Features.Feature_Entity
    is
       function Test (Feature : not null access constant
                        Ack.Features.Feature_Entity_Record'Class)
                      return Boolean
-      is (Feature.Alias = Alias);
+      is (Feature.Alias = Alias
+          and then Infix = (Feature.Argument_Count = 1));
    begin
       return Class.Find_Feature (Test'Access);
    end Find_Aliased_Feature;
@@ -851,12 +854,13 @@ package body Ack.Classes is
 
    function Has_Aliased_Feature
      (Class : not null access constant Class_Entity_Record'Class;
-      Alias : Name_Id)
+      Alias : Name_Id;
+      Infix : Boolean)
       return Boolean
    is
       use type Ack.Features.Feature_Entity;
    begin
-      return Class.Find_Aliased_Feature (Alias) /= null;
+      return Class.Find_Aliased_Feature (Alias, Infix) /= null;
    end Has_Aliased_Feature;
 
    -------------

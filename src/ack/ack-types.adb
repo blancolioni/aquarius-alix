@@ -13,11 +13,12 @@ package body Ack.Types is
 
    function Aliased_Feature
      (Typ   : Type_Entity_Record'Class;
-      Alias : Name_Id)
+      Alias : Name_Id;
+      Infix : Boolean)
       return Ack.Features.Feature_Entity
    is
    begin
-      return Typ.Class.Aliased_Feature (Alias);
+      return Typ.Class.Aliased_Feature (Alias, Infix);
    end Aliased_Feature;
 
    --------------
@@ -354,11 +355,12 @@ package body Ack.Types is
 
    function Has_Aliased_Feature
      (Typ   : Type_Entity_Record'Class;
-      Alias : Name_Id)
+      Alias : Name_Id;
+      Infix : Boolean)
       return Boolean
    is
    begin
-      return Typ.Class.Has_Aliased_Feature (Alias);
+      return Typ.Class.Has_Aliased_Feature (Alias, Infix);
    end Has_Aliased_Feature;
 
    -----------------
