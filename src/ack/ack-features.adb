@@ -1,5 +1,4 @@
 with Ada.Strings.Fixed;
-with Ada.Text_IO;
 
 with Tagatha.Operands;
 
@@ -305,7 +304,9 @@ package body Ack.Features is
       Rescue_Label     : constant String :=
                            Feature.Link_Name & "$rescue";
    begin
-      if Feature.Property then
+      if Feature.External then
+         null;
+      elsif Feature.Property then
          --  Generate a property routine, in case it redefines
          --  an actual routine
 
@@ -374,108 +375,59 @@ package body Ack.Features is
 
          end if;
 
-         if Feature.External then
+         if Feature.Once then
             declare
-               Object_Name : constant String := -Feature.External_Object;
-               Label       : constant String := -Feature.External_Label;
+               Continue_Once : constant Positive := Unit.Next_Label;
             begin
-               if Object_Name = "" then
-                  for I in reverse 1 .. Arg_Count loop
-                     Unit.Push_Argument
-                       (Tagatha.Argument_Offset (I));
-                  end loop;
-
-                  Unit.Pop_Register ("op");
-                  Unit.Native_Operation
-                    ("get_property " & Label & ","
-                     & Natural'Image (Arg_Count - 1),
-                     Input_Stack_Words  => 0,
-                     Output_Stack_Words => 0,
-                     Changed_Registers  => "pv");
-
-                  if Feature.Has_Result then
-                     Unit.Push_Register ("pv");
-                     Unit.Pop_Local (1);
-                  end if;
-
-               else
-
-                  for I in reverse 2 .. Arg_Count loop
-                     Unit.Push_Argument
-                       (Tagatha.Argument_Offset (I));
-                  end loop;
-
-                  Unit.Push_Operand
-                    (Tagatha.Operands.External_Operand
-                       (Object_Name, True),
-                     Tagatha.Default_Size);
-                  Unit.Pop_Register ("op");
-                  Unit.Native_Operation
-                    ("get_property " & Label & ","
-                     & Natural'Image (Arg_Count - 1),
-                     Input_Stack_Words  => 0,
-                     Output_Stack_Words => 0,
-                     Changed_Registers  => "pv");
-
-                  Unit.Push_Register ("pv");
-
+               Unit.Push_Register (Once_Flag_Label);
+               Unit.Operate (Tagatha.Op_Test, Tagatha.Default_Size);
+               Unit.Jump (Continue_Once, Tagatha.C_Equal);
+               if Feature.Has_Result then
+                  Unit.Push_Register (Once_Value_Label);
+                  Unit.Pop_Result;
                end if;
+               Unit.Jump (Exit_Label);
+               Unit.Label (Continue_Once);
             end;
-         else
-            if Feature.Once then
-               declare
-                  Continue_Once : constant Positive := Unit.Next_Label;
-               begin
-                  Unit.Push_Register (Once_Flag_Label);
-                  Unit.Operate (Tagatha.Op_Test, Tagatha.Default_Size);
-                  Unit.Jump (Continue_Once, Tagatha.C_Equal);
-                  if Feature.Has_Result then
-                     Unit.Push_Register (Once_Value_Label);
-                     Unit.Pop_Result;
-                  end if;
-                  Unit.Jump (Exit_Label);
-                  Unit.Label (Continue_Once);
-               end;
-            end if;
-            for I in 1 .. Feature.Local_Count loop
-               Unit.Push (0);
+         end if;
+
+         for I in 1 .. Feature.Local_Count loop
+            Unit.Push (0);
+         end loop;
+
+         if Feature.Monitor_Postconditions then
+            for Old of Feature.Olds loop
+               Ack.Generate.Generate_Expression (Unit, Old);
             end loop;
+         end if;
 
-            if Feature.Monitor_Postconditions then
-               for Old of Feature.Olds loop
-                  Ack.Generate.Generate_Expression (Unit, Old);
-               end loop;
-            end if;
+         Ack.Generate.Generate_Compound
+           (Unit, Compound (Feature.Routine_Node));
 
-            Ack.Generate.Generate_Compound
-              (Unit, Compound (Feature.Routine_Node));
-
-            if Feature.Monitor_Postconditions then
-               for Clause of Feature.Postconditions loop
-                  declare
-                     Out_Label : constant Positive := Unit.Next_Label;
-                  begin
-                     Ack.Generate.Generate_Expression (Unit, Clause.Node);
-                     Unit.Operate (Tagatha.Op_Test);
-                     Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
-                     Unit.Push_Text
-                       (Get_Program (Clause.Node).Show_Location
-                        & ": assertion failure in postcondition of "
-                        & Feature.Qualified_Name
-                        & (if Clause.Tag = No_Name then ""
-                          else ": " & To_String (Clause.Tag)));
-                     Unit.Pop_Register ("r0");
-                     if Feature.Rescue_Node in Real_Node_Id then
-                        Unit.Jump (Rescue_Label);
-                     else
-                        Unit.Push_Register ("pc");
-                        Unit.Native_Operation ("trap 15", 0, 0, "");
-                     end if;
-                     Unit.Label (Out_Label);
-                  end;
-               end loop;
-            end if;
-
+         if Feature.Monitor_Postconditions then
+            for Clause of Feature.Postconditions loop
+               declare
+                  Out_Label : constant Positive := Unit.Next_Label;
+               begin
+                  Ack.Generate.Generate_Expression (Unit, Clause.Node);
+                  Unit.Operate (Tagatha.Op_Test);
+                  Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
+                  Unit.Push_Text
+                    (Get_Program (Clause.Node).Show_Location
+                     & ": assertion failure in postcondition of "
+                     & Feature.Qualified_Name
+                     & (if Clause.Tag = No_Name then ""
+                       else ": " & To_String (Clause.Tag)));
+                  Unit.Pop_Register ("r0");
+                  if Feature.Rescue_Node in Real_Node_Id then
+                     Unit.Jump (Rescue_Label);
+                  else
+                     Unit.Push_Register ("pc");
+                     Unit.Native_Operation ("trap 15", 0, 0, "");
+                  end if;
+                  Unit.Label (Out_Label);
+               end;
+            end loop;
          end if;
 
          if Feature.Has_Result then
@@ -650,63 +602,12 @@ package body Ack.Features is
 
       Unit.Pop_Register ("op");
 
-      if not Feature.Deferred
-        and then Feature.Effective_Class.Standard_Name = "string"
-      then
-         Unit.Native_Operation
-           ("get_property " & Feature.Standard_Name & ","
-            & Natural'Image (Feature.Argument_Count),
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-
-         if Feature.Has_Result then
-            Unit.Push_Register ("pv");
-         end if;
-
-         return;
-      end if;
-
-      if Feature.Is_External_Routine
-        and then Feature.Effective_Class.Aqua_Primitive_Behaviour
-      then
-         Unit.Native_Operation
-           ("get_property " & Feature.Effective_Class.Link_Name & ",0",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-         Unit.Push_Register ("pv");
-         Unit.Pop_Register ("op");
-         Unit.Native_Operation
-           ("get_property " & Feature.Standard_Name & ","
-            & Natural'Image (Feature.Argument_Count),
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-
-         Unit.Push_Register ("pv");
-
-         return;
-      end if;
-
-      if Feature.Is_External_Routine
-        and then Feature.Effective_Class.Expanded
-      then
-         Unit.Native_Operation
-           ("get_property " & Feature.Standard_Name & ","
-            & Natural'Image (Feature.Argument_Count),
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-
-         Unit.Push_Register ("pv");
-         return;
-      end if;
-
       --  Create current
       Unit.Push_Register ("op");
 
-      if Feature.Definition_Class /= Current then
+      if Feature.Definition_Class /= Current
+        and then not Current.Expanded
+      then
          Unit.Push_Register ("op");
          Unit.Dereference;
          Push_Offset
@@ -724,36 +625,20 @@ package body Ack.Features is
 
       else
 
-         if False then
-            Ada.Text_IO.Put_Line
-              ("generating feature call: "
-               & Feature.Link_Name);
-            Ada.Text_IO.Put_Line
-              ("   current class: " & Current.Qualified_Name);
-            Ada.Text_IO.Put_Line
-              ("   feature class: " & Feature.Definition_Class.Qualified_Name);
-            Ada.Text_IO.Put_Line
-              ("   feature class offset:"
-               & Word_Offset'Image
-                 (Current.Ancestor_Table_Offset
-                      (Feature.Definition_Class) * 4));
-            Ada.Text_IO.Put_Line
-              ("   feature offset:"
-               & Word_Offset'Image
-                 (Feature.Virtual_Table_Offset * 4));
+         if Current.Expanded then
+            Unit.Call (Feature.Link_Name);
+         else
+            --  push feature address from virtual table
+            Unit.Pop_Register ("op");
+            Unit.Push_Register ("op");
+            Unit.Push_Register ("op");
+            Unit.Dereference;
+            Push_Offset (Unit, Feature.Virtual_Table_Offset);
+            Unit.Operate (Tagatha.Op_Add);
+            Unit.Dereference;
+            Unit.Indirect_Call;
          end if;
 
-         --  push feature address from virtual table
-         Unit.Pop_Register ("op");
-         Unit.Push_Register ("op");
-         Unit.Push_Register ("op");
-         Unit.Dereference;
-         Push_Offset (Unit, Feature.Virtual_Table_Offset);
-         Unit.Operate (Tagatha.Op_Add);
-         Unit.Dereference;
-         Unit.Indirect_Call;
-
---         Unit.Drop;   --  drop current
          for I in 1 .. Feature.Argument_Count loop
             Unit.Drop;
          end loop;
