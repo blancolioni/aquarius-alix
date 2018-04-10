@@ -5,7 +5,7 @@ package body Ack.Generate.Primitives is
 
    type Primitive_Operator_Record is
       record
-         Operator : Name_Id;
+         Operator  : Name_Id;
          Left_Type : Ack.Types.Type_Entity;
          Generator : Primitive_Operator_Generator;
       end record;
@@ -14,6 +14,7 @@ package body Ack.Generate.Primitives is
      new Ada.Containers.Doubly_Linked_Lists (Primitive_Operator_Record);
 
    Primitive_Operators : Primitive_Operator_Lists.List;
+   Have_Standard_Primitives : Boolean := False;
 
    procedure Create_Primitives;
 
@@ -32,7 +33,51 @@ package body Ack.Generate.Primitives is
    procedure Generate_Implies (Unit : in out Tagatha.Units.Tagatha_Unit);
 
    procedure Generate_Add (Unit : in out Tagatha.Units.Tagatha_Unit);
+   procedure Generate_Subtract (Unit : in out Tagatha.Units.Tagatha_Unit);
    procedure Generate_Join (Unit : in out Tagatha.Units.Tagatha_Unit);
+
+   --------------------------------
+   -- Create_Integral_Primitives --
+   --------------------------------
+
+   procedure Create_Integral_Primitives
+     (For_Class : Ack.Classes.Class_Entity)
+   is
+      Integer_Type : constant Ack.Types.Type_Entity :=
+                       Ack.Types.New_Class_Type
+                         (No_Node, For_Class, False);
+
+      procedure Add
+        (Name      : String;
+         Left_Type : Ack.Types.Type_Entity;
+         Generator : Primitive_Operator_Generator);
+
+      ---------
+      -- Add --
+      ---------
+
+      procedure Add
+        (Name      : String;
+         Left_Type : Ack.Types.Type_Entity;
+         Generator : Primitive_Operator_Generator)
+      is
+      begin
+         Primitive_Operators.Append
+           (Primitive_Operator_Record'
+              (Operator  => Get_Name_Id (Name),
+               Left_Type => Left_Type,
+               Generator => Generator));
+      end Add;
+
+   begin
+      Add (">", Integer_Type, Generate_GT'Access);
+      Add ("<", Integer_Type, Generate_LT'Access);
+      Add (">=", Integer_Type, Generate_GE'Access);
+      Add ("<=", Integer_Type, Generate_LE'Access);
+
+      Add ("+", Integer_Type, Generate_Add'Access);
+      Add ("-", Integer_Type, Generate_Subtract'Access);
+   end Create_Integral_Primitives;
 
    -----------------------
    -- Create_Primitives --
@@ -209,8 +254,9 @@ package body Ack.Generate.Primitives is
       return Boolean
    is
    begin
-      if Primitive_Operators.Is_Empty then
+      if not Have_Standard_Primitives then
          Create_Primitives;
+         Have_Standard_Primitives := True;
       end if;
 
       for Rec of Primitive_Operators loop
@@ -219,6 +265,12 @@ package body Ack.Generate.Primitives is
          then
             Rec.Generator (Unit);
             return True;
+         elsif Rec.Operator = Operator
+           and then Rec.Left_Type.Standard_Name = "any"
+         then
+            raise Constraint_Error with
+              "type " & Left_Type.Description
+                & " does not conform to Any";
          end if;
       end loop;
       return False;
@@ -232,6 +284,15 @@ package body Ack.Generate.Primitives is
    begin
       Unit.Operate (Tagatha.Op_Or);
    end Generate_Or;
+
+   -----------------------
+   -- Generate_Subtract --
+   -----------------------
+
+   procedure Generate_Subtract (Unit : in out Tagatha.Units.Tagatha_Unit) is
+   begin
+      Unit.Operate (Tagatha.Op_Sub);
+   end Generate_Subtract;
 
    ------------------
    -- Generate_Xor --

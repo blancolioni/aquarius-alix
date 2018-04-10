@@ -1,3 +1,4 @@
+with Ack.Classes;
 with Ack.Types;
 
 package Ack.Generate.Primitives is
@@ -7,5 +8,8 @@ package Ack.Generate.Primitives is
       Operator  : Name_Id;
       Left_Type : Ack.Types.Type_Entity)
       return Boolean;
+
+   procedure Create_Integral_Primitives
+     (For_Class : Ack.Classes.Class_Entity);
 
 end Ack.Generate.Primitives;
