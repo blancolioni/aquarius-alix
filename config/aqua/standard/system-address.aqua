@@ -6,9 +6,17 @@ inherit
    
 feature
 
-   Offset_Words (Count : Word_32) : Address external "intrinsic"
+   Offset_Words (Count : Word_32) : Address
+      do
+         Value := Value + Count * 4
+      end
 
-   Word_Count (Bound : System.Address) : Word_32 external "intrinsic"
+   Word_Count (Bound : System.Address) : Word_32
+      require
+         Bound.Value > Value
+      do
+         Result := (Bound.Value - Value) / 4
+      end
    
    Make_With_Integer_Literal (Literal : Aqua.Integer_Literal)
      do

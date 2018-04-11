@@ -1,0 +1,19 @@
+deferred class
+   Aqua.Algebra.Multiplicative
+
+feature
+
+   One : Multiplicative
+      deferred
+      end
+      
+   Multiply alias "*" (Right : like Current) : like Current
+      deferred
+      end
+
+   Divide alias "/" (Right : like Current) : like Current
+      deferred
+      end
+
+      
+end

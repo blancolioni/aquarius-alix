@@ -5,6 +5,7 @@ inherit
    Aqua.Algebra.Additive redefine Add, Subtract, Negate, Zero end
    Aqua.Algebra.Eq redefine Equal end
    Aqua.Integral redefine Make_With_Integer_Literal, Convert_From end
+   Aqua.Comparable redefine GE, LE, GT, LT, Equal end
    
 feature
    To_String : String external "aqua"
@@ -19,16 +20,16 @@ feature
       end
       
     
-   Equal alias "=" (Right : Integer) : Boolean external "intrinsic"
+   Equal (Right : Integer) : Boolean external "intrinsic"
 
-   GE alias ">=" (Right : Integer) : Boolean external "aqua"
-   LE alias "<=" (Right : Integer) : Boolean external "aqua"
-   GT alias ">" (Right : Integer) : Boolean external "aqua"
-   LT alias "<" (Right : Integer) : Boolean external "aqua"
+   GE (Right : Integer) : Boolean external "intrinsic"
+   LE (Right : Integer) : Boolean external "intrinsic"
+   GT (Right : Integer) : Boolean external "intrinsic"
+   LT (Right : Integer) : Boolean external "intrinsic"
    
-   Make_With_Integer_Literal (Literal : Aqua.Integer_Literal) external "intrinsic"
+   Make_With_Integer_Literal (Literal : Aqua.Integer_Literal) external "nop"
    
-   Convert_From (Other : Aqua.Integral) external "intrinsic"
+   Convert_From (Other : Aqua.Integral) external "intrinsic" alias "nop"
          
 feature { None }
 

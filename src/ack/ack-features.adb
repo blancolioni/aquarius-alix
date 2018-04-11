@@ -306,9 +306,7 @@ package body Ack.Features is
       Rescue_Label     : constant String :=
                            Feature.Link_Name & "$rescue";
    begin
-      if Feature.External then
-         null;
-      elsif Feature.Property then
+      if Feature.Property then
          --  Generate a property routine, in case it redefines
          --  an actual routine
 
@@ -328,6 +326,28 @@ package body Ack.Features is
 
          Unit.End_Routine;
 
+      elsif Feature.External then
+         --  Generate a wrapper that can be accessed via a virtual table entry
+
+         Unit.Begin_Routine
+           (Name           => Feature.Link_Name,
+            Argument_Words => Arg_Count,
+            Frame_Words    => 0,
+            Result_Words   => Result_Count,
+            Global         => True);
+
+         for I in reverse 1 .. Arg_Count loop
+            Unit.Push_Argument (Tagatha.Argument_Offset (I));
+         end loop;
+
+         Feature.Push_Entity (True, Feature.Active_Class, Unit);
+
+         if Result_Count > 0 then
+            Unit.Pop_Result;
+         end if;
+
+         Unit.End_Routine;
+
       elsif Feature.Routine then
 
          --  Don't allocate a frame, because we do it later
@@ -344,7 +364,9 @@ package body Ack.Features is
 
          --  restore Current to our needs
 
-         if Feature.Definition_Class /= Class then
+         if not Feature.Active_Class.Expanded
+           and then Feature.Definition_Class /= Class
+         then
             Unit.Push_Argument (1);
             Unit.Push_Argument (1);
             Unit.Dereference;
@@ -553,16 +575,26 @@ package body Ack.Features is
    is
       pragma Assert (Feature.Property);
    begin
-      Unit.Push_Argument (1);
-      Push_Offset (Unit, Feature.Property_Offset);
-      Unit.Operate (Tagatha.Op_Add);
-      Unit.Pop_Register ("op");
-      Unit.Pop_Register ("pv");
-      Unit.Native_Operation
-        ("mov pv, (op)",
-         Input_Stack_Words  => 0,
-         Output_Stack_Words => 0,
-         Changed_Registers  => "");
+--        Ada.Text_IO.Put_Line
+--          ("pop entity: " & Feature.Active_Class.Qualified_Name
+--           & "." & Feature.Declared_Name
+--           & ": expanded = "
+--           & (if Feature.Active_Class.Expanded then "yes" else "no"));
+
+      if Feature.Active_Class.Expanded then
+         Unit.Pop_Argument (1);
+      else
+         Unit.Push_Argument (1);
+         Push_Offset (Unit, Feature.Property_Offset);
+         Unit.Operate (Tagatha.Op_Add);
+         Unit.Pop_Register ("op");
+         Unit.Pop_Register ("pv");
+         Unit.Native_Operation
+           ("mov pv, (op)",
+            Input_Stack_Words  => 0,
+            Output_Stack_Words => 0,
+            Changed_Registers  => "");
+      end if;
    end Pop_Entity;
 
    -----------------
@@ -578,6 +610,12 @@ package body Ack.Features is
       Current        : constant Ack.Classes.Constant_Class_Entity :=
                          Ack.Classes.Constant_Class_Entity (Context);
    begin
+
+--        Ada.Text_IO.Put_Line
+--          ("push feature: context " & Current.Qualified_Name
+--           & "; feature "
+--           & Feature.Active_Class.Qualified_Name
+--           & "." & Feature.Declared_Name);
 
       if Feature.Standard_Name = "void" then
          Unit.Push (0);
@@ -602,15 +640,13 @@ package body Ack.Features is
          Unit.Push_Argument (1);
       end if;
 
-      Unit.Pop_Register ("op");
-
-      --  Create current
-      Unit.Push_Register ("op");
-
       if Feature.Definition_Class /= Current
         and then not Current.Expanded
         and then not Feature.Intrinsic
       then
+
+         Unit.Pop_Register ("op");
+         Unit.Push_Register ("op");
          Unit.Push_Register ("op");
          Unit.Dereference;
          Push_Offset
@@ -625,9 +661,11 @@ package body Ack.Features is
          Ack.Generate.Primitives.Generate_Intrinsic
            (Unit, Feature.External_Label);
       elsif Feature.Is_Property then
-         Push_Offset (Unit, Feature.Property_Offset);
-         Unit.Operate (Tagatha.Op_Add);
-         Unit.Dereference;
+         if not Feature.Active_Class.Expanded then
+            Push_Offset (Unit, Feature.Property_Offset);
+            Unit.Operate (Tagatha.Op_Add);
+            Unit.Dereference;
+         end if;
       else
          if Current.Expanded then
             Unit.Call (Feature.Link_Name);
@@ -643,13 +681,27 @@ package body Ack.Features is
             Unit.Indirect_Call;
          end if;
 
-         for I in 1 .. Feature.Argument_Count loop
-            Unit.Drop;
-         end loop;
+         if Current.Expanded and then not Feature.Has_Result then
+            if Current.Frame_Words = 1 then
+               if Feature.Argument_Count > 0 then
+                  Unit.Pop_Register ("r0");
+                  for I in 1 .. Feature.Argument_Count loop
+                     Unit.Drop;
+                  end loop;
+                  Unit.Push_Register ("r0");
+               end if;
+            end if;
+         else
 
-         --  push result
-         if Feature.Has_Result then
-            Unit.Push_Register ("r0");
+            Unit.Drop;  --  current
+            for I in 1 .. Feature.Argument_Count loop
+               Unit.Drop;
+            end loop;
+
+            --  push result
+            if Feature.Has_Result then
+               Unit.Push_Register ("r0");
+            end if;
          end if;
       end if;
 
