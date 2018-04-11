@@ -5,6 +5,9 @@ expanded class Boolean
 
 feature
 
+   Boolean_Equal alias "=" (Right : like Current) : Boolean external "intrinsic" alias "equal"
+   Boolean_Not_Equal alias "/=" (Right : like Current) : Boolean external "intrinsic" alias "equal"
+   
    Boolean_And alias "and" (Other : Boolean) : Boolean external "aqua"
    Boolean_Or alias "or" (Other : Boolean) : Boolean external "aqua"
    Boolean_And_Then alias "andthen" (Other : Boolean) : Boolean external "aqua"

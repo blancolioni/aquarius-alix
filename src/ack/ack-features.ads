@@ -56,6 +56,10 @@ package Ack.Features is
      (Feature : Feature_Entity_Record'Class)
       return Boolean;
 
+   function Has_Result
+     (Feature : Feature_Entity_Record'Class)
+      return Boolean;
+
    function Effective_Class
      (Feature : Feature_Entity_Record'Class)
       return access constant Ack.Classes.Class_Entity_Record'Class
@@ -320,6 +324,11 @@ private
      (Feature : Feature_Entity_Record'Class)
       return Boolean
    is (Feature.External and then not Feature.Property);
+
+   function Has_Result
+     (Feature : Feature_Entity_Record'Class)
+      return Boolean
+   is (Feature.Has_Result);
 
    function Is_Feature
      (Entity : not null access constant Root_Entity_Type'Class)

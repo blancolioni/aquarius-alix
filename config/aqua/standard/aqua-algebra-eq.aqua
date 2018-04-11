@@ -1,17 +1,4 @@
 deferred class
    Aqua.Algebra.Eq
    
-feature
-
-   Equal (Right : like Current) : Boolean
-      deferred
-      end
-
-   Not_Equal (Right : like Current) : Boolean
-      do
-         Result := not Equal (Right)
-      ensure
-         Result = not Equal (Right)
-      end
-
 end

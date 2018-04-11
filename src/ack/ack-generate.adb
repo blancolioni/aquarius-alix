@@ -8,8 +8,6 @@ with Ack.Classes;
 with Ack.Features;
 with Ack.Types;
 
-with Ack.Generate.Primitives;
-
 with Ada.Text_IO;
 with Ack.IO;
 
@@ -220,7 +218,6 @@ package body Ack.Generate is
                Generate_Loop (Unit, Instruction);
             when N_Precursor =>
                Generate_Precursor (Unit, Instruction);
-               Unit.Drop;
             when N_Check =>
                Generate_Check (Unit, Instruction);
             when N_Retry =>
@@ -432,9 +429,7 @@ package body Ack.Generate is
         Ack.Features.Feature_Entity_Record'Class)
    is
    begin
-      if not Feature.Is_External_Routine then
-         Feature.Generate_Routine (Class, Unit);
-      end if;
+      Feature.Generate_Routine (Class, Unit);
    end Generate_Feature;
 
    ---------------------------
@@ -639,24 +634,16 @@ package body Ack.Generate is
          Generate_Expression (Unit, Right);
          Unit.Operate (Tagatha.Op_Or);
       else
-         Generate_Expression (Unit, Left);
          if Right /= No_Node then
             Generate_Expression (Unit, Right);
          end if;
+         Generate_Expression (Unit, Left);
 
-         if not Ack.Generate.Primitives.Generate_Operator
-           (Unit      => Unit,
-            Operator  => Operator,
-            Left_Type => Ack.Types.Type_Entity (Get_Type (Left)))
-         then
-            raise Constraint_Error with
-            Get_Program (Operator_Node).Show_Location
-              & ": custom operators ("
-              & To_String (Operator)
-              & "/"
-              & Get_Type (Left).Qualified_Name
-              & ") not implemented yet";
-         end if;
+         Get_Entity (Operator_Node).Push_Entity
+           (Have_Current => True,
+            Context      => Get_Type (Left).Class_Context,
+            Unit         => Unit);
+
       end if;
    end Generate_Operator_Expression;
 
@@ -678,11 +665,15 @@ package body Ack.Generate is
       Last_Element  : constant Node_Id :=
                         List_Table (List).List.Last_Element;
 
+      Previous_Entity : Ack.Constant_Entity_Type := null;
+      Previous_Context : Ack.Classes.Constant_Class_Entity := null;
+
       procedure Apply_Arguments
         (Actuals_List   : List_Id);
 
       procedure Process
-        (Element      : Node_Id);
+        (Element : Node_Id;
+         Last    : Boolean);
 
       ---------------------
       -- Apply_Arguments --
@@ -705,7 +696,8 @@ package body Ack.Generate is
       -------------
 
       procedure Process
-        (Element      : Node_Id)
+        (Element : Node_Id;
+         Last    : Boolean)
       is
          Entity : constant Entity_Type := Get_Entity (Element);
       begin
@@ -713,6 +705,14 @@ package body Ack.Generate is
            (Have_Current => Element /= First_Element,
             Context      => Get_Context (Element),
             Unit         => Unit);
+
+         if not Last then
+            Previous_Entity := Constant_Entity_Type (Entity);
+            Previous_Context :=
+              Ack.Classes.Constant_Class_Entity
+                (Get_Context (Element).Class_Context);
+         end if;
+
       end Process;
 
    begin
@@ -737,13 +737,31 @@ package body Ack.Generate is
                end if;
 
                for Item of Pending loop
-                  Process (Item);
+                  Process (Item, Item = Last_Element);
                end loop;
 
                Pending.Clear;
             end if;
          end;
       end loop;
+
+      declare
+         use Ack.Features;
+         use type Ack.Classes.Constant_Class_Entity;
+         Last_Entity : constant Constant_Entity_Type :=
+                         Constant_Entity_Type
+                           (Get_Entity (Last_Element));
+         Expanded : constant Boolean := Previous_Context /= null
+           and then Previous_Context.Expanded;
+         Has_Result : constant Boolean :=
+                        Last_Entity.all in Feature_Entity_Record'Class
+                            and then
+                              Constant_Feature_Entity (Last_Entity).Has_Result;
+      begin
+         if Expanded and then not Has_Result then
+            Previous_Entity.Pop_Entity (Unit);
+         end if;
+      end;
 
    end Generate_Precursor;
 

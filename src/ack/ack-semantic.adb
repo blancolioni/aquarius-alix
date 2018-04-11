@@ -1741,6 +1741,7 @@ package body Ack.Semantic is
                                   Feature => Feature);
             begin
                Set_Type (Operator_Node, Result_Type);
+               Set_Entity (Operator_Node, Feature);
                if not Result_Type.Conforms_To (Expression_Type) then
                   Error (Operator_Node, E_Type_Error,
                          Entity_Type (Expression_Type));
@@ -1831,6 +1832,7 @@ package body Ack.Semantic is
 
             Set_Entity (Precursor_Element, Entity);
             Set_Context (Precursor_Element, Local_Table.Class_Context);
+
             Value_Entity := Entity;
             Value_Type := Value_Entity.Get_Type;
             Local_Table := Value_Type;
