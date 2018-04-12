@@ -15,7 +15,9 @@ package body Ack.Generate is
 
    String_Label_Index : Natural := 0;
 
-   function Next_String_Label return String;
+   function Next_String_Label
+     (Base_Name : String)
+      return String;
 
    procedure Generate_Feature
      (Unit    : in out Tagatha.Units.Tagatha_Unit;
@@ -383,7 +385,8 @@ package body Ack.Generate is
                case N_Constant_Value (Kind (Value)) is
                   when N_String_Constant =>
                      declare
-                        Label : constant String := Next_String_Label;
+                        Label : constant String :=
+                                  Next_String_Label (Unit.Unit_Name);
                         Text  : constant String :=
                                   To_String (Get_Name (Value));
                      begin
@@ -852,11 +855,14 @@ package body Ack.Generate is
    -- Next_String_Label --
    -----------------------
 
-   function Next_String_Label return String is
+   function Next_String_Label
+     (Base_Name : String)
+      return String
+   is
       S : constant String := Natural'Image (String_Label_Index);
    begin
       String_Label_Index := String_Label_Index + 1;
-      return "_string_literal_" & S (2 .. S'Last);
+      return Base_Name & "$str_" & S (2 .. S'Last);
    end Next_String_Label;
 
 end Ack.Generate;
