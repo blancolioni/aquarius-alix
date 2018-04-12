@@ -8,9 +8,9 @@ feature
    
    Allocate (Count : System.Word_32) : System.Address external "aqua"
    
-feature
-
-   Poke (Addr : System.Address; Value : System.Word_8) external "intrinsic"
-   Peek (Addr : System.Address) : System.Word_8 external "intrinsic"
+--  feature
+--
+--   Poke (Addr : System.Address; Value : System.Word_8) external "intrinsic"
+--   Peek (Addr : System.Address) : System.Word_8 external "intrinsic"
 
 end
