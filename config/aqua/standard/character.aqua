@@ -4,9 +4,19 @@ expanded class
 feature
 
    To_Upper_Case : Character
+      do
+         Result := Current
+      end
+      
    To_Lower_Case : Character
+      do
+         Result := Current
+      end
    
    Is_White_Space : Boolean
+      do
+         
+      end
    
 feature
    
