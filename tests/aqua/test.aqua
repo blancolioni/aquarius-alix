@@ -38,6 +38,7 @@ feature
          Passed_Tests    : Integer
          Failed_Tests    : Integer
       do
+         Put_Line ("Initialising ...")
          Create_Test_List
          Put_Line ("Running tests ...")
          across Test_List as T loop
