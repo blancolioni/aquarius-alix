@@ -400,6 +400,12 @@ package body Ack.Generate is
 
                         Unit.Segment (Tagatha.Executable);
                         Unit.Push_Label (Label);
+                        Unit.Call ("string$create");
+                        Unit.Push_Register ("r0");
+                        Unit.Call ("string__create_from_string_literal");
+                        Unit.Pop_Register ("r0");
+                        Unit.Drop;
+                        Unit.Push_Register ("r0");
                      end;
                   when N_Integer_Constant =>
                      Unit.Push
