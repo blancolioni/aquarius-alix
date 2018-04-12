@@ -41,7 +41,14 @@ feature
    
 feature  --  get/put
 
-   Put (Offset : System.Word_32; Value : System.Word_32) external "intrinsic"
+   Put (Offset : System.Word_32; Value : System.Word_32)
+      local
+         Mem  : System.Memory.Mem
+         Addr : System.Address
+      do
+         Addr := Base.Offset_Words (Offset)
+         Mem.Put_Word_32 (Addr, Value)
+      end
 
    Get (Offset : System.Word_32) : System.Word_32
       local
