@@ -754,9 +754,11 @@ package body Ack.Generate is
          Expanded : constant Boolean := Previous_Context /= null
            and then Previous_Context.Expanded;
          Has_Result : constant Boolean :=
-                        Last_Entity.all in Feature_Entity_Record'Class
-                            and then
-                              Constant_Feature_Entity (Last_Entity).Has_Result;
+                        Ack.Features.Is_Feature (Last_Entity)
+                          and then
+                            (Constant_Feature_Entity (Last_Entity).Has_Result
+                             or else Constant_Feature_Entity (Last_Entity)
+                               .Is_Property);
       begin
          if Expanded and then not Has_Result then
             Previous_Entity.Pop_Entity (Unit);
