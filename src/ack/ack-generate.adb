@@ -755,28 +755,25 @@ package body Ack.Generate is
       end loop;
 
       declare
-         use Ack.Features;
-         use type Ack.Classes.Constant_Class_Entity;
+         use Ack.Features, Ack.Classes;
          Last_Entity : constant Constant_Entity_Type :=
                          Constant_Entity_Type
                            (Get_Entity (Last_Element));
-         Expanded : constant Boolean := Previous_Context /= null
-           and then Previous_Context.Expanded;
-         Has_Result : constant Boolean :=
-                        Ack.Features.Is_Feature (Last_Entity)
-                          and then
-                            (Constant_Feature_Entity (Last_Entity).Has_Result
-                             or else Constant_Feature_Entity (Last_Entity)
-                               .Is_Property);
+         Current_Context : constant Constant_Class_Entity :=
+                             Constant_Class_Entity
+                               (Get_Context (Last_Element).Class_Context);
+         Expanded        : constant Boolean :=
+                             Previous_Context /= null
+                                 and then Current_Context /= null
+                                     and then Current_Context.Expanded;
+         Has_Result      : constant Boolean :=
+                             Ack.Features.Is_Feature (Last_Entity)
+                               and then
+                                 (Constant_Feature_Entity
+                                    (Last_Entity).Has_Result
+                                  or else Constant_Feature_Entity (Last_Entity)
+                                  .Is_Property);
       begin
-         Ada.Text_IO.Put_Line
-           (Get_Program (Precursor).Show_Location
-            & ": " & Last_Entity.Qualified_Name
-            & ": previous context: "
-            & (if Previous_Context = null then "none"
-              else Previous_Context.Qualified_Name)
-            & ": expanded " & (if Expanded then "yes" else "no")
-            & "; has-result " & (if Has_Result then "yes" else "no"));
          if Expanded and then not Has_Result then
             Previous_Entity.Pop_Entity (Unit);
          end if;
