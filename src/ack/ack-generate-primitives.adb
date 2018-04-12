@@ -186,6 +186,13 @@ package body Ack.Generate.Primitives is
 
       Add ("nop", Generate_Intrinsic_Nop'Access);
       Add ("replace-current", Generate_Intrinsic_Replace_Current'Access);
+
+      Add ("not", Generate_Not'Access);
+      Add ("and", Generate_And'Access);
+      Add ("or", Generate_Or'Access);
+      Add ("xor", Generate_Xor'Access);
+      Add ("implies", Generate_Implies'Access);
+
       Add ("zero", Generate_Intrinsic_Zero'Access);
       Add ("one", Generate_Intrinsic_One'Access);
       Add ("add", Generate_Add'Access);
