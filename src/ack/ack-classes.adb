@@ -570,13 +570,22 @@ package body Ack.Classes is
       Infix   : Boolean)
       return Ack.Features.Feature_Entity
    is
+      use type Ack.Features.Feature_Entity;
+
       function Test (Feature : not null access constant
                        Ack.Features.Feature_Entity_Record'Class)
                      return Boolean
       is (Feature.Alias = Alias
           and then Infix = (Feature.Argument_Count = 1));
+
+      Base_Feature : constant Ack.Features.Feature_Entity :=
+                       Class.Find_Feature (Test'Access);
    begin
-      return Class.Find_Feature (Test'Access);
+      if Base_Feature /= null then
+         return Class.Feature (Get_Name_Id (Base_Feature.Standard_Name));
+      else
+         return null;
+      end if;
    end Find_Aliased_Feature;
 
    ------------------
