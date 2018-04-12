@@ -115,7 +115,11 @@ package body Ack.Features is
          Feature.Insert (Current);
       end if;
 
-      Next_Argument := Current_Class.Frame_Words + 1;
+      if Current_Class.Frame_Words <= 1 then
+         Next_Argument := 2;
+      else
+         Next_Argument := Current_Class.Frame_Words + 1;
+      end if;
 
       for Argument of Feature.Arguments loop
          Argument.Set_Offset (Next_Argument);
