@@ -254,7 +254,7 @@ package body Ack.Generate.Primitives is
 
    procedure Generate_GE (Unit : in out Tagatha.Units.Tagatha_Unit) is
    begin
-      Unit.Operate (Tagatha.Op_Greater_Equal);
+      Unit.Operate (Tagatha.Op_Less);
    end Generate_GE;
 
    -----------------
@@ -263,7 +263,7 @@ package body Ack.Generate.Primitives is
 
    procedure Generate_GT (Unit : in out Tagatha.Units.Tagatha_Unit) is
    begin
-      Unit.Operate (Tagatha.Op_Greater);
+      Unit.Operate (Tagatha.Op_Less_Equal);
    end Generate_GT;
 
    ----------------------
@@ -384,7 +384,7 @@ package body Ack.Generate.Primitives is
 
    procedure Generate_LE (Unit : in out Tagatha.Units.Tagatha_Unit) is
    begin
-      Unit.Operate (Tagatha.Op_Less_Equal);
+      Unit.Operate (Tagatha.Op_Greater);
    end Generate_LE;
 
    -----------------
@@ -393,7 +393,7 @@ package body Ack.Generate.Primitives is
 
    procedure Generate_LT (Unit : in out Tagatha.Units.Tagatha_Unit) is
    begin
-      Unit.Operate (Tagatha.Op_Less);
+      Unit.Operate (Tagatha.Op_Greater_Equal);
    end Generate_LT;
 
    -----------------------
