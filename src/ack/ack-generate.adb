@@ -769,6 +769,14 @@ package body Ack.Generate is
                              or else Constant_Feature_Entity (Last_Entity)
                                .Is_Property);
       begin
+         Ada.Text_IO.Put_Line
+           (Get_Program (Precursor).Show_Location
+            & ": " & Last_Entity.Qualified_Name
+            & ": previous context: "
+            & (if Previous_Context = null then "none"
+              else Previous_Context.Qualified_Name)
+            & ": expanded " & (if Expanded then "yes" else "no")
+            & "; has-result " & (if Has_Result then "yes" else "no"));
          if Expanded and then not Has_Result then
             Previous_Entity.Pop_Entity (Unit);
          end if;
