@@ -7,8 +7,11 @@ inherit
 feature
 
    Offset_Words (Count : Word_32) : Address
+      local
+         New_Value : Word_32
       do
-         Value := Value + Count * 4
+         New_Value := Value + Count * 4
+         Result.Convert_From (New_Value)
       end
 
    Word_Count (Bound : System.Address) : Word_32
