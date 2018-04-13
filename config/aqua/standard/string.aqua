@@ -34,6 +34,7 @@ feature
          W : System.Word_32
       do
          I.Convert_From (Index)
+         I := I - 1
          W := Block.Get (I)
          Result.Create_From_UTF_32 (W)
       end
