@@ -192,10 +192,10 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Komnenos_Arg : constant Aqua.Word := 0;
 --                         Executor.Plugin.Executor.To_Word
 --                         (Komnenos.Entities.Aqua_Entities.Get_Aqua_Object);
-      Top_Arg     : constant Aqua.Word :=
-                      Executor.Plugin.Executor.To_Word (Tree.Program_Root);
-      Tree_Arg  : constant Aqua.Word :=
-                      Executor.Plugin.Executor.To_Word (Tree);
+      Top_Arg     : constant Aqua.Word := 0;
+--                      Executor.Plugin.Executor.To_Word (Tree.Program_Root);
+      Tree_Arg  : constant Aqua.Word := 0;
+--                      Executor.Plugin.Executor.To_Word (Tree);
    begin
       Executor.Plugin.Executor.Execute
         (Tree.Local_Environment_Name,
@@ -228,15 +228,15 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Komnenos_Arg : constant Aqua.Word := 0;
 --                     Executor.Plugin.Executor.To_Word
 --                       (Komnenos.Entities.Aqua_Entities.Get_Aqua_Object);
-      Top_Arg     : constant Aqua.Word :=
-                      Executor.Plugin.Executor.To_Word
-                        (Parent_Tree.Program_Root);
-      Parent_Arg  : constant Aqua.Word :=
-                      Executor.Plugin.Executor.To_Word
-                        (Parent_Tree);
-      Child_Arg   : constant Aqua.Word :=
-                      Executor.Plugin.Executor.To_Word
-                        (Child_Tree);
+      Top_Arg     : constant Aqua.Word := 0;
+--                        Executor.Plugin.Executor.To_Word
+--                          (Parent_Tree.Program_Root);
+      Parent_Arg  : constant Aqua.Word := 0;
+--                        Executor.Plugin.Executor.To_Word
+--                          (Parent_Tree);
+      Child_Arg   : constant Aqua.Word := 0;
+--                        Executor.Plugin.Executor.To_Word
+--                          (Child_Tree);
    begin
       Executor.Plugin.Executor.Execute
         (Parent_Tree.Local_Environment_Name,

@@ -59,25 +59,6 @@ package body Aquarius.Plugins.Macro_32.Assemble is
       Deferred_OK : Boolean := True)
       return Expression_Value;
 
-   ----------------------
-   -- After_Allocation --
-   ----------------------
-
-   procedure After_Allocation
-     (Target : not null access Aquarius.Actions.Actionable'Class)
-   is
-      use Aquarius.Programs;
-      Op : constant Program_Tree := Program_Tree (Target);
-      Assembly       : constant Aqua.Assembler.Assembly :=
-                         Assembly_Object
-                           (Op.Property
-                              (Global_Plugin.Assembly)).Assembly;
-   begin
-      Assembly.Append_Octet
-        (Aqua.Architecture.Encode
-           (Aqua.Architecture.A_Allocate));
-   end After_Allocation;
-
    ------------------
    -- After_Branch --
    ------------------
@@ -219,7 +200,7 @@ package body Aquarius.Plugins.Macro_32.Assemble is
       Name      : constant String :=
                     Directive.Program_Child ("identifier").Text;
       Arguments : constant Array_Of_Program_Trees :=
-                    Directive.Direct_Children ("operand");
+                    Directive.Direct_Children ("directive_operand");
    begin
       if Name = "extern" then
          for Arg of Arguments loop
@@ -741,10 +722,7 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                      Node : constant Program_Tree :=
                               Operand.Program_Child ("integer");
                   begin
-                     Value :=
-                       To_Integer_Word
-                         (-Aqua_Integer'Value
-                            (Node.Text));
+                     Value := (not Word'Value (Node.Text)) + 1;
                   end;
                else
                   raise Constraint_Error
@@ -783,6 +761,7 @@ package body Aquarius.Plugins.Macro_32.Assemble is
       Relative : Boolean;
       Size     : Aqua.Data_Size)
    is
+      use type Aqua.Word;
       use Aquarius.Programs;
       Op : constant Program_Tree := Tree.Chosen_Tree;
    begin
@@ -796,14 +775,9 @@ package body Aquarius.Plugins.Macro_32.Assemble is
            (Aqua.Word'Value (Op.Text),
             Size);
       elsif Op.Name = "negative_integer" then
-         declare
-            use Aqua;
-            X : constant Aqua_Integer :=
-                  -Aqua_Integer'Value (Op.Program_Child ("integer").Text);
-         begin
-            Assembly.Append
-              (Aqua.To_Integer_Word (X), Size);
-         end;
+         Assembly.Append
+           ((not Aqua.Word'Value (Op.Program_Child ("integer").Text)) + 1,
+            Size);
       else
          raise Constraint_Error
            with "invalid operand: " & Op.Name;
@@ -1047,9 +1021,6 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                  (Value.Word_Value, Aqua.Word_32_Size);
             end if;
          end;
-      elsif Operand_Name = "string" then
-         Assembly.Append
-           (Assembly.Reference_String (Operand_Tree.Text), Aqua.Word_32_Size);
       end if;
    end Place_Operand;
 

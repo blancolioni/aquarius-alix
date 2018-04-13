@@ -122,7 +122,7 @@ package body Ack.Variables is
               (Tagatha.Local_Offset (Variable.Offset),
                Tagatha.Default_Size);
 
-            if Variable.Iterator then
+            if False and then Variable.Iterator then
                Unit.Pop_Register ("op");
                Unit.Push_Register ("op");
                Unit.Native_Operation

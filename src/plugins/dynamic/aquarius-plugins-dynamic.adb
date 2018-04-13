@@ -40,22 +40,6 @@ package body Aquarius.Plugins.Dynamic is
       Aquarius_Plugin_Type (Plugin.all).Load (Grammar);
    end Load;
 
-   -----------------
-   -- Load_Object --
-   -----------------
-
-   overriding function Load_Object
-     (Plugin : in out Dynamic_Plugin_Type;
-      File_Name : String)
-      return access Aqua.External_Object_Interface'Class
-   is
-      Result : constant Aquarius.Programs.Program_Tree :=
-                 Aquarius_Plugin_Type'Class (Plugin).Get_Program
-                 (File_Name);
-   begin
-      return Result;
-   end Load_Object;
-
    ----------
    -- Name --
    ----------
@@ -84,8 +68,8 @@ package body Aquarius.Plugins.Dynamic is
       Result.Name    := Ada.Strings.Unbounded.To_Unbounded_String (Name);
       Result.Version := Ada.Strings.Unbounded.To_Unbounded_String (Version);
       Result.Image   := Aqua.Images.New_Image;
-      Result.Executor := new Aqua.CPU.Aqua_CPU_Type
-        (Result.Image, Result);
+      Result.Executor :=
+        new Aqua.CPU.Aqua_CPU_Type (Result.Image);
       Aquarius_Plugin_Type'Class (Result.all).Load (Grammar);
       return Aquarius_Plugin (Result);
    end New_Dynamic_Plugin;

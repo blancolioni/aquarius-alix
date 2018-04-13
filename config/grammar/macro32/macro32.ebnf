@@ -32,7 +32,9 @@ instruction ::= pseudo_op | op
 
 pseudo_op ::= directive | declaration
 
-directive ::= '.' identifier { operand }
+directive ::= '.' identifier { directive_operand }
+
+directive_operand ::= integer | identifier | string
 
 op ::= no_operand
      | single_operand
@@ -43,20 +45,11 @@ op ::= no_operand
      | call
      | goto
      | trap
-     | property
-     | iterator
-     | allocation
      
 no_operand ::= 'halt' | 'nop' | 'rts'
 single_operand ::= single_operand_instruction [size] arg
 double_operand ::= double_operand_instruction [size] arg ',' arg
 triple_operand ::= double_operand_instruction [size] arg ',' arg ',' arg
-
-property ::= property_instruction operand [ ',' integer ]
-property_instruction ::= 'get_property' | 'set_property'
-iterator ::= iterator_instruction [ identifier ]
-iterator_instruction ::= 'iterator_start' | 'iterator_next'
-allocation ::= 'allocate'
 
 branch ::= branch_instruction branch_destination
 branch_destination ::= identifier | temporary_label
@@ -98,7 +91,7 @@ arg ::= identifier | deferred
       | autodecrement | autodecrement_deferred
       | indexed | indexed_deferred
       | immediate | absolute
-      | string | subroutine
+      | subroutine
       
 deferred ::= '(' identifier ')'
 autoincrement ::= '(' identifier ')' '+'
@@ -113,7 +106,7 @@ absolute ::= '@' '#' expression
 
 expression ::= < operand / operator >
 
-operand ::= identifier | integer | string | negative_integer
+operand ::= identifier | integer | negative_integer
 
 negative_integer ::= '-' integer
 

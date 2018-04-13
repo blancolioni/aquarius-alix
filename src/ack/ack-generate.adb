@@ -63,11 +63,6 @@ package body Ack.Generate is
      (Unit    : in out Tagatha.Units.Tagatha_Unit;
       Node    : Node_Id);
 
-   procedure Generate_Get_Property
-     (Unit    : in out Tagatha.Units.Tagatha_Unit;
-      Node    : Node_Id)
-     with Pre => Kind (Node) = N_Get_Property;
-
    --------------------------------
    -- Generate_Class_Declaration --
    --------------------------------
@@ -83,22 +78,6 @@ package body Ack.Generate is
       Unit.Create_Unit
         (Entity.Base_File_Name,
          Get_Program (Node).Source_File_Name);
-
-      Unit.Directive
-        ("map ="
-         & Natural'Image (16#3000_0001#));
-
-      Unit.Directive
-        ("array ="
-         & Natural'Image (16#3000_0002#));
-
-      Unit.Directive
-        ("aqua ="
-         & Natural'Image (16#3000_0003#));
-
-      Unit.Directive
-        ("io ="
-         & Natural'Image (16#3000_0004#));
 
       if Root then
          Unit.Directive (".start " & Entity.Link_Name & "$main");
@@ -419,11 +398,6 @@ package body Ack.Generate is
             end;
       end case;
 
-      if Get_Property (Expression) /= No_Node then
-         Generate_Get_Property
-           (Unit, Get_Property (Expression));
-      end if;
-
    end Generate_Expression;
 
    ----------------------
@@ -440,24 +414,6 @@ package body Ack.Generate is
    begin
       Feature.Generate_Routine (Class, Unit);
    end Generate_Feature;
-
-   ---------------------------
-   -- Generate_Get_Property --
-   ---------------------------
-
-   procedure Generate_Get_Property
-     (Unit    : in out Tagatha.Units.Tagatha_Unit;
-      Node    : Node_Id)
-   is
-   begin
-      Unit.Pop_Register ("op");
-      Unit.Native_Operation
-        ("get_property " & To_Standard_String (Get_Name (Node)) & ", 0",
-         Input_Stack_Words  => 0,
-         Output_Stack_Words => 0,
-         Changed_Registers  => "pv");
-      Unit.Push_Register ("pv");
-   end Generate_Get_Property;
 
    -------------------
    -- Generate_Loop --
@@ -481,7 +437,7 @@ package body Ack.Generate is
          Generate_Compound (Unit, Compound (Initialization_Node));
       end if;
 
-      if Iteration_Node /= No_Node then
+      if False and then Iteration_Node /= No_Node then
          declare
             Expression_Node : constant Node_Id := Expression (Iteration_Node);
          begin
@@ -508,7 +464,7 @@ package body Ack.Generate is
          end;
       end if;
 
-      if Iteration_Node /= No_Node then
+      if False and then Iteration_Node /= No_Node then
          Unit.Push_Register ("r0");
          Unit.Pop_Register ("op");
          Unit.Push_Register ("op");
@@ -543,7 +499,7 @@ package body Ack.Generate is
 
       Generate_Compound (Unit, Compound (Loop_Body_Node));
 
-      if Iteration_Node = No_Node then
+      if True or else Iteration_Node = No_Node then
          Unit.Jump (Top_Label, Tagatha.C_Always);
       else
          Unit.Pop_Register ("op");
@@ -589,7 +545,7 @@ package body Ack.Generate is
 
       Unit.Label (Out_Label);
 
-      if Iteration_Node /= No_Node then
+      if False and then Iteration_Node /= No_Node then
          Unit.Drop;
       end if;
 
@@ -827,11 +783,14 @@ package body Ack.Generate is
                          (Tuple_Expression_List (Expression));
       Arity_Image : constant String := Natural'Image (Actual_Nodes'Length);
       Make_Name    : constant String :=
-                       "make_tuple" & Arity_Image (2 .. Arity_Image'Last);
+                       Tuple_Type.Link_Name
+                       & "__make_tuple"
+                       & Arity_Image (2 .. Arity_Image'Last);
    begin
       Unit.Push_Register ("agg");
       Unit.Call
         (Tuple_Type.Link_Name & "$create");
+      Unit.Push_Register ("r0");
       Unit.Push_Register ("r0");
       Unit.Pop_Register ("agg");
 
@@ -842,24 +801,10 @@ package body Ack.Generate is
       Unit.Push_Register ("agg");
       Unit.Pop_Register ("op");
       Unit.Push_Register ("op");
-      Unit.Native_Operation
-        ("get_property " & Tuple_Type.Link_Name & ",0",
-         Input_Stack_Words  => 0,
-         Output_Stack_Words => 0,
-         Changed_Registers  => "pv");
-      Unit.Push_Register ("pv");
-      Unit.Pop_Register ("op");
-      Unit.Native_Operation
-        ("get_property " & Make_Name & ",0",
-         Input_Stack_Words  => 0,
-         Output_Stack_Words => 0,
-         Changed_Registers  => "pv");
-      Unit.Push_Register ("pv");
-      Unit.Indirect_Call;
+      Unit.Call (Make_Name);
       for I in 1 .. Actual_Nodes'Length + 1 loop
          Unit.Drop;
       end loop;
-      Unit.Push_Register ("agg");
    end Generate_Tuple_Expression;
 
    -----------------------
