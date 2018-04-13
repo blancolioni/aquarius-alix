@@ -27,9 +27,9 @@ feature
    GT (Right : Integer) : Boolean external "intrinsic"
    LT (Right : Integer) : Boolean external "intrinsic"
    
-   Make_With_Integer_Literal (Literal : Aqua.Integer_Literal) external "nop"
+   Make_With_Integer_Literal (Literal : Aqua.Integer_Literal) external "replace-current"
    
-   Convert_From (Other : Aqua.Integral) external "intrinsic" alias "nop"
+   Convert_From (Other : Aqua.Integral) external "intrinsic" alias "replace-current"
          
 feature { None }
 
