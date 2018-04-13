@@ -1,7 +1,5 @@
 private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Strings.Fixed.Hash;
-private with Aqua.Iterators;
-private with Aqua.Execution;
 
 private with WL.String_Maps;
 
@@ -21,9 +19,6 @@ with Aquarius.Types;
 
 with Aquarius.Trees;
 
-with Aqua.Objects;
-with Aqua.Values;
-
 with Tagatha.Fragments;
 
 package Aquarius.Programs is
@@ -41,8 +36,6 @@ package Aquarius.Programs is
      and Aquarius.Entries.Entry_Property_Interface
      and Aquarius.Types.Type_Property_Interface
      and Komnenos.Source.Source_Tree_Interface
-     and Aqua.External_Object_Interface
-     and Aqua.Objects.Object_Interface
      with private;
 
    type Program_Tree is access all Program_Tree_Type'Class;
@@ -482,9 +475,6 @@ private
         Hash            => Ada.Strings.Fixed.Hash,
         Equivalent_Keys => "=");
 
-   type Aqua_Object_Access is
-     access all Aqua.Objects.Root_Object_Type'Class;
-
    package String_Property_Maps is
      new WL.String_Maps (String);
 
@@ -496,8 +486,6 @@ private
      and Aquarius.Entries.Entry_Property_Interface
      and Aquarius.Types.Type_Property_Interface
      and Komnenos.Source.Source_Tree_Interface
-     and Aqua.External_Object_Interface
-     and Aqua.Objects.Object_Interface
    with
       record
          Free              : Boolean;
@@ -536,11 +524,9 @@ private
          Fragment          : Tagatha.Fragments.Tagatha_Fragment;
          Local_Env         : access Local_Environment_Interface'Class;
          String_Props      : String_Property_Maps.Map;
-         Aqua_Object       : Aqua_Object_Access;
-         Aqua_Reference    : Aqua.External_Reference := 0;
       end record;
 
-   overriding function Class_Name
+   function Class_Name
      (It : Program_Tree_Type)
       return String
    is ("aquarius__trees__program_tree");
@@ -578,45 +564,20 @@ private
      (Program  : in out Program_Tree_Type;
       Property : not null access Types.Root_Aquarius_Type'Class);
 
-   overriding procedure Set_Property
+   procedure Set_Property
      (Program  : in out Program_Tree_Type;
       Name     : in     String;
-      Value    : in     Aqua.Values.Property_Value);
+      Value    : in     String);
 
-   overriding function Get_Property
+   function Get_Property
      (Program  : in out Program_Tree_Type;
       Name     : in String)
-      return Aqua.Values.Property_Value;
+      return String;
 
-   overriding function Has_Property
+   function Has_Property
      (Program  : in Program_Tree_Type;
       Name     : in String)
       return Boolean;
-
-   overriding procedure Scan_Properties
-     (Program  : in Program_Tree_Type;
-      Process  : not null access
-        procedure (Name : String;
-                   Value : Aqua.Values.Property_Value));
-
-   overriding function Show
-     (Program        : Program_Tree_Type;
-      Recursive_Show : access
-        function (Value : Aqua.Word) return String)
-      return String
-   is (Program_Tree_Type'Class (Program).Image);
-
-   overriding procedure Set_Reference
-     (Program   : in out Program_Tree_Type;
-      Reference : Aqua.External_Reference);
-
-   overriding function Get_Reference
-     (Program : Program_Tree_Type)
-      return Aqua.External_Reference;
-
-   overriding function Start
-     (Program : Program_Tree_Type)
-      return Aqua.Iterators.Aqua_Iterator_Interface'Class;
 
    overriding function Source_Root
      (Source : not null access Program_Tree_Type)
@@ -625,57 +586,5 @@ private
 
    overriding function Name (Item : Program_Tree_Type) return String
    is (Aquarius.Names.To_String (Item.Tree_Name));
-
-   type Root_Program_Tree_Iterator is
-     new Aqua.Iterators.Aqua_Iterator_Interface with
-      record
-         Aqua_Reference : Aqua.External_Reference := 0;
-         Current        : Program_Tree;
-         Going_Down     : Boolean       := True;
-      end record;
-
-   overriding function Name
-     (It : Root_Program_Tree_Iterator)
-      return String
-   is ("[program-tree-iterator]");
-
-   overriding function Class_Name
-     (It : Root_Program_Tree_Iterator)
-      return String
-   is ("[program-tree-iterator]");
-
-   overriding function Text
-     (It : Root_Program_Tree_Iterator)
-      return String
-   is ("[program-tree-iterator]");
-
-   overriding function Show
-     (It             : Root_Program_Tree_Iterator;
-      Recursive_Show : access
-        function (Value : Aqua.Word) return String)
-      return String
-   is ("[program-tree-iterator]");
-
-   overriding procedure Set_Reference
-     (It        : in out Root_Program_Tree_Iterator;
-      Reference : Aqua.External_Reference);
-
-   overriding function Get_Reference
-     (It : Root_Program_Tree_Iterator)
-      return Aqua.External_Reference;
-
-   overriding procedure Next
-     (It       : in out Root_Program_Tree_Iterator;
-      Finished :    out Boolean);
-
-   overriding function Current
-     (It : Root_Program_Tree_Iterator)
-      return Aqua.Word
-   is (0);
-
-   function To_Program_Tree
-     (Context : in out Aqua.Execution.Execution_Interface'Class;
-      Value   : Aqua.Word)
-      return Program_Tree;
 
 end Aquarius.Programs;

@@ -41,6 +41,4 @@ package Aquarius.Programs.Komnenos_Entities is
 --        Location  : File_Location)
 --        return Entity_Reference;
 
-   procedure Add_Handlers;
-
 end Aquarius.Programs.Komnenos_Entities;

@@ -204,7 +204,7 @@ begin
    if Aquarius.Command_Line.Ack_Execute_Root /= "" then
       declare
          Image : constant Aqua.Images.Image_Type := Aqua.Images.New_Image;
-         CPU   : Aqua.CPU.Aqua_CPU_Type (Image, null);
+         CPU   : Aqua.CPU.Aqua_CPU_Type (Image);
       begin
          Image.Install_Driver
            (Start  => 16#0100#,
