@@ -372,9 +372,9 @@ package body Ack.Features is
            and then Feature.Definition_Class /= Class
          then
             Unit.Push_Argument (1);
+            Unit.Dereference;
+            Unit.Dereference;
             Unit.Push_Argument (1);
-            Unit.Dereference;
-            Unit.Dereference;
             Unit.Operate (Tagatha.Op_Sub);
             Unit.Pop_Argument (1);
          end if;
