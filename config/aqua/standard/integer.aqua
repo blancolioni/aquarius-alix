@@ -8,7 +8,10 @@ inherit
    Aqua.Comparable redefine GE, LE, GT, LT, Equal end
    
 feature
-   To_String : String external "aqua"
+   To_String : String
+      do
+         Result := "[integer]"
+      end
    
    Add (Right : Integer) : Integer external "intrinsic"
    Subtract (Right : Integer) : Integer external "intrinsic"
