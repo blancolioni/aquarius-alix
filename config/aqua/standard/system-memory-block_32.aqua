@@ -32,7 +32,23 @@ feature
          
    Copy (To_Block : Block_32
          Start    : Word_32)
-         external "aqua"
+      local
+         Src : System.Word_32
+         Dst : System.Word_32
+         X   : System.Word_32
+      do
+         from
+            Src := 0
+            Dst := Start
+         until
+            Src >= Count
+         loop
+            X := Get (Src)
+            To_Block.Put (Dst, X)
+            Src := Src + 4
+            Dst := Dst + 4
+         end
+      end
          
 feature
    Base    : System.Address
