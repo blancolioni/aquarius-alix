@@ -322,8 +322,6 @@ package body Ack.Generate is
            (Have_Current => True,
             Context      => Creation_Type.Class_Context,
             Unit         => Unit);
-
-         Unit.Drop;
       end if;
 
    exception
