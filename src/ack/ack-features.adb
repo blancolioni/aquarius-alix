@@ -331,26 +331,30 @@ package body Ack.Features is
          Unit.End_Routine;
 
       elsif Feature.External then
-         --  Generate a wrapper that can be accessed via a virtual table entry
+         if Feature.Intrinsic then
 
-         Unit.Begin_Routine
-           (Name           => Feature.Link_Name,
-            Argument_Words => Arg_Count,
-            Frame_Words    => 0,
-            Result_Words   => Result_Count,
-            Global         => True);
+            --  Generate a wrapper that can be accessed
+            --  via a virtual table entry
 
-         for I in reverse 1 .. Arg_Count loop
-            Unit.Push_Argument (Tagatha.Argument_Offset (I));
-         end loop;
+            Unit.Begin_Routine
+              (Name           => Feature.Link_Name,
+               Argument_Words => Arg_Count,
+               Frame_Words    => 0,
+               Result_Words   => Result_Count,
+               Global         => True);
 
-         Feature.Push_Entity (True, Feature.Active_Class, Unit);
+            for I in reverse 1 .. Arg_Count loop
+               Unit.Push_Argument (Tagatha.Argument_Offset (I));
+            end loop;
 
-         if Result_Count > 0 then
-            Unit.Pop_Result;
+            Feature.Push_Entity (True, Feature.Active_Class, Unit);
+
+            if Result_Count > 0 then
+               Unit.Pop_Result;
+            end if;
+
+            Unit.End_Routine;
          end if;
-
-         Unit.End_Routine;
 
       elsif Feature.Routine then
 
