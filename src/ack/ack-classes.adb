@@ -707,7 +707,7 @@ package body Ack.Classes is
    function Generic_Formal
      (Class : Class_Entity_Record'Class;
       Index : Positive)
-      return access constant Ack.Types.Type_Entity_Record'Class
+      return access Ack.Types.Type_Entity_Record'Class
    is
       Count : Natural := 0;
    begin

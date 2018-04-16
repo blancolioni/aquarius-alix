@@ -141,7 +141,7 @@ package body Ack.Types is
    -------------
 
    function Feature
-     (Typ   : Type_Entity_Record'Class;
+     (Typ   : not null access constant Type_Entity_Record'Class;
       Name  : Name_Id)
       return Ack.Features.Feature_Entity
    is
@@ -202,6 +202,10 @@ package body Ack.Types is
    is
       Count : Natural := 0;
    begin
+      if Typ.Generic_Bindings.Is_Empty then
+         return Typ.Class.Generic_Formal (Index);
+      end if;
+
       for Binding of Typ.Generic_Bindings loop
          Count := Count + 1;
          if Count = Index then
@@ -209,7 +213,8 @@ package body Ack.Types is
          end if;
       end loop;
       raise Constraint_Error with
-        "generic_binding: index too large: " & Typ.Description;
+        "generic_binding: index"
+        & Index'Img & " too large : " & Typ.Description;
    end Generic_Binding;
 
    ---------
@@ -227,7 +232,7 @@ package body Ack.Types is
       else
          declare
             use type Ack.Classes.Constant_Class_Entity;
-            Feature          : constant Ack.Features.Feature_Entity :=
+            Feature        : constant Ack.Features.Feature_Entity :=
                                  Typ.Class.Feature
                                    (Get_Name_Id (Name));
             Ancestor_Type : Ack.Classes.Class_Type_Access :=
@@ -401,7 +406,7 @@ package body Ack.Types is
    -----------------
 
    function Has_Feature
-     (Typ   : Type_Entity_Record'Class;
+     (Typ   : not null access constant Type_Entity_Record'Class;
       Name  : Name_Id)
       return Boolean
    is

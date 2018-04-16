@@ -9,12 +9,12 @@ package Ack.Types is
      new Root_Entity_Type with private;
 
    function Has_Feature
-     (Typ   : Type_Entity_Record'Class;
+     (Typ   : not null access constant Type_Entity_Record'Class;
       Name  : Name_Id)
       return Boolean;
 
    function Feature
-     (Typ   : Type_Entity_Record'Class;
+     (Typ   : not null access constant Type_Entity_Record'Class;
       Name  : Name_Id)
       return Ack.Features.Feature_Entity
      with Pre => Typ.Has_Feature (Name);
@@ -217,6 +217,8 @@ private
    function Generic_Binding_Count
      (Typ : Type_Entity_Record'Class)
       return Natural
-   is (Natural (Typ.Generic_Bindings.Length));
+   is (if Typ.Generic_Bindings.Is_Empty
+       then Typ.Class.Generic_Formal_Count
+       else Natural (Typ.Generic_Bindings.Length));
 
 end Ack.Types;

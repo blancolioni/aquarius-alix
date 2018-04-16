@@ -24,6 +24,8 @@ with Ack.Errors;
 package body Ack.Semantic is
 
    Local_Integral_Type  : Ack.Types.Type_Entity := null;
+   Local_Iterable_Type  : Ack.Types.Type_Entity := null;
+   Local_Iterable_Class : Ack.Classes.Class_Entity := null;
 
    function Load_Class
      (Referrer : Aquarius.Programs.Program_Tree;
@@ -44,7 +46,9 @@ package body Ack.Semantic is
      (Arity : Tuple_Arity_Range)
       return Ack.Classes.Class_Entity;
 
-   function Forward_Iterable return Ack.Classes.Class_Entity;
+   function Type_Any return Ack.Types.Type_Entity
+   is (Get_Top_Level_Type ("any"))
+   with Unreferenced;
 
    function Type_Integral (Node : Node_Id) return Ack.Types.Type_Entity;
    function Type_String return Ack.Types.Type_Entity
@@ -52,6 +56,12 @@ package body Ack.Semantic is
 
    function Type_Boolean return Ack.Types.Type_Entity
    is (Get_Top_Level_Type ("boolean"));
+
+   function Class_Iterable
+     return Ack.Classes.Class_Entity;
+
+   function Type_Iterable
+     return Ack.Types.Type_Entity;
 
    function Property_Feature_Node
      (Node : Node_Id)
@@ -1492,27 +1502,29 @@ package body Ack.Semantic is
          declare
             Expression_Node : constant Node_Id := Expression (Iteration_Node);
             Expression_Type : constant Ack.Types.Type_Entity :=
-                                Ack.Types.New_Class_Type
-                                  (Iteration_Node, Forward_Iterable, False);
+                                Type_Iterable;
          begin
+
             Analyse_Expression
               (Class, Container, Expression_Type, Expression_Node);
 
             declare
                use Ack.Types;
-               Iterable_Type  : constant Type_Entity :=
-                                  Type_Entity
-                                    (Get_Type (Expression_Node));
-               Inherited_Type           : constant access constant
-                 Type_Entity_Record'Class :=
-                   Iterable_Type.Get_Ancestor_Type
-                     (Forward_Iterable);
+               Iterable_Type      : constant Type_Entity :=
+                                      Type_Entity
+                                        (Get_Type (Expression_Node));
+               Inherited_Type     : constant access constant
+                 Type_Entity_Record'Class
+                   := Iterable_Type.Get_Ancestor_Type (Class_Iterable);
+               Generic_Bindings   : constant Natural :=
+                                      Inherited_Type.Generic_Binding_Count;
+               pragma Assert (Generic_Bindings = 1);
                Implicit_Type      : constant Ack.Types.Type_Entity :=
                                       Inherited_Type.Generic_Binding (1);
                Implicit           : constant Ack.Variables.Variable_Entity :=
                                       Ack.Variables.New_Iterator_Entity
                                         (Name       =>
-                                                     Get_Name (Iteration_Node),
+                                           Get_Name (Iteration_Node),
                                          Node       => Iteration_Node,
                                          Local_Type => Implicit_Type);
             begin
@@ -2016,33 +2028,35 @@ package body Ack.Semantic is
       end case;
    end Analyse_Type;
 
-   ----------------------
-   -- Forward_Iterable --
-   ----------------------
+   --------------------
+   -- Class_Iterable --
+   --------------------
 
-   function Forward_Iterable return Ack.Classes.Class_Entity is
-      Container_Name    : constant Name_Id := Get_Name_Id ("containers");
-      Forward_Name      : constant Name_Id := Get_Name_Id ("forward_iterable");
-      Aqua_Entity       : constant Ack.Classes.Class_Entity :=
-                            Ack.Classes.Get_Top_Level_Class ("aqua");
-      Containers_Entity : constant Ack.Classes.Class_Entity :=
-                            (if Aqua_Entity.Contains (Container_Name)
-                             then Ack.Classes.Class_Entity
-                               (Aqua_Entity.Get (Container_Name))
-                             else Load_Class
-                               (Get_Program (Aqua_Entity.Declaration_Node),
-                                Aqua_Entity, Container_Name));
-      Forward_Entity    : constant Ack.Classes.Class_Entity :=
-                            (if Containers_Entity.Contains (Forward_Name)
-                             then Ack.Classes.Class_Entity
-                               (Containers_Entity.Get (Forward_Name))
-                             else Load_Class
-                               (Get_Program
-                                  (Containers_Entity.Declaration_Node),
-                                Containers_Entity, Forward_Name));
+   function Class_Iterable
+      return Ack.Classes.Class_Entity
+   is
+      use type Ack.Classes.Class_Entity;
    begin
-      return Forward_Entity;
-   end Forward_Iterable;
+      if Local_Iterable_Class = null then
+         declare
+            Aqua_Entity     : constant Ack.Classes.Class_Entity :=
+                                Ack.Classes.Get_Top_Level_Class ("aqua");
+            Iterable_Name   : constant String := "iterable";
+         begin
+            if Aqua_Entity.Contains (Iterable_Name) then
+               Local_Iterable_Class :=
+                 Ack.Classes.Class_Entity
+                   (Aqua_Entity.Get (Iterable_Name));
+            else
+               Local_Iterable_Class :=
+                 Load_Class (null, Aqua_Entity,
+                             Get_Name_Id (Iterable_Name));
+            end if;
+         end;
+      end if;
+
+      return Local_Iterable_Class;
+   end Class_Iterable;
 
    ------------------------
    -- Get_Top_Level_Type --
@@ -2219,5 +2233,22 @@ package body Ack.Semantic is
 
       return Local_Integral_Type;
    end Type_Integral;
+
+   -------------------
+   -- Type_Iterable --
+   -------------------
+
+   function Type_Iterable
+      return Ack.Types.Type_Entity
+   is
+      use type Ack.Types.Type_Entity;
+   begin
+      if Local_Iterable_Type = null then
+         Local_Iterable_Type :=
+           Ack.Types.New_Class_Type (No_Node, Class_Iterable, False);
+      end if;
+
+      return Local_Iterable_Type;
+   end Type_Iterable;
 
 end Ack.Semantic;
