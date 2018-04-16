@@ -585,6 +585,17 @@ package body Ack is
       Node_Table (Node).Label := Value;
    end Set_Label;
 
+   ---------------------
+   -- Set_Stack_Check --
+   ---------------------
+
+   procedure Set_Stack_Check
+     (Stack_Check : Boolean)
+   is
+   begin
+      Stack_Check_Enabled := Stack_Check;
+   end Set_Stack_Check;
+
    ---------------
    -- Set_Trace --
    ---------------

@@ -192,6 +192,10 @@ begin
       Ack.Set_Write_Tables (True);
    end if;
 
+   if Command_Line.Ack_Stack_Check then
+      Ack.Set_Stack_Check (True);
+   end if;
+
    Ack.Set_Trace
      (Class_Analysis => Command_Line.Ack_Trace_Class_Analysis);
 
