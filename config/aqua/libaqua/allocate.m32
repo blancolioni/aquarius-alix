@@ -22,8 +22,6 @@ L1:
    
 .export system__memory__mem__allocate
 system__memory__mem__allocate:
-   mov r0, -(sp)
    mov 12(sp), r0
    jsr __allocate
-   mov (sp)+, r0
    rts
