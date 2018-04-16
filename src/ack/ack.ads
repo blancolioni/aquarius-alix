@@ -154,6 +154,9 @@ package Ack is
    procedure Set_Trace
      (Class_Analysis : Boolean);
 
+   procedure Set_Stack_Check
+     (Stack_Check : Boolean);
+
    type Node_Id is private;
 
    No_Node : constant Node_Id;
@@ -1241,5 +1244,6 @@ private
 
    Local_Write_Tables   : Boolean := False;
    Trace_Class_Analysis : Boolean := False;
+   Stack_Check_Enabled  : Boolean := False;
 
 end Ack;

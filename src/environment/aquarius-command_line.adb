@@ -23,6 +23,15 @@ package body Aquarius.Command_Line is
       return Get_Argument ("", "ack-execute-root");
    end Ack_Execute_Root;
 
+   ---------------------
+   -- Ack_Stack_Check --
+   ---------------------
+
+   function Ack_Stack_Check return Boolean is
+   begin
+      return Get_Flag ("", "ack-stack-check");
+   end Ack_Stack_Check;
+
    ------------------------------
    -- Ack_Trace_Class_Analysis --
    ------------------------------
