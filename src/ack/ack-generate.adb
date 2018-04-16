@@ -435,30 +435,22 @@ package body Ack.Generate is
          Generate_Compound (Unit, Compound (Initialization_Node));
       end if;
 
-      if False and then Iteration_Node /= No_Node then
+      if Iteration_Node /= No_Node then
          declare
-            Expression_Node : constant Node_Id := Expression (Iteration_Node);
+            Expression_Node    : constant Node_Id :=
+                                   Expression (Iteration_Node);
+            Iterable_Type      : constant Ack.Types.Type_Entity :=
+                                   Ack.Types.Type_Entity
+                                     (Get_Type (Expression_Node));
+            New_Cursor_Feature : constant Ack.Features.Feature_Entity :=
+                                   Iterable_Type.Feature
+                                     (Get_Name_Id ("new_cursor"));
          begin
             Generate_Expression (Unit, Expression_Node);
-            Unit.Pop_Register ("r0");
-            Unit.Push_Register ("r0");  --  'current' argument to New_Cursor
-            Unit.Push_Register ("r0");  --  sent to op
-            Unit.Pop_Register ("op");
-            Unit.Native_Operation
-              ("get_property aqua__iterable, 0",
-               Input_Stack_Words  => 0,
-               Output_Stack_Words => 0,
-               Changed_Registers  => "pv");
-            Unit.Push_Register ("pv");
-            Unit.Pop_Register ("op");
-            Unit.Native_Operation
-              ("get_property new_cursor, 0",
-               Input_Stack_Words  => 0,
-               Output_Stack_Words => 0,
-               Changed_Registers  => "pv");
-            Unit.Push_Register ("pv");
-            Unit.Indirect_Call;
-            Unit.Drop;
+            New_Cursor_Feature.Push_Entity
+              (Have_Current => True,
+               Context      => Iterable_Type.Class_Context,
+               Unit         => Unit);
          end;
       end if;
 
@@ -543,7 +535,7 @@ package body Ack.Generate is
 
       Unit.Label (Out_Label);
 
-      if False and then Iteration_Node /= No_Node then
+      if Iteration_Node /= No_Node then
          Unit.Drop;
       end if;
 
@@ -691,10 +683,18 @@ package body Ack.Generate is
                                   then Node_Table.Element
                                     (Actual_List_Node).List
                                   else No_List);
+            Check_Stack      : constant Boolean :=
+                                 Stack_Check_Enabled
+                                     and then Actual_List /= No_List;
          begin
             if Element = Last_Element
               or else Actual_List /= No_List
             then
+
+               if Check_Stack then
+                  Unit.Push_Register ("sp");
+               end if;
+
                if Actual_List /= No_List then
                   Apply_Arguments (Actual_List);
                end if;
@@ -702,6 +702,40 @@ package body Ack.Generate is
                for Item of Pending loop
                   Process (Item, Item = Last_Element);
                end loop;
+
+               if Check_Stack then
+                  declare
+                     use Ack.Features;
+                     Label : constant Positive := Unit.Next_Label;
+                     Last  : constant Constant_Entity_Type :=
+                               Constant_Entity_Type
+                                 (Get_Entity
+                                    (Pending.Last_Element));
+                     Has_Result      : constant Boolean :=
+                                         Ack.Features.Is_Feature (Last)
+                                           and then
+                                               (Constant_Feature_Entity
+                                                  (Last).Has_Result
+                                                or else Constant_Feature_Entity
+                                                  (Last)
+                                                .Is_Property);
+                  begin
+                     if Has_Result then
+                        Unit.Pop_Register ("r0");
+                     end if;
+                     Unit.Pop_Register ("r1");
+                     Unit.Native_Operation ("cmp r1, sp");
+                     Unit.Jump (Label, Tagatha.C_Equal);
+                     Unit.Push (0);
+                     Unit.Indirect_Call;
+                     Unit.Label (Label);
+                     if Has_Result then
+                        Unit.Push_Register ("r0");
+                     else
+                        Unit.Native_Operation ("nop");
+                     end if;
+                  end;
+               end if;
 
                Pending.Clear;
             end if;
