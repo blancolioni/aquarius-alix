@@ -1,9 +1,13 @@
 .data
+.export __heap_start
+.export __heap_top
 __heap_start:
    .word 0
    
 __heap_top:
    .word 0
+   
+.code
    
 .export __allocate
 __allocate:
