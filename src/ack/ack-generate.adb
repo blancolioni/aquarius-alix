@@ -429,57 +429,52 @@ package body Ack.Generate is
       Loop_Body_Node      : constant Node_Id := Loop_Body (Loop_Node);
       Top_Label           : constant Positive := Unit.Next_Label;
       Out_Label           : constant Positive := Unit.Next_Label;
+
+      Has_Iterator        : constant Boolean := Iteration_Node /= No_Node;
+      It_Expression       : Node_Id := No_Node;
+      Iterable_Type       : Ack.Types.Type_Entity;
+      Iterator_Type       : Ack.Types.Type_Entity;
+      New_Cursor_Feature  : Ack.Features.Feature_Entity;
+      After_Feature       : Ack.Features.Feature_Entity;
+
    begin
+
+      if Has_Iterator then
+         It_Expression := Expression (Iteration_Node);
+         Iterable_Type := Ack.Types.Type_Entity (Get_Type (It_Expression));
+         New_Cursor_Feature :=
+           Iterable_Type.Feature (Get_Name_Id ("new_cursor"));
+         Iterator_Type :=
+           Ack.Types.Type_Entity
+             (New_Cursor_Feature.Get_Type);
+         After_Feature :=
+           Iterator_Type.Feature (Get_Name_Id ("after"));
+      end if;
 
       if Initialization_Node /= No_Node then
          Generate_Compound (Unit, Compound (Initialization_Node));
       end if;
 
-      if Iteration_Node /= No_Node then
-         declare
-            Expression_Node    : constant Node_Id :=
-                                   Expression (Iteration_Node);
-            Iterable_Type      : constant Ack.Types.Type_Entity :=
-                                   Ack.Types.Type_Entity
-                                     (Get_Type (Expression_Node));
-            New_Cursor_Feature : constant Ack.Features.Feature_Entity :=
-                                   Iterable_Type.Feature
-                                     (Get_Name_Id ("new_cursor"));
-         begin
-            Generate_Expression (Unit, Expression_Node);
-            New_Cursor_Feature.Push_Entity
-              (Have_Current => True,
-               Context      => Iterable_Type.Class_Context,
-               Unit         => Unit);
-         end;
-      end if;
-
-      if False and then Iteration_Node /= No_Node then
-         Unit.Push_Register ("r0");
-         Unit.Pop_Register ("op");
-         Unit.Push_Register ("op");
-         Unit.Push_Register ("op");
-         Unit.Native_Operation
-           ("get_property aqua__iteration_cursor, 0",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-         Unit.Push_Register ("pv");
-         Unit.Pop_Register ("op");
-         Unit.Native_Operation
-           ("get_property after, 0",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-         Unit.Push_Register ("pv");
-         Unit.Indirect_Call;
-         Unit.Drop;
-         Unit.Push_Register ("r0");
-         Unit.Operate (Tagatha.Op_Test);
-         Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
+      if Has_Iterator then
+         Generate_Expression (Unit, It_Expression);
+         New_Cursor_Feature.Push_Entity
+           (Have_Current => True,
+            Context      => Iterable_Type.Class_Context,
+            Unit         => Unit);
       end if;
 
       Unit.Label (Top_Label);
+
+      if Has_Iterator then
+         Unit.Pop_Register ("op");
+         Unit.Push_Register ("op");
+         Unit.Push_Register ("op");
+         After_Feature.Push_Entity
+           (Have_Current => True,
+            Context      => Iterator_Type.Class_Context,
+            Unit         => Unit);
+         Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
+      end if;
 
       if Exit_Condition_Node /= No_Node then
          Generate_Expression (Unit, Expression (Exit_Condition_Node));

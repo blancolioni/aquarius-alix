@@ -27,9 +27,10 @@ package Ack.Variables is
       return Variable_Entity;
 
    function New_Iterator_Entity
-     (Name       : Name_Id;
-      Node       : Node_Id;
-      Local_Type : not null access Root_Entity_Type'Class)
+     (Name           : Name_Id;
+      Node           : Node_Id;
+      Iteration_Type : not null access Root_Entity_Type'Class;
+      Local_Type     : not null access Root_Entity_Type'Class)
       return Variable_Entity;
 
    function Is_Variable
@@ -43,9 +44,10 @@ private
    type Variable_Entity_Record is
      new Root_Entity_Type with
       record
-         Kind     : Variable_Kind;
-         Offset   : Positive;
-         Iterator : Boolean := False;
+         Kind      : Variable_Kind;
+         Offset    : Positive;
+         Iterator  : Boolean := False;
+         Iteration : Entity_Type;
       end record;
 
    overriding function Class_Context

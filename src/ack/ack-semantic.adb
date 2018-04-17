@@ -23,9 +23,9 @@ with Ack.Errors;
 
 package body Ack.Semantic is
 
-   Local_Integral_Type  : Ack.Types.Type_Entity := null;
-   Local_Iterable_Type  : Ack.Types.Type_Entity := null;
-   Local_Iterable_Class : Ack.Classes.Class_Entity := null;
+   Local_Integral_Type         : Ack.Types.Type_Entity := null;
+   Local_Iterable_Type         : Ack.Types.Type_Entity := null;
+   Local_Iterable_Class        : Ack.Classes.Class_Entity := null;
 
    function Load_Class
      (Referrer : Aquarius.Programs.Program_Tree;
@@ -1516,6 +1516,13 @@ package body Ack.Semantic is
                Inherited_Type     : constant access constant
                  Type_Entity_Record'Class
                    := Iterable_Type.Get_Ancestor_Type (Class_Iterable);
+
+               New_Cursor_Feature : constant Ack.Features.Feature_Entity :=
+                                      Iterable_Type.Feature
+                                        (Get_Name_Id ("new_cursor"));
+               Iterator_Type      : constant Ack.Types.Type_Entity :=
+                                      Ack.Types.Type_Entity
+                                        (New_Cursor_Feature.Get_Type);
                Generic_Bindings   : constant Natural :=
                                       Inherited_Type.Generic_Binding_Count;
                pragma Assert (Generic_Bindings = 1);
@@ -1526,7 +1533,8 @@ package body Ack.Semantic is
                                         (Name       =>
                                            Get_Name (Iteration_Node),
                                          Node       => Iteration_Node,
-                                         Local_Type => Implicit_Type);
+                                         Iteration_Type => Iterator_Type,
+                                         Local_Type     => Implicit_Type);
             begin
                Implicit.Set_Attached;
                Set_Entity (Iteration_Node, Implicit);
