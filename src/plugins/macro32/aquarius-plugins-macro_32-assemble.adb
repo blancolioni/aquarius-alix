@@ -274,6 +274,12 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                  "cannot append word: " & Arg.Chosen_Tree.Name;
             end if;
          end loop;
+      elsif Name = "data" then
+         Assembly.Data_Segment;
+      elsif Name = "text" then
+         Assembly.Text_Segment;
+      elsif Name = "code" then
+         Assembly.Code_Segment;
       elsif Name = "source_file" then
          Assembly.Set_Source_File
            (Arguments (1).Chosen_Tree.Text);
@@ -460,46 +466,6 @@ package body Aquarius.Plugins.Macro_32.Assemble is
         (Aqua.Architecture.Encode
            (Aqua.Architecture.Aqua_Instruction'Value ("A_" & Mnemonic)));
    end After_No_Operand;
-
-   --------------------
-   -- After_Property --
-   --------------------
-
-   procedure After_Property
-     (Target : not null access Aquarius.Actions.Actionable'Class)
-   is
-      use Aquarius.Programs;
-      Op : constant Program_Tree := Program_Tree (Target);
-      Mnemonic       : constant String :=
-                         Op.Program_Child
-                           ("property_instruction").Concatenate_Children;
-      Operand_Tree   : constant Program_Tree :=
-                         Op.Program_Child ("operand").Chosen_Tree;
-      Argument_Tree  : constant Program_Tree :=
-                         Op.Program_Child ("integer");
-      Argument_Count : constant Natural :=
-                         (if Argument_Tree /= null
-                          then Natural'Value
-                            (Argument_Tree.Text)
-                          else 0);
-      Assembly       : constant Aqua.Assembler.Assembly :=
-                         Assembly_Object
-                           (Op.Property
-                              (Global_Plugin.Assembly)).Assembly;
-   begin
-      Assembly.Append_Octet
-        (Aqua.Architecture.Encode
-           (Aqua.Architecture.Aqua_Instruction'Value
-                ("A_" & Mnemonic),
-            Immediate => Aqua.Octet (Argument_Count)));
-      declare
-         Property_Name  : constant Aqua.Word :=
-                            Assembly.Reference_Property_Name
-                              (Operand_Tree.Concatenate_Children);
-      begin
-         Assembly.Append_Word (Property_Name);
-      end;
-   end After_Property;
 
    --------------------------
    -- After_Single_Operand --
