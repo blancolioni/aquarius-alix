@@ -27,9 +27,6 @@ package Aquarius.Plugins.Macro_32.Assemble is
    procedure After_Triple_Operand
      (Target : not null access Aquarius.Actions.Actionable'Class);
 
-   procedure After_Property
-     (Target : not null access Aquarius.Actions.Actionable'Class);
-
    procedure After_Iterator
      (Target : not null access Aquarius.Actions.Actionable'Class);
 
