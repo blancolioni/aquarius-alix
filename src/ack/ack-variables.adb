@@ -1,3 +1,7 @@
+with Ack.Classes;
+with Ack.Features;
+with Ack.Types;
+
 package body Ack.Variables is
 
    -----------------
@@ -45,9 +49,10 @@ package body Ack.Variables is
    -------------------------
 
    function New_Iterator_Entity
-     (Name       : Name_Id;
-      Node       : Node_Id;
-      Local_Type : not null access Root_Entity_Type'Class)
+     (Name           : Name_Id;
+      Node           : Node_Id;
+      Iteration_Type : not null access Root_Entity_Type'Class;
+      Local_Type     : not null access Root_Entity_Type'Class)
       return Variable_Entity
    is
    begin
@@ -58,6 +63,7 @@ package body Ack.Variables is
          Result.Kind := Local;
          Result.Value_Type := Entity_Type (Local_Type);
          Result.Iterator := True;
+         Result.Iteration := Entity_Type (Iteration_Type);
       end return;
    end New_Iterator_Entity;
 
@@ -122,25 +128,21 @@ package body Ack.Variables is
               (Tagatha.Local_Offset (Variable.Offset),
                Tagatha.Default_Size);
 
-            if False and then Variable.Iterator then
-               Unit.Pop_Register ("op");
-               Unit.Push_Register ("op");
-               Unit.Native_Operation
-                 ("get_property aqua__iteration_cursor, 0",
-                  Input_Stack_Words  => 0,
-                  Output_Stack_Words => 0,
-                  Changed_Registers  => "pv");
-               Unit.Push_Register ("pv");
-               Unit.Pop_Register ("op");
-               Unit.Native_Operation
-                 ("get_property element, 0",
-                  Input_Stack_Words  => 0,
-                  Output_Stack_Words => 0,
-                  Changed_Registers  => "pv");
-               Unit.Push_Register ("pv");
-               Unit.Indirect_Call;
-               Unit.Drop;
-               Unit.Push_Register ("r0");
+            if Variable.Iterator then
+               declare
+                  Class : constant Ack.Classes.Class_Entity :=
+                            Ack.Classes.Class_Entity
+                              (Ack.Types.Type_Entity
+                                 (Variable.Iteration).Class);
+                  Feature : constant Ack.Features.Feature_Entity :=
+                              Class.Feature
+                                (Get_Name_Id ("element"));
+               begin
+                  Feature.Push_Entity
+                    (Have_Current => True,
+                     Context      => Class,
+                     Unit         => Unit);
+               end;
             end if;
 
          when Argument =>
