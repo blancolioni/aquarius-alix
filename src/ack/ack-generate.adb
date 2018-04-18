@@ -802,13 +802,6 @@ package body Ack.Generate is
    is
       Entity : constant Entity_Type := Get_Entity (Node);
    begin
-      Ada.Text_IO.Put_Line
-        ("set value: value type = " & Value_Type.Description);
-      Ada.Text_IO.Put_Line
-        ("set value: entity = " & Entity.Description);
-      Ada.Text_IO.Put_Line
-        ("set value: entity type  = " & Entity.Get_Type.Description);
-
       if Value_Type.Standard_Name = "none" then
          Entity.Pop_Entity (Entity.Get_Type.Class_Context, Unit);
       else
