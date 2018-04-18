@@ -46,6 +46,18 @@ package body Ack.Types is
       end if;
    end Check_Bound;
 
+   ---------------------
+   -- Concrete_Entity --
+   ---------------------
+
+   overriding function Concrete_Entity
+     (Entity : not null access Type_Entity_Record)
+      return Entity_Type
+   is
+   begin
+      return Entity_Type (Entity);
+   end Concrete_Entity;
+
    -----------------
    -- Conforms_To --
    -----------------
@@ -273,6 +285,7 @@ package body Ack.Types is
                            return Entity_Type (Binding.Actual);
                         end if;
                      end loop;
+
                      return Entity;
                   end Instantiate_Entity;
 
@@ -425,7 +438,32 @@ package body Ack.Types is
       return Entity_Type
    is
    begin
-      return Type_Instantiation (Entity_Type (Entity));
+      return Result : Entity_Type do
+         if Entity.Generic_Formal then
+            Result := Type_Instantiation (Entity_Type (Entity));
+         elsif Entity.Class.Generic_Formal_Count > 0 then
+            declare
+               Actuals : Array_Of_Types
+                 (1 .. Entity.Class.Generic_Formal_Count);
+            begin
+               for I in Actuals'Range loop
+                  Actuals (I) :=
+                    Type_Entity
+                      (Entity.Generic_Binding (I)
+                       .Instantiate (Type_Instantiation));
+               end loop;
+               Result :=
+                 Entity_Type
+                   (Instantiate_Generic_Class
+                      (Node            => Entity.Declaration_Node,
+                       Generic_Class   => Entity.Class,
+                       Generic_Actuals => Actuals,
+                       Detachable      => Entity.Detachable));
+            end;
+         else
+            Result := Entity_Type (Entity);
+         end if;
+      end return;
    end Instantiate;
 
    ------------------------------

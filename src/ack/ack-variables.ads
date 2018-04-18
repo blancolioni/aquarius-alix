@@ -63,6 +63,11 @@ private
         function (Generic_Type : Entity_Type) return Entity_Type)
       return Entity_Type;
 
+   overriding function Concrete_Entity
+     (Variable : not null access Variable_Entity_Record)
+      return Entity_Type
+   is (Entity_Type (Variable));
+
    overriding procedure Push_Entity
      (Variable      : Variable_Entity_Record;
       Have_Current  : Boolean;
@@ -71,8 +76,9 @@ private
      with Pre => not Have_Current;
 
    overriding procedure Pop_Entity
-     (Variable : Variable_Entity_Record;
-      Unit     : in out Tagatha.Units.Tagatha_Unit);
+     (Variable   : Variable_Entity_Record;
+      Value_Type : not null access constant Root_Entity_Type'Class;
+      Unit       : in out Tagatha.Units.Tagatha_Unit);
 
    function Is_Variable
      (Entity : not null access Root_Entity_Type'Class)

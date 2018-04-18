@@ -270,6 +270,11 @@ private
         function (Generic_Type : Entity_Type) return Entity_Type)
       return Entity_Type;
 
+   overriding function Concrete_Entity
+     (Feature : not null access Feature_Entity_Record)
+      return Entity_Type
+   is (Entity_Type (Feature));
+
    overriding function Argument_Count
      (Entity : Feature_Entity_Record)
       return Natural
@@ -296,8 +301,9 @@ private
       Unit          : in out Tagatha.Units.Tagatha_Unit);
 
    overriding procedure Pop_Entity
-     (Feature : Feature_Entity_Record;
-      Unit    : in out Tagatha.Units.Tagatha_Unit);
+     (Feature    : Feature_Entity_Record;
+      Value_Type : not null access constant Root_Entity_Type'Class;
+      Unit       : in out Tagatha.Units.Tagatha_Unit);
 
    procedure Check_Precondition
      (Feature       : Feature_Entity_Record'Class;

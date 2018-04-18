@@ -1,4 +1,4 @@
-class 
+class
    Test
 inherit
    Aqua.Text_IO
@@ -37,20 +37,24 @@ feature
          Number_Of_Tests : Integer
          Passed_Tests    : Integer
          Failed_Tests    : Integer
+         Test_Value      : Unit_Test
+         Test_Name       : String
       do
          Put_Line ("Initialising ...")
          Create_Test_List
          Put_Line ("Running tests ...")
          across Test_List as T loop
             Number_Of_Tests := Number_Of_Tests + 1
-            Put (T.Name)
+            Test_Value := T.Element
+            Test_Name := Test_Value.Name
+            Put (Test_Name)
             Set_Col (30)
-            T.Execute
-            if T.Success then
+            Test_Value.Execute
+            if Test_Value.Success then
                Put_Line ("PASS")
                Passed_Tests := Passed_Tests + 1
             else
-               Put_Line ("FAIL: " & T.Fail_Message)
+               Put_Line ("FAIL: " & Test_Value.Fail_Message)
                Failed_Tests := Failed_Tests + 1
             end
          end
