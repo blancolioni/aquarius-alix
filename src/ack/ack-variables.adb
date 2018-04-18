@@ -1,7 +1,6 @@
 with Ack.Classes;
 with Ack.Features;
 with Ack.Types;
-with Ada.Text_IO;
 
 package body Ack.Variables is
 
@@ -99,23 +98,14 @@ package body Ack.Variables is
       Unit       : in out Tagatha.Units.Tagatha_Unit)
    is
       use type Ack.Types.Constant_Type_Entity;
-      Val_Type : constant Ack.Types.Constant_Type_Entity :=
-                   Ack.Types.Constant_Type_Entity (Value_Type);
       Var_Type : constant Ack.Types.Constant_Type_Entity :=
                    Ack.Types.Constant_Type_Entity
                      (Variable.Get_Type);
    begin
 
-      if not Val_Type.Expanded
-        and then Val_Type /= Var_Type
+      if not Value_Type.Expanded
+        and then Var_Type.Proper_Ancestor_Of (Value_Type)
       then
-         Ada.Text_IO.Put_Line
-           ("pop: " & Variable.Declared_Name
-            & ": adjusting value from "
-            & Val_Type.Qualified_Name
-            & " to "
-            & Var_Type.Qualified_Name);
-
          Unit.Pop_Register ("op");
          Unit.Push_Register ("op");
          Unit.Push_Register ("op");
@@ -123,7 +113,11 @@ package body Ack.Variables is
 
          Push_Offset
            (Unit,
-            Val_Type.Class.Ancestor_Table_Offset (Var_Type.Class));
+            Ack.Classes.Constant_Class_Entity
+              (Value_Type.Class_Context)
+            .Ancestor_Table_Offset
+              (Ack.Classes.Constant_Class_Entity
+                   (Var_Type.Class_Context)));
          Unit.Operate (Tagatha.Op_Add);
          Unit.Dereference;
          Unit.Operate (Tagatha.Op_Add);
