@@ -172,6 +172,11 @@ private
       Other     : not null access constant Root_Entity_Type'Class)
       return Boolean;
 
+   overriding function Proper_Ancestor_Of
+     (Ancestor : not null access constant Type_Entity_Record;
+      Other     : not null access constant Root_Entity_Type'Class)
+      return Boolean;
+
    overriding function Description
      (Typ       : Type_Entity_Record)
       return String;

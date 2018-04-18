@@ -297,6 +297,11 @@ package Ack is
       Other : not null access constant Root_Entity_Type'Class)
       return Boolean;
 
+   function Proper_Ancestor_Of
+     (Ancestor   : not null access constant Root_Entity_Type;
+      Descendent : not null access constant Root_Entity_Type'Class)
+      return Boolean;
+
    function Attached
      (Entity : not null access constant Root_Entity_Type'Class)
       return Boolean;
@@ -1238,6 +1243,12 @@ private
      (Entity : not null access constant Root_Entity_Type'Class)
       return Boolean
    is (Entity.Attached);
+
+   function Proper_Ancestor_Of
+     (Ancestor   : not null access constant Root_Entity_Type;
+      Descendent : not null access constant Root_Entity_Type'Class)
+      return Boolean
+   is (False);
 
    procedure Create
      (Entity             : in out Root_Entity_Type'Class;
