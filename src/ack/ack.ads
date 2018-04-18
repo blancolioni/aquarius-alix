@@ -287,6 +287,11 @@ package Ack is
       return Entity_Type
    is (Entity_Type (Entity));
 
+   function Expanded
+     (Entity : Root_Entity_Type)
+      return Boolean
+      is abstract;
+
    function Conforms_To
      (Class : not null access constant Root_Entity_Type;
       Other : not null access constant Root_Entity_Type'Class)

@@ -36,8 +36,8 @@ package Ack.Types is
      (Typ : Type_Entity_Record'Class)
       return access Ack.Classes.Class_Entity_Record'Class;
 
-   function Expanded
-     (Typ : Type_Entity_Record'Class)
+   overriding function Expanded
+     (Typ : Type_Entity_Record)
       return Boolean;
 
    overriding function Deferred

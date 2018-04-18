@@ -43,6 +43,11 @@ package Ack.Features is
      (Feature : Feature_Entity_Record)
       return Boolean;
 
+   overriding function Expanded
+     (Feature : Feature_Entity_Record)
+      return Boolean
+   is (False);
+
    function Is_Property
      (Feature : Feature_Entity_Record'Class)
       return Boolean;

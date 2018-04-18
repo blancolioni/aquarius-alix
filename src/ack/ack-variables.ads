@@ -8,6 +8,11 @@ package Ack.Variables is
       return Boolean
    is (False);
 
+   overriding function Expanded
+     (Entity : Variable_Entity_Record)
+      return Boolean
+   is (Entity.Get_Type.Expanded);
+
    procedure Set_Offset
      (Variable : in out Variable_Entity_Record'Class;
       Offset   : Positive);

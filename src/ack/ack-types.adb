@@ -138,8 +138,8 @@ package body Ack.Types is
    -- Expanded --
    --------------
 
-   function Expanded
-     (Typ : Type_Entity_Record'Class)
+   overriding function Expanded
+     (Typ : Type_Entity_Record)
       return Boolean
    is
       use type Ack.Classes.Class_Entity;
