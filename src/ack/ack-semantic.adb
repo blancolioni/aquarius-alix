@@ -334,6 +334,7 @@ package body Ack.Semantic is
             Analyse_Expression (Class, Container, Entity.Get_Type,
                                 Expression (Assignment));
             Set_Entity (Variable (Assignment), Entity);
+            Set_Context (Variable (Assignment), Container);
          end;
       else
          Error (Variable (Assignment), E_Undeclared_Name);
@@ -1885,6 +1886,8 @@ package body Ack.Semantic is
          end if;
 
       end if;
+
+      Set_Context (Precursor, Container);
 
    end Analyse_Precursor;
 

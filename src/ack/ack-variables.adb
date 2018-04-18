@@ -94,9 +94,11 @@ package body Ack.Variables is
 
    overriding procedure Pop_Entity
      (Variable   : Variable_Entity_Record;
+      Context    : not null access constant Root_Entity_Type'Class;
       Value_Type : not null access constant Root_Entity_Type'Class;
       Unit       : in out Tagatha.Units.Tagatha_Unit)
    is
+      pragma Unreferenced (Context);
       use type Ack.Types.Constant_Type_Entity;
       Var_Type : constant Ack.Types.Constant_Type_Entity :=
                    Ack.Types.Constant_Type_Entity

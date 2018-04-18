@@ -328,7 +328,8 @@ package body Ack.Generate is
       end if;
 
       Unit.Push_Register ("agg");
-      Get_Entity (Creation).Pop_Entity (Creation_Type, Unit);
+      Get_Entity (Creation).Pop_Entity
+        (Get_Context (Creation).Class_Context, Creation_Type, Unit);
 
       Unit.Pop_Register ("agg");
 
@@ -766,9 +767,18 @@ package body Ack.Generate is
                                   .Is_Property);
       begin
          if Expanded and then not Has_Result then
-            Previous_Entity.Pop_Entity (Current_Context, Unit);
+            Previous_Entity.Pop_Entity
+              (Get_Context (Precursor).Class_Context, Current_Context, Unit);
          end if;
       end;
+
+   exception
+      when others =>
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            Get_Program (Precursor).Show_Location
+            & ": generate precursor failed");
+         raise;
 
    end Generate_Precursor;
 
@@ -803,9 +813,13 @@ package body Ack.Generate is
       Entity : constant Entity_Type := Get_Entity (Node);
    begin
       if Value_Type.Standard_Name = "none" then
-         Entity.Pop_Entity (Entity.Get_Type.Class_Context, Unit);
+         Entity.Pop_Entity
+           (Get_Context (Node).Class_Context,
+            Entity.Get_Type.Class_Context, Unit);
       else
-         Entity.Pop_Entity (Value_Type, Unit);
+         Entity.Pop_Entity
+           (Get_Context (Node).Class_Context,
+            Value_Type, Unit);
       end if;
 
    exception

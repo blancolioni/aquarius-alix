@@ -582,10 +582,13 @@ package body Ack.Features is
 
    overriding procedure Pop_Entity
      (Feature    : Feature_Entity_Record;
+      Context    : not null access constant Root_Entity_Type'Class;
       Value_Type : not null access constant Root_Entity_Type'Class;
       Unit       : in out Tagatha.Units.Tagatha_Unit)
    is
       pragma Assert (Feature.Property);
+      Current        : constant Ack.Classes.Constant_Class_Entity :=
+                         Ack.Classes.Constant_Class_Entity (Context);
    begin
 --        Ada.Text_IO.Put_Line
 --          ("pop entity: " & Feature.Active_Class.Qualified_Name
@@ -619,6 +622,23 @@ package body Ack.Features is
          end if;
 
          Unit.Push_Argument (1);
+
+         if Feature.Definition_Class /= Current
+           and then not Current.Expanded
+           and then not Feature.Intrinsic
+         then
+            Unit.Pop_Register ("op");
+            Unit.Push_Register ("op");
+            Unit.Push_Register ("op");
+            Unit.Dereference;
+            Push_Offset
+              (Unit,
+               Current.Ancestor_Table_Offset (Feature.Definition_Class));
+            Unit.Operate (Tagatha.Op_Add);
+            Unit.Dereference;
+            Unit.Operate (Tagatha.Op_Add);
+         end if;
+
          Push_Offset (Unit, Feature.Property_Offset);
          Unit.Operate (Tagatha.Op_Add);
          Unit.Pop_Register ("op");
