@@ -599,6 +599,25 @@ package body Ack.Types is
       end return;
    end New_Generic_Formal_Type;
 
+   ------------------------
+   -- Proper_Ancestor_Of --
+   ------------------------
+
+   overriding function Proper_Ancestor_Of
+     (Ancestor  : not null access constant Type_Entity_Record;
+      Other     : not null access constant Root_Entity_Type'Class)
+      return Boolean
+   is
+   begin
+      if Other.all not in Type_Entity_Record'Class
+        or else Ancestor.Qualified_Name = Other.Qualified_Name
+      then
+         return False;
+      end if;
+
+      return Other.Conforms_To (Ancestor);
+   end Proper_Ancestor_Of;
+
    -------------------------------
    -- Update_Type_Instantiation --
    -------------------------------
