@@ -7,7 +7,6 @@ with Ack.Generate;
 with Ack.Types;
 
 with Ack.Generate.Primitives;
-with Ada.Text_IO;
 
 package body Ack.Features is
 
@@ -597,14 +596,7 @@ package body Ack.Features is
       if Feature.Active_Class.Expanded then
          Unit.Pop_Argument (1);
       else
-         if Feature.Get_Type /= Value_Type then
-            Ada.Text_IO.Put_Line
-              ("pop: " & Feature.Qualified_Name
-               & ": adjusting value from "
-               & Value_Type.Description
-               & " to "
-               & Feature.Get_Type.Description);
-
+         if Feature.Get_Type.Proper_Ancestor_Of (Value_Type) then
             Unit.Pop_Register ("op");
             Unit.Push_Register ("op");
             Unit.Push_Register ("op");
