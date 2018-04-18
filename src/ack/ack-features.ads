@@ -1,5 +1,6 @@
 with Tagatha.Units;
 
+private with Ada.Containers.Doubly_Linked_Lists;
 private with Ada.Containers.Vectors;
 
 limited with Ack.Classes;
@@ -208,6 +209,9 @@ private
    package Old_Value_Vectors is
      new Ada.Containers.Vectors (Positive, Node_Id);
 
+   package Feature_Lists is
+     new Ada.Containers.Doubly_Linked_Lists (Feature_Entity);
+
    type Assertion_Record is
       record
          Tag  : Name_Id;
@@ -246,6 +250,7 @@ private
          Olds                 : Old_Value_Vectors.Vector;
          Preconditions        : Assertion_Record_Lists.List;
          Postconditions       : Assertion_Record_Lists.List;
+         Instantiated         : Feature_Lists.List;
          Routine_Node         : Node_Id := No_Node;
          Explicit_Value_Node  : Node_Id := No_Node;
          Rescue_Node          : Node_Id := No_Node;

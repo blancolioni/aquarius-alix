@@ -525,6 +525,8 @@ package body Ack.Features is
              (Arg.Instantiate (Type_Instantiation));
       end loop;
 
+      Entity.Instantiated.Append (Instan);
+
       return Entity_Type (Instan);
 
    end Instantiate;
@@ -570,6 +572,7 @@ package body Ack.Features is
          Feature.Effective_Class := Class;
          Feature.Definition_Class := Class;
          Feature.Property := Property;
+         Feature.Property_Offset := Word_Offset'Last;
       end return;
    end New_Feature;
 
@@ -954,6 +957,9 @@ package body Ack.Features is
    is
    begin
       Feature.Property_Offset := Offset;
+      for Instan of Feature.Instantiated loop
+         Instan.Set_Property_Offset (Offset);
+      end loop;
    end Set_Property_Offset;
 
    -------------------
