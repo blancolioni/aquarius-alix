@@ -163,6 +163,10 @@ private
         function (Generic_Type : Entity_Type) return Entity_Type)
       return Entity_Type;
 
+   overriding function Concrete_Entity
+     (Entity : not null access Type_Entity_Record)
+      return Entity_Type;
+
    overriding function Conforms_To
      (Conformer : not null access constant Type_Entity_Record;
       Other     : not null access constant Root_Entity_Type'Class)

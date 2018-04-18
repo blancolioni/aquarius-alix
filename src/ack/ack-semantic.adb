@@ -1533,9 +1533,28 @@ package body Ack.Semantic is
                                         (Name       =>
                                            Get_Name (Iteration_Node),
                                          Node       => Iteration_Node,
-                                         Iteration_Type => Iterator_Type,
+                                         Iteration_Type =>
+                                           Iterator_Type,
                                          Local_Type     => Implicit_Type);
             begin
+               Ada.Text_IO.Put_Line
+                 (Get_Program (Implicit.Declaration_Node).Show_Location
+                  & ": Iterable type: "
+                  & Iterable_Type.Description);
+               Ada.Text_IO.Put_Line
+                 (Get_Program (Implicit.Declaration_Node).Show_Location
+                  & ": Inherited type: "
+                  & Inherited_Type.Description);
+               Ada.Text_IO.Put_Line
+                 (Get_Program (Implicit.Declaration_Node).Show_Location
+                  & ": Iterator type: "
+                  & Iterator_Type.Description);
+               Ada.Text_IO.Put_Line
+                 (Get_Program (Implicit.Declaration_Node).Show_Location
+                  & ": "
+                  & Implicit.Declared_Name
+                  & " : "
+                  & Implicit.Get_Type.Description);
                Implicit.Set_Attached;
                Set_Entity (Iteration_Node, Implicit);
                Set_Implicit_Entity (Iteration_Node);

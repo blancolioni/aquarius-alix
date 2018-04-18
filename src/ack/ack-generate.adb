@@ -60,8 +60,9 @@ package body Ack.Generate is
       Retry : Node_Id);
 
    procedure Generate_Set_Value
-     (Unit    : in out Tagatha.Units.Tagatha_Unit;
-      Node    : Node_Id);
+     (Unit       : in out Tagatha.Units.Tagatha_Unit;
+      Value_Type : not null access constant Root_Entity_Type'Class;
+      Node       : Node_Id);
 
    --------------------------------
    -- Generate_Class_Declaration --
@@ -190,7 +191,9 @@ package body Ack.Generate is
          case N_Instruction (Kind (Instruction)) is
             when N_Assignment =>
                Generate_Expression (Unit, Expression (Instruction));
-               Generate_Set_Value (Unit, Variable (Instruction));
+               Generate_Set_Value
+                 (Unit, Get_Type (Expression (Instruction)),
+                  Variable (Instruction));
             when N_Creation_Instruction =>
                Generate_Creation (Unit, Instruction);
             when N_Conditional =>
@@ -288,10 +291,7 @@ package body Ack.Generate is
                               else Get_Entity (Creation).Get_Type);
    begin
 
-      Unit.Call
-        (Creation_Type.Link_Name & "$create");
-      Unit.Push_Register ("r0");
-      Get_Entity (Creation).Pop_Entity (Unit);
+      Unit.Push_Register ("agg");
 
       if Explicit_Call_Node in Real_Node_Id then
          declare
@@ -312,17 +312,25 @@ package body Ack.Generate is
                Generate_Expression (Unit, Item);
             end loop;
          end;
+      end if;
 
-         Get_Entity (Creation).Push_Entity
-           (Have_Current => False,
-            Context      => Get_Context (Creation).Class_Context,
-            Unit         => Unit);
+      Unit.Call
+        (Creation_Type.Link_Name & "$create");
+      Unit.Push_Register ("r0");
+      Unit.Pop_Register ("agg");
 
+      if Explicit_Call_Node in Real_Node_Id then
+         Unit.Push_Register ("r0");
          Get_Entity (Explicit_Call_Node).Push_Entity
            (Have_Current => True,
             Context      => Creation_Type.Class_Context,
             Unit         => Unit);
       end if;
+
+      Unit.Push_Register ("agg");
+      Get_Entity (Creation).Pop_Entity (Creation_Type.Class_Context, Unit);
+
+      Unit.Pop_Register ("agg");
 
    exception
       when others =>
@@ -758,7 +766,7 @@ package body Ack.Generate is
                                   .Is_Property);
       begin
          if Expanded and then not Has_Result then
-            Previous_Entity.Pop_Entity (Unit);
+            Previous_Entity.Pop_Entity (Current_Context, Unit);
          end if;
       end;
 
@@ -788,12 +796,31 @@ package body Ack.Generate is
    ------------------------
 
    procedure Generate_Set_Value
-     (Unit    : in out Tagatha.Units.Tagatha_Unit;
-      Node    : Node_Id)
+     (Unit       : in out Tagatha.Units.Tagatha_Unit;
+      Value_Type : not null access constant Root_Entity_Type'Class;
+      Node       : Node_Id)
    is
       Entity : constant Entity_Type := Get_Entity (Node);
    begin
-      Entity.Pop_Entity (Unit);
+      Ada.Text_IO.Put_Line
+        ("set value: value type = " & Value_Type.Description);
+      Ada.Text_IO.Put_Line
+        ("set value: entity = " & Entity.Description);
+      Ada.Text_IO.Put_Line
+        ("set value: entity type  = " & Entity.Get_Type.Description);
+
+      if Value_Type.Standard_Name = "none" then
+         Entity.Pop_Entity (Entity.Get_Type.Class_Context, Unit);
+      else
+         Entity.Pop_Entity (Value_Type, Unit);
+      end if;
+
+   exception
+      when others =>
+         Ada.Text_IO.Put_Line
+           (Get_Program (Node).Show_Location
+            & ": pop entity " & Entity.Qualified_Name & " failed");
+         raise;
    end Generate_Set_Value;
 
    -------------------------------

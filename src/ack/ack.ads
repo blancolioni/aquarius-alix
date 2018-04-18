@@ -282,6 +282,11 @@ package Ack is
      (Entity : in out Root_Entity_Type'Class;
       Level  : Assertion_Monitoring_Level);
 
+   function Concrete_Entity
+     (Entity : not null access Root_Entity_Type)
+      return Entity_Type
+   is (Entity_Type (Entity));
+
    function Conforms_To
      (Class : not null access constant Root_Entity_Type;
       Other : not null access constant Root_Entity_Type'Class)
@@ -354,8 +359,9 @@ package Ack is
    is null;
 
    procedure Pop_Entity
-     (Entity : Root_Entity_Type;
-      Unit   : in out Tagatha.Units.Tagatha_Unit)
+     (Entity     : Root_Entity_Type;
+      Value_Type : not null access constant Root_Entity_Type'Class;
+      Unit       : in out Tagatha.Units.Tagatha_Unit)
    is null;
 
    procedure Allocate

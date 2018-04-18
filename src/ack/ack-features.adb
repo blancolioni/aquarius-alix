@@ -7,6 +7,7 @@ with Ack.Generate;
 with Ack.Types;
 
 with Ack.Generate.Primitives;
+with Ada.Text_IO;
 
 package body Ack.Features is
 
@@ -581,8 +582,9 @@ package body Ack.Features is
    ----------------
 
    overriding procedure Pop_Entity
-     (Feature : Feature_Entity_Record;
-      Unit    : in out Tagatha.Units.Tagatha_Unit)
+     (Feature    : Feature_Entity_Record;
+      Value_Type : not null access constant Root_Entity_Type'Class;
+      Unit       : in out Tagatha.Units.Tagatha_Unit)
    is
       pragma Assert (Feature.Property);
    begin
@@ -595,6 +597,35 @@ package body Ack.Features is
       if Feature.Active_Class.Expanded then
          Unit.Pop_Argument (1);
       else
+         if Feature.Get_Type /= Value_Type then
+            Ada.Text_IO.Put_Line
+              ("pop: " & Feature.Qualified_Name
+               & ": adjusting value from "
+               & Value_Type.Description
+               & " to "
+               & Feature.Get_Type.Description);
+
+            Unit.Pop_Register ("op");
+            Unit.Push_Register ("op");
+            Unit.Push_Register ("op");
+            Unit.Dereference;
+
+            declare
+               use Ack.Classes;
+            begin
+               Push_Offset
+                 (Unit,
+                  Constant_Class_Entity
+                    (Value_Type.Class_Context).Ancestor_Table_Offset
+                      (Constant_Class_Entity
+                           (Feature.Get_Type.Class_Context)));
+            end;
+
+            Unit.Operate (Tagatha.Op_Add);
+            Unit.Dereference;
+            Unit.Operate (Tagatha.Op_Add);
+         end if;
+
          Unit.Push_Argument (1);
          Push_Offset (Unit, Feature.Property_Offset);
          Unit.Operate (Tagatha.Op_Add);
@@ -655,7 +686,6 @@ package body Ack.Features is
         and then not Current.Expanded
         and then not Feature.Intrinsic
       then
-
          Unit.Pop_Register ("op");
          Unit.Push_Register ("op");
          Unit.Push_Register ("op");
@@ -682,6 +712,7 @@ package body Ack.Features is
             Unit.Call (Feature.Link_Name);
          else
             --  push feature address from virtual table
+
             Unit.Pop_Register ("op");
             Unit.Push_Register ("op");
             Unit.Push_Register ("op");

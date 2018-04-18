@@ -48,8 +48,11 @@ feature  --  Element update
 feature
 
    Element : G
+      local
+         Linkable : Aqua.Containers.Linkable[G]
       do
-         Result := Current_Linkable.Element
+         Linkable := Current_Linkable
+         Result := Linkable.Element
       end
       
    Next

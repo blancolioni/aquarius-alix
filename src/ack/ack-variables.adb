@@ -1,6 +1,7 @@
 with Ack.Classes;
 with Ack.Features;
 with Ack.Types;
+with Ada.Text_IO;
 
 package body Ack.Variables is
 
@@ -55,13 +56,14 @@ package body Ack.Variables is
       Local_Type     : not null access Root_Entity_Type'Class)
       return Variable_Entity
    is
+      pragma Unreferenced (Local_Type);
    begin
       return Result : constant Variable_Entity :=
         new Variable_Entity_Record
       do
          Result.Create (Name, Node, Table => False);
          Result.Kind := Local;
-         Result.Value_Type := Entity_Type (Local_Type);
+         Result.Value_Type := Entity_Type (Iteration_Type);
          Result.Iterator := True;
          Result.Iteration := Entity_Type (Iteration_Type);
       end return;
@@ -92,10 +94,41 @@ package body Ack.Variables is
    ----------------
 
    overriding procedure Pop_Entity
-     (Variable : Variable_Entity_Record;
-      Unit     : in out Tagatha.Units.Tagatha_Unit)
+     (Variable   : Variable_Entity_Record;
+      Value_Type : not null access constant Root_Entity_Type'Class;
+      Unit       : in out Tagatha.Units.Tagatha_Unit)
    is
+      use type Ack.Types.Constant_Type_Entity;
+      Val_Type : constant Ack.Types.Constant_Type_Entity :=
+                   Ack.Types.Constant_Type_Entity (Value_Type);
+      Var_Type : constant Ack.Types.Constant_Type_Entity :=
+                   Ack.Types.Constant_Type_Entity
+                     (Variable.Get_Type);
    begin
+
+      if not Val_Type.Expanded
+        and then Val_Type /= Var_Type
+      then
+         Ada.Text_IO.Put_Line
+           ("pop: " & Variable.Declared_Name
+            & ": adjusting value from "
+            & Val_Type.Qualified_Name
+            & " to "
+            & Var_Type.Qualified_Name);
+
+         Unit.Pop_Register ("op");
+         Unit.Push_Register ("op");
+         Unit.Push_Register ("op");
+         Unit.Dereference;
+
+         Push_Offset
+           (Unit,
+            Val_Type.Class.Ancestor_Table_Offset (Var_Type.Class));
+         Unit.Operate (Tagatha.Op_Add);
+         Unit.Dereference;
+         Unit.Operate (Tagatha.Op_Add);
+      end if;
+
       case Variable.Kind is
          when Local =>
             Unit.Pop_Local
@@ -128,7 +161,7 @@ package body Ack.Variables is
               (Tagatha.Local_Offset (Variable.Offset),
                Tagatha.Default_Size);
 
-            if Variable.Iterator then
+            if False and then Variable.Iterator then
                declare
                   Class : constant Ack.Classes.Class_Entity :=
                             Ack.Classes.Class_Entity

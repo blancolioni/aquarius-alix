@@ -345,6 +345,11 @@ private
       return Entity_Type
    is (Entity_Type (Entity));
 
+   overriding function Concrete_Entity
+     (Class : not null access Class_Entity_Record)
+      return Entity_Type
+   is (Entity_Type (Class));
+
    overriding function Conforms_To
      (Class : not null access constant Class_Entity_Record;
       Other : not null access constant Root_Entity_Type'Class)
