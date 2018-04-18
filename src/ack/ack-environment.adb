@@ -8,6 +8,11 @@ package body Ack.Environment is
       return Boolean
    is (False);
 
+   overriding function Expanded
+     (Entity : Top_Level_Entity_Record)
+      return Boolean
+   is (False);
+
    overriding function Class_Context
      (Top : not null access constant Top_Level_Entity_Record)
       return Constant_Entity_Type

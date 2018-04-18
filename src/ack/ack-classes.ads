@@ -56,8 +56,8 @@ package Ack.Classes is
      (Class : Class_Entity_Record)
       return Boolean;
 
-   function Expanded
-     (Class : Class_Entity_Record'Class)
+   overriding function Expanded
+     (Class : Class_Entity_Record)
       return Boolean;
 
    function Frozen
@@ -413,8 +413,8 @@ private
       return Boolean
    is (Class.Deferred_Class);
 
-   function Expanded
-     (Class : Class_Entity_Record'Class)
+   overriding function Expanded
+     (Class : Class_Entity_Record)
       return Boolean
    is (Class.Expanded);
 
