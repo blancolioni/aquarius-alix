@@ -370,6 +370,7 @@ package Ack is
 
    procedure Pop_Entity
      (Entity     : Root_Entity_Type;
+      Context    : not null access constant Root_Entity_Type'Class;
       Value_Type : not null access constant Root_Entity_Type'Class;
       Unit       : in out Tagatha.Units.Tagatha_Unit)
    is null;

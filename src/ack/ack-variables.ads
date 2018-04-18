@@ -82,6 +82,7 @@ private
 
    overriding procedure Pop_Entity
      (Variable   : Variable_Entity_Record;
+      Context    : not null access constant Root_Entity_Type'Class;
       Value_Type : not null access constant Root_Entity_Type'Class;
       Unit       : in out Tagatha.Units.Tagatha_Unit);
 
