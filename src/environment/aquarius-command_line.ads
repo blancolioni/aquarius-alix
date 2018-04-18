@@ -31,6 +31,7 @@ package Aquarius.Command_Line is
    function Ack_Stack_Check return Boolean;
 
    function Aqua_Trace_Code return Boolean;
+   function Aqua_Trace_Link return Boolean;
 
    function Extra_Arguments return String;
 

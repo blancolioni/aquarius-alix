@@ -36,6 +36,7 @@ with Ack.Generate;
 with Aqua.CPU;
 with Aqua.Drivers;
 with Aqua.Images;
+with Aqua.Options;
 
 with Komnenos.Logging;
 with Komnenos.Paths;
@@ -185,7 +186,11 @@ begin
    end if;
 
    if Command_Line.Aqua_Trace_Code then
-      Aqua.CPU.Set_Option ("trace-code", "true");
+      Aqua.Options.Set_Option ("trace-code", "true");
+   end if;
+
+   if Command_Line.Aqua_Trace_Link then
+      Aqua.Options.Set_Option ("trace-link", "true");
    end if;
 
    if Command_Line.Ack_Write_Tables then

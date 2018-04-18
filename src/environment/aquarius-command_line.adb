@@ -77,6 +77,15 @@ package body Aquarius.Command_Line is
       return Get_Flag ("", "aqua-trace-code");
    end Aqua_Trace_Code;
 
+   ---------------------
+   -- Aqua_Trace_Link --
+   ---------------------
+
+   function Aqua_Trace_Link return Boolean is
+   begin
+      return Get_Flag ("", "aqua-trace-link");
+   end Aqua_Trace_Link;
+
    -----------------
    -- Clear_Cache --
    -----------------
