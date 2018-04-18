@@ -328,7 +328,7 @@ package body Ack.Generate is
       end if;
 
       Unit.Push_Register ("agg");
-      Get_Entity (Creation).Pop_Entity (Creation_Type.Class_Context, Unit);
+      Get_Entity (Creation).Pop_Entity (Creation_Type, Unit);
 
       Unit.Pop_Register ("agg");
 
