@@ -1540,6 +1540,7 @@ package body Ack.Semantic is
             begin
                Implicit.Set_Attached;
                Set_Entity (Iteration_Node, Implicit);
+               Set_Context (Iteration_Node, Container);
                Set_Implicit_Entity (Iteration_Node);
                Container.Add_Implicit (Implicit);
             end;

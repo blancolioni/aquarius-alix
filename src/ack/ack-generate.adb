@@ -445,7 +445,8 @@ package body Ack.Generate is
       Iterator_Type       : Ack.Types.Type_Entity;
       New_Cursor_Feature  : Ack.Features.Feature_Entity;
       After_Feature       : Ack.Features.Feature_Entity;
-
+      Next_Feature        : Ack.Features.Feature_Entity;
+      --  Iterator_Entity     : Entity_Type;
    begin
 
       if Has_Iterator then
@@ -458,6 +459,10 @@ package body Ack.Generate is
              (New_Cursor_Feature.Get_Type);
          After_Feature :=
            Iterator_Type.Feature (Get_Name_Id ("after"));
+         Next_Feature :=
+           Iterator_Type.Feature (Get_Name_Id ("next"));
+         --  Iterator_Entity := Get_Entity (Iteration_Node);
+
       end if;
 
       if Initialization_Node /= No_Node then
@@ -493,49 +498,17 @@ package body Ack.Generate is
 
       Generate_Compound (Unit, Compound (Loop_Body_Node));
 
-      if True or else Iteration_Node = No_Node then
-         Unit.Jump (Top_Label, Tagatha.C_Always);
-      else
-         Unit.Pop_Register ("op");
-         Unit.Push_Register ("op");
-         Unit.Push_Register ("op");
-         Unit.Native_Operation
-           ("get_property aqua__iteration_cursor, 0",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-         Unit.Push_Register ("pv");
-         Unit.Pop_Register ("op");
-         Unit.Native_Operation
-           ("get_property next, 0",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-         Unit.Push_Register ("pv");
-         Unit.Indirect_Call;
-         Unit.Drop;
-         Unit.Pop_Register ("op");
-         Unit.Push_Register ("op");
-         Unit.Push_Register ("op");
-         Unit.Native_Operation
-           ("get_property aqua__iteration_cursor, 0",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-         Unit.Push_Register ("pv");
-         Unit.Pop_Register ("op");
-         Unit.Native_Operation
-           ("get_property after, 0",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-         Unit.Push_Register ("pv");
-         Unit.Indirect_Call;
-         Unit.Drop;
+      if Has_Iterator then
+         Unit.Pop_Register ("r0");
          Unit.Push_Register ("r0");
-         Unit.Operate (Tagatha.Op_Test);
-         Unit.Jump (Top_Label, Tagatha.C_Equal);
+         Unit.Push_Register ("r0");
+         Next_Feature.Push_Entity
+           (Have_Current => True,
+            Context      => Iterator_Type.Class_Context,
+            Unit         => Unit);
       end if;
+
+      Unit.Jump (Top_Label, Tagatha.C_Always);
 
       Unit.Label (Out_Label);
 
