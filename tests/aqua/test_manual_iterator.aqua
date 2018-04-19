@@ -17,7 +17,7 @@ feature
       local
          Vs : Aqua.Containers.Linked_List[Integer]
          Sum : Integer   
-         It  : Aqua.Containers.Forward_Iterator
+         It  : Aqua.Iteration_Cursor[Integer]
       do
          create Vs
          Vs.Append (1)
