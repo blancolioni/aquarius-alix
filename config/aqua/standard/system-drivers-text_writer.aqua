@@ -7,8 +7,22 @@ feature
       local
          Mem : System.Memory.Mem
       do
-         Mem.Put_Word_32 (260, Ch.UTF_32_Code)
-         Mem.Put_Word_32 (256, 1)
+         Mem.Put_Word_32 (256, Ch.UTF_32_Code)
       end
-   
+
+    Col : Integer
+      local
+         Mem : System.Memory.Mem
+      do
+         Result.Convert_From (Mem.Get_Word_32 (260))
+      end
+      
+    Set_Col (Value : Integer)
+       local
+          Mem : System.Memory.Mem
+          Col_32 : System.Word_32
+       do
+          Col_32.Convert_From (Value)
+          Mem.Put_Word_32 (260, Col_32)
+       end
 end

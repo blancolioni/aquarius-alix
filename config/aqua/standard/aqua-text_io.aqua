@@ -40,11 +40,18 @@ feature
       end
       
    Set_Output (Path : String) do end
-   Set_Col (Col : Integer) do end
+   Set_Col (Col : Integer) 
+      local
+         Writer : System.Drivers.Text_Writer
+      do
+         Writer.Set_Col (Col)
+      end
    
    Col : Integer
+      local
+         Writer : System.Drivers.Text_Writer
       do
-         Result := 1
+         Result := Writer.Col
       end
 
 end
