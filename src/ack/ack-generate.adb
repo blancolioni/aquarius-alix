@@ -101,6 +101,8 @@ package body Ack.Generate is
          Unit.Dereference;
          Unit.Indirect_Call;
          Unit.Drop;
+         Unit.Push (0);
+         Unit.Native_Operation ("trap 15");
          Unit.End_Routine;
       end if;
 
