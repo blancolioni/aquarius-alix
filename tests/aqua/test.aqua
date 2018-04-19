@@ -20,16 +20,16 @@ feature
          Test_List.Append (T)
          create { Test_Indirect_Inheritance } T
          Test_List.Append (T)
-         create { Test_Rescue } T
-         Test_List.Append (T)
+--         create { Test_Rescue } T
+--         Test_List.Append (T)
          create { Test_Boolean_Implies } T
          Test_List.Append (T)
-         create { Test_Weaker_Precondition } T
-         Test_List.Append (T)
+--         create { Test_Weaker_Precondition } T
+--         Test_List.Append (T)
          create { Test_Simple_Tuples } T
          Test_List.Append (T)
-         create { Test_Diamond_Inheritance } T
-         Test_List.Append (T)
+--         create { Test_Diamond_Inheritance } T
+--         Test_List.Append (T)
       end
 
    Make
@@ -58,11 +58,14 @@ feature
                Failed_Tests := Failed_Tests + 1
             end
          end
-      
-         Put_Line ("Tests: " & Number_Of_Tests.To_String
-                  & "; passed: " & Passed_Tests.To_String
-                  & "; failed: " & Failed_Tests.To_String)
          
+         Put ("Tests: ")
+         Put (Number_Of_Tests.To_String)
+         Put ("; passed: ")
+         Put (Passed_Tests.To_String)
+         Put ("; failed: ")
+         Put (Failed_Tests.To_String)
+         New_Line
       end
 
 feature {None}
