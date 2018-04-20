@@ -326,13 +326,7 @@ package body Ack.Generate.Primitives is
    is
    begin
       Unit.Drop;
-      Unit.Pop_Register ("op");
-      Unit.Pop_Register ("pv");
-      Unit.Native_Operation
-        ("mov pv, (op)",
-         Input_Stack_Words  => 0,
-         Output_Stack_Words => 0,
-         Changed_Registers  => "");
+      Unit.Store;
    end Generate_Intrinsic_Mem_Put_Word_32;
 
    ----------------------------

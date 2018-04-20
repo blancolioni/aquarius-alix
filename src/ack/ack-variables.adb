@@ -108,9 +108,7 @@ package body Ack.Variables is
       if not Value_Type.Expanded
         and then Var_Type.Proper_Ancestor_Of (Value_Type)
       then
-         Unit.Pop_Register ("op");
-         Unit.Push_Register ("op");
-         Unit.Push_Register ("op");
+         Unit.Duplicate;
          Unit.Dereference;
 
          Push_Offset

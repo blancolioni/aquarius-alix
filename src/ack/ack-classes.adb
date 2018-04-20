@@ -636,10 +636,11 @@ package body Ack.Classes is
          Result_Words   => 0,
          Global         => True);
       Unit.Push (Tagatha.Tagatha_Integer (Layout.Length) * 4);
-      Unit.Pop_Register ("r0");
       Unit.Call ("__allocate");
-      Unit.Push_Register ("r0");
-      Unit.Pop_Register ("r1");
+      Unit.Drop;
+      Unit.Push_Return;
+      Unit.Duplicate;
+      Unit.Start_Copy_To;
 
       for Item of Layout loop
          if Item.Reference /= No_Name then
@@ -656,11 +657,13 @@ package body Ack.Classes is
             Push_Offset (Unit, Item.Offset);
          end if;
 
-         Unit.Pop_Operand
-           (Tagatha.Operands.Register_Operand
-              ("r1", Dereference => True, Postinc => True),
-            Tagatha.Default_Size);
+         Unit.Copy_Item (Tagatha.Default_Size);
+
       end loop;
+
+      Unit.End_Copy;
+
+      Unit.Pop_Result;
 
       Unit.End_Routine;
    end Generate_Object_Allocator;
