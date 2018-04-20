@@ -89,14 +89,15 @@ package body Ack.Generate is
             Result_Words   => 0,
             Global         => True);
          Unit.Call (Entity.Link_Name & "$create");
-         Unit.Push_Register ("r0");
-         Unit.Pop_Register ("op");
-         Unit.Push_Register ("op");
-         Unit.Push_Register ("op");
+
+         Unit.Push_Return;
+         Unit.Duplicate;
          Unit.Dereference;
+
          Push_Offset
            (Unit,
             Entity.Feature (Get_Name_Id ("make")).Virtual_Table_Offset);
+
          Unit.Operate (Tagatha.Op_Add);
          Unit.Dereference;
          Unit.Indirect_Call;
@@ -245,9 +246,7 @@ package body Ack.Generate is
          if Condition /= No_Node then
             Generate_Expression (Unit, Condition);
             if Implicit_Entity (Condition) then
-               Unit.Pop_Register ("r0");
-               Unit.Push_Register ("r0");
-               Unit.Push_Register ("r0");
+               Unit.Duplicate;
             end if;
 
             Else_Label := Unit.Next_Label;
@@ -291,11 +290,20 @@ package body Ack.Generate is
                              (if Explicit_Type_Node in Real_Node_Id
                               then Get_Entity (Explicit_Type_Node)
                               else Get_Entity (Creation).Get_Type);
+      Created_Context    : constant Constant_Entity_Type :=
+                             Get_Context (Creation).Class_Context;
+      Created_Entity     : constant Entity_Type :=
+                             Get_Entity (Creation);
    begin
 
-      Unit.Push_Register ("agg");
+      Unit.Call
+        (Creation_Type.Link_Name & "$create");
+      Unit.Push_Return;
 
       if Explicit_Call_Node in Real_Node_Id then
+
+         Created_Entity.Pop_Entity (Created_Context, Creation_Type, Unit);
+
          declare
             Actual_List_Node : constant Node_Id :=
                                  Actual_List (Explicit_Call_Node);
@@ -314,26 +322,26 @@ package body Ack.Generate is
                Generate_Expression (Unit, Item);
             end loop;
          end;
-      end if;
 
-      Unit.Call
-        (Creation_Type.Link_Name & "$create");
-      Unit.Push_Register ("r0");
-      Unit.Pop_Register ("agg");
+         Created_Entity.Push_Entity
+           (Have_Current => False,
+            Context      => Created_Context,
+            Unit         => Unit);
 
-      if Explicit_Call_Node in Real_Node_Id then
-         Unit.Push_Register ("r0");
          Get_Entity (Explicit_Call_Node).Push_Entity
            (Have_Current => True,
             Context      => Creation_Type.Class_Context,
             Unit         => Unit);
+
+         Created_Entity.Push_Entity
+           (Have_Current => False,
+            Context      => Created_Context,
+            Unit         => Unit);
+
       end if;
 
-      Unit.Push_Register ("agg");
-      Get_Entity (Creation).Pop_Entity
-        (Get_Context (Creation).Class_Context, Creation_Type, Unit);
-
-      Unit.Pop_Register ("agg");
+      Created_Entity.Pop_Entity
+        (Created_Context, Creation_Type, Unit);
 
    exception
       when others =>
@@ -387,13 +395,14 @@ package body Ack.Generate is
                         end loop;
 
                         Unit.Segment (Tagatha.Executable);
-                        Unit.Push_Label (Label);
                         Unit.Call ("string$create");
-                        Unit.Push_Register ("r0");
+                        Unit.Push_Return;
+                        Unit.Duplicate;
+                        Unit.Push_Label (Label);
+                        Unit.Swap;
                         Unit.Call ("string__create_from_string_literal");
-                        Unit.Pop_Register ("r0");
                         Unit.Drop;
-                        Unit.Push_Register ("r0");
+                        Unit.Drop;
                      end;
                   when N_Integer_Constant =>
                      Unit.Push
@@ -482,9 +491,7 @@ package body Ack.Generate is
       Unit.Label (Top_Label);
 
       if Has_Iterator then
-         Unit.Pop_Register ("op");
-         Unit.Push_Register ("op");
-         Unit.Push_Register ("op");
+         Unit.Duplicate;
          After_Feature.Push_Entity
            (Have_Current => True,
             Context      => Iterator_Type.Class_Context,
@@ -501,9 +508,7 @@ package body Ack.Generate is
       Generate_Compound (Unit, Compound (Loop_Body_Node));
 
       if Has_Iterator then
-         Unit.Pop_Register ("r0");
-         Unit.Push_Register ("r0");
-         Unit.Push_Register ("r0");
+         Unit.Duplicate;
          Next_Feature.Push_Entity
            (Have_Current => True,
             Context      => Iterator_Type.Class_Context,
@@ -662,17 +667,10 @@ package body Ack.Generate is
                                   then Node_Table.Element
                                     (Actual_List_Node).List
                                   else No_List);
-            Check_Stack      : constant Boolean :=
-                                 Stack_Check_Enabled
-                                     and then Actual_List /= No_List;
          begin
             if Element = Last_Element
               or else Actual_List /= No_List
             then
-
-               if Check_Stack then
-                  Unit.Push_Register ("sp");
-               end if;
 
                if Actual_List /= No_List then
                   Apply_Arguments (Actual_List);
@@ -681,40 +679,6 @@ package body Ack.Generate is
                for Item of Pending loop
                   Process (Item, Item = Last_Element);
                end loop;
-
-               if Check_Stack then
-                  declare
-                     use Ack.Features;
-                     Label : constant Positive := Unit.Next_Label;
-                     Last  : constant Constant_Entity_Type :=
-                               Constant_Entity_Type
-                                 (Get_Entity
-                                    (Pending.Last_Element));
-                     Has_Result      : constant Boolean :=
-                                         Ack.Features.Is_Feature (Last)
-                                           and then
-                                               (Constant_Feature_Entity
-                                                  (Last).Has_Result
-                                                or else Constant_Feature_Entity
-                                                  (Last)
-                                                .Is_Property);
-                  begin
-                     if Has_Result then
-                        Unit.Pop_Register ("r0");
-                     end if;
-                     Unit.Pop_Register ("r1");
-                     Unit.Native_Operation ("cmp r1, sp");
-                     Unit.Jump (Label, Tagatha.C_Equal);
-                     Unit.Push (0);
-                     Unit.Indirect_Call;
-                     Unit.Label (Label);
-                     if Has_Result then
-                        Unit.Push_Register ("r0");
-                     else
-                        Unit.Native_Operation ("nop");
-                     end if;
-                  end;
-               end if;
 
                Pending.Clear;
             end if;
@@ -823,24 +787,23 @@ package body Ack.Generate is
                        & "__make_tuple"
                        & Arity_Image (2 .. Arity_Image'Last);
    begin
-      Unit.Push_Register ("agg");
-      Unit.Call
-        (Tuple_Type.Link_Name & "$create");
-      Unit.Push_Register ("r0");
-      Unit.Push_Register ("r0");
-      Unit.Pop_Register ("agg");
-
       for Arg of reverse Actual_Nodes loop
          Generate_Expression (Unit, Arg);
       end loop;
 
-      Unit.Push_Register ("agg");
-      Unit.Pop_Register ("op");
-      Unit.Push_Register ("op");
+      Unit.Call
+        (Tuple_Type.Link_Name & "$create");
+      Unit.Duplicate;
+      Unit.Save_Top;
+
       Unit.Call (Make_Name);
+
       for I in 1 .. Actual_Nodes'Length + 1 loop
          Unit.Drop;
       end loop;
+
+      Unit.Restore_Top;
+
    end Generate_Tuple_Expression;
 
    -----------------------

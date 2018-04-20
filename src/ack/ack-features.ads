@@ -163,11 +163,6 @@ package Ack.Features is
    overriding procedure Remove_Implicit
      (Feature    : in out Feature_Entity_Record);
 
-   procedure Set_Default_Value
-     (Feature          : Feature_Entity_Record;
-      Current_Property : in out Name_Id;
-      Unit             : in out Tagatha.Units.Tagatha_Unit);
-
    procedure Generate_Allocation_Value
      (Feature : Feature_Entity_Record'Class;
       Unit    : in out Tagatha.Units.Tagatha_Unit);

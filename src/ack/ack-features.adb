@@ -1,7 +1,5 @@
 with Ada.Strings.Fixed;
 
-with Tagatha.Operands;
-
 with Ack.Classes;
 with Ack.Generate;
 with Ack.Types;
@@ -192,12 +190,11 @@ package body Ack.Features is
                   & Feature.Qualified_Name
                   & (if Clause.Tag = No_Name then ""
                     else ": " & To_String (Clause.Tag)));
-               Unit.Pop_Register ("r0");
 
                if Feature.Rescue_Node in Real_Node_Id then
                   Unit.Jump (Feature.Link_Name & "$rescue");
                else
-                  Unit.Push_Register ("pc");
+                  --  Unit.Push_Register ("pc");
                   Unit.Native_Operation ("trap 15", 0, 0, "");
                end if;
             end if;
@@ -411,11 +408,11 @@ package body Ack.Features is
             declare
                Continue_Once : constant Positive := Unit.Next_Label;
             begin
-               Unit.Push_Register (Once_Flag_Label);
+               Unit.Push_Label (Once_Flag_Label);
                Unit.Operate (Tagatha.Op_Test, Tagatha.Default_Size);
                Unit.Jump (Continue_Once, Tagatha.C_Equal);
                if Feature.Has_Result then
-                  Unit.Push_Register (Once_Value_Label);
+                  Unit.Push_Label (Once_Value_Label);
                   Unit.Pop_Result;
                end if;
                Unit.Jump (Exit_Label);
@@ -450,11 +447,11 @@ package body Ack.Features is
                      & Feature.Qualified_Name
                      & (if Clause.Tag = No_Name then ""
                        else ": " & To_String (Clause.Tag)));
-                  Unit.Pop_Register ("r0");
+
                   if Feature.Rescue_Node in Real_Node_Id then
                      Unit.Jump (Rescue_Label);
                   else
-                     Unit.Push_Register ("pc");
+                     --  Unit.Push_Register ("pc");
                      Unit.Native_Operation ("trap 15", 0, 0, "");
                   end if;
                   Unit.Label (Out_Label);
@@ -465,9 +462,9 @@ package body Ack.Features is
          if Feature.Has_Result then
             if Feature.Once then
                Unit.Push (1);
-               Unit.Pop_Register (Once_Flag_Label);
+               Unit.Pop_Label (Once_Flag_Label);
                Unit.Push_Local (1);
-               Unit.Pop_Register (Once_Value_Label);
+               Unit.Pop_Label (Once_Value_Label);
             end if;
 
             Unit.Push_Local (1);
@@ -600,9 +597,7 @@ package body Ack.Features is
          Unit.Pop_Argument (1);
       else
          if Feature.Get_Type.Proper_Ancestor_Of (Value_Type) then
-            Unit.Pop_Register ("op");
-            Unit.Push_Register ("op");
-            Unit.Push_Register ("op");
+            Unit.Duplicate;
             Unit.Dereference;
 
             declare
@@ -627,9 +622,7 @@ package body Ack.Features is
            and then not Current.Expanded
            and then not Feature.Intrinsic
          then
-            Unit.Pop_Register ("op");
-            Unit.Push_Register ("op");
-            Unit.Push_Register ("op");
+            Unit.Duplicate;
             Unit.Dereference;
             Push_Offset
               (Unit,
@@ -641,13 +634,7 @@ package body Ack.Features is
 
          Push_Offset (Unit, Feature.Property_Offset);
          Unit.Operate (Tagatha.Op_Add);
-         Unit.Pop_Register ("op");
-         Unit.Pop_Register ("pv");
-         Unit.Native_Operation
-           ("mov pv, (op)",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "");
+         Unit.Store;
       end if;
    end Pop_Entity;
 
@@ -698,9 +685,7 @@ package body Ack.Features is
         and then not Current.Expanded
         and then not Feature.Intrinsic
       then
-         Unit.Pop_Register ("op");
-         Unit.Push_Register ("op");
-         Unit.Push_Register ("op");
+         Unit.Duplicate;
          Unit.Dereference;
          Push_Offset
            (Unit,
@@ -724,10 +709,7 @@ package body Ack.Features is
             Unit.Call (Feature.Link_Name);
          else
             --  push feature address from virtual table
-
-            Unit.Pop_Register ("op");
-            Unit.Push_Register ("op");
-            Unit.Push_Register ("op");
+            Unit.Duplicate;
             Unit.Dereference;
             Push_Offset (Unit, Feature.Virtual_Table_Offset);
             Unit.Operate (Tagatha.Op_Add);
@@ -738,11 +720,11 @@ package body Ack.Features is
          if Current.Expanded and then not Feature.Has_Result then
             if Current.Frame_Words = 1 then
                if Feature.Argument_Count > 0 then
-                  Unit.Pop_Register ("r0");
+                  Unit.Save_Top;
                   for I in 1 .. Feature.Argument_Count loop
                      Unit.Drop;
                   end loop;
-                  Unit.Push_Register ("r0");
+                  Unit.Restore_Top;
                end if;
             end if;
          else
@@ -754,7 +736,7 @@ package body Ack.Features is
 
             --  push result
             if Feature.Has_Result then
-               Unit.Push_Register ("r0");
+               Unit.Push_Return;
             end if;
          end if;
       end if;
@@ -852,69 +834,6 @@ package body Ack.Features is
    begin
       Feature.Creator := True;
    end Set_Creator;
-
-   -----------------------
-   -- Set_Default_Value --
-   -----------------------
-
-   procedure Set_Default_Value
-     (Feature          : Feature_Entity_Record;
-      Current_Property : in out Name_Id;
-      Unit             : in out Tagatha.Units.Tagatha_Unit)
-   is
-
-      procedure Set (Class : not null access constant
-                       Ack.Classes.Class_Entity_Record'Class);
-
-      ---------
-      -- Set --
-      ---------
-
-      procedure Set (Class : not null access constant
-                       Ack.Classes.Class_Entity_Record'Class)
-      is
-      begin
-         if Current_Property = No_Name
-           or else Class.Link_Name /= To_Standard_String (Current_Property)
-         then
-            Unit.Push_Register ("agg");
-            Unit.Pop_Register ("op");
-            Unit.Native_Operation
-              ("get_property "
-               & Class.Link_Name & ",0",
-               Input_Stack_Words  => 0,
-               Output_Stack_Words => 0,
-               Changed_Registers  => "pv");
-            Unit.Push_Register ("pv");
-            Unit.Pop_Register ("op");
-            Current_Property := Get_Name_Id (Class.Link_Name);
-         end if;
-
-         if Feature.Property then
-            Unit.Push (0);
-            Unit.Pop_Register ("pv");
-            Unit.Native_Operation
-              ("set_property " & Feature.Standard_Name);
-         elsif Feature.Routine then
-            Unit.Push_Operand
-              (Tagatha.Operands.External_Operand
-                 (Feature.Effective_Class.Link_Name
-                  & "__" & Feature.Standard_Name,
-                  True),
-               Tagatha.Default_Size);
-            Unit.Pop_Register ("pv");
-            Unit.Native_Operation
-              ("set_property " & Feature.Standard_Name);
-         else
-            raise Constraint_Error with
-              "expected a property or a routine, but found '"
-              & (-Feature.Source_Name) & "'";
-         end if;
-      end Set;
-
-   begin
-      Feature.Scan_Original_Classes (Set'Access);
-   end Set_Default_Value;
 
    ------------------
    -- Set_Deferred --
