@@ -637,10 +637,8 @@ package body Ack.Classes is
          Global         => True);
       Unit.Push (Tagatha.Tagatha_Integer (Layout.Length) * 4);
       Unit.Call ("__allocate");
-      Unit.Drop;
-      Unit.Push_Return;
       Unit.Duplicate;
-      Unit.Start_Copy_To;
+      Unit.Start_Copy;
 
       for Item of Layout loop
          if Item.Reference /= No_Name then
@@ -657,7 +655,7 @@ package body Ack.Classes is
             Push_Offset (Unit, Item.Offset);
          end if;
 
-         Unit.Copy_Item (Tagatha.Default_Size);
+         Unit.Copy_To (Tagatha.Default_Size);
 
       end loop;
 
