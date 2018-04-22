@@ -11,16 +11,16 @@ __heap_top:
    
 .export __allocate
 __allocate:
-   mov r1, -(sp)
-   mov r0, r1
+   mov r0, -(sp)
    mov __heap_top, r0
    bne L1
    trap 1
    mov r0, __heap_start
    mov r0, __heap_top
 L1:
-   add r0, r1, __heap_top
-   mov (sp)+, r1
+   add r0, 8(sp), __heap_top
+   mov r0, 8(sp)
+   mov (sp)+, r0
    rts
    
    
