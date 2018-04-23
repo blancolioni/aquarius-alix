@@ -98,8 +98,6 @@ package body Ack.Generate is
             Result_Words   => 0,
             Global         => True);
          Unit.Call (Entity.Link_Name & "$create");
-
-         Unit.Push_Return;
          Unit.Duplicate;
          Unit.Dereference;
 
@@ -310,7 +308,6 @@ package body Ack.Generate is
 
       Unit.Call
         (Creation_Type.Link_Name & "$create");
-      Unit.Push_Return;
 
       if Explicit_Call_Node in Real_Node_Id then
 
@@ -409,7 +406,6 @@ package body Ack.Generate is
 
                         Unit.Segment (Tagatha.Executable);
                         Unit.Call ("string$create");
-                        Unit.Push_Return;
                         Unit.Duplicate;
                         Unit.Push_Label (Label);
                         Unit.Swap;
@@ -814,7 +810,6 @@ package body Ack.Generate is
 
       Unit.Call
         (Tuple_Type.Link_Name & "$create");
-      Unit.Push_Return;
       Unit.Duplicate;
       Unit.Pop_Local
         (Tagatha.Local_Offset (Context.Shelf ("tuple-expression")));

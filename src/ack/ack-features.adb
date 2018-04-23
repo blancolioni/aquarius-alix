@@ -370,15 +370,10 @@ package body Ack.Features is
 
       elsif Feature.Routine then
 
-         --  Don't allocate a frame, because we do it later
-         --  by pushing zeroes onto the stack.  We don't need
-         --  to worry about popping the frame off at the end
-         --  of the routine, because this is done when we
-         --  transfer the frame pointer to the stack pointer.
          Unit.Begin_Routine
            (Name           => Feature.Link_Name,
             Argument_Words => Arg_Count,
-            Frame_Words    => 0,
+            Frame_Words    => Feature.Local_Count,
             Result_Words   => Result_Count,
             Global         => True);
 
@@ -434,10 +429,6 @@ package body Ack.Features is
                Unit.Label (Continue_Once);
             end;
          end if;
-
-         for I in 1 .. Feature.Local_Count loop
-            Unit.Push (0);
-         end loop;
 
          if Feature.Monitor_Postconditions then
             for Old of Feature.Olds loop
@@ -497,8 +488,6 @@ package body Ack.Features is
             Unit.Clear_Property ("retry_label");
          end if;
 
-         Unit.Native_Operation ("mov fp, sp", 0, 0, "sp");
-         Unit.Native_Operation ("mov (sp)+, fp", 1, 0, "sp,fp");
          Unit.Native_Operation ("trap 15", 1, 0, "r0");
 
          Unit.Label (Exit_Label);
@@ -750,10 +739,6 @@ package body Ack.Features is
                Unit.Drop;
             end loop;
 
-            --  push result
-            if Feature.Has_Result then
-               Unit.Push_Return;
-            end if;
          end if;
       end if;
 
