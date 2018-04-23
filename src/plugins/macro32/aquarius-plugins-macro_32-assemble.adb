@@ -820,9 +820,25 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                       (Operand_Tree.Program_Child ("identifier").Text), 0);
          end;
       elsif Operand_Name = "indexed_deferred" then
-         return (Indexed, True,
-                 Assembly.Get_Register
-                   (Operand_Tree.Program_Child ("identifier").Text), 0);
+         declare
+            use Aqua;
+            Size : constant Aqua.Data_Size :=
+                     Get_Operand_Size
+                       (Operand_Tree.Program_Child ("operand"));
+            Mode : constant Addressing_Mode :=
+                     (case Size is
+                         when Aqua.Word_8_Size  =>
+                            Indexed_8,
+                         when Aqua.Word_16_Size =>
+                            Indexed_16,
+                         when Aqua.Word_32_Size =>
+                            Indexed);
+         begin
+            return (Mode, True,
+                    Assembly.Get_Register
+                      (Operand_Tree.Program_Child ("identifier").Text), 0);
+         end;
+
       elsif Operand_Name = "immediate" then
          declare
             use Aqua;
