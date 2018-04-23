@@ -45,6 +45,7 @@ op ::= no_operand
      | call
      | goto
      | trap
+     | return
      
 no_operand ::= 'halt' | 'nop' | 'rts'
 single_operand ::= single_operand_instruction [size] arg
@@ -59,6 +60,7 @@ jump_destination ::= identifier | temporary_label
 
 call ::= 'call' integer ',' arg
 goto ::= 'goto' arg
+return ::= 'return' integer
 
 temporary_label ::= label_direction integer
 label_direction ::= '+' | '-'
