@@ -1934,6 +1934,8 @@ package body Ack.Semantic is
       Type_Entity   : Ack.Types.Type_Entity := null;
    begin
 
+      Container.Add_Shelf ("tuple-expression");
+
       if Tuple_Class = null then
          Tuple_Class := Load_Tuple_Class (Tuple_Arity);
       end if;
