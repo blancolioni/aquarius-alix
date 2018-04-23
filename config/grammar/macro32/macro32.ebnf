@@ -87,22 +87,19 @@ branch_instruction ::=
 jump_instruction ::= 'jmp' | 'jsr'
 
 arg ::= identifier | deferred
-      | autoincrement | autoincrement_deferred
-      | autodecrement | autodecrement_deferred
+      | autoincrement
+      | autodecrement
       | indexed | indexed_deferred
-      | immediate | absolute
+      | immediate
       | subroutine
       
 deferred ::= '(' identifier ')'
 autoincrement ::= '(' identifier ')' '+'
-autoincrement_deferred ::= '@' '(' identifier ')' '+'
 autodecrement ::= '-' '(' identifier ')'
-autodecrement_deferred ::= '@' '-' '(' identifier ')'
 indexed ::= operand '(' identifier ')'
 indexed_deferred ::= '@' operand '(' identifier ')'
 subroutine ::= '{' identifier '}'
 immediate ::= '#' expression
-absolute ::= '@' '#' expression
 
 expression ::= < operand / operator >
 
