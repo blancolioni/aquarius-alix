@@ -1,14 +1,41 @@
-expanded class Integer
-  -- inherit Comparable
-
+expanded class 
+   Integer
+   
+inherit  
+   Aqua.Algebra.Additive redefine Add, Subtract, Negate, Zero end
+   Aqua.Algebra.Eq redefine Equal end
+   Aqua.Integral redefine Make_With_Integer_Literal, Convert_From end
+   Aqua.Comparable redefine GE, LE, GT, LT, Equal end
+   
 feature
-   To_String : String external "aqua"
+   To_String : String
+      do
+         Result := "[integer]"
+      end
    
-   Plus alias "+" (Right : Integer) : Integer
+   Add (Right : Integer) : Integer external "intrinsic"
+   Subtract (Right : Integer) : Integer external "intrinsic"
+   Negate : Integer external "intrinsic"
+      
+   Zero : Integer
+      do
+         Result := 0
+      end
+      
+    
+   Equal (Right : Integer) : Boolean external "intrinsic"
+
+   GE (Right : Integer) : Boolean external "intrinsic"
+   LE (Right : Integer) : Boolean external "intrinsic"
+   GT (Right : Integer) : Boolean external "intrinsic"
+   LT (Right : Integer) : Boolean external "intrinsic"
    
-   GE alias ">=" (Right : Integer) : Boolean
-   LE alias "<=" (Right : Integer) : Boolean
-   GT alias ">" (Right : Integer) : Boolean
-   LT alias "<" (Right : Integer) : Boolean
+   Make_With_Integer_Literal (Literal : Aqua.Integer_Literal) external "replace-current"
+   
+   Convert_From (Other : Aqua.Integral) external "intrinsic" alias "replace-current"
+         
+feature { None }
+
+   Internal : System.Internal_Frame_Word
    
 end

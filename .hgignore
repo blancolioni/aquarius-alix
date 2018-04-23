@@ -17,3 +17,4 @@ trace.txt
 aquarius.log
 config/aqua/generated/*
 *.lst
+logs/*.txt

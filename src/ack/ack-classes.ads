@@ -1,3 +1,5 @@
+private with Ada.Containers.Indefinite_Vectors;
+
 private with WL.String_Sets;
 
 with Ack.Features;
@@ -54,8 +56,8 @@ package Ack.Classes is
      (Class : Class_Entity_Record)
       return Boolean;
 
-   function Expanded
-     (Class : Class_Entity_Record'Class)
+   overriding function Expanded
+     (Class : Class_Entity_Record)
       return Boolean;
 
    function Frozen
@@ -70,6 +72,10 @@ package Ack.Classes is
 
    procedure Set_Frozen
      (Class : in out Class_Entity_Record'Class);
+
+   function Frame_Words
+     (Class : Class_Entity_Record'Class)
+      return Natural;
 
    procedure Inherit
      (Class           : in out Class_Entity_Record'Class;
@@ -91,6 +97,18 @@ package Ack.Classes is
       Feature_Name : Name_Id)
       return Boolean;
 
+   function Is_Descendent_Of
+     (Class             : Class_Entity_Record'Class;
+      Ancestor          : not null access constant Class_Entity_Record'Class)
+      return Boolean;
+
+   function Is_Proper_Descendent_Of
+     (Class             : Class_Entity_Record'Class;
+      Ancestor          : not null access constant Class_Entity_Record'Class)
+      return Boolean
+   is (Class.Link_Name /= Ancestor.Link_Name
+       and then Class.Is_Descendent_Of (Ancestor));
+
    function Generic_Formal_Count
      (Class : Class_Entity_Record'Class)
       return Natural;
@@ -98,13 +116,13 @@ package Ack.Classes is
    function Generic_Formal
      (Class : Class_Entity_Record'Class;
       Index : Positive)
-      return access constant Ack.Types.Type_Entity_Record'Class;
+      return access Ack.Types.Type_Entity_Record'Class;
 
    overriding procedure Check_Bound
-     (Class : in out Class_Entity_Record);
+     (Class : not null access Class_Entity_Record);
 
    overriding procedure Bind
-     (Class : in out Class_Entity_Record);
+     (Class : not null access Class_Entity_Record);
 
    overriding procedure Allocate
      (Class : Class_Entity_Record;
@@ -123,14 +141,16 @@ package Ack.Classes is
 
    function Has_Aliased_Feature
      (Class : not null access constant Class_Entity_Record'Class;
-      Alias : Name_Id)
+      Alias : Name_Id;
+      Infix : Boolean)
       return Boolean;
 
    function Aliased_Feature
      (Class : not null access constant Class_Entity_Record'Class;
-      Alias : Name_Id)
+      Alias : Name_Id;
+      Infix : Boolean)
       return Ack.Features.Feature_Entity
-     with Pre => Class.Has_Aliased_Feature (Alias);
+     with Pre => Class.Has_Aliased_Feature (Alias, Infix);
 
    procedure Scan_Conforming_Child_Ancestors
      (Class : not null access constant Class_Entity_Record'Class;
@@ -173,6 +193,22 @@ package Ack.Classes is
      (Class  : in out Class_Entity_Record'Class;
       Formal : not null access Ack.Types.Type_Entity_Record'Class);
 
+   function Ancestor_Table_Offset
+     (Class : Class_Entity_Record'Class;
+      Ancestor : not null access constant Class_Entity_Record'Class)
+      return Word_Offset;
+
+   procedure Create_Memory_Layout
+     (Class : not null access Class_Entity_Record'Class);
+
+   procedure Generate_Virtual_Table
+     (Class  : not null access constant Class_Entity_Record'Class;
+      Unit   : in out Tagatha.Units.Tagatha_Unit);
+
+   procedure Generate_Object_Allocator
+     (Class  : not null access constant Class_Entity_Record'Class;
+      Unit   : in out Tagatha.Units.Tagatha_Unit);
+
    function New_Class
      (Name        : Name_Id;
       Context     : Class_Entity;
@@ -202,7 +238,20 @@ package Ack.Classes is
      (Name : String)
       return Class_Entity;
 
+   procedure Set_Modulus
+     (Class   : in out Class_Entity_Record'Class;
+      Modulus : Positive);
+
 private
+
+   type Ancestor_Class_Record is
+      record
+         Ancestor_Name : Name_Id;           --  link name
+         Table_Offset  : Word_Offset;       --  word offset of virtual table
+      end record;
+
+   package Ancestor_Class_Lists is
+     new Ada.Containers.Doubly_Linked_Lists (Ancestor_Class_Record);
 
    package List_Of_Class_Entities is
      new Ada.Containers.Doubly_Linked_Lists (Class_Entity);
@@ -233,6 +282,18 @@ private
    package Notes_Map is
      new WL.String_Maps (String);
 
+   type Layout_Entry is
+      record
+         Name      : Name_Id;
+         Reference : Name_Id;
+         Offset    : Word_Offset;
+      end record;
+
+   package Layout_Entry_Vectors is
+     new Ada.Containers.Indefinite_Vectors (Positive, Layout_Entry);
+
+   subtype Virtual_Table_Layout is Layout_Entry_Vectors.Vector;
+
    type Class_Entity_Record is
      new Root_Entity_Type with
       record
@@ -243,18 +304,28 @@ private
          Bound                   : Boolean := False;
          Behaviour               : Class_Behaviour := Normal;
          Conforming_Child_Action : Name_Id := No_Name;
+         Frame_Words             : Natural := 0;
+         Modulus                 : Natural := 0;
          Inherited_Types         : List_Of_Inherited_Type_Records.List;
          Inherited_List          : List_Of_Class_Entities.List;
+         Ancestor_List           : Ancestor_Class_Lists.List;
          Class_Features          : List_Of_Feature_Entities.List;
          Formal_Arguments        : List_Of_Entities.List;
          Notes                   : Notes_Map.Map;
          Creators                : WL.String_Sets.Set;
+         Virtual_Table           : Virtual_Table_Layout;
+         Object_Record           : Virtual_Table_Layout;
       end record;
 
    overriding function Description
      (Class : Class_Entity_Record)
       return String
    is ("class " & Class_Entity_Record'Class (Class).Qualified_Name);
+
+   overriding function Class_Context
+     (Class : not null access constant Class_Entity_Record)
+      return Constant_Entity_Type
+   is (Constant_Entity_Type (Class));
 
    overriding function Contains
      (Class     : Class_Entity_Record;
@@ -273,6 +344,11 @@ private
         function (Generic_Type : Entity_Type) return Entity_Type)
       return Entity_Type
    is (Entity_Type (Entity));
+
+   overriding function Concrete_Entity
+     (Class : not null access Class_Entity_Record)
+      return Entity_Type
+   is (Entity_Type (Class));
 
    overriding function Conforms_To
      (Class : not null access constant Class_Entity_Record;
@@ -307,7 +383,8 @@ private
 
    function Find_Aliased_Feature
      (Class   : Class_Entity_Record'Class;
-      Alias   : Name_Id)
+      Alias   : Name_Id;
+      Infix   : Boolean)
       return Ack.Features.Feature_Entity;
 
    function Has_Note
@@ -336,8 +413,8 @@ private
       return Boolean
    is (Class.Deferred_Class);
 
-   function Expanded
-     (Class : Class_Entity_Record'Class)
+   overriding function Expanded
+     (Class : Class_Entity_Record)
       return Boolean
    is (Class.Expanded);
 
@@ -345,5 +422,10 @@ private
      (Class : Class_Entity_Record'Class)
       return Boolean
    is (Class.Frozen);
+
+   function Frame_Words
+     (Class : Class_Entity_Record'Class)
+      return Natural
+   is (Class.Frame_Words);
 
 end Ack.Classes;

@@ -11,7 +11,7 @@ feature
    
    Void : None
    
-   Reference_Equal alias "=" (Other : Any) : Boolean 
-   Reference_Not_Equal alias "/=" (Other : Any) : Boolean
+   Equal alias "=" (Other : like Current) : Boolean external "intrinsic"
+   Not_Equal alias "/=" (Other : like Current) : Boolean external "intrinsic"
 
 end

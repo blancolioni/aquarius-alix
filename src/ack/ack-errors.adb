@@ -55,6 +55,8 @@ package body Ack.Errors is
               & Get_Error_Entity (Node).Description;
          when E_Create_Deferred_Class =>
             return "cannot create instance of deferred class";
+         when E_Requires_Body =>
+            return "routine feature requires a body";
          when E_Missing_Redefine =>
             return "deferred feature '"
               & Get_Error_Entity (Node).Declared_Name

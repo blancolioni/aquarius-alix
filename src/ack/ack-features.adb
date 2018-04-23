@@ -1,10 +1,10 @@
 with Ada.Strings.Fixed;
 
-with Tagatha.Operands;
-
 with Ack.Classes;
 with Ack.Generate;
 with Ack.Types;
+
+with Ack.Generate.Primitives;
 
 package body Ack.Features is
 
@@ -21,6 +21,7 @@ package body Ack.Features is
       Feature.Arguments.Append
         (Ack.Variables.New_Argument_Entity
            (Get_Name (Name_Node), Name_Node, Arg_Type));
+      Feature.Property := False;
    end Add_Argument;
 
    ------------------
@@ -82,31 +83,56 @@ package body Ack.Features is
       Feature.Preconditions.Append ((Tag, Condition));
    end Add_Precondition;
 
+   ---------------
+   -- Add_Shelf --
+   ---------------
+
+   overriding procedure Add_Shelf
+     (Feature : in out Feature_Entity_Record;
+      Name    : String)
+   is
+   begin
+      if not Feature.Shelves.Contains (Name) then
+         Feature.Local_Count := Feature.Local_Count + 1;
+         Feature.Shelves.Insert (Name, Feature.Local_Count);
+      end if;
+   end Add_Shelf;
+
    ----------
    -- Bind --
    ----------
 
    overriding procedure Bind
-     (Feature : in out Feature_Entity_Record)
+     (Feature : not null access Feature_Entity_Record)
    is
       use type Ack.Classes.Class_Entity;
       Next_Argument : Positive := 1;
       Next_Local    : Positive := 1;
+      Current_Class : constant Ack.Classes.Class_Entity :=
+                        Ack.Classes.Class_Entity
+                          (if Feature.Effective_Class = null
+                           then Feature.Definition_Class
+                           else Feature.Effective_Class);
       Current       : constant Ack.Variables.Variable_Entity :=
                         Ack.Variables.New_Argument_Entity
-                          (Get_Name_Id ("Current"),
-                           Feature.Declaration_Node,
-                           Ack.Types.New_Class_Type
-                             (Feature.Declaration_Node,
-                              (if Feature.Effective_Class = null
-                               then Feature.Definition_Class
-                               else Feature.Effective_Class),
-                              Detachable => False));
+                          (Name          => Get_Name_Id ("Current"),
+                           Node          => Feature.Declaration_Node,
+                           Argument_Type =>
+                             Ack.Types.New_Class_Type
+                               (Feature.Declaration_Node, Current_Class,
+                                Detachable => False));
    begin
       Current.Set_Attached;
-      Current.Set_Offset (1);
-      Feature.Insert (Current);
-      Next_Argument := 2;
+      if Current_Class.Frame_Words > 0 then
+         Current.Set_Offset (Current_Class.Frame_Words);
+         Feature.Insert (Current);
+      end if;
+
+      if Current_Class.Frame_Words <= 1 then
+         Next_Argument := 2;
+      else
+         Next_Argument := Current_Class.Frame_Words + 1;
+      end if;
 
       for Argument of Feature.Arguments loop
          Argument.Set_Offset (Next_Argument);
@@ -142,29 +168,31 @@ package body Ack.Features is
    ------------------------
 
    procedure Check_Precondition
-     (Feature       : Feature_Entity_Record'Class;
+     (Feature       : not null access constant Feature_Entity_Record'Class;
       Unit          : in out Tagatha.Units.Tagatha_Unit;
       Success_Label : Positive;
       Fail_Label    : Natural)
    is
    begin
       if Feature.Redefined_Feature /= null then
-         declare
-            Ancestor_Fail : constant Positive := Unit.Next_Label;
-         begin
-            Feature.Redefined_Feature.Check_Precondition
-              (Unit          => Unit,
-               Success_Label => Success_Label,
-               Fail_Label    => Ancestor_Fail);
-            Unit.Label (Ancestor_Fail);
-         end;
+         if False then
+            declare
+               Ancestor_Fail : constant Positive := Unit.Next_Label;
+            begin
+               Feature.Redefined_Feature.Check_Precondition
+                 (Unit          => Unit,
+                  Success_Label => Success_Label,
+                  Fail_Label    => Ancestor_Fail);
+               Unit.Label (Ancestor_Fail);
+            end;
+         end if;
       end if;
 
       for Clause of Feature.Preconditions loop
          declare
             Out_Label : constant Positive := Unit.Next_Label;
          begin
-            Ack.Generate.Generate_Expression (Unit, Clause.Node);
+            Ack.Generate.Generate_Expression (Unit, Feature, Clause.Node);
             Unit.Operate (Tagatha.Op_Test);
             Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
 
@@ -177,12 +205,11 @@ package body Ack.Features is
                   & Feature.Qualified_Name
                   & (if Clause.Tag = No_Name then ""
                     else ": " & To_String (Clause.Tag)));
-               Unit.Pop_Register ("r0");
 
                if Feature.Rescue_Node in Real_Node_Id then
                   Unit.Jump (Feature.Link_Name & "$rescue");
                else
-                  Unit.Push_Register ("pc");
+                  --  Unit.Push_Register ("pc");
                   Unit.Native_Operation ("trap 15", 0, 0, "");
                end if;
             end if;
@@ -192,6 +219,17 @@ package body Ack.Features is
       end loop;
       Unit.Jump (Success_Label);
    end Check_Precondition;
+
+   -------------------
+   -- Class_Context --
+   -------------------
+
+   overriding function Class_Context
+     (Feature : not null access constant Feature_Entity_Record)
+      return Constant_Entity_Type
+   is (if Feature.Redefined_Class /= null
+       then Constant_Entity_Type (Feature.Redefined_Class)
+       else Constant_Entity_Type (Feature.Definition_Class));
 
    -----------------
    -- Description --
@@ -267,7 +305,8 @@ package body Ack.Features is
    -------------------------
 
    procedure Generate_Routine
-     (Feature : Feature_Entity_Record'Class;
+     (Feature : not null access constant Feature_Entity_Record'Class;
+      Class   : not null access constant Ack.Classes.Class_Entity_Record'Class;
       Unit    : in out Tagatha.Units.Tagatha_Unit)
    is
       Arg_Count    : constant Natural :=
@@ -281,9 +320,55 @@ package body Ack.Features is
                            "once_value$" & Feature.Link_Name;
       Exit_Label       : constant Positive := Unit.Next_Label;
       Rescue_Label     : constant String :=
-                          Feature.Link_Name & "$rescue";
+                           Feature.Link_Name & "$rescue";
    begin
-      if Feature.Routine then
+      if Feature.Property then
+         --  Generate a property routine, in case it redefines
+         --  an actual routine
+
+         Unit.Begin_Routine
+           (Name           => Feature.Link_Name,
+            Argument_Words => 1,
+            Frame_Words    => 0,
+            Result_Words   => 1,
+            Global         => True);
+
+         Unit.Push_Argument (1);
+         Push_Offset (Unit, Feature.Property_Offset);
+         Unit.Operate (Tagatha.Op_Add);
+         Unit.Dereference;
+
+         Unit.Pop_Result;
+
+         Unit.End_Routine;
+
+      elsif Feature.External then
+         if Feature.Intrinsic then
+
+            --  Generate a wrapper that can be accessed
+            --  via a virtual table entry
+
+            Unit.Begin_Routine
+              (Name           => Feature.Link_Name,
+               Argument_Words => Arg_Count,
+               Frame_Words    => 0,
+               Result_Words   => Result_Count,
+               Global         => True);
+
+            for I in reverse 1 .. Arg_Count loop
+               Unit.Push_Argument (Tagatha.Argument_Offset (I));
+            end loop;
+
+            Feature.Push_Entity (True, Feature.Active_Class, Unit);
+
+            if Result_Count > 0 then
+               Unit.Pop_Result;
+            end if;
+
+            Unit.End_Routine;
+         end if;
+
+      elsif Feature.Routine then
 
          --  Don't allocate a frame, because we do it later
          --  by pushing zeroes onto the stack.  We don't need
@@ -296,6 +381,19 @@ package body Ack.Features is
             Frame_Words    => 0,
             Result_Words   => Result_Count,
             Global         => True);
+
+         --  restore Current to our needs
+
+         if not Feature.Active_Class.Expanded
+           and then Feature.Definition_Class /= Class
+         then
+            Unit.Push_Argument (1);
+            Unit.Dereference;
+            Unit.Dereference;
+            Unit.Push_Argument (1);
+            Unit.Operate (Tagatha.Op_Sub);
+            Unit.Pop_Argument (1);
+         end if;
 
          if Feature.Rescue_Node in Real_Node_Id then
             Unit.Directive (".exception "
@@ -321,116 +419,68 @@ package body Ack.Features is
 
          end if;
 
-         if Feature.External then
+         if Feature.Once then
             declare
-               Object_Name : constant String := -Feature.External_Object;
-               Label       : constant String := -Feature.External_Label;
+               Continue_Once : constant Positive := Unit.Next_Label;
             begin
-               if Object_Name = "" then
-                  for I in reverse 1 .. Arg_Count loop
-                     Unit.Push_Argument
-                       (Tagatha.Argument_Offset (I));
-                  end loop;
-
-                  Unit.Pop_Register ("op");
-                  Unit.Native_Operation
-                    ("get_property " & Label & ","
-                     & Natural'Image (Arg_Count - 1),
-                     Input_Stack_Words  => 0,
-                     Output_Stack_Words => 0,
-                     Changed_Registers  => "pv");
-
-                  if Feature.Has_Result then
-                     Unit.Push_Register ("pv");
-                     Unit.Pop_Local (1);
-                  end if;
-
-               else
-
-                  for I in reverse 2 .. Arg_Count loop
-                     Unit.Push_Argument
-                       (Tagatha.Argument_Offset (I));
-                  end loop;
-
-                  Unit.Push_Operand
-                    (Tagatha.Operands.External_Operand
-                       (Object_Name, True),
-                     Tagatha.Default_Size);
-                  Unit.Pop_Register ("op");
-                  Unit.Native_Operation
-                    ("get_property " & Label & ","
-                     & Natural'Image (Arg_Count - 1),
-                     Input_Stack_Words  => 0,
-                     Output_Stack_Words => 0,
-                     Changed_Registers  => "pv");
-
-                  Unit.Push_Register ("pv");
-
+               Unit.Push_Label (Once_Flag_Label);
+               Unit.Operate (Tagatha.Op_Test, Tagatha.Default_Size);
+               Unit.Jump (Continue_Once, Tagatha.C_Equal);
+               if Feature.Has_Result then
+                  Unit.Push_Label (Once_Value_Label);
+                  Unit.Pop_Result;
                end if;
+               Unit.Jump (Exit_Label);
+               Unit.Label (Continue_Once);
             end;
-         else
-            if Feature.Once then
-               declare
-                  Continue_Once : constant Positive := Unit.Next_Label;
-               begin
-                  Unit.Push_Register (Once_Flag_Label);
-                  Unit.Operate (Tagatha.Op_Test, Tagatha.Default_Size);
-                  Unit.Jump (Continue_Once, Tagatha.C_Equal);
-                  if Feature.Has_Result then
-                     Unit.Push_Register (Once_Value_Label);
-                     Unit.Pop_Result;
-                  end if;
-                  Unit.Jump (Exit_Label);
-                  Unit.Label (Continue_Once);
-               end;
-            end if;
-            for I in 1 .. Feature.Local_Count loop
-               Unit.Push (0);
+         end if;
+
+         for I in 1 .. Feature.Local_Count loop
+            Unit.Push (0);
+         end loop;
+
+         if Feature.Monitor_Postconditions then
+            for Old of Feature.Olds loop
+               Ack.Generate.Generate_Expression (Unit, Feature, Old);
             end loop;
+         end if;
 
-            if Feature.Monitor_Postconditions then
-               for Old of Feature.Olds loop
-                  Ack.Generate.Generate_Expression (Unit, Old);
-               end loop;
-            end if;
+         Ack.Generate.Generate_Compound
+           (Unit, Feature, Compound (Feature.Routine_Node));
 
-            Ack.Generate.Generate_Compound
-              (Unit, Compound (Feature.Routine_Node));
+         if Feature.Monitor_Postconditions then
+            for Clause of Feature.Postconditions loop
+               declare
+                  Out_Label : constant Positive := Unit.Next_Label;
+               begin
+                  Ack.Generate.Generate_Expression
+                    (Unit, Feature, Clause.Node);
+                  Unit.Operate (Tagatha.Op_Test);
+                  Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
+                  Unit.Push_Text
+                    (Get_Program (Clause.Node).Show_Location
+                     & ": assertion failure in postcondition of "
+                     & Feature.Qualified_Name
+                     & (if Clause.Tag = No_Name then ""
+                       else ": " & To_String (Clause.Tag)));
 
-            if Feature.Monitor_Postconditions then
-               for Clause of Feature.Postconditions loop
-                  declare
-                     Out_Label : constant Positive := Unit.Next_Label;
-                  begin
-                     Ack.Generate.Generate_Expression (Unit, Clause.Node);
-                     Unit.Operate (Tagatha.Op_Test);
-                     Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
-                     Unit.Push_Text
-                       (Get_Program (Clause.Node).Show_Location
-                        & ": assertion failure in postcondition of "
-                        & Feature.Qualified_Name
-                        & (if Clause.Tag = No_Name then ""
-                          else ": " & To_String (Clause.Tag)));
-                     Unit.Pop_Register ("r0");
-                     if Feature.Rescue_Node in Real_Node_Id then
-                        Unit.Jump (Rescue_Label);
-                     else
-                        Unit.Push_Register ("pc");
-                        Unit.Native_Operation ("trap 15", 0, 0, "");
-                     end if;
-                     Unit.Label (Out_Label);
-                  end;
-               end loop;
-            end if;
-
+                  if Feature.Rescue_Node in Real_Node_Id then
+                     Unit.Jump (Rescue_Label);
+                  else
+                     --  Unit.Push_Register ("pc");
+                     Unit.Native_Operation ("trap 15", 0, 0, "");
+                  end if;
+                  Unit.Label (Out_Label);
+               end;
+            end loop;
          end if;
 
          if Feature.Has_Result then
             if Feature.Once then
                Unit.Push (1);
-               Unit.Pop_Register (Once_Flag_Label);
+               Unit.Pop_Label (Once_Flag_Label);
                Unit.Push_Local (1);
-               Unit.Pop_Register (Once_Value_Label);
+               Unit.Pop_Label (Once_Value_Label);
             end if;
 
             Unit.Push_Local (1);
@@ -443,7 +493,7 @@ package body Ack.Features is
          if Feature.Rescue_Node in Real_Node_Id then
             Unit.Set_Property ("retry_label", Feature.Link_Name & "$retry");
             Ack.Generate.Generate_Compound
-              (Unit, Compound (Feature.Rescue_Node));
+              (Unit, Feature, Compound (Feature.Rescue_Node));
             Unit.Clear_Property ("retry_label");
          end if;
 
@@ -488,9 +538,29 @@ package body Ack.Features is
              (Arg.Instantiate (Type_Instantiation));
       end loop;
 
+      Entity.Instantiated.Append (Instan);
+
       return Entity_Type (Instan);
 
    end Instantiate;
+
+   --------------------------
+   -- Is_Property_Of_Class --
+   --------------------------
+
+   function Is_Property_Of_Class
+     (Feature : Feature_Entity_Record'Class;
+      Class   : not null access constant
+        Ack.Classes.Class_Entity_Record'Class)
+      return Boolean
+   is
+      use Ack.Classes;
+   begin
+      return not Feature.Deferred
+        and then Feature.Is_Property
+        and then Constant_Class_Entity (Feature.Active_Class)
+        = Constant_Class_Entity (Class);
+   end Is_Property_Of_Class;
 
    -----------------
    -- New_Feature --
@@ -500,6 +570,7 @@ package body Ack.Features is
      (Name        : Name_Id;
       Alias       : Name_Id;
       Declaration : Node_Id;
+      Property    : Boolean;
       Class       : not null access Ack.Classes.Class_Entity_Record'Class)
       return Feature_Entity
    is
@@ -513,7 +584,8 @@ package body Ack.Features is
          Feature.Alias := Alias;
          Feature.Effective_Class := Class;
          Feature.Definition_Class := Class;
-         Feature.Property := True;
+         Feature.Property := Property;
+         Feature.Property_Offset := Word_Offset'Last;
       end return;
    end New_Feature;
 
@@ -522,28 +594,64 @@ package body Ack.Features is
    ----------------
 
    overriding procedure Pop_Entity
-     (Feature : Feature_Entity_Record;
-      Unit    : in out Tagatha.Units.Tagatha_Unit)
+     (Feature    : Feature_Entity_Record;
+      Context    : not null access constant Root_Entity_Type'Class;
+      Value_Type : not null access constant Root_Entity_Type'Class;
+      Unit       : in out Tagatha.Units.Tagatha_Unit)
    is
       pragma Assert (Feature.Property);
-      Original_Class : constant Ack.Classes.Class_Entity :=
-                         (if Feature.Original_Classes.Is_Empty
-                          then Feature.Effective_Class
-                          else Ack.Classes.Class_Entity
-                            (Feature.Original_Classes.First_Element));
+      Current        : constant Ack.Classes.Constant_Class_Entity :=
+                         Ack.Classes.Constant_Class_Entity (Context);
    begin
-      Unit.Push_Argument (1);
-      Unit.Pop_Register ("op");
-      Unit.Native_Operation
-        ("get_property " & Original_Class.Link_Name & ",0",
-         Input_Stack_Words  => 0,
-         Output_Stack_Words => 0,
-         Changed_Registers  => "pv");
-      Unit.Push_Register ("pv");
-      Unit.Pop_Register ("op");
-      Unit.Pop_Register ("pv");
-      Unit.Native_Operation
-        ("set_property " & Feature.Standard_Name);
+--        Ada.Text_IO.Put_Line
+--          ("pop entity: " & Feature.Active_Class.Qualified_Name
+--           & "." & Feature.Declared_Name
+--           & ": expanded = "
+--           & (if Feature.Active_Class.Expanded then "yes" else "no"));
+
+      if Feature.Active_Class.Expanded then
+         Unit.Pop_Argument (1);
+      else
+         if Feature.Get_Type.Proper_Ancestor_Of (Value_Type) then
+            Unit.Duplicate;
+            Unit.Dereference;
+
+            declare
+               use Ack.Classes;
+            begin
+               Push_Offset
+                 (Unit,
+                  Constant_Class_Entity
+                    (Value_Type.Class_Context).Ancestor_Table_Offset
+                      (Constant_Class_Entity
+                           (Feature.Get_Type.Class_Context)));
+            end;
+
+            Unit.Operate (Tagatha.Op_Add);
+            Unit.Dereference;
+            Unit.Operate (Tagatha.Op_Add);
+         end if;
+
+         Unit.Push_Argument (1);
+
+         if Feature.Definition_Class /= Current
+           and then not Current.Expanded
+           and then not Feature.Intrinsic
+         then
+            Unit.Duplicate;
+            Unit.Dereference;
+            Push_Offset
+              (Unit,
+               Current.Ancestor_Table_Offset (Feature.Definition_Class));
+            Unit.Operate (Tagatha.Op_Add);
+            Unit.Dereference;
+            Unit.Operate (Tagatha.Op_Add);
+         end if;
+
+         Push_Offset (Unit, Feature.Property_Offset);
+         Unit.Operate (Tagatha.Op_Add);
+         Unit.Store;
+      end if;
    end Pop_Entity;
 
    -----------------
@@ -551,15 +659,20 @@ package body Ack.Features is
    -----------------
 
    overriding procedure Push_Entity
-     (Feature      : Feature_Entity_Record;
-      Have_Context : Boolean;
-      Unit         : in out Tagatha.Units.Tagatha_Unit)
+     (Feature       : Feature_Entity_Record;
+      Have_Current  : Boolean;
+      Context       : not null access constant Root_Entity_Type'Class;
+      Unit          : in out Tagatha.Units.Tagatha_Unit)
    is
-      Original_Class : constant Ack.Classes.Class_Entity :=
-                         Feature.Definition_Class;
-      Feature_Type   : constant Ack.Types.Type_Entity :=
-                         Ack.Types.Type_Entity (Feature.Get_Type);
+      Current        : constant Ack.Classes.Constant_Class_Entity :=
+                         Ack.Classes.Constant_Class_Entity (Context);
    begin
+
+--        Ada.Text_IO.Put_Line
+--          ("push feature: context " & Current.Qualified_Name
+--           & "; feature "
+--           & Feature.Active_Class.Qualified_Name
+--           & "." & Feature.Declared_Name);
 
       if Feature.Standard_Name = "void" then
          Unit.Push (0);
@@ -580,159 +693,68 @@ package body Ack.Features is
          return;
       end if;
 
-      if not Have_Context then
+      if not Have_Current then
          Unit.Push_Argument (1);
       end if;
 
-      Unit.Pop_Register ("op");
-
-      if not Feature.Deferred
-        and then Feature.Effective_Class.Standard_Name = "string"
+      if Feature.Definition_Class /= Current
+        and then not Current.Expanded
+        and then not Feature.Intrinsic
       then
-         Unit.Native_Operation
-           ("get_property " & Feature.Standard_Name & ","
-            & Natural'Image (Feature.Argument_Count),
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
+         Unit.Duplicate;
+         Unit.Dereference;
+         Push_Offset
+           (Unit,
+            Current.Ancestor_Table_Offset (Feature.Definition_Class));
+         Unit.Operate (Tagatha.Op_Add);
+         Unit.Dereference;
+         Unit.Operate (Tagatha.Op_Add);
+      end if;
 
-         if Feature.Has_Result then
-            Unit.Push_Register ("pv");
+      if Feature.Intrinsic then
+         Ack.Generate.Primitives.Generate_Intrinsic
+           (Unit, Feature.External_Label);
+      elsif Feature.Is_Property then
+         if not Feature.Active_Class.Expanded then
+            Push_Offset (Unit, Feature.Property_Offset);
+            Unit.Operate (Tagatha.Op_Add);
+            Unit.Dereference;
+         end if;
+      else
+         if Current.Expanded then
+            Unit.Call (Feature.Link_Name);
+         else
+            --  push feature address from virtual table
+            Unit.Duplicate;
+            Unit.Dereference;
+            Push_Offset (Unit, Feature.Virtual_Table_Offset);
+            Unit.Operate (Tagatha.Op_Add);
+            Unit.Dereference;
+            Unit.Indirect_Call;
          end if;
 
-         return;
-      end if;
+         if Current.Expanded and then not Feature.Has_Result then
+            if Current.Frame_Words = 1 then
+               if Feature.Argument_Count > 0 then
+                  Unit.Save_Top;
+                  for I in 1 .. Feature.Argument_Count loop
+                     Unit.Drop;
+                  end loop;
+                  Unit.Restore_Top;
+               end if;
+            end if;
+         else
 
-      if Feature.Is_External_Routine
-        and then Feature.Effective_Class.Aqua_Primitive_Behaviour
-      then
-         Unit.Native_Operation
-           ("get_property " & Feature.Effective_Class.Link_Name & ",0",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-         Unit.Push_Register ("pv");
-         Unit.Pop_Register ("op");
-         Unit.Native_Operation
-           ("get_property " & Feature.Standard_Name & ","
-            & Natural'Image (Feature.Argument_Count),
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-
-         Unit.Push_Register ("pv");
-
-         return;
-      end if;
-
-      if Feature.Is_External_Routine
-        and then Feature.Effective_Class.Expanded
-      then
-         Unit.Native_Operation
-           ("get_property " & Feature.Standard_Name & ","
-            & Natural'Image (Feature.Argument_Count),
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-
-         Unit.Push_Register ("pv");
-         return;
-      end if;
-
-      if Feature.Property
-        and then not Feature_Type.Detachable
-        and then not Feature_Type.Expanded
-        and then not Feature_Type.Deferred
-        and then not Feature.Attached
-      then
-         --  Save op in case we have to allocate
-         Unit.Push_Register ("op");
-      elsif Feature.Routine then
-         --  Push "Current"
-         Unit.Push_Register ("op");
-      end if;
-
-      Unit.Native_Operation
-        ("get_property "
-         & Original_Class.Link_Name & ",0",
-         Input_Stack_Words  => 0,
-         Output_Stack_Words => 0,
-         Changed_Registers  => "pv");
-      Unit.Push_Register ("pv");
-      Unit.Pop_Register ("op");
-      Unit.Native_Operation
-        ("get_property " & Feature.Standard_Name & ",0",
-         Input_Stack_Words  => 0,
-         Output_Stack_Words => 0,
-         Changed_Registers  => "pv");
-
-      if Feature.Routine then
-         Unit.Push_Register ("pv");
-         Unit.Indirect_Call;
-         Unit.Drop;
-         for I in 1 .. Feature.Argument_Count loop
-            Unit.Drop;
-         end loop;
-         Unit.Push_Register ("r0");
-      elsif Feature.Property then
-         if not Feature.Get_Type.Detachable
-           and then not Feature_Type.Expanded
-           and then not Feature_Type.Deferred
-           and then not Feature.Attached
-         then
-
-            declare
-               Continue_Label : constant Positive :=
-                                  Unit.Next_Label;
-            begin
-               Unit.Push_Register ("pv");
-               Unit.Operate (Tagatha.Op_Test, Tagatha.Default_Size);
-               Unit.Jump (Continue_Label, Tagatha.C_Not_Equal);
-               Feature.Get_Type.Allocate (Unit);
-               Unit.Pop_Register ("pv");
-               Unit.Pop_Register ("op");
-               Unit.Push_Register ("op");
-
-               declare
-                  procedure Set_Value
-                    (Class : not null access constant
-                       Ack.Classes.Class_Entity_Record'Class);
-
-                  ---------------
-                  -- Set_Value --
-                  ---------------
-
-                  procedure Set_Value
-                    (Class : not null access constant
-                       Ack.Classes.Class_Entity_Record'Class)
-                  is
-                  begin
-                     Unit.Push_Register ("pv");
-                     Unit.Native_Operation
-                       ("get_property "
-                        & Class.Link_Name & ",0",
-                        Input_Stack_Words  => 0,
-                        Output_Stack_Words => 0,
-                        Changed_Registers  => "pv");
-                     Unit.Push_Register ("pv");
-                     Unit.Pop_Register ("op");
-                     Unit.Pop_Register ("pv");
-                     Unit.Native_Operation
-                       ("set_property " & Feature.Standard_Name);
-                  end Set_Value;
-
-               begin
-                  Feature.Scan_Original_Classes
-                    (Set_Value'Access);
-               end;
-
-               Unit.Label (Continue_Label);
+            Unit.Drop;  --  current
+            for I in 1 .. Feature.Argument_Count loop
                Unit.Drop;
-            end;
-         end if;
+            end loop;
 
---         Unit.Drop;
-         Unit.Push_Register ("pv");
+            --  push result
+            if Feature.Has_Result then
+               Unit.Push_Return;
+            end if;
+         end if;
       end if;
 
    end Push_Entity;
@@ -829,69 +851,6 @@ package body Ack.Features is
       Feature.Creator := True;
    end Set_Creator;
 
-   -----------------------
-   -- Set_Default_Value --
-   -----------------------
-
-   procedure Set_Default_Value
-     (Feature          : Feature_Entity_Record;
-      Current_Property : in out Name_Id;
-      Unit             : in out Tagatha.Units.Tagatha_Unit)
-   is
-
-      procedure Set (Class : not null access constant
-                       Ack.Classes.Class_Entity_Record'Class);
-
-      ---------
-      -- Set --
-      ---------
-
-      procedure Set (Class : not null access constant
-                       Ack.Classes.Class_Entity_Record'Class)
-      is
-      begin
-         if Current_Property = No_Name
-           or else Class.Link_Name /= To_Standard_String (Current_Property)
-         then
-            Unit.Push_Register ("agg");
-            Unit.Pop_Register ("op");
-            Unit.Native_Operation
-              ("get_property "
-               & Class.Link_Name & ",0",
-               Input_Stack_Words  => 0,
-               Output_Stack_Words => 0,
-               Changed_Registers  => "pv");
-            Unit.Push_Register ("pv");
-            Unit.Pop_Register ("op");
-            Current_Property := Get_Name_Id (Class.Link_Name);
-         end if;
-
-         if Feature.Property then
-            Unit.Push (0);
-            Unit.Pop_Register ("pv");
-            Unit.Native_Operation
-              ("set_property " & Feature.Standard_Name);
-         elsif Feature.Routine then
-            Unit.Push_Operand
-              (Tagatha.Operands.External_Operand
-                 (Feature.Effective_Class.Link_Name
-                  & "__" & Feature.Standard_Name,
-                  True),
-               Tagatha.Default_Size);
-            Unit.Pop_Register ("pv");
-            Unit.Native_Operation
-              ("set_property " & Feature.Standard_Name);
-         else
-            raise Constraint_Error with
-              "expected a property or a routine, but found '"
-              & (-Feature.Source_Name) & "'";
-         end if;
-      end Set;
-
-   begin
-      Feature.Scan_Original_Classes (Set'Access);
-   end Set_Default_Value;
-
    ------------------
    -- Set_Deferred --
    ------------------
@@ -943,14 +902,15 @@ package body Ack.Features is
                             (Dot_Index + 1 .. External_Alias'Last);
    begin
       Feature.Property := External_Type = "aqua_property";
+      Feature.Intrinsic := External_Type = "intrinsic";
       Feature.Routine := not Feature.Property;
       Feature.External := True;
       if Feature.Value_Type /= null then
          Feature.Has_Result := True;
       end if;
-      Feature.External_Object := +External_Object;
-      Feature.External_Type := +External_Type;
-      Feature.External_Label := +External_Label;
+      Feature.External_Object := Get_Name_Id (External_Object);
+      Feature.External_Type := Get_Name_Id (External_Type);
+      Feature.External_Label := Get_Name_Id (External_Label);
    end Set_External;
 
    ------------------------
@@ -965,12 +925,29 @@ package body Ack.Features is
       Set_Entity (Node, Feature);
    end Set_Feature_Entity;
 
+   -------------------------
+   -- Set_Property_Offset --
+   -------------------------
+
+   procedure Set_Property_Offset
+     (Feature : in out Feature_Entity_Record'Class;
+      Offset  : Word_Offset)
+   is
+   begin
+      Feature.Property_Offset := Offset;
+      for Instan of Feature.Instantiated loop
+         Instan.Set_Property_Offset (Offset);
+      end loop;
+   end Set_Property_Offset;
+
    -------------------
    -- Set_Redefined --
    -------------------
 
    procedure Set_Redefined
      (Feature          : in out Feature_Entity_Record'Class;
+      Class            : not null access
+        Ack.Classes.Class_Entity_Record'Class;
       Original_Feature : not null access constant
         Feature_Entity_Record'Class)
    is
@@ -980,6 +957,7 @@ package body Ack.Features is
         Original_Feature.Definition_Class;
       Feature.Original_Classes.Append
         (Original_Feature.Definition_Class);
+      Feature.Redefined_Class := Class;
       Feature.Redefined_Feature :=
         Constant_Feature_Entity (Original_Feature);
    end Set_Redefined;
@@ -1029,5 +1007,17 @@ package body Ack.Features is
       end if;
       Feature.Has_Current := True;
    end Set_Routine;
+
+   ------------------------------
+   -- Set_Virtual_Table_Offset --
+   ------------------------------
+
+   procedure Set_Virtual_Table_Offset
+     (Feature : in out Feature_Entity_Record'Class;
+      Offset  : Word_Offset)
+   is
+   begin
+      Feature.Virtual_Table_Offset := Offset;
+   end Set_Virtual_Table_Offset;
 
 end Ack.Features;

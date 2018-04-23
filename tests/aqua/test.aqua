@@ -1,4 +1,4 @@
-class 
+class
    Test
 inherit
    Aqua.Text_IO
@@ -11,6 +11,7 @@ feature
       local
          T : Unit_Test
       do
+         create Test_List
          create { Test_Class_Load } T
          Test_List.Append (T)
          create { Test_Manual_Iterator } T
@@ -19,14 +20,16 @@ feature
          Test_List.Append (T)
          create { Test_Indirect_Inheritance } T
          Test_List.Append (T)
-         create { Test_Rescue } T
-         Test_List.Append (T)
+--         create { Test_Rescue } T
+--         Test_List.Append (T)
          create { Test_Boolean_Implies } T
          Test_List.Append (T)
-         create { Test_Weaker_Precondition } T
-         Test_List.Append (T)
+--         create { Test_Weaker_Precondition } T
+--         Test_List.Append (T)
          create { Test_Simple_Tuples } T
          Test_List.Append (T)
+--         create { Test_Diamond_Inheritance } T
+--         Test_List.Append (T)
       end
 
    Make
@@ -34,27 +37,35 @@ feature
          Number_Of_Tests : Integer
          Passed_Tests    : Integer
          Failed_Tests    : Integer
+         Test_Value      : Unit_Test
+         Test_Name       : String
       do
+         Put_Line ("Initialising ...")
          Create_Test_List
          Put_Line ("Running tests ...")
          across Test_List as T loop
             Number_Of_Tests := Number_Of_Tests + 1
-            Put (T.Name)
+            Test_Value := T.Element
+            Test_Name := Test_Value.Name
+            Put (Test_Name)
             Set_Col (30)
-            T.Execute
-            if T.Success then
+            Test_Value.Execute
+            if Test_Value.Success then
                Put_Line ("PASS")
                Passed_Tests := Passed_Tests + 1
             else
-               Put_Line ("FAIL: " & T.Fail_Message)
+               Put_Line ("FAIL: " & Test_Value.Fail_Message)
                Failed_Tests := Failed_Tests + 1
             end
          end
-      
-         Put_Line ("Tests: " & Number_Of_Tests.To_String
-                  & "; passed: " & Passed_Tests.To_String
-                  & "; failed: " & Failed_Tests.To_String)
          
+         Put ("Tests: ")
+         Put (Number_Of_Tests.To_String)
+         Put ("; passed: ")
+         Put (Passed_Tests.To_String)
+         Put ("; failed: ")
+         Put (Failed_Tests.To_String)
+         New_Line
       end
 
 feature {None}

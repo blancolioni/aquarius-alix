@@ -95,6 +95,52 @@ package body Ack is
       return False;
    end Contains_Name;
 
+   ----------
+   -- Copy --
+   ----------
+
+   function Copy (Node : Node_Id) return Node_Id is
+   begin
+      if Node not in Real_Node_Id then
+         return Node;
+      else
+         declare
+            New_Record : Node_Record :=
+                           Node_Table.Element (Node);
+         begin
+            for Field of New_Record.Field loop
+               Field := Copy (Field);
+            end loop;
+
+            New_Record.List := Copy (New_Record.List);
+            New_Record.Entity := null;
+            New_Record.Context := null;
+            New_Record.Node_Type := null;
+            New_Record.Error := E_No_Error;
+            New_Record.Error_Entity := null;
+            New_Record.Integer_Value := 0;
+            New_Record.Label := 0;
+            Node_Table.Append (New_Record);
+            return Node_Table.Last_Index;
+         end;
+      end if;
+   end Copy;
+
+   ----------
+   -- Copy --
+   ----------
+
+   function Copy (List : List_Id) return List_Id is
+      New_List : List_Record;
+      Old_List : constant List_Record :=  List_Table.Element (List);
+   begin
+      for Item of Old_List.List loop
+         New_List.List.Append (Copy (Item));
+      end loop;
+      List_Table.Append (New_List);
+      return List_Table.Last_Index;
+   end Copy;
+
    ------------
    -- Create --
    ------------
@@ -221,7 +267,9 @@ package body Ack is
       return Name_Id
    is
    begin
-      if Name_Map.Contains (Name) then
+      if Name = "" then
+         return No_Name;
+      elsif Name_Map.Contains (Name) then
          return Name_Map.Element (Name);
       else
          Name_Table.Append (Name);
@@ -229,6 +277,22 @@ package body Ack is
          return Name_Table.Last_Index;
       end if;
    end Get_Name_Id;
+
+   -----------
+   -- Image --
+   -----------
+
+   function Image (Offset : Word_Offset) return String is
+      Hex : constant String := "0123456789ABCDEF";
+      It  : Word_Offset := Offset * 4;
+   begin
+      return S : String (1 .. 4) do
+         for Ch of reverse S loop
+            Ch := Hex (Natural (It mod 16) + 1);
+            It := It / 16;
+         end loop;
+      end return;
+   end Image;
 
    ------------
    -- Insert --
@@ -296,16 +360,29 @@ package body Ack is
                   4 => Field_4,
                   5 => Field_5,
                   6 => Field_6),
-               List       => List,
-               Name       => Name,
-               Integer_Value => 0,
-               Entity        => Entity,
-               Node_Type     => null,
-               Error_Entity  => null,
-               Error         => E_No_Error,
-               Label         => 0));
+               List            => List,
+               Name            => Name,
+               Integer_Value   => 0,
+               Entity          => Entity,
+               Context         => null,
+               Node_Type       => null,
+               Error_Entity    => null,
+               Error           => E_No_Error,
+               Label           => 0));
       end return;
    end New_Node;
+
+   -----------------
+   -- Push_Offset --
+   -----------------
+
+   procedure Push_Offset
+     (Unit   : in out Tagatha.Units.Tagatha_Unit;
+      Offset : Word_Offset)
+   is
+   begin
+      Unit.Push (Tagatha.Tagatha_Integer (Offset * 4));
+   end Push_Offset;
 
    ---------------------
    -- Remove_Implicit --
@@ -422,6 +499,18 @@ package body Ack is
       Entity.Attached := True;
    end Set_Attached;
 
+   -----------------
+   -- Set_Context --
+   -----------------
+
+   procedure Set_Context
+     (Node    : Real_Node_Id;
+      Context : not null access constant Root_Entity_Type'Class)
+   is
+   begin
+      Node_Table (Node).Context := Constant_Entity_Type (Context);
+   end Set_Context;
+
    ---------------------------
    -- Set_Declaration_Count --
    ---------------------------
@@ -496,6 +585,28 @@ package body Ack is
       Node_Table (Node).Label := Value;
    end Set_Label;
 
+   ---------------------
+   -- Set_Stack_Check --
+   ---------------------
+
+   procedure Set_Stack_Check
+     (Stack_Check : Boolean)
+   is
+   begin
+      Stack_Check_Enabled := Stack_Check;
+   end Set_Stack_Check;
+
+   ---------------
+   -- Set_Trace --
+   ---------------
+
+   procedure Set_Trace
+     (Class_Analysis : Boolean)
+   is
+   begin
+      Trace_Class_Analysis := Class_Analysis;
+   end Set_Trace;
+
    --------------
    -- Set_Type --
    --------------
@@ -507,6 +618,17 @@ package body Ack is
    begin
       Node_Table (Node).Node_Type := Entity_Type (Entity);
    end Set_Type;
+
+   ----------------------
+   -- Set_Write_Tables --
+   ----------------------
+
+   procedure Set_Write_Tables
+     (Write_Tables : Boolean)
+   is
+   begin
+      Local_Write_Tables := Write_Tables;
+   end Set_Write_Tables;
 
    --------------
    -- To_Array --

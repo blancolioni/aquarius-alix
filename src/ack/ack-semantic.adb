@@ -15,13 +15,17 @@ with Ack.Features;
 with Ack.Types;
 with Ack.Variables;
 
+with Ack.Generate.Primitives;
+
 with Ack.Environment;
 
 with Ack.Errors;
 
 package body Ack.Semantic is
 
-   Trace_Class_Analysis : constant Boolean := False;
+   Local_Integral_Type         : Ack.Types.Type_Entity := null;
+   Local_Iterable_Type         : Ack.Types.Type_Entity := null;
+   Local_Iterable_Class        : Ack.Classes.Class_Entity := null;
 
    function Load_Class
      (Referrer : Aquarius.Programs.Program_Tree;
@@ -42,7 +46,27 @@ package body Ack.Semantic is
      (Arity : Tuple_Arity_Range)
       return Ack.Classes.Class_Entity;
 
-   function Forward_Iterable return Ack.Classes.Class_Entity;
+   function Type_Any return Ack.Types.Type_Entity
+   is (Get_Top_Level_Type ("any"))
+   with Unreferenced;
+
+   function Type_Integral (Node : Node_Id) return Ack.Types.Type_Entity;
+   function Type_String return Ack.Types.Type_Entity
+   is (Get_Top_Level_Type ("string"));
+
+   function Type_Boolean return Ack.Types.Type_Entity
+   is (Get_Top_Level_Type ("boolean"));
+
+   function Class_Iterable
+     return Ack.Classes.Class_Entity;
+
+   function Type_Iterable
+     return Ack.Types.Type_Entity;
+
+   function Property_Feature_Node
+     (Node : Node_Id)
+     return Boolean
+     with Pre => Kind (Node) = N_Feature_Declaration;
 
    function Analyse_Class_Header
      (Class  : Node_Id;
@@ -63,9 +87,9 @@ package body Ack.Semantic is
       Notes : Node_Id);
 
    procedure Analyse_Feature_Name
-     (Class   : Ack.Classes.Class_Entity;
-      Exports : Node_Id;
-      Feature : Node_Id)
+     (Class    : Ack.Classes.Class_Entity;
+      Exports  : Node_Id;
+      Feature  : Node_Id)
      with Pre => Kind (Feature) = N_Feature_Declaration;
 
    procedure Analyse_Feature_Header
@@ -310,6 +334,7 @@ package body Ack.Semantic is
             Analyse_Expression (Class, Container, Entity.Get_Type,
                                 Expression (Assignment));
             Set_Entity (Variable (Assignment), Entity);
+            Set_Context (Variable (Assignment), Container);
          end;
       else
          Error (Variable (Assignment), E_Undeclared_Name);
@@ -471,6 +496,13 @@ package body Ack.Semantic is
             Class.Scan_Features (Check_Effective'Access);
          end;
       end if;
+
+      if Trace_Class_Analysis then
+         Ada.Text_IO.Put_Line
+           ("  virtual and object tables: " & Class.Qualified_Name);
+      end if;
+
+      Class.Create_Memory_Layout;
 
       if Trace_Class_Analysis then
          Ada.Text_IO.Put_Line
@@ -832,6 +864,7 @@ package body Ack.Semantic is
          return;
       end if;
 
+      Set_Context (Creation, Container);
       Set_Entity (Creation, Created_Entity);
 
       Created_Type := Created_Entity.Get_Type;
@@ -1006,24 +1039,32 @@ package body Ack.Semantic is
             declare
                use type Ack.Classes.Class_Entity;
                Value     : constant Node_Id := Constant_Value (Expression);
-               Type_Name : constant String :=
+               Value_Type : constant Ack.Types.Type_Entity :=
                               (case N_Constant_Value (Kind (Value)) is
                                   when N_String_Constant  =>
-                                     "string",
+                                     Type_String,
                                   when N_Integer_Constant =>
-                                     "integer",
+                                     Type_Integral (Value),
                                   when N_Boolean_Constant =>
-                                     "boolean");
-               Value_Type : constant Ack.Types.Type_Entity :=
-                              Get_Top_Level_Type (Type_Name);
+                                     Type_Boolean);
             begin
-               Set_Type (Expression, Value_Type);
-               Set_Entity (Expression, Value_Type);
                if Expression_Type = null then
                   Error (Value, E_Ignored_Return_Value);
-               elsif not  Value_Type.Conforms_To (Expression_Type) then
-                  Error (Expression, E_Type_Error,
-                         Entity_Type (Expression_Type));
+               else
+                  if Kind (Value) = N_Integer_Constant then
+                     Set_Type (Expression, Expression_Type);
+                     Set_Entity (Expression, Expression_Type);
+                     if not Expression_Type.Conforms_To (Value_Type) then
+                        Error (Expression, E_Type_Error, Value_Type);
+                     end if;
+                  else
+                     Set_Type (Expression, Value_Type);
+                     Set_Entity (Expression, Value_Type);
+                     if not  Value_Type.Conforms_To (Expression_Type) then
+                        Error (Expression, E_Type_Error,
+                               Entity_Type (Expression_Type));
+                     end if;
+                  end if;
                end if;
             end;
       end case;
@@ -1081,6 +1122,13 @@ package body Ack.Semantic is
                           Effective
                                  and then Kind (Effective_Node) = N_External;
    begin
+
+      if not Property_Feature_Node (Feature)
+        and then not Value_Feature
+        and then not Routine_Feature
+      then
+         Error (Feature, E_Requires_Body);
+      end if;
 
       for Node of List_Table.Element (Names).List loop
          declare
@@ -1234,9 +1282,9 @@ package body Ack.Semantic is
    --------------------------
 
    procedure Analyse_Feature_Name
-     (Class   : Ack.Classes.Class_Entity;
-      Exports : Node_Id;
-      Feature : Node_Id)
+     (Class    : Ack.Classes.Class_Entity;
+      Exports  : Node_Id;
+      Feature  : Node_Id)
    is
       pragma Unreferenced (Exports);
       Names        : constant List_Id := New_Feature_List (Feature);
@@ -1257,6 +1305,8 @@ package body Ack.Semantic is
                                      (Name        => Get_Name (Name_Node),
                                       Alias       => Alias,
                                       Declaration => Node,
+                                      Property    =>
+                                        Property_Feature_Node (Feature),
                                       Class       => Class);
          begin
             if Entity.Standard_Name = "void"
@@ -1292,9 +1342,9 @@ package body Ack.Semantic is
                              Feature_Declarations (Clause_Node);
          begin
             for Feature_Node of List_Table.Element (Feature_List).List loop
-               Analyse (Class   => Class,
-                        Exports => No_Node,
-                        Node    => Feature_Node);
+               Analyse (Class    => Class,
+                        Exports  => No_Node,
+                        Node     => Feature_Node);
             end loop;
          end;
       end loop;
@@ -1377,7 +1427,8 @@ package body Ack.Semantic is
          if Inherited_Class.Has_Feature (Name) then
             if Class.Has_Feature (Name) then
                Class.Feature (Name).Set_Redefined
-                 (Original_Feature =>
+                 (Class            => Class,
+                  Original_Feature =>
                     Inherited_Class.Feature (Name));
             else
                Error (Node, E_Missing_Redefinition,
@@ -1452,32 +1503,44 @@ package body Ack.Semantic is
          declare
             Expression_Node : constant Node_Id := Expression (Iteration_Node);
             Expression_Type : constant Ack.Types.Type_Entity :=
-                                Ack.Types.New_Class_Type
-                                  (Iteration_Node, Forward_Iterable, False);
+                                Type_Iterable;
          begin
+
             Analyse_Expression
               (Class, Container, Expression_Type, Expression_Node);
 
             declare
                use Ack.Types;
-               Iterable_Type  : constant Type_Entity :=
-                                  Type_Entity
-                                    (Get_Type (Expression_Node));
-               Inherited_Type           : constant access constant
-                 Type_Entity_Record'Class :=
-                   Iterable_Type.Get_Ancestor_Type
-                     (Forward_Iterable);
+               Iterable_Type      : constant Type_Entity :=
+                                      Type_Entity
+                                        (Get_Type (Expression_Node));
+               Inherited_Type     : constant access constant
+                 Type_Entity_Record'Class
+                   := Iterable_Type.Get_Ancestor_Type (Class_Iterable);
+
+               New_Cursor_Feature : constant Ack.Features.Feature_Entity :=
+                                      Iterable_Type.Feature
+                                        (Get_Name_Id ("new_cursor"));
+               Iterator_Type      : constant Ack.Types.Type_Entity :=
+                                      Ack.Types.Type_Entity
+                                        (New_Cursor_Feature.Get_Type);
+               Generic_Bindings   : constant Natural :=
+                                      Inherited_Type.Generic_Binding_Count;
+               pragma Assert (Generic_Bindings = 1);
                Implicit_Type      : constant Ack.Types.Type_Entity :=
                                       Inherited_Type.Generic_Binding (1);
                Implicit           : constant Ack.Variables.Variable_Entity :=
                                       Ack.Variables.New_Iterator_Entity
                                         (Name       =>
-                                                     Get_Name (Iteration_Node),
+                                           Get_Name (Iteration_Node),
                                          Node       => Iteration_Node,
-                                         Local_Type => Implicit_Type);
+                                         Iteration_Type =>
+                                           Iterator_Type,
+                                         Local_Type     => Implicit_Type);
             begin
                Implicit.Set_Attached;
                Set_Entity (Iteration_Node, Implicit);
+               Set_Context (Iteration_Node, Container);
                Set_Implicit_Entity (Iteration_Node);
                Container.Add_Implicit (Implicit);
             end;
@@ -1603,6 +1666,21 @@ package body Ack.Semantic is
             Class.Add_Note
               (Name  => To_Standard_String (Name),
                Value => To_String (Value_List));
+
+            if To_Standard_String (Name) = "aqua_modular_type" then
+               declare
+                  Modulus : Positive;
+               begin
+                  Modulus := Positive'Value (To_String (Value_List));
+                  Class.Set_Modulus (Modulus);
+                  Ack.Generate.Primitives.Create_Integral_Primitives (Class);
+               exception
+                  when Constraint_Error =>
+                     raise Constraint_Error with
+                     Get_Program (Value).Show_Location
+                       & ": positive integer required for modulus bits";
+               end;
+            end if;
          end;
       end loop;
    end Analyse_Notes;
@@ -1623,9 +1701,6 @@ package body Ack.Semantic is
       Right     : constant Node_Id := Field_2 (Operator_Node);
       Left_Type : Ack.Types.Type_Entity;
    begin
---        Ada.Text_IO.Put_Line
---          (Get_Program (Left).Show_Location
---               & ": analysing: " & To_String (Operator));
       Analyse_Expression
         (Class           => Class,
          Container       => Container,
@@ -1639,14 +1714,23 @@ package body Ack.Semantic is
 
       if Left_Type = null then
          null;
-      elsif not Left_Type.Has_Aliased_Feature (Operator) then
+      elsif not Left_Type.Has_Aliased_Feature (Operator, Right /= No_Node) then
          Error (Operator_Node, E_Undeclared_Name);
       else
          declare
             Feature : constant Ack.Features.Feature_Entity :=
-                        Left_Type.Aliased_Feature (Operator);
+                        Left_Type.Aliased_Feature
+                          (Alias => Operator,
+                           Infix => Right /= No_Node);
          begin
             pragma Assert (Feature.Argument_Count in 0 .. 1);
+            if not Feature.Has_Type then
+               raise Constraint_Error with
+                 "attempted to treat non-value feature "
+                 & Feature.Qualified_Name
+                 & " as an operator";
+            end if;
+
             if Feature.Argument_Count = 0 then
                if Right /= No_Node then
                   Error (Right, E_Too_Many_Arguments);
@@ -1655,15 +1739,37 @@ package body Ack.Semantic is
                if Right = No_Node then
                   Error (Operator_Node, E_Insufficient_Arguments);
                else
-                  Analyse_Expression
-                    (Class, Container, Feature.Argument (1).Get_Type, Right);
+                  declare
+                     Argument_Type : constant Ack.Types.Type_Entity :=
+                                       Ack.Types.Type_Entity
+                                         (Feature.Argument (1).Get_Type);
+                     Expected_Type : constant Ack.Types.Type_Entity :=
+                                       Ack.Types.Get_Concrete_Type
+                                         (Of_Type => Argument_Type,
+                                          Current => Left_Type,
+                                          Feature => Feature);
+                  begin
+                     Analyse_Expression
+                       (Class, Container, Expected_Type, Right);
+                  end;
                end if;
             end if;
-            Set_Type (Operator_Node, Feature.Get_Type);
-            if not Feature.Get_Type.Conforms_To (Expression_Type) then
-               Error (Operator_Node, E_Type_Error,
-                      Entity_Type (Expression_Type));
-            end if;
+
+            declare
+               Result_Type : constant Ack.Types.Type_Entity :=
+                               Ack.Types.Get_Concrete_Type
+                                 (Of_Type => Ack.Types.Type_Entity
+                                    (Feature.Get_Type),
+                                  Current => Left_Type,
+                                  Feature => Feature);
+            begin
+               Set_Type (Operator_Node, Result_Type);
+               Set_Entity (Operator_Node, Feature);
+               if not Result_Type.Conforms_To (Expression_Type) then
+                  Error (Operator_Node, E_Type_Error,
+                         Entity_Type (Expression_Type));
+               end if;
+            end;
          end;
       end if;
 
@@ -1748,6 +1854,8 @@ package body Ack.Semantic is
             end if;
 
             Set_Entity (Precursor_Element, Entity);
+            Set_Context (Precursor_Element, Local_Table.Class_Context);
+
             Value_Entity := Entity;
             Value_Type := Value_Entity.Get_Type;
             Local_Table := Value_Type;
@@ -1779,6 +1887,8 @@ package body Ack.Semantic is
          end if;
 
       end if;
+
+      Set_Context (Precursor, Container);
 
    end Analyse_Precursor;
 
@@ -1823,6 +1933,8 @@ package body Ack.Semantic is
                        Tuple_Classes (Tuple_Arity);
       Type_Entity   : Ack.Types.Type_Entity := null;
    begin
+
+      Container.Add_Shelf ("tuple-expression");
 
       if Tuple_Class = null then
          Tuple_Class := Load_Tuple_Class (Tuple_Arity);
@@ -1931,33 +2043,35 @@ package body Ack.Semantic is
       end case;
    end Analyse_Type;
 
-   ----------------------
-   -- Forward_Iterable --
-   ----------------------
+   --------------------
+   -- Class_Iterable --
+   --------------------
 
-   function Forward_Iterable return Ack.Classes.Class_Entity is
-      Container_Name    : constant Name_Id := Get_Name_Id ("containers");
-      Forward_Name      : constant Name_Id := Get_Name_Id ("forward_iterable");
-      Aqua_Entity       : constant Ack.Classes.Class_Entity :=
-                            Ack.Classes.Get_Top_Level_Class ("aqua");
-      Containers_Entity : constant Ack.Classes.Class_Entity :=
-                            (if Aqua_Entity.Contains (Container_Name)
-                             then Ack.Classes.Class_Entity
-                               (Aqua_Entity.Get (Container_Name))
-                             else Load_Class
-                               (Get_Program (Aqua_Entity.Declaration_Node),
-                                Aqua_Entity, Container_Name));
-      Forward_Entity    : constant Ack.Classes.Class_Entity :=
-                            (if Containers_Entity.Contains (Forward_Name)
-                             then Ack.Classes.Class_Entity
-                               (Containers_Entity.Get (Forward_Name))
-                             else Load_Class
-                               (Get_Program
-                                  (Containers_Entity.Declaration_Node),
-                                Containers_Entity, Forward_Name));
+   function Class_Iterable
+      return Ack.Classes.Class_Entity
+   is
+      use type Ack.Classes.Class_Entity;
    begin
-      return Forward_Entity;
-   end Forward_Iterable;
+      if Local_Iterable_Class = null then
+         declare
+            Aqua_Entity     : constant Ack.Classes.Class_Entity :=
+                                Ack.Classes.Get_Top_Level_Class ("aqua");
+            Iterable_Name   : constant String := "iterable";
+         begin
+            if Aqua_Entity.Contains (Iterable_Name) then
+               Local_Iterable_Class :=
+                 Ack.Classes.Class_Entity
+                   (Aqua_Entity.Get (Iterable_Name));
+            else
+               Local_Iterable_Class :=
+                 Load_Class (null, Aqua_Entity,
+                             Get_Name_Id (Iterable_Name));
+            end if;
+         end;
+      end if;
+
+      return Local_Iterable_Class;
+   end Class_Iterable;
 
    ------------------------
    -- Get_Top_Level_Type --
@@ -2074,5 +2188,82 @@ package body Ack.Semantic is
       return Load_Class (null, Aqua_Class,
                          Get_Name_Id (Tuple_Name));
    end Load_Tuple_Class;
+
+   ---------------------------
+   -- Property_Feature_Node --
+   ---------------------------
+
+   function Property_Feature_Node
+     (Node : Node_Id)
+      return Boolean
+   is
+      Dec_Body        : constant Node_Id := Declaration_Body (Node);
+      Value_Node      : constant Node_Id := Value (Dec_Body);
+      Value_Feature   : constant Boolean :=
+                          Value_Node /= No_Node
+                              and then Kind (Value_Node) = N_Explicit_Value;
+      Routine_Feature : constant Boolean :=
+                          Value_Node /= No_Node
+                              and then Kind (Value_Node) = N_Routine;
+      Deferred        : constant Boolean :=
+                          Routine_Feature
+                              and then Node_Table.Element
+                                (Value_Node).Deferred;
+      Arg_Node        : constant Node_Id := Formal_Arguments (Dec_Body);
+      Type_Node       : constant Node_Id := Value_Type (Dec_Body);
+   begin
+      return not Deferred
+        and then not Routine_Feature
+        and then not Value_Feature
+        and then Arg_Node = No_Node and then Type_Node /= No_Node;
+   end Property_Feature_Node;
+
+   -------------------
+   -- Type_Integral --
+   -------------------
+
+   function Type_Integral
+     (Node : Node_Id)
+      return Ack.Types.Type_Entity
+   is
+      use type Ack.Types.Type_Entity;
+   begin
+      if Local_Integral_Type = null then
+         declare
+            Aqua_Entity     : constant Ack.Classes.Class_Entity :=
+                                Ack.Classes.Get_Top_Level_Class ("aqua");
+            Integral_Name   : constant String := "integral";
+            Integral_Entity : constant Ack.Classes.Class_Entity :=
+                                (if Aqua_Entity.Contains (Integral_Name)
+                                 then Ack.Classes.Class_Entity
+                                   (Aqua_Entity.Get (Integral_Name))
+                                   else Load_Class
+                                   (Get_Program (Aqua_Entity.Declaration_Node),
+                                    Aqua_Entity, Get_Name_Id (Integral_Name)));
+         begin
+            Local_Integral_Type :=
+              Ack.Types.New_Class_Type (Node, Integral_Entity, False);
+         end;
+      end if;
+
+      return Local_Integral_Type;
+   end Type_Integral;
+
+   -------------------
+   -- Type_Iterable --
+   -------------------
+
+   function Type_Iterable
+      return Ack.Types.Type_Entity
+   is
+      use type Ack.Types.Type_Entity;
+   begin
+      if Local_Iterable_Type = null then
+         Local_Iterable_Type :=
+           Ack.Types.New_Class_Type (No_Node, Class_Iterable, False);
+      end if;
+
+      return Local_Iterable_Type;
+   end Type_Iterable;
 
 end Ack.Semantic;
