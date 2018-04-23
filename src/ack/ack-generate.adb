@@ -28,39 +28,48 @@ package body Ack.Generate is
 
    procedure Generate_Creation
      (Unit     : in out Tagatha.Units.Tagatha_Unit;
+      Context  : not null access constant Root_Entity_Type'Class;
       Creation : Node_Id);
 
    procedure Generate_Conditional
      (Unit        : in out Tagatha.Units.Tagatha_Unit;
+      Context     : not null access constant Root_Entity_Type'Class;
       Conditional : Node_Id);
 
    procedure Generate_Loop
      (Unit      : in out Tagatha.Units.Tagatha_Unit;
+      Context   : not null access constant Root_Entity_Type'Class;
       Loop_Node : Node_Id);
 
    procedure Generate_Operator_Expression
      (Unit          : in out Tagatha.Units.Tagatha_Unit;
+      Context       : not null access constant Root_Entity_Type'Class;
       Operator_Node : Node_Id);
 
    procedure Generate_Tuple_Expression
      (Unit       : in out Tagatha.Units.Tagatha_Unit;
+      Context    : not null access constant Root_Entity_Type'Class;
       Expression : Node_Id);
 
    procedure Generate_Precursor
      (Unit      : in out Tagatha.Units.Tagatha_Unit;
+      Context   : not null access constant Root_Entity_Type'Class;
       Precursor : Node_Id);
 
    procedure Generate_Check
      (Unit  : in out Tagatha.Units.Tagatha_Unit;
-      Check : Node_Id)
+      Context : not null access constant Root_Entity_Type'Class;
+      Check   : Node_Id)
    is null;
 
    procedure Generate_Retry
      (Unit  : in out Tagatha.Units.Tagatha_Unit;
-      Retry : Node_Id);
+      Context : not null access constant Root_Entity_Type'Class;
+      Retry   : Node_Id);
 
    procedure Generate_Set_Value
      (Unit       : in out Tagatha.Units.Tagatha_Unit;
+      Context    : not null access constant Root_Entity_Type'Class;
       Value_Type : not null access constant Root_Entity_Type'Class;
       Node       : Node_Id);
 
@@ -175,6 +184,7 @@ package body Ack.Generate is
 
    procedure Generate_Compound
      (Unit    : in out Tagatha.Units.Tagatha_Unit;
+      Context : not null access constant Root_Entity_Type'Class;
       Node    : Node_Id)
    is
       procedure Generate_Instruction
@@ -193,22 +203,22 @@ package body Ack.Generate is
             Column => Positive (Get_Program (Instruction).Location_Column));
          case N_Instruction (Kind (Instruction)) is
             when N_Assignment =>
-               Generate_Expression (Unit, Expression (Instruction));
+               Generate_Expression (Unit, Context, Expression (Instruction));
                Generate_Set_Value
-                 (Unit, Get_Type (Expression (Instruction)),
+                 (Unit, Context, Get_Type (Expression (Instruction)),
                   Variable (Instruction));
             when N_Creation_Instruction =>
-               Generate_Creation (Unit, Instruction);
+               Generate_Creation (Unit, Context, Instruction);
             when N_Conditional =>
-               Generate_Conditional (Unit, Instruction);
+               Generate_Conditional (Unit, Context, Instruction);
             when N_Loop =>
-               Generate_Loop (Unit, Instruction);
+               Generate_Loop (Unit, Context, Instruction);
             when N_Precursor =>
-               Generate_Precursor (Unit, Instruction);
+               Generate_Precursor (Unit, Context, Instruction);
             when N_Check =>
-               Generate_Check (Unit, Instruction);
+               Generate_Check (Unit, Context, Instruction);
             when N_Retry =>
-               Generate_Retry (Unit, Instruction);
+               Generate_Retry (Unit, Context, Instruction);
          end case;
       end Generate_Instruction;
 
@@ -222,6 +232,7 @@ package body Ack.Generate is
 
    procedure Generate_Conditional
      (Unit        : in out Tagatha.Units.Tagatha_Unit;
+      Context     : not null access constant Root_Entity_Type'Class;
       Conditional : Node_Id)
    is
 
@@ -244,7 +255,7 @@ package body Ack.Generate is
          end if;
 
          if Condition /= No_Node then
-            Generate_Expression (Unit, Condition);
+            Generate_Expression (Unit, Context, Condition);
             if Implicit_Entity (Condition) then
                Unit.Duplicate;
             end if;
@@ -253,7 +264,7 @@ package body Ack.Generate is
             Unit.Operate (Tagatha.Op_Test, Tagatha.Default_Size);
             Unit.Jump (Else_Label, Tagatha.C_Equal);
          end if;
-         Generate_Compound (Unit, Compound);
+         Generate_Compound (Unit, Context, Compound);
          if Condition /= No_Node
            and then Implicit_Entity (Condition)
          then
@@ -279,6 +290,7 @@ package body Ack.Generate is
 
    procedure Generate_Creation
      (Unit     : in out Tagatha.Units.Tagatha_Unit;
+      Context  : not null access constant Root_Entity_Type'Class;
       Creation : Node_Id)
    is
       Call_Node : constant Node_Id := Creation_Call (Creation);
@@ -319,7 +331,7 @@ package body Ack.Generate is
                                    .List);
          begin
             for Item of reverse Actuals_Node_List loop
-               Generate_Expression (Unit, Item);
+               Generate_Expression (Unit, Context, Item);
             end loop;
          end;
 
@@ -357,6 +369,7 @@ package body Ack.Generate is
 
    procedure Generate_Expression
      (Unit       : in out Tagatha.Units.Tagatha_Unit;
+      Context    : not null access constant Root_Entity_Type'Class;
       Expression : Node_Id)
    is
    begin
@@ -365,15 +378,15 @@ package body Ack.Generate is
          Column => Positive (Get_Program (Expression).Location_Column));
       case N_Expression_Node (Kind (Expression)) is
          when N_Operator =>
-            Generate_Operator_Expression (Unit, Expression);
+            Generate_Operator_Expression (Unit, Context, Expression);
          when N_Precursor =>
-            Generate_Precursor (Unit, Expression);
+            Generate_Precursor (Unit, Context, Expression);
          when N_Attachment_Test =>
-            Generate_Expression (Unit, Field_1 (Expression));
+            Generate_Expression (Unit, Context, Field_1 (Expression));
          when N_Old =>
-            Generate_Expression (Unit, Field_1 (Expression));
+            Generate_Expression (Unit, Context, Field_1 (Expression));
          when N_Tuple =>
-            Generate_Tuple_Expression (Unit, Expression);
+            Generate_Tuple_Expression (Unit, Context, Expression);
          when N_Constant =>
             declare
                Value : constant Node_Id := Constant_Value (Expression);
@@ -439,6 +452,7 @@ package body Ack.Generate is
 
    procedure Generate_Loop
      (Unit      : in out Tagatha.Units.Tagatha_Unit;
+      Context   : not null access constant Root_Entity_Type'Class;
       Loop_Node : Node_Id)
    is
       Iteration_Node      : constant Node_Id := Loop_Iteration (Loop_Node);
@@ -477,11 +491,11 @@ package body Ack.Generate is
       end if;
 
       if Initialization_Node /= No_Node then
-         Generate_Compound (Unit, Compound (Initialization_Node));
+         Generate_Compound (Unit, Context, Compound (Initialization_Node));
       end if;
 
       if Has_Iterator then
-         Generate_Expression (Unit, It_Expression);
+         Generate_Expression (Unit, Context, It_Expression);
          New_Cursor_Feature.Push_Entity
            (Have_Current => True,
             Context      => Iterable_Type.Class_Context,
@@ -500,12 +514,12 @@ package body Ack.Generate is
       end if;
 
       if Exit_Condition_Node /= No_Node then
-         Generate_Expression (Unit, Expression (Exit_Condition_Node));
+         Generate_Expression (Unit, Context, Expression (Exit_Condition_Node));
          Unit.Operate (Tagatha.Op_Test);
          Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
       end if;
 
-      Generate_Compound (Unit, Compound (Loop_Body_Node));
+      Generate_Compound (Unit, Context, Compound (Loop_Body_Node));
 
       if Has_Iterator then
          Unit.Duplicate;
@@ -531,6 +545,7 @@ package body Ack.Generate is
 
    procedure Generate_Operator_Expression
      (Unit          : in out Tagatha.Units.Tagatha_Unit;
+      Context       : not null access constant Root_Entity_Type'Class;
       Operator_Node : Node_Id)
    is
       use type Ack.Types.Type_Entity;
@@ -544,13 +559,13 @@ package body Ack.Generate is
             Maybe : constant Positive := Unit.Next_Label;
             Leave : constant Positive := Unit.Next_Label;
          begin
-            Generate_Expression (Unit, Left);
+            Generate_Expression (Unit, Context, Left);
             Unit.Operate (Tagatha.Op_Test);
             Unit.Jump (Maybe, Tagatha.C_Not_Equal);
             Unit.Push (0);
             Unit.Jump (Leave);
             Unit.Label (Maybe);
-            Generate_Expression (Unit, Right);
+            Generate_Expression (Unit, Context, Right);
             Unit.Label (Leave);
          end;
       elsif Operator = Get_Name_Id ("orelse") then
@@ -558,25 +573,25 @@ package body Ack.Generate is
             Maybe : constant Positive := Unit.Next_Label;
             Leave : constant Positive := Unit.Next_Label;
          begin
-            Generate_Expression (Unit, Left);
+            Generate_Expression (Unit, Context, Left);
             Unit.Operate (Tagatha.Op_Test);
             Unit.Jump (Maybe, Tagatha.C_Equal);
             Unit.Push (1);
             Unit.Jump (Leave);
             Unit.Label (Maybe);
-            Generate_Expression (Unit, Right);
+            Generate_Expression (Unit, Context, Right);
             Unit.Label (Leave);
          end;
       elsif Operator = Get_Name_Id ("implies") then
-         Generate_Expression (Unit, Left);
+         Generate_Expression (Unit, Context, Left);
          Unit.Operate (Tagatha.Op_Not);
-         Generate_Expression (Unit, Right);
+         Generate_Expression (Unit, Context, Right);
          Unit.Operate (Tagatha.Op_Or);
       else
          if Right /= No_Node then
-            Generate_Expression (Unit, Right);
+            Generate_Expression (Unit, Context, Right);
          end if;
-         Generate_Expression (Unit, Left);
+         Generate_Expression (Unit, Context, Left);
 
          Get_Entity (Operator_Node).Push_Entity
            (Have_Current => True,
@@ -592,6 +607,7 @@ package body Ack.Generate is
 
    procedure Generate_Precursor
      (Unit      : in out Tagatha.Units.Tagatha_Unit;
+      Context   : not null access constant Root_Entity_Type'Class;
       Precursor : Node_Id)
    is
       List   : constant List_Id :=
@@ -626,7 +642,7 @@ package body Ack.Generate is
                                  (Actuals_List).List;
       begin
          for Item of reverse Actuals_Node_List loop
-            Generate_Expression (Unit, Item);
+            Generate_Expression (Unit, Context, Item);
          end loop;
       end Apply_Arguments;
 
@@ -727,8 +743,10 @@ package body Ack.Generate is
 
    procedure Generate_Retry
      (Unit  : in out Tagatha.Units.Tagatha_Unit;
-      Retry : Node_Id)
+      Context : not null access constant Root_Entity_Type'Class;
+      Retry   : Node_Id)
    is
+      pragma Unreferenced (Context);
       Target : constant String := Unit.Get_Property ("retry_label");
    begin
       if Target /= "" then
@@ -746,9 +764,11 @@ package body Ack.Generate is
 
    procedure Generate_Set_Value
      (Unit       : in out Tagatha.Units.Tagatha_Unit;
+      Context    : not null access constant Root_Entity_Type'Class;
       Value_Type : not null access constant Root_Entity_Type'Class;
       Node       : Node_Id)
    is
+      pragma Unreferenced (Context);
       Entity : constant Entity_Type := Get_Entity (Node);
    begin
       if Value_Type.Standard_Name = "none" then
@@ -775,6 +795,7 @@ package body Ack.Generate is
 
    procedure Generate_Tuple_Expression
      (Unit       : in out Tagatha.Units.Tagatha_Unit;
+      Context    : not null access constant Root_Entity_Type'Class;
       Expression : Node_Id)
    is
       Tuple_Type   : constant Entity_Type := Get_Type (Expression);
@@ -788,7 +809,7 @@ package body Ack.Generate is
                        & Arity_Image (2 .. Arity_Image'Last);
    begin
       for Arg of reverse Actual_Nodes loop
-         Generate_Expression (Unit, Arg);
+         Generate_Expression (Unit, Context, Arg);
       end loop;
 
       Unit.Call

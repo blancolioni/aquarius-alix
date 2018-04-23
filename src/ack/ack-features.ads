@@ -168,7 +168,7 @@ package Ack.Features is
       Unit    : in out Tagatha.Units.Tagatha_Unit);
 
    procedure Generate_Routine
-     (Feature : Feature_Entity_Record'Class;
+     (Feature : not null access constant Feature_Entity_Record'Class;
       Class   : not null access constant Ack.Classes.Class_Entity_Record'Class;
       Unit    : in out Tagatha.Units.Tagatha_Unit);
 
@@ -311,7 +311,7 @@ private
       Name    : String);
 
    procedure Check_Precondition
-     (Feature       : Feature_Entity_Record'Class;
+     (Feature       : not null access constant Feature_Entity_Record'Class;
       Unit          : in out Tagatha.Units.Tagatha_Unit;
       Success_Label : Positive;
       Fail_Label    : Natural);
