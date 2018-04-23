@@ -8,7 +8,6 @@ package Aquarius.Plugins.Dynamic is
 
    type Dynamic_Plugin_Type is
      new Aquarius_Plugin_Type
-     and Aqua.Execution.Loader_Interface
    with private;
 
    overriding
@@ -23,11 +22,6 @@ package Aquarius.Plugins.Dynamic is
 
    overriding procedure Report_State
      (Plugin : Dynamic_Plugin_Type);
-
-   overriding function Load_Object
-     (Plugin : in out Dynamic_Plugin_Type;
-      File_Name : String)
-      return access Aqua.External_Object_Interface'Class;
 
    function New_Dynamic_Plugin
      (Name    : String;
@@ -55,7 +49,6 @@ private
 
    type Dynamic_Plugin_Type is
      new Aquarius_Plugin_Type
-     and Aqua.Execution.Loader_Interface
        with
       record
          Name       : Ada.Strings.Unbounded.Unbounded_String;

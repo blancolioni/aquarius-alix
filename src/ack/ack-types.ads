@@ -9,33 +9,35 @@ package Ack.Types is
      new Root_Entity_Type with private;
 
    function Has_Feature
-     (Typ   : Type_Entity_Record'Class;
+     (Typ   : not null access constant Type_Entity_Record'Class;
       Name  : Name_Id)
       return Boolean;
 
    function Feature
-     (Typ   : Type_Entity_Record'Class;
+     (Typ   : not null access constant Type_Entity_Record'Class;
       Name  : Name_Id)
       return Ack.Features.Feature_Entity
      with Pre => Typ.Has_Feature (Name);
 
    function Has_Aliased_Feature
      (Typ   : Type_Entity_Record'Class;
-      Alias : Name_Id)
+      Alias : Name_Id;
+      Infix : Boolean)
       return Boolean;
 
    function Aliased_Feature
      (Typ   : Type_Entity_Record'Class;
-      Alias : Name_Id)
+      Alias : Name_Id;
+      Infix : Boolean)
       return Ack.Features.Feature_Entity
-     with Pre => Typ.Has_Aliased_Feature (Alias);
+     with Pre => Typ.Has_Aliased_Feature (Alias, Infix);
 
    function Class
      (Typ : Type_Entity_Record'Class)
       return access Ack.Classes.Class_Entity_Record'Class;
 
-   function Expanded
-     (Typ : Type_Entity_Record'Class)
+   overriding function Expanded
+     (Typ : Type_Entity_Record)
       return Boolean;
 
    overriding function Deferred
@@ -77,7 +79,8 @@ package Ack.Types is
 
    function New_Class_Type
      (Node       : Node_Id;
-      Class      : Ack.Classes.Class_Entity;
+      Class      : not null access
+        Ack.Classes.Class_Entity_Record'Class;
       Detachable : Boolean)
       return Type_Entity;
 
@@ -105,6 +108,13 @@ package Ack.Types is
       Node          : Node_Id;
       Generic_Class : Ack.Classes.Class_Entity;
       Constraints   : Array_Of_Types := Empty_Type_Array)
+      return Type_Entity;
+
+   function Get_Concrete_Type
+     (Of_Type : not null access Type_Entity_Record'Class;
+      Current : not null access Type_Entity_Record'Class;
+      Feature : not null access constant
+        Ack.Features.Feature_Entity_Record'Class)
       return Type_Entity;
 
    function Get_Class_Type
@@ -142,14 +152,28 @@ private
          Anchored         : Boolean := False;
       end record;
 
+   overriding function Class_Context
+     (Typ : not null access constant Type_Entity_Record)
+      return Constant_Entity_Type
+   is (Constant_Entity_Type (Typ.Class));
+
    overriding function Instantiate
      (Entity             : not null access Type_Entity_Record;
       Type_Instantiation : not null access
         function (Generic_Type : Entity_Type) return Entity_Type)
       return Entity_Type;
 
+   overriding function Concrete_Entity
+     (Entity : not null access Type_Entity_Record)
+      return Entity_Type;
+
    overriding function Conforms_To
      (Conformer : not null access constant Type_Entity_Record;
+      Other     : not null access constant Root_Entity_Type'Class)
+      return Boolean;
+
+   overriding function Proper_Ancestor_Of
+     (Ancestor : not null access constant Type_Entity_Record;
       Other     : not null access constant Root_Entity_Type'Class)
       return Boolean;
 
@@ -186,7 +210,7 @@ private
       Unit : in out Tagatha.Units.Tagatha_Unit);
 
    overriding procedure Check_Bound
-     (Typ : in out Type_Entity_Record);
+     (Typ : not null access Type_Entity_Record);
 
    function Class
      (Typ : Type_Entity_Record'Class)
@@ -202,6 +226,8 @@ private
    function Generic_Binding_Count
      (Typ : Type_Entity_Record'Class)
       return Natural
-   is (Natural (Typ.Generic_Bindings.Length));
+   is (if Typ.Generic_Bindings.Is_Empty
+       then Typ.Class.Generic_Formal_Count
+       else Natural (Typ.Generic_Bindings.Length));
 
 end Ack.Types;

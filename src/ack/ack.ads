@@ -116,6 +116,7 @@ package Ack is
       E_Not_Defined_In,
       E_Not_A_Create_Feature,
       E_Create_Deferred_Class,
+      E_Requires_Body,
       E_Missing_Redefine,
       E_Missing_Redefinition,
       E_No_Component,
@@ -147,12 +148,23 @@ package Ack is
 
    function Default_Monitoring_Level return Assertion_Monitoring_Level;
 
+   procedure Set_Write_Tables
+     (Write_Tables : Boolean);
+
+   procedure Set_Trace
+     (Class_Analysis : Boolean);
+
+   procedure Set_Stack_Check
+     (Stack_Check : Boolean);
+
    type Node_Id is private;
 
    No_Node : constant Node_Id;
 
    function Kind (Node : Node_Id) return Node_Kind
      with Pre => Node /= No_Node;
+
+   function Copy (Node : Node_Id) return Node_Id;
 
    type List_Id is private;
 
@@ -197,6 +209,18 @@ package Ack is
      (Name : Name_Id)
       return String;
 
+   type Byte_Offset is new Natural;
+
+   type Word_Offset is new Natural;
+
+   function Image (Offset : Word_Offset) return String;
+
+   type Bit_Offset is new Natural;
+
+   procedure Push_Offset
+     (Unit   : in out Tagatha.Units.Tagatha_Unit;
+      Offset : Word_Offset);
+
    type Root_Entity_Type is abstract tagged private;
 
    function Deferred
@@ -207,10 +231,16 @@ package Ack is
    type Entity_Type is access all Root_Entity_Type'Class;
    type Constant_Entity_Type is access constant Root_Entity_Type'Class;
 
+   function Class_Context
+     (Entity : not null access constant Root_Entity_Type)
+      return Constant_Entity_Type
+      is abstract;
+
    function Standard_Name (Entity : Root_Entity_Type'Class) return String;
    function Declared_Name (Entity : Root_Entity_Type'Class) return String;
    function Qualified_Name (Entity : Root_Entity_Type'Class) return String;
    function Link_Name (Entity : Root_Entity_Type) return String;
+   function Link_Name_Id (Entity : Root_Entity_Type) return Name_Id;
    function Base_File_Name (Entity : Root_Entity_Type'Class) return String;
    function Base_Child_File_Name
      (Entity     : Root_Entity_Type;
@@ -252,9 +282,24 @@ package Ack is
      (Entity : in out Root_Entity_Type'Class;
       Level  : Assertion_Monitoring_Level);
 
+   function Concrete_Entity
+     (Entity : not null access Root_Entity_Type)
+      return Entity_Type
+   is (Entity_Type (Entity));
+
+   function Expanded
+     (Entity : Root_Entity_Type)
+      return Boolean
+      is abstract;
+
    function Conforms_To
      (Class : not null access constant Root_Entity_Type;
       Other : not null access constant Root_Entity_Type'Class)
+      return Boolean;
+
+   function Proper_Ancestor_Of
+     (Ancestor   : not null access constant Root_Entity_Type;
+      Descendent : not null access constant Root_Entity_Type'Class)
       return Boolean;
 
    function Attached
@@ -285,6 +330,16 @@ package Ack is
      with Pre'Class =>
        Root_Entity_Type'Class (Entity).Argument_Count >= Index;
 
+   procedure Add_Shelf
+     (Entity : in out Root_Entity_Type;
+      Name   : String)
+   is null;
+
+   function Shelf
+     (Entity : Root_Entity_Type;
+      Name   : String)
+      return Positive;
+
    function Declaration_Node
      (Entity : Root_Entity_Type'Class)
       return Node_Id;
@@ -313,18 +368,21 @@ package Ack is
       Node   : Node_Id)
    is null;
 
-   procedure Check_Bound (Entity : in out Root_Entity_Type) is null;
-   procedure Bind (Entity : in out Root_Entity_Type) is null;
+   procedure Check_Bound (Entity : not null access Root_Entity_Type) is null;
+   procedure Bind (Entity : not null access Root_Entity_Type) is null;
 
    procedure Push_Entity
-     (Entity       : Root_Entity_Type;
-      Have_Context : Boolean;
-      Unit         : in out Tagatha.Units.Tagatha_Unit)
+     (Entity        : Root_Entity_Type;
+      Have_Current  : Boolean;
+      Context       : not null access constant Root_Entity_Type'Class;
+      Unit          : in out Tagatha.Units.Tagatha_Unit)
    is null;
 
    procedure Pop_Entity
-     (Entity : Root_Entity_Type;
-      Unit   : in out Tagatha.Units.Tagatha_Unit)
+     (Entity     : Root_Entity_Type;
+      Context    : not null access constant Root_Entity_Type'Class;
+      Value_Type : not null access constant Root_Entity_Type'Class;
+      Unit       : in out Tagatha.Units.Tagatha_Unit)
    is null;
 
    procedure Allocate
@@ -462,6 +520,9 @@ package Ack is
 
    function Get_Entity (N : Node_Id) return Entity_Type;
    function Has_Entity (N : Node_Id) return Boolean;
+
+   function Get_Context (N : Node_Id) return Constant_Entity_Type;
+   function Has_Context (N : Node_Id) return Boolean;
 
    function Get_Type (N : Node_Id) return Entity_Type;
    function Has_Type (N : Node_Id) return Boolean;
@@ -681,6 +742,7 @@ private
          List            : List_Id    := No_List;
          Name            : Name_Id    := No_Name;
          Entity          : Entity_Type := null;
+         Context         : Constant_Entity_Type := null;
          Node_Type       : Entity_Type := null;
          Error           : Error_Kind := E_No_Error;
          Error_Entity    : Constant_Entity_Type := null;
@@ -695,6 +757,8 @@ private
       record
          List : List_Of_Nodes.List;
       end record;
+
+   function Copy (List : List_Id) return List_Id;
 
 --     package List_Of_Entities is
 --       new Ada.Containers.Doubly_Linked_Lists (Entity_Type);
@@ -907,6 +971,12 @@ private
    function Get_Entity (N : Node_Id) return Entity_Type
    is (Node_Table.Element (N).Entity);
 
+   function Has_Context (N : Node_Id) return Boolean
+   is (Node_Table.Element (N).Context /= null);
+
+   function Get_Context (N : Node_Id) return Constant_Entity_Type
+   is (Node_Table.Element (N).Context);
+
    function Has_Type (N : Node_Id) return Boolean
    is (Node_Table.Element (N).Node_Type /= null);
 
@@ -1036,6 +1106,11 @@ private
       Process : not null access
         procedure (Node : Node_Id));
 
+   procedure Set_Context
+     (Node    : Real_Node_Id;
+      Context : not null access constant Root_Entity_Type'Class)
+     with Pre => Get_Context (Node) = null;
+
    procedure Set_Entity
      (Node : Real_Node_Id;
       Entity : not null access Root_Entity_Type'Class)
@@ -1092,6 +1167,9 @@ private
 
    type Entity_Table is access Entity_Table_Record;
 
+   package Shelf_Maps is
+     new WL.String_Maps (Positive);
+
    type Root_Entity_Type is abstract tagged
       record
          Name                 : Ada.Strings.Unbounded.Unbounded_String;
@@ -1104,6 +1182,7 @@ private
          Attached             : Boolean := False;
          Has_Monitoring_Level : Boolean := False;
          Monitoring_Level     : Assertion_Monitoring_Level;
+         Shelves              : Shelf_Maps.Map;
       end record;
 
    function Has_Context
@@ -1138,6 +1217,9 @@ private
 
    function Link_Name (Entity : Root_Entity_Type) return String
    is (Entity.Context_Name ("__", True));
+
+   function Link_Name_Id (Entity : Root_Entity_Type) return Name_Id
+   is (Get_Name_Id (Entity.Context_Name ("__", True)));
 
    function Base_File_Name (Entity : Root_Entity_Type'Class) return String
    is (Entity.Context_Name ("-", True));
@@ -1177,6 +1259,18 @@ private
       return Boolean
    is (Entity.Attached);
 
+   function Shelf
+     (Entity : Root_Entity_Type;
+      Name   : String)
+      return Positive
+   is (Entity.Shelves.Element (Name));
+
+   function Proper_Ancestor_Of
+     (Ancestor   : not null access constant Root_Entity_Type;
+      Descendent : not null access constant Root_Entity_Type'Class)
+      return Boolean
+   is (False);
+
    procedure Create
      (Entity             : in out Root_Entity_Type'Class;
       Name               : Name_Id;
@@ -1190,5 +1284,9 @@ private
 
    function Default_Monitoring_Level return Assertion_Monitoring_Level
    is (Local_Default_Monitoring_Level);
+
+   Local_Write_Tables   : Boolean := False;
+   Trace_Class_Analysis : Boolean := False;
+   Stack_Check_Enabled  : Boolean := False;
 
 end Ack;

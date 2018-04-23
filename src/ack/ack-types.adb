@@ -13,11 +13,12 @@ package body Ack.Types is
 
    function Aliased_Feature
      (Typ   : Type_Entity_Record'Class;
-      Alias : Name_Id)
+      Alias : Name_Id;
+      Infix : Boolean)
       return Ack.Features.Feature_Entity
    is
    begin
-      return Typ.Class.Aliased_Feature (Alias);
+      return Typ.Class.Aliased_Feature (Alias, Infix);
    end Aliased_Feature;
 
    --------------
@@ -37,13 +38,25 @@ package body Ack.Types is
    -----------------
 
    overriding procedure Check_Bound
-     (Typ : in out Type_Entity_Record)
+     (Typ : not null access Type_Entity_Record)
    is
    begin
       if not Typ.Generic_Formal then
          Typ.Class.Check_Bound;
       end if;
    end Check_Bound;
+
+   ---------------------
+   -- Concrete_Entity --
+   ---------------------
+
+   overriding function Concrete_Entity
+     (Entity : not null access Type_Entity_Record)
+      return Entity_Type
+   is
+   begin
+      return Entity_Type (Entity);
+   end Concrete_Entity;
 
    -----------------
    -- Conforms_To --
@@ -114,6 +127,8 @@ package body Ack.Types is
       if Typ.Generic_Formal then
          return Typ.Declared_Name & " (a generic argument of "
            & Typ.Class.Description & ")";
+      elsif Typ.Anchored then
+         return "like " & To_String (Typ.Anchored_Name);
       else
          return Typ.Full_Name & " (" & Typ.Class.Description & ")";
       end if;
@@ -123,8 +138,8 @@ package body Ack.Types is
    -- Expanded --
    --------------
 
-   function Expanded
-     (Typ : Type_Entity_Record'Class)
+   overriding function Expanded
+     (Typ : Type_Entity_Record)
       return Boolean
    is
       use type Ack.Classes.Class_Entity;
@@ -138,7 +153,7 @@ package body Ack.Types is
    -------------
 
    function Feature
-     (Typ   : Type_Entity_Record'Class;
+     (Typ   : not null access constant Type_Entity_Record'Class;
       Name  : Name_Id)
       return Ack.Features.Feature_Entity
    is
@@ -199,6 +214,10 @@ package body Ack.Types is
    is
       Count : Natural := 0;
    begin
+      if Typ.Generic_Bindings.Is_Empty then
+         return Typ.Class.Generic_Formal (Index);
+      end if;
+
       for Binding of Typ.Generic_Bindings loop
          Count := Count + 1;
          if Count = Index then
@@ -206,7 +225,8 @@ package body Ack.Types is
          end if;
       end loop;
       raise Constraint_Error with
-        "generic_binding: index too large: " & Typ.Description;
+        "generic_binding: index"
+        & Index'Img & " too large : " & Typ.Description;
    end Generic_Binding;
 
    ---------
@@ -224,7 +244,7 @@ package body Ack.Types is
       else
          declare
             use type Ack.Classes.Constant_Class_Entity;
-            Feature          : constant Ack.Features.Feature_Entity :=
+            Feature        : constant Ack.Features.Feature_Entity :=
                                  Typ.Class.Feature
                                    (Get_Name_Id (Name));
             Ancestor_Type : Ack.Classes.Class_Type_Access :=
@@ -265,6 +285,7 @@ package body Ack.Types is
                            return Entity_Type (Binding.Actual);
                         end if;
                      end loop;
+
                      return Entity;
                   end Instantiate_Entity;
 
@@ -318,6 +339,37 @@ package body Ack.Types is
       return Class_Type_Map.Element (Key);
    end Get_Class_Type;
 
+   -----------------------
+   -- Get_Concrete_Type --
+   -----------------------
+
+   function Get_Concrete_Type
+     (Of_Type : not null access Type_Entity_Record'Class;
+      Current : not null access Type_Entity_Record'Class;
+      Feature : not null access constant
+        Ack.Features.Feature_Entity_Record'Class)
+      return Type_Entity
+   is
+   begin
+      if not Of_Type.Anchored then
+         return Type_Entity (Of_Type);
+      end if;
+
+      declare
+         Anchor_Name : constant String :=
+                         To_Standard_String (Of_Type.Anchored_Name);
+      begin
+         if Anchor_Name = "current" then
+            return Type_Entity (Current);
+         else
+            raise Constraint_Error with
+            Get_Program (Feature.Declaration_Node).Show_Location
+              & ": like " & To_String (Of_Type.Anchored_Name)
+              & ": non-Current anchors not implemented";
+         end if;
+      end;
+   end Get_Concrete_Type;
+
    ------------------------
    -- Get_Top_Level_Type --
    ------------------------
@@ -354,11 +406,12 @@ package body Ack.Types is
 
    function Has_Aliased_Feature
      (Typ   : Type_Entity_Record'Class;
-      Alias : Name_Id)
+      Alias : Name_Id;
+      Infix : Boolean)
       return Boolean
    is
    begin
-      return Typ.Class.Has_Aliased_Feature (Alias);
+      return Typ.Class.Has_Aliased_Feature (Alias, Infix);
    end Has_Aliased_Feature;
 
    -----------------
@@ -366,7 +419,7 @@ package body Ack.Types is
    -----------------
 
    function Has_Feature
-     (Typ   : Type_Entity_Record'Class;
+     (Typ   : not null access constant Type_Entity_Record'Class;
       Name  : Name_Id)
       return Boolean
    is
@@ -385,7 +438,32 @@ package body Ack.Types is
       return Entity_Type
    is
    begin
-      return Type_Instantiation (Entity_Type (Entity));
+      return Result : Entity_Type do
+         if Entity.Generic_Formal then
+            Result := Type_Instantiation (Entity_Type (Entity));
+         elsif Entity.Class.Generic_Formal_Count > 0 then
+            declare
+               Actuals : Array_Of_Types
+                 (1 .. Entity.Class.Generic_Formal_Count);
+            begin
+               for I in Actuals'Range loop
+                  Actuals (I) :=
+                    Type_Entity
+                      (Entity.Generic_Binding (I)
+                       .Instantiate (Type_Instantiation));
+               end loop;
+               Result :=
+                 Entity_Type
+                   (Instantiate_Generic_Class
+                      (Node            => Entity.Declaration_Node,
+                       Generic_Class   => Entity.Class,
+                       Generic_Actuals => Actuals,
+                       Detachable      => Entity.Detachable));
+            end;
+         else
+            Result := Entity_Type (Entity);
+         end if;
+      end return;
    end Instantiate;
 
    ------------------------------
@@ -465,15 +543,15 @@ package body Ack.Types is
    --------------------
 
    function New_Class_Type
-     (Node            : Node_Id;
-      Class           : Ack.Classes.Class_Entity;
-      Detachable      : Boolean)
+     (Node       : Node_Id;
+      Class      : not null access Ack.Classes.Class_Entity_Record'Class;
+      Detachable : Boolean)
       return Type_Entity
    is
    begin
       return Result : constant Type_Entity := new Type_Entity_Record'
         (Root_Entity_Type with
-         Class               => Class,
+         Class               => Ack.Classes.Class_Entity (Class),
          Generic_Bindings    => <>,
          Constraints         => <>,
          Anchored_Name       => <>,
@@ -520,6 +598,25 @@ package body Ack.Types is
 
       end return;
    end New_Generic_Formal_Type;
+
+   ------------------------
+   -- Proper_Ancestor_Of --
+   ------------------------
+
+   overriding function Proper_Ancestor_Of
+     (Ancestor  : not null access constant Type_Entity_Record;
+      Other     : not null access constant Root_Entity_Type'Class)
+      return Boolean
+   is
+   begin
+      if Other.all not in Type_Entity_Record'Class
+        or else Ancestor.Qualified_Name = Other.Qualified_Name
+      then
+         return False;
+      end if;
+
+      return Other.Conforms_To (Ancestor);
+   end Proper_Ancestor_Of;
 
    -------------------------------
    -- Update_Type_Instantiation --

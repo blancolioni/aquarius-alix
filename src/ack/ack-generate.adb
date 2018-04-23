@@ -1,4 +1,3 @@
-with Tagatha.Operands;
 with Tagatha.Units;
 with Tagatha.Units.Listing;
 
@@ -9,185 +8,70 @@ with Ack.Classes;
 with Ack.Features;
 with Ack.Types;
 
-with Ack.Generate.Primitives;
-
 with Ada.Text_IO;
 with Ack.IO;
 
 package body Ack.Generate is
 
-   Report_Allocation : constant Boolean := False;
+   String_Label_Index : Natural := 0;
 
-   procedure Generate_Allocator
-     (Unit  : in out Tagatha.Units.Tagatha_Unit;
-      Class : not null access Ack.Classes.Class_Entity_Record'Class);
-
-   procedure Generate_Default_Create
-     (Unit  : in out Tagatha.Units.Tagatha_Unit;
-      Class : not null access Ack.Classes.Class_Entity_Record'Class);
+   function Next_String_Label
+     (Base_Name : String)
+      return String;
 
    procedure Generate_Feature
      (Unit    : in out Tagatha.Units.Tagatha_Unit;
+      Class   : not null access constant
+        Ack.Classes.Class_Entity_Record'Class;
       Feature : not null access constant
         Ack.Features.Feature_Entity_Record'Class);
 
    procedure Generate_Creation
      (Unit     : in out Tagatha.Units.Tagatha_Unit;
+      Context  : not null access constant Root_Entity_Type'Class;
       Creation : Node_Id);
 
    procedure Generate_Conditional
      (Unit        : in out Tagatha.Units.Tagatha_Unit;
+      Context     : not null access constant Root_Entity_Type'Class;
       Conditional : Node_Id);
 
    procedure Generate_Loop
      (Unit      : in out Tagatha.Units.Tagatha_Unit;
+      Context   : not null access constant Root_Entity_Type'Class;
       Loop_Node : Node_Id);
 
    procedure Generate_Operator_Expression
      (Unit          : in out Tagatha.Units.Tagatha_Unit;
+      Context       : not null access constant Root_Entity_Type'Class;
       Operator_Node : Node_Id);
 
    procedure Generate_Tuple_Expression
      (Unit       : in out Tagatha.Units.Tagatha_Unit;
+      Context    : not null access constant Root_Entity_Type'Class;
       Expression : Node_Id);
 
    procedure Generate_Precursor
      (Unit      : in out Tagatha.Units.Tagatha_Unit;
+      Context   : not null access constant Root_Entity_Type'Class;
       Precursor : Node_Id);
 
    procedure Generate_Check
      (Unit  : in out Tagatha.Units.Tagatha_Unit;
-      Check : Node_Id)
+      Context : not null access constant Root_Entity_Type'Class;
+      Check   : Node_Id)
    is null;
 
    procedure Generate_Retry
      (Unit  : in out Tagatha.Units.Tagatha_Unit;
-      Retry : Node_Id);
+      Context : not null access constant Root_Entity_Type'Class;
+      Retry   : Node_Id);
 
    procedure Generate_Set_Value
-     (Unit    : in out Tagatha.Units.Tagatha_Unit;
-      Node    : Node_Id);
-
-   procedure Generate_Get_Property
-     (Unit    : in out Tagatha.Units.Tagatha_Unit;
-      Node    : Node_Id)
-     with Pre => Kind (Node) = N_Get_Property;
-
-   ------------------------
-   -- Generate_Allocator --
-   ------------------------
-
-   procedure Generate_Allocator
-     (Unit  : in out Tagatha.Units.Tagatha_Unit;
-      Class : not null access Ack.Classes.Class_Entity_Record'Class)
-   is
-
-      use type Ack.Classes.Class_Entity;
-
-      Current_Property : Name_Id := No_Name;
-
-      procedure Set_Value
-        (Feature : not null access constant
-           Ack.Features.Feature_Entity_Record'Class);
-
-      procedure Generate_Local_Allocator
-        (Ancestor_Class : not null access
-           constant Ack.Classes.Class_Entity_Record'Class);
-
-      ------------------------------
-      -- Generate_Local_Allocator --
-      ------------------------------
-
-      procedure Generate_Local_Allocator
-        (Ancestor_Class : not null access
-           constant Ack.Classes.Class_Entity_Record'Class)
-      is
-      begin
-         Unit.Push_Operand
-           (Tagatha.Operands.External_Operand ("map", True),
-            Tagatha.Default_Size);
-         Unit.Pop_Register ("op");
-         Unit.Native_Operation
-           ("allocate",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "op");
-         Unit.Push_Register ("op");
-         Unit.Pop_Register ("pv");
-         Unit.Push_Register ("agg");
-         Unit.Pop_Register ("op");
-         Unit.Native_Operation
-           ("set_property " & Ancestor_Class.Link_Name);
-      end Generate_Local_Allocator;
-
-      ---------------
-      -- Set_Value --
-      ---------------
-
-      procedure Set_Value
-        (Feature : not null access constant
-           Ack.Features.Feature_Entity_Record'Class)
-      is
-      begin
-         Feature.Set_Default_Value (Current_Property, Unit);
-      end Set_Value;
-
-   begin
-      Unit.Begin_Routine
-        (Class.Link_Name & "$allocate",
-         Argument_Words => 0,
-         Frame_Words    => 0,
-         Result_Words   => 1,
-         Global         => True);
-
-      if Report_Allocation then
-         Unit.Push_Text ("allocating: " & Class.Full_Name);
-         Unit.Push_Operand
-           (Tagatha.Operands.External_Operand ("io", True),
-            Tagatha.Default_Size);
-         Unit.Pop_Register ("op");
-         Unit.Native_Operation
-           ("get_property put_line,1",
-            Input_Stack_Words  => 1,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-      end if;
-
-      Unit.Push_Operand
-        (Tagatha.Operands.External_Operand ("map", True),
-         Tagatha.Default_Size);
-      Unit.Pop_Register ("op");
-      Unit.Native_Operation
-        ("allocate",
-         Input_Stack_Words  => 0,
-         Output_Stack_Words => 0,
-         Changed_Registers  => "op");
-      Unit.Push_Register ("op");
-      Unit.Push_Register ("op");
-      Unit.Pop_Register ("agg");
-
-      Class.Scan_Ancestors (Proper_Ancestors => False,
-                            Process          =>
-                              Generate_Local_Allocator'Access);
-      Class.Scan_Features (Set_Value'Access);
-
-      if Report_Allocation then
-         Unit.Push_Text ("finished allocating: " & Class.Full_Name);
-         Unit.Push_Operand
-           (Tagatha.Operands.External_Operand ("io", True),
-            Tagatha.Default_Size);
-         Unit.Pop_Register ("op");
-         Unit.Native_Operation
-           ("get_property put_line,1",
-            Input_Stack_Words  => 1,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-      end if;
-
-      Unit.Pop_Result;
-      Unit.End_Routine;
-
-   end Generate_Allocator;
+     (Unit       : in out Tagatha.Units.Tagatha_Unit;
+      Context    : not null access constant Root_Entity_Type'Class;
+      Value_Type : not null access constant Root_Entity_Type'Class;
+      Node       : Node_Id);
 
    --------------------------------
    -- Generate_Class_Declaration --
@@ -205,22 +89,6 @@ package body Ack.Generate is
         (Entity.Base_File_Name,
          Get_Program (Node).Source_File_Name);
 
-      Unit.Directive
-        ("map ="
-         & Natural'Image (16#3000_0001#));
-
-      Unit.Directive
-        ("array ="
-         & Natural'Image (16#3000_0002#));
-
-      Unit.Directive
-        ("aqua ="
-         & Natural'Image (16#3000_0003#));
-
-      Unit.Directive
-        ("io ="
-         & Natural'Image (16#3000_0004#));
-
       if Root then
          Unit.Directive (".start " & Entity.Link_Name & "$main");
          Unit.Begin_Routine
@@ -229,25 +97,22 @@ package body Ack.Generate is
             Frame_Words    => 0,
             Result_Words   => 0,
             Global         => True);
-         Unit.Call (Entity.Link_Name & "$allocate");
-         Unit.Push_Register ("r0");
-         Unit.Pop_Register ("op");
-         Unit.Push_Register ("op");
-         Unit.Native_Operation
-           ("get_property " & Entity.Link_Name & ",0",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-         Unit.Push_Register ("pv");
-         Unit.Pop_Register ("op");
-         Unit.Native_Operation
-           ("get_property make,0",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-         Unit.Push_Register ("pv");
+         Unit.Call (Entity.Link_Name & "$create");
+
+         Unit.Push_Return;
+         Unit.Duplicate;
+         Unit.Dereference;
+
+         Push_Offset
+           (Unit,
+            Entity.Feature (Get_Name_Id ("make")).Virtual_Table_Offset);
+
+         Unit.Operate (Tagatha.Op_Add);
+         Unit.Dereference;
          Unit.Indirect_Call;
          Unit.Drop;
+         Unit.Push (0);
+         Unit.Native_Operation ("trap 15");
          Unit.End_Routine;
       end if;
 
@@ -260,9 +125,12 @@ package body Ack.Generate is
 
       Unit.End_Routine;
 
-      if not Entity.Deferred then
-         Generate_Allocator (Unit, Entity);
-         Generate_Default_Create (Unit, Entity);
+      if not Entity.Expanded then
+         Entity.Generate_Virtual_Table (Unit);
+      end if;
+
+      if not Entity.Deferred and then not Entity.Expanded then
+         Entity.Generate_Object_Allocator (Unit);
       end if;
 
       declare
@@ -287,7 +155,7 @@ package body Ack.Generate is
               Ack.Features.Feature_Entity_Record'Class)
          is
          begin
-            Generate_Feature (Unit, Feature);
+            Generate_Feature (Unit, Entity, Feature);
          end Generate_Feature;
 
       begin
@@ -316,6 +184,7 @@ package body Ack.Generate is
 
    procedure Generate_Compound
      (Unit    : in out Tagatha.Units.Tagatha_Unit;
+      Context : not null access constant Root_Entity_Type'Class;
       Node    : Node_Id)
    is
       procedure Generate_Instruction
@@ -334,21 +203,22 @@ package body Ack.Generate is
             Column => Positive (Get_Program (Instruction).Location_Column));
          case N_Instruction (Kind (Instruction)) is
             when N_Assignment =>
-               Generate_Expression (Unit, Expression (Instruction));
-               Generate_Set_Value (Unit, Variable (Instruction));
+               Generate_Expression (Unit, Context, Expression (Instruction));
+               Generate_Set_Value
+                 (Unit, Context, Get_Type (Expression (Instruction)),
+                  Variable (Instruction));
             when N_Creation_Instruction =>
-               Generate_Creation (Unit, Instruction);
+               Generate_Creation (Unit, Context, Instruction);
             when N_Conditional =>
-               Generate_Conditional (Unit, Instruction);
+               Generate_Conditional (Unit, Context, Instruction);
             when N_Loop =>
-               Generate_Loop (Unit, Instruction);
+               Generate_Loop (Unit, Context, Instruction);
             when N_Precursor =>
-               Generate_Precursor (Unit, Instruction);
-               Unit.Drop;
+               Generate_Precursor (Unit, Context, Instruction);
             when N_Check =>
-               Generate_Check (Unit, Instruction);
+               Generate_Check (Unit, Context, Instruction);
             when N_Retry =>
-               Generate_Retry (Unit, Instruction);
+               Generate_Retry (Unit, Context, Instruction);
          end case;
       end Generate_Instruction;
 
@@ -362,6 +232,7 @@ package body Ack.Generate is
 
    procedure Generate_Conditional
      (Unit        : in out Tagatha.Units.Tagatha_Unit;
+      Context     : not null access constant Root_Entity_Type'Class;
       Conditional : Node_Id)
    is
 
@@ -384,18 +255,16 @@ package body Ack.Generate is
          end if;
 
          if Condition /= No_Node then
-            Generate_Expression (Unit, Condition);
+            Generate_Expression (Unit, Context, Condition);
             if Implicit_Entity (Condition) then
-               Unit.Pop_Register ("r0");
-               Unit.Push_Register ("r0");
-               Unit.Push_Register ("r0");
+               Unit.Duplicate;
             end if;
 
             Else_Label := Unit.Next_Label;
             Unit.Operate (Tagatha.Op_Test, Tagatha.Default_Size);
             Unit.Jump (Else_Label, Tagatha.C_Equal);
          end if;
-         Generate_Compound (Unit, Compound);
+         Generate_Compound (Unit, Context, Compound);
          if Condition /= No_Node
            and then Implicit_Entity (Condition)
          then
@@ -421,6 +290,7 @@ package body Ack.Generate is
 
    procedure Generate_Creation
      (Unit     : in out Tagatha.Units.Tagatha_Unit;
+      Context  : not null access constant Root_Entity_Type'Class;
       Creation : Node_Id)
    is
       Call_Node : constant Node_Id := Creation_Call (Creation);
@@ -432,14 +302,20 @@ package body Ack.Generate is
                              (if Explicit_Type_Node in Real_Node_Id
                               then Get_Entity (Explicit_Type_Node)
                               else Get_Entity (Creation).Get_Type);
+      Created_Context    : constant Constant_Entity_Type :=
+                             Get_Context (Creation).Class_Context;
+      Created_Entity     : constant Entity_Type :=
+                             Get_Entity (Creation);
    begin
 
       Unit.Call
-        (Creation_Type.Link_Name & "$allocate");
-      Unit.Push_Register ("r0");
-      Get_Entity (Creation).Pop_Entity (Unit);
+        (Creation_Type.Link_Name & "$create");
+      Unit.Push_Return;
 
       if Explicit_Call_Node in Real_Node_Id then
+
+         Created_Entity.Pop_Entity (Created_Context, Creation_Type, Unit);
+
          declare
             Actual_List_Node : constant Node_Id :=
                                  Actual_List (Explicit_Call_Node);
@@ -455,16 +331,29 @@ package body Ack.Generate is
                                    .List);
          begin
             for Item of reverse Actuals_Node_List loop
-               Generate_Expression (Unit, Item);
+               Generate_Expression (Unit, Context, Item);
             end loop;
          end;
 
-         Get_Entity (Creation).Push_Entity (False, Unit);
-         Get_Entity (Explicit_Call_Node).Push_Entity
-           (Have_Context => True,
+         Created_Entity.Push_Entity
+           (Have_Current => False,
+            Context      => Created_Context,
             Unit         => Unit);
-         Unit.Drop;
+
+         Get_Entity (Explicit_Call_Node).Push_Entity
+           (Have_Current => True,
+            Context      => Creation_Type.Class_Context,
+            Unit         => Unit);
+
+         Created_Entity.Push_Entity
+           (Have_Current => False,
+            Context      => Created_Context,
+            Unit         => Unit);
+
       end if;
+
+      Created_Entity.Pop_Entity
+        (Created_Context, Creation_Type, Unit);
 
    exception
       when others =>
@@ -474,84 +363,13 @@ package body Ack.Generate is
 
    end Generate_Creation;
 
-   -----------------------------
-   -- Generate_Default_Create --
-   -----------------------------
-
-   procedure Generate_Default_Create
-     (Unit  : in out Tagatha.Units.Tagatha_Unit;
-      Class : not null access Ack.Classes.Class_Entity_Record'Class)
-   is
-      procedure Clear_Feature_Value
-        (Feature : not null access constant
-           Ack.Features.Feature_Entity_Record'Class);
-
-      -------------------------
-      -- Clear_Feature_Value --
-      -------------------------
-
-      procedure Clear_Feature_Value
-        (Feature : not null access constant
-           Ack.Features.Feature_Entity_Record'Class)
-      is
-
-         procedure Clear_Value_In_Class
-           (Class : not null access constant
-              Ack.Classes.Class_Entity_Record'Class);
-
-         --------------------------
-         -- Clear_Value_In_Class --
-         --------------------------
-
-         procedure Clear_Value_In_Class
-           (Class : not null access constant
-              Ack.Classes.Class_Entity_Record'Class)
-         is
-         begin
-            Unit.Push_Register ("r0");
-            Unit.Pop_Register ("op");
-            Unit.Native_Operation
-              ("get_property " & Class.Link_Name & ",0",
-               Input_Stack_Words  => 0,
-               Output_Stack_Words => 0,
-               Changed_Registers  => "pv");
-
-            Unit.Push_Register ("pv");
-            Unit.Pop_Register ("op");
-
-            Unit.Push (0);
-            Unit.Pop_Register ("pv");
-            Unit.Native_Operation
-              ("set_property " & Feature.Standard_Name);
-         end Clear_Value_In_Class;
-
-      begin
-         Feature.Scan_Original_Classes (Clear_Value_In_Class'Access);
-      end Clear_Feature_Value;
-
-   begin
-      Unit.Begin_Routine
-        (Class.Link_Name & "$default_create",
-         Argument_Words => 1,
-         Frame_Words    => 0,
-         Result_Words   => 0,
-         Global         => True);
-
-      Unit.Push_Argument (1);
-      Unit.Pop_Register ("r0");
-
-      Class.Scan_Features (Clear_Feature_Value'Access);
-
-      Unit.End_Routine;
-
-   end Generate_Default_Create;
-
    -------------------------
    -- Generate_Expression --
    -------------------------
 
    procedure Generate_Expression
      (Unit       : in out Tagatha.Units.Tagatha_Unit;
+      Context    : not null access constant Root_Entity_Type'Class;
       Expression : Node_Id)
    is
    begin
@@ -560,23 +378,45 @@ package body Ack.Generate is
          Column => Positive (Get_Program (Expression).Location_Column));
       case N_Expression_Node (Kind (Expression)) is
          when N_Operator =>
-            Generate_Operator_Expression (Unit, Expression);
+            Generate_Operator_Expression (Unit, Context, Expression);
          when N_Precursor =>
-            Generate_Precursor (Unit, Expression);
+            Generate_Precursor (Unit, Context, Expression);
          when N_Attachment_Test =>
-            Generate_Expression (Unit, Field_1 (Expression));
+            Generate_Expression (Unit, Context, Field_1 (Expression));
          when N_Old =>
-            Generate_Expression (Unit, Field_1 (Expression));
+            Generate_Expression (Unit, Context, Field_1 (Expression));
          when N_Tuple =>
-            Generate_Tuple_Expression (Unit, Expression);
+            Generate_Tuple_Expression (Unit, Context, Expression);
          when N_Constant =>
             declare
                Value : constant Node_Id := Constant_Value (Expression);
             begin
                case N_Constant_Value (Kind (Value)) is
                   when N_String_Constant =>
-                     Unit.Push_Text
-                       (To_String (Get_Name (Value)));
+                     declare
+                        Label : constant String :=
+                                  Next_String_Label (Unit.Unit_Name);
+                        Text  : constant String :=
+                                  To_String (Get_Name (Value));
+                     begin
+                        Unit.Segment (Tagatha.Read_Only);
+                        Unit.Label (Label);
+                        Unit.Data (Text'Length);
+
+                        for Ch of Text loop
+                           Unit.Data (Character'Pos (Ch));
+                        end loop;
+
+                        Unit.Segment (Tagatha.Executable);
+                        Unit.Call ("string$create");
+                        Unit.Push_Return;
+                        Unit.Duplicate;
+                        Unit.Push_Label (Label);
+                        Unit.Swap;
+                        Unit.Call ("string__create_from_string_literal");
+                        Unit.Drop;
+                        Unit.Drop;
+                     end;
                   when N_Integer_Constant =>
                      Unit.Push
                        (Tagatha.Tagatha_Integer'Value
@@ -589,11 +429,6 @@ package body Ack.Generate is
             end;
       end case;
 
-      if Get_Property (Expression) /= No_Node then
-         Generate_Get_Property
-           (Unit, Get_Property (Expression));
-      end if;
-
    end Generate_Expression;
 
    ----------------------
@@ -602,30 +437,14 @@ package body Ack.Generate is
 
    procedure Generate_Feature
      (Unit    : in out Tagatha.Units.Tagatha_Unit;
+      Class   : not null access constant
+        Ack.Classes.Class_Entity_Record'Class;
       Feature : not null access constant
         Ack.Features.Feature_Entity_Record'Class)
    is
    begin
-      Feature.Generate_Routine (Unit);
+      Feature.Generate_Routine (Class, Unit);
    end Generate_Feature;
-
-   ---------------------------
-   -- Generate_Get_Property --
-   ---------------------------
-
-   procedure Generate_Get_Property
-     (Unit    : in out Tagatha.Units.Tagatha_Unit;
-      Node    : Node_Id)
-   is
-   begin
-      Unit.Pop_Register ("op");
-      Unit.Native_Operation
-        ("get_property " & To_Standard_String (Get_Name (Node)) & ", 0",
-         Input_Stack_Words  => 0,
-         Output_Stack_Words => 0,
-         Changed_Registers  => "pv");
-      Unit.Push_Register ("pv");
-   end Generate_Get_Property;
 
    -------------------
    -- Generate_Loop --
@@ -633,6 +452,7 @@ package body Ack.Generate is
 
    procedure Generate_Loop
      (Unit      : in out Tagatha.Units.Tagatha_Unit;
+      Context   : not null access constant Root_Entity_Type'Class;
       Loop_Node : Node_Id)
    is
       Iteration_Node      : constant Node_Id := Loop_Iteration (Loop_Node);
@@ -643,117 +463,73 @@ package body Ack.Generate is
       Loop_Body_Node      : constant Node_Id := Loop_Body (Loop_Node);
       Top_Label           : constant Positive := Unit.Next_Label;
       Out_Label           : constant Positive := Unit.Next_Label;
+
+      Has_Iterator        : constant Boolean := Iteration_Node /= No_Node;
+      It_Expression       : Node_Id := No_Node;
+      Iterable_Type       : Ack.Types.Type_Entity;
+      Iterator_Type       : Ack.Types.Type_Entity;
+      New_Cursor_Feature  : Ack.Features.Feature_Entity;
+      After_Feature       : Ack.Features.Feature_Entity;
+      Next_Feature        : Ack.Features.Feature_Entity;
+      --  Iterator_Entity     : Entity_Type;
    begin
 
+      if Has_Iterator then
+         It_Expression := Expression (Iteration_Node);
+         Iterable_Type := Ack.Types.Type_Entity (Get_Type (It_Expression));
+         New_Cursor_Feature :=
+           Iterable_Type.Feature (Get_Name_Id ("new_cursor"));
+         Iterator_Type :=
+           Ack.Types.Type_Entity
+             (New_Cursor_Feature.Get_Type);
+         After_Feature :=
+           Iterator_Type.Feature (Get_Name_Id ("after"));
+         Next_Feature :=
+           Iterator_Type.Feature (Get_Name_Id ("next"));
+         --  Iterator_Entity := Get_Entity (Iteration_Node);
+
+      end if;
+
       if Initialization_Node /= No_Node then
-         Generate_Compound (Unit, Compound (Initialization_Node));
+         Generate_Compound (Unit, Context, Compound (Initialization_Node));
       end if;
 
-      if Iteration_Node /= No_Node then
-         declare
-            Expression_Node : constant Node_Id := Expression (Iteration_Node);
-         begin
-            Generate_Expression (Unit, Expression_Node);
-            Unit.Pop_Register ("r0");
-            Unit.Push_Register ("r0");  --  'current' argument to New_Cursor
-            Unit.Push_Register ("r0");  --  sent to op
-            Unit.Pop_Register ("op");
-            Unit.Native_Operation
-              ("get_property aqua__iterable, 0",
-               Input_Stack_Words  => 0,
-               Output_Stack_Words => 0,
-               Changed_Registers  => "pv");
-            Unit.Push_Register ("pv");
-            Unit.Pop_Register ("op");
-            Unit.Native_Operation
-              ("get_property new_cursor, 0",
-               Input_Stack_Words  => 0,
-               Output_Stack_Words => 0,
-               Changed_Registers  => "pv");
-            Unit.Push_Register ("pv");
-            Unit.Indirect_Call;
-            Unit.Drop;
-         end;
-      end if;
-
-      if Iteration_Node /= No_Node then
-         Unit.Push_Register ("r0");
-         Unit.Pop_Register ("op");
-         Unit.Push_Register ("op");
-         Unit.Push_Register ("op");
-         Unit.Native_Operation
-           ("get_property aqua__iteration_cursor, 0",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-         Unit.Push_Register ("pv");
-         Unit.Pop_Register ("op");
-         Unit.Native_Operation
-           ("get_property after, 0",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-         Unit.Push_Register ("pv");
-         Unit.Indirect_Call;
-         Unit.Drop;
-         Unit.Push_Register ("r0");
-         Unit.Operate (Tagatha.Op_Test);
-         Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
+      if Has_Iterator then
+         Generate_Expression (Unit, Context, It_Expression);
+         New_Cursor_Feature.Push_Entity
+           (Have_Current => True,
+            Context      => Iterable_Type.Class_Context,
+            Unit         => Unit);
       end if;
 
       Unit.Label (Top_Label);
 
+      if Has_Iterator then
+         Unit.Duplicate;
+         After_Feature.Push_Entity
+           (Have_Current => True,
+            Context      => Iterator_Type.Class_Context,
+            Unit         => Unit);
+         Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
+      end if;
+
       if Exit_Condition_Node /= No_Node then
-         Generate_Expression (Unit, Expression (Exit_Condition_Node));
+         Generate_Expression (Unit, Context, Expression (Exit_Condition_Node));
          Unit.Operate (Tagatha.Op_Test);
          Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
       end if;
 
-      Generate_Compound (Unit, Compound (Loop_Body_Node));
+      Generate_Compound (Unit, Context, Compound (Loop_Body_Node));
 
-      if Iteration_Node = No_Node then
-         Unit.Jump (Top_Label, Tagatha.C_Always);
-      else
-         Unit.Pop_Register ("op");
-         Unit.Push_Register ("op");
-         Unit.Push_Register ("op");
-         Unit.Native_Operation
-           ("get_property aqua__iteration_cursor, 0",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-         Unit.Push_Register ("pv");
-         Unit.Pop_Register ("op");
-         Unit.Native_Operation
-           ("get_property next, 0",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-         Unit.Push_Register ("pv");
-         Unit.Indirect_Call;
-         Unit.Drop;
-         Unit.Pop_Register ("op");
-         Unit.Push_Register ("op");
-         Unit.Push_Register ("op");
-         Unit.Native_Operation
-           ("get_property aqua__iteration_cursor, 0",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-         Unit.Push_Register ("pv");
-         Unit.Pop_Register ("op");
-         Unit.Native_Operation
-           ("get_property after, 0",
-            Input_Stack_Words  => 0,
-            Output_Stack_Words => 0,
-            Changed_Registers  => "pv");
-         Unit.Push_Register ("pv");
-         Unit.Indirect_Call;
-         Unit.Drop;
-         Unit.Push_Register ("r0");
-         Unit.Operate (Tagatha.Op_Test);
-         Unit.Jump (Top_Label, Tagatha.C_Equal);
+      if Has_Iterator then
+         Unit.Duplicate;
+         Next_Feature.Push_Entity
+           (Have_Current => True,
+            Context      => Iterator_Type.Class_Context,
+            Unit         => Unit);
       end if;
+
+      Unit.Jump (Top_Label, Tagatha.C_Always);
 
       Unit.Label (Out_Label);
 
@@ -769,6 +545,7 @@ package body Ack.Generate is
 
    procedure Generate_Operator_Expression
      (Unit          : in out Tagatha.Units.Tagatha_Unit;
+      Context       : not null access constant Root_Entity_Type'Class;
       Operator_Node : Node_Id)
    is
       use type Ack.Types.Type_Entity;
@@ -782,13 +559,13 @@ package body Ack.Generate is
             Maybe : constant Positive := Unit.Next_Label;
             Leave : constant Positive := Unit.Next_Label;
          begin
-            Generate_Expression (Unit, Left);
+            Generate_Expression (Unit, Context, Left);
             Unit.Operate (Tagatha.Op_Test);
             Unit.Jump (Maybe, Tagatha.C_Not_Equal);
             Unit.Push (0);
             Unit.Jump (Leave);
             Unit.Label (Maybe);
-            Generate_Expression (Unit, Right);
+            Generate_Expression (Unit, Context, Right);
             Unit.Label (Leave);
          end;
       elsif Operator = Get_Name_Id ("orelse") then
@@ -796,37 +573,31 @@ package body Ack.Generate is
             Maybe : constant Positive := Unit.Next_Label;
             Leave : constant Positive := Unit.Next_Label;
          begin
-            Generate_Expression (Unit, Left);
+            Generate_Expression (Unit, Context, Left);
             Unit.Operate (Tagatha.Op_Test);
             Unit.Jump (Maybe, Tagatha.C_Equal);
             Unit.Push (1);
             Unit.Jump (Leave);
             Unit.Label (Maybe);
-            Generate_Expression (Unit, Right);
+            Generate_Expression (Unit, Context, Right);
             Unit.Label (Leave);
          end;
       elsif Operator = Get_Name_Id ("implies") then
-         Generate_Expression (Unit, Left);
+         Generate_Expression (Unit, Context, Left);
          Unit.Operate (Tagatha.Op_Not);
-         Generate_Expression (Unit, Right);
+         Generate_Expression (Unit, Context, Right);
          Unit.Operate (Tagatha.Op_Or);
       else
-         Generate_Expression (Unit, Left);
          if Right /= No_Node then
-            Generate_Expression (Unit, Right);
+            Generate_Expression (Unit, Context, Right);
          end if;
+         Generate_Expression (Unit, Context, Left);
 
-         if not Ack.Generate.Primitives.Generate_Operator
-           (Unit      => Unit,
-            Operator  => Operator,
-            Left_Type => Ack.Types.Type_Entity (Get_Type (Left)))
-         then
-            raise Constraint_Error with
-            Get_Program (Operator_Node).Show_Location
-              & "custom operators ("
-              & To_String (Operator)
-              & ") not implemented yet";
-         end if;
+         Get_Entity (Operator_Node).Push_Entity
+           (Have_Current => True,
+            Context      => Get_Type (Left).Class_Context,
+            Unit         => Unit);
+
       end if;
    end Generate_Operator_Expression;
 
@@ -836,6 +607,7 @@ package body Ack.Generate is
 
    procedure Generate_Precursor
      (Unit      : in out Tagatha.Units.Tagatha_Unit;
+      Context   : not null access constant Root_Entity_Type'Class;
       Precursor : Node_Id)
    is
       List   : constant List_Id :=
@@ -848,11 +620,15 @@ package body Ack.Generate is
       Last_Element  : constant Node_Id :=
                         List_Table (List).List.Last_Element;
 
+      Previous_Entity : Ack.Constant_Entity_Type := null;
+      Previous_Context : Ack.Classes.Constant_Class_Entity := null;
+
       procedure Apply_Arguments
         (Actuals_List   : List_Id);
 
       procedure Process
-        (Element      : Node_Id);
+        (Element : Node_Id;
+         Last    : Boolean);
 
       ---------------------
       -- Apply_Arguments --
@@ -866,7 +642,7 @@ package body Ack.Generate is
                                  (Actuals_List).List;
       begin
          for Item of reverse Actuals_Node_List loop
-            Generate_Expression (Unit, Item);
+            Generate_Expression (Unit, Context, Item);
          end loop;
       end Apply_Arguments;
 
@@ -875,13 +651,23 @@ package body Ack.Generate is
       -------------
 
       procedure Process
-        (Element      : Node_Id)
+        (Element : Node_Id;
+         Last    : Boolean)
       is
          Entity : constant Entity_Type := Get_Entity (Element);
       begin
          Entity.Push_Entity
-           (Have_Context => Element /= First_Element,
+           (Have_Current => Element /= First_Element,
+            Context      => Get_Context (Element),
             Unit         => Unit);
+
+         if not Last then
+            Previous_Entity := Constant_Entity_Type (Entity);
+            Previous_Context :=
+              Ack.Classes.Constant_Class_Entity
+                (Get_Context (Element).Class_Context);
+         end if;
+
       end Process;
 
    begin
@@ -901,18 +687,53 @@ package body Ack.Generate is
             if Element = Last_Element
               or else Actual_List /= No_List
             then
+
                if Actual_List /= No_List then
                   Apply_Arguments (Actual_List);
                end if;
 
                for Item of Pending loop
-                  Process (Item);
+                  Process (Item, Item = Last_Element);
                end loop;
 
                Pending.Clear;
             end if;
          end;
       end loop;
+
+      declare
+         use Ack.Features, Ack.Classes;
+         Last_Entity : constant Constant_Entity_Type :=
+                         Constant_Entity_Type
+                           (Get_Entity (Last_Element));
+         Current_Context : constant Constant_Class_Entity :=
+                             Constant_Class_Entity
+                               (Get_Context (Last_Element).Class_Context);
+         Expanded        : constant Boolean :=
+                             Previous_Context /= null
+                                 and then Current_Context /= null
+                                     and then Current_Context.Expanded;
+         Has_Result      : constant Boolean :=
+                             Ack.Features.Is_Feature (Last_Entity)
+                               and then
+                                 (Constant_Feature_Entity
+                                    (Last_Entity).Has_Result
+                                  or else Constant_Feature_Entity (Last_Entity)
+                                  .Is_Property);
+      begin
+         if Expanded and then not Has_Result then
+            Previous_Entity.Pop_Entity
+              (Get_Context (Precursor).Class_Context, Current_Context, Unit);
+         end if;
+      end;
+
+   exception
+      when others =>
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            Get_Program (Precursor).Show_Location
+            & ": generate precursor failed");
+         raise;
 
    end Generate_Precursor;
 
@@ -922,8 +743,10 @@ package body Ack.Generate is
 
    procedure Generate_Retry
      (Unit  : in out Tagatha.Units.Tagatha_Unit;
-      Retry : Node_Id)
+      Context : not null access constant Root_Entity_Type'Class;
+      Retry   : Node_Id)
    is
+      pragma Unreferenced (Context);
       Target : constant String := Unit.Get_Property ("retry_label");
    begin
       if Target /= "" then
@@ -940,12 +763,30 @@ package body Ack.Generate is
    ------------------------
 
    procedure Generate_Set_Value
-     (Unit    : in out Tagatha.Units.Tagatha_Unit;
-      Node    : Node_Id)
+     (Unit       : in out Tagatha.Units.Tagatha_Unit;
+      Context    : not null access constant Root_Entity_Type'Class;
+      Value_Type : not null access constant Root_Entity_Type'Class;
+      Node       : Node_Id)
    is
+      pragma Unreferenced (Context);
       Entity : constant Entity_Type := Get_Entity (Node);
    begin
-      Entity.Pop_Entity (Unit);
+      if Value_Type.Standard_Name = "none" then
+         Entity.Pop_Entity
+           (Get_Context (Node).Class_Context,
+            Entity.Get_Type.Class_Context, Unit);
+      else
+         Entity.Pop_Entity
+           (Get_Context (Node).Class_Context,
+            Value_Type, Unit);
+      end if;
+
+   exception
+      when others =>
+         Ada.Text_IO.Put_Line
+           (Get_Program (Node).Show_Location
+            & ": pop entity " & Entity.Qualified_Name & " failed");
+         raise;
    end Generate_Set_Value;
 
    -------------------------------
@@ -954,6 +795,7 @@ package body Ack.Generate is
 
    procedure Generate_Tuple_Expression
      (Unit       : in out Tagatha.Units.Tagatha_Unit;
+      Context    : not null access constant Root_Entity_Type'Class;
       Expression : Node_Id)
    is
       Tuple_Type   : constant Entity_Type := Get_Type (Expression);
@@ -962,39 +804,44 @@ package body Ack.Generate is
                          (Tuple_Expression_List (Expression));
       Arity_Image : constant String := Natural'Image (Actual_Nodes'Length);
       Make_Name    : constant String :=
-                       "make_tuple" & Arity_Image (2 .. Arity_Image'Last);
+                       Tuple_Type.Link_Name
+                       & "__make_tuple"
+                       & Arity_Image (2 .. Arity_Image'Last);
    begin
-      Unit.Push_Register ("agg");
-      Unit.Call
-        (Tuple_Type.Link_Name & "$allocate");
-      Unit.Push_Register ("r0");
-      Unit.Pop_Register ("agg");
-
       for Arg of reverse Actual_Nodes loop
-         Generate_Expression (Unit, Arg);
+         Generate_Expression (Unit, Context, Arg);
       end loop;
 
-      Unit.Push_Register ("agg");
-      Unit.Pop_Register ("op");
-      Unit.Push_Register ("op");
-      Unit.Native_Operation
-        ("get_property " & Tuple_Type.Link_Name & ",0",
-         Input_Stack_Words  => 0,
-         Output_Stack_Words => 0,
-         Changed_Registers  => "pv");
-      Unit.Push_Register ("pv");
-      Unit.Pop_Register ("op");
-      Unit.Native_Operation
-        ("get_property " & Make_Name & ",0",
-         Input_Stack_Words  => 0,
-         Output_Stack_Words => 0,
-         Changed_Registers  => "pv");
-      Unit.Push_Register ("pv");
-      Unit.Indirect_Call;
+      Unit.Call
+        (Tuple_Type.Link_Name & "$create");
+      Unit.Push_Return;
+      Unit.Duplicate;
+      Unit.Pop_Local
+        (Tagatha.Local_Offset (Context.Shelf ("tuple-expression")));
+
+      Unit.Call (Make_Name);
+
       for I in 1 .. Actual_Nodes'Length + 1 loop
          Unit.Drop;
       end loop;
-      Unit.Push_Register ("agg");
+
+      Unit.Push_Local
+        (Tagatha.Local_Offset (Context.Shelf ("tuple-expression")));
+
    end Generate_Tuple_Expression;
+
+   -----------------------
+   -- Next_String_Label --
+   -----------------------
+
+   function Next_String_Label
+     (Base_Name : String)
+      return String
+   is
+      S : constant String := Natural'Image (String_Label_Index);
+   begin
+      String_Label_Index := String_Label_Index + 1;
+      return Base_Name & "$str_" & S (2 .. S'Last);
+   end Next_String_Label;
 
 end Ack.Generate;

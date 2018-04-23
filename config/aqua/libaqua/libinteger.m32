@@ -1,0 +1,25 @@
+.export  integer__ge
+ integer__ge:
+    sge 8(sp), 4(sp), r0
+    rts
+
+.export  integer__gt
+ integer__gt:
+    sgt 8(sp), 4(sp), r0
+    rts
+    
+.export  integer__le
+ integer__le:
+    sle 8(sp), 4(sp), r0
+    rts
+    
+.export  integer__lt
+ integer__lt:
+    slt 8(sp), 4(sp), r0
+    rts
+    
+.export integer__add
+integer__add:
+    add 8(sp), 4(sp), r0
+    rts
+    

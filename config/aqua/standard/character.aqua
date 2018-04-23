@@ -1,3 +1,32 @@
-expanded class Character
+expanded class 
+   Character
+
+feature
+
+   To_Upper_Case : Character
+      do
+         Result := Current
+      end
+      
+   To_Lower_Case : Character
+      do
+         Result := Current
+      end
+   
+   Is_White_Space : Boolean
+      do
+         
+      end
+   
+feature
+   
+   Create_From_UTF_32 (Code : System.Word_32)
+      do
+         UTF_32_Code := Code
+      end
+   
+feature
+
+   UTF_32_Code : System.Word_32
 
 end

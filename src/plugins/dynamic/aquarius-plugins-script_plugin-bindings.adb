@@ -15,8 +15,7 @@ with Aquarius.Plugins.Dynamic;
 with Aquarius.Source;
 with Aquarius.Syntax;
 
-with Aquarius.Actions.Scanner;
-with Aquarius.Actions.Tagatha_Scanner;
+--  with Aquarius.Actions.Tagatha_Scanner;
 
 with Ack;
 with Ack.Bindings;
@@ -92,22 +91,22 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Target_Plugin.Grammar.Add_Action_Program
         (Group, Action_Program);
 
-      if Aquarius.Paths.Is_Newer (Action_Path, Assembly_Path) then
-         declare
-            use Aquarius.Messages;
-            Processor : Aquarius.Actions.Tagatha_Scanner.Tagatha_Scanner;
-         begin
-            Aquarius.Actions.Scanner.Scan_Actions
-              (Processor, Action_Program, Group);
-            if Console.Check_Messages (Action_Program.all) >= Warning then
-               Ada.Text_IO.Put_Line
-                 (Ada.Text_IO.Standard_Error,
-                  "errors detected");
-               return;
-            end if;
-            Processor.Write;
-         end;
-      end if;
+--        if Aquarius.Paths.Is_Newer (Action_Path, Assembly_Path) then
+--           declare
+--              use Aquarius.Messages;
+--              Processor : Aquarius.Actions.Tagatha_Scanner.Tagatha_Scanner;
+--           begin
+--              Aquarius.Actions.Scanner.Scan_Actions
+--                (Processor, Action_Program, Group);
+--              if Console.Check_Messages (Action_Program.all) >= Warning then
+--                 Ada.Text_IO.Put_Line
+--                   (Ada.Text_IO.Standard_Error,
+--                    "errors detected");
+--                 return;
+--              end if;
+--              Processor.Write;
+--           end;
+--        end if;
 
       if Aquarius.Paths.Is_Newer (Assembly_Path, Object_Path) then
          Process_Compiled_Plugin (Base_Name);
@@ -192,10 +191,10 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Komnenos_Arg : constant Aqua.Word := 0;
 --                         Executor.Plugin.Executor.To_Word
 --                         (Komnenos.Entities.Aqua_Entities.Get_Aqua_Object);
-      Top_Arg     : constant Aqua.Word :=
-                      Executor.Plugin.Executor.To_Word (Tree.Program_Root);
-      Tree_Arg  : constant Aqua.Word :=
-                      Executor.Plugin.Executor.To_Word (Tree);
+      Top_Arg     : constant Aqua.Word := 0;
+--                      Executor.Plugin.Executor.To_Word (Tree.Program_Root);
+      Tree_Arg  : constant Aqua.Word := 0;
+--                      Executor.Plugin.Executor.To_Word (Tree);
    begin
       Executor.Plugin.Executor.Execute
         (Tree.Local_Environment_Name,
@@ -228,15 +227,15 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Komnenos_Arg : constant Aqua.Word := 0;
 --                     Executor.Plugin.Executor.To_Word
 --                       (Komnenos.Entities.Aqua_Entities.Get_Aqua_Object);
-      Top_Arg     : constant Aqua.Word :=
-                      Executor.Plugin.Executor.To_Word
-                        (Parent_Tree.Program_Root);
-      Parent_Arg  : constant Aqua.Word :=
-                      Executor.Plugin.Executor.To_Word
-                        (Parent_Tree);
-      Child_Arg   : constant Aqua.Word :=
-                      Executor.Plugin.Executor.To_Word
-                        (Child_Tree);
+      Top_Arg     : constant Aqua.Word := 0;
+--                        Executor.Plugin.Executor.To_Word
+--                          (Parent_Tree.Program_Root);
+      Parent_Arg  : constant Aqua.Word := 0;
+--                        Executor.Plugin.Executor.To_Word
+--                          (Parent_Tree);
+      Child_Arg   : constant Aqua.Word := 0;
+--                        Executor.Plugin.Executor.To_Word
+--                          (Child_Tree);
    begin
       Executor.Plugin.Executor.Execute
         (Parent_Tree.Local_Environment_Name,
@@ -379,6 +378,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Group     : Aquarius.Actions.Action_Group;
       Image     : Aqua.Images.Image_Type)
    is
+      pragma Unreferenced (Group);
       Base_Name      : constant String :=
                          Ada.Directories.Base_Name (Full_Path);
       Assembly_Path  : constant String :=
@@ -387,26 +387,26 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Object_Path    : constant String :=
                          Aquarius.Paths.Scratch_File
                            (Base_Name, "o32");
-      Action_Program : constant Aquarius.Programs.Program_Tree :=
-                         Aquarius.Loader.Load_From_File (Full_Path);
+--        Action_Program : constant Aquarius.Programs.Program_Tree :=
+--                           Aquarius.Loader.Load_From_File (Full_Path);
    begin
 
-      if Aquarius.Paths.Is_Newer (Full_Path, Assembly_Path) then
-         declare
-            use Aquarius.Messages;
-            Processor : Aquarius.Actions.Tagatha_Scanner.Tagatha_Scanner;
-         begin
-            Aquarius.Actions.Scanner.Scan_Actions
-              (Processor, Action_Program, Group);
-            if Console.Check_Messages (Action_Program.all) >= Warning then
-               Ada.Text_IO.Put_Line
-                 (Ada.Text_IO.Standard_Error,
-                  "errors detected");
-               return;
-            end if;
-            Processor.Write;
-         end;
-      end if;
+--        if Aquarius.Paths.Is_Newer (Full_Path, Assembly_Path) then
+--           declare
+--              use Aquarius.Messages;
+--              Processor : Aquarius.Actions.Tagatha_Scanner.Tagatha_Scanner;
+--           begin
+--              Aquarius.Actions.Scanner.Scan_Actions
+--                (Processor, Action_Program, Group);
+--              if Console.Check_Messages (Action_Program.all) >= Warning then
+--                 Ada.Text_IO.Put_Line
+--                   (Ada.Text_IO.Standard_Error,
+--                    "errors detected");
+--                 return;
+--              end if;
+--              Processor.Write;
+--           end;
+--        end if;
 
       if Aquarius.Paths.Is_Newer (Assembly_Path, Object_Path) then
          Process_Compiled_Plugin (Base_Name);

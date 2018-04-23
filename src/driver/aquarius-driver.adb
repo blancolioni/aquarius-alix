@@ -34,7 +34,9 @@ with Ack.Semantic;
 with Ack.Generate;
 
 with Aqua.CPU;
+with Aqua.Drivers;
 with Aqua.Images;
+with Aqua.Options;
 
 with Komnenos.Logging;
 with Komnenos.Paths;
@@ -184,8 +186,23 @@ begin
    end if;
 
    if Command_Line.Aqua_Trace_Code then
-      Aqua.CPU.Set_Option ("trace-code", "true");
+      Aqua.Options.Set_Option ("trace-code", "true");
    end if;
+
+   if Command_Line.Aqua_Trace_Link then
+      Aqua.Options.Set_Option ("trace-link", "true");
+   end if;
+
+   if Command_Line.Ack_Write_Tables then
+      Ack.Set_Write_Tables (True);
+   end if;
+
+   if Command_Line.Ack_Stack_Check then
+      Ack.Set_Stack_Check (True);
+   end if;
+
+   Ack.Set_Trace
+     (Class_Analysis => Command_Line.Ack_Trace_Class_Analysis);
 
    Komnenos.Themes.Load_Theme
      (Tropos.Reader.Read_Config
@@ -196,8 +213,12 @@ begin
    if Aquarius.Command_Line.Ack_Execute_Root /= "" then
       declare
          Image : constant Aqua.Images.Image_Type := Aqua.Images.New_Image;
-         CPU   : Aqua.CPU.Aqua_CPU_Type (Image, null);
+         CPU   : Aqua.CPU.Aqua_CPU_Type (Image);
       begin
+         Image.Install_Driver
+           (Start  => 16#0100#,
+            Driver => Aqua.Drivers.Text_Writer);
+
          Ack.Compile.Load_Root_Class
            (Source_Path => Aquarius.Command_Line.Ack_Execute_Root,
             To_Image    => Image);

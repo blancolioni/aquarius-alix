@@ -23,6 +23,24 @@ package body Aquarius.Command_Line is
       return Get_Argument ("", "ack-execute-root");
    end Ack_Execute_Root;
 
+   ---------------------
+   -- Ack_Stack_Check --
+   ---------------------
+
+   function Ack_Stack_Check return Boolean is
+   begin
+      return Get_Flag ("", "ack-stack-check");
+   end Ack_Stack_Check;
+
+   ------------------------------
+   -- Ack_Trace_Class_Analysis --
+   ------------------------------
+
+   function Ack_Trace_Class_Analysis return Boolean is
+   begin
+      return Get_Flag ("", "ack-trace-class-analysis");
+   end Ack_Trace_Class_Analysis;
+
    -----------------------
    -- Ack_Write_Listing --
    -----------------------
@@ -31,6 +49,15 @@ package body Aquarius.Command_Line is
    begin
       return Get_Flag ("", "ack-write-listing");
    end Ack_Write_Listing;
+
+   ----------------------
+   -- Ack_Write_Tables --
+   ----------------------
+
+   function Ack_Write_Tables return Boolean is
+   begin
+      return Get_Flag ("", "ack-write-tables");
+   end Ack_Write_Tables;
 
    ------------
    -- Action --
@@ -49,6 +76,15 @@ package body Aquarius.Command_Line is
    begin
       return Get_Flag ("", "aqua-trace-code");
    end Aqua_Trace_Code;
+
+   ---------------------
+   -- Aqua_Trace_Link --
+   ---------------------
+
+   function Aqua_Trace_Link return Boolean is
+   begin
+      return Get_Flag ("", "aqua-trace-link");
+   end Aqua_Trace_Link;
 
    -----------------
    -- Clear_Cache --

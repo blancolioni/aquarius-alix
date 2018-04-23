@@ -1,3 +1,7 @@
+with Ack.Classes;
+with Ack.Features;
+with Ack.Types;
+
 package body Ack.Variables is
 
    -----------------
@@ -45,19 +49,22 @@ package body Ack.Variables is
    -------------------------
 
    function New_Iterator_Entity
-     (Name       : Name_Id;
-      Node       : Node_Id;
-      Local_Type : not null access Root_Entity_Type'Class)
+     (Name           : Name_Id;
+      Node           : Node_Id;
+      Iteration_Type : not null access Root_Entity_Type'Class;
+      Local_Type     : not null access Root_Entity_Type'Class)
       return Variable_Entity
    is
+      pragma Unreferenced (Local_Type);
    begin
       return Result : constant Variable_Entity :=
         new Variable_Entity_Record
       do
          Result.Create (Name, Node, Table => False);
          Result.Kind := Local;
-         Result.Value_Type := Entity_Type (Local_Type);
+         Result.Value_Type := Entity_Type (Iteration_Type);
          Result.Iterator := True;
+         Result.Iteration := Entity_Type (Iteration_Type);
       end return;
    end New_Iterator_Entity;
 
@@ -86,10 +93,36 @@ package body Ack.Variables is
    ----------------
 
    overriding procedure Pop_Entity
-     (Variable : Variable_Entity_Record;
-      Unit     : in out Tagatha.Units.Tagatha_Unit)
+     (Variable   : Variable_Entity_Record;
+      Context    : not null access constant Root_Entity_Type'Class;
+      Value_Type : not null access constant Root_Entity_Type'Class;
+      Unit       : in out Tagatha.Units.Tagatha_Unit)
    is
+      pragma Unreferenced (Context);
+      use type Ack.Types.Constant_Type_Entity;
+      Var_Type : constant Ack.Types.Constant_Type_Entity :=
+                   Ack.Types.Constant_Type_Entity
+                     (Variable.Get_Type);
    begin
+
+      if not Value_Type.Expanded
+        and then Var_Type.Proper_Ancestor_Of (Value_Type)
+      then
+         Unit.Duplicate;
+         Unit.Dereference;
+
+         Push_Offset
+           (Unit,
+            Ack.Classes.Constant_Class_Entity
+              (Value_Type.Class_Context)
+            .Ancestor_Table_Offset
+              (Ack.Classes.Constant_Class_Entity
+                   (Var_Type.Class_Context)));
+         Unit.Operate (Tagatha.Op_Add);
+         Unit.Dereference;
+         Unit.Operate (Tagatha.Op_Add);
+      end if;
+
       case Variable.Kind is
          when Local =>
             Unit.Pop_Local
@@ -108,11 +141,13 @@ package body Ack.Variables is
    -----------------
 
    overriding procedure Push_Entity
-     (Variable     : Variable_Entity_Record;
-      Have_Context : Boolean;
-      Unit         : in out Tagatha.Units.Tagatha_Unit)
+     (Variable      : Variable_Entity_Record;
+      Have_Current  : Boolean;
+      Context       : not null access constant Root_Entity_Type'Class;
+      Unit          : in out Tagatha.Units.Tagatha_Unit)
    is
-      pragma Unreferenced (Have_Context);
+      pragma Unreferenced (Have_Current);
+      pragma Unreferenced (Context);
    begin
       case Variable.Kind is
          when Local =>
@@ -120,25 +155,21 @@ package body Ack.Variables is
               (Tagatha.Local_Offset (Variable.Offset),
                Tagatha.Default_Size);
 
-            if Variable.Iterator then
-               Unit.Pop_Register ("op");
-               Unit.Push_Register ("op");
-               Unit.Native_Operation
-                 ("get_property aqua__iteration_cursor, 0",
-                  Input_Stack_Words  => 0,
-                  Output_Stack_Words => 0,
-                  Changed_Registers  => "pv");
-               Unit.Push_Register ("pv");
-               Unit.Pop_Register ("op");
-               Unit.Native_Operation
-                 ("get_property element, 0",
-                  Input_Stack_Words  => 0,
-                  Output_Stack_Words => 0,
-                  Changed_Registers  => "pv");
-               Unit.Push_Register ("pv");
-               Unit.Indirect_Call;
-               Unit.Drop;
-               Unit.Push_Register ("r0");
+            if False and then Variable.Iterator then
+               declare
+                  Class : constant Ack.Classes.Class_Entity :=
+                            Ack.Classes.Class_Entity
+                              (Ack.Types.Type_Entity
+                                 (Variable.Iteration).Class);
+                  Feature : constant Ack.Features.Feature_Entity :=
+                              Class.Feature
+                                (Get_Name_Id ("element"));
+               begin
+                  Feature.Push_Entity
+                    (Have_Current => True,
+                     Context      => Class,
+                     Unit         => Unit);
+               end;
             end if;
 
          when Argument =>

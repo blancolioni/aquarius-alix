@@ -59,25 +59,6 @@ package body Aquarius.Plugins.Macro_32.Assemble is
       Deferred_OK : Boolean := True)
       return Expression_Value;
 
-   ----------------------
-   -- After_Allocation --
-   ----------------------
-
-   procedure After_Allocation
-     (Target : not null access Aquarius.Actions.Actionable'Class)
-   is
-      use Aquarius.Programs;
-      Op : constant Program_Tree := Program_Tree (Target);
-      Assembly       : constant Aqua.Assembler.Assembly :=
-                         Assembly_Object
-                           (Op.Property
-                              (Global_Plugin.Assembly)).Assembly;
-   begin
-      Assembly.Append_Octet
-        (Aqua.Architecture.Encode
-           (Aqua.Architecture.A_Allocate));
-   end After_Allocation;
-
    ------------------
    -- After_Branch --
    ------------------
@@ -219,7 +200,7 @@ package body Aquarius.Plugins.Macro_32.Assemble is
       Name      : constant String :=
                     Directive.Program_Child ("identifier").Text;
       Arguments : constant Array_Of_Program_Trees :=
-                    Directive.Direct_Children ("operand");
+                    Directive.Direct_Children ("directive_operand");
    begin
       if Name = "extern" then
          for Arg of Arguments loop
@@ -281,6 +262,24 @@ package body Aquarius.Plugins.Macro_32.Assemble is
          begin
             Assembly.Set_Start_Label (Start);
          end;
+      elsif Name = "word" then
+         for Arg of Arguments loop
+            if Arg.Chosen_Tree.Name = "identifier" then
+               Assembly.Append_Word
+                 (Assembly.Reference_Label (Arg.Chosen_Tree.Text, False));
+            elsif Arg.Chosen_Tree.Name = "integer" then
+               Assembly.Append_Word (Aqua.Word'Value (Arg.Chosen_Tree.Text));
+            else
+               raise Constraint_Error with
+                 "cannot append word: " & Arg.Chosen_Tree.Name;
+            end if;
+         end loop;
+      elsif Name = "data" then
+         Assembly.Data_Segment;
+      elsif Name = "text" then
+         Assembly.Text_Segment;
+      elsif Name = "code" then
+         Assembly.Code_Segment;
       elsif Name = "source_file" then
          Assembly.Set_Source_File
            (Arguments (1).Chosen_Tree.Text);
@@ -467,46 +466,6 @@ package body Aquarius.Plugins.Macro_32.Assemble is
         (Aqua.Architecture.Encode
            (Aqua.Architecture.Aqua_Instruction'Value ("A_" & Mnemonic)));
    end After_No_Operand;
-
-   --------------------
-   -- After_Property --
-   --------------------
-
-   procedure After_Property
-     (Target : not null access Aquarius.Actions.Actionable'Class)
-   is
-      use Aquarius.Programs;
-      Op : constant Program_Tree := Program_Tree (Target);
-      Mnemonic       : constant String :=
-                         Op.Program_Child
-                           ("property_instruction").Concatenate_Children;
-      Operand_Tree   : constant Program_Tree :=
-                         Op.Program_Child ("operand").Chosen_Tree;
-      Argument_Tree  : constant Program_Tree :=
-                         Op.Program_Child ("integer");
-      Argument_Count : constant Natural :=
-                         (if Argument_Tree /= null
-                          then Natural'Value
-                            (Argument_Tree.Text)
-                          else 0);
-      Assembly       : constant Aqua.Assembler.Assembly :=
-                         Assembly_Object
-                           (Op.Property
-                              (Global_Plugin.Assembly)).Assembly;
-   begin
-      Assembly.Append_Octet
-        (Aqua.Architecture.Encode
-           (Aqua.Architecture.Aqua_Instruction'Value
-                ("A_" & Mnemonic),
-            Immediate => Aqua.Octet (Argument_Count)));
-      declare
-         Property_Name  : constant Aqua.Word :=
-                            Assembly.Reference_Property_Name
-                              (Operand_Tree.Concatenate_Children);
-      begin
-         Assembly.Append_Word (Property_Name);
-      end;
-   end After_Property;
 
    --------------------------
    -- After_Single_Operand --
@@ -729,10 +688,7 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                      Node : constant Program_Tree :=
                               Operand.Program_Child ("integer");
                   begin
-                     Value :=
-                       To_Integer_Word
-                         (-Aqua_Integer'Value
-                            (Node.Text));
+                     Value := (not Word'Value (Node.Text)) + 1;
                   end;
                else
                   raise Constraint_Error
@@ -771,6 +727,7 @@ package body Aquarius.Plugins.Macro_32.Assemble is
       Relative : Boolean;
       Size     : Aqua.Data_Size)
    is
+      use type Aqua.Word;
       use Aquarius.Programs;
       Op : constant Program_Tree := Tree.Chosen_Tree;
    begin
@@ -784,14 +741,9 @@ package body Aquarius.Plugins.Macro_32.Assemble is
            (Aqua.Word'Value (Op.Text),
             Size);
       elsif Op.Name = "negative_integer" then
-         declare
-            use Aqua;
-            X : constant Aqua_Integer :=
-                  -Aqua_Integer'Value (Op.Program_Child ("integer").Text);
-         begin
-            Assembly.Append
-              (Aqua.To_Integer_Word (X), Size);
-         end;
+         Assembly.Append
+           ((not Aqua.Word'Value (Op.Program_Child ("integer").Text)) + 1,
+            Size);
       else
          raise Constraint_Error
            with "invalid operand: " & Op.Name;
@@ -820,7 +772,7 @@ package body Aquarius.Plugins.Macro_32.Assemble is
             return (Register, False,
                     Assembly.Get_Register (Operand_Tree.Text), 0);
          else
-            return (Indexed, False, Aqua.Architecture.R_PC, 0);
+            return (Indexed_32, False, Aqua.Architecture.R_PC, 0);
          end if;
       elsif Operand_Name = "deferred" then
          if Assembly.Is_Register
@@ -830,22 +782,15 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                     Assembly.Get_Register
                       (Operand_Tree.Program_Child ("identifier").Text), 0);
          else
-            return (Indexed, True, Aqua.Architecture.R_PC, 0);
+            raise Constraint_Error with
+            Operand_Tree.Show_Location & ": expected a register name";
          end if;
       elsif Operand_Name = "autoincrement" then
-         return (Autoincrement, False,
+         return (Postincrement, False,
                  Assembly.Get_Register
                    (Operand_Tree.Program_Child ("identifier").Text), 0);
       elsif Operand_Name = "autodecrement" then
-         return (Autodecrement, False,
-                 Assembly.Get_Register
-                   (Operand_Tree.Program_Child ("identifier").Text), 0);
-      elsif Operand_Name = "autoincrement_deferred" then
-         return (Autoincrement, True,
-                 Assembly.Get_Register
-                   (Operand_Tree.Program_Child ("identifier").Text), 0);
-      elsif Operand_Name = "autodecrement_deferred" then
-         return (Autodecrement, True,
+         return (Predecrement, False,
                  Assembly.Get_Register
                    (Operand_Tree.Program_Child ("identifier").Text), 0);
       elsif Operand_Name = "indexed" then
@@ -858,19 +803,31 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                      (case Size is
                          when Aqua.Word_8_Size =>
                             Indexed_8,
-                         when Aqua.Word_16_Size =>
-                            Indexed_16,
-                         when Aqua.Word_32_Size =>
-                            Indexed);
+                         when Aqua.Word_16_Size | Aqua.Word_32_Size =>
+                            Indexed_32);
          begin
             return (Mode, False,
                     Assembly.Get_Register
                       (Operand_Tree.Program_Child ("identifier").Text), 0);
          end;
       elsif Operand_Name = "indexed_deferred" then
-         return (Indexed, True,
-                 Assembly.Get_Register
-                   (Operand_Tree.Program_Child ("identifier").Text), 0);
+         declare
+            use Aqua;
+            Size : constant Aqua.Data_Size :=
+                     Get_Operand_Size
+                       (Operand_Tree.Program_Child ("operand"));
+            Mode : constant Addressing_Mode :=
+                     (case Size is
+                         when Aqua.Word_8_Size  =>
+                            Indexed_8,
+                         when Aqua.Word_16_Size | Aqua.Word_32_Size =>
+                            Indexed_32);
+         begin
+            return (Mode, True,
+                    Assembly.Get_Register
+                      (Operand_Tree.Program_Child ("identifier").Text), 0);
+         end;
+
       elsif Operand_Name = "immediate" then
          declare
             use Aqua;
@@ -880,15 +837,11 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                      Operand_Tree.Program_Child ("expression"));
          begin
             if not X.Deferred and then X.Word_Value < 32 then
-               return (Literal, False, 0, Octet (X.Word_Value));
+               return (Small_Immediate, False, 0, Octet (X.Word_Value));
             else
-               return (Autoincrement, False, Aqua.Architecture.R_PC, 0);
+               return (Postincrement, False, Aqua.Architecture.R_PC, 0);
             end if;
          end;
-      elsif Operand_Name = "absolute" then
-         return (Autoincrement, True, Aqua.Architecture.R_PC, 0);
-      elsif Operand_Name = "string" then
-         return (Autoincrement, False, Aqua.Architecture.R_PC, 0);
       else
          raise Constraint_Error
            with "unknown mode: " & Operand_Name;
@@ -989,7 +942,7 @@ package body Aquarius.Plugins.Macro_32.Assemble is
       Operand_Name   : constant String := Operand_Tree.Name;
 
    begin
-      if Operand.Mode = Literal
+      if Operand.Mode = Small_Immediate
         or else Operand.Mode = Register
       then
          null;
@@ -1035,9 +988,6 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                  (Value.Word_Value, Aqua.Word_32_Size);
             end if;
          end;
-      elsif Operand_Name = "string" then
-         Assembly.Append
-           (Assembly.Reference_String (Operand_Tree.Text), Aqua.Word_32_Size);
       end if;
    end Place_Operand;
 
