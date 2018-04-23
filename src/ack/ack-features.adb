@@ -83,6 +83,21 @@ package body Ack.Features is
       Feature.Preconditions.Append ((Tag, Condition));
    end Add_Precondition;
 
+   ---------------
+   -- Add_Shelf --
+   ---------------
+
+   overriding procedure Add_Shelf
+     (Feature : in out Feature_Entity_Record;
+      Name    : String)
+   is
+   begin
+      if not Feature.Shelves.Contains (Name) then
+         Feature.Local_Count := Feature.Local_Count + 1;
+         Feature.Shelves.Insert (Name, Feature.Local_Count);
+      end if;
+   end Add_Shelf;
+
    ----------
    -- Bind --
    ----------

@@ -306,6 +306,10 @@ private
       Value_Type : not null access constant Root_Entity_Type'Class;
       Unit       : in out Tagatha.Units.Tagatha_Unit);
 
+   overriding procedure Add_Shelf
+     (Feature : in out Feature_Entity_Record;
+      Name    : String);
+
    procedure Check_Precondition
      (Feature       : Feature_Entity_Record'Class;
       Unit          : in out Tagatha.Units.Tagatha_Unit;
