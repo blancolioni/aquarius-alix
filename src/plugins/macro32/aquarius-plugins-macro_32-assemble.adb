@@ -772,7 +772,7 @@ package body Aquarius.Plugins.Macro_32.Assemble is
             return (Register, False,
                     Assembly.Get_Register (Operand_Tree.Text), 0);
          else
-            return (Indexed, False, Aqua.Architecture.R_PC, 0);
+            return (Indexed_32, False, Aqua.Architecture.R_PC, 0);
          end if;
       elsif Operand_Name = "deferred" then
          if Assembly.Is_Register
@@ -782,22 +782,15 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                     Assembly.Get_Register
                       (Operand_Tree.Program_Child ("identifier").Text), 0);
          else
-            return (Indexed, True, Aqua.Architecture.R_PC, 0);
+            raise Constraint_Error with
+            Operand_Tree.Show_Location & ": expected a register name";
          end if;
       elsif Operand_Name = "autoincrement" then
-         return (Autoincrement, False,
+         return (Postincrement, False,
                  Assembly.Get_Register
                    (Operand_Tree.Program_Child ("identifier").Text), 0);
       elsif Operand_Name = "autodecrement" then
-         return (Autodecrement, False,
-                 Assembly.Get_Register
-                   (Operand_Tree.Program_Child ("identifier").Text), 0);
-      elsif Operand_Name = "autoincrement_deferred" then
-         return (Autoincrement, True,
-                 Assembly.Get_Register
-                   (Operand_Tree.Program_Child ("identifier").Text), 0);
-      elsif Operand_Name = "autodecrement_deferred" then
-         return (Autodecrement, True,
+         return (Predecrement, False,
                  Assembly.Get_Register
                    (Operand_Tree.Program_Child ("identifier").Text), 0);
       elsif Operand_Name = "indexed" then
@@ -810,10 +803,8 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                      (case Size is
                          when Aqua.Word_8_Size =>
                             Indexed_8,
-                         when Aqua.Word_16_Size =>
-                            Indexed_16,
-                         when Aqua.Word_32_Size =>
-                            Indexed);
+                         when Aqua.Word_16_Size | Aqua.Word_32_Size =>
+                            Indexed_32);
          begin
             return (Mode, False,
                     Assembly.Get_Register
@@ -829,10 +820,8 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                      (case Size is
                          when Aqua.Word_8_Size  =>
                             Indexed_8,
-                         when Aqua.Word_16_Size =>
-                            Indexed_16,
-                         when Aqua.Word_32_Size =>
-                            Indexed);
+                         when Aqua.Word_16_Size | Aqua.Word_32_Size =>
+                            Indexed_32);
          begin
             return (Mode, True,
                     Assembly.Get_Register
@@ -848,15 +837,11 @@ package body Aquarius.Plugins.Macro_32.Assemble is
                      Operand_Tree.Program_Child ("expression"));
          begin
             if not X.Deferred and then X.Word_Value < 32 then
-               return (Literal, False, 0, Octet (X.Word_Value));
+               return (Small_Immediate, False, 0, Octet (X.Word_Value));
             else
-               return (Autoincrement, False, Aqua.Architecture.R_PC, 0);
+               return (Postincrement, False, Aqua.Architecture.R_PC, 0);
             end if;
          end;
-      elsif Operand_Name = "absolute" then
-         return (Autoincrement, True, Aqua.Architecture.R_PC, 0);
-      elsif Operand_Name = "string" then
-         return (Autoincrement, False, Aqua.Architecture.R_PC, 0);
       else
          raise Constraint_Error
            with "unknown mode: " & Operand_Name;
@@ -957,7 +942,7 @@ package body Aquarius.Plugins.Macro_32.Assemble is
       Operand_Name   : constant String := Operand_Tree.Name;
 
    begin
-      if Operand.Mode = Literal
+      if Operand.Mode = Small_Immediate
         or else Operand.Mode = Register
       then
          null;
