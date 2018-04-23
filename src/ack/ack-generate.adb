@@ -97,6 +97,7 @@ package body Ack.Generate is
             Frame_Words    => 0,
             Result_Words   => 0,
             Global         => True);
+         Unit.Push (0);
          Unit.Call (Entity.Link_Name & "$create");
          Unit.Duplicate;
          Unit.Dereference;
@@ -113,15 +114,6 @@ package body Ack.Generate is
          Unit.Native_Operation ("trap 15");
          Unit.End_Routine;
       end if;
-
-      Unit.Begin_Routine
-        (Entity.Link_Name & "$init",
-         Argument_Words => 0,
-         Frame_Words    => 0,
-         Result_Words   => 1,
-         Global         => True);
-
-      Unit.End_Routine;
 
       if not Entity.Expanded then
          Entity.Generate_Virtual_Table (Unit);
