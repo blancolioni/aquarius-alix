@@ -330,6 +330,16 @@ package Ack is
      with Pre'Class =>
        Root_Entity_Type'Class (Entity).Argument_Count >= Index;
 
+   procedure Add_Shelf
+     (Entity : in out Root_Entity_Type;
+      Name   : String)
+   is null;
+
+   function Shelf
+     (Entity : Root_Entity_Type;
+      Name   : String)
+      return Positive;
+
    function Declaration_Node
      (Entity : Root_Entity_Type'Class)
       return Node_Id;
@@ -1157,6 +1167,9 @@ private
 
    type Entity_Table is access Entity_Table_Record;
 
+   package Shelf_Maps is
+     new WL.String_Maps (Positive);
+
    type Root_Entity_Type is abstract tagged
       record
          Name                 : Ada.Strings.Unbounded.Unbounded_String;
@@ -1169,6 +1182,7 @@ private
          Attached             : Boolean := False;
          Has_Monitoring_Level : Boolean := False;
          Monitoring_Level     : Assertion_Monitoring_Level;
+         Shelves              : Shelf_Maps.Map;
       end record;
 
    function Has_Context
@@ -1244,6 +1258,12 @@ private
      (Entity : not null access constant Root_Entity_Type'Class)
       return Boolean
    is (Entity.Attached);
+
+   function Shelf
+     (Entity : Root_Entity_Type;
+      Name   : String)
+      return Positive
+   is (Entity.Shelves.Element (Name));
 
    function Proper_Ancestor_Of
      (Ancestor   : not null access constant Root_Entity_Type;
