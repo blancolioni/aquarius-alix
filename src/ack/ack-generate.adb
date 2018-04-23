@@ -814,8 +814,10 @@ package body Ack.Generate is
 
       Unit.Call
         (Tuple_Type.Link_Name & "$create");
+      Unit.Push_Return;
       Unit.Duplicate;
-      Unit.Save_Top;
+      Unit.Pop_Local
+        (Tagatha.Local_Offset (Context.Shelf ("tuple-expression")));
 
       Unit.Call (Make_Name);
 
@@ -823,7 +825,8 @@ package body Ack.Generate is
          Unit.Drop;
       end loop;
 
-      Unit.Restore_Top;
+      Unit.Push_Local
+        (Tagatha.Local_Offset (Context.Shelf ("tuple-expression")));
 
    end Generate_Tuple_Expression;
 
