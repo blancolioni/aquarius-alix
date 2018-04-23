@@ -168,7 +168,7 @@ package body Ack.Features is
    ------------------------
 
    procedure Check_Precondition
-     (Feature       : Feature_Entity_Record'Class;
+     (Feature       : not null access constant Feature_Entity_Record'Class;
       Unit          : in out Tagatha.Units.Tagatha_Unit;
       Success_Label : Positive;
       Fail_Label    : Natural)
@@ -192,7 +192,7 @@ package body Ack.Features is
          declare
             Out_Label : constant Positive := Unit.Next_Label;
          begin
-            Ack.Generate.Generate_Expression (Unit, Clause.Node);
+            Ack.Generate.Generate_Expression (Unit, Feature, Clause.Node);
             Unit.Operate (Tagatha.Op_Test);
             Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
 
@@ -305,7 +305,7 @@ package body Ack.Features is
    -------------------------
 
    procedure Generate_Routine
-     (Feature : Feature_Entity_Record'Class;
+     (Feature : not null access constant Feature_Entity_Record'Class;
       Class   : not null access constant Ack.Classes.Class_Entity_Record'Class;
       Unit    : in out Tagatha.Units.Tagatha_Unit)
    is
@@ -441,19 +441,20 @@ package body Ack.Features is
 
          if Feature.Monitor_Postconditions then
             for Old of Feature.Olds loop
-               Ack.Generate.Generate_Expression (Unit, Old);
+               Ack.Generate.Generate_Expression (Unit, Feature, Old);
             end loop;
          end if;
 
          Ack.Generate.Generate_Compound
-           (Unit, Compound (Feature.Routine_Node));
+           (Unit, Feature, Compound (Feature.Routine_Node));
 
          if Feature.Monitor_Postconditions then
             for Clause of Feature.Postconditions loop
                declare
                   Out_Label : constant Positive := Unit.Next_Label;
                begin
-                  Ack.Generate.Generate_Expression (Unit, Clause.Node);
+                  Ack.Generate.Generate_Expression
+                    (Unit, Feature, Clause.Node);
                   Unit.Operate (Tagatha.Op_Test);
                   Unit.Jump (Out_Label, Tagatha.C_Not_Equal);
                   Unit.Push_Text
@@ -492,7 +493,7 @@ package body Ack.Features is
          if Feature.Rescue_Node in Real_Node_Id then
             Unit.Set_Property ("retry_label", Feature.Link_Name & "$retry");
             Ack.Generate.Generate_Compound
-              (Unit, Compound (Feature.Rescue_Node));
+              (Unit, Feature, Compound (Feature.Rescue_Node));
             Unit.Clear_Property ("retry_label");
          end if;
 
