@@ -95,7 +95,7 @@ arg ::= identifier | deferred
       | immediate
       | subroutine
       
-deferred ::= '(' identifier ')'
+deferred ::= '(' identifier ')' | '@' identifier
 autoincrement ::= '(' identifier ')' '+'
 autodecrement ::= '-' '(' identifier ')'
 indexed ::= operand '(' identifier ')'
