@@ -11,21 +11,19 @@ __heap_top:
    
 .export __allocate
 __allocate:
-   mov r0, -(sp)
+   mov r0, r1
    mov __heap_top, r0
    bne L1
    trap 1
    mov r0, __heap_start
    mov r0, __heap_top
 L1:
-   add r0, 8(sp), __heap_top
-   mov r0, 8(sp)
-   mov (sp)+, r0
-   rts
-   
-   
+   add r0, r1, __heap_top
+   mov r1, r0
+   return 1
+      
 .export system__memory__mem__allocate
 system__memory__mem__allocate:
-   mov 12(sp), r0
-   jsr __allocate
-   rts
+   call 1, __allocate
+   return 1
+   
