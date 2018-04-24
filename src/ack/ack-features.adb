@@ -711,7 +711,10 @@ package body Ack.Features is
          end if;
       else
          if Current.Expanded then
-            Unit.Call (Feature.Link_Name);
+            Unit.Call
+              (Target         => Feature.Link_Name,
+               Argument_Words => Feature.Argument_Count + 1,
+               Result_Words   => (if Feature.Has_Result then 1 else 0));
          else
             --  push feature address from virtual table
             Unit.Duplicate;
@@ -719,26 +722,9 @@ package body Ack.Features is
             Push_Offset (Unit, Feature.Virtual_Table_Offset);
             Unit.Operate (Tagatha.Op_Add);
             Unit.Dereference;
-            Unit.Indirect_Call;
-         end if;
-
-         if Current.Expanded and then not Feature.Has_Result then
-            if Current.Frame_Words = 1 then
-               if Feature.Argument_Count > 0 then
-                  Unit.Save_Top;
-                  for I in 1 .. Feature.Argument_Count loop
-                     Unit.Drop;
-                  end loop;
-                  Unit.Restore_Top;
-               end if;
-            end if;
-         else
-
-            Unit.Drop;  --  current
-            for I in 1 .. Feature.Argument_Count loop
-               Unit.Drop;
-            end loop;
-
+            Unit.Indirect_Call
+              (Argument_Words => Feature.Argument_Count + 1,
+               Result_Words   => (if Feature.Has_Result then 1 else 0));
          end if;
       end if;
 

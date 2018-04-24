@@ -97,8 +97,7 @@ package body Ack.Generate is
             Frame_Words    => 0,
             Result_Words   => 0,
             Global         => True);
-         Unit.Push (0);
-         Unit.Call (Entity.Link_Name & "$create");
+         Unit.Call (Entity.Link_Name & "$create", 0, 1);
          Unit.Duplicate;
          Unit.Dereference;
 
@@ -108,8 +107,7 @@ package body Ack.Generate is
 
          Unit.Operate (Tagatha.Op_Add);
          Unit.Dereference;
-         Unit.Indirect_Call;
-         Unit.Drop;
+         Unit.Indirect_Call (1, 0);
          Unit.Push (0);
          Unit.Native_Operation ("trap 15");
          Unit.End_Routine;
@@ -299,7 +297,7 @@ package body Ack.Generate is
    begin
 
       Unit.Call
-        (Creation_Type.Link_Name & "$create");
+        (Creation_Type.Link_Name & "$create", 0, 1);
 
       if Explicit_Call_Node in Real_Node_Id then
 
@@ -397,13 +395,11 @@ package body Ack.Generate is
                         end loop;
 
                         Unit.Segment (Tagatha.Executable);
-                        Unit.Call ("string$create");
+                        Unit.Call ("string$create", 0, 1);
                         Unit.Duplicate;
                         Unit.Push_Label (Label);
                         Unit.Swap;
-                        Unit.Call ("string__create_from_string_literal");
-                        Unit.Drop;
-                        Unit.Drop;
+                        Unit.Call ("string__create_from_string_literal", 2, 0);
                      end;
                   when N_Integer_Constant =>
                      Unit.Push
@@ -801,12 +797,12 @@ package body Ack.Generate is
       end loop;
 
       Unit.Call
-        (Tuple_Type.Link_Name & "$create");
+        (Tuple_Type.Link_Name & "$create", 0, 1);
       Unit.Duplicate;
       Unit.Pop_Local
         (Tagatha.Local_Offset (Context.Shelf ("tuple-expression")));
 
-      Unit.Call (Make_Name);
+      Unit.Call (Make_Name, Actual_Nodes'Length + 1, 0);
 
       for I in 1 .. Actual_Nodes'Length + 1 loop
          Unit.Drop;
