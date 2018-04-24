@@ -632,7 +632,7 @@ package body Ack.Classes is
         (Name           => Class.Link_Name & "$create",
          Argument_Words => 0,
          Frame_Words    => 0,
-         Result_Words   => 0,
+         Result_Words   => 1,
          Global         => True);
       Unit.Push (Tagatha.Tagatha_Integer (Layout.Length) * 4);
       Unit.Call ("__allocate", 1, 1);
