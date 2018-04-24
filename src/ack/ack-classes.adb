@@ -117,8 +117,7 @@ package body Ack.Classes is
    is
    begin
       Unit.Call
-        (Class_Entity_Record'Class (Class).Link_Name & "$create");
-      Unit.Push_Result;
+        (Class_Entity_Record'Class (Class).Link_Name & "$create", 0, 1);
    end Allocate;
 
    --------------
@@ -636,7 +635,7 @@ package body Ack.Classes is
          Result_Words   => 0,
          Global         => True);
       Unit.Push (Tagatha.Tagatha_Integer (Layout.Length) * 4);
-      Unit.Call ("__allocate");
+      Unit.Call ("__allocate", 1, 1);
       Unit.Duplicate;
       Unit.Start_Copy;
 
