@@ -804,10 +804,6 @@ package body Ack.Generate is
 
       Unit.Call (Make_Name, Actual_Nodes'Length + 1, 0);
 
-      for I in 1 .. Actual_Nodes'Length + 1 loop
-         Unit.Drop;
-      end loop;
-
       Unit.Push_Local
         (Tagatha.Local_Offset (Context.Shelf ("tuple-expression")));
 
