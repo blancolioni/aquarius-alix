@@ -155,7 +155,9 @@ package body Aquarius.Plugins.Macro_32.Assemble is
       Assembly.Append_Octet
         (Aqua.Architecture.Encode
            (Aqua.Architecture.A_Call,
-            Immediate => Aqua.Octet (Argument_Count)));
+            Immediate => 0));
+      Assembly.Append_Octet
+        (Aqua.Octet (Argument_Count));
       Assembly.Append_Octet
         (Aqua.Architecture.Encode (Dst_Op));
       Place_Operand (Dst, Dst_Op, Aqua.Word_32_Size);
@@ -466,6 +468,34 @@ package body Aquarius.Plugins.Macro_32.Assemble is
         (Aqua.Architecture.Encode
            (Aqua.Architecture.Aqua_Instruction'Value ("A_" & Mnemonic)));
    end After_No_Operand;
+
+   ------------------
+   -- After_Return --
+   ------------------
+
+   procedure After_Return
+     (Target : not null access Aquarius.Actions.Actionable'Class)
+   is
+      use Aquarius.Programs;
+      Op        : constant Program_Tree := Program_Tree (Target);
+      Pop_Tree  : constant Program_Tree :=
+                    Op.Program_Child ("integer");
+      Pop_Count : constant Natural :=
+                    (if Pop_Tree /= null
+                     then Natural'Value
+                       (Pop_Tree.Text)
+                     else 0);
+      Assembly  : constant Aqua.Assembler.Assembly :=
+                    Assembly_Object
+                      (Op.Property
+                         (Global_Plugin.Assembly)).Assembly;
+   begin
+      Assembly.Append_Octet
+        (Aqua.Architecture.Encode
+           (Aqua.Architecture.A_Return));
+      Assembly.Append_Octet
+        (Aqua.Octet (Pop_Count));
+   end After_Return;
 
    --------------------------
    -- After_Single_Operand --

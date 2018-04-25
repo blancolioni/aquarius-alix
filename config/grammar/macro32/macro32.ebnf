@@ -75,7 +75,8 @@ single_operand_instruction ::=
                   'clr' | 'not'
                  | 'inc' | 'dec' | 'neg'
                  | 'adc' | 'sbc' | 'tst'
-
+                 | 'ldj' | 'stj'
+                 
 double_operand_instruction ::=
      'mov' | 'cmp' | 'add' | 'sub' | 'mul' | 'div' | 'mod' | 'and' | 'or' | 'xor'
    | 'seq' | 'sne' | 'sgt' | 'slt' | 'sge' | 'sle'
