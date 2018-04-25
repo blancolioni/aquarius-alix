@@ -313,6 +313,7 @@ package body Ack.Features is
                        1 + Natural (Feature.Arguments.Length);
       Result_Count : constant Natural :=
                        (if Feature.Value_Type /= null
+                        or else Class.Expanded
                         then 1 else 0);
       Once_Flag_Label  : constant String :=
                            "once_flag$" & Feature.Link_Name;
@@ -362,6 +363,9 @@ package body Ack.Features is
             Feature.Push_Entity (True, Feature.Active_Class, Unit);
 
             if Result_Count > 0 then
+               if Class.Expanded and then Feature.Value_Type = null then
+                  Unit.Push_Argument (1);
+               end if;
                Unit.Pop_Result;
             end if;
 
@@ -475,6 +479,9 @@ package body Ack.Features is
             end if;
 
             Unit.Push_Local (1);
+            Unit.Pop_Result;
+         elsif Class.Expanded then
+            Unit.Push_Argument (1);
             Unit.Pop_Result;
          end if;
 
@@ -703,6 +710,7 @@ package body Ack.Features is
       if Feature.Intrinsic then
          Ack.Generate.Primitives.Generate_Intrinsic
            (Unit, Feature.External_Label);
+         Unit.Push_Argument (1);
       elsif Feature.Is_Property then
          if not Feature.Active_Class.Expanded then
             Push_Offset (Unit, Feature.Property_Offset);
@@ -714,7 +722,7 @@ package body Ack.Features is
             Unit.Call
               (Target         => Feature.Link_Name,
                Argument_Words => Feature.Argument_Count + 1,
-               Result_Words   => (if Feature.Has_Result then 1 else 0));
+               Result_Words   => 1);
          else
             --  push feature address from virtual table
             Unit.Duplicate;
