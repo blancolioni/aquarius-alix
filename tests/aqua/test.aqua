@@ -28,8 +28,8 @@ feature
 --         Test_List.Append (T)
          create { Test_Simple_Tuples } T
          Test_List.Append (T)
---         create { Test_Diamond_Inheritance } T
---         Test_List.Append (T)
+         create { Test_Diamond_Inheritance } T
+         Test_List.Append (T)
       end
 
    Make

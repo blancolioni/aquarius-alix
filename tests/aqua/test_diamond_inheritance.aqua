@@ -25,10 +25,19 @@ feature
       
    Execute
       do
-         Put_Line (A.a1 & " " & A.a2 & " " & A.a3 & " " & A.a4)
-         Put_Line (B.a1 & " " & B.a2 & " " & B.a3 & " " & B.a4)
-         Put_Line (C.a1 & " " & C.a2 & " " & C.a3 & " " & C.a4)
-         Put_Line (D.a1 & " " & D.a2 & " " & D.a3 & " " & D.a4)
+         New_Line
+         create A
+         Put (A.a1) Put (" ") Put (A.a2) Put (" ") Put (A.a3) Put (" ") Put (A.a4) New_Line
+         --  Put_Line (A.a1 & " " & A.a2 & " " & A.a3 & " " & A.a4)
+         create B
+         Put (B.a1) Put (" ") Put (B.a2) Put (" ") Put (B.a3) Put (" ") Put (B.a4) New_Line
+         --  Put_Line (B.a1 & " " & B.a2 & " " & B.a3 & " " & B.a4)
+         create C
+         Put (C.a1) Put (" ") Put (C.a2) Put (" ") Put (C.a3) Put (" ") Put (C.a4) New_Line
+         --  Put_Line (C.a1 & " " & C.a2 & " " & C.a3 & " " & C.a4)
+         create D
+         Put (D.a1) Put (" ") Put (D.a2) Put (" ") Put (D.a3) Put (" ") Put (D.a4) New_Line
+         --  Put_Line (D.a1 & " " & D.a2 & " " & D.a3 & " " & D.a4)
          Success := Value = 10
          if not Success then
             Fail_Message := "Expected Value = 10; found " & Value.To_String
