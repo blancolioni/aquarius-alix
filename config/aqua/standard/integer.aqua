@@ -2,26 +2,41 @@ expanded class
    Integer
    
 inherit  
-   Aqua.Algebra.Additive redefine Add, Subtract, Negate, Zero end
-   Aqua.Algebra.Eq redefine Equal end
-   Aqua.Integral redefine Make_With_Integer_Literal, Convert_From end
-   Aqua.Comparable redefine GE, LE, GT, LT, Equal end
+   Aqua.Algebra.Additive 
+      redefine Add, Subtract, Negate, Zero end
+   Aqua.Algebra.Multiplicative
+      redefine One, Multiply, Divide end
+   Aqua.Algebra.Eq 
+      redefine Equal end
+   Aqua.Integral 
+      redefine Make_With_Integer_Literal, Convert_From end
+   Aqua.Comparable 
+      redefine GE, LE, GT, LT, Equal end
    
 feature
    To_String : String
+      local
+         It : Integer
       do
-         Result := "[integer]"
+         if Current = 0 then
+            Result := "0"
+         else   
+            Result := "[integer]"
+         end
       end
    
    Add (Right : Integer) : Integer external "intrinsic"
    Subtract (Right : Integer) : Integer external "intrinsic"
    Negate : Integer external "intrinsic"
+   Multiply (Right : Integer) : Integer external "intrinsic"
+   Divide   (Right : Integer) : Integer external "intrinsic"
       
    Zero : Integer
       do
          Result := 0
       end
       
+   One  : Integer external "intrinsic"
     
    Equal (Right : Integer) : Boolean external "intrinsic"
 
