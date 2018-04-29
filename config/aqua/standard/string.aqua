@@ -1,12 +1,19 @@
 class String
 
 create
-    Create_With_Size
+    Create_With_Size, Create_From_String_Literal
 
 feature
 
---   To_Lower : String external "aqua"
---   To_Integer : Integer external "aqua"
+   To_Lower : String
+      do
+         Result := Current
+      end
+   
+   To_Integer : Integer
+      do
+         Result := Current.Length
+      end
 
    Join alias "&" (Right : String) : String
    
