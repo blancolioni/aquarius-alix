@@ -55,14 +55,13 @@ package body Ack.Variables is
       Local_Type     : not null access Root_Entity_Type'Class)
       return Variable_Entity
    is
-      pragma Unreferenced (Local_Type);
    begin
       return Result : constant Variable_Entity :=
         new Variable_Entity_Record
       do
          Result.Create (Name, Node, Table => False);
          Result.Kind := Local;
-         Result.Value_Type := Entity_Type (Iteration_Type);
+         Result.Value_Type := Entity_Type (Local_Type);
          Result.Iterator := True;
          Result.Iteration := Entity_Type (Iteration_Type);
       end return;
@@ -155,7 +154,7 @@ package body Ack.Variables is
               (Tagatha.Local_Offset (Variable.Offset),
                Tagatha.Default_Size);
 
-            if False and then Variable.Iterator then
+            if Variable.Iterator then
                declare
                   Class : constant Ack.Classes.Class_Entity :=
                             Ack.Classes.Class_Entity

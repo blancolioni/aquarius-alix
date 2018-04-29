@@ -24,7 +24,7 @@ feature
          Vs.Append (4)
          Sum := 0
          across Vs as V loop
-            Sum := Sum + V.Element
+            Sum := Sum + V
          end
          Success := Sum = 10
          if not Success then

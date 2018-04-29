@@ -45,7 +45,7 @@ feature
          Put_Line ("Running tests ...")
          across Test_List as T loop
             Number_Of_Tests := Number_Of_Tests + 1
-            Test_Value := T.Element
+            Test_Value := T
             Test_Name := Test_Value.Name
             Put (Test_Name)
             Set_Col (30)
