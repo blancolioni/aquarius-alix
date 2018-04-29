@@ -173,9 +173,6 @@ package body Ack.Compile is
    begin
       if not Class_Object_Paths.Contains (Base_Name) then
          if not Loaded_Classes.Contains (Base_Name) then
-            Ada.Text_IO.Put_Line
-              ("Loading: " & Base_Name);
-
             declare
                Source_Program : constant Aquarius.Programs.Program_Tree :=
                                   Aquarius.Loader.Load_From_File
@@ -199,10 +196,6 @@ package body Ack.Compile is
                      end if;
                   end if;
                end;
-
-               Ada.Text_IO.Put_Line
-                 ("Finished: " & Base_Name);
-
                Loaded_Classes.Insert (Base_Name, Node);
             end;
 
