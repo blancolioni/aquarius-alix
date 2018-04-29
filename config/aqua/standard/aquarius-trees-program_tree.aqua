@@ -5,25 +5,25 @@ feature
    Name : String
       do
          Set_Tree_Driver (1)
-         Result.Make_From_String_Literal (1032)
+         create Result.Create_From_String_Literal (1032)
       end
       
    Text : String
       do
          Set_Tree_Driver (2)
-         Result.Make_From_String_Literal (1032)
+         create Result.Create_From_String_Literal (1032)
       end
       
    Standard_Text : String
       do
          Set_Tree_Driver (3)
-         Result.Make_From_String_Literal (1032)
+         create Result.Create_From_String_Literal (1032)
       end
       
    Concatenated_Image : String
       do
          Set_Tree_Driver (4)
-         Result.Make_From_String_Literal (1032)
+         create Result.Create_From_String_Literal (1032)
       end
 
    Error (Message : String)
