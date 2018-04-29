@@ -32,7 +32,7 @@ feature
       local
          I : System.Word_32
          W : System.Word_32
-      do
+      do    
          I.Convert_From (Index)
          I := I - 1
          W := Block.Get (I)
@@ -51,6 +51,19 @@ feature { None }
    Create_With_Size (Size : System.Word_32)
       do
          create Block.Allocate_Count (Size)
+      end
+      
+feature { None }
+
+   Write_To_Memory (Start : System.Address)
+      local
+         Target : System.Memory.Block_32
+         Count  : System.Word_32
+      do
+         Count.Convert_From (Length)
+         Count := Count + 1
+         create Target.Make_From_Base_And_Bound (Start, Start.Offset_Words (Count))
+         Block.Copy (Target, 0)
       end
 
 feature { None }
