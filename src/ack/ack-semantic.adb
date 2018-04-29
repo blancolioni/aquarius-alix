@@ -1411,7 +1411,10 @@ package body Ack.Semantic is
            Ack.Features.Feature_Entity_Record'Class)
       is
       begin
-         if not Redefined_Features.Contains (Feature.Standard_Name) then
+         if Inherited_Class.Feature
+           (Get_Name_Id (Feature.Standard_Name)).Deferred
+           and then not Redefined_Features.Contains (Feature.Standard_Name)
+         then
             Error (Inherit, E_Missing_Redefine, Feature);
          end if;
       end Check_Redefined;
@@ -1453,7 +1456,7 @@ package body Ack.Semantic is
          Scan (Redefine_List, Set_Redefine'Access);
 
          if not Class.Deferred then
-            Inherited_Class.Scan_Deferred_Features
+            Inherited_Class.Scan_Features
               (Check_Redefined'Access);
          end if;
       end if;
