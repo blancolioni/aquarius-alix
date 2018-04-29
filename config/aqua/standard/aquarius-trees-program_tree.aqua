@@ -1,20 +1,36 @@
-note
-   Behaviour: Aqua_Primitive
-   
 class Aquarius.Trees.Program_Tree
       
 feature
 
-   Name               : String external "aqua"
-   Text               : String external "aqua"
-   Standard_Text      : String external "aqua"
-   Image              : String external "aqua"
-   Concatenated_Image : String external "aqua"
-   
-   Parent : detachable Aquarius.Trees.Program_Tree
-      external "aqua"
+   Name : String
+      do
+         Set_Tree_Driver (1)
+         Result.Make_From_String_Literal (1032)
+      end
+      
+   Text : String
+      do
+         Set_Tree_Driver (2)
+         Result.Make_From_String_Literal (1032)
+      end
+      
+   Standard_Text : String
+      do
+         Set_Tree_Driver (3)
+         Result.Make_From_String_Literal (1032)
+      end
+      
+   Concatenated_Image : String
+      do
+         Set_Tree_Driver (4)
+         Result.Make_From_String_Literal (1032)
+      end
 
-   Error (Message : String) external "aqua"
+   Error (Message : String)
+      do
+         Message.Write_To_Memory (1032)
+         Set_Tree_Driver (5)
+      end
 
    Create_Entity (Defining_Name_Tree   : Aquarius.Trees.Program_Tree
                   Name, Qualified_Name : String
@@ -31,5 +47,23 @@ feature
                     Referenced_Entity : Komnenos.Entity
                     Reference_Type    : String)
       external "aqua" alias "tree__cross_reference"
-                  
+   
+feature
+
+   Make_From_Index (Index : System.Word_32)
+      do
+         External_Tree_Index := Index
+      end
+      
+   Set_Tree_Driver (Command : System.Word_32)
+      local
+         Mem : System.Memory.Mem
+      do
+         Mem.Put_Word_32 (1024, External_Tree_Index)
+         Mem.Put_Word_32 (1028, Command)
+      end
+         
+
+   External_Tree_Index : System.Word_32
+   
 end
