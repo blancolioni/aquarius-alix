@@ -417,6 +417,15 @@ package body Ack.Generate is
                         Unit.Drop;
                         Unit.Drop;
                      end;
+                  when N_Character_Constant =>
+                     declare
+                        Text : constant String :=
+                                 To_String (Get_Name (Value));
+                     begin
+                        Unit.Push
+                          (Character'Pos (Text (Text'First)));
+                     end;
+
                   when N_Integer_Constant =>
                      Unit.Push
                        (Tagatha.Tagatha_Integer'Value

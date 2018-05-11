@@ -199,6 +199,11 @@ package body Ack.Parser.Expressions is
          Text :=
            Get_Name_Id
              (Import_String_Constant (Choice.Concatenate_Children));
+      elsif Choice.Name = "character_constant" then
+         Kind := N_Character_Constant;
+         Text :=
+           Get_Name_Id
+             (Import_Character_Constant (Choice.Concatenate_Children));
       elsif Choice.Name = "integer_constant" then
          Kind := N_Integer_Constant;
          Text := Get_Name_Id (Choice.Concatenate_Children);

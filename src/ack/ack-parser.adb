@@ -459,6 +459,18 @@ package body Ack.Parser is
              (From.Program_Child ("expression")));
    end Import_Assignment;
 
+   -------------------------------
+   -- Import_Character_Constant --
+   -------------------------------
+
+   function Import_Character_Constant
+     (Raw_Text : String)
+      return String
+   is
+   begin
+      return (1 => Raw_Text (Raw_Text'First + 1));
+   end Import_Character_Constant;
+
    ------------------
    -- Import_Check --
    ------------------

@@ -682,6 +682,14 @@ package body Ack.Features is
             when N_String_Constant =>
                Unit.Push_Text
                  (To_String (Get_Name (Feature.Explicit_Value_Node)));
+            when N_Character_Constant =>
+               declare
+                  Text : constant String :=
+                           To_String (Get_Name (Feature.Explicit_Value_Node));
+               begin
+                  Unit.Push
+                    (Character'Pos (Text (Text'First)));
+               end;
             when N_Integer_Constant =>
                Unit.Push
                  (Tagatha.Tagatha_Integer'Value

@@ -54,6 +54,9 @@ package body Ack.Semantic is
    function Type_String return Ack.Types.Type_Entity
    is (Get_Top_Level_Type ("string"));
 
+   function Type_Character return Ack.Types.Type_Entity
+   is (Get_Top_Level_Type ("character"));
+
    function Type_Boolean return Ack.Types.Type_Entity
    is (Get_Top_Level_Type ("boolean"));
 
@@ -1043,6 +1046,8 @@ package body Ack.Semantic is
                               (case N_Constant_Value (Kind (Value)) is
                                   when N_String_Constant  =>
                                      Type_String,
+                                  when N_Character_Constant =>
+                                     Type_Character,
                                   when N_Integer_Constant =>
                                      Type_Integral (Value),
                                   when N_Boolean_Constant =>
@@ -1621,6 +1626,8 @@ package body Ack.Semantic is
                begin
                   case N_Constant_Value (Kind (Value)) is
                      when N_String_Constant =>
+                        Add_Note_Text (To_String (Get_Name (Value)));
+                     when N_Character_Constant =>
                         Add_Note_Text (To_String (Get_Name (Value)));
                      when N_Integer_Constant =>
                         Add_Note_Text (To_String (Get_Name (Value)));

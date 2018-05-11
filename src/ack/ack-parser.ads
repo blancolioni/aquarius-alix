@@ -31,4 +31,8 @@ private
      (Raw_Text : String)
       return String;
 
+   function Import_Character_Constant
+     (Raw_Text : String)
+      return String;
+
 end Ack.Parser;
