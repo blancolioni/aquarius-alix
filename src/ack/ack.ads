@@ -87,6 +87,7 @@ package Ack is
       N_Tuple,
       N_Constant,
       N_String_Constant,
+      N_Character_Constant,
       N_Integer_Constant,
       N_Boolean_Constant,
       N_Variable,
@@ -507,7 +508,7 @@ package Ack is
    function Has_Name (N : Node_Id) return Boolean
    is (Kind (N) in N_Identifier | N_Feature_Name | N_Feature_Alias
          | N_Variable | N_Integer_Constant | N_String_Constant
-         | N_Boolean_Constant
+         | N_Boolean_Constant | N_Character_Constant
          | N_Effective_Routine | N_Precursor_Element
          | N_Explicit_Creation_Call
          | N_Anchored_Type
