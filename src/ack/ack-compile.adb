@@ -238,17 +238,71 @@ package body Ack.Compile is
      (Path  : String;
       Image : Aqua.Images.Image_Type)
    is
-      Assembly_Program : constant Aquarius.Programs.Program_Tree :=
-                           Aquarius.Loader.Load_From_File
-                             (Path);
-      Assembly_Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
-                           Aquarius.Grammars.Manager.Get_Grammar_For_File
-                             (Path);
+      use Ada.Directories, Ada.Calendar;
+      Base_Name   : constant String := Ada.Directories.Base_Name (Path);
+      Object_Path : constant String :=
+                      Aquarius.Paths.Scratch_File
+                        (Base_Name, "o32");
    begin
-      Assembly_Grammar.Run_Action_Trigger
-        (Assembly_Program, Aquarius.Actions.Semantic_Trigger);
-      Image.Load (Ada.Directories.Base_Name (Path) & ".o32");
+      if not Exists (Object_Path)
+        or else Modification_Time (Object_Path)
+        < Modification_Time (Path)
+      then
+         declare
+            Assembly_Program : constant Aquarius.Programs.Program_Tree :=
+                                 Aquarius.Loader.Load_From_File
+                                   (Path);
+            Assembly_Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
+                                 Aquarius.Grammars.Manager.Get_Grammar_For_File
+                                   (Path);
+         begin
+            Assembly_Grammar.Run_Action_Trigger
+              (Assembly_Program, Aquarius.Actions.Semantic_Trigger);
+         end;
+      end if;
+
+      Image.Load (Base_Name & ".o32");
    end Load_Library_File;
+
+   ----------------------
+   -- Load_Link_Config --
+   ----------------------
+
+   procedure Load_Link_Config
+     (Image : Aqua.Images.Image_Type)
+   is
+      use Ada.Text_IO;
+      Link_Config : Ada.Text_IO.File_Type;
+   begin
+      Open (Link_Config, In_File,
+            Aquarius.Config_Paths.Config_File
+              ("aqua/link.config"));
+
+      while not End_Of_File (Link_Config) loop
+         declare
+            Line : constant String :=
+                     Ada.Strings.Fixed.Trim
+                       (Get_Line (Link_Config),
+                        Ada.Strings.Both);
+            Path : constant String :=
+                     Aquarius.Config_Paths.Config_File
+                       ("aqua/libaqua/" & Line & ".m32");
+         begin
+            if Line /= ""
+              and then Line (Line'First) /= '#'
+            then
+               if not Ada.Directories.Exists (Path) then
+                  Put_Line
+                    (Standard_Error,
+                     Line & ": cannot open");
+               else
+                  Load_Library_File (Path, Image);
+               end if;
+            end if;
+         end;
+      end loop;
+      Close (Link_Config);
+   end Load_Link_Config;
 
    ---------------------
    -- Load_Root_Class --
@@ -263,39 +317,7 @@ package body Ack.Compile is
                      Root_Class => True,
                      Feature_Callback => null);
 
-      declare
-         use Ada.Text_IO;
-         Link_Config : Ada.Text_IO.File_Type;
-      begin
-         Open (Link_Config, In_File,
-               Aquarius.Config_Paths.Config_File
-                 ("aqua/link.config"));
-
-         while not End_Of_File (Link_Config) loop
-            declare
-               Line : constant String :=
-                        Ada.Strings.Fixed.Trim
-                          (Get_Line (Link_Config),
-                           Ada.Strings.Both);
-               Path : constant String :=
-                        Aquarius.Config_Paths.Config_File
-                          ("aqua/libaqua/" & Line & ".m32");
-            begin
-               if Line /= ""
-                 and then Line (Line'First) /= '#'
-               then
-                  if not Ada.Directories.Exists (Path) then
-                     Put_Line
-                       (Standard_Error,
-                        Line & ": cannot open");
-                  else
-                     Load_Library_File (Path, To_Image);
-                  end if;
-               end if;
-            end;
-         end loop;
-      end;
-
+      Load_Link_Config (To_Image);
       To_Image.Link;
    end Load_Root_Class;
 
