@@ -26,7 +26,7 @@ feature
          Mem : System.Memory.Mem
       do
          Count := Request
-         Base := Mem.Allocate (Count)
+         Base := Mem.Allocate (Count * 4)
          Bound := Base.Offset_Words (Count)
       end
          
