@@ -523,7 +523,9 @@ package body Ack.Bindings is
          end if;
 
          References.Clear;
-         if Tree_Name /= "" then
+         if Tree_Name /= ""
+           and then Grammar.Have_Syntax (Tree_Name)
+         then
             Ack.Bindings.Actions.Add_Tree (Binding_Table, Tree_Name);
          end if;
 
