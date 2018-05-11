@@ -806,7 +806,7 @@ private
    function To_String
      (Name : Name_Id)
       return String
-   is (Name_Table (Name));
+   is (if Name = No_Name then "" else Name_Table (Name));
 
    function To_Standard_String
      (Name : Name_Id)
