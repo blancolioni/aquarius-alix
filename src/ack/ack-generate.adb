@@ -847,10 +847,16 @@ package body Ack.Generate is
      (Base_Name : String)
       return String
    is
+      Head : String := Base_Name;
       S : constant String := Natural'Image (String_Label_Index);
    begin
+      for Ch of Head loop
+         if Ch = '-' then
+            Ch := '_';
+         end if;
+      end loop;
       String_Label_Index := String_Label_Index + 1;
-      return Base_Name & "$str_" & S (2 .. S'Last);
+      return Head & "$str_" & S (2 .. S'Last);
    end Next_String_Label;
 
 end Ack.Generate;
