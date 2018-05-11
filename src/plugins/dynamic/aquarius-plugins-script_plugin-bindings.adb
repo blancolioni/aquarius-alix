@@ -19,6 +19,7 @@ with Aquarius.Syntax;
 
 with Ack;
 with Ack.Bindings;
+with Ack.Compile;
 
 with Aqua.Images;
 with Ack.Classes;
@@ -300,10 +301,12 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                Group            => Group,
                Trigger          => Trigger)
             then
-               Load_Action_File
-                 (Full_Path => Action_File_Path,
-                  Group     => Group,
-                  Image     => Dynamic.Dynamic_Plugin (New_Plugin).Image);
+               if False then
+                  Load_Action_File
+                    (Full_Path => Action_File_Path,
+                     Group     => Group,
+                     Image     => Dynamic.Dynamic_Plugin (New_Plugin).Image);
+               end if;
             end if;
          end;
       end if;
@@ -408,7 +411,8 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
 --           end;
 --        end if;
 
-      if Aquarius.Paths.Is_Newer (Assembly_Path, Object_Path) then
+      if Aquarius.Paths.Is_Newer (Assembly_Path, Object_Path)
+      then
          Process_Compiled_Plugin (Base_Name);
       end if;
 
@@ -492,6 +496,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       end Bind_To_Grammar;
 
    begin
+      Ack.Compile.Load_Link_Config (Image);
       Image.Link;
       Image.Bind (Bind_To_Grammar'Access);
    end Plugin_Declaration_After_List_Of_Declarations;

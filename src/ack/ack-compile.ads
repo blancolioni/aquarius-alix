@@ -17,4 +17,7 @@ package Ack.Compile is
      (Source_Path : String;
       To_Image    : Aqua.Images.Image_Type);
 
+   procedure Load_Link_Config
+     (Image : Aqua.Images.Image_Type);
+
 end Ack.Compile;
