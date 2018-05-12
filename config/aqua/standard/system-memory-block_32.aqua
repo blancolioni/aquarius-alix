@@ -45,8 +45,8 @@ feature
          loop
             X := Get (Src)
             To_Block.Put (Dst, X)
-            Src := Src + 4
-            Dst := Dst + 4
+            Src := Src + 1
+            Dst := Dst + 1
          end
       end
          
