@@ -14,14 +14,16 @@ feature
          create Test_List
          create { Test_Class_Load } T
          Test_List.Append (T)
+         create { Test_Strings_1 } T
+         Test_List.Append (T)
          create { Test_Manual_Iterator } T
          Test_List.Append (T)
          create { Test_Simple_Loop } T
          Test_List.Append (T)
          create { Test_Indirect_Inheritance } T
          Test_List.Append (T)
-         create { Test_List_Inheritance } T
-         Test_List.Append (T)
+--         create { Test_List_Inheritance } T
+--         Test_List.Append (T)
 --         create { Test_Rescue } T
 --         Test_List.Append (T)
          create { Test_Boolean_Implies } T
