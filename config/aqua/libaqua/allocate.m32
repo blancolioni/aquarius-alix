@@ -28,5 +28,5 @@ L1:
 system__memory__mem__allocate:
    mov 8(sp), -(sp)
    jsr __allocate
-   tst (sp)+
+   mov (sp)+, r0
    rts
