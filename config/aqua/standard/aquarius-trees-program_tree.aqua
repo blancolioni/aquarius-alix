@@ -5,54 +5,87 @@ feature
    Name : String
       do
          Set_Tree_Driver (1)
-         create Result.Create_From_String_Literal (1032)
+         create Result.Create_From_String_Literal (1036)
       end
       
    Text : String
       do
          Set_Tree_Driver (2)
-         create Result.Create_From_String_Literal (1032)
+         create Result.Create_From_String_Literal (1036)
       end
       
    Standard_Text : String
       do
          Set_Tree_Driver (3)
-         create Result.Create_From_String_Literal (1032)
+         create Result.Create_From_String_Literal (1036)
       end
       
    Concatenated_Image : String
       do
          Set_Tree_Driver (4)
-         create Result.Create_From_String_Literal (1032)
+         create Result.Create_From_String_Literal (1036)
       end
 
    Error (Message : String)
       do
-         Message.Write_To_Memory (1032)
+         Message.Write_To_Memory (1036)
          Set_Tree_Driver (5)
       end
 
+   Get_Property (Name : String) : System.Address
+      local
+         Mem : System.Memory.Mem
+      do
+         Send_String (6, Name)
+         Result := Mem.Get_Address (1032)
+      end
+         
+   Has_Property (Name : String) : Boolean
+      local
+         Mem : System.Memory.Mem
+      do
+         Send_String (7, Name)
+         Result := Mem.Get_Address (1032) /= 0
+      end
+         
+         
+   Set_Property (Name  : String
+                 Value : System.Address)
+      local
+         Mem : System.Memory.Mem
+      do
+         Mem.Put_Address (1032, Value)
+         Send_String (8, Name)
+      end
+         
    Create_Entity (Defining_Name_Tree   : Aquarius.Trees.Program_Tree
                   Name, Qualified_Name : String
                   Class_Name           : String
                   Top_Level            : Boolean) : Komnenos.Entity
-      external "aqua" alias "tree__create_entity"
+      do end
    
    Find_Entity (Entity_Name    : String
                 Class_Name     : String) : Komnenos.Entity
-      external "aqua" alias "tree__find_entity"
+      do end
    
    
    Cross_Reference (Referrer_Entity   : Komnenos.Entity
                     Referenced_Entity : Komnenos.Entity
                     Reference_Type    : String)
-      external "aqua" alias "tree__cross_reference"
+      do end
    
 feature
 
    Make_From_Index (Index : System.Word_32)
       do
          External_Tree_Index := Index
+      end
+
+   Send_String (Command : System.Word_32
+                Text    : String)
+      do
+         Text.Write_To_Memory (1036)
+         Set_Tree_Driver (Command)
       end
       
    Set_Tree_Driver (Command : System.Word_32)
