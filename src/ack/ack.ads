@@ -237,6 +237,7 @@ package Ack is
       return Constant_Entity_Type
       is abstract;
 
+   function Entity_Name_Id (Entity : Root_Entity_Type'Class) return Name_Id;
    function Standard_Name (Entity : Root_Entity_Type'Class) return String;
    function Declared_Name (Entity : Root_Entity_Type'Class) return String;
    function Qualified_Name (Entity : Root_Entity_Type'Class) return String;
@@ -1198,6 +1199,9 @@ private
 
    function Standard_Name (Entity : Root_Entity_Type'Class) return String
    is (-Entity.Name);
+
+   function Entity_Name_Id (Entity : Root_Entity_Type'Class) return Name_Id
+   is (Get_Name_Id (Entity.Standard_Name));
 
    function Declared_Name (Entity : Root_Entity_Type'Class) return String
    is (-Entity.Source_Name);

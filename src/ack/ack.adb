@@ -1,3 +1,4 @@
+with Ada.Text_IO;
 package body Ack is
 
    ------------------
@@ -543,6 +544,13 @@ package body Ack is
       Entity : not null access Root_Entity_Type'Class)
    is
    begin
+      if Get_Program (Node).Show_Location
+        = "aqua-text_io.aqua:7:19"
+      then
+         Ada.Text_IO.Put_Line
+           (Get_Program (Node).Show_Location
+            & ": set-entity: " & Entity.Description);
+      end if;
       Node_Table (Node).Entity := Entity_Type (Entity);
    end Set_Entity;
 
