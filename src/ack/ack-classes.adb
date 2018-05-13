@@ -931,7 +931,7 @@ package body Ack.Classes is
             end loop;
 
             for Feature of Inherited.Redefined_Features loop
-               if Get_Name_Id (Feature.Standard_Name) = Local_Name then
+               if Feature.Feature_Name = Local_Name then
                   return True;
                end if;
             end loop;
@@ -990,20 +990,20 @@ package body Ack.Classes is
    -- Redefine --
    --------------
 
---     procedure Redefine
---       (Class           : in out Class_Entity_Record'Class;
---        Inherited_Class : not null access Class_Entity_Record'Class;
---        Feature_Name    : Name_Id)
---     is
---     begin
---        for Inherited of Class.Inherited_Classes loop
---           if Inherited.Inherited_Class = Inherited_Class then
---              Inherited.Redefined_Features.Append
---                (Inherited_Class.Feature (Feature_Name));
---              exit;
---           end if;
---        end loop;
---     end Redefine;
+   procedure Redefine
+     (Class           : in out Class_Entity_Record'Class;
+      Inherited_Class : not null access Class_Entity_Record'Class;
+      Feature_Name    : Name_Id)
+   is
+   begin
+      for Inherited of Class.Inherited_Types loop
+         if Inherited.Inherited_Type.Class = Inherited_Class then
+            Inherited.Redefined_Features.Append
+              ((Feature_Name => Feature_Name));
+            exit;
+         end if;
+      end loop;
+   end Redefine;
 
    ------------
    -- Rename --

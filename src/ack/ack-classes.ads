@@ -92,6 +92,11 @@ package Ack.Classes is
       Feature_Name : Name_Id)
       return Boolean;
 
+   procedure Redefine
+     (Class           : in out Class_Entity_Record'Class;
+      Inherited_Class : not null access Class_Entity_Record'Class;
+      Feature_Name    : Name_Id);
+
    function Is_Redefinition
      (Class : Class_Entity_Record'Class;
       Feature_Name : Name_Id)
@@ -260,6 +265,14 @@ private
      new Ada.Containers.Doubly_Linked_Lists
        (Ack.Features.Feature_Entity, Ack.Features."=");
 
+   type Feature_Redefine is
+      record
+         Feature_Name : Name_Id;
+      end record;
+
+   package List_Of_Feature_Redefines is
+     new Ada.Containers.Doubly_Linked_Lists (Feature_Redefine);
+
    type Feature_Rename is
       record
          Old_Name : Name_Id;
@@ -272,7 +285,7 @@ private
    type Inherited_Type_Record is
       record
          Inherited_Type     : access Ack.Types.Type_Entity_Record'Class;
-         Redefined_Features : List_Of_Feature_Entities.List;
+         Redefined_Features : List_Of_Feature_Redefines.List;
          Renamed_Features   : List_Of_Feature_Renames.List;
       end record;
 
