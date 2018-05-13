@@ -6,22 +6,39 @@ inherit
       redefine Add, Subtract, Negate, Zero end
    Aqua.Algebra.Multiplicative
       redefine One, Multiply, Divide end
-   Aqua.Algebra.Eq 
-      redefine Equal end
+   Aqua.Algebra.Eq
    Aqua.Integral 
       redefine Make_With_Integer_Literal, Convert_From end
    Aqua.Comparable 
-      redefine GE, LE, GT, LT, Equal end
+      redefine GE, LE, GT, LT end
    
 feature
    To_String : String
       local
          It : Integer
+         Index : Integer
+         Ch    : Character
+         Code  : System.Word_32
       do
          if Current = 0 then
             Result := "0"
-         else   
-            Result := "[integer]"
+         else
+            create Result
+            Result.Create_With_Length (20)
+            from
+               It := Current
+               Index := 20
+            until
+               It = 0
+            loop
+               Code.Convert_From (It mod 10 + 48)
+               Ch.Create_From_UTF32 (Code)
+               Result.Replace_Element (Index, Ch)
+               Index := Index - 1
+               It := It / 10
+            end
+            
+            Result := Result.Slice (Index + 1, 20)
          end
       end
    
