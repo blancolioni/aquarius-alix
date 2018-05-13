@@ -20,6 +20,8 @@ with Aquarius.Actions;
 with Aquarius.Grammars;
 with Aquarius.Grammars.Manager;
 
+with Ack.Semantic.Work;
+
 with Aquarius.Paths;
 
 package body Ack.Compile is
@@ -200,6 +202,10 @@ package body Ack.Compile is
             end;
 
          end if;
+
+         while Ack.Semantic.Work.Have_Work loop
+            Ack.Semantic.Work.Execute_Work;
+         end loop;
 
          if not Ack.Errors.Has_Errors then
             declare
