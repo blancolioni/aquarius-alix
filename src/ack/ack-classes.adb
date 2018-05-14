@@ -1188,6 +1188,28 @@ package body Ack.Classes is
       end loop;
    end Scan_Features;
 
+   ------------------------
+   -- Scan_Redefinitions --
+   ------------------------
+
+   procedure Scan_Redefinitions
+     (Class        : Class_Entity_Record'Class;
+      Feature_Name : Name_Id;
+      Process      : not null access
+        procedure (Ancestor_Class : Class_Entity;
+                   Ancestor_Feature : Name_Id))
+   is
+   begin
+      for Inherited of Class.Inherited_Types loop
+         for Redefined of Inherited.Redefined_Features loop
+            if Redefined.Feature_Name = Feature_Name then
+               Process (Inherited.Inherited_Type.Class,
+                        Redefined.Feature_Name);
+            end if;
+         end loop;
+      end loop;
+   end Scan_Redefinitions;
+
    ------------------
    -- Set_Deferred --
    ------------------
