@@ -5,6 +5,8 @@ with Tagatha.Operands;
 with Ack.Environment;
 with Ack.Types;
 
+with Ack.Semantic.Work;
+
 package body Ack.Classes is
 
    Trace_Classes : constant Boolean := False;
@@ -609,6 +611,11 @@ package body Ack.Classes is
 
       for Inherited of Class.Inherited_List loop
          for Feature of Inherited.Class_Features loop
+            Ack.Semantic.Work.Check_Work_Item
+              (Class        => Inherited,
+               Feature_Name => Feature.Entity_Name_Id,
+               Category     => Ack.Semantic.Work.Feature_Header);
+
             if Test (Feature) then
                return Feature;
             end if;
