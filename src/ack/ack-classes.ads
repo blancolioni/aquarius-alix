@@ -102,6 +102,13 @@ package Ack.Classes is
       Feature_Name : Name_Id)
       return Boolean;
 
+   procedure Scan_Redefinitions
+     (Class        : Class_Entity_Record'Class;
+      Feature_Name : Name_Id;
+      Process      : not null access
+        procedure (Ancestor_Class : Class_Entity;
+                   Ancestor_Feature : Name_Id));
+
    function Is_Descendent_Of
      (Class             : Class_Entity_Record'Class;
       Ancestor          : not null access constant Class_Entity_Record'Class)
