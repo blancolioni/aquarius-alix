@@ -1,8 +1,6 @@
 with Ada.Text_IO;
 with Ack.IO;
 
-with WL.String_Sets;
-
 with Komnenos.Entities.Tables;
 
 with Aquarius.Loader;
@@ -324,6 +322,14 @@ package body Ack.Semantic is
             Entity : constant Ack.Entity_Type :=
                        Container.Get (Target);
          begin
+            if Ack.Features.Is_Feature (Entity) then
+               Ack.Semantic.Work.Check_Work_Item
+                 (Class        =>
+                    Ack.Features.Feature_Entity (Entity).Definition_Class,
+                  Feature_Name => Get_Name (Variable (Assignment)),
+                  Category     => Ack.Semantic.Work.Feature_Header);
+            end if;
+
             Analyse_Expression (Class, Container, Entity.Get_Type,
                                 Expression (Assignment));
             Set_Entity (Variable (Assignment), Entity);
@@ -1276,6 +1282,26 @@ package body Ack.Semantic is
       Dec_Body     : constant Node_Id := Declaration_Body (Feature);
       Arg_Node     : constant Node_Id := Formal_Arguments (Dec_Body);
       Type_Node    : constant Node_Id := Value_Type (Dec_Body);
+
+      procedure Analyse_Ancestor_Feature
+        (Ancestor_Class   : Ack.Classes.Class_Entity;
+         Ancestor_Feature : Name_Id);
+
+      ------------------------------
+      -- Analyse_Ancestor_Feature --
+      ------------------------------
+
+      procedure Analyse_Ancestor_Feature
+        (Ancestor_Class   : Ack.Classes.Class_Entity;
+         Ancestor_Feature : Name_Id)
+      is
+      begin
+         Ack.Semantic.Work.Check_Work_Item
+           (Class        => Ancestor_Class,
+            Feature_Name => Ancestor_Feature,
+            Category     => Ack.Semantic.Work.Feature_Header);
+      end Analyse_Ancestor_Feature;
+
    begin
       if Type_Node /= No_Node then
          Analyse_Type (Class, Type_Node);
@@ -1289,15 +1315,27 @@ package body Ack.Semantic is
               & To_String (Get_Name (Feature_Name (Node)));
          end if;
 
+         Class.Scan_Redefinitions
+           (Get_Entity (Node).Entity_Name_Id,
+            Analyse_Ancestor_Feature'Access);
+
          declare
             Entity    : constant Ack.Features.Feature_Entity :=
                        Ack.Features.Get_Feature_Entity (Node);
          begin
             if Arg_Node /= No_Node then
+               Ada.Text_IO.Put_Line
+                 ("checking arguments for " & Entity.Description);
+               Ack.IO.Put_Line (Entity_Declaration_Group_List (Arg_Node));
                Analyse_Entity_Declaration_Groups
                  (Class, Entity,
                   Entity_Declaration_Group_List (Arg_Node),
                   Local => False);
+            end if;
+
+            if Entity.Declaration_Node = 3159 then
+               Ada.Text_IO.Put_Line ("argument count:"
+                                     & Natural'Image (Entity.Argument_Count));
             end if;
 
             if Type_Node /= No_Node
@@ -1756,7 +1794,8 @@ package body Ack.Semantic is
       Left_Type := Ack.Types.Type_Entity (Get_Type (Left));
 
       if Left_Type /= null then
-         Left_Type.Check_Bound;
+         Ack.Semantic.Work.Check_Work_Item
+           (Left_Type.Class, No_Name, Ack.Semantic.Work.Class_Binding);
       end if;
 
       if Left_Type = null then
@@ -1861,6 +1900,9 @@ package body Ack.Semantic is
 
          if Local_Table = null then
             Error (Precursor_Element, E_No_Component);
+            Ada.Text_IO.Put_Line
+              (Get_Program (Precursor_Element).Show_Location
+               & ": stopping because local table is null");
             Stop := True;
             return;
          end if;
@@ -1870,11 +1912,24 @@ package body Ack.Semantic is
          if not Local_Table.Contains (Name) then
             Error (Precursor_Element, E_Undeclared_Name, Local_Table);
             Stop := True;
+            Ada.Text_IO.Put_Line
+              (Get_Program (Precursor_Element).Show_Location
+               & ": stopping " & To_Standard_String (Name)
+               & " is undefined");
             return;
          end if;
 
-         Ack.Semantic.Work.Check_Work_Item
-           (Class, Name, Ack.Semantic.Work.Feature_Header);
+         declare
+            Entity : constant Entity_Type := Local_Table.Get (Name);
+         begin
+            if Ack.Features.Is_Feature (Entity) then
+               Ack.Semantic.Work.Check_Work_Item
+                 (Ack.Classes.Constant_Class_Entity
+                    (Local_Table.Class_Context),
+                  Name,
+                  Ack.Semantic.Work.Feature_Header);
+            end if;
+         end;
 
          declare
             Entity           : constant Entity_Type :=
@@ -1891,6 +1946,7 @@ package body Ack.Semantic is
                                    (Actual_List_Node).List);
                begin
                   if Entity.Argument_Count = 0 then
+                     Ada.Text_IO.Put_Line (Entity.Description);
                      Error (Actual_List_Node, E_Does_Not_Accept_Arguments);
                   elsif Actuals'Length > Entity.Argument_Count then
                      Error (Actual_List_Node, E_Too_Many_Arguments);
@@ -1918,11 +1974,6 @@ package body Ack.Semantic is
       end Process;
 
    begin
-
-      Ada.Text_IO.Put_Line
-        (Get_Program (Precursor).Show_Location
-         & ": analyse precursor");
-
       Scan (List, Process'Access);
 
       if not Stop then
