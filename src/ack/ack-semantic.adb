@@ -197,7 +197,7 @@ package body Ack.Semantic is
    procedure Analyse_Expression
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
-      Expression_Type : access Root_Entity_Type'Class;
+      Expression_Type : not null access Root_Entity_Type'Class;
       Expression      : Node_Id);
 
    procedure Analyse_Operator
@@ -1034,7 +1034,7 @@ package body Ack.Semantic is
    procedure Analyse_Expression
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
-      Expression_Type : access Root_Entity_Type'Class;
+      Expression_Type : not null access Root_Entity_Type'Class;
       Expression      : Node_Id)
    is
       K : constant Node_Kind := Kind (Expression);
@@ -1089,22 +1089,18 @@ package body Ack.Semantic is
                                   when N_Boolean_Constant =>
                                      Type_Boolean);
             begin
-               if Expression_Type = null then
-                  Error (Value, E_Ignored_Return_Value);
+               if Kind (Value) = N_Integer_Constant then
+                  Set_Type (Expression, Expression_Type);
+                  Set_Entity (Expression, Expression_Type);
+                  if not Expression_Type.Conforms_To (Value_Type) then
+                     Error (Expression, E_Type_Error, Value_Type);
+                  end if;
                else
-                  if Kind (Value) = N_Integer_Constant then
-                     Set_Type (Expression, Expression_Type);
-                     Set_Entity (Expression, Expression_Type);
-                     if not Expression_Type.Conforms_To (Value_Type) then
-                        Error (Expression, E_Type_Error, Value_Type);
-                     end if;
-                  else
-                     Set_Type (Expression, Value_Type);
-                     Set_Entity (Expression, Value_Type);
-                     if not  Value_Type.Conforms_To (Expression_Type) then
-                        Error (Expression, E_Type_Error,
-                               Entity_Type (Expression_Type));
-                     end if;
+                  Set_Type (Expression, Value_Type);
+                  Set_Entity (Expression, Value_Type);
+                  if not  Value_Type.Conforms_To (Expression_Type) then
+                     Error (Expression, E_Type_Error,
+                            Entity_Type (Expression_Type));
                   end if;
                end if;
             end;
