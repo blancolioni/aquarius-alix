@@ -79,7 +79,8 @@ feature
          until
             Index > End_Index
          loop
-            Result.Replace_Element (Index, Element (Index - Start_Index + 1))
+            Result.Replace_Element (Index - Start_Index + 1, Element (Index))
+            Index := Index + 1
          end
       end
       
