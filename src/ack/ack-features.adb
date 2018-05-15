@@ -540,10 +540,6 @@ package body Ack.Features is
 
          Ack.Instantiated (Instan.all);
 
-         if Entity.Declaration_Node = 3159 then
-            Ada.Text_IO.Put_Line ("instantiating: " & Entity.Description);
-         end if;
-
          if Instan.Value_Type /= null then
             Instan.Value_Type :=
               Instan.Value_Type.Instantiate (Type_Instantiation);
