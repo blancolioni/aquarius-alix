@@ -6,6 +6,8 @@ with Ack.Types;
 
 with Ack.Generate.Primitives;
 
+with Ack.Semantic.Work;
+
 package body Ack.Features is
 
    ------------------
@@ -524,23 +526,39 @@ package body Ack.Features is
         function (Generic_Type : Entity_Type) return Entity_Type)
       return Entity_Type
    is
-      Instan : constant Feature_Entity :=
-                 new Feature_Entity_Record'(Entity.all);
    begin
-      if Instan.Value_Type /= null then
-         Instan.Value_Type :=
-           Instan.Value_Type.Instantiate (Type_Instantiation);
-      end if;
 
-      for Arg of Instan.Arguments loop
-         Arg :=
-           Ack.Variables.Variable_Entity
-             (Arg.Instantiate (Type_Instantiation));
-      end loop;
+      Ack.Semantic.Work.Check_Work_Item
+        (Class        => Entity.Definition_Class,
+         Feature_Name => Entity.Entity_Name_Id,
+         Category     => Ack.Semantic.Work.Feature_Header);
 
-      Entity.Instantiated.Append (Instan);
+      declare
+         Instan : constant Feature_Entity :=
+                    new Feature_Entity_Record'(Entity.all);
+      begin
 
-      return Entity_Type (Instan);
+         Ack.Instantiated (Instan.all);
+
+         if Entity.Declaration_Node = 3159 then
+            Ada.Text_IO.Put_Line ("instantiating: " & Entity.Description);
+         end if;
+
+         if Instan.Value_Type /= null then
+            Instan.Value_Type :=
+              Instan.Value_Type.Instantiate (Type_Instantiation);
+         end if;
+
+         for Arg of Instan.Arguments loop
+            Arg :=
+              Ack.Variables.Variable_Entity
+                (Arg.Instantiate (Type_Instantiation));
+         end loop;
+
+         Entity.Instantiated.Append (Instan);
+
+         return Entity_Type (Instan);
+      end;
 
    end Instantiate;
 
