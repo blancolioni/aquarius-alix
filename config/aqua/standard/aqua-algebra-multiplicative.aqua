@@ -15,5 +15,8 @@ feature
       deferred
       end
 
+   Modulus alias "mod" (Right : like Current) : like Current
+      deferred
+      end
       
 end

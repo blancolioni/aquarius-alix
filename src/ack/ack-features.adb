@@ -6,6 +6,8 @@ with Ack.Types;
 
 with Ack.Generate.Primitives;
 
+with Ack.Semantic.Work;
+
 package body Ack.Features is
 
    ------------------
@@ -524,23 +526,35 @@ package body Ack.Features is
         function (Generic_Type : Entity_Type) return Entity_Type)
       return Entity_Type
    is
-      Instan : constant Feature_Entity :=
-                 new Feature_Entity_Record'(Entity.all);
    begin
-      if Instan.Value_Type /= null then
-         Instan.Value_Type :=
-           Instan.Value_Type.Instantiate (Type_Instantiation);
-      end if;
 
-      for Arg of Instan.Arguments loop
-         Arg :=
-           Ack.Variables.Variable_Entity
-             (Arg.Instantiate (Type_Instantiation));
-      end loop;
+      Ack.Semantic.Work.Check_Work_Item
+        (Class        => Entity.Definition_Class,
+         Feature_Name => Entity.Entity_Name_Id,
+         Category     => Ack.Semantic.Work.Feature_Header);
 
-      Entity.Instantiated.Append (Instan);
+      declare
+         Instan : constant Feature_Entity :=
+                    new Feature_Entity_Record'(Entity.all);
+      begin
 
-      return Entity_Type (Instan);
+         Ack.Instantiated (Instan.all);
+
+         if Instan.Value_Type /= null then
+            Instan.Value_Type :=
+              Instan.Value_Type.Instantiate (Type_Instantiation);
+         end if;
+
+         for Arg of Instan.Arguments loop
+            Arg :=
+              Ack.Variables.Variable_Entity
+                (Arg.Instantiate (Type_Instantiation));
+         end loop;
+
+         Entity.Instantiated.Append (Instan);
+
+         return Entity_Type (Instan);
+      end;
 
    end Instantiate;
 
@@ -871,9 +885,6 @@ package body Ack.Features is
       Feature.Routine := True;
       Feature.Deferred_Feature := True;
       Feature.Effective_Class := null;
-      if Feature.Value_Type /= null then
-         Feature.Has_Result := True;
-      end if;
    end Set_Deferred;
 
    ------------------------
@@ -913,9 +924,6 @@ package body Ack.Features is
       Feature.Intrinsic := External_Type = "intrinsic";
       Feature.Routine := not Feature.Property;
       Feature.External := True;
-      if Feature.Value_Type /= null then
-         Feature.Has_Result := True;
-      end if;
       Feature.External_Object := Get_Name_Id (External_Object);
       Feature.External_Type := Get_Name_Id (External_Type);
       Feature.External_Label := Get_Name_Id (External_Label);
@@ -992,9 +1000,6 @@ package body Ack.Features is
    is
    begin
       Feature.Value_Type := Entity_Type (Result_Type);
-      if Feature.Routine or else Feature.External or else Feature.Deferred then
-         Feature.Has_Result := True;
-      end if;
    end Set_Result_Type;
 
    -----------------
@@ -1010,9 +1015,6 @@ package body Ack.Features is
       Feature.Routine_Node := Routine_Node;
       Feature.Routine := True;
       Feature.Once := Once_Routine (Routine_Node);
-      if Feature.Value_Type /= null then
-         Feature.Has_Result := True;
-      end if;
       Feature.Has_Current := True;
    end Set_Routine;
 
@@ -1025,7 +1027,29 @@ package body Ack.Features is
       Offset  : Word_Offset)
    is
    begin
-      Feature.Virtual_Table_Offset := Offset;
+      Feature.VT_Offset := Offset;
    end Set_Virtual_Table_Offset;
+
+   --------------------------
+   -- Virtual_Table_Offset --
+   --------------------------
+
+   function Virtual_Table_Offset
+     (Feature : Feature_Entity_Record'Class)
+      return Word_Offset
+   is
+   begin
+      if Feature.VT_Offset = 0 then
+         declare
+            Original_Feature : constant Feature_Entity :=
+                                 Feature.Definition_Class.Feature
+                                   (Feature.Entity_Name_Id);
+         begin
+            return Original_Feature.Virtual_Table_Offset;
+         end;
+      else
+         return Feature.VT_Offset;
+      end if;
+   end Virtual_Table_Offset;
 
 end Ack.Features;

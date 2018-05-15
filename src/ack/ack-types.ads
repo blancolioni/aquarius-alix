@@ -13,6 +13,10 @@ package Ack.Types is
       Name  : Name_Id)
       return Boolean;
 
+   function Is_Generic_Formal_Type
+     (Typ : Type_Entity_Record'Class)
+      return Boolean;
+
    function Feature
      (Typ   : not null access constant Type_Entity_Record'Class;
       Name  : Name_Id)
@@ -229,5 +233,10 @@ private
    is (if Typ.Generic_Bindings.Is_Empty
        then Typ.Class.Generic_Formal_Count
        else Natural (Typ.Generic_Bindings.Length));
+
+   function Is_Generic_Formal_Type
+     (Typ : Type_Entity_Record'Class)
+      return Boolean
+   is (Typ.Generic_Formal);
 
 end Ack.Types;

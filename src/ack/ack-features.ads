@@ -230,11 +230,10 @@ private
          Deferred_Feature     : Boolean := False;
          External             : Boolean := False;
          Creator              : Boolean := False;
-         Has_Result           : Boolean := False;
          Has_Current          : Boolean := False;
          Once                 : Boolean := False;
          Intrinsic            : Boolean := False;
-         Virtual_Table_Offset : Word_Offset := 0;
+         VT_Offset            : Word_Offset := 0;
          Property_Offset      : Word_Offset := 0;
          Alias                : Name_Id;
          Original_Classes     : List_Of_Entities.List;
@@ -344,7 +343,8 @@ private
    function Has_Result
      (Feature : Feature_Entity_Record'Class)
       return Boolean
-   is (Feature.Has_Result);
+   is (not Feature.Property
+       and then Feature.Value_Type /= null);
 
    function Is_Feature
      (Entity : not null access constant Root_Entity_Type'Class)
@@ -365,11 +365,6 @@ private
      (Feature : Feature_Entity_Record'Class)
       return access constant Ack.Classes.Class_Entity_Record'Class
    is (Feature.Definition_Class);
-
-   function Virtual_Table_Offset
-     (Feature : Feature_Entity_Record'Class)
-      return Word_Offset
-   is (Feature.Virtual_Table_Offset);
 
    function Property_Offset
      (Feature : Feature_Entity_Record'Class)
