@@ -885,9 +885,6 @@ package body Ack.Features is
       Feature.Routine := True;
       Feature.Deferred_Feature := True;
       Feature.Effective_Class := null;
-      if Feature.Value_Type /= null then
-         Feature.Has_Result := True;
-      end if;
    end Set_Deferred;
 
    ------------------------
@@ -927,9 +924,6 @@ package body Ack.Features is
       Feature.Intrinsic := External_Type = "intrinsic";
       Feature.Routine := not Feature.Property;
       Feature.External := True;
-      if Feature.Value_Type /= null then
-         Feature.Has_Result := True;
-      end if;
       Feature.External_Object := Get_Name_Id (External_Object);
       Feature.External_Type := Get_Name_Id (External_Type);
       Feature.External_Label := Get_Name_Id (External_Label);
@@ -1006,9 +1000,6 @@ package body Ack.Features is
    is
    begin
       Feature.Value_Type := Entity_Type (Result_Type);
-      if Feature.Routine or else Feature.External or else Feature.Deferred then
-         Feature.Has_Result := True;
-      end if;
    end Set_Result_Type;
 
    -----------------
@@ -1024,9 +1015,6 @@ package body Ack.Features is
       Feature.Routine_Node := Routine_Node;
       Feature.Routine := True;
       Feature.Once := Once_Routine (Routine_Node);
-      if Feature.Value_Type /= null then
-         Feature.Has_Result := True;
-      end if;
       Feature.Has_Current := True;
    end Set_Routine;
 
