@@ -1352,6 +1352,35 @@ package body Ack.Semantic is
                  (Ack.Types.Get_Type_Entity (Type_Node));
             end if;
          end;
+
+         declare
+            procedure Link_Redefinition
+              (Ancestor_Class   : Ack.Classes.Class_Entity;
+               Ancestor_Feature : Name_Id);
+
+            -----------------------
+            -- Link_Redefinition --
+            -----------------------
+
+            procedure Link_Redefinition
+              (Ancestor_Class   : Ack.Classes.Class_Entity;
+               Ancestor_Feature : Name_Id)
+            is
+               Feature : constant Ack.Features.Feature_Entity :=
+                           Ack.Features.Get_Feature_Entity
+                             (Node);
+            begin
+               Feature.Set_Redefined
+                 (Class            => Class,
+                  Original_Feature =>
+                    Ancestor_Class.Feature (Ancestor_Feature));
+            end Link_Redefinition;
+
+         begin
+            Class.Scan_Redefinitions
+              (Get_Entity (Node).Entity_Name_Id,
+               Link_Redefinition'Access);
+         end;
       end loop;
    end Analyse_Feature_Header;
 
@@ -1504,7 +1533,7 @@ package body Ack.Semantic is
       procedure Set_Redefine (Node : Node_Id) is
          Name : constant Name_Id := Get_Name (Node);
       begin
-         Class.Redefine (Inherited_Class, Name);
+         Class.Redefine (Node, Inherited_Class, Name);
 
 --           Redefined_Features.Insert (To_Standard_String (Name));
 --           if Inherited_Class.Has_Feature (Name) then
