@@ -94,6 +94,7 @@ package Ack.Classes is
 
    procedure Redefine
      (Class           : in out Class_Entity_Record'Class;
+      Node            : Node_Id;
       Inherited_Class : not null access Class_Entity_Record'Class;
       Feature_Name    : Name_Id);
 
@@ -274,7 +275,9 @@ private
 
    type Feature_Redefine is
       record
-         Feature_Name : Name_Id;
+         Node          : Node_Id;
+         Feature_Name  : Name_Id;
+         Feature       : Ack.Features.Feature_Entity;
       end record;
 
    package List_Of_Feature_Redefines is

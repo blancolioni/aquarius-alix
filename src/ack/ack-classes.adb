@@ -176,6 +176,8 @@ package body Ack.Classes is
 
       procedure Scan_Hierarchy (Top : Class_Entity) is
       begin
+         Ack.Semantic.Work.Check_Work_Item
+           (Top, No_Name, Ack.Semantic.Work.Class_Binding);
          if not Class.Inherited_List.Contains (Top) then
             Class.Inherited_List.Append (Top);
             for Inherited of Top.Inherited_Types loop
@@ -999,6 +1001,7 @@ package body Ack.Classes is
 
    procedure Redefine
      (Class           : in out Class_Entity_Record'Class;
+      Node            : Node_Id;
       Inherited_Class : not null access Class_Entity_Record'Class;
       Feature_Name    : Name_Id)
    is
@@ -1006,7 +1009,9 @@ package body Ack.Classes is
       for Inherited of Class.Inherited_Types loop
          if Inherited.Inherited_Type.Class = Inherited_Class then
             Inherited.Redefined_Features.Append
-              ((Feature_Name => Feature_Name));
+              ((Feature_Name => Feature_Name,
+                Node         => Node,
+                Feature      => null));
             exit;
          end if;
       end loop;
