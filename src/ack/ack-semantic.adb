@@ -909,6 +909,13 @@ package body Ack.Semantic is
          return;
       end if;
 
+      if Ack.Features.Is_Feature (Created_Entity) then
+         Ack.Semantic.Work.Check_Work_Item
+           (Ack.Features.Feature_Entity (Created_Entity).Active_Class,
+            Created_Entity.Entity_Name_Id,
+            Ack.Semantic.Work.Feature_Header);
+      end if;
+
       Set_Context (Creation, Container);
       Set_Entity (Creation, Created_Entity);
 
@@ -928,6 +935,11 @@ package body Ack.Semantic is
 
       if Explicit_Call_Node in Real_Node_Id then
          Creator_Name := Get_Name (Explicit_Call_Node);
+
+         Ack.Semantic.Work.Check_Work_Item
+           (Ack.Types.Type_Entity (Created_Type).Class,
+            Creator_Name, Ack.Semantic.Work.Feature_Header);
+
          if Created_Type.Contains (Creator_Name) then
             declare
                Creator : constant Entity_Type :=
@@ -1793,7 +1805,9 @@ package body Ack.Semantic is
          Expression      => Left);
       Left_Type := Ack.Types.Type_Entity (Get_Type (Left));
 
-      if Left_Type /= null then
+      if Left_Type /= null
+        and then not Left_Type.Is_Generic_Formal_Type
+      then
          Ack.Semantic.Work.Check_Work_Item
            (Left_Type.Class, No_Name, Ack.Semantic.Work.Class_Binding);
       end if;
