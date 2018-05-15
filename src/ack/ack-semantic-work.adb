@@ -82,6 +82,20 @@ package body Ack.Semantic.Work is
 
    begin
 
+      if Trace_Work then
+         Ada.Text_IO.Put_Line
+           ("check work item: "
+            & Class.Qualified_Name
+            & (if Feature_Name = No_Name then ""
+              else "." & To_Standard_String (Feature_Name))
+            & ": "
+            & (case Category is
+                 when Feature_Header => "feature-header",
+                 when Feature_Body   => "feature-body",
+                 when Class_Binding  => "class-binding",
+                 when Class_Layout   => "class-layout"));
+      end if;
+
       while not Finished loop
          declare
             Position : Cursor := No_Element;
