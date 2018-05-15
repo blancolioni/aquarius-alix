@@ -125,7 +125,7 @@ package body Ack.Generate is
 
       Unit.End_Routine;
 
-      if not Entity.Expanded then
+      if not Entity.Expanded and then not Entity.Deferred then
          Entity.Generate_Virtual_Table (Unit);
       end if;
 

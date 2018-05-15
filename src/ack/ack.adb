@@ -1,4 +1,7 @@
+with Ada.Text_IO;
 package body Ack is
+
+   Next_Sequence_Number : Natural := 0;
 
    ------------------
    -- Add_Implicit --
@@ -163,7 +166,9 @@ package body Ack is
       if Table then
          Entity.Children := new Entity_Table_Record;
       end if;
-
+      Entity.Created := True;
+      Next_Sequence_Number := Next_Sequence_Number + 1;
+      Entity.Sequence_Number := Next_Sequence_Number;
    end Create;
 
    ----------------------
@@ -214,6 +219,12 @@ package body Ack is
    begin
       Node_Table (Node).Error := Kind;
       Node_Table (Node).Error_Entity := Constant_Entity_Type (Entity);
+      Ada.Text_IO.Put_Line
+        (Get_Program (Node).Show_Location
+         & ": "
+         & Kind'Img
+         & (if Entity = null then ""
+           else "(" & Entity.Qualified_Name & ")"));
    end Error;
 
    ------------------
@@ -307,6 +318,18 @@ package body Ack is
         (-(Entity.Name), Entity_Type (Entity));
       Table_Entity.Children.List.Append (Entity_Type (Entity));
    end Insert;
+
+   ------------------
+   -- Instantiated --
+   ------------------
+
+   procedure Instantiated
+     (Entity : in out Root_Entity_Type'Class)
+   is
+   begin
+      Next_Sequence_Number := Next_Sequence_Number + 1;
+      Entity.Sequence_Number := Next_Sequence_Number;
+   end Instantiated;
 
    --------------
    -- New_List --

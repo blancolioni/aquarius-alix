@@ -5,6 +5,8 @@ with Tagatha.Operands;
 with Ack.Environment;
 with Ack.Types;
 
+with Ack.Semantic.Work;
+
 package body Ack.Classes is
 
    Trace_Classes : constant Boolean := False;
@@ -174,6 +176,8 @@ package body Ack.Classes is
 
       procedure Scan_Hierarchy (Top : Class_Entity) is
       begin
+         Ack.Semantic.Work.Check_Work_Item
+           (Top, No_Name, Ack.Semantic.Work.Class_Binding);
          if not Class.Inherited_List.Contains (Top) then
             Class.Inherited_List.Append (Top);
             for Inherited of Top.Inherited_Types loop
@@ -609,6 +613,11 @@ package body Ack.Classes is
 
       for Inherited of Class.Inherited_List loop
          for Feature of Inherited.Class_Features loop
+            Ack.Semantic.Work.Check_Work_Item
+              (Class        => Inherited,
+               Feature_Name => Feature.Entity_Name_Id,
+               Category     => Ack.Semantic.Work.Feature_Header);
+
             if Test (Feature) then
                return Feature;
             end if;
@@ -931,7 +940,7 @@ package body Ack.Classes is
             end loop;
 
             for Feature of Inherited.Redefined_Features loop
-               if Get_Name_Id (Feature.Standard_Name) = Local_Name then
+               if Feature.Feature_Name = Local_Name then
                   return True;
                end if;
             end loop;
@@ -990,20 +999,23 @@ package body Ack.Classes is
    -- Redefine --
    --------------
 
---     procedure Redefine
---       (Class           : in out Class_Entity_Record'Class;
---        Inherited_Class : not null access Class_Entity_Record'Class;
---        Feature_Name    : Name_Id)
---     is
---     begin
---        for Inherited of Class.Inherited_Classes loop
---           if Inherited.Inherited_Class = Inherited_Class then
---              Inherited.Redefined_Features.Append
---                (Inherited_Class.Feature (Feature_Name));
---              exit;
---           end if;
---        end loop;
---     end Redefine;
+   procedure Redefine
+     (Class           : in out Class_Entity_Record'Class;
+      Node            : Node_Id;
+      Inherited_Class : not null access Class_Entity_Record'Class;
+      Feature_Name    : Name_Id)
+   is
+   begin
+      for Inherited of Class.Inherited_Types loop
+         if Inherited.Inherited_Type.Class = Inherited_Class then
+            Inherited.Redefined_Features.Append
+              ((Feature_Name => Feature_Name,
+                Node         => Node,
+                Feature      => null));
+            exit;
+         end if;
+      end loop;
+   end Redefine;
 
    ------------
    -- Rename --
@@ -1187,6 +1199,28 @@ package body Ack.Classes is
          end loop;
       end loop;
    end Scan_Features;
+
+   ------------------------
+   -- Scan_Redefinitions --
+   ------------------------
+
+   procedure Scan_Redefinitions
+     (Class        : Class_Entity_Record'Class;
+      Feature_Name : Name_Id;
+      Process      : not null access
+        procedure (Ancestor_Class : Class_Entity;
+                   Ancestor_Feature : Name_Id))
+   is
+   begin
+      for Inherited of Class.Inherited_Types loop
+         for Redefined of Inherited.Redefined_Features loop
+            if Redefined.Feature_Name = Feature_Name then
+               Process (Inherited.Inherited_Type.Class,
+                        Redefined.Feature_Name);
+            end if;
+         end loop;
+      end loop;
+   end Scan_Redefinitions;
 
    ------------------
    -- Set_Deferred --

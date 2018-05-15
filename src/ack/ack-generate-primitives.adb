@@ -47,6 +47,7 @@ package body Ack.Generate.Primitives is
    procedure Generate_Negate (Unit : in out Tagatha.Units.Tagatha_Unit);
    procedure Generate_Multiply (Unit : in out Tagatha.Units.Tagatha_Unit);
    procedure Generate_Divide (Unit : in out Tagatha.Units.Tagatha_Unit);
+   procedure Generate_Mod (Unit : in out Tagatha.Units.Tagatha_Unit);
    procedure Generate_Join (Unit : in out Tagatha.Units.Tagatha_Unit);
 
    procedure Generate_Intrinsic_Nop
@@ -200,6 +201,7 @@ package body Ack.Generate.Primitives is
       Add ("negate", Generate_Negate'Access);
       Add ("multiply", Generate_Multiply'Access);
       Add ("divide", Generate_Divide'Access);
+      Add ("modulus", Generate_Mod'Access);
       Add ("equal", Generate_Equal'Access);
       Add ("not_equal", Generate_Not_Equal'Access);
       Add ("le", Generate_LE'Access);
@@ -390,6 +392,15 @@ package body Ack.Generate.Primitives is
    begin
       Unit.Operate (Tagatha.Op_Greater);
    end Generate_LT;
+
+   ------------------
+   -- Generate_Mod --
+   ------------------
+
+   procedure Generate_Mod (Unit : in out Tagatha.Units.Tagatha_Unit) is
+   begin
+      Unit.Operate (Tagatha.Op_Mod);
+   end Generate_Mod;
 
    -----------------------
    -- Generate_Multiply --

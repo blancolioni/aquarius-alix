@@ -1,7 +1,5 @@
 with Ada.Text_IO;
 
-with WL.String_Sets;
-
 with Komnenos.Entities.Tables;
 
 with Aquarius.Loader;
@@ -10,10 +8,11 @@ with Aquarius.Programs.Komnenos_Entities;
 with Ack.Files;
 with Ack.Parser;
 
-with Ack.Classes;
 with Ack.Features;
 with Ack.Types;
 with Ack.Variables;
+
+with Ack.Semantic.Work;
 
 with Ack.Generate.Primitives;
 
@@ -93,18 +92,6 @@ package body Ack.Semantic is
      (Class    : Ack.Classes.Class_Entity;
       Exports  : Node_Id;
       Feature  : Node_Id)
-     with Pre => Kind (Feature) = N_Feature_Declaration;
-
-   procedure Analyse_Feature_Header
-     (Class   : Ack.Classes.Class_Entity;
-      Exports : Node_Id;
-      Feature : Node_Id)
-     with Pre => Kind (Feature) = N_Feature_Declaration;
-
-   procedure Analyse_Feature_Body
-     (Class   : Ack.Classes.Class_Entity;
-      Exports : Node_Id;
-      Feature : Node_Id)
      with Pre => Kind (Feature) = N_Feature_Declaration;
 
    procedure Analyse_Features
@@ -207,7 +194,7 @@ package body Ack.Semantic is
    procedure Analyse_Expression
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
-      Expression_Type : access Root_Entity_Type'Class;
+      Expression_Type : not null access Root_Entity_Type'Class;
       Expression      : Node_Id);
 
    procedure Analyse_Operator
@@ -334,6 +321,14 @@ package body Ack.Semantic is
             Entity : constant Ack.Entity_Type :=
                        Container.Get (Target);
          begin
+            if Ack.Features.Is_Feature (Entity) then
+               Ack.Semantic.Work.Check_Work_Item
+                 (Class        =>
+                    Ack.Features.Feature_Entity (Entity).Definition_Class,
+                  Feature_Name => Get_Name (Variable (Assignment)),
+                  Category     => Ack.Semantic.Work.Feature_Header);
+            end if;
+
             Analyse_Expression (Class, Container, Entity.Get_Type,
                                 Expression (Assignment));
             Set_Entity (Variable (Assignment), Entity);
@@ -374,6 +369,33 @@ package body Ack.Semantic is
       Features_Node    : constant Node_Id := Class_Features (Node);
       Class            : constant Ack.Classes.Class_Entity :=
                            Analyse_Class_Header (Node, Class_Header (Node));
+
+      procedure Add_Feature_Work_Items
+        (Features_Node : Node_Id;
+         Category      : Ack.Semantic.Work.Work_Item_Category);
+
+      procedure Add_Feature_Work_Items
+        (Features_Node : Node_Id;
+         Category      : Ack.Semantic.Work.Work_Item_Category)
+      is
+         Clause_List : constant List_Id :=
+                         Feature_Clauses (Features_Node);
+      begin
+         for Clause_Node of List_Table.Element (Clause_List).List loop
+            declare
+               Feature_List : constant List_Id :=
+                                Feature_Declarations (Clause_Node);
+            begin
+               for Feature_Node of List_Table.Element (Feature_List).List loop
+                  Ack.Semantic.Work.Add_Work_Item
+                    (Category => Category,
+                     Class    => Class,
+                     Feature  => Feature_Node);
+               end loop;
+            end;
+         end loop;
+      end Add_Feature_Work_Items;
+
    begin
 
       if Trace_Class_Analysis then
@@ -450,26 +472,24 @@ package body Ack.Semantic is
       if Features_Node in Real_Node_Id then
          if Trace_Class_Analysis then
             Ada.Text_IO.Put_Line
-              ("Analysing feature headers: " & Class.Qualified_Name);
+              ("Adding feature work items: " & Class.Qualified_Name);
          end if;
-         Analyse_Features
-           (Class, Features_Node, Analyse_Feature_Header'Access);
+
+         Add_Feature_Work_Items
+           (Features_Node, Ack.Semantic.Work.Feature_Header);
+
       end if;
 
-      if Trace_Class_Analysis then
-         Ada.Text_IO.Put_Line
-           ("  binding: " & Class.Qualified_Name);
-      end if;
-
-      Class.Bind;
+      Ack.Semantic.Work.Add_Work_Item
+        (Category  => Ack.Semantic.Work.Class_Binding,
+         Class     => Class,
+         Feature   => No_Node);
 
       if Features_Node in Real_Node_Id then
-         if Trace_Class_Analysis then
-            Ada.Text_IO.Put_Line
-              ("  feature bodies: " & Class.Qualified_Name);
-         end if;
-         Analyse_Features (Class, Features_Node,
-                           Analyse_Feature_Body'Access);
+
+         Add_Feature_Work_Items
+           (Features_Node, Ack.Semantic.Work.Feature_Body);
+
       end if;
 
       if not Class.Deferred then
@@ -505,7 +525,10 @@ package body Ack.Semantic is
            ("  virtual and object tables: " & Class.Qualified_Name);
       end if;
 
-      Class.Create_Memory_Layout;
+      Ack.Semantic.Work.Add_Work_Item
+        (Category  => Ack.Semantic.Work.Class_Layout,
+         Class     => Class,
+         Feature   => No_Node);
 
       if Trace_Class_Analysis then
          Ada.Text_IO.Put_Line
@@ -679,6 +702,18 @@ package body Ack.Semantic is
                   & To_String (Last_Name));
                raise;
          end;
+      end if;
+
+      if Has_Entity (Class_Name) then
+         Ada.Text_IO.Put_Line
+           (Get_Program (Class_Name).Show_Location
+            & ": cannot set entity to "
+            & Parent.Identity & " " & Parent.Qualified_Name);
+         Ada.Text_IO.Put_Line
+           (Get_Program (Class_Name).Show_Location
+            & ": already contains entity "
+            & Get_Entity (Class_Name).Identity
+            & " " & Get_Entity (Class_Name).Description);
       end if;
 
       Set_Entity (Class_Name, Parent);
@@ -867,10 +902,26 @@ package body Ack.Semantic is
          return;
       end if;
 
+      if Ack.Features.Is_Feature (Created_Entity) then
+         Ack.Semantic.Work.Check_Work_Item
+           (Ack.Features.Feature_Entity (Created_Entity).Active_Class,
+            Created_Entity.Entity_Name_Id,
+            Ack.Semantic.Work.Feature_Header);
+      end if;
+
       Set_Context (Creation, Container);
       Set_Entity (Creation, Created_Entity);
 
       Created_Type := Created_Entity.Get_Type;
+
+      if Created_Type = null then
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            Get_Program (Variable_Node).Show_Location
+            & ": no type for entity '"
+            & Created_Entity.Declared_Name
+            & "'");
+      end if;
 
       if Explicit_Type_Node in Real_Node_Id then
          Analyse_Type (Class, Explicit_Type_Node);
@@ -885,7 +936,13 @@ package body Ack.Semantic is
       end if;
 
       if Explicit_Call_Node in Real_Node_Id then
+
          Creator_Name := Get_Name (Explicit_Call_Node);
+
+         Ack.Semantic.Work.Check_Work_Item
+           (Ack.Types.Type_Entity (Created_Type).Class,
+            Creator_Name, Ack.Semantic.Work.Feature_Header);
+
          if Created_Type.Contains (Creator_Name) then
             declare
                Creator : constant Entity_Type :=
@@ -998,7 +1055,7 @@ package body Ack.Semantic is
    procedure Analyse_Expression
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
-      Expression_Type : access Root_Entity_Type'Class;
+      Expression_Type : not null access Root_Entity_Type'Class;
       Expression      : Node_Id)
    is
       K : constant Node_Kind := Kind (Expression);
@@ -1053,22 +1110,18 @@ package body Ack.Semantic is
                                   when N_Boolean_Constant =>
                                      Type_Boolean);
             begin
-               if Expression_Type = null then
-                  Error (Value, E_Ignored_Return_Value);
+               if Kind (Value) = N_Integer_Constant then
+                  Set_Type (Expression, Expression_Type);
+                  Set_Entity (Expression, Expression_Type);
+                  if not Expression_Type.Conforms_To (Value_Type) then
+                     Error (Expression, E_Type_Error, Value_Type);
+                  end if;
                else
-                  if Kind (Value) = N_Integer_Constant then
-                     Set_Type (Expression, Expression_Type);
-                     Set_Entity (Expression, Expression_Type);
-                     if not Expression_Type.Conforms_To (Value_Type) then
-                        Error (Expression, E_Type_Error, Value_Type);
-                     end if;
-                  else
-                     Set_Type (Expression, Value_Type);
-                     Set_Entity (Expression, Value_Type);
-                     if not  Value_Type.Conforms_To (Expression_Type) then
-                        Error (Expression, E_Type_Error,
-                               Entity_Type (Expression_Type));
-                     end if;
+                  Set_Type (Expression, Value_Type);
+                  Set_Entity (Expression, Value_Type);
+                  if not  Value_Type.Conforms_To (Expression_Type) then
+                     Error (Expression, E_Type_Error,
+                            Entity_Type (Expression_Type));
                   end if;
                end if;
             end;
@@ -1082,10 +1135,8 @@ package body Ack.Semantic is
 
    procedure Analyse_Feature_Body
      (Class   : Ack.Classes.Class_Entity;
-      Exports : Node_Id;
       Feature : Node_Id)
    is
-      pragma Unreferenced (Exports);
       Names           : constant List_Id := New_Feature_List (Feature);
       Dec_Body        : constant Node_Id := Declaration_Body (Feature);
       Value_Node      : constant Node_Id := Value (Dec_Body);
@@ -1240,14 +1291,32 @@ package body Ack.Semantic is
 
    procedure Analyse_Feature_Header
      (Class   : Ack.Classes.Class_Entity;
-      Exports : Node_Id;
       Feature : Node_Id)
    is
-      pragma Unreferenced (Exports);
       Names        : constant List_Id := New_Feature_List (Feature);
       Dec_Body     : constant Node_Id := Declaration_Body (Feature);
       Arg_Node     : constant Node_Id := Formal_Arguments (Dec_Body);
       Type_Node    : constant Node_Id := Value_Type (Dec_Body);
+
+      procedure Analyse_Ancestor_Feature
+        (Ancestor_Class   : Ack.Classes.Class_Entity;
+         Ancestor_Feature : Name_Id);
+
+      ------------------------------
+      -- Analyse_Ancestor_Feature --
+      ------------------------------
+
+      procedure Analyse_Ancestor_Feature
+        (Ancestor_Class   : Ack.Classes.Class_Entity;
+         Ancestor_Feature : Name_Id)
+      is
+      begin
+         Ack.Semantic.Work.Check_Work_Item
+           (Class        => Ancestor_Class,
+            Feature_Name => Ancestor_Feature,
+            Category     => Ack.Semantic.Work.Feature_Header);
+      end Analyse_Ancestor_Feature;
+
    begin
       if Type_Node /= No_Node then
          Analyse_Type (Class, Type_Node);
@@ -1260,6 +1329,10 @@ package body Ack.Semantic is
               & ": expected an entity in "
               & To_String (Get_Name (Feature_Name (Node)));
          end if;
+
+         Class.Scan_Redefinitions
+           (Get_Entity (Node).Entity_Name_Id,
+            Analyse_Ancestor_Feature'Access);
 
          declare
             Entity    : constant Ack.Features.Feature_Entity :=
@@ -1278,6 +1351,35 @@ package body Ack.Semantic is
                Entity.Set_Result_Type
                  (Ack.Types.Get_Type_Entity (Type_Node));
             end if;
+         end;
+
+         declare
+            procedure Link_Redefinition
+              (Ancestor_Class   : Ack.Classes.Class_Entity;
+               Ancestor_Feature : Name_Id);
+
+            -----------------------
+            -- Link_Redefinition --
+            -----------------------
+
+            procedure Link_Redefinition
+              (Ancestor_Class   : Ack.Classes.Class_Entity;
+               Ancestor_Feature : Name_Id)
+            is
+               Feature : constant Ack.Features.Feature_Entity :=
+                           Ack.Features.Get_Feature_Entity
+                             (Node);
+            begin
+               Feature.Set_Redefined
+                 (Class            => Class,
+                  Original_Feature =>
+                    Ancestor_Class.Feature (Ancestor_Feature));
+            end Link_Redefinition;
+
+         begin
+            Class.Scan_Redefinitions
+              (Get_Entity (Node).Entity_Name_Id,
+               Link_Redefinition'Access);
          end;
       end loop;
    end Analyse_Feature_Header;
@@ -1399,30 +1501,30 @@ package body Ack.Semantic is
       Inherited_Type  : Ack.Types.Type_Entity;
       Inherited_Class : Ack.Classes.Class_Entity;
 
-      Redefined_Features : WL.String_Sets.Set;
+--        Redefined_Features : WL.String_Sets.Set;
 
       procedure Set_Redefine (Node : Node_Id);
 
-      procedure Check_Redefined
-        (Feature : not null access constant
-           Ack.Features.Feature_Entity_Record'Class);
-
-      ---------------------
-      -- Check_Redefined --
-      ---------------------
-
-      procedure Check_Redefined
-        (Feature : not null access constant
-           Ack.Features.Feature_Entity_Record'Class)
-      is
-      begin
-         if Inherited_Class.Feature
-           (Get_Name_Id (Feature.Standard_Name)).Deferred
-           and then not Redefined_Features.Contains (Feature.Standard_Name)
-         then
-            Error (Inherit, E_Missing_Redefine, Feature);
-         end if;
-      end Check_Redefined;
+--        procedure Check_Redefined
+--          (Feature : not null access constant
+--             Ack.Features.Feature_Entity_Record'Class);
+--
+--        ---------------------
+--        -- Check_Redefined --
+--        ---------------------
+--
+--        procedure Check_Redefined
+--          (Feature : not null access constant
+--             Ack.Features.Feature_Entity_Record'Class)
+--        is
+--        begin
+--           if Inherited_Class.Feature
+--             (Get_Name_Id (Feature.Standard_Name)).Deferred
+--             and then not Redefined_Features.Contains (Feature.Standard_Name)
+--           then
+--              Error (Inherit, E_Missing_Redefine, Feature);
+--           end if;
+--        end Check_Redefined;
 
       ------------------
       -- Set_Redefine --
@@ -1431,20 +1533,22 @@ package body Ack.Semantic is
       procedure Set_Redefine (Node : Node_Id) is
          Name : constant Name_Id := Get_Name (Node);
       begin
-         Redefined_Features.Insert (To_Standard_String (Name));
-         if Inherited_Class.Has_Feature (Name) then
-            if Class.Has_Feature (Name) then
-               Class.Feature (Name).Set_Redefined
-                 (Class            => Class,
-                  Original_Feature =>
-                    Inherited_Class.Feature (Name));
-            else
-               Error (Node, E_Missing_Redefinition,
-                      Entity_Type (Inherited_Class));
-            end if;
-         else
-            Error (Node, E_Not_Defined_In, Entity_Type (Inherited_Class));
-         end if;
+         Class.Redefine (Node, Inherited_Class, Name);
+
+--           Redefined_Features.Insert (To_Standard_String (Name));
+--           if Inherited_Class.Has_Feature (Name) then
+--              if Class.Has_Feature (Name) then
+--                 Class.Feature (Name).Set_Redefined
+--                   (Class            => Class,
+--                    Original_Feature =>
+--                      Inherited_Class.Feature (Name));
+--              else
+--                 Error (Node, E_Missing_Redefinition,
+--                        Entity_Type (Inherited_Class));
+--              end if;
+--           else
+--              Error (Node, E_Not_Defined_In, Entity_Type (Inherited_Class));
+--           end if;
       end Set_Redefine;
 
    begin
@@ -1460,10 +1564,10 @@ package body Ack.Semantic is
          Class.Inherit (Inherited_Type);
          Scan (Redefine_List, Set_Redefine'Access);
 
-         if not Class.Deferred then
-            Inherited_Class.Scan_Features
-              (Check_Redefined'Access);
-         end if;
+--           if not Class.Deferred then
+--              Inherited_Class.Scan_Features
+--                (Check_Redefined'Access);
+--           end if;
       end if;
 
    end Analyse_Inherit;
@@ -1507,21 +1611,29 @@ package body Ack.Semantic is
                               Loop_Exit_Condition (Loop_Node);
       Loop_Body_Node      : constant Node_Id := Loop_Body (Loop_Node);
    begin
+
       if Iteration_Node /= No_Node then
          declare
             Expression_Node : constant Node_Id := Expression (Iteration_Node);
             Expression_Type : constant Ack.Types.Type_Entity :=
                                 Type_Iterable;
+            Iterable_Type   : Ack.Types.Type_Entity;
          begin
 
             Analyse_Expression
               (Class, Container, Expression_Type, Expression_Node);
 
+            Iterable_Type :=
+              Ack.Types.Type_Entity
+                (Get_Type (Expression_Node));
+
+            Ack.Semantic.Work.Check_Work_Item
+              (Class        => Iterable_Type.Class,
+               Feature_Name => Get_Name_Id ("new_cursor"),
+               Category     => Ack.Semantic.Work.Feature_Header);
+
             declare
                use Ack.Types;
-               Iterable_Type      : constant Type_Entity :=
-                                      Type_Entity
-                                        (Get_Type (Expression_Node));
                Inherited_Type     : constant access constant
                  Type_Entity_Record'Class
                    := Iterable_Type.Get_Ancestor_Type (Class_Iterable);
@@ -1718,8 +1830,11 @@ package body Ack.Semantic is
          Expression      => Left);
       Left_Type := Ack.Types.Type_Entity (Get_Type (Left));
 
-      if Left_Type /= null then
-         Left_Type.Check_Bound;
+      if Left_Type /= null
+        and then not Left_Type.Is_Generic_Formal_Type
+      then
+         Ack.Semantic.Work.Check_Work_Item
+           (Left_Type.Class, No_Name, Ack.Semantic.Work.Class_Binding);
       end if;
 
       if Left_Type = null then
@@ -1733,6 +1848,11 @@ package body Ack.Semantic is
                           (Alias => Operator,
                            Infix => Right /= No_Node);
          begin
+
+            Ack.Semantic.Work.Check_Work_Item
+              (Feature.Definition_Class, Feature.Entity_Name_Id,
+               Ack.Semantic.Work.Feature_Header);
+
             pragma Assert (Feature.Argument_Count in 0 .. 1);
             if not Feature.Has_Type then
                raise Constraint_Error with
@@ -1832,6 +1952,18 @@ package body Ack.Semantic is
          end if;
 
          declare
+            Entity : constant Entity_Type := Local_Table.Get (Name);
+         begin
+            if Ack.Features.Is_Feature (Entity) then
+               Ack.Semantic.Work.Check_Work_Item
+                 (Ack.Classes.Constant_Class_Entity
+                    (Local_Table.Class_Context),
+                  Name,
+                  Ack.Semantic.Work.Feature_Header);
+            end if;
+         end;
+
+         declare
             Entity           : constant Entity_Type :=
                                  Local_Table.Get (Name);
             Actual_List_Node : constant Node_Id :=
@@ -1873,7 +2005,6 @@ package body Ack.Semantic is
       end Process;
 
    begin
-
       Scan (List, Process'Access);
 
       if not Stop then

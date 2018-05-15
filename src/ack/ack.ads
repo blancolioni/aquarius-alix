@@ -237,6 +237,7 @@ package Ack is
       return Constant_Entity_Type
       is abstract;
 
+   function Entity_Name_Id (Entity : Root_Entity_Type'Class) return Name_Id;
    function Standard_Name (Entity : Root_Entity_Type'Class) return String;
    function Declared_Name (Entity : Root_Entity_Type'Class) return String;
    function Qualified_Name (Entity : Root_Entity_Type'Class) return String;
@@ -1180,11 +1181,19 @@ private
          Value_Type           : Entity_Type;
          Children             : Entity_Table;
          Parent_Environment   : Entity_Type;
+         Sequence_Number      : Natural := 0;
+         Created              : Boolean := False;
          Attached             : Boolean := False;
          Has_Monitoring_Level : Boolean := False;
          Monitoring_Level     : Assertion_Monitoring_Level;
          Shelves              : Shelf_Maps.Map;
       end record;
+
+   function Identity
+     (Entity : Root_Entity_Type'Class)
+      return String
+   is ("[e" & Integer'Image (-Entity.Sequence_Number) & "/node"
+       & Integer'Image (-(Integer (Entity.Declaration_Node))) & "]");
 
    function Has_Context
      (Entity : Root_Entity_Type)
@@ -1198,6 +1207,9 @@ private
 
    function Standard_Name (Entity : Root_Entity_Type'Class) return String
    is (-Entity.Name);
+
+   function Entity_Name_Id (Entity : Root_Entity_Type'Class) return Name_Id
+   is (Get_Name_Id (Entity.Standard_Name));
 
    function Declared_Name (Entity : Root_Entity_Type'Class) return String
    is (-Entity.Source_Name);
@@ -1278,7 +1290,12 @@ private
       Node               : Node_Id;
       Table              : Boolean;
       Parent_Environment : access Root_Entity_Type'Class := null;
-      Context            : access Root_Entity_Type'Class := null);
+      Context            : access Root_Entity_Type'Class := null)
+     with Pre => not Entity.Created,
+     Post => Entity.Created;
+
+   procedure Instantiated
+     (Entity : in out Root_Entity_Type'Class);
 
    Local_Default_Monitoring_Level : Assertion_Monitoring_Level :=
                                       Monitor_All;
