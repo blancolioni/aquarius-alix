@@ -520,17 +520,15 @@ package body Ack.Semantic is
          end;
       end if;
 
-      if not Class.Deferred then
-         if Trace_Class_Analysis then
-            Ada.Text_IO.Put_Line
-              ("  virtual and object tables: " & Class.Qualified_Name);
-         end if;
-
-         Ack.Semantic.Work.Add_Work_Item
-           (Category  => Ack.Semantic.Work.Class_Layout,
-            Class     => Class,
-            Feature   => No_Node);
+      if Trace_Class_Analysis then
+         Ada.Text_IO.Put_Line
+           ("  virtual and object tables: " & Class.Qualified_Name);
       end if;
+
+      Ack.Semantic.Work.Add_Work_Item
+        (Category  => Ack.Semantic.Work.Class_Layout,
+         Class     => Class,
+         Feature   => No_Node);
 
       if Trace_Class_Analysis then
          Ada.Text_IO.Put_Line
@@ -1584,6 +1582,7 @@ package body Ack.Semantic is
                               Loop_Exit_Condition (Loop_Node);
       Loop_Body_Node      : constant Node_Id := Loop_Body (Loop_Node);
    begin
+
       if Iteration_Node /= No_Node then
          declare
             Expression_Node : constant Node_Id := Expression (Iteration_Node);
