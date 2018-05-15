@@ -1,5 +1,4 @@
 with Ada.Text_IO;
-with Ack.IO;
 
 with Komnenos.Entities.Tables;
 
@@ -709,21 +708,15 @@ package body Ack.Semantic is
          Ada.Text_IO.Put_Line
            (Get_Program (Class_Name).Show_Location
             & ": cannot set entity to "
-            & Parent.Qualified_Name);
+            & Parent.Identity & " " & Parent.Qualified_Name);
          Ada.Text_IO.Put_Line
            (Get_Program (Class_Name).Show_Location
             & ": already contains entity "
-            & Get_Entity (Class_Name).Description);
+            & Get_Entity (Class_Name).Identity
+            & " " & Get_Entity (Class_Name).Description);
       end if;
 
       Set_Entity (Class_Name, Parent);
-
-   exception
-
-      when others =>
-         Ada.Text_IO.Put_Line
-           ("exception while analysing class name");
-         Ack.IO.Put_Line (Class_Name);
 
    end Analyse_Class_Name;
 
@@ -921,6 +914,15 @@ package body Ack.Semantic is
 
       Created_Type := Created_Entity.Get_Type;
 
+      if Created_Type = null then
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            Get_Program (Variable_Node).Show_Location
+            & ": no type for entity '"
+            & Created_Entity.Declared_Name
+            & "'");
+      end if;
+
       if Explicit_Type_Node in Real_Node_Id then
          Analyse_Type (Class, Explicit_Type_Node);
          if Get_Entity (Explicit_Type_Node) /= null then
@@ -934,6 +936,7 @@ package body Ack.Semantic is
       end if;
 
       if Explicit_Call_Node in Real_Node_Id then
+
          Creator_Name := Get_Name (Explicit_Call_Node);
 
          Ack.Semantic.Work.Check_Work_Item
@@ -1336,18 +1339,10 @@ package body Ack.Semantic is
                        Ack.Features.Get_Feature_Entity (Node);
          begin
             if Arg_Node /= No_Node then
-               Ada.Text_IO.Put_Line
-                 ("checking arguments for " & Entity.Description);
-               Ack.IO.Put_Line (Entity_Declaration_Group_List (Arg_Node));
                Analyse_Entity_Declaration_Groups
                  (Class, Entity,
                   Entity_Declaration_Group_List (Arg_Node),
                   Local => False);
-            end if;
-
-            if Entity.Declaration_Node = 3159 then
-               Ada.Text_IO.Put_Line ("argument count:"
-                                     & Natural'Image (Entity.Argument_Count));
             end if;
 
             if Type_Node /= No_Node
@@ -1914,9 +1909,6 @@ package body Ack.Semantic is
 
          if Local_Table = null then
             Error (Precursor_Element, E_No_Component);
-            Ada.Text_IO.Put_Line
-              (Get_Program (Precursor_Element).Show_Location
-               & ": stopping because local table is null");
             Stop := True;
             return;
          end if;
@@ -1926,10 +1918,6 @@ package body Ack.Semantic is
          if not Local_Table.Contains (Name) then
             Error (Precursor_Element, E_Undeclared_Name, Local_Table);
             Stop := True;
-            Ada.Text_IO.Put_Line
-              (Get_Program (Precursor_Element).Show_Location
-               & ": stopping " & To_Standard_String (Name)
-               & " is undefined");
             return;
          end if;
 
@@ -1960,7 +1948,6 @@ package body Ack.Semantic is
                                    (Actual_List_Node).List);
                begin
                   if Entity.Argument_Count = 0 then
-                     Ada.Text_IO.Put_Line (Entity.Description);
                      Error (Actual_List_Node, E_Does_Not_Accept_Arguments);
                   elsif Actuals'Length > Entity.Argument_Count then
                      Error (Actual_List_Node, E_Too_Many_Arguments);
