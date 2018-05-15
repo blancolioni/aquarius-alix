@@ -233,7 +233,7 @@ private
          Has_Current          : Boolean := False;
          Once                 : Boolean := False;
          Intrinsic            : Boolean := False;
-         Virtual_Table_Offset : Word_Offset := 0;
+         VT_Offset            : Word_Offset := 0;
          Property_Offset      : Word_Offset := 0;
          Alias                : Name_Id;
          Original_Classes     : List_Of_Entities.List;
@@ -365,11 +365,6 @@ private
      (Feature : Feature_Entity_Record'Class)
       return access constant Ack.Classes.Class_Entity_Record'Class
    is (Feature.Definition_Class);
-
-   function Virtual_Table_Offset
-     (Feature : Feature_Entity_Record'Class)
-      return Word_Offset
-   is (Feature.Virtual_Table_Offset);
 
    function Property_Offset
      (Feature : Feature_Entity_Record'Class)
