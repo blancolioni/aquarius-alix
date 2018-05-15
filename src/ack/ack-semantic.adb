@@ -520,15 +520,17 @@ package body Ack.Semantic is
          end;
       end if;
 
-      if Trace_Class_Analysis then
-         Ada.Text_IO.Put_Line
-           ("  virtual and object tables: " & Class.Qualified_Name);
-      end if;
+      if not Class.Deferred then
+         if Trace_Class_Analysis then
+            Ada.Text_IO.Put_Line
+              ("  virtual and object tables: " & Class.Qualified_Name);
+         end if;
 
-      Ack.Semantic.Work.Add_Work_Item
-        (Category  => Ack.Semantic.Work.Class_Layout,
-         Class     => Class,
-         Feature   => No_Node);
+         Ack.Semantic.Work.Add_Work_Item
+           (Category  => Ack.Semantic.Work.Class_Layout,
+            Class     => Class,
+            Feature   => No_Node);
+      end if;
 
       if Trace_Class_Analysis then
          Ada.Text_IO.Put_Line
