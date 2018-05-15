@@ -1027,7 +1027,29 @@ package body Ack.Features is
       Offset  : Word_Offset)
    is
    begin
-      Feature.Virtual_Table_Offset := Offset;
+      Feature.VT_Offset := Offset;
    end Set_Virtual_Table_Offset;
+
+   --------------------------
+   -- Virtual_Table_Offset --
+   --------------------------
+
+   function Virtual_Table_Offset
+     (Feature : Feature_Entity_Record'Class)
+      return Word_Offset
+   is
+   begin
+      if Feature.VT_Offset = 0 then
+         declare
+            Original_Feature : constant Feature_Entity :=
+                                 Feature.Definition_Class.Feature
+                                   (Feature.Entity_Name_Id);
+         begin
+            return Original_Feature.Virtual_Table_Offset;
+         end;
+      else
+         return Feature.VT_Offset;
+      end if;
+   end Virtual_Table_Offset;
 
 end Ack.Features;
