@@ -24,6 +24,15 @@ package Ack.Classes is
      (Class : Class_Entity_Record'Class)
       return Boolean;
 
+   function Top_Class_Node
+     (Class : Class_Entity_Record'Class)
+      return Node_Id;
+
+   procedure Set_Top_Class_Node
+     (Class : in out Class_Entity_Record'Class;
+      Node  : Node_Id)
+     with Pre => Kind (Node) = N_Class_Declaration;
+
    function Class_Declaration_Context
      (Class : Class_Entity_Record'Class)
       return Class_Entity;
@@ -325,6 +334,7 @@ private
          Expanded                : Boolean := False;
          Frozen                  : Boolean := False;
          Bound                   : Boolean := False;
+         Top_Node                : Node_Id;
          Behaviour               : Class_Behaviour := Normal;
          Conforming_Child_Action : Name_Id := No_Name;
          Frame_Words             : Natural := 0;
@@ -421,6 +431,11 @@ private
       Name  : String)
       return String
    is (Class.Notes.Element (Name));
+
+   function Top_Class_Node
+     (Class : Class_Entity_Record'Class)
+      return Node_Id
+   is (Class.Top_Node);
 
    function Behaviour (Class : Class_Entity_Record'Class)
                        return Class_Behaviour

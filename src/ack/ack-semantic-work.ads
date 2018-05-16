@@ -6,7 +6,8 @@ package Ack.Semantic.Work is
      (Feature_Header,
       Feature_Body,
       Class_Binding,
-      Class_Layout);
+      Class_Layout,
+      Error_Report);
 
    type Feature_Work_Handler is access
      procedure (Class    : Ack.Classes.Class_Entity;

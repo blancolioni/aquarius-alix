@@ -1268,4 +1268,16 @@ package body Ack.Classes is
       Class.Modulus := Modulus;
    end Set_Modulus;
 
+   ------------------------
+   -- Set_Top_Class_Node --
+   ------------------------
+
+   procedure Set_Top_Class_Node
+     (Class : in out Class_Entity_Record'Class;
+      Node  : Node_Id)
+   is
+   begin
+      Class.Top_Node := Node;
+   end Set_Top_Class_Node;
+
 end Ack.Classes;

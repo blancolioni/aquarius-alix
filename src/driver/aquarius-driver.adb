@@ -222,8 +222,11 @@ begin
          Ack.Compile.Load_Root_Class
            (Source_Path => Aquarius.Command_Line.Ack_Execute_Root,
             To_Image    => Image);
-         CPU.Run;
-         CPU.Report;
+
+         if not Ack.Errors.Has_Errors then
+            CPU.Run;
+            CPU.Report;
+         end if;
       end;
    elsif Aquarius.Command_Line.Filter then
 

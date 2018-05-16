@@ -2,6 +2,8 @@ with Ada.Text_IO;
 
 with Ada.Containers.Doubly_Linked_Lists;
 
+with Ack.Errors;
+
 package body Ack.Semantic.Work is
 
    Trace_Work : constant Boolean := False;
@@ -20,6 +22,14 @@ package body Ack.Semantic.Work is
      new Ada.Containers.Doubly_Linked_Lists (Work_Item);
 
    Work_List : Work_Item_Lists.List;
+
+   function Category_Image (Category : Work_Item_Category) return String
+   is (case Category is
+          when Feature_Header => "feature-header",
+          when Feature_Body   => "feature-body",
+          when Class_Binding  => "class-binding",
+          when Class_Layout   => "class-layout",
+          when Error_Report   => "error-report");
 
    -------------------
    -- Add_Work_Item --
@@ -89,11 +99,7 @@ package body Ack.Semantic.Work is
             & (if Feature_Name = No_Name then ""
               else "." & To_Standard_String (Feature_Name))
             & ": "
-            & (case Category is
-                 when Feature_Header => "feature-header",
-                 when Feature_Body   => "feature-body",
-                 when Class_Binding  => "class-binding",
-                 when Class_Layout   => "class-layout"));
+            & (Category_Image (Category)));
       end if;
 
       while not Finished loop
@@ -165,6 +171,11 @@ package body Ack.Semantic.Work is
             Item.Class.Bind;
          when Class_Layout =>
             Item.Class.Create_Memory_Layout;
+         when Error_Report =>
+            Ack.Errors.Record_Errors
+              (Item.Class.Top_Class_Node);
+            Ack.Errors.Report_Errors
+              (Item.Class.Top_Class_Node);
       end case;
    end Execute_Work_Item;
 
@@ -183,20 +194,11 @@ package body Ack.Semantic.Work is
 
    function Image (Item : Work_Item) return String is
    begin
-      case Item.Category is
-         when Feature_Header =>
-            return "analyse-feature-header: "
-              & Get_Program (Item.Feature).Show_Location;
-         when Feature_Body =>
-            return "analyse-feature-body: "
-              & Get_Program (Item.Feature).Show_Location;
-         when Class_Binding =>
-            return "bind-class: "
-              & Item.Class.Qualified_Name;
-         when Class_Layout =>
-            return "create-class-layout: "
-              & Item.Class.Qualified_Name;
-      end case;
+      return Category_Image (Item.Category)
+        & ": "
+        & (if Item.Feature = No_Node
+           then Item.Class.Qualified_Name
+           else Get_Program (Item.Feature).Show_Location);
    end Image;
 
 end Ack.Semantic.Work;

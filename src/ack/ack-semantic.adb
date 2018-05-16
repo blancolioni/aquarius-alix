@@ -18,8 +18,6 @@ with Ack.Generate.Primitives;
 
 with Ack.Environment;
 
-with Ack.Errors;
-
 package body Ack.Semantic is
 
    Local_Integral_Type         : Ack.Types.Type_Entity := null;
@@ -530,6 +528,11 @@ package body Ack.Semantic is
          Class     => Class,
          Feature   => No_Node);
 
+      Ack.Semantic.Work.Add_Work_Item
+        (Category  => Ack.Semantic.Work.Error_Report,
+         Class     => Class,
+         Feature   => No_Node);
+
       if Trace_Class_Analysis then
          Ada.Text_IO.Put_Line
            ("Finished: " & Class.Qualified_Name);
@@ -552,6 +555,8 @@ package body Ack.Semantic is
       Analyse_Class_Name (null, Class_Name (Header),
                           Defining_Name => True);
       Result := Ack.Classes.Get_Class_Entity (Class_Name (Header));
+
+      Result.Set_Top_Class_Node (Class);
 
       if Node_Table.Element (Header).Deferred then
          Result.Set_Deferred;
@@ -1614,6 +1619,7 @@ package body Ack.Semantic is
 
       if Iteration_Node /= No_Node then
          declare
+            use type Ack.Types.Type_Entity;
             Expression_Node : constant Node_Id := Expression (Iteration_Node);
             Expression_Type : constant Ack.Types.Type_Entity :=
                                 Type_Iterable;
@@ -1626,6 +1632,10 @@ package body Ack.Semantic is
             Iterable_Type :=
               Ack.Types.Type_Entity
                 (Get_Type (Expression_Node));
+
+            if Iterable_Type = null then
+               return;
+            end if;
 
             Ack.Semantic.Work.Check_Work_Item
               (Class        => Iterable_Type.Class,
@@ -2269,8 +2279,6 @@ package body Ack.Semantic is
                               Ack.Parser.Import (Program);
                begin
                   Ack.Semantic.Analyse_Class_Declaration (Node);
-                  Ack.Errors.Record_Errors (Node);
-                  Ack.Errors.Report_Errors (Node);
                   Entity := Get_Entity (Node);
                   declare
                      Base_Name : constant String := Entity.Base_File_Name;
