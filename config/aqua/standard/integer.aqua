@@ -11,6 +11,7 @@ inherit
       redefine Make_With_Integer_Literal, Convert_From end
    Aqua.Comparable 
       redefine GE, LE, GT, LT end
+   Aqua.Bounded_Enumerable redefine Minimum, Maximum, Next, Previous end
    
 feature
    To_String : String
@@ -63,6 +64,26 @@ feature
    GT (Right : Integer) : Boolean external "intrinsic"
    LT (Right : Integer) : Boolean external "intrinsic"
    
+   Minimum : Integer
+      do
+         Result := 0
+      end
+      
+   Maximum : Integer
+      do
+         Result := 2147483647
+      end
+      
+   Next : Integer
+      do
+         Result := Current + 1
+      end
+      
+   Previous : Integer
+      do
+         Result := Current - 1
+      end
+      
    Make_With_Integer_Literal (Literal : Aqua.Integer_Literal) external "replace-current"
    
    Convert_From (Other : Aqua.Integral) external "intrinsic" alias "replace-current"
