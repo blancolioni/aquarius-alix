@@ -3,6 +3,8 @@ private with Ada.Strings.Fixed.Hash;
 
 private with WL.String_Maps;
 
+private with Aqua;
+
 with Komnenos.Source;
 
 with Aquarius.Actions;
@@ -475,6 +477,9 @@ private
         Hash            => Ada.Strings.Fixed.Hash,
         Equivalent_Keys => "=");
 
+   package Aqua_Address_Maps is
+     new WL.String_Maps (Aqua.Address, Aqua."=");
+
    package String_Property_Maps is
      new WL.String_Maps (String);
 
@@ -503,7 +508,9 @@ private
          Is_Declaration    : Boolean;
          Has_Position      : Boolean;
          Has_Environment   : Boolean;
+         Indent_Rule       : Boolean;
          Self              : Program_Tree;
+         Sequence          : Natural := 0;
          Tree_Name         : Aquarius.Names.Aquarius_Name;
          Source_File       : Aquarius.Source.Source_File;
          Source_File_Name  : Aquarius.Names.Aquarius_Name;
@@ -518,12 +525,12 @@ private
          End_Line          : Aquarius.Layout.Line_Number;
          Start_Column      : Aquarius.Layout.Column_Number;
          End_Column        : Aquarius.Layout.Column_Number;
-         Indent_Rule       : Boolean;
          Offset_Rule       : Aquarius.Source.Source_Position;
          Render_Class      : Aquarius.Syntax.Syntax_Tree;
          Fragment          : Tagatha.Fragments.Tagatha_Fragment;
          Local_Env         : access Local_Environment_Interface'Class;
          String_Props      : String_Property_Maps.Map;
+         Aqua_Props        : Aqua_Address_Maps.Map;
       end record;
 
    function Class_Name
@@ -586,5 +593,9 @@ private
 
    overriding function Name (Item : Program_Tree_Type) return String
    is (Aquarius.Names.To_String (Item.Tree_Name));
+
+   function Get_Tree_From_Sequence
+     (Sequence : Positive)
+      return Program_Tree;
 
 end Aquarius.Programs;
