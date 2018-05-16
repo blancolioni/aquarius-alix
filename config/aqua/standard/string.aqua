@@ -1,5 +1,9 @@
-class String
+class 
+   String
 
+inherit
+   Any redefine Equal, Not_Equal end
+   
 create
     Create_With_Size, Create_From_String_Literal,
     Create_With_Length, Create_From_String
@@ -29,6 +33,30 @@ feature
             Replace_Element (Index, S.Element (Index))
             Index := Index + 1
          end
+      end
+      
+   Equal (Other : like Current) : Boolean
+      local
+         Index : Integer
+      do
+         if Other.Length = Length then
+            Result := True
+            from
+               Index := 1
+            until
+               not Result or else Index > Length
+            loop
+               if Element (Index) /= Other.Element (Index) then
+                  Result := False
+               end
+               Index := Index + 1
+            end
+         end
+      end
+      
+   Not_Equal alias "/=" (Other : like Current) : Boolean
+      do
+         Result := not Equal (Other)
       end
       
    To_Lower : String
