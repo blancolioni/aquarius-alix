@@ -13,8 +13,6 @@ with Ack.Errors;
 
 with Aquarius.Config_Paths;
 with Aquarius.Loader;
-with Aquarius.Messages;
-with Aquarius.Messages.Console;
 
 with Aquarius.Actions;
 with Aquarius.Grammars;
@@ -184,20 +182,6 @@ package body Ack.Compile is
                                     (Source_Program);
             begin
                Ack.Semantic.Analyse_Class_Declaration (Node);
-               Ack.Errors.Record_Errors (Node);
-
-               declare
-                  use Aquarius.Messages;
-                  List : Message_List;
-               begin
-                  Source_Program.Get_Messages (List);
-                  if Message_Count (List) > 0 then
-                     Aquarius.Messages.Console.Show_Messages (List);
-                     if Highest_Level (List) > Warning then
-                        return;
-                     end if;
-                  end if;
-               end;
                Loaded_Classes.Insert (Base_Name, Node);
             end;
 
