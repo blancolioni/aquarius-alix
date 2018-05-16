@@ -14,7 +14,8 @@ package body Aquarius.Programs is
    package Program_Tree_Vectors is
       new Ada.Containers.Vectors (Positive, Program_Tree);
 
-   Free_List : Program_Tree_Vectors.Vector;
+   Free_List      : Program_Tree_Vectors.Vector;
+   Allocated_List : Program_Tree_Vectors.Vector;
 
    Empty_Program_Node : constant Program_Tree_Type :=
      (Aquarius.Trees.Root_Tree_Type with
@@ -34,6 +35,7 @@ package body Aquarius.Programs is
       Has_Position         => False,
       Has_Environment      => False,
       Self                 => null,
+      Sequence             => 0,
       Source_File          => Aquarius.Source.No_Source_File,
       Tree_Name            => Aquarius.Names.Null_Aquarius_Name,
       Source_File_Name     => Aquarius.Names.Null_Aquarius_Name,
@@ -53,6 +55,7 @@ package body Aquarius.Programs is
       Render_Class         => null,
       Fragment             => Tagatha.Fragments.Empty_Fragment,
       Local_Env            => null,
+      Aqua_Props           => Aqua_Address_Maps.Empty_Map,
       String_Props         => String_Property_Maps.Empty_Map);
 
    --  After a node is changed, update any entry it references
@@ -762,6 +765,18 @@ package body Aquarius.Programs is
       return Item.Syntax.Token;
    end Get_Token;
 
+   ----------------------------
+   -- Get_Tree_From_Sequence --
+   ----------------------------
+
+   function Get_Tree_From_Sequence
+     (Sequence : Positive)
+      return Program_Tree
+   is
+   begin
+      return Allocated_List.Element (Sequence);
+   end Get_Tree_From_Sequence;
+
    --------------
    -- Get_Type --
    --------------
@@ -1290,6 +1305,8 @@ package body Aquarius.Programs is
       Program_Tree_Type (Result.all) := Empty_Program_Node;
       Initialise_Tree (Result.all, Aquarius.Source.No_Source_Position,
                        Keep_Parent => True, Keep_Siblings => True);
+      Allocated_List.Append (Result);
+      Result.Sequence := Allocated_List.Last_Index;
       Result.Syntax         := Syntax;
       Result.Indent_Rule    := Syntax.Has_Indent_Rule;
       Result.Tree_Name      := Aquarius.Names.To_Aquarius_Name (Syntax.Name);
