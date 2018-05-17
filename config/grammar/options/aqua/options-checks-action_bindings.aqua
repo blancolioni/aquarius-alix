@@ -1,0 +1,25 @@
+note
+   Aqua_Action_Binding: Binding_1, Declaration, Before, Option_Declaration
+
+expanded class 
+   Options.Checks.Action_Bindings
+   
+feature
+
+   Binding_1 (Parent : Aquarius.Trees.Program_Tree
+              Child  : Aquarius.Trees.Program_Tree)
+   local
+      Convert_P : System.Address_To_Object_Conversions[Options.Checks.Declaration.Aqua_Action_Binding]
+      Convert_C : System.Address_To_Object_Conversions[Options.Checks.Option_Declaration.Aqua_Action_Binding]
+      P : Options.Checks.Declaration.Aqua_Action_Binding
+      C : Options.Checks.Option_Declaration.Aqua_Action_Binding
+   do
+      if Parent.Has_Property ("Options.Checks.Declaration") then
+         P := Convert_P.To_Object (Parent.Get_Property ("Options.Checks.Declaration"))
+      else
+         create P
+         Parent.Set_Property ("Options.Checks.Declaration", Convert_P.To_Address (P))
+      end
+   end
+end
+     
