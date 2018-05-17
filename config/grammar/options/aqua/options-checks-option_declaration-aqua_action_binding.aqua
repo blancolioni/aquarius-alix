@@ -1,0 +1,7 @@
+class 
+   Options.Checks.Option_Declaration.Aqua_Action_Binding
+   
+inherit 
+   Options.Checks.Option_Declaration
+
+end
