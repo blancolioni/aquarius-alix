@@ -1375,10 +1375,14 @@ package body Ack.Semantic is
                            Ack.Features.Get_Feature_Entity
                              (Node);
             begin
-               Feature.Set_Redefined
-                 (Class            => Class,
-                  Original_Feature =>
-                    Ancestor_Class.Feature (Ancestor_Feature));
+               if Ancestor_Class.Has_Feature (Ancestor_Feature) then
+                  Feature.Set_Redefined
+                    (Class            => Class,
+                     Original_Feature =>
+                       Ancestor_Class.Feature (Ancestor_Feature));
+               else
+                  Error (Node, E_Not_Defined_In, Ancestor_Class);
+               end if;
             end Link_Redefinition;
 
          begin
@@ -2012,6 +2016,13 @@ package body Ack.Semantic is
             Value_Type := Value_Entity.Get_Type;
             Local_Table := Value_Type;
          end;
+
+      exception
+         when others =>
+            raise Constraint_Error with
+            Get_Program (Precursor_Element).Show_Location
+              & ": exception while processing precursor";
+
       end Process;
 
    begin

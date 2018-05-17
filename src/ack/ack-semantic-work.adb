@@ -112,6 +112,8 @@ package body Ack.Semantic.Work is
                            Element (Search_Cursor);
                begin
                   if Item.Class.Qualified_Name = Class.Qualified_Name then
+                     exit when Item.Category > Category;
+
                      if Feature_Name = No_Name
                        or else Item.Feature = No_Node
                        or else Match_Feature (Item.Feature)
