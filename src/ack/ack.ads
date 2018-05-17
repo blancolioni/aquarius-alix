@@ -1193,7 +1193,9 @@ private
      (Entity : Root_Entity_Type'Class)
       return String
    is ("[e" & Integer'Image (-Entity.Sequence_Number) & "/node"
-       & Integer'Image (-(Integer (Entity.Declaration_Node))) & "]");
+       & Integer'Image (-(Integer (Entity.Declaration_Node)))
+       & " " & Ada.Strings.Unbounded.To_String (Entity.Name)
+       & "]");
 
    function Has_Context
      (Entity : Root_Entity_Type)

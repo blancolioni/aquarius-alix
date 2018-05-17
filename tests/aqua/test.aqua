@@ -22,6 +22,14 @@ feature
          Test_List.Append (T)
          create { Test_Simple_Loop } T
          Test_List.Append (T)
+         create { Test_Integer_Bounds } T
+         Test_List.Append (T)
+         create { Test_Integer_Enum } T
+         Test_List.Append (T)
+--         create { Test_Explicit_Integer_Interval } T
+--         Test_List.Append (T)
+--         create { Test_Explicit_Interval } T
+--         Test_List.Append (T)
          create { Test_Indirect_Inheritance } T
          Test_List.Append (T)
 --         create { Test_List_Inheritance } T
@@ -43,6 +51,7 @@ feature
          Number_Of_Tests : Integer
          Passed_Tests    : Integer
          Failed_Tests    : Integer
+         Pass_Ratio      : Integer
          Test_Value      : Unit_Test
          Test_Name       : String
       do
@@ -65,12 +74,15 @@ feature
             end
          end
          
+         Pass_Ratio := Passed_Tests * 100 / Number_Of_Tests
+         
          Put ("Tests: ")
          Put (Number_Of_Tests.To_String)
-         Put ("; passed: ")
-         Put (Passed_Tests.To_String)
          Put ("; failed: ")
          Put (Failed_Tests.To_String)
+         Put ("; passed: ")
+         Put (Passed_Tests.To_String)
+         Put (" (" & Pass_Ratio.To_String & "%)")
          New_Line
       end
 
