@@ -11,7 +11,7 @@ inherit
       redefine Make_With_Integer_Literal, Convert_From end
    Aqua.Comparable 
       redefine GE, LE, GT, LT end
-   Aqua.Bounded_Enumerable redefine Minimum, Maximum, Next, Previous end
+   Aqua.Bounded redefine Minimum, Maximum end
    
 feature
    To_String : String
