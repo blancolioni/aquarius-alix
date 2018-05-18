@@ -28,8 +28,7 @@ feature
 
    Error (Message : String)
       do
-         Message.Write_To_Memory (1036)
-         Set_Tree_Driver (5)
+         Send_String (5, Message)
       end
 
    Get_Property (Name : String) : System.Address
