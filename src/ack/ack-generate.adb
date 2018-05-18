@@ -82,22 +82,26 @@ package body Ack.Generate is
       Root : Boolean)
    is
       Unit : Tagatha.Units.Tagatha_Unit;
-      Entity : constant Ack.Classes.Class_Entity :=
+      Class : constant Ack.Classes.Class_Entity :=
                  Ack.Classes.Get_Class_Entity (Node);
    begin
       Unit.Create_Unit
-        (Entity.Base_File_Name,
+        (Class.Base_File_Name,
          Get_Program (Node).Source_File_Name);
 
       if Root then
-         Unit.Directive (".start " & Entity.Link_Name & "$main");
+         Unit.Directive (".start " & Class.Link_Name & "$main");
+         Unit.Source_Location
+           (Line   => Positive (Get_Program (Node).Location_Line),
+            Column => Positive (Get_Program (Node).Location_Column));
+
          Unit.Begin_Routine
-           (Name           => Entity.Link_Name & "$main",
+           (Name           => Class.Link_Name & "$main",
             Argument_Words => 0,
             Frame_Words    => 0,
             Result_Words   => 0,
             Global         => True);
-         Unit.Call (Entity.Link_Name & "$create");
+         Unit.Call (Class.Link_Name & "$create");
 
          Unit.Push_Return;
          Unit.Duplicate;
@@ -105,7 +109,7 @@ package body Ack.Generate is
 
          Push_Offset
            (Unit,
-            Entity.Feature (Get_Name_Id ("make")).Virtual_Table_Offset);
+            Class.Feature (Get_Name_Id ("make")).Virtual_Table_Offset);
 
          Unit.Operate (Tagatha.Op_Add);
          Unit.Dereference;
@@ -116,8 +120,66 @@ package body Ack.Generate is
          Unit.End_Routine;
       end if;
 
+      declare
+
+         function Class_Defined_Feature
+           (Feature : not null access constant
+              Ack.Features.Feature_Entity_Record'Class)
+            return Boolean
+         is (not Feature.Deferred
+             and then Feature.Effective_Class = Class);
+
+         procedure Check_Feature_Bindings
+           (Feature : not null access constant
+              Ack.Features.Feature_Entity_Record'Class);
+
+         ----------------------------
+         -- Check_Feature_Bindings --
+         ----------------------------
+
+         procedure Check_Feature_Bindings
+           (Feature : not null access constant
+              Ack.Features.Feature_Entity_Record'Class)
+         is
+            Note_Name : constant String :=
+                          "aqua_action_binding_"
+                          & Feature.Standard_Name;
+         begin
+
+            if Class.Has_Note (Note_Name) then
+               declare
+                  Parent_Name   : constant String :=
+                                    Ada.Characters.Handling.To_Lower
+                                      (Class.Get_Note_Item (Note_Name, 1));
+                  Position_Name : constant String :=
+                                    Ada.Characters.Handling.To_Lower
+                                      (Class.Get_Note_Item (Note_Name, 2));
+                  Child_Name    : constant String :=
+                                    Ada.Characters.Handling.To_Lower
+                                      (Class.Get_Note_Item (Note_Name, 3));
+               begin
+                  Unit.Segment (Tagatha.Executable);
+                  Unit.Directive
+                    (".bind_action "
+                     & Class.Declaration_Context.Standard_Name
+                     & " " & Feature.Link_Name
+                     & " " & Position_Name
+                     & " " & Parent_Name
+                     & " " & Child_Name);
+               end;
+            end if;
+
+         end Check_Feature_Bindings;
+
+      begin
+
+         Class.Scan_Features
+           (Class_Defined_Feature'Access,
+            Check_Feature_Bindings'Access);
+      end;
+
       Unit.Begin_Routine
-        (Entity.Link_Name & "$init",
+        (Class.Link_Name & "$init",
          Argument_Words => 0,
          Frame_Words    => 0,
          Result_Words   => 1,
@@ -125,12 +187,12 @@ package body Ack.Generate is
 
       Unit.End_Routine;
 
-      if not Entity.Expanded and then not Entity.Deferred then
-         Entity.Generate_Virtual_Table (Unit);
+      if not Class.Expanded and then not Class.Deferred then
+         Class.Generate_Virtual_Table (Unit);
       end if;
 
-      if not Entity.Deferred and then not Entity.Expanded then
-         Entity.Generate_Object_Allocator (Unit);
+      if not Class.Deferred and then not Class.Expanded then
+         Class.Generate_Object_Allocator (Unit);
       end if;
 
       declare
@@ -140,7 +202,7 @@ package body Ack.Generate is
               Ack.Features.Feature_Entity_Record'Class)
             return Boolean
          is (not Feature.Deferred
-             and then Feature.Effective_Class = Entity);
+             and then Feature.Effective_Class = Class);
 
          procedure Generate_Feature
            (Feature : not null access constant
@@ -155,12 +217,12 @@ package body Ack.Generate is
               Ack.Features.Feature_Entity_Record'Class)
          is
          begin
-            Generate_Feature (Unit, Entity, Feature);
+            Generate_Feature (Unit, Class, Feature);
          end Generate_Feature;
 
       begin
 
-         Entity.Scan_Features
+         Class.Scan_Features
            (Class_Defined_Feature'Access,
             Generate_Feature'Access);
       end;
@@ -198,9 +260,10 @@ package body Ack.Generate is
         (Instruction : Node_Id)
       is
       begin
-         Unit.Source_Position
+         Unit.Source_Location
            (Line   => Positive (Get_Program (Instruction).Location_Line),
             Column => Positive (Get_Program (Instruction).Location_Column));
+
          case N_Instruction (Kind (Instruction)) is
             when N_Assignment =>
                Generate_Expression (Unit, Context, Expression (Instruction));
@@ -373,9 +436,6 @@ package body Ack.Generate is
       Expression : Node_Id)
    is
    begin
-      Unit.Source_Position
-        (Line   => Positive (Get_Program (Expression).Location_Line),
-         Column => Positive (Get_Program (Expression).Location_Column));
       case N_Expression_Node (Kind (Expression)) is
          when N_Operator =>
             Generate_Operator_Expression (Unit, Context, Expression);
