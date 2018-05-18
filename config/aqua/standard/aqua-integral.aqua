@@ -1,6 +1,9 @@
 deferred class
    Aqua.Integral
 
+inherit
+   Aqua.Enumerable
+   
 feature
 
    Make_With_Integer_Literal
