@@ -435,7 +435,9 @@ attachment_test ::= 'attached' expression [ 'as' identifier ]
 member_of ::= 'in' | 'not' 'in'
 
 relation ::=
-	simple_expression [ relational_operator simple_expression ]
+	range_expression [ relational_operator range_expression ]
+
+range_expression ::= simple_expression [ range_operator simple_expression ]
 
 simple_expression ::=
     [ unary_adding_operator ] term { binary_adding_operator term }
@@ -454,6 +456,8 @@ boolean_operator ::=
 	'and' | 'and' 'then' | 'or' | 'or' 'else' | 'xor' | 'implies'
 
 relational_operator ::= '=' | '/=' | '<' | '<=' | '>' | '>='
+
+range_operator ::= '..'
 
 binary_adding_operator ::= '+' | '-' | '&'
 

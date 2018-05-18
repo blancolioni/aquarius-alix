@@ -145,6 +145,7 @@ package body Ack.Parser.Expressions is
         new Generic_Import
           ("unary_primary_operator", "primary", "",
            Import_Primary);
+
       function Import_Term is
         new Generic_Import
           ("", "factor", "multiplying_operator",
@@ -156,11 +157,17 @@ package body Ack.Parser.Expressions is
            "binary_adding_operator",
            Import_Term);
 
-      function Import_Relation is
+      function Import_Range_Expression is
         new Generic_Import
           ("", "simple_expression",
-           "relational_operator",
+           "range_operator",
            Import_Simple_Expression);
+
+      function Import_Relation is
+        new Generic_Import
+          ("", "range_expression",
+           "relational_operator",
+           Import_Range_Expression);
 
       function Import_Top_Level is
         new Generic_Import
