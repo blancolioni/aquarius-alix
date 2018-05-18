@@ -50,6 +50,8 @@ package body Ack.Generate.Primitives is
    procedure Generate_Mod (Unit : in out Tagatha.Units.Tagatha_Unit);
    procedure Generate_Join (Unit : in out Tagatha.Units.Tagatha_Unit);
 
+   procedure Generate_Exit (Unit : in out Tagatha.Units.Tagatha_Unit);
+
    procedure Generate_Intrinsic_Nop
      (Unit : in out Tagatha.Units.Tagatha_Unit)
    is null;
@@ -210,6 +212,9 @@ package body Ack.Generate.Primitives is
       Add ("gt", Generate_GT'Access);
       Add ("get_word_32", Generate_Intrinsic_Mem_Get_Word_32'Access);
       Add ("put_word_32", Generate_Intrinsic_Mem_Put_Word_32'Access);
+
+      Add ("exit", Generate_Exit'Access);
+
       Have_Primitives := True;
 
    end Create_Primitives;
@@ -249,6 +254,15 @@ package body Ack.Generate.Primitives is
    begin
       Unit.Operate (Tagatha.Op_Equal);
    end Generate_Equal;
+
+   -------------------
+   -- Generate_Exit --
+   -------------------
+
+   procedure Generate_Exit (Unit : in out Tagatha.Units.Tagatha_Unit) is
+   begin
+      Unit.Native_Operation ("trap 15");
+   end Generate_Exit;
 
    -----------------
    -- Generate_GE --
