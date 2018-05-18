@@ -78,7 +78,17 @@ package body Ack.Classes is
       Std : constant String :=
               Ada.Characters.Handling.To_Lower (Value);
    begin
-      Class.Notes.Insert (Name, Value);
+      if Class.Notes.Contains (Name) then
+         Class.Notes (Name).Append (Value);
+      else
+         declare
+            V   : Note_Element_Vectors.Vector;
+         begin
+            V.Append (Value);
+            Class.Notes.Insert (Name, V);
+         end;
+      end if;
+
       if Name = "behaviour" then
          if Std = "normal" then
             Class.Behaviour := Normal;
@@ -851,6 +861,38 @@ package body Ack.Classes is
       return Class_Entity (Get_Entity (Node));
    end Get_Class_Entity;
 
+   --------------
+   -- Get_Note --
+   --------------
+
+   function Get_Note
+     (Class : Class_Entity_Record'Class;
+      Name  : String)
+      return String
+   is
+      use Ada.Strings.Unbounded;
+      Result : Unbounded_String;
+
+      procedure Append_Note (Note : String);
+
+      -----------------
+      -- Append_Note --
+      -----------------
+
+      procedure Append_Note (Note : String) is
+      begin
+         if Result = Null_Unbounded_String then
+            Result := To_Unbounded_String (Note);
+         else
+            Result := Result & Character'Val (10) & Note;
+         end if;
+      end Append_Note;
+
+   begin
+      Class.Scan_Note (Name, Append_Note'Access);
+      return To_String (Result);
+   end Get_Note;
+
    -------------------------
    -- Get_Top_Level_Class --
    -------------------------
@@ -1199,6 +1241,22 @@ package body Ack.Classes is
          end loop;
       end loop;
    end Scan_Features;
+
+   ---------------
+   -- Scan_Note --
+   ---------------
+
+   procedure Scan_Note
+     (Class   : Class_Entity_Record'Class;
+      Name    : String;
+      Process : not null access
+        procedure (Note : String))
+   is
+   begin
+      for Note of Class.Notes (Name) loop
+         Process (Note);
+      end loop;
+   end Scan_Note;
 
    ------------------------
    -- Scan_Redefinitions --

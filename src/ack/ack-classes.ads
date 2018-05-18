@@ -61,6 +61,13 @@ package Ack.Classes is
       return String
      with Pre => Class.Has_Note (Name);
 
+   procedure Scan_Note
+     (Class : Class_Entity_Record'Class;
+      Name  : String;
+      Process : not null access
+        procedure (Note : String))
+     with Pre => Class.Has_Note (Name);
+
    overriding function Deferred
      (Class : Class_Entity_Record)
       return Boolean;
@@ -311,8 +318,12 @@ private
    package List_Of_Inherited_Type_Records is
      new Ada.Containers.Doubly_Linked_Lists (Inherited_Type_Record);
 
+   package Note_Element_Vectors is
+     new Ada.Containers.Indefinite_Vectors (Positive, String);
+
    package Notes_Map is
-     new WL.String_Maps (String);
+     new WL.String_Maps (Note_Element_Vectors.Vector,
+                         Note_Element_Vectors."=");
 
    type Layout_Entry is
       record
@@ -425,12 +436,6 @@ private
       Name  : String)
       return Boolean
    is (Class.Notes.Contains (Name));
-
-   function Get_Note
-     (Class : Class_Entity_Record'Class;
-      Name  : String)
-      return String
-   is (Class.Notes.Element (Name));
 
    function Top_Class_Node
      (Class : Class_Entity_Record'Class)

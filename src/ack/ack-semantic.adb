@@ -1713,20 +1713,22 @@ package body Ack.Semantic is
    is
       List : constant List_Id := Node_Table.Element (Notes).List;
 
-      function To_String
-        (List : List_Id)
-         return String;
+      Have_Single_Item    : Boolean;
+      Have_Single_Integer : Boolean := False;
+      Single_Integer      : Integer;
 
-      ---------------
-      -- To_String --
-      ---------------
+      procedure Add_Note_Items
+        (Note_Name : String;
+         List      : List_Id);
 
-      function To_String
-        (List : List_Id)
-         return String
+      --------------------
+      -- Add_Note_Items --
+      --------------------
+
+      procedure Add_Note_Items
+        (Note_Name : String;
+         List      : List_Id)
       is
-         use Ada.Strings.Unbounded;
-         Result : Unbounded_String;
 
          procedure Add_Note_Item
            (Note_Item : Node_Id)
@@ -1743,6 +1745,7 @@ package body Ack.Semantic is
            (Note_Item : Node_Id)
          is
             Item : constant Node_Id := Field_1 (Note_Item);
+
          begin
             if Kind (Item) = N_Identifier then
                Add_Note_Text (To_String (Get_Name (Item)));
@@ -1757,6 +1760,12 @@ package body Ack.Semantic is
                         Add_Note_Text (To_String (Get_Name (Value)));
                      when N_Integer_Constant =>
                         Add_Note_Text (To_String (Get_Name (Value)));
+                        if Have_Single_Item then
+                           Have_Single_Integer := True;
+                           Single_Integer :=
+                             Integer'Value (To_String (Get_Name (Value)));
+                        end if;
+
                      when N_Boolean_Constant =>
                         Add_Note_Text (if Boolean_Value (Value)
                                        then "True" else "False");
@@ -1778,44 +1787,43 @@ package body Ack.Semantic is
            (Text : String)
          is
          begin
-            if Result = Null_Unbounded_String then
-               Result := To_Unbounded_String (Text);
-            else
-               Result := Result & Character'Val (10)
-                 & Text;
-            end if;
+            Class.Add_Note (Note_Name, Text);
          end Add_Note_Text;
 
       begin
          Scan (List, Add_Note_Item'Access);
-         return To_String (Result);
-      end To_String;
+      end Add_Note_Items;
 
    begin
       for Note of List_Table.Element (List).List loop
          declare
+            use type Ada.Containers.Count_Type;
             Name  : constant Name_Id := Get_Name (Note_Name (Note));
             Value : constant Node_Id := Note_Value (Note);
             Value_List : constant List_Id :=
                            Node_Table.Element (Value).List;
          begin
-            Class.Add_Note
-              (Name  => To_Standard_String (Name),
-               Value => To_String (Value_List));
+
+            Have_Single_Item := List_Table (Value_List).List.Length = 1;
+            Have_Single_Integer := False;
+
+            Add_Note_Items (To_Standard_String (Name), Value_List);
 
             if To_Standard_String (Name) = "aqua_modular_type" then
-               declare
-                  Modulus : Positive;
-               begin
-                  Modulus := Positive'Value (To_String (Value_List));
-                  Class.Set_Modulus (Modulus);
-                  Ack.Generate.Primitives.Create_Integral_Primitives (Class);
-               exception
-                  when Constraint_Error =>
-                     raise Constraint_Error with
-                     Get_Program (Value).Show_Location
-                       & ": positive integer required for modulus bits";
-               end;
+               if Have_Single_Integer then
+                  declare
+                     Modulus : Positive;
+                  begin
+                     Modulus := Single_Integer;
+                     Class.Set_Modulus (Modulus);
+                     Ack.Generate.Primitives
+                       .Create_Integral_Primitives (Class);
+                  end;
+               else
+                  raise Constraint_Error with
+                  Get_Program (Value).Show_Location
+                    & ": positive integer required for modulus bits";
+               end if;
             end if;
          end;
       end loop;
