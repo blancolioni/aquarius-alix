@@ -61,6 +61,13 @@ package Ack.Classes is
       return String
      with Pre => Class.Has_Note (Name);
 
+   function Get_Note_Item
+     (Class : Class_Entity_Record'Class;
+      Name  : String;
+      Index : Positive)
+      return String
+     with Pre => Class.Has_Note (Name);
+
    procedure Scan_Note
      (Class : Class_Entity_Record'Class;
       Name  : String;
@@ -436,6 +443,15 @@ private
       Name  : String)
       return Boolean
    is (Class.Notes.Contains (Name));
+
+   function Get_Note_Item
+     (Class : Class_Entity_Record'Class;
+      Name  : String;
+      Index : Positive)
+      return String
+   is (if Index <= Class.Notes.Element (Name).Last_Index
+       then Class.Notes.Element (Name).Element (Index)
+       else "");
 
    function Top_Class_Node
      (Class : Class_Entity_Record'Class)

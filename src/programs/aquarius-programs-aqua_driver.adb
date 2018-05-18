@@ -1,3 +1,7 @@
+with Ada.Text_IO;
+
+with Aqua.IO;
+
 package body Aquarius.Programs.Aqua_Driver is
 
    Local_Tree_Driver : aliased Aquarius_Tree_Driver_Record (255);
@@ -59,9 +63,13 @@ package body Aquarius.Programs.Aqua_Driver is
       Command          : constant Natural :=
                            Natural (Driver.Get_Word (4));
    begin
+
+      Driver.Set_Word (4, 0);
+
       if Current_Sequence = 0 then
          return;
       end if;
+
       if Driver.Current = null
         or else Driver.Current.Sequence /= Current_Sequence
       then
@@ -90,14 +98,34 @@ package body Aquarius.Programs.Aqua_Driver is
                   Location => Driver.Current,
                   Text     => Driver.Read_String));
          when Get_Property =>
-            Driver.Set_Word
-              (8, Driver.Current.Aqua_Props.Element (Driver.Read_String));
+            declare
+               Name  : constant String := Driver.Read_String;
+               Props : Aqua_Address_Maps.Map renames
+                         Driver.Current.Aqua_Props;
+               Value : constant Aqua.Address :=
+                         Props.Element (Name);
+            begin
+               Ada.Text_IO.Put_Line
+                 (Aqua.IO.Hex_Image (Driver.Get_Word (0))
+                  & ": get_property "
+                  & Name & " = " & Aqua.IO.Hex_Image (Value));
+               Driver.Set_Word (8, Value);
+            end;
          when Has_Property =>
-            Driver.Set_Word
-              (8,
-               Boolean'Pos
-                 (Driver.Current.Aqua_Props.Contains
-                      (Driver.Read_String)));
+            declare
+               Name  : constant String := Driver.Read_String;
+               Props : Aqua_Address_Maps.Map renames
+                         Driver.Current.Aqua_Props;
+               Value : constant Boolean :=
+                         Props.Contains (Name);
+            begin
+               Ada.Text_IO.Put_Line
+                 (Aqua.IO.Hex_Image (Driver.Get_Word (0))
+                  & ": has_property "
+                  & Name & " = " & Boolean'Image (Value));
+               Driver.Set_Word
+                 (8, Boolean'Pos (Value));
+            end;
          when Set_Property =>
             declare
                Name  : constant String := Driver.Read_String;
@@ -105,6 +133,10 @@ package body Aquarius.Programs.Aqua_Driver is
                          Driver.Current.Aqua_Props;
                Value : constant Aqua.Address := Driver.Get_Word (8);
             begin
+               Ada.Text_IO.Put_Line
+                 (Aqua.IO.Hex_Image (Driver.Get_Word (0))
+                  & ": set_property "
+                  & Name & " := " & Aqua.IO.Hex_Image (Value));
                if Props.Contains (Name) then
                   Props.Replace (Name, Value);
                else

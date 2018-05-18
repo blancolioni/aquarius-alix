@@ -191,9 +191,9 @@ feature { None }
          Count  : System.Word_32
       do
          Count.Convert_From (Length)
-         Count := Count + 1
-         create Target.Make_From_Base_And_Bound (Start, Start.Offset_Words (Count))
-         Block.Copy (Target, 0)
+         create Target.Make_From_Base_And_Bound (Start, Start.Offset_Words (Count + 1))
+         Target.Put (0, Count)
+         Block.Copy (Target, 1)
       end
 
 feature { None }

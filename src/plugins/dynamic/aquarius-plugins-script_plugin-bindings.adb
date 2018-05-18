@@ -15,6 +15,8 @@ with Aquarius.Plugins.Dynamic;
 with Aquarius.Source;
 with Aquarius.Syntax;
 
+with Aquarius.Programs.Aqua_Driver;
+
 --  with Aquarius.Actions.Tagatha_Scanner;
 
 with Ack;
@@ -189,18 +191,21 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Item     : not null access Aquarius.Actions.Actionable'Class)
    is
       Tree    : constant Program_Tree := Program_Tree (Item);
-      Komnenos_Arg : constant Aqua.Word := 0;
+--        Komnenos_Arg : constant Aqua.Word := 0;
 --                         Executor.Plugin.Executor.To_Word
 --                         (Komnenos.Entities.Aqua_Entities.Get_Aqua_Object);
-      Top_Arg     : constant Aqua.Word := 0;
---                      Executor.Plugin.Executor.To_Word (Tree.Program_Root);
-      Tree_Arg  : constant Aqua.Word := 0;
---                      Executor.Plugin.Executor.To_Word (Tree);
+      Top_Arg      : constant Aqua.Word :=
+                       Aquarius.Programs.Aqua_Driver.To_Address
+                         (Tree.Program_Root);
+      Tree_Arg     : constant Aqua.Address :=
+                       Aquarius.Programs.Aqua_Driver.To_Address (Tree);
    begin
+      Ada.Text_IO.Put_Line
+        (Tree.Text & ": executing");
       Executor.Plugin.Executor.Execute
         (Tree.Local_Environment_Name,
          Executor.Start,
-         (Komnenos_Arg, Top_Arg, Tree_Arg));
+         (0, Top_Arg, Tree_Arg));
    exception
       when E : others =>
          Ada.Text_IO.Put_Line
@@ -225,23 +230,23 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
    is
       Parent_Tree : constant Program_Tree := Program_Tree (Parent);
       Child_Tree  : constant Program_Tree := Program_Tree (Child);
-      Komnenos_Arg : constant Aqua.Word := 0;
+--        Komnenos_Arg : constant Aqua.Word := 0;
 --                     Executor.Plugin.Executor.To_Word
 --                       (Komnenos.Entities.Aqua_Entities.Get_Aqua_Object);
-      Top_Arg     : constant Aqua.Word := 0;
---                        Executor.Plugin.Executor.To_Word
---                          (Parent_Tree.Program_Root);
-      Parent_Arg  : constant Aqua.Word := 0;
---                        Executor.Plugin.Executor.To_Word
---                          (Parent_Tree);
-      Child_Arg   : constant Aqua.Word := 0;
---                        Executor.Plugin.Executor.To_Word
---                          (Child_Tree);
+      Top_Arg      : constant Aqua.Word :=
+                       Aquarius.Programs.Aqua_Driver.To_Address
+                         (Parent_Tree.Program_Root);
+      Parent_Arg   : constant Aqua.Address :=
+                       Aquarius.Programs.Aqua_Driver.To_Address (Parent_Tree);
+      Child_Arg    : constant Aqua.Word :=
+                       Aquarius.Programs.Aqua_Driver.To_Address (Child_Tree);
    begin
+      Ada.Text_IO.Put_Line
+        (Parent_Tree.Text & "/" & Child_Tree.Text & ": executing");
       Executor.Plugin.Executor.Execute
         (Parent_Tree.Local_Environment_Name,
          Executor.Start,
-         (Komnenos_Arg, Top_Arg, Parent_Arg, Child_Arg));
+         (0, Top_Arg, Parent_Arg, Child_Arg));
    exception
       when E : others =>
          Ada.Text_IO.Put_Line
