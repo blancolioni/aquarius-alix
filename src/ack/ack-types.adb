@@ -588,7 +588,7 @@ package body Ack.Types is
          Detachable          => False,
          Anchored            => False)
       do
-         Result.Create (Name, Node, Table => False);
+         Result.Create (Name, Node, Table => True);
          Result.Class := Generic_Class;
          Result.Generic_Formal := True;
 
