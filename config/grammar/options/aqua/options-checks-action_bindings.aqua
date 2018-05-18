@@ -1,13 +1,14 @@
 note
-   Aqua_Action_Binding: Binding_1, Declaration, Before, Option_Declaration
+   Aqua_Action_Binding_Binding_1: Declaration, Before, Option_Declaration
 
-expanded class 
+expanded class
    Options.Checks.Action_Bindings
    
 feature
 
-   Binding_1 (Parent : Aquarius.Trees.Program_Tree
-              Child  : Aquarius.Trees.Program_Tree)
+   Exit (Code : Integer) external "intrinsic"
+   
+   Binding_1 (Top, Parent, Child : Aquarius.Trees.Program_Tree)
    local
       Convert_P : System.Address_To_Object_Conversions[Options.Checks.Declaration.Aqua_Action_Binding]
       Convert_C : System.Address_To_Object_Conversions[Options.Checks.Option_Declaration.Aqua_Action_Binding]
@@ -20,6 +21,14 @@ feature
          create P
          Parent.Set_Property ("Options.Checks.Declaration", Convert_P.To_Address (P))
       end
+      if Child.Has_Property ("Options.Checks.Option_Declaration") then
+         C := Convert_C.To_object (Child.Get_Property ("Options.Checks.Option_Declaration"))
+      else
+         create C
+         Child.Set_Property ("Options.Checks.Option_Declaration", Convert_C.To_Address (C))
+      end
+      P.Before_Option_Declaration (C)
+      Exit (0)
    end
 end
      
