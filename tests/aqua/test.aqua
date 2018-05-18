@@ -24,6 +24,8 @@ feature
          Test_List.Append (T)
          create { Test_Integer_Bounds } T
          Test_List.Append (T)
+         create { Test_Property_Redefinition } T
+         Test_List.Append (T)
          create { Test_Integer_Enum } T
          Test_List.Append (T)
 --         create { Test_Explicit_Integer_Interval } T
