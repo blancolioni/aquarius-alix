@@ -7,7 +7,7 @@ feature
    Get_Word_32 (Addr : System.Address) : System.Word_32 external "intrinsic"
    
    Put_Address (Addr : System.Address; Value : System.Address) external "intrinsic" alias "put_word_32"
-   Get_Address (Addr : System.Address) : System.Address external "intrinsic" alias "put_word_32"
+   Get_Address (Addr : System.Address) : System.Address external "intrinsic" alias "get_word_32"
    
    Allocate (Count : System.Word_32) : System.Address external "aqua"
    
