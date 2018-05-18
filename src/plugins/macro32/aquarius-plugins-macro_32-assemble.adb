@@ -230,19 +230,21 @@ package body Aquarius.Plugins.Macro_32.Assemble is
          end loop;
       elsif Name = "bind_action" then
          declare
-            Group_Name : constant String :=
-                           Arguments (1).Chosen_Tree.Text;
-            Position   : constant String :=
-                           Arguments (2).Chosen_Tree.Text;
-            Parent     : constant String :=
-                           Arguments (3).Chosen_Tree.Text;
-            Child      : constant String :=
-                           (if Arguments'Length > 3
-                            then Arguments (4).Chosen_Tree.Text
-                            else "");
+            Group_Name   : constant String :=
+                             Arguments (1).Chosen_Tree.Text;
+            Routine_Name : constant String :=
+                             Arguments (2).Chosen_Tree.Text;
+            Position     : constant String :=
+                             Arguments (3).Chosen_Tree.Text;
+            Parent       : constant String :=
+                             Arguments (4).Chosen_Tree.Text;
+            Child        : constant String :=
+                             (if Arguments'Length > 4
+                              then Arguments (5).Chosen_Tree.Text
+                              else "");
          begin
             Assembly.Bind_Action (Group_Name, Position = "before",
-                                  Parent, Child);
+                                  Parent, Child, Routine_Name);
          end;
       elsif Name = "exception" then
          declare

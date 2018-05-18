@@ -249,6 +249,10 @@ package Ack is
       Child_Name : Name_Id)
       return String;
 
+   function Declaration_Context
+     (Entity : Root_Entity_Type)
+      return Entity_Type;
+
    function Full_Name (Entity : Root_Entity_Type) return String
    is (Root_Entity_Type'Class (Entity).Qualified_Name);
 

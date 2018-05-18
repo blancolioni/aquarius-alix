@@ -1,4 +1,4 @@
-class Aquarius.Trees.Program_Tree
+expanded class Aquarius.Trees.Program_Tree
       
 feature
 
