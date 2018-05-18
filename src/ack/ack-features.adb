@@ -979,7 +979,7 @@ package body Ack.Features is
         Feature_Entity_Record'Class)
    is
    begin
-      Feature.Property := False;
+--      Feature.Property := False;
       Feature.Definition_Class :=
         Original_Feature.Definition_Class;
       Feature.Original_Classes.Append
