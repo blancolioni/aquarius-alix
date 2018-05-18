@@ -323,7 +323,18 @@ package body Ack.Features is
       Exit_Label       : constant Positive := Unit.Next_Label;
       Rescue_Label     : constant String :=
                            Feature.Link_Name & "$rescue";
+      Line             : constant Positive :=
+                           Positive
+                             (Get_Program
+                                (Feature.Declaration_Node).Location_Line);
+      Column           : constant Positive :=
+                           Positive
+                             (Get_Program
+                                (Feature.Declaration_Node).Location_Column);
    begin
+
+      Unit.Source_Location (Line, Column);
+
       if Feature.Property then
          --  Generate a property routine, in case it redefines
          --  an actual routine
