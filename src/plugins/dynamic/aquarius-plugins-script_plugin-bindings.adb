@@ -200,8 +200,6 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Tree_Arg     : constant Aqua.Address :=
                        Aquarius.Programs.Aqua_Driver.To_Address (Tree);
    begin
-      Ada.Text_IO.Put_Line
-        (Tree.Text & ": executing");
       Executor.Plugin.Executor.Execute
         (Tree.Local_Environment_Name,
          Executor.Start,
@@ -241,8 +239,6 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
       Child_Arg    : constant Aqua.Word :=
                        Aquarius.Programs.Aqua_Driver.To_Address (Child_Tree);
    begin
-      Ada.Text_IO.Put_Line
-        (Parent_Tree.Text & "/" & Child_Tree.Text & ": executing");
       Executor.Plugin.Executor.Execute
         (Parent_Tree.Local_Environment_Name,
          Executor.Start,
@@ -276,9 +272,6 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                       Item.Program_Child ("group_header");
             Ids        : constant Array_Of_Program_Trees :=
                            Child.Direct_Children ("identifier");
-            Trigger    : constant Aquarius.Actions.Action_Execution_Trigger :=
-                           Aquarius.Actions.Action_Execution_Trigger'Value
-                             (Ids (2).Text & "_Trigger");
             Group_Name : constant String :=
                            Ids (1).Text;
             Group      : constant Aquarius.Actions.Action_Group :=
@@ -290,7 +283,7 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
                                    (Grammar.Name & "-"
                                     & Group_Name
                                     & "-action_bindings",
-                                    "action");
+                                    "aqua");
             Base_Aqua_Path   : constant String :=
                                  Ada.Directories.Compose
                                    (Aquarius.Configuration.Get_Grammar_Path
@@ -299,12 +292,11 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
 
          begin
             if Ack.Bindings.Load_Ack_Binding
-              (Action_File_Path => Action_File_Path,
-               Base_Aqua_Path   => Base_Aqua_Path,
-               Image            => Dynamic.Dynamic_Plugin (New_Plugin).Image,
-               Grammar          => Grammar,
-               Group            => Group,
-               Trigger          => Trigger)
+              (Binding_File_Path => Action_File_Path,
+               Base_Aqua_Path    => Base_Aqua_Path,
+               Image             => Dynamic.Dynamic_Plugin (New_Plugin).Image,
+               Grammar           => Grammar,
+               Group             => Group)
             then
                if False then
                   Load_Action_File

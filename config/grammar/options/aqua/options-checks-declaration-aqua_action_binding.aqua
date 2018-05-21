@@ -1,7 +1,0 @@
-class 
-   Options.Checks.Declaration.Aqua_Action_Binding
-   
-inherit 
-   Options.Checks.Declaration
-
-end
