@@ -311,6 +311,7 @@ package body Ack.Features is
       Class   : not null access constant Ack.Classes.Class_Entity_Record'Class;
       Unit    : in out Tagatha.Units.Tagatha_Unit)
    is
+      pragma Unreferenced (Class);
       Arg_Count    : constant Natural :=
                        1 + Natural (Feature.Arguments.Length);
       Result_Count : constant Natural :=
@@ -397,16 +398,16 @@ package body Ack.Features is
 
          --  restore Current to our needs
 
-         if not Feature.Active_Class.Expanded
-           and then Feature.Definition_Class /= Class
-         then
-            Unit.Push_Argument (1);
-            Unit.Dereference;
-            Unit.Dereference;
-            Unit.Push_Argument (1);
-            Unit.Operate (Tagatha.Op_Sub);
-            Unit.Pop_Argument (1);
-         end if;
+--           if not Feature.Active_Class.Expanded
+--             and then Feature.Definition_Class /= Class
+--           then
+--              Unit.Push_Argument (1);
+--              Unit.Dereference;
+--              Unit.Dereference;
+--              Unit.Push_Argument (1);
+--              Unit.Operate (Tagatha.Op_Sub);
+--              Unit.Pop_Argument (1);
+--           end if;
 
          if Feature.Rescue_Node in Real_Node_Id then
             Unit.Directive (".exception "
@@ -730,19 +731,19 @@ package body Ack.Features is
          Unit.Push_Argument (1);
       end if;
 
-      if Feature.Definition_Class /= Current
-        and then not Current.Expanded
-        and then not Feature.Intrinsic
-      then
-         Unit.Duplicate;
-         Unit.Dereference;
-         Push_Offset
-           (Unit,
-            Current.Ancestor_Table_Offset (Feature.Definition_Class));
-         Unit.Operate (Tagatha.Op_Add);
-         Unit.Dereference;
-         Unit.Operate (Tagatha.Op_Add);
-      end if;
+--        if Feature.Definition_Class /= Current
+--          and then not Current.Expanded
+--          and then not Feature.Intrinsic
+--        then
+--           Unit.Duplicate;
+--           Unit.Dereference;
+--           Push_Offset
+--             (Unit,
+--              Current.Ancestor_Table_Offset (Feature.Definition_Class));
+--           Unit.Operate (Tagatha.Op_Add);
+--           Unit.Dereference;
+--           Unit.Operate (Tagatha.Op_Add);
+--        end if;
 
       if Feature.Intrinsic then
          Ack.Generate.Primitives.Generate_Intrinsic
@@ -759,6 +760,20 @@ package body Ack.Features is
          else
             --  push feature address from virtual table
             Unit.Duplicate;
+
+            if Feature.Definition_Class /= Current
+              and then not Current.Expanded
+              and then not Feature.Intrinsic
+            then
+               Unit.Duplicate;
+               Unit.Dereference;
+               Push_Offset
+                 (Unit,
+                  Current.Ancestor_Table_Offset (Feature.Definition_Class));
+               Unit.Operate (Tagatha.Op_Add);
+               Unit.Dereference;
+               Unit.Operate (Tagatha.Op_Add);
+            end if;
             Unit.Dereference;
             Push_Offset (Unit, Feature.Virtual_Table_Offset);
             Unit.Operate (Tagatha.Op_Add);

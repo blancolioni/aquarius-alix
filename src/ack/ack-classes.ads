@@ -337,6 +337,8 @@ private
          Name      : Name_Id;
          Reference : Name_Id;
          Offset    : Word_Offset;
+         Class     : Constant_Class_Entity;
+         Feature   : access Ack.Features.Feature_Entity_Record'Class;
       end record;
 
    package Layout_Entry_Vectors is

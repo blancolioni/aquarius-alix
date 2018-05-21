@@ -388,7 +388,8 @@ package body Ack.Classes is
 
          if not Layout.Class.Expanded then
             Object_Layout.Append
-              ((No_Name, Table_Link_Name (Layout.Class), 0));
+              ((No_Name, Table_Link_Name (Layout.Class), 0,
+               null, null));
 
             Put_Log
               (Object_Log, Offset, "vptr " & Layout.Class.Qualified_Name);
@@ -399,7 +400,7 @@ package body Ack.Classes is
             if Feature.Is_Property_Of_Class (Layout.Class) then
                Feature.Set_Property_Offset (Offset - Start);
                Object_Layout.Append
-                 ((No_Name, No_Name, 0));
+                 ((No_Name, No_Name, 0, null, null));
                Put_Log
                  (Object_Log, Offset,
                   "prop " & Feature.Declared_Name);
@@ -421,7 +422,8 @@ package body Ack.Classes is
          Entry_Name : Name_Id :=
                         Table_Link_Name (Layout.Class);
       begin
-         Table_Layout.Append ((Entry_Name, No_Name, Layout.Object_Start));
+         Table_Layout.Append
+           ((Entry_Name, No_Name, Layout.Object_Start, null, null));
          Entry_Name := No_Name;
          Put_Log
            (Table_Log, Offset,
@@ -435,7 +437,7 @@ package body Ack.Classes is
                         Class_Vector.Element (Base_Index);
             begin
                Table_Layout.Append
-                 ((Entry_Name, No_Name, Base.Object_Start));
+                 ((Entry_Name, No_Name, Base.Object_Start, null, null));
                Put_Log
                  (Table_Log, Offset,
                   Image  (Base.Object_Start)
@@ -466,13 +468,15 @@ package body Ack.Classes is
                        (Table_Log, Offset,
                         "deferred "
                         & Class_Feature.Declared_Name);
-                     Table_Layout.Append ((Entry_Name, No_Name, 0));
+                     Table_Layout.Append
+                       ((Entry_Name, No_Name, 0, null, null));
                   else
                      Put_Log
                        (Table_Log, Offset,
                         Class_Feature.Link_Name);
                      Table_Layout.Append
-                       ((Entry_Name, Class_Feature.Link_Name_Id, 0));
+                       ((Entry_Name, Class_Feature.Link_Name_Id, 0,
+                        Layout.Class, Feature));
                   end if;
                end;
                Entry_Name := No_Name;
@@ -696,6 +700,42 @@ package body Ack.Classes is
       Layout : Virtual_Table_Layout renames Class.Virtual_Table;
       Labels : WL.String_Sets.Set;
       Offset : Word_Offset := 0;
+
+      procedure Create_Call_Thunk
+        (To_Class  : Constant_Class_Entity;
+         Link_Name : String);
+
+      -----------------------
+      -- Create_Call_Thunk --
+      -----------------------
+
+      procedure Create_Call_Thunk
+        (To_Class  : Constant_Class_Entity;
+         Link_Name : String)
+      is
+         Thunk_Name : constant String :=
+                        Class.Link_Name
+                        & "$" & Link_Name
+                        & "$call_thunk";
+      begin
+         Unit.Segment (Tagatha.Executable);
+         Unit.Begin_Code (Thunk_Name, False);
+         Unit.Native_Operation ("mov (sp)+, agg");
+         Unit.Duplicate;
+         Unit.Dereference;
+         Push_Offset
+           (Unit,
+            Class.Ancestor_Table_Offset (To_Class));
+         Unit.Operate (Tagatha.Op_Add);
+         Unit.Dereference;
+         Unit.Operate (Tagatha.Op_Add);
+         Unit.Native_Operation ("mov agg, -(sp)");
+         Unit.Jump (Link_Name);
+         Unit.End_Code;
+         Unit.Segment (Tagatha.Read_Only);
+         Unit.Data (Thunk_Name);
+      end Create_Call_Thunk;
+
    begin
       Unit.Segment (Tagatha.Read_Only);
       Unit.Label (Class.Link_Name & "$vt");
@@ -708,8 +748,13 @@ package body Ack.Classes is
          end if;
 
          if Item.Reference /= No_Name then
-            Unit.Data
-              (Label_Name => To_Standard_String (Item.Reference));
+            if Item.Class.Link_Name = Class.Link_Name then
+               Unit.Data
+                 (Label_Name => To_Standard_String (Item.Reference));
+            else
+               Create_Call_Thunk (Item.Class,
+                                  To_Standard_String (Item.Reference));
+            end if;
          else
             Unit.Data (Tagatha.Tagatha_Integer (Item.Offset * 4));
          end if;
