@@ -16,34 +16,45 @@ with Aquarius.Trees;
 
 package body Ack.Bindings is
 
-   Report_Calls          : constant Boolean := False;
-   Report_Implicit_Calls : constant Boolean := False;
+--     Report_Calls          : constant Boolean := False;
+--     Report_Implicit_Calls : constant Boolean := False;
    Report_Class_Load     : constant Boolean := False;
 
    package Link_Name_To_Class_Maps is
      new WL.String_Maps
        (Ack.Classes.Constant_Class_Entity, Ack.Classes."=");
 
+   type Binding_Record is
+      record
+         Parent_Tree      : Ada.Strings.Unbounded.Unbounded_String;
+         Child_Tree       : Ada.Strings.Unbounded.Unbounded_String;
+         Parent_Full_Name : Ada.Strings.Unbounded.Unbounded_String;
+         Child_Full_Name  : Ada.Strings.Unbounded.Unbounded_String;
+         Child_Type       : Ada.Strings.Unbounded.Unbounded_String;
+         Position         : Binding_Position;
+      end record;
+
+   package Binding_Record_Vectors is
+     new Ada.Containers.Vectors (Positive, Binding_Record);
+
    ----------------------
    -- Load_Ack_Binding --
    ----------------------
 
    function Load_Ack_Binding
-     (Action_File_Path : String;
-      Base_Aqua_Path   : String;
-      Image            : Aqua.Images.Image_Type;
-      Grammar          : Aquarius.Grammars.Aquarius_Grammar;
-      Group            : Aquarius.Actions.Action_Group;
-      Trigger          : Aquarius.Actions.Action_Execution_Trigger)
+     (Binding_File_Path : String;
+      Base_Aqua_Path    : String;
+      Image             : Aqua.Images.Image_Type;
+      Grammar           : Aquarius.Grammars.Aquarius_Grammar;
+      Group             : Aquarius.Actions.Action_Group)
       return Boolean
    is
-      pragma Unreferenced (Trigger);
-
-      Action_File : Ada.Text_IO.File_Type;
-
-      References    : List_Of_Entities.List;
-      Binding_Table : Ack.Bindings.Actions.Ack_Binding_Table;
-      Local_Classes : Link_Name_To_Class_Maps.Map;
+      References     : List_Of_Entities.List;
+      Binding_Table  : Ack.Bindings.Actions.Ack_Binding_Table;
+      Binding_Vector : Binding_Record_Vectors.Vector;
+      Local_Classes  : Link_Name_To_Class_Maps.Map;
+      Group_Name     : constant String :=
+                         Aquarius.Actions.Action_Group_Name (Group);
 
       function Is_Group_Reference
         (Class    : not null access constant
@@ -76,9 +87,7 @@ package body Ack.Bindings is
         (Parent_Name : String;
          Child_Name  : String);
 
-      procedure Check_Allocated
-        (Class     : String;
-         Tree_Name : String);
+      procedure Write_Aqua_Binding_Class;
 
       -------------------------
       -- Add_Feature_Binding --
@@ -104,7 +113,6 @@ package body Ack.Bindings is
          Child_Tree    : constant String :=
                            Feature_Name (Index + 1 .. Feature_Name'Last);
          Parent_Tree   : constant String := Class.Standard_Name;
-         Group_Property : constant String := Class.Link_Name;
       begin
 
          if not Grammar.Have_Syntax (Parent_Tree) then
@@ -141,192 +149,32 @@ package body Ack.Bindings is
                      or else Position_Name = "after")
          then
 
-            if Child_Tree = "node" then
-               Start_Binding
-                 (Parent_Tree      => Parent_Tree,
-                  Child_Tree       => Child_Tree,
-                  Parent_Link_Name => Class.Link_Name,
-                  Child_Link_Name  => "",
-                  Position         => Position);
+            declare
+               Rec : Binding_Record :=
+                       Binding_Record'
+                         (Parent_Tree      => +Parent_Tree,
+                          Child_Tree       => <>,
+                          Parent_Full_Name => +Class.Qualified_Name,
+                          Child_Full_Name  => <>,
+                          Child_Type       => <>,
+                          Position         => Position);
+            begin
+               if Child_Tree /= "node" then
+                  declare
+                     Child_Argument : constant Entity_Type :=
+                                        Feature.Argument (1);
+                     Child_Type     : constant Entity_Type :=
+                                        Child_Argument.Get_Type;
+                  begin
+                     Rec.Child_Tree := +Child_Tree;
+                     Rec.Child_Full_Name := +Child_Type.Qualified_Name;
+                  end;
+               end if;
 
-               Ada.Text_IO.Put_Line
-                 (Action_File,
-                  "   call "
-                  & "tree." & Group_Property & "."
-                  & Class.Link_Name
-                  & "."
-                  & Position_Name & "_node"
-                  & "(tree." & Group_Property & ")");
-            else
-               declare
-                  Child_Argument : constant Entity_Type :=
-                                     Feature.Argument (1);
-                  Child_Type     : constant Entity_Type :=
-                                     Child_Argument.Get_Type;
-               begin
-
-                  Start_Binding
-                    (Parent_Tree      => Parent_Tree,
-                     Child_Tree       => Child_Tree,
-                     Parent_Link_Name => Class.Link_Name,
-                     Child_Link_Name  => Child_Type.Link_Name,
-                     Position         => Position);
-
-                  if Child_Type.Standard_Name = "string" then
-                     if False then
-                        Ada.Text_IO.Put_Line
-                          (Action_File,
-                           "   IO.put_line (""" & Parent_Tree
-                           & "/" & Child_Tree
-                           & " -> "" & child.text.to_lower)");
-                     end if;
-
-                     Ada.Text_IO.Put_Line
-                       (Action_File,
-                        "   call "
-                        & "tree." & Group_Property & "."
-                        & Class.Link_Name
-                        & "."
-                        & Position_Name & "_" & Child_Tree
-                        & "(tree." & Group_Property & ","
-                        & "child.text);");
-                  elsif Is_Group_Reference
-                    (Class, Child_Argument)
-                  then
-
-                     if not Local_Classes.Contains
-                       (Child_Type.Standard_Name)
-                     then
-                        declare
-                           use Ack.Classes;
-                           use Ack.Types;
-                           Child_Class : constant Constant_Class_Entity :=
-                                           Type_Entity (Child_Type).Class;
-                        begin
-                           Local_Classes.Insert
-                             (Child_Class.Standard_Name, Child_Class);
-                        end;
-                     end if;
-
-                     if Report_Calls then
-                        Ada.Text_IO.Put_Line
-                          (Action_File,
-                           "   IO.put_line (""Before call: "
-                           & Position_Name & " "
-                           & Parent_Tree
-                           & "/" & Child_Tree
-                           & " -> "" & child."
-                           & Child_Type.Link_Name
-                           & ".Image)");
-                     end if;
-
-                     if Position_Name = "before" then
-                        declare
-                           procedure Call_With_Conforming_Child
-                             (Ancestor_Class : not null access constant
-                                Ack.Classes.Class_Entity_Record'Class;
-                              Call_Name      : String);
-
-                           --------------------------------
-                           -- Call_With_Conforming_Child --
-                           --------------------------------
-
-                           procedure Call_With_Conforming_Child
-                             (Ancestor_Class : not null access constant
-                                Ack.Classes.Class_Entity_Record'Class;
-                              Call_Name      : String)
-                           is
-                           begin
-                              Ada.Text_IO.Put_Line
-                                (Action_File,
-                                 "   call "
-                                 & "tree." & Group_Property & "."
-                                 & Ancestor_Class.Link_Name
-                                 & "."
-                                 & Call_Name
-                                 & "(tree." & Group_Property & ","
-                                 & "child." & Child_Type.Link_Name & ");");
-                           end Call_With_Conforming_Child;
-
-                        begin
-                           Class.Scan_Conforming_Child_Ancestors
-                             (Child     =>
-                                Ack.Types.Type_Entity (Child_Type).Class,
-                              Process   =>
-                                Call_With_Conforming_Child'Access);
-                        end;
-                     end if;
-
-                     Ada.Text_IO.Put_Line
-                       (Action_File,
-                        "   call "
-                        & "tree." & Group_Property & "."
-                        & Class.Link_Name
-                        & "."
-                        & Position_Name & "_" & Child_Tree
-                        & "(tree." & Group_Property & ","
-                        & "child." & Child_Type.Link_Name & ");");
-
-                     if Report_Calls then
-                        Ada.Text_IO.Put_Line
-                          (Action_File,
-                           "   IO.put_line (""After Call: "
-                           & Position_Name & " "
-                           & Parent_Tree
-                           & "/" & Child_Tree
-                           & " -> "" & child."
-                           & Child_Type.Link_Name
-                           & ".Image)");
-                     end if;
-
-                  else
-                     Ada.Text_IO.Put_Line
-                       (Ada.Text_IO.Standard_Error,
-                        "warning: "
-                        & Feature.Full_Name & ": cannot bind argument "
-                        & Child_Argument.Declared_Name
-                        & " of type "
-                        & Child_Type.Full_Name);
-                  end if;
-               end;
-            end if;
-
-            Finish_Binding;
-
+               Binding_Vector.Append (Rec);
+            end;
          end if;
       end Add_Feature_Binding;
-
-      ---------------------
-      -- Check_Allocated --
-      ---------------------
-
-      procedure Check_Allocated
-        (Class     : String;
-         Tree_Name : String)
-      is
-      begin
-         Ada.Text_IO.Put_Line
-           (Action_File,
-            "   if not " & Tree_Name & "." & Class & " then");
-         Ada.Text_IO.Put_Line
-           (Action_File,
-            "      " & Tree_Name & "." & Class & " :=");
-         Ada.Text_IO.Put_Line
-           (Action_File,
-            "        "
-            & Class
-            & "$allocate");
-         if Report_Calls then
-            Ada.Text_IO.Put_Line
-              (Action_File,
-               "      IO.Put_Line (""Allocated " & Tree_Name & ": "" & "
-               & Tree_Name & "." & Class & ".Image)");
-         end if;
-
-         Ada.Text_IO.Put_Line
-           (Action_File,
-            "   end if");
-      end Check_Allocated;
 
       --------------------
       -- Check_Bindings --
@@ -400,6 +248,7 @@ package body Ack.Bindings is
               Class_Entity_Record'Class;
             Call_Name      : String)
          is
+            pragma Unreferenced (Ancestor_Class, Call_Name);
          begin
             if First_Call then
                Start_Binding
@@ -411,27 +260,27 @@ package body Ack.Bindings is
                First_Call := False;
             end if;
 
-            if Report_Implicit_Calls then
-               Ada.Text_IO.Put_Line
-                 (Action_File,
-                  "   IO.Put_Line ("""
-                  & Call_Name
-                  & ": "
-                  & Parent_Class.Standard_Name
-                  & "/"
-                  & Child_Class.Standard_Name
-                  & """)");
-            end if;
+--              if Report_Implicit_Calls then
+--                 Ada.Text_IO.Put_Line
+--                   (Action_File,
+--                    "   IO.Put_Line ("""
+--                    & Call_Name
+--                    & ": "
+--                    & Parent_Class.Standard_Name
+--                    & "/"
+--                    & Child_Class.Standard_Name
+--                    & """)");
+--              end if;
 
-            Ada.Text_IO.Put_Line
-              (Action_File,
-               "   call "
-               & "tree." & Parent_Class.Link_Name & "."
-               & Ancestor_Class.Link_Name
-               & "."
-               & Call_Name
-               & "(tree." & Parent_Class.Link_Name & ","
-               & "child." & Child_Class.Link_Name & ");");
+--              Ada.Text_IO.Put_Line
+--                (Action_File,
+--                 "   call "
+--                 & "tree." & Parent_Class.Link_Name & "."
+--                 & Ancestor_Class.Link_Name
+--                 & "."
+--                 & Call_Name
+--                 & "(tree." & Parent_Class.Link_Name & ","
+--                 & "child." & Child_Class.Link_Name & ");");
 
          end Add_Call;
 
@@ -450,12 +299,7 @@ package body Ack.Bindings is
       -- Finish_Binding --
       --------------------
 
-      procedure Finish_Binding is
-      begin
-         Ada.Text_IO.Put_Line
-           (Action_File, "end;");
-         Ada.Text_IO.New_Line (Action_File);
-      end Finish_Binding;
+      procedure Finish_Binding is null;
 
       ------------------------
       -- Is_Group_Reference --
@@ -544,86 +388,273 @@ package body Ack.Bindings is
          Parent_Link_Name : String;
          Child_Link_Name  : String;
          Position         : Binding_Position)
-      is
-         Position_Name : constant String :=
-                           (case Position is
-                               when Before => "before",
-                               when After  => "after");
+      is null;
+--           Position_Name : constant String :=
+--                             (case Position is
+--                                 when Before => "before",
+--                                 when After  => "after");
+--        begin
+--           if Child_Tree = "node" then
+--              Ada.Text_IO.Put_Line
+--                (Action_File,
+--                 Position_Name & " " & Parent_Tree & " do");
+--           else
+--              Ada.Text_IO.Put_Line
+--                (Action_File,
+--                 Position_Name & " " & Parent_Tree
+--                 & "/" & Child_Tree & " do");
+--
+--              Ack.Bindings.Actions.Create_Binding
+--                (Table            => Binding_Table,
+--                 Parent_Tree_Name => Parent_Tree,
+--                 Child_Tree_Name  => Child_Tree,
+--                 Position         => Position);
+--
+--           end if;
+--
+--           Check_Allocated (Parent_Link_Name, "tree");
+--
+--           for Reference of References loop
+--              Ada.Text_IO.Put_Line
+--                (Action_File,
+--                 "   if tree." & Reference.Get_Type.Link_Name & " then");
+--              Ada.Text_IO.Put_Line
+--                (Action_File,
+--                 "      tree." & Parent_Link_Name
+--                 & "." & Parent_Link_Name
+--                 & "." & Reference.Standard_Name & " :=");
+--              Ada.Text_IO.Put_Line
+--                (Action_File,
+--                 "        tree." & Reference.Get_Type.Link_Name);
+--              Ada.Text_IO.Put_Line
+--                (Action_File,
+--                 "   end if");
+--           end loop;
+--
+--           Ada.Text_IO.Put_Line
+--             (Action_File,
+--              "   if tree." & Parent_Link_Name
+--              & ".aquarius__trees__program_tree then");
+--           Ada.Text_IO.Put_Line
+--             (Action_File,
+--              "      tree." & Parent_Link_Name
+--              & ".aquarius__trees__program_tree := tree");
+--           Ada.Text_IO.Put_Line
+--             (Action_File, "   end if");
+--
+--           if Child_Tree /= "node"
+--             and then Child_Link_Name /= "string"
+--           then
+--              Check_Allocated
+--                (Child_Link_Name, "child");
+--              Ada.Text_IO.Put_Line
+--                (Action_File,
+--                 "   if child." & Child_Link_Name
+--                 & ".aquarius__trees__program_tree then");
+--              Ada.Text_IO.Put_Line
+--                (Action_File,
+--                 "      child." & Child_Link_Name
+--                 & ".aquarius__trees__program_tree := child");
+--              Ada.Text_IO.Put_Line
+--                (Action_File, "   end if");
+--
+--           end if;
+--
+--        end Start_Binding;
+
+      ------------------------------
+      -- Write_Aqua_Binding_Class --
+      ------------------------------
+
+      procedure Write_Aqua_Binding_Class is
+         use Ada.Strings.Unbounded;
+         use Ada.Text_IO;
+         File : File_Type;
+
+         function Binding_Name (Index : Positive) return String;
+
+         procedure Put_Converter
+           (Local_Name, Class_Name : String);
+
+         procedure Check_Property
+           (Tree_Name, Local_Name, Converter_Name, Class_Name : String);
+
+         function Position_Name (Position : Binding_Position) return String
+         is (case Position is
+                when Before => "Before",
+                when After  => "After");
+
+         ------------------
+         -- Binding_Name --
+         ------------------
+
+         function Binding_Name (Index : Positive) return String is
+            Rec : constant Binding_Record := Binding_Vector.Element (Index);
+         begin
+            return -Rec.Parent_Tree & "_" & Position_Name (Rec.Position)
+              & (if Rec.Child_Tree = "" then ""
+                 else "_" & (-Rec.Child_Tree));
+         end Binding_Name;
+
+         --------------------
+         -- Check_Property --
+         --------------------
+
+         procedure Check_Property
+           (Tree_Name, Local_Name, Converter_Name, Class_Name : String)
+         is
+         begin
+            Put_Line
+              (File,
+               "      if " & Tree_Name & ".Has_Property ("""
+               & Class_Name
+               & """) then");
+            Put_Line
+              (File,
+               "         "
+               & Local_Name & " := " & Converter_Name
+               & ".To_Object (" & Tree_Name
+               & ".Get_Property (""" & Class_Name & """))");
+            Put_Line
+              (File,
+               "      else");
+            Put_Line
+              (File,
+               "         "
+               & "create " & Local_Name);
+            Put_Line
+              (File,
+               "         "
+               & Tree_Name & ".Set_Property ("""
+               & Class_Name & """, " & Converter_Name
+               & ".To_Address (" & Local_Name & "))");
+            Put_Line
+              (File,
+               "      end");
+         end Check_Property;
+
+         -------------------
+         -- Put_Converter --
+         -------------------
+
+         procedure Put_Converter
+           (Local_Name, Class_Name : String)
+         is
+         begin
+            Put_Line
+              (File,
+               "      " & Local_Name & " : "
+               & "System.Address_To_Object_Conversions["
+               & Class_Name & "]");
+         end Put_Converter;
+
       begin
-         if Child_Tree = "node" then
-            Ada.Text_IO.Put_Line
-              (Action_File,
-               Position_Name & " " & Parent_Tree & " do");
-         else
-            Ada.Text_IO.Put_Line
-              (Action_File,
-               Position_Name & " " & Parent_Tree
-               & "/" & Child_Tree & " do");
+         Create (File, Out_File, Binding_File_Path);
+         Put_Line (File, "note");
 
-            Ack.Bindings.Actions.Create_Binding
-              (Table            => Binding_Table,
-               Parent_Tree_Name => Parent_Tree,
-               Child_Tree_Name  => Child_Tree,
-               Position         => Position);
-
-         end if;
-
-         Check_Allocated (Parent_Link_Name, "tree");
-
-         for Reference of References loop
-            Ada.Text_IO.Put_Line
-              (Action_File,
-               "   if tree." & Reference.Get_Type.Link_Name & " then");
-            Ada.Text_IO.Put_Line
-              (Action_File,
-               "      tree." & Parent_Link_Name
-               & "." & Parent_Link_Name
-               & "." & Reference.Standard_Name & " :=");
-            Ada.Text_IO.Put_Line
-              (Action_File,
-               "        tree." & Reference.Get_Type.Link_Name);
-            Ada.Text_IO.Put_Line
-              (Action_File,
-               "   end if");
+         for Index in 1 .. Binding_Vector.Last_Index loop
+            declare
+               Rec : constant Binding_Record := Binding_Vector.Element (Index);
+               Feature_Name : constant String := Binding_Name (Index);
+               Parent_Name   : constant String :=
+                                 To_String (Rec.Parent_Tree);
+               Child_Name    : constant String :=
+                                 To_String (Rec.Child_Tree);
+            begin
+               Put_Line
+                 (File,
+                  "   Aqua_Action_Binding_" & Feature_Name
+                  & ": "
+                  & Parent_Name
+                  & ", "
+                  & Position_Name (Rec.Position)
+                  & (if Child_Name = "" then ""
+                    else ", " & Child_Name));
+            end;
          end loop;
 
-         Ada.Text_IO.Put_Line
-           (Action_File,
-            "   if tree." & Parent_Link_Name
-            & ".aquarius__trees__program_tree then");
-         Ada.Text_IO.Put_Line
-           (Action_File,
-            "      tree." & Parent_Link_Name
-            & ".aquarius__trees__program_tree := tree");
-         Ada.Text_IO.Put_Line
-           (Action_File, "   end if");
+         New_Line (File);
+         Put_Line (File, "expanded class");
+         Put_Line (File, "   " & Grammar.Name & "."
+                   & Group_Name
+                   & ".Action_Bindings");
+         New_Line (File);
+         Put_Line (File, "feature");
+         New_Line (File);
+         Put_Line (File, "   Exit (Code : Integer) external ""intrinsic""");
 
-         if Child_Tree /= "node"
-           and then Child_Link_Name /= "string"
-         then
-            Check_Allocated
-              (Child_Link_Name, "child");
-            Ada.Text_IO.Put_Line
-              (Action_File,
-               "   if child." & Child_Link_Name
-               & ".aquarius__trees__program_tree then");
-            Ada.Text_IO.Put_Line
-              (Action_File,
-               "      child." & Child_Link_Name
-               & ".aquarius__trees__program_tree := child");
-            Ada.Text_IO.Put_Line
-              (Action_File, "   end if");
+         for Index in 1 .. Binding_Vector.Last_Index loop
+            declare
+               Rec           : constant Binding_Record :=
+                                 Binding_Vector.Element (Index);
+               Parent_Name   : constant String := -Rec.Parent_Full_Name;
+               Child_Name    : constant String := -Rec.Child_Full_Name;
+               Child_Tree    : constant String := -Rec.Child_Tree;
+               Feature_Name  : constant String := Binding_Name (Index);
+               Has_Child     : constant Boolean :=
+                                 Child_Name /= "";
+               Child_String  : constant Boolean :=
+                                 Child_Name = "String";
+            begin
+               New_Line (File);
 
-         end if;
+               Put_Line
+                 (File,
+                  "   " & Feature_Name
+                  & " (Top, Parent, Child : Aquarius.Trees.Program_Tree)");
+               Put_Line (File, "   local");
+               Put_Converter ("Convert_P", Parent_Name);
+               if Has_Child and then not Child_String then
+                  Put_Converter ("Convert_C", Child_Name);
+               end if;
+               Put_Line
+                 (File,
+                  "      P : " & Parent_Name);
+               if Has_Child then
+                  Put_Line
+                    (File,
+                     "      C : " & Child_Name);
+               end if;
 
-      end Start_Binding;
+               Put_Line
+                 (File,
+                  "   do");
+               Check_Property ("Parent", "P", "Convert_P", Parent_Name);
 
-      Group_Name : constant String :=
-                     Aquarius.Actions.Action_Group_Name (Group);
+               if Has_Child then
+                  if Child_String then
+                     Put_Line
+                       (File,
+                        "      C := Child.Text");
+                  else
+                     Check_Property ("Child", "C", "Convert_C", Child_Name);
+                  end if;
+               end if;
+
+               if Has_Child then
+                  Put_Line
+                    (File,
+                     "      P." & Position_Name (Rec.Position) & "_"
+                     & Child_Tree & " (C)");
+               else
+                  Put_Line
+                    (File,
+                     "      P." & Position_Name (Rec.Position) & "_Node");
+               end if;
+
+               Put_Line
+                 (File,
+                  "      Exit (0)");
+               Put_Line (File, "   end");
+            end;
+         end loop;
+
+         New_Line (File);
+         Put_Line (File, "end");
+         Close (File);
+      end Write_Aqua_Binding_Class;
 
    begin
-      Ada.Text_IO.Create (Action_File, Ada.Text_IO.Out_File,
-                          Action_File_Path);
 
       Ada.Directories.Search
         (Base_Aqua_Path,
@@ -633,16 +664,13 @@ package body Ack.Bindings is
       Ack.Bindings.Actions.Scan_Trees
         (Binding_Table, Check_Bindings'Access);
 
-      Ada.Text_IO.Close (Action_File);
+      if not Ack.Errors.Has_Errors then
+         Write_Aqua_Binding_Class;
+         Ack.Compile.Compile_Class
+           (Binding_File_Path, Image, null);
+      end if;
 
       return not Ack.Errors.Has_Errors;
-
---        if not Ack.Errors.Has_Errors then
---           Load_Action_File
---             (Full_Path => Action_File_Path,
---              Group     => Group,
---              Image     => Image);
---        end if;
 
    end Load_Ack_Binding;
 

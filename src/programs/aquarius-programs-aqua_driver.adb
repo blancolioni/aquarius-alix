@@ -1,7 +1,3 @@
-with Ada.Text_IO;
-
-with Aqua.IO;
-
 package body Aquarius.Programs.Aqua_Driver is
 
    Local_Tree_Driver : aliased Aquarius_Tree_Driver_Record (255);
@@ -105,10 +101,10 @@ package body Aquarius.Programs.Aqua_Driver is
                Value : constant Aqua.Address :=
                          Props.Element (Name);
             begin
-               Ada.Text_IO.Put_Line
-                 (Aqua.IO.Hex_Image (Driver.Get_Word (0))
-                  & ": get_property "
-                  & Name & " = " & Aqua.IO.Hex_Image (Value));
+--                 Ada.Text_IO.Put_Line
+--                   (Aqua.IO.Hex_Image (Driver.Get_Word (0))
+--                    & ": get_property "
+--                    & Name & " = " & Aqua.IO.Hex_Image (Value));
                Driver.Set_Word (8, Value);
             end;
          when Has_Property =>
@@ -119,10 +115,10 @@ package body Aquarius.Programs.Aqua_Driver is
                Value : constant Boolean :=
                          Props.Contains (Name);
             begin
-               Ada.Text_IO.Put_Line
-                 (Aqua.IO.Hex_Image (Driver.Get_Word (0))
-                  & ": has_property "
-                  & Name & " = " & Boolean'Image (Value));
+--                 Ada.Text_IO.Put_Line
+--                   (Aqua.IO.Hex_Image (Driver.Get_Word (0))
+--                    & ": has_property "
+--                    & Name & " = " & Boolean'Image (Value));
                Driver.Set_Word
                  (8, Boolean'Pos (Value));
             end;
@@ -133,10 +129,10 @@ package body Aquarius.Programs.Aqua_Driver is
                          Driver.Current.Aqua_Props;
                Value : constant Aqua.Address := Driver.Get_Word (8);
             begin
-               Ada.Text_IO.Put_Line
-                 (Aqua.IO.Hex_Image (Driver.Get_Word (0))
-                  & ": set_property "
-                  & Name & " := " & Aqua.IO.Hex_Image (Value));
+--                 Ada.Text_IO.Put_Line
+--                   (Aqua.IO.Hex_Image (Driver.Get_Word (0))
+--                    & ": set_property "
+--                    & Name & " := " & Aqua.IO.Hex_Image (Value));
                if Props.Contains (Name) then
                   Props.Replace (Name, Value);
                else
