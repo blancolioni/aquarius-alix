@@ -16,7 +16,7 @@ feature
 
    Word_Count (Bound : System.Address) : Word_32
       require
-         Bound.Value > Value
+         Non_Negative: Bound.Value >= Value
       do
          Result := (Bound.Value - Value) / 4
       end
