@@ -204,7 +204,7 @@ package body Ack.Features is
                Unit.Push_Text
                  (Get_Program (Clause.Node).Show_Location
                   & ": assertion failure in precondition of "
-                  & Feature.Qualified_Name
+                  & Feature.Declared_Name
                   & (if Clause.Tag = No_Name then ""
                     else ": " & To_String (Clause.Tag)));
 
@@ -474,7 +474,7 @@ package body Ack.Features is
                   Unit.Push_Text
                     (Get_Program (Clause.Node).Show_Location
                      & ": assertion failure in postcondition of "
-                     & Feature.Qualified_Name
+                     & Feature.Declared_Name
                      & (if Clause.Tag = No_Name then ""
                        else ": " & To_String (Clause.Tag)));
 
