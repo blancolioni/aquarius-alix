@@ -476,7 +476,7 @@ package body Ack.Classes is
                         Class_Feature.Link_Name);
                      Table_Layout.Append
                        ((Entry_Name, Class_Feature.Link_Name_Id, 0,
-                        Layout.Class, Feature));
+                        Class_Feature.Active_Class, Feature));
                   end if;
                end;
                Entry_Name := No_Name;
