@@ -723,6 +723,11 @@ package body Ack.Classes is
          Unit.Native_Operation ("mov (sp)+, agg");
          Unit.Duplicate;
          Unit.Dereference;
+         Unit.Dereference;
+         Unit.Swap;
+         Unit.Operate (Tagatha.Op_Sub);
+         Unit.Duplicate;
+         Unit.Dereference;
          Push_Offset
            (Unit,
             Class.Ancestor_Table_Offset (To_Class));
