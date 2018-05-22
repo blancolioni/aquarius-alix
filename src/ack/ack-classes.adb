@@ -753,13 +753,8 @@ package body Ack.Classes is
          end if;
 
          if Item.Reference /= No_Name then
-            if Item.Class.Link_Name = Class.Link_Name then
-               Unit.Data
-                 (Label_Name => To_Standard_String (Item.Reference));
-            else
-               Create_Call_Thunk (Item.Class,
-                                  To_Standard_String (Item.Reference));
-            end if;
+            Create_Call_Thunk (Item.Class,
+                               To_Standard_String (Item.Reference));
          else
             Unit.Data (Tagatha.Tagatha_Integer (Item.Offset * 4));
          end if;
