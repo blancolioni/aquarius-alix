@@ -750,6 +750,18 @@ package body Ack.Features is
            (Unit, Feature.External_Label);
       elsif Feature.Is_Property then
          if not Feature.Active_Class.Expanded then
+            if Feature.Definition_Class /= Current
+              and then not Feature.Intrinsic
+            then
+               Unit.Duplicate;
+               Unit.Dereference;
+               Push_Offset
+                 (Unit,
+                  Current.Ancestor_Table_Offset (Feature.Definition_Class));
+               Unit.Operate (Tagatha.Op_Add);
+               Unit.Dereference;
+               Unit.Operate (Tagatha.Op_Add);
+            end if;
             Push_Offset (Unit, Feature.Property_Offset);
             Unit.Operate (Tagatha.Op_Add);
             Unit.Dereference;
