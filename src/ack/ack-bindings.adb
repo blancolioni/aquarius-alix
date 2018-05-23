@@ -167,7 +167,8 @@ package body Ack.Bindings is
                                         Child_Argument.Get_Type;
                   begin
                      Rec.Child_Tree := +Child_Tree;
-                     Rec.Child_Full_Name := +Child_Type.Qualified_Name;
+                     Rec.Child_Full_Name :=
+                       +Child_Type.Class_Context.Qualified_Name;
                   end;
                end if;
 
