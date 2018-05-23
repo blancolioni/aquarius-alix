@@ -10,3 +10,5 @@ feature
       ensure
          Element_Put: Element = V
       end
+
+end
