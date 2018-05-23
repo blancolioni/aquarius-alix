@@ -418,6 +418,8 @@ package body Ack.Generate is
       Created_Entity.Pop_Entity
         (Created_Context, Creation_Type, Unit);
 
+      Created_Entity.Set_Attached;
+
    exception
       when others =>
          Ada.Text_IO.Put_Line ("no entity in this tree:");
@@ -723,12 +725,43 @@ package body Ack.Generate is
         (Element : Node_Id;
          Last    : Boolean)
       is
+         use type Ack.Types.Constant_Type_Entity;
          Entity : constant Entity_Type := Get_Entity (Element);
+         E_Type : constant Ack.Types.Constant_Type_Entity :=
+                    Ack.Types.Constant_Type_Entity (Entity.Get_Type);
       begin
          Entity.Push_Entity
            (Have_Current => Element /= First_Element,
             Context      => Get_Context (Element),
             Unit         => Unit);
+
+         if E_Type /= null
+           and then not E_Type.Expanded
+           and then Entity.Can_Update
+           and then not Entity.Attached
+           and then not E_Type.Detachable
+           and then not E_Type.Deferred
+           and then not E_Type.Is_Generic_Formal_Type
+         then
+            declare
+               Label : constant Positive := Unit.Next_Label;
+            begin
+               Unit.Duplicate;
+               Unit.Operate (Tagatha.Op_Test);
+               Unit.Jump (Label, Tagatha.C_Not_Equal);
+               Unit.Drop;
+               Unit.Call
+                 (E_Type.Link_Name & "$create");
+               Unit.Push_Return;
+               Unit.Duplicate;
+               Entity.Pop_Entity
+                 (Context    => Get_Context (Element),
+                  Value_Type => E_Type,
+                  Unit       => Unit);
+               Unit.Label (Label);
+               Entity.Set_Attached;
+            end;
+         end if;
 
          if not Last then
             Previous_Entity := Constant_Entity_Type (Entity);
@@ -737,6 +770,13 @@ package body Ack.Generate is
                 (Get_Context (Element).Class_Context);
          end if;
 
+      exception
+         when others =>
+            Ada.Text_IO.Put_Line
+              (Get_Program (Element).Show_Location
+               & ": process failed for "
+               & Entity.Qualified_Name);
+            raise;
       end Process;
 
    begin
@@ -849,6 +889,8 @@ package body Ack.Generate is
            (Get_Context (Node).Class_Context,
             Value_Type, Unit);
       end if;
+
+      Entity.Clear_Attached;
 
    exception
       when others =>

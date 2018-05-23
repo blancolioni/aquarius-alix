@@ -48,6 +48,10 @@ package Ack.Features is
       return Boolean
    is (False);
 
+   overriding function Can_Update
+     (Feature : Feature_Entity_Record)
+      return Boolean;
+
    function Is_Property
      (Feature : Feature_Entity_Record'Class)
       return Boolean;
@@ -334,6 +338,11 @@ private
      (Feature : Feature_Entity_Record)
       return Boolean
    is (Feature.Deferred_Feature);
+
+   overriding function Can_Update
+     (Feature : Feature_Entity_Record)
+      return Boolean
+   is (Feature.Property);
 
    function Is_External_Routine
      (Feature : Feature_Entity_Record'Class)
