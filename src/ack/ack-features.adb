@@ -755,6 +755,11 @@ package body Ack.Features is
             then
                Unit.Duplicate;
                Unit.Dereference;
+               Unit.Dereference;
+               Unit.Swap;
+               Unit.Operate (Tagatha.Op_Sub);
+               Unit.Duplicate;
+               Unit.Dereference;
                Push_Offset
                  (Unit,
                   Current.Ancestor_Table_Offset (Feature.Definition_Class));
