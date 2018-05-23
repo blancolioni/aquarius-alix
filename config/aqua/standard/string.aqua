@@ -20,7 +20,7 @@ feature
 
    Create_From_String (S : String)
       require
-         S /= Void
+         attached S
       local
          Index : Integer
       do
