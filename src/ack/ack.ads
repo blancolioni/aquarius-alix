@@ -308,6 +308,11 @@ package Ack is
       Descendent : not null access constant Root_Entity_Type'Class)
       return Boolean;
 
+   function Can_Update
+     (Entity : Root_Entity_Type)
+      return Boolean
+   is (False);
+
    function Attached
      (Entity : not null access constant Root_Entity_Type'Class)
       return Boolean;

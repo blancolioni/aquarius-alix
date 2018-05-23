@@ -86,6 +86,11 @@ private
       Value_Type : not null access constant Root_Entity_Type'Class;
       Unit       : in out Tagatha.Units.Tagatha_Unit);
 
+   overriding function Can_Update
+     (Entity : Variable_Entity_Record)
+      return Boolean
+   is (Entity.Kind = Local and then not Entity.Iterator);
+
    function Is_Variable
      (Entity : not null access Root_Entity_Type'Class)
       return Boolean
