@@ -2012,6 +2012,8 @@ package body Ack.Semantic is
                            Container       => Container,
                            Expression_Type => Entity.Argument (I).Get_Type,
                            Expression      => Actuals (I));
+                        Set_Destination_Type
+                          (Actuals (I), Entity.Argument (I).Get_Type);
                      end loop;
                   end if;
                end;
