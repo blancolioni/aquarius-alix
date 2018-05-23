@@ -538,6 +538,10 @@ package Ack is
    function Get_Type (N : Node_Id) return Entity_Type;
    function Has_Type (N : Node_Id) return Boolean;
 
+   function Has_Destination_Type (N : Node_Id) return Boolean;
+   function Get_Destination_Type (N : Node_Id) return Constant_Entity_Type
+     with Pre => Has_Destination_Type (N);
+
    function Class_Creators (N : Node_Id) return Node_Id
      with Pre => Kind (N) = N_Class_Declaration;
 
@@ -755,6 +759,7 @@ private
          Entity          : Entity_Type := null;
          Context         : Constant_Entity_Type := null;
          Node_Type       : Entity_Type := null;
+         Dest_Type       : Constant_Entity_Type := null;
          Error           : Error_Kind := E_No_Error;
          Error_Entity    : Constant_Entity_Type := null;
          Integer_Value   : Integer;
@@ -771,35 +776,11 @@ private
 
    function Copy (List : List_Id) return List_Id;
 
---     package List_Of_Entities is
---       new Ada.Containers.Doubly_Linked_Lists (Entity_Type);
---
---     type Entity_Record is
---        record
---           Redefine          : Boolean;
---           Name              : Name_Id;
---           Kind              : Entity_Kind;
---           Context           : Entity_Type;
---           Defined_In        : Entity_Type;
---           Inherited_From    : Entity_Type;
---           Instantiated_From : Entity_Type;
---           Declaration       : Node_Id;
---           Entity_Type       : Entity_Type;
---           Virtual_Offset    : Natural;
---           Property_Offset   : Natural;
---           Argument_Offset   : Positive;
---           Local_Offset      : Positive;
---           Children          : List_Of_Entities.List;
---        end record;
-
    package Node_Vectors is
      new Ada.Containers.Vectors (Real_Node_Id, Node_Record);
 
    package List_Vectors is
      new Ada.Containers.Vectors (Real_List_Id, List_Record);
-
---     package Entity_Vectors is
---       new Ada.Containers.Vectors (Real_Entity_Type, Entity_Record);
 
    package Name_Vectors is
      new Ada.Containers.Indefinite_Vectors (Real_Name_Id, String);
@@ -809,7 +790,6 @@ private
 
    Node_Table   : Node_Vectors.Vector;
    List_Table   : List_Vectors.Vector;
---     Entity_Table : Entity_Vectors.Vector;
    Name_Table   : Name_Vectors.Vector;
    Name_Map     : Name_Maps.Map;
 
@@ -993,6 +973,16 @@ private
 
    function Get_Type (N : Node_Id) return Entity_Type
    is (Node_Table.Element (N).Node_Type);
+
+   function Has_Destination_Type (N : Node_Id) return Boolean
+   is (Node_Table.Element (N).Dest_Type /= null);
+
+   function Get_Destination_Type (N : Node_Id) return Constant_Entity_Type
+   is (Node_Table.Element (N).Dest_Type);
+
+   procedure Set_Destination_Type
+     (N       : Node_Id;
+      To_Type : not null access constant Root_Entity_Type'Class);
 
    function Class_Creators (N : Node_Id) return Node_Id
    is (Node_Table.Element (N).Field (4));
@@ -1188,6 +1178,7 @@ private
          Declaration_Node     : Node_Id;
          Declaration_Context  : Entity_Type;
          Value_Type           : Entity_Type;
+         Destination_Type     : Constant_Entity_Type;
          Children             : Entity_Table;
          Parent_Environment   : Entity_Type;
          Sequence_Number      : Natural := 0;

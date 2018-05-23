@@ -390,6 +390,7 @@ package body Ack is
                Entity          => Entity,
                Context         => null,
                Node_Type       => null,
+               Dest_Type       => null,
                Error_Entity    => null,
                Error           => E_No_Error,
                Label           => 0));
@@ -557,6 +558,19 @@ package body Ack is
    begin
       Local_Default_Monitoring_Level := Level;
    end Set_Default_Monitoring_Level;
+
+   --------------------------
+   -- Set_Destination_Type --
+   --------------------------
+
+   procedure Set_Destination_Type
+     (N       : Node_Id;
+      To_Type : not null access constant Root_Entity_Type'Class)
+   is
+   begin
+      Node_Table (N).Dest_Type :=
+        Constant_Entity_Type (To_Type);
+   end Set_Destination_Type;
 
    ----------------
    -- Set_Entity --
