@@ -697,6 +697,11 @@ package body Ack.Generate is
       procedure Apply_Arguments
         (Actuals_List   : List_Id);
 
+      procedure Convert
+        (Argument                         : Node_Id;
+         From_Type_Entity, To_Type_Entity : not null access constant
+           Root_Entity_Type'Class);
+
       procedure Process
         (Element : Node_Id;
          Last    : Boolean);
@@ -714,8 +719,51 @@ package body Ack.Generate is
       begin
          for Item of reverse Actuals_Node_List loop
             Generate_Expression (Unit, Context, Item);
+            if Has_Destination_Type (Item) then
+               Convert (Item, Get_Type (Item), Get_Destination_Type (Item));
+            end if;
          end loop;
       end Apply_Arguments;
+
+      -------------
+      -- Convert --
+      -------------
+
+      procedure Convert
+        (Argument                         : Node_Id;
+         From_Type_Entity, To_Type_Entity : not null access constant
+           Root_Entity_Type'Class)
+      is
+         use type Ack.Classes.Class_Entity;
+         From : constant Ack.Types.Constant_Type_Entity :=
+                  Ack.Types.Constant_Type_Entity (From_Type_Entity);
+         To   : constant Ack.Types.Constant_Type_Entity :=
+                  Ack.Types.Constant_Type_Entity (To_Type_Entity);
+      begin
+         if From.Class /= To.Class
+           and then not From.Class.Expanded
+           and then From.Class.Qualified_Name /= "None"
+         then
+            declare
+               Offset : constant Word_Offset :=
+                          From.Class.Ancestor_Table_Offset (To.Class);
+            begin
+               if Offset > 0 then
+                  Ada.Text_IO.Put_Line
+                    (Get_Program (Argument).Show_Location
+                     & ": converting from "
+                     & From.Class.Qualified_Name
+                     & " to " & To.Class.Qualified_Name);
+                  Unit.Duplicate;
+                  Unit.Dereference;
+                  Push_Offset (Unit, Offset);
+                  Unit.Operate (Tagatha.Op_Add);
+                  Unit.Dereference;
+                  Unit.Operate (Tagatha.Op_Add);
+               end if;
+            end;
+         end if;
+      end Convert;
 
       -------------
       -- Process --
