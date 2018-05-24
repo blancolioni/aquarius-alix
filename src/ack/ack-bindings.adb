@@ -24,14 +24,26 @@ package body Ack.Bindings is
      new WL.String_Maps
        (Ack.Classes.Constant_Class_Entity, Ack.Classes."=");
 
+   type Implicit_Call_Record is
+      record
+         Feature_Name : Ada.Strings.Unbounded.Unbounded_String;
+      end record;
+
+   package Implicit_Call_Lists is
+      new Ada.Containers.Doubly_Linked_Lists (Implicit_Call_Record);
+
    type Binding_Record is
       record
-         Parent_Tree      : Ada.Strings.Unbounded.Unbounded_String;
-         Child_Tree       : Ada.Strings.Unbounded.Unbounded_String;
-         Parent_Full_Name : Ada.Strings.Unbounded.Unbounded_String;
-         Child_Full_Name  : Ada.Strings.Unbounded.Unbounded_String;
-         Child_Type       : Ada.Strings.Unbounded.Unbounded_String;
-         Position         : Binding_Position;
+         Parent_Tree          : Ada.Strings.Unbounded.Unbounded_String;
+         Child_Tree           : Ada.Strings.Unbounded.Unbounded_String;
+         Parent_Full_Name     : Ada.Strings.Unbounded.Unbounded_String;
+         Child_Full_Name      : Ada.Strings.Unbounded.Unbounded_String;
+         Child_Type           : Ada.Strings.Unbounded.Unbounded_String;
+         Parent_Class         : Ack.Classes.Constant_Class_Entity;
+         Child_Class          : Ack.Classes.Constant_Class_Entity;
+         Position             : Binding_Position;
+         Implicit_Calls       : Implicit_Call_Lists.List;
+         Has_Feature_Binding  : Boolean;
       end record;
 
    package Binding_Record_Vectors is
@@ -71,21 +83,13 @@ package body Ack.Bindings is
          Feature      : not null access constant
            Ack.Root_Entity_Type'Class);
 
-      procedure Start_Binding
-        (Parent_Tree      : String;
-         Child_Tree       : String;
-         Parent_Link_Name : String;
-         Child_Link_Name  : String;
-         Position         : Binding_Position);
-
-      procedure Finish_Binding;
-
       procedure Check_Bindings
         (Tree_Name : String);
 
       procedure Check_Conforming_Children
         (Parent_Name : String;
-         Child_Name  : String);
+         Child_Name  : String;
+         Calls       : in out Implicit_Call_Lists.List);
 
       procedure Write_Aqua_Binding_Class;
 
@@ -152,13 +156,25 @@ package body Ack.Bindings is
             declare
                Rec : Binding_Record :=
                        Binding_Record'
-                         (Parent_Tree      => +Parent_Tree,
-                          Child_Tree       => <>,
-                          Parent_Full_Name => +Class.Qualified_Name,
-                          Child_Full_Name  => <>,
-                          Child_Type       => <>,
-                          Position         => Position);
+                         (Parent_Tree          => +Parent_Tree,
+                          Child_Tree           => <>,
+                          Parent_Full_Name     => +Class.Qualified_Name,
+                          Child_Full_Name      => <>,
+                          Child_Type           => <>,
+                          Parent_Class         =>
+                            Ack.Classes.Constant_Class_Entity (Class),
+                          Child_Class          => <>,
+                          Position             => Position,
+                          Has_Feature_Binding  => True,
+                          Implicit_Calls       => <>);
             begin
+
+               Ack.Bindings.Actions.Create_Binding
+                 (Table            => Binding_Table,
+                  Parent_Tree_Name => Parent_Tree,
+                  Child_Tree_Name  => Child_Tree,
+                  Position         => Position);
+
                if Child_Tree /= "node" then
                   declare
                      Child_Argument : constant Entity_Type :=
@@ -167,8 +183,21 @@ package body Ack.Bindings is
                                         Child_Argument.Get_Type;
                   begin
                      Rec.Child_Tree := +Child_Tree;
-                     Rec.Child_Full_Name :=
-                       +Child_Type.Class_Context.Qualified_Name;
+                     Rec.Child_Class :=
+                       Ack.Classes.Constant_Class_Entity
+                         (Child_Type.Class_Context);
+
+                     if not Local_Classes.Contains (Child_Tree) then
+                        Local_Classes.Insert (Child_Tree, Rec.Child_Class);
+                     end if;
+
+                     Rec.Child_Full_Name := +Rec.Child_Class.Qualified_Name;
+
+                     if Position = Before then
+                        Check_Conforming_Children
+                          (Parent_Tree, Child_Tree,
+                           Rec.Implicit_Calls);
+                     end if;
                   end;
                end if;
 
@@ -188,6 +217,50 @@ package body Ack.Bindings is
                       Grammar.Get_Syntax (Tree_Name);
          Children : constant Aquarius.Trees.Array_Of_Trees :=
                       Tree.Get_Named_Children;
+
+         procedure Check_Child_Binding
+           (Syntax : Aquarius.Syntax.Syntax_Tree);
+
+         -------------------------
+         -- Check_Child_Binding --
+         -------------------------
+
+         procedure Check_Child_Binding
+           (Syntax : Aquarius.Syntax.Syntax_Tree)
+         is
+            use all type Aquarius.Syntax.Node_Class;
+            Child_Name : constant String := Syntax.Name;
+            Calls    : Implicit_Call_Lists.List;
+            Parent   : constant Ack.Classes.Constant_Class_Entity :=
+                         Local_Classes.Element (Tree_Name);
+            Child    : Ack.Classes.Constant_Class_Entity;
+         begin
+            if Syntax.Syntax_Class in Choice | Non_Terminal
+              and then Local_Classes.Contains (Child_Name)
+            then
+               Check_Conforming_Children
+                 (Tree_Name, Child_Name, Calls);
+
+               if not Calls.Is_Empty then
+
+                  Child := Local_Classes.Element (Child_Name);
+
+                  Binding_Vector.Append
+                    (Binding_Record'
+                       (Parent_Tree         => +Tree_Name,
+                        Child_Tree          => +Child_Name,
+                        Parent_Full_Name    => +Parent.Qualified_Name,
+                        Child_Full_Name     => +Child.Qualified_Name,
+                        Child_Type          => <>,
+                        Parent_Class        => Parent,
+                        Child_Class         => Child,
+                        Position            => Before,
+                        Implicit_Calls      => Calls,
+                        Has_Feature_Binding => False));
+               end if;
+            end if;
+         end Check_Child_Binding;
+
       begin
          if Local_Classes.Contains (Tree_Name) then
             for Child of Children loop
@@ -203,19 +276,10 @@ package body Ack.Bindings is
                      Child_Tree_Name  => Child.Name,
                      Position         => Before);
 
-                  declare
-                     use all type Aquarius.Syntax.Node_Class;
-                     Syntax : constant Aquarius.Syntax.Syntax_Tree :=
-                                Aquarius.Syntax.Syntax_Tree (Child);
-                  begin
-                     if Syntax.Syntax_Class in Choice | Non_Terminal
-                       and then Local_Classes.Contains (Child.Name)
-                     then
-                        Check_Conforming_Children (Tree_Name, Child.Name);
-                     end if;
-                  end;
+                  Check_Child_Binding (Aquarius.Syntax.Syntax_Tree (Child));
                end if;
             end loop;
+
          end if;
       end Check_Bindings;
 
@@ -225,15 +289,14 @@ package body Ack.Bindings is
 
       procedure Check_Conforming_Children
         (Parent_Name : String;
-         Child_Name  : String)
+         Child_Name  : String;
+         Calls       : in out Implicit_Call_Lists.List)
       is
          use Ack.Classes;
          Parent_Class : constant Constant_Class_Entity :=
                           Local_Classes.Element (Parent_Name);
          Child_Class  : constant Constant_Class_Entity :=
                           Local_Classes.Element (Child_Name);
-
-         First_Call   : Boolean := True;
 
          procedure Add_Call
            (Ancestor_Class : not null access constant
@@ -249,17 +312,11 @@ package body Ack.Bindings is
               Class_Entity_Record'Class;
             Call_Name      : String)
          is
-            pragma Unreferenced (Ancestor_Class, Call_Name);
+            pragma Unreferenced (Ancestor_Class);
          begin
-            if First_Call then
-               Start_Binding
-                 (Parent_Tree      => Parent_Name,
-                  Child_Tree       => Child_Name,
-                  Parent_Link_Name => Parent_Class.Link_Name,
-                  Child_Link_Name  => Child_Class.Link_Name,
-                  Position         => Before);
-               First_Call := False;
-            end if;
+
+            Calls.Append (Implicit_Call_Record'
+                          (Feature_Name => +Call_Name));
 
 --              if Report_Implicit_Calls then
 --                 Ada.Text_IO.Put_Line
@@ -286,21 +343,9 @@ package body Ack.Bindings is
          end Add_Call;
 
       begin
-
          Parent_Class.Scan_Conforming_Child_Ancestors
            (Child_Class, Add_Call'Access);
-
-         if not First_Call then
-            Finish_Binding;
-         end if;
-
       end Check_Conforming_Children;
-
-      --------------------
-      -- Finish_Binding --
-      --------------------
-
-      procedure Finish_Binding is null;
 
       ------------------------
       -- Is_Group_Reference --
@@ -383,13 +428,13 @@ package body Ack.Bindings is
       -- Start_Binding --
       -------------------
 
-      procedure Start_Binding
-        (Parent_Tree      : String;
-         Child_Tree       : String;
-         Parent_Link_Name : String;
-         Child_Link_Name  : String;
-         Position         : Binding_Position)
-      is null;
+--        procedure Start_Binding
+--          (Parent_Tree      : String;
+--           Child_Tree       : String;
+--           Parent_Link_Name : String;
+--           Child_Link_Name  : String;
+--           Position         : Binding_Position)
+--        is null;
 --           Position_Name : constant String :=
 --                             (case Position is
 --                                 when Before => "before",
@@ -485,6 +530,10 @@ package body Ack.Bindings is
                 when Before => "Before",
                 when After  => "After");
 
+         procedure Write_Binding
+           (Feature_Name : String;
+            Binding      : Binding_Record);
+
          ------------------
          -- Binding_Name --
          ------------------
@@ -549,28 +598,114 @@ package body Ack.Bindings is
                & Class_Name & "]");
          end Put_Converter;
 
+         -------------------
+         -- Write_Binding --
+         -------------------
+
+         procedure Write_Binding
+           (Feature_Name : String;
+            Binding      : Binding_Record)
+         is
+            Parent_Name   : constant String := -Binding.Parent_Full_Name;
+            Child_Name    : constant String := -Binding.Child_Full_Name;
+            Position      : constant String :=
+                              Position_Name (Binding.Position);
+            Child_Tree    : constant String := -Binding.Child_Tree;
+            Has_Child     : constant Boolean :=
+                              Child_Name /= "";
+            Child_String  : constant Boolean :=
+                              Child_Name = "String";
+         begin
+            New_Line (File);
+
+            Put_Line
+              (File,
+               "   " & Feature_Name
+               & " (Top, Parent, Child : Aquarius.Trees.Program_Tree)");
+            Put_Line (File, "   local");
+            Put_Converter ("Convert_P", Parent_Name);
+            if Has_Child and then not Child_String then
+               Put_Converter ("Convert_C", Child_Name);
+            end if;
+            Put_Line
+              (File,
+               "      P : " & Parent_Name);
+            if Has_Child then
+               Put_Line
+                 (File,
+                  "      C : " & Child_Name);
+            end if;
+
+            Put_Line
+              (File,
+               "   do");
+            Check_Property ("Parent", "P", "Convert_P", Parent_Name);
+
+            if Has_Child then
+               if Child_String then
+                  Put_Line
+                    (File,
+                     "      C := Child.Text");
+               else
+                  Check_Property ("Child", "C", "Convert_C", Child_Name);
+               end if;
+            end if;
+
+            if Has_Child then
+
+               for Call of Binding.Implicit_Calls loop
+                  Put_Line
+                    (File,
+                     "      C." & (-Call.Feature_Name)
+                         & " (P)");
+               end loop;
+
+               if Binding.Has_Feature_Binding then
+                  Put_Line
+                    (File,
+                     "      P." & Position & "_"
+                     & Child_Tree & " (C)");
+               end if;
+
+            elsif Binding.Has_Feature_Binding then
+               Put_Line
+                 (File,
+                  "      P." & Position & "_Node");
+            end if;
+
+            Put_Line
+              (File,
+               "      Exit (0)");
+            Put_Line (File, "   end");
+         end Write_Binding;
+
       begin
          Create (File, Out_File, Binding_File_Path);
          Put_Line (File, "note");
 
          for Index in 1 .. Binding_Vector.Last_Index loop
             declare
-               Rec : constant Binding_Record := Binding_Vector.Element (Index);
-               Feature_Name : constant String := Binding_Name (Index);
+               Rec           : constant Binding_Record :=
+                                 Binding_Vector.Element (Index);
+               Feature_Name  : constant String := Binding_Name (Index);
                Parent_Name   : constant String :=
                                  To_String (Rec.Parent_Tree);
                Child_Name    : constant String :=
                                  To_String (Rec.Child_Tree);
             begin
-               Put_Line
-                 (File,
-                  "   Aqua_Action_Binding_" & Feature_Name
-                  & ": "
-                  & Parent_Name
-                  & ", "
-                  & Position_Name (Rec.Position)
-                  & (if Child_Name = "" then ""
-                    else ", " & Child_Name));
+               if Rec.Has_Feature_Binding
+                 or else not Rec.Implicit_Calls.Is_Empty
+               then
+                  Put_Line
+                    (File,
+                     "   Aqua_Action_Binding_" & Feature_Name
+                     & ": "
+                     & Parent_Name
+                     & ", "
+                     & Position_Name (Rec.Position)
+                     & (if Child_Name = "" then ""
+                       else ", " & Child_Name));
+               end if;
             end;
          end loop;
 
@@ -588,65 +723,14 @@ package body Ack.Bindings is
             declare
                Rec           : constant Binding_Record :=
                                  Binding_Vector.Element (Index);
-               Parent_Name   : constant String := -Rec.Parent_Full_Name;
-               Child_Name    : constant String := -Rec.Child_Full_Name;
-               Child_Tree    : constant String := -Rec.Child_Tree;
-               Feature_Name  : constant String := Binding_Name (Index);
-               Has_Child     : constant Boolean :=
-                                 Child_Name /= "";
-               Child_String  : constant Boolean :=
-                                 Child_Name = "String";
             begin
-               New_Line (File);
 
-               Put_Line
-                 (File,
-                  "   " & Feature_Name
-                  & " (Top, Parent, Child : Aquarius.Trees.Program_Tree)");
-               Put_Line (File, "   local");
-               Put_Converter ("Convert_P", Parent_Name);
-               if Has_Child and then not Child_String then
-                  Put_Converter ("Convert_C", Child_Name);
-               end if;
-               Put_Line
-                 (File,
-                  "      P : " & Parent_Name);
-               if Has_Child then
-                  Put_Line
-                    (File,
-                     "      C : " & Child_Name);
+               if Rec.Has_Feature_Binding
+                 or else not Rec.Implicit_Calls.Is_Empty
+               then
+                  Write_Binding (Binding_Name (Index), Rec);
                end if;
 
-               Put_Line
-                 (File,
-                  "   do");
-               Check_Property ("Parent", "P", "Convert_P", Parent_Name);
-
-               if Has_Child then
-                  if Child_String then
-                     Put_Line
-                       (File,
-                        "      C := Child.Text");
-                  else
-                     Check_Property ("Child", "C", "Convert_C", Child_Name);
-                  end if;
-               end if;
-
-               if Has_Child then
-                  Put_Line
-                    (File,
-                     "      P." & Position_Name (Rec.Position) & "_"
-                     & Child_Tree & " (C)");
-               else
-                  Put_Line
-                    (File,
-                     "      P." & Position_Name (Rec.Position) & "_Node");
-               end if;
-
-               Put_Line
-                 (File,
-                  "      Exit (0)");
-               Put_Line (File, "   end");
             end;
          end loop;
 
