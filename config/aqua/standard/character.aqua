@@ -4,18 +4,24 @@ expanded class
 feature
 
    To_Upper_Case : Character
+      local
+         Handling : System.Drivers.Character_Handling
       do
-         Result := Current
+         Result := Handling.To_Upper_Case (Current)
       end
       
    To_Lower_Case : Character
+      local
+         Handling : System.Drivers.Character_Handling
       do
-         Result := Current
+         Result := Handling.To_Lower_Case (Current)
       end
-   
+      
    Is_White_Space : Boolean
+      local
+         Handling : System.Drivers.Character_Handling
       do
-         
+         Result := Handling.Is_White_Space (Current)
       end
    
 feature

@@ -1,0 +1,34 @@
+expanded class 
+   System.Drivers.Character_Handling
+   
+feature
+
+   To_Upper_Case (Ch : Character) : Character
+      do
+         Result := Operate (1, Ch)
+      end
+      
+   To_Lower_Case (Ch : Character) : Character
+      do
+         Result := Operate (2, Ch)
+      end
+      
+   Is_White_Space (Ch : Character) : Boolean
+      do
+         Result := Operate (3, Ch) = ' '
+      end
+      
+
+feature { None }
+
+   Operate (Command : System.Word_32
+            Ch      : Character) : Character
+      local
+         Mem  : System.Memory.Mem
+      do
+         Mem.Put_Word_32 (276, Ch.UTF_32_Code)
+         Mem.Put_Word_32 (272, Command)
+         Result.Create_From_UTF_32 (Mem.Get_Word_32 (276))
+      end
+
+end
