@@ -1,3 +1,6 @@
+note
+   Conforming_Child_Node: Inherit_Option_Entry
+   
 deferred class Options.Option_Entry_Node
 
 feature
