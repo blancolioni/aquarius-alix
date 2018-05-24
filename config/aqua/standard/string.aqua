@@ -60,8 +60,18 @@ feature
       end
       
    To_Lower : String
+      local
+         Index : Integer
       do
-         Result := Current
+         create Result.Create_From_String (Current)
+         from
+            Index := 1
+         until
+            Index > Length
+         loop
+            Result.Replace_Element (Index, Current.Element (Index).To_Lower_Case)
+            Index := Index + 1
+         end
       end
    
    To_Integer : Integer
