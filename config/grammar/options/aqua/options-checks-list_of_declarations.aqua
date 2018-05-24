@@ -1,4 +1,5 @@
-class Options.Checks.List_Of_Declarations
+class 
+   Options.Checks.List_Of_Declarations
 
 feature
 

@@ -1,6 +1,9 @@
-class Options.Checks.Aspect
-   inherit Options.Option_Entry_Node
-           
+class
+   Options.Checks.Aspect
+  
+inherit 
+   Options.Option_Entry_Node
+   
 feature
 
    After_String_Literal (Text : String)
