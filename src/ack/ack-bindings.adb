@@ -16,7 +16,7 @@ with Aquarius.Trees;
 
 package body Ack.Bindings is
 
---     Report_Calls          : constant Boolean := False;
+   Report_Calls          : constant Boolean := False;
 --     Report_Implicit_Calls : constant Boolean := False;
    Report_Class_Load     : constant Boolean := False;
 
@@ -42,6 +42,7 @@ package body Ack.Bindings is
          Parent_Class         : Ack.Classes.Constant_Class_Entity;
          Child_Class          : Ack.Classes.Constant_Class_Entity;
          Position             : Binding_Position;
+         References           : List_Of_Entities.List;
          Implicit_Calls       : Implicit_Call_Lists.List;
          Has_Feature_Binding  : Boolean;
       end record;
@@ -136,6 +137,9 @@ package body Ack.Bindings is
              (Class,
               Ack.Features.Feature_Entity_Record'Class (Feature.all)'Access)
          then
+            Ada.Text_IO.Put_Line
+              ("binding class reference: "
+               & Feature.Get_Type.Class_Context.Qualified_Name);
             References.Append (Feature);
             return;
          end if;
@@ -166,6 +170,7 @@ package body Ack.Bindings is
                           Child_Class          => <>,
                           Position             => Position,
                           Has_Feature_Binding  => True,
+                          References           => References,
                           Implicit_Calls       => <>);
             begin
 
@@ -256,6 +261,7 @@ package body Ack.Bindings is
                         Child_Class         => Child,
                         Position            => Before,
                         Implicit_Calls      => Calls,
+                        References          => <>,
                         Has_Feature_Binding => False));
                end if;
             end if;
@@ -525,6 +531,9 @@ package body Ack.Bindings is
          procedure Check_Property
            (Tree_Name, Local_Name, Converter_Name, Class_Name : String);
 
+         procedure Check_Class_Binding
+           (Bound_Class_Feature : Entity_Type);
+
          function Position_Name (Position : Binding_Position) return String
          is (case Position is
                 when Before => "Before",
@@ -545,6 +554,33 @@ package body Ack.Bindings is
               & (if Rec.Child_Tree = "" then ""
                  else "_" & (-Rec.Child_Tree));
          end Binding_Name;
+
+         -------------------------
+         -- Check_Class_Binding --
+         -------------------------
+
+         procedure Check_Class_Binding
+           (Bound_Class_Feature : Entity_Type)
+         is
+            Bound_Class_Name : constant String :=
+                                 Bound_Class_Feature.Get_Type
+                                   .Class_Context.Qualified_Name;
+         begin
+            Put_Line
+              (File,
+               "      if Parent.Has_Property ("""
+               & Bound_Class_Name
+               & """) then");
+            Put_Line
+              (File,
+               "         P.Set_Binding_" & Bound_Class_Feature.Declared_Name
+               & " (Convert_Ref_" & Bound_Class_Feature.Declared_Name
+               & ".To_Object (Parent.Get_Property ("""
+               & Bound_Class_Name & """)))");
+            Put_Line
+              (File,
+               "       end");
+         end Check_Class_Binding;
 
          --------------------
          -- Check_Property --
@@ -606,16 +642,80 @@ package body Ack.Bindings is
            (Feature_Name : String;
             Binding      : Binding_Record)
          is
-            Parent_Name   : constant String := -Binding.Parent_Full_Name;
-            Child_Name    : constant String := -Binding.Child_Full_Name;
-            Position      : constant String :=
-                              Position_Name (Binding.Position);
-            Child_Tree    : constant String := -Binding.Child_Tree;
-            Has_Child     : constant Boolean :=
-                              Child_Name /= "";
-            Child_String  : constant Boolean :=
-                              Child_Name = "String";
+            Parent_Name       : constant String := -Binding.Parent_Full_Name;
+            Child_Name        : constant String := -Binding.Child_Full_Name;
+            Parent_Class_Name : constant String :=
+                                  (if not Binding.References.Is_Empty
+                                   then Parent_Name & "_Aqua_Binding"
+                                   else Parent_Name);
+            Position          : constant String :=
+                                  Position_Name (Binding.Position);
+            Child_Tree        : constant String := -Binding.Child_Tree;
+            Has_Child         : constant Boolean :=
+                                  Child_Name /= "";
+            Child_String      : constant Boolean :=
+                                  Child_Name = "String";
+
+            function To_Source_File_Name
+              (Class_Name : String)
+               return String;
+
+            -------------------------
+            -- To_Source_File_Name --
+            -------------------------
+
+            function To_Source_File_Name
+              (Class_Name : String)
+               return String
+            is
+               Result : String := Class_Name;
+            begin
+               for Ch of Result loop
+                  if Ch = '.' then
+                     Ch := '-';
+                  else
+                     Ch := Ada.Characters.Handling.To_Lower (Ch);
+                  end if;
+               end loop;
+               return Result & ".aqua";
+            end To_Source_File_Name;
+
          begin
+
+            if not Binding.References.Is_Empty then
+               declare
+                  use Ada.Directories;
+                  Parent_Class_File : File_Type;
+               begin
+                  Create (Parent_Class_File, Out_File,
+                          Compose
+                            (Containing_Directory (Binding_File_Path),
+                             To_Source_File_Name (Parent_Class_Name)));
+                  Put_Line (Parent_Class_File,
+                            "class " & Parent_Class_Name
+                            & " inherit " & Parent_Name);
+                  Put_Line (Parent_Class_File,
+                            "feature");
+                  for Ref of Binding.References loop
+                     Put_Line (Parent_Class_File,
+                               "   Set_Binding_" & Ref.Declared_Name
+                               & " (Item : "
+                               & Ref.Get_Type.Class_Context.Qualified_Name
+                               & ")");
+                     Put_Line (Parent_Class_File,
+                               "      do");
+                     Put_Line (Parent_Class_File,
+                               "         " & Ref.Declared_Name
+                               & " := Item");
+                     Put_Line (Parent_Class_File,
+                               "      end");
+                  end loop;
+
+                  Put_Line (Parent_Class_File, "end");
+                  Close (Parent_Class_File);
+               end;
+            end if;
+
             New_Line (File);
 
             Put_Line
@@ -623,13 +723,19 @@ package body Ack.Bindings is
                "   " & Feature_Name
                & " (Top, Parent, Child : Aquarius.Trees.Program_Tree)");
             Put_Line (File, "   local");
-            Put_Converter ("Convert_P", Parent_Name);
+            Put_Converter ("Convert_P", Parent_Class_Name);
             if Has_Child and then not Child_String then
                Put_Converter ("Convert_C", Child_Name);
             end if;
+            for Ref of Binding.References loop
+               Put_Converter ("Convert_Ref_" & Ref.Declared_Name,
+                              Class_Name =>
+                                Ref.Get_Type.Class_Context.Qualified_Name);
+            end loop;
+
             Put_Line
               (File,
-               "      P : " & Parent_Name);
+               "      P : " & Parent_Class_Name);
             if Has_Child then
                Put_Line
                  (File,
@@ -639,6 +745,13 @@ package body Ack.Bindings is
             Put_Line
               (File,
                "   do");
+
+            if Report_Calls then
+               Put_Line
+                 (File,
+                  "      if attached IO then else create IO end");
+            end if;
+
             Check_Property ("Parent", "P", "Convert_P", Parent_Name);
 
             if Has_Child then
@@ -651,6 +764,10 @@ package body Ack.Bindings is
                end if;
             end if;
 
+            for Ref of Binding.References loop
+               Check_Class_Binding (Ref);
+            end loop;
+
             if Has_Child then
 
                for Call of Binding.Implicit_Calls loop
@@ -660,6 +777,15 @@ package body Ack.Bindings is
                          & " (P)");
                end loop;
 
+               if Report_Calls then
+                  Put_Line
+                    (File,
+                     "      IO.Put_Line ("""
+                     & Position & " "
+                     & Parent_Name & "/" & Child_Name
+                     & """)");
+               end if;
+
                if Binding.Has_Feature_Binding then
                   Put_Line
                     (File,
@@ -668,6 +794,15 @@ package body Ack.Bindings is
                end if;
 
             elsif Binding.Has_Feature_Binding then
+               if Report_Calls then
+                  Put_Line
+                    (File,
+                     "      IO.Put_Line ("""
+                     & Position & " "
+                     & Parent_Name
+                     & """)");
+               end if;
+
                Put_Line
                  (File,
                   "      P." & Position & "_Node");
@@ -718,6 +853,10 @@ package body Ack.Bindings is
          Put_Line (File, "feature");
          New_Line (File);
          Put_Line (File, "   Exit (Code : Integer) external ""intrinsic""");
+
+         if Report_Calls then
+            Put_Line (File, "   IO : Aqua.Text_IO");
+         end if;
 
          for Index in 1 .. Binding_Vector.Last_Index loop
             declare
