@@ -734,6 +734,7 @@ package body Ack.Generate is
          From_Type_Entity, To_Type_Entity : not null access constant
            Root_Entity_Type'Class)
       is
+         pragma Unreferenced (Argument);
          use type Ack.Classes.Class_Entity;
          From : constant Ack.Types.Constant_Type_Entity :=
                   Ack.Types.Constant_Type_Entity (From_Type_Entity);
@@ -749,11 +750,11 @@ package body Ack.Generate is
                           From.Class.Ancestor_Table_Offset (To.Class);
             begin
                if Offset > 0 then
-                  Ada.Text_IO.Put_Line
-                    (Get_Program (Argument).Show_Location
-                     & ": converting from "
-                     & From.Class.Qualified_Name
-                     & " to " & To.Class.Qualified_Name);
+--                    Ada.Text_IO.Put_Line
+--                      (Get_Program (Argument).Show_Location
+--                       & ": converting from "
+--                       & From.Class.Qualified_Name
+--                       & " to " & To.Class.Qualified_Name);
                   Unit.Duplicate;
                   Unit.Dereference;
                   Push_Offset (Unit, Offset);
