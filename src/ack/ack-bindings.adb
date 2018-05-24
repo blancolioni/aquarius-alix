@@ -137,9 +137,6 @@ package body Ack.Bindings is
              (Class,
               Ack.Features.Feature_Entity_Record'Class (Feature.all)'Access)
          then
-            Ada.Text_IO.Put_Line
-              ("binding class reference: "
-               & Feature.Get_Type.Class_Context.Qualified_Name);
             References.Append (Feature);
             return;
          end if;
