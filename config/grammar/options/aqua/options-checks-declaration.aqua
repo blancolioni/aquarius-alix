@@ -1,10 +1,14 @@
-class Options.Checks.Declaration
-   inherit Options.Option_Entry_Node
-
-feature
+class 
+   Options.Checks.Declaration
    
-   Before_Option_Declaration (Child : Options.Checks.Option_Declaration) 
+inherit 
+   Options.Option_Entry_Node
+   
+feature
+
+   Before_Node
       do
-         Child.Inherit_Option_Entry (Current)
+         create Option_Entry
       end
+
 end
