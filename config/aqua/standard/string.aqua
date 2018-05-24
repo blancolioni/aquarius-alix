@@ -124,13 +124,14 @@ feature
       local
          Index : Integer
       do
+         create Result.Create_From_String (Current)
          from
             Index := 1
          until
             Index > Length
          loop
-            if Element (Index) = Search_Character then
-               Replace_Element (Index, Replacement_Character)
+            if Result.Element (Index) = Search_Character then
+               Result.Replace_Element (Index, Replacement_Character)
             end
             Index := Index + 1
          end
