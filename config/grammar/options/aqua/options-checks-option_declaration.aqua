@@ -1,5 +1,9 @@
-class Options.Checks.Option_Declaration
-   inherit Option_Entry_Node
+class 
+   Options.Checks.Option_Declaration
+
+inherit 
+   Option_Entry_Node
+   
 feature
 
    After_Identifier (Id : String)
@@ -21,5 +25,5 @@ feature
       do
          Child.Inherit_Option_Entry (Current)
       end
-   
+      
 end

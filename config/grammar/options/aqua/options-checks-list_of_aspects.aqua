@@ -1,4 +1,7 @@
-class Options.Checks.List_Of_Aspects
-   inherit Options.Option_Entry_Node
-
+class 
+   Options.Checks.List_Of_Aspects
+   
+inherit 
+   Options.Option_Entry_Node
+      
 end
