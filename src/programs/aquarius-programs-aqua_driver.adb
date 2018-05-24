@@ -108,7 +108,8 @@ package body Aquarius.Programs.Aqua_Driver is
             begin
                if Trace_Properties then
                   Ada.Text_IO.Put_Line
-                    (Aqua.IO.Hex_Image (Driver.Get_Word (0))
+                    (Driver.Current.Show_Location
+                     & ": " & Aqua.IO.Hex_Image (Driver.Get_Word (0))
                      & ": get_property "
                      & Name & " = " & Aqua.IO.Hex_Image (Value));
                end if;
@@ -125,7 +126,8 @@ package body Aquarius.Programs.Aqua_Driver is
             begin
                if Trace_Properties then
                   Ada.Text_IO.Put_Line
-                    (Aqua.IO.Hex_Image (Driver.Get_Word (0))
+                    (Driver.Current.Show_Location
+                     & ": " & Aqua.IO.Hex_Image (Driver.Get_Word (0))
                      & ": has_property "
                      & Name & " = " & Boolean'Image (Value));
                end if;
@@ -142,7 +144,8 @@ package body Aquarius.Programs.Aqua_Driver is
             begin
                if Trace_Properties then
                   Ada.Text_IO.Put_Line
-                    (Aqua.IO.Hex_Image (Driver.Get_Word (0))
+                    (Driver.Current.Show_Location
+                     & ": " & Aqua.IO.Hex_Image (Driver.Get_Word (0))
                      & ": set_property "
                      & Name & " := " & Aqua.IO.Hex_Image (Value));
                end if;
