@@ -1,4 +1,8 @@
-class Options.Checks.Qualified_Identifier
+class 
+   Options.Checks.Qualified_Identifier
+   
+inherit
+   Aqua.Text_IO
    
 feature
 
@@ -16,6 +20,7 @@ feature
       
    Base_File_Name : String
       do
-         Result := Identifiers.Interpolate ("-").To_Lower
+         Result := Identifiers.Interpolate ("-")
+         Result := Result.To_Lower
       end
 end

@@ -74,5 +74,5 @@ feature  --  get/put
          Addr := Base.Offset_Words (Offset)
          Result := Mem.Get_Word_32 (Addr)
       end
-   
+
 end

@@ -21,14 +21,31 @@ feature
 
 feature { None }
 
+   Base : System.Address
+      local
+         Meta : System.Drivers.Meta_Driver
+      once
+         Result := Meta.Install_Driver ("aqua-character-handler")
+      end
+      
+   Cmd : System.Address
+      once
+         Result := Base
+      end
+      
+   Code : System.Address
+      once
+         Result := Base.Offset_Words (1)
+      end
+      
    Operate (Command : System.Word_32
             Ch      : Character) : Character
       local
          Mem  : System.Memory.Mem
       do
-         Mem.Put_Word_32 (276, Ch.UTF_32_Code)
-         Mem.Put_Word_32 (272, Command)
-         Result.Create_From_UTF_32 (Mem.Get_Word_32 (276))
+         Mem.Put_Word_32 (Code, Ch.UTF_32_Code)
+         Mem.Put_Word_32 (Cmd, Command)
+         Result.Create_From_UTF_32 (Mem.Get_Word_32 (Code))
       end
 
 end

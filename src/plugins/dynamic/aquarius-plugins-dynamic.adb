@@ -1,5 +1,4 @@
 with Aquarius.Grammars.Manager;
-with Aquarius.Programs.Aqua_Driver;
 
 with Aqua.CPU;
 with Aqua.Drivers;
@@ -70,15 +69,6 @@ package body Aquarius.Plugins.Dynamic is
       Result.Name    := Ada.Strings.Unbounded.To_Unbounded_String (Name);
       Result.Version := Ada.Strings.Unbounded.To_Unbounded_String (Version);
       Result.Image   := Aqua.Images.New_Image;
-      Result.Image.Install_Driver
-        (Start  => 16#0100#,
-         Driver => Aqua.Drivers.Text_Writer);
-      Result.Image.Install_Driver
-        (Start  => 16#0110#,
-         Driver => Aqua.Drivers.Character_Handling);
-      Result.Image.Install_Driver
-        (Start  => 16#0400#,
-         Driver => Aquarius.Programs.Aqua_Driver.Aquarius_Tree_Driver);
       Result.Executor :=
         new Aqua.CPU.Aqua_CPU_Type (Result.Image);
       Aquarius_Plugin_Type'Class (Result.all).Load (Grammar);
