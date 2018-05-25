@@ -1,5 +1,8 @@
 with Ada.Strings.Fixed;
 
+with Tagatha;
+with Tagatha.Operands;
+
 with Ack.Classes;
 with Ack.Generate;
 with Ack.Types;
@@ -437,11 +440,19 @@ package body Ack.Features is
             declare
                Continue_Once : constant Positive := Unit.Next_Label;
             begin
-               Unit.Push_Label (Once_Flag_Label);
+               Unit.Push_Operand
+                 (Tagatha.Operands.External_Operand
+                    (Once_Flag_Label,
+                     Immediate => False),
+                  Size => Tagatha.Default_Size);
                Unit.Operate (Tagatha.Op_Test, Tagatha.Default_Size);
                Unit.Jump (Continue_Once, Tagatha.C_Equal);
                if Feature.Has_Result then
-                  Unit.Push_Label (Once_Value_Label);
+                  Unit.Push_Operand
+                    (Tagatha.Operands.External_Operand
+                       (Once_Value_Label,
+                        Immediate => False),
+                     Size => Tagatha.Default_Size);
                   Unit.Pop_Result;
                end if;
                Unit.Jump (Exit_Label);
@@ -492,9 +503,17 @@ package body Ack.Features is
          if Feature.Has_Result then
             if Feature.Once then
                Unit.Push (1);
-               Unit.Pop_Label (Once_Flag_Label);
+               Unit.Pop_Operand
+                 (Tagatha.Operands.External_Operand
+                    (Once_Flag_Label,
+                     Immediate => False),
+                  Size => Tagatha.Default_Size);
                Unit.Push_Local (1);
-               Unit.Pop_Label (Once_Value_Label);
+               Unit.Pop_Operand
+                 (Tagatha.Operands.External_Operand
+                    (Once_Value_Label,
+                     Immediate => False),
+                  Size => Tagatha.Default_Size);
             end if;
 
             Unit.Push_Local (1);
@@ -519,10 +538,12 @@ package body Ack.Features is
          Unit.End_Routine;
 
          if Feature.Once then
+            Unit.Segment (Tagatha.Read_Write);
             Unit.Label (Once_Flag_Label);
             Unit.Data (0);
             Unit.Label (Once_Value_Label);
             Unit.Data (0);
+            Unit.Segment (Tagatha.Executable);
          end if;
 
       end if;

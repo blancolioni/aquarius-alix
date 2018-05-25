@@ -50,6 +50,13 @@ package body Ack.Classes is
       if Class.Creators.Contains (Feature.Standard_Name) then
          Feature.Set_Creator;
       end if;
+   exception
+      when others =>
+         Ada.Text_IO.Put_Line
+           ("error while adding feature "
+            & Feature.Declared_Name
+            & " to class " & Class.Qualified_Name);
+         raise;
    end Add_Feature;
 
    ------------------------

@@ -1,9 +1,12 @@
+with Aqua.Drivers;
+
 with Aquarius.Command_Line;
 with Aquarius.Configuration;
 with Aquarius.File_System_Stores;
 with Aquarius.Grammars;
 with Aquarius.Paths;
 with Aquarius.Programs;
+with Aquarius.Programs.Aqua_Driver;
 
 with Komnenos.Connectors;
 with Komnenos.Entities.Tables;
@@ -38,6 +41,11 @@ package body Aquarius.Library is
    is
       Plugin_Path : constant String := Aquarius.Command_Line.Plugin_Path;
    begin
+
+      Aqua.Drivers.Register
+        ("aquarius-program-tree",
+         Aquarius.Programs.Aqua_Driver.Aquarius_Tree_Driver'Access);
+
       Aquarius.Configuration.Load_Configuration;
       if Plugin_Path /= "" then
          Aquarius.Configuration.Add_Grammar_Path (Plugin_Path);
