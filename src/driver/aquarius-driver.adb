@@ -16,7 +16,6 @@ with Aquarius.Messages.Console;
 with Aquarius.Names;
 with Aquarius.Plugins.Manager;
 with Aquarius.Programs.Arrangements;
-with Aquarius.Programs.Aqua_Driver;
 with Aquarius.Projects.Files;
 with Aquarius.Rendering.Manager;
 with Aquarius.Target.Manager;
@@ -216,13 +215,6 @@ begin
          Image : constant Aqua.Images.Image_Type := Aqua.Images.New_Image;
          CPU   : Aqua.CPU.Aqua_CPU_Type (Image);
       begin
-         Image.Install_Driver
-           (Start  => 16#0100#,
-            Driver => Aqua.Drivers.Text_Writer);
-         Image.Install_Driver
-           (Start  => 16#0400#,
-            Driver => Aquarius.Programs.Aqua_Driver.Aquarius_Tree_Driver);
-
          Ack.Compile.Load_Root_Class
            (Source_Path => Aquarius.Command_Line.Ack_Execute_Root,
             To_Image    => Image);

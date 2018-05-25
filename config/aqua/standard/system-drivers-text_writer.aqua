@@ -7,14 +7,14 @@ feature
       local
          Mem : System.Memory.Mem
       do
-         Mem.Put_Word_32 (256, Ch.UTF_32_Code)
+         Mem.Put_Word_32 (Character_Addr, Ch.UTF_32_Code)
       end
 
     Col : Integer
       local
          Mem : System.Memory.Mem
       do
-         Result.Convert_From (Mem.Get_Word_32 (260))
+         Result.Convert_From (Mem.Get_Word_32 (Col_Addr))
       end
       
     Set_Col (Value : Integer)
@@ -23,6 +23,26 @@ feature
           Col_32 : System.Word_32
        do
           Col_32.Convert_From (Value)
-          Mem.Put_Word_32 (260, Col_32)
+          Mem.Put_Word_32 (Col_Addr, Col_32)
        end
+       
+feature { None }
+
+   Base : System.Address
+      local
+         Meta : System.Drivers.Meta_Driver
+      once
+         Result := Meta.Install_Driver ("aqua-text-writer")
+      end
+      
+   Character_Addr : System.Address
+      once
+         Result := Base
+      end
+      
+   Col_Addr : System.Address
+      once
+         Result := Base.Offset_Words (1)
+      end
+
 end
