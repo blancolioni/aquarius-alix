@@ -207,8 +207,11 @@ feature { None }
          Block.Copy (Target, 1)
       end
 
-feature { None }
+feature { System.Drivers.Meta_Driver }
 
    Block : System.Memory.Block_32
+   
+feature { None }
+
    Can_Change : Boolean
 end

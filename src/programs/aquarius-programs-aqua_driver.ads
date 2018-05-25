@@ -15,6 +15,11 @@ private
          Current : Program_Tree;
       end record;
 
+   overriding function Identity
+     (Driver : Aquarius_Tree_Driver_Record)
+      return String
+   is ("aquarius-program-tree-driver");
+
    overriding procedure Update
      (Driver : in out Aquarius_Tree_Driver_Record);
 
