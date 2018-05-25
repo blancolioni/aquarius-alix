@@ -704,26 +704,30 @@ package body Ack.Features is
          Unit.Push (0);
          return;
       elsif Feature.Explicit_Value then
-         case N_Constant_Value (Kind (Feature.Explicit_Value_Node)) is
-            when N_String_Constant =>
-               Unit.Push_Text
-                 (To_String (Get_Name (Feature.Explicit_Value_Node)));
-            when N_Character_Constant =>
-               declare
-                  Text : constant String :=
-                           To_String (Get_Name (Feature.Explicit_Value_Node));
-               begin
+         declare
+            Value : constant Node_Id :=
+                      Constant_Value (Feature.Explicit_Value_Node);
+            K     : constant Node_Kind := Kind (Value);
+            Text  : constant String :=
+                      (if K = N_Boolean_Constant
+                       then ""
+                       else To_String (Get_Name (Value)));
+         begin
+            case N_Constant_Value (K) is
+               when N_String_Constant =>
+                  Unit.Push_Text (Text);
+               when N_Character_Constant =>
                   Unit.Push
                     (Character'Pos (Text (Text'First)));
-               end;
-            when N_Integer_Constant =>
-               Unit.Push
-                 (Tagatha.Tagatha_Integer'Value
-                    (To_String (Get_Name (Feature.Explicit_Value_Node))));
-            when N_Boolean_Constant =>
-               Unit.Push
-                 (Boolean'Pos (Boolean_Value (Feature.Explicit_Value_Node)));
-         end case;
+               when N_Integer_Constant =>
+                  Unit.Push
+                    (Tagatha.Tagatha_Integer'Value (Text));
+               when N_Boolean_Constant =>
+                  Unit.Push
+                    (Boolean'Pos
+                       (Boolean_Value (Feature.Explicit_Value_Node)));
+            end case;
+         end;
          return;
       end if;
 

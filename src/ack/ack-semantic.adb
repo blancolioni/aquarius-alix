@@ -1171,8 +1171,9 @@ package body Ack.Semantic is
                               then Rescue (Value_Node)
                               else No_Node);
       Locals_Node        : constant Node_Id :=
-                             (if Value_Node = No_Node then No_Node
-                              else Local_Declarations (Value_Node));
+                             (if Routine_Feature
+                              then Local_Declarations (Value_Node)
+                              else No_Node);
       Effective_Node     : constant Node_Id :=
                              (if Effective then Effective_Routine (Value_Node)
                            else No_Node);
