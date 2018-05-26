@@ -26,6 +26,14 @@ feature
           Mem.Put_Word_32 (Col_Addr, Col_32)
        end
        
+    Set_Output (Name : String)
+       local
+          Mem : System.Memory.Mem
+       do
+          Name.Write_To_Memory (Name_Addr)
+          Mem.Put_Word_32 (Output_Addr, 1)
+       end
+       
 feature { None }
 
    Base : System.Address
@@ -44,5 +52,16 @@ feature { None }
       once
          Result := Base.Offset_Words (1)
       end
+
+   Output_Addr : System.Address
+      once
+         Result := Base.Offset_Words (2)
+      end
+      
+   Name_Addr : System.Address
+      once
+         Result := Base.Offset_Words (3)
+      end
+      
 
 end
