@@ -539,9 +539,9 @@ package body Ack.Features is
 
          if Feature.Once then
             Unit.Segment (Tagatha.Read_Write);
-            Unit.Label (Once_Flag_Label);
+            Unit.Label (Once_Flag_Label, Export => True);
             Unit.Data (0);
-            Unit.Label (Once_Value_Label);
+            Unit.Label (Once_Value_Label, Export => True);
             Unit.Data (0);
             Unit.Segment (Tagatha.Executable);
          end if;
