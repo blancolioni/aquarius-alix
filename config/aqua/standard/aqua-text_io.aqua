@@ -39,7 +39,13 @@ feature
          Put_Char (Ch)
       end
       
-   Set_Output (Path : String) do end
+   Set_Output (Path : String)
+      local
+         Writer : System.Drivers.Text_Writer
+      do
+         Writer.Set_Output (Path)
+      end
+   
    Set_Col (Col : Integer) 
       local
          Writer : System.Drivers.Text_Writer
