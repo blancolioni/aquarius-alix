@@ -36,7 +36,7 @@ feature
          Mem : System.Memory.Mem
       do
          Send_String (6, Name)
-         Result := Mem.Get_Address (1032)
+         Result := Mem.Get_Address (Argument_Address)
       end
          
    Has_Property (Name : String) : Boolean
@@ -44,7 +44,7 @@ feature
          Mem : System.Memory.Mem
       do
          Send_String (7, Name)
-         Result := Mem.Get_Address (1032) /= 0
+         Result := Mem.Get_Address (Argument_Address) /= 0
       end
          
          
@@ -53,7 +53,7 @@ feature
       local
          Mem : System.Memory.Mem
       do
-         Mem.Put_Address (1032, Value)
+         Mem.Put_Address (Argument_Address, Value)
          Send_String (8, Name)
       end
          
@@ -83,7 +83,7 @@ feature
    Send_String (Command : System.Word_32
                 Text    : String)
       do
-         Text.Write_To_Memory (1036)
+         Text.Write_To_Memory (Text_Address)
          Set_Tree_Driver (Command)
       end
       
@@ -91,7 +91,7 @@ feature
       local
          S : String
       do
-         create S.Create_From_String_Literal (1036)
+         create S.Create_From_String_Literal (Text_Address)
          create Result.Create_From_String (S)
       end
       
@@ -99,10 +99,38 @@ feature
       local
          Mem : System.Memory.Mem
       do
-         Mem.Put_Word_32 (1024, External_Tree_Index)
-         Mem.Put_Word_32 (1028, Command)
+         Mem.Put_Word_32 (Current_Tree_Address, External_Tree_Index)
+         Mem.Put_Word_32 (Command_Address, Command)
       end
-         
+
+feature { None }
+
+   Base : System.Address
+      local
+         Meta : System.Drivers.Meta_Driver
+      once
+         Result := Meta.Install_Driver ("aquarius-program-tree")
+      end
+      
+   Current_Tree_Address : System.Address
+      once
+         Result := Base
+      end
+      
+   Command_Address : System.Address
+      once
+         Result := Base.Offset_Words (1)
+      end
+
+   Argument_Address : System.Address
+      once
+         Result := Base.Offset_Words (2)
+      end
+
+   Text_Address : System.Address
+      once
+         Result := Base.Offset_Words (3)
+      end
 
    External_Tree_Index : System.Word_32
    
