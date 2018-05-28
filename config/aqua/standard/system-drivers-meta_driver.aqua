@@ -7,10 +7,10 @@ feature
       local
          Mem : System.Memory.Mem
       do
-         Mem.Put_Word_32 (4026531844, Identifier.Block.Count)
-         Mem.Put_Address (4026531848, Identifier.Block.Base)
-         Mem.Put_Word_32 (4026531840, 1)
-         Result := Mem.Get_Address (4026531840)
+         Mem.Put_Word_32 (16#F000_0004#, Identifier.Block.Count)
+         Mem.Put_Address (16#F000_0008#, Identifier.Block.Base)
+         Mem.Put_Word_32 (16#F000_0000#, 1)
+         Result := Mem.Get_Address (16#F000_0000#)
       end
       
 end
