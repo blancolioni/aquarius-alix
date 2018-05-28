@@ -1,3 +1,5 @@
+with Ack;
+
 package Aquarius.Command_Line is
 
    function Version return Boolean;
@@ -23,6 +25,8 @@ package Aquarius.Command_Line is
 
    function Line_Length  return Positive;
    function Enable_Plugins return Boolean;
+
+   function Assertion_Monitoring return Ack.Assertion_Monitoring_Level;
 
    function Ack_Write_Listing return Boolean;
    function Ack_Write_Tables return Boolean;

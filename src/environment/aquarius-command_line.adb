@@ -86,6 +86,21 @@ package body Aquarius.Command_Line is
       return Get_Flag ("", "aqua-trace-link");
    end Aqua_Trace_Link;
 
+   --------------------------
+   -- Assertion_Monitoring --
+   --------------------------
+
+   function Assertion_Monitoring return Ack.Assertion_Monitoring_Level is
+      Value : constant String :=
+                Get_Argument ("", "assertion-monitoring", "all");
+   begin
+      if Value = "none" then
+         return Ack.Monitor_None;
+      else
+         return Ack.Monitor_All;
+      end if;
+   end Assertion_Monitoring;
+
    -----------------
    -- Clear_Cache --
    -----------------

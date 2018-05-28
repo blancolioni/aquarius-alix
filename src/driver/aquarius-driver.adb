@@ -201,6 +201,9 @@ begin
       Ack.Set_Stack_Check (True);
    end if;
 
+   Ack.Set_Default_Monitoring_Level
+     (Aquarius.Command_Line.Assertion_Monitoring);
+
    Ack.Set_Trace
      (Class_Analysis => Command_Line.Ack_Trace_Class_Analysis);
 
