@@ -2,7 +2,7 @@ top_level ::= class_declaration
 case_sensitive = false
 
 identifier         ::= !\l[\w]*!
-integer            ::= ![0-9]+!
+integer            ::= standard ada_numeric_literal
 real               ::= ![0-9]+\.[0-9]+([eE][0-9]+)?!
 character_constant ::= !\'[.]\'!
 string_constant     ::= standard ada_string_literal
