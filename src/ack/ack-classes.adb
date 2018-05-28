@@ -735,10 +735,17 @@ package body Ack.Classes is
          Unit.Operate (Tagatha.Op_Sub);
          Unit.Duplicate;
          Unit.Dereference;
-         Push_Offset
-           (Unit,
-            Class.Ancestor_Table_Offset (To_Class));
-         Unit.Operate (Tagatha.Op_Add);
+         declare
+            Offset : constant Word_Offset :=
+                       Class.Ancestor_Table_Offset (To_Class);
+         begin
+            if Offset > 0 then
+               Push_Offset
+                 (Unit, Offset);
+               Unit.Operate (Tagatha.Op_Add);
+            end if;
+         end;
+
          Unit.Dereference;
          Unit.Operate (Tagatha.Op_Add);
          Unit.Native_Operation ("mov agg, -(sp)");
