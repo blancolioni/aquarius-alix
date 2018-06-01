@@ -1,7 +1,7 @@
 with Ada.Strings.Fixed;
 
 with Tagatha;
-with Tagatha.Operands;
+with Tagatha.Transfers;
 
 with Ack.Classes;
 with Ack.Generate;
@@ -441,7 +441,7 @@ package body Ack.Features is
                Continue_Once : constant Positive := Unit.Next_Label;
             begin
                Unit.Push_Operand
-                 (Tagatha.Operands.External_Operand
+                 (Tagatha.Transfers.External_Operand
                     (Once_Flag_Label,
                      Immediate => False),
                   Size => Tagatha.Default_Size);
@@ -449,7 +449,7 @@ package body Ack.Features is
                Unit.Jump (Continue_Once, Tagatha.C_Equal);
                if Feature.Has_Result then
                   Unit.Push_Operand
-                    (Tagatha.Operands.External_Operand
+                    (Tagatha.Transfers.External_Operand
                        (Once_Value_Label,
                         Immediate => False),
                      Size => Tagatha.Default_Size);
@@ -504,13 +504,13 @@ package body Ack.Features is
             if Feature.Once then
                Unit.Push (1);
                Unit.Pop_Operand
-                 (Tagatha.Operands.External_Operand
+                 (Tagatha.Transfers.External_Operand
                     (Once_Flag_Label,
                      Immediate => False),
                   Size => Tagatha.Default_Size);
                Unit.Push_Local (1);
                Unit.Pop_Operand
-                 (Tagatha.Operands.External_Operand
+                 (Tagatha.Transfers.External_Operand
                     (Once_Value_Label,
                      Immediate => False),
                   Size => Tagatha.Default_Size);
@@ -798,7 +798,7 @@ package body Ack.Features is
          end if;
       else
          if Current.Expanded then
-            Unit.Call (Feature.Link_Name);
+            Unit.Call (Feature.Link_Name, Feature.Argument_Count + 1);
          else
             --  push feature address from virtual table
             Unit.Duplicate;
@@ -825,7 +825,7 @@ package body Ack.Features is
             Push_Offset (Unit, Feature.Virtual_Table_Offset);
             Unit.Operate (Tagatha.Op_Add);
             Unit.Dereference;
-            Unit.Indirect_Call;
+            Unit.Indirect_Call (Feature.Argument_Count + 1);
          end if;
 
          if Current.Expanded and then not Feature.Has_Result then

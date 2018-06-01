@@ -101,7 +101,7 @@ package body Ack.Generate is
             Frame_Words    => 0,
             Result_Words   => 0,
             Global         => True);
-         Unit.Call (Class.Link_Name & "$create");
+         Unit.Call (Class.Link_Name & "$create", 0);
 
          Unit.Push_Return;
          Unit.Duplicate;
@@ -113,7 +113,7 @@ package body Ack.Generate is
 
          Unit.Operate (Tagatha.Op_Add);
          Unit.Dereference;
-         Unit.Indirect_Call;
+         Unit.Indirect_Call (1);
          Unit.Drop;
          Unit.Push (0);
          Unit.Native_Operation ("trap 15");
@@ -235,7 +235,7 @@ package body Ack.Generate is
       end if;
 
       Unit.Write
-        (Target_Name    => "pdp32",
+        (Target_Name    => "aqua32",
          Directory_Path => Aquarius.Config_Paths.Config_File ("scratch"));
 
    end Generate_Class_Declaration;
@@ -372,7 +372,7 @@ package body Ack.Generate is
    begin
 
       Unit.Call
-        (Creation_Type.Link_Name & "$create");
+        (Creation_Type.Link_Name & "$create", 0);
       Unit.Push_Return;
 
       if Explicit_Call_Node in Real_Node_Id then
@@ -470,12 +470,12 @@ package body Ack.Generate is
                         end loop;
 
                         Unit.Segment (Tagatha.Executable);
-                        Unit.Call ("string$create");
+                        Unit.Call ("string$create", 0);
                         Unit.Push_Return;
                         Unit.Duplicate;
                         Unit.Push_Label (Label);
                         Unit.Swap;
-                        Unit.Call ("string__create_from_string_literal");
+                        Unit.Call ("string__create_from_string_literal", 2);
                         Unit.Drop;
                         Unit.Drop;
                      end;
@@ -800,7 +800,7 @@ package body Ack.Generate is
                Unit.Jump (Label, Tagatha.C_Not_Equal);
                Unit.Drop;
                Unit.Call
-                 (E_Type.Link_Name & "$create");
+                 (E_Type.Link_Name & "$create", 0);
                Unit.Push_Return;
                Unit.Duplicate;
                Entity.Pop_Entity
@@ -973,13 +973,13 @@ package body Ack.Generate is
       end loop;
 
       Unit.Call
-        (Tuple_Type.Link_Name & "$create");
+        (Tuple_Type.Link_Name & "$create", 0);
       Unit.Push_Return;
       Unit.Duplicate;
       Unit.Pop_Local
         (Tagatha.Local_Offset (Context.Shelf ("tuple-expression")));
 
-      Unit.Call (Make_Name);
+      Unit.Call (Make_Name, Actual_Nodes'Length + 1);
 
       for I in 1 .. Actual_Nodes'Length + 1 loop
          Unit.Drop;
