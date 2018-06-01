@@ -1,6 +1,6 @@
 with Ada.Text_IO;
 
-with Tagatha.Operands;
+with Tagatha.Transfers;
 
 with Ack.Environment;
 with Ack.Types;
@@ -136,7 +136,7 @@ package body Ack.Classes is
    is
    begin
       Unit.Call
-        (Class_Entity_Record'Class (Class).Link_Name & "$create");
+        (Class_Entity_Record'Class (Class).Link_Name & "$create", 0);
       Unit.Push_Result;
    end Allocate;
 
@@ -666,14 +666,14 @@ package body Ack.Classes is
          Result_Words   => 0,
          Global         => True);
       Unit.Push (Tagatha.Tagatha_Integer (Layout.Length) * 4);
-      Unit.Call ("__allocate");
+      Unit.Call ("__allocate", 1);
       Unit.Duplicate;
       Unit.Start_Copy;
 
       for Item of Layout loop
          if Item.Reference /= No_Name then
             Unit.Push_Operand
-              (Tagatha.Operands.External_Operand
+              (Tagatha.Transfers.External_Operand
                  (To_Standard_String (Item.Reference),
                   Immediate => True),
                Size => Tagatha.Default_Size);
@@ -727,7 +727,10 @@ package body Ack.Classes is
       begin
          Unit.Segment (Tagatha.Executable);
          Unit.Begin_Code (Thunk_Name, False);
-         Unit.Native_Operation ("mov (sp)+, agg");
+
+--           Unit.Pop_Operand
+--             (Tagatha.Operands.Shelf_Operand (Thunk_Name),
+--              Tagatha.Default_Size);
          Unit.Duplicate;
          Unit.Dereference;
          Unit.Dereference;
@@ -748,7 +751,9 @@ package body Ack.Classes is
 
          Unit.Dereference;
          Unit.Operate (Tagatha.Op_Add);
-         Unit.Native_Operation ("mov agg, -(sp)");
+--           Unit.Push_Operand
+--             (Tagatha.Operands.Shelf_Operand (Thunk_Name),
+--              Tagatha.Default_Size);
          Unit.Jump (Link_Name);
          Unit.End_Code;
          Unit.Segment (Tagatha.Read_Only);
