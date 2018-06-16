@@ -1102,7 +1102,6 @@ package body Ack.Semantic is
 
          when N_Constant =>
             declare
-               use type Ack.Classes.Class_Entity;
                Value     : constant Node_Id := Constant_Value (Expression);
                Value_Type : constant Ack.Types.Type_Entity :=
                               (case N_Constant_Value (Kind (Value)) is
@@ -2311,7 +2310,6 @@ package body Ack.Semantic is
 
                   declare
                      use Aquarius.Programs.Komnenos_Entities;
-                     use Komnenos.Entities;
                   begin
                      Create_Aquarius_Source_Entity
                        (Table            =>

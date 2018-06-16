@@ -801,7 +801,6 @@ package body Aquarius.Programs.Parser is
    procedure Parse_String (Context : in out Parse_Context;
                            Line    : in     String)
    is
-      use type Aquarius.Tokens.Token;
       Next, First       : Natural := Line'First;
       Class             : Aquarius.Tokens.Token_Class;
       Tok               : Aquarius.Tokens.Token;
@@ -1023,7 +1022,6 @@ package body Aquarius.Programs.Parser is
    is
       use Aquarius.Trees.Cursors;
       use type Aquarius.Tokens.Token;
-      use type Aquarius.Source.Source_Position;
       A : constant Ambiguity := List_Of_Ambiguities.Element (Current);
       Location : Cursor renames A.Location;
       Program : constant Program_Tree :=

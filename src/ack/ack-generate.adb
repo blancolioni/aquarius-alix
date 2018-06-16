@@ -619,7 +619,6 @@ package body Ack.Generate is
       Context       : not null access constant Root_Entity_Type'Class;
       Operator_Node : Node_Id)
    is
-      use type Ack.Types.Type_Entity;
       Operator  : constant Name_Id := Get_Name (Operator_Node);
       Left      : constant Node_Id := Field_1 (Operator_Node);
       Right     : constant Node_Id := Field_2 (Operator_Node);
@@ -735,7 +734,6 @@ package body Ack.Generate is
            Root_Entity_Type'Class)
       is
          pragma Unreferenced (Argument);
-         use type Ack.Classes.Class_Entity;
          From : constant Ack.Types.Constant_Type_Entity :=
                   Ack.Types.Constant_Type_Entity (From_Type_Entity);
          To   : constant Ack.Types.Constant_Type_Entity :=

@@ -339,7 +339,6 @@ package body Aquarius.VM.Library is
       return Aquarius.VM.VM_Value
    is
       use Aquarius.Programs;
-      use Aquarius.VM;
       Grammar        : constant Aquarius.Grammars.Aquarius_Grammar :=
                          Aquarius.Grammars.Aquarius_Grammar
                            (Aquarius.VM.To_Property

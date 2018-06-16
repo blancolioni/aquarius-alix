@@ -557,8 +557,6 @@ package body Aquarius.Syntax.Komnenos_Entities is
      (Entity : not null access Aquarius_Syntax_Entity'Class;
       Visual : in out Komnenos.Entities.Text_Entity_Visual'Class)
    is
-      use Komnenos;
-
       Default_Style      : constant Komnenos.Styles.Komnenos_Style :=
                              Komnenos.Themes.Active_Theme.Default_Style;
       Keyword_Style      : constant Komnenos.Styles.Komnenos_Style :=

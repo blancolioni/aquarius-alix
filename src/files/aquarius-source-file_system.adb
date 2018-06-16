@@ -60,7 +60,6 @@ package body Aquarius.Source.File_System is
                        File_Name   : in String)
                       return String
    is
-      use Ada.Strings.Unbounded;
 
       function Check_Path (OS_Path : String) return String;
 

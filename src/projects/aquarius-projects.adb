@@ -66,7 +66,6 @@ package body Aquarius.Projects is
    procedure Add_Main (Project : not null access Aquarius_Project_Type'Class;
                        Name    : in     String)
    is
-      use type Aquarius.Buffers.Aquarius_Buffer;
       Name_With_Extension : constant String :=
                               (if Ends_With (Name, ".adb")
                                then Name

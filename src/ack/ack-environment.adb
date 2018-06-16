@@ -29,8 +29,7 @@ package body Ack.Environment is
      (Entity             : not null access Top_Level_Entity_Record;
       Type_Instantiation : not null access
         function (Generic_Type : Entity_Type) return Entity_Type)
-      return Entity_Type
-   is (Entity_Type (Entity));
+      return Entity_Type;
 
    Top_Level_Entity : aliased Top_Level_Entity_Record;
    Initialised      : Boolean := False;
@@ -51,6 +50,21 @@ package body Ack.Environment is
          Context            => null);
       Initialised := True;
    end Create_Top_Level;
+
+   -----------------
+   -- Instantiate --
+   -----------------
+
+   overriding function Instantiate
+     (Entity             : not null access Top_Level_Entity_Record;
+      Type_Instantiation : not null access
+        function (Generic_Type : Entity_Type) return Entity_Type)
+      return Entity_Type
+   is
+      pragma Unreferenced (Type_Instantiation);
+   begin
+      return Entity_Type (Entity);
+   end Instantiate;
 
    ---------------
    -- Top_Level --
