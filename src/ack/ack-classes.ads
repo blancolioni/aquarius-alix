@@ -395,8 +395,7 @@ private
      (Entity             : not null access Class_Entity_Record;
       Type_Instantiation : not null access
         function (Generic_Type : Entity_Type) return Entity_Type)
-      return Entity_Type
-   is (Entity_Type (Entity));
+      return Entity_Type;
 
    overriding function Concrete_Entity
      (Class : not null access Class_Entity_Record)

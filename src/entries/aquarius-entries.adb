@@ -237,7 +237,6 @@ package body Aquarius.Entries is
    procedure Insert (Table     : access Symbol_Table_Record;
                      Item      : in     Table_Entry)
    is
-      use Ada.Strings.Unbounded;
    begin
 
       if Table.Map.Contains (Item.Name) then
@@ -498,7 +497,6 @@ package body Aquarius.Entries is
          end if;
       else
          declare
-            use Ada.Containers;
             Matches : constant Table_Entry_Vector.Vector :=
               Element (C);
             Result  : Array_Of_Entries (1 .. Matches.Last_Index);
@@ -565,7 +563,6 @@ package body Aquarius.Entries is
                             Constraint : Entry_Constraint'Class)
                            return Array_Of_Entries
    is
-      use type Hash_Map.Cursor;
    begin
       if not Hash_Map.Has_Element (Cursor) then
          declare

@@ -107,8 +107,7 @@ package body Aquarius.Programs.Komnenos_Entities is
      (Entity : Root_Aquarius_Source_Entity;
       End_1  : Komnenos.Cursor_Type;
       End_2  : Komnenos.Cursor_Type)
-      return String
-   is ("");
+      return String;
 
    procedure Forward_Character
      (Item   : in out Root_Aquarius_Source_Entity'Class);
@@ -161,7 +160,6 @@ package body Aquarius.Programs.Komnenos_Entities is
    procedure Backward_Character
      (Entity : in out Root_Aquarius_Source_Entity'Class)
    is
-      use Ada.Strings.Unbounded;
       use Komnenos;
       New_Position : Text_Position renames
                        Entity.Cursors (Komnenos.Point);
@@ -176,7 +174,6 @@ package body Aquarius.Programs.Komnenos_Entities is
          end if;
 
          declare
-            use Aquarius.Programs;
             Next_Terminal : constant Program_Tree :=
                               Entity.Edit_Tree.Scan_Terminal (-1);
          begin
@@ -202,7 +199,6 @@ package body Aquarius.Programs.Komnenos_Entities is
       Echo   : out Boolean)
    is
       use Ada.Strings.Unbounded;
-      use Aquarius.Programs;
       use Aquarius.Programs.Parser;
       use Komnenos;
 
@@ -336,7 +332,6 @@ package body Aquarius.Programs.Komnenos_Entities is
    begin
       if not Table.Exists (Key) then
          declare
-            use type Aquarius.Programs.Program_Tree;
             Entity : Root_Aquarius_Source_Entity;
             Result : Komnenos.Entities.Entity_Reference;
          begin
@@ -411,7 +406,7 @@ package body Aquarius.Programs.Komnenos_Entities is
    overriding procedure Delete_Region
      (Entity     : in out Root_Aquarius_Source_Entity)
    is
-      use Komnenos, Komnenos.Entities;
+      use Komnenos;
       Mark_Position : constant Text_Position :=
                         Entity.Get_Cursor (Mark);
       Point_Position : constant Text_Position :=
@@ -442,7 +437,6 @@ package body Aquarius.Programs.Komnenos_Entities is
            and then Remaining >= Entity.Buffer_Offset
          loop
             declare
-               use Aquarius.Programs;
                New_Edit_Tree : constant Program_Tree :=
                                  Entity.Edit_Tree.Scan_Terminal (-1);
                New_Offset    : constant Text_Offset :=
@@ -619,7 +613,6 @@ package body Aquarius.Programs.Komnenos_Entities is
          end if;
 
          declare
-            use Aquarius.Programs;
             Next_Terminal : constant Program_Tree :=
                               Tree.Scan_Terminal (1);
          begin
@@ -644,7 +637,6 @@ package body Aquarius.Programs.Komnenos_Entities is
       return Komnenos.Column_Number
    is
       use Komnenos;
-      use type Aquarius.Programs.Program_Tree;
       Terminal : constant Aquarius.Programs.Program_Tree :=
                    Entity.Entity_Tree.Find_Local_Node_At
                      (Aquarius.Layout.Position (Position));
@@ -696,7 +688,6 @@ package body Aquarius.Programs.Komnenos_Entities is
       Position : Komnenos.Text_Position)
       return Komnenos.Line_Number
    is
-      use type Aquarius.Programs.Program_Tree;
       Terminal : constant Aquarius.Programs.Program_Tree :=
                    Entity.Entity_Tree.Find_Local_Node_At
                      (Aquarius.Layout.Position (Position));
@@ -708,6 +699,21 @@ package body Aquarius.Programs.Komnenos_Entities is
       end if;
    end Get_Line;
 
+   ---------------------
+   -- Get_Region_Text --
+   ---------------------
+
+   overriding function Get_Region_Text
+     (Entity : Root_Aquarius_Source_Entity;
+      End_1  : Komnenos.Cursor_Type;
+      End_2  : Komnenos.Cursor_Type)
+      return String
+   is
+      pragma Unreferenced (Entity, End_1, End_2);
+   begin
+      return "";
+   end Get_Region_Text;
+
    -----------------------
    -- Get_Start_Of_Line --
    -----------------------
@@ -718,7 +724,6 @@ package body Aquarius.Programs.Komnenos_Entities is
       return Komnenos.Text_Position
    is
       use Komnenos;
-      use type Aquarius.Programs.Program_Tree;
       Terminal : constant Aquarius.Programs.Program_Tree :=
                    Entity.Entity_Tree.Find_Local_First_Node_At_Line
                      (Aquarius.Layout.Line_Number (Line));
@@ -817,7 +822,6 @@ package body Aquarius.Programs.Komnenos_Entities is
 
             if Ch = Character'Val (10) then
                declare
-                  use Aquarius.Programs;
                   use Ada.Strings.Unbounded;
                   Edit_Tree     : constant Aquarius.Programs.Program_Tree :=
                                     Entity.Edit_Tree;
@@ -1026,7 +1030,6 @@ package body Aquarius.Programs.Komnenos_Entities is
       Visual : not null access Komnenos.Entities.Entity_Visual'Class)
    is
       use Komnenos;
-      use type Aquarius.Programs.Program_Tree;
       Program  : constant Aquarius.Programs.Program_Tree := Entity.Entity_Tree;
       Renderer : Aquarius.Rendering.Aquarius_Renderer :=
                    Aquarius.Rendering.Komnenos_Renderer.Fragment_Renderer
@@ -1157,8 +1160,6 @@ package body Aquarius.Programs.Komnenos_Entities is
       Visual : access Komnenos.Entities.Entity_Visual'Class;
       Offset : Komnenos.Pixel_Offset)
    is
-      use Ada.Strings.Unbounded;
-      use type Aquarius.Programs.Program_Tree;
       Fragment : constant Komnenos.Fragments.Fragment_Type :=
                    (if Visual = null
                     then Komnenos.Fragments.New_Text_Fragment (Entity)
@@ -1198,7 +1199,6 @@ package body Aquarius.Programs.Komnenos_Entities is
             declare
                use Ada.Strings.Unbounded;
                use Aquarius.Layout;
-               use Aquarius.Programs;
                use type Komnenos.Text_Position;
                Pos : constant Aquarius.Layout.Position :=
                        Aquarius.Layout.Position (Position);

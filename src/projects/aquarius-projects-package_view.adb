@@ -38,7 +38,6 @@ package body Aquarius.Projects.Package_View is
       -----------------
 
       function Check_Entry (E : Table_Entry) return Aquarius.Trees.Tree is
-         use Aquarius.Entries.Packages;
          P : constant Table_Entry := E.Entry_Owner;
          T : Aquarius.Trees.Tree := null;
       begin

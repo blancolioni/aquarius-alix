@@ -168,7 +168,6 @@ package body Aquarius.Programs is
                                Position : Aquarius.Layout.Position)
                                return Boolean
    is
-      use type Aquarius.Layout.Position;
    begin
       return Position in
         Item.Layout_Start_Position .. Item.Layout_End_Position;
@@ -337,7 +336,7 @@ package body Aquarius.Programs is
    -- Expand --
    ------------
 
-   procedure Expand (Item : in out Program_Tree_Type) is
+   procedure Expand (Item : not null access Program_Tree_Type) is
       use Aquarius.Syntax;
       Syn : constant Syntax_Tree := Item.Syntax;
    begin
@@ -430,7 +429,6 @@ package body Aquarius.Programs is
       Line : Aquarius.Layout.Line_Number)
       return Program_Tree
    is
-      use type Aquarius.Layout.Position;
       Last_Terminal : Program_Tree := null;
       Stop : Boolean := False;
 
@@ -610,7 +608,6 @@ package body Aquarius.Programs is
       Location : in     Aquarius.Layout.Position)
       return Program_Tree
    is
-      use type Aquarius.Layout.Position;
       Last_Terminal : Program_Tree := null;
 
       procedure Find (Current : not null access Program_Tree_Type'Class);
@@ -1111,7 +1108,6 @@ package body Aquarius.Programs is
    function Layout_Length (Item : Program_Tree_Type)
                           return Aquarius.Layout.Count
    is
-      use type Aquarius.Layout.Count;
    begin
       if Item.Child_Count = 0 then
          declare
@@ -1212,7 +1208,6 @@ package body Aquarius.Programs is
    function Minimum_Indent (Item : Program_Tree_Type)
                            return Aquarius.Source.Column_Number
    is
-      use type Aquarius.Source.Column_Number;
    begin
       if Item.Indent_Rule then
          return 2;
@@ -2021,7 +2016,6 @@ package body Aquarius.Programs is
    procedure Update_Entry
      (Item    : in out Program_Tree_Type'Class)
    is
-      use type Aquarius.Trees.Root_Tree_Type'Class;
       use Aquarius.Entries;
       E : constant Table_Entry := Aquarius.Trees.Properties.Get_Entry (Item);
    begin
