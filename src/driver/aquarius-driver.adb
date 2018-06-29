@@ -193,6 +193,10 @@ begin
       Aqua.Options.Set_Option ("trace-link", "true");
    end if;
 
+   if Command_Line.Profile then
+      Aqua.Options.Set_Option ("profile", "true");
+   end if;
+
    if Command_Line.Ack_Write_Tables then
       Ack.Set_Write_Tables (True);
    end if;
@@ -225,6 +229,9 @@ begin
          if not Ack.Errors.Has_Errors then
             CPU.Run;
             CPU.Report;
+            if Command_Line.Profile then
+               Aqua.CPU.Write_Profile ("aquarius-profile.txt");
+            end if;
          end if;
       end;
    elsif Aquarius.Command_Line.Filter then
@@ -407,6 +414,10 @@ begin
 
          if Command_Line.Enable_Debug /= "" then
             Aquarius.Trace.End_Trace;
+         end if;
+
+         if Command_Line.Profile then
+            Aqua.CPU.Write_Profile ("aquarius-profile.txt");
          end if;
 
          Aquarius.Plugins.Manager.Loaded_Plugin_Report;
