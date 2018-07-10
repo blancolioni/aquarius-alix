@@ -61,7 +61,6 @@ package body Ack.Semantic.Work is
       Category     : Work_Item_Category)
    is
       use Work_Item_Lists;
-      use type Ack.Classes.Class_Entity;
 
       Finished : Boolean := False;
 
