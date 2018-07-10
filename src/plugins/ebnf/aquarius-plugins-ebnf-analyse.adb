@@ -243,7 +243,6 @@ package body Aquarius.Plugins.EBNF.Analyse is
    procedure After_Repeater
      (Target : not null access Aquarius.Actions.Actionable'Class)
    is
-      use Aquarius.Syntax;
       Tree         : constant Program_Tree := Program_Tree (Target);
       Child  : constant Aquarius.Trees.Tree :=
         Tree.Breadth_First_Search ("sequence-of-rules");
@@ -309,7 +308,6 @@ package body Aquarius.Plugins.EBNF.Analyse is
       if Syntax_Definition /= null then
 
          declare
-            use type Aquarius.Syntax.Syntax_Tree;
             Definition : constant Aquarius.Syntax.Syntax_Tree :=
               Aquarius.Trees.Properties.Get_Syntax (Syntax_Definition.all);
             Rule       : constant Aquarius.Syntax.Syntax_Tree :=

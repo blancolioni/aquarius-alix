@@ -110,7 +110,6 @@ package body Ack.Features is
    overriding procedure Bind
      (Feature : not null access Feature_Entity_Record)
    is
-      use type Ack.Classes.Class_Entity;
       Next_Argument : Positive := 1;
       Next_Local    : Positive := 1;
       Current_Class : constant Ack.Classes.Class_Entity :=
