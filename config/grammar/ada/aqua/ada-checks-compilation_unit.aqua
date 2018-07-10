@@ -6,18 +6,7 @@ inherit
 feature
 
    Before_Node
-      local
-         X : Integer
-         Y : Ada.Entity_Reference
       do
-         X := 42
-         Put_Line (X.To_String)
-         X := X + 57
-         Put_Line (X.To_String)
-         Set_Col (20)
-         Put_Line ("|---col 20")
-         create Y.Make ("y", Void, Current)
-         Put_Line (Y.Name)
       end
 
    After_Node
