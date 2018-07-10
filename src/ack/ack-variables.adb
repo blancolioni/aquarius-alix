@@ -98,7 +98,6 @@ package body Ack.Variables is
       Unit       : in out Tagatha.Units.Tagatha_Unit)
    is
       pragma Unreferenced (Context);
-      use type Ack.Types.Constant_Type_Entity;
       Var_Type : constant Ack.Types.Constant_Type_Entity :=
                    Ack.Types.Constant_Type_Entity
                      (Variable.Get_Type);

@@ -267,20 +267,16 @@ package body Aquarius.Syntax is
                end;
             end if;
 
-            declare
-               use Aquarius.Trees;
-            begin
-               for I in 1 .. Child.Child_Count loop
-                  declare
-                     Result : constant Syntax_Tree :=
-                       FC (Syntax_Tree (Child.Child (I)));
-                  begin
-                     if Result /= null then
-                        return Result;
-                     end if;
-                  end;
-               end loop;
-            end;
+            for I in 1 .. Child.Child_Count loop
+               declare
+                  Result : constant Syntax_Tree :=
+                             FC (Syntax_Tree (Child.Child (I)));
+               begin
+                  if Result /= null then
+                     return Result;
+                  end if;
+               end;
+            end loop;
 
             return null;
          end if;
@@ -514,7 +510,6 @@ package body Aquarius.Syntax is
    -----------
 
    overriding function Image (Tree : Syntax_Tree_Record) return String is
-      use Aquarius.Trees;
 
       function Node_Class_Image (Class : Node_Class) return String;
       function Children_Image
