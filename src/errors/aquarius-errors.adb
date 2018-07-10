@@ -47,7 +47,6 @@ package body Aquarius.Errors is
       Message     : in     String;
       Ref_Message : in     String)
    is
-      use type Aquarius.Messages.Message;
       use type Aquarius.Messages.Message_Level;
       Msg : constant Aquarius.Messages.Message :=
         Aquarius.Messages.New_Message (Level, Location, Message,

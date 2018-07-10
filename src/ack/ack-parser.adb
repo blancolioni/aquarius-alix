@@ -1204,7 +1204,7 @@ package body Ack.Parser is
       function Import_Invariant
         (Tree : Aquarius.Programs.Program_Tree)
          return Node_Id
-      is (No_Node);
+      is (if Tree.Name = "" then No_Node else No_Node);
 
       function Import_Exit_Condition
         (Tree : Aquarius.Programs.Program_Tree)
@@ -1218,7 +1218,7 @@ package body Ack.Parser is
       function Import_Variant
         (Tree : Aquarius.Programs.Program_Tree)
          return Node_Id
-      is (No_Node);
+      is (if Tree.Name = "" then No_Node else No_Node);
 
       Loop_Body : constant Aquarius.Programs.Program_Tree :=
                     From.Program_Child ("loop_body");

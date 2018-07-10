@@ -877,7 +877,6 @@ package body Ack.Classes is
          Current_Class : Class_Entity_Record'Class)
          return Class_Type_Access
       is
-         use type Ack.Types.Type_Entity;
          Result : Class_Type_Access;
       begin
          for Inherited of Current_Class.Inherited_Types loop
@@ -1004,6 +1003,21 @@ package body Ack.Classes is
         ((Inherited_Type => Ack.Types.Type_Entity (Inherited_Type),
           others          => <>));
    end Inherit;
+
+   -----------------
+   -- Instantiate --
+   -----------------
+
+   overriding function Instantiate
+     (Entity             : not null access Class_Entity_Record;
+      Type_Instantiation : not null access
+        function (Generic_Type : Entity_Type) return Entity_Type)
+      return Entity_Type
+   is
+      pragma Unreferenced (Type_Instantiation);
+   begin
+      return Entity_Type (Entity);
+   end Instantiate;
 
    ----------------------
    -- Is_Descendent_Of --
@@ -1265,8 +1279,20 @@ package body Ack.Classes is
    is
       function Always (Feature : not null access constant
                          Ack.Features.Feature_Entity_Record'Class)
+                       return Boolean;
+
+      ------------
+      -- Always --
+      ------------
+
+      function Always (Feature : not null access constant
+                         Ack.Features.Feature_Entity_Record'Class)
                        return Boolean
-      is (True);
+      is
+         pragma Unreferenced (Feature);
+      begin
+         return True;
+      end Always;
 
    begin
       Class.Scan_Features (Always'Access, Process);

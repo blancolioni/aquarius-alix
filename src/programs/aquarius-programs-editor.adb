@@ -431,7 +431,6 @@ package body Aquarius.Programs.Editor is
      (Editor : in out Root_Program_Editor;
       Point  : in     Aquarius.Layout.Position)
    is
-      use Aquarius.Layout;
    begin
       Editor.Position := Point;
       Ada.Text_IO.Put_Line

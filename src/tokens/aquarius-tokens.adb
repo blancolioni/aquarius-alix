@@ -250,7 +250,6 @@ package body Aquarius.Tokens is
       Full_Text      : Boolean := False)
       return Token_Class
    is
-      use type Aquarius.Lexers.Lexer;
       Possible       : Token_Class;
       Unique         : Boolean      := False;
       Possible_Count : Natural      := 0;
@@ -263,7 +262,6 @@ package body Aquarius.Tokens is
       Possible_Count := 0;
       for I in 1 .. Frame.Class_Vector.Last_Index loop
          declare
-            use Ada.Strings.Maps;
             Class : Token_Class_Info renames
               Frame.Class_Vector.Element (I);
             Length : constant Natural :=
@@ -714,7 +712,6 @@ package body Aquarius.Tokens is
    -------------------
 
    function To_Token_Text (Item : String) return Token_Text is
-      use Ada.Strings.Fixed;
    begin
       if Item'Length > Max_Short_Length then
          return (Long, new String'(Item));

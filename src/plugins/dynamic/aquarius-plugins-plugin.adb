@@ -758,7 +758,6 @@ package body Aquarius.Plugins.Plugin is
    is
       use Aquarius.Programs;
       use Ada.Characters.Handling;
-      use Ada.Characters.Latin_1;
       Project : constant Program_Tree := Program_Tree (Project_Actionable);
       Plugin_Name  : constant String :=
         Project.Property (Plugin.Property_Plugin_Name).Name;

@@ -248,7 +248,6 @@ package body Aquarius.Syntax is
       --------
 
       function FC (Child : Syntax_Tree) return Syntax_Tree is
-         use Aquarius.Tokens;
       begin
          if Child /= Current and then Child.Name = Child_Name then
             Local_Index := Local_Index - 1;
