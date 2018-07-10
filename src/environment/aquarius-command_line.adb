@@ -304,6 +304,15 @@ package body Aquarius.Command_Line is
       return Get_Argument ("", "plugin-dir");
    end Plugin_Path;
 
+   -------------
+   -- Profile --
+   -------------
+
+   function Profile return Boolean is
+   begin
+      return Get_Flag ("", "profile");
+   end Profile;
+
    ------------------
    -- Project_Name --
    ------------------

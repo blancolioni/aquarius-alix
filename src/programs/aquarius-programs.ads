@@ -76,7 +76,7 @@ package Aquarius.Programs is
      (Item : in out Program_Tree_Type;
       Pos  : in     Aquarius.Source.Source_Position);
 
-   procedure Expand (Item : in out Program_Tree_Type);
+   procedure Expand (Item : not null access Program_Tree_Type);
    --  Expand: creates all required children of a tree
 
    procedure Expand_All (Item : in out Program_Tree_Type);

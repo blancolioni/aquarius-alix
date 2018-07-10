@@ -1,4 +1,3 @@
-with Ada.Calendar;
 with Ada.Characters.Handling;
 with Ada.Directories;
 with Ada.Exceptions;
@@ -63,7 +62,6 @@ package body Aquarius.Plugins.Script_Plugin.Bindings is
    procedure After_Action_File_Reference
      (Item : Aquarius.Programs.Program_Tree)
    is
-      use type Ada.Calendar.Time;
       Base_Name   : constant String := Item.Concatenate_Children;
       Action_Path : constant String :=
                       Ada.Directories.Compose

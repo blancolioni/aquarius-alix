@@ -378,7 +378,6 @@ package body Aquarius.Plugins.EBNF.Analyse is
    procedure After_Separator
      (Target : not null access Aquarius.Actions.Actionable'Class)
    is
-      use Aquarius.Syntax;
       Tree         : constant Program_Tree := Program_Tree (Target);
       Child  : constant Aquarius.Trees.Tree :=
         Tree.Breadth_First_Search ("terminal-rule");

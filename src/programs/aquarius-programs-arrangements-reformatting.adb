@@ -4,8 +4,6 @@ with Aquarius.Programs.Arrangements.Logging;
 
 package body Aquarius.Programs.Arrangements.Reformatting is
 
-   use Aquarius.Programs.Arrangements.Contexts;
-
    type Reformat_Domain is
       record
          Top, Start, Finish : Program_Tree;
