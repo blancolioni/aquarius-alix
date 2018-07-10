@@ -799,6 +799,7 @@ package body Ack.Generate is
          end if;
 
          if E_Type /= null
+           and then Entity.Standard_Name /= "void"
            and then not E_Type.Expanded
            and then Entity.Can_Update
            and then not Entity.Attached
@@ -822,7 +823,6 @@ package body Ack.Generate is
                   Value_Type => E_Type,
                   Unit       => Unit);
                Unit.Label (Label);
-               Entity.Set_Attached;
             end;
          end if;
 
