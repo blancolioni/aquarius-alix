@@ -1,6 +1,8 @@
-class Petal.Checks.Qualified_Identifier
-inherit
-   Aquarius.Trees.Program_Tree
+class
+   Petal.Checks.Qualified_Identifier
+   
+inherit 
+   Aqua.Text_IO
    
 feature
 
@@ -37,13 +39,13 @@ feature
                   end
                else
                   if First then
-                     Error ("undeclared: " & Id)
+                     Put_Line ("undeclared: " & Id)
                   else
-                     Error ("invalid prefix in selected component " & Id)
+                     Put_Line ("invalid prefix in selected component " & Id)
                   end
                end
             else
-               Error ("invalid prefix in selected component " & Id)
+               Put_Line ("invalid prefix in selected component " & Id)
             end
             First := False
          end
