@@ -1,4 +1,7 @@
-class Ada.Checks.Package_Specification inherit
+class 
+   Ada.Checks.Package_Specification 
+   
+inherit
    Aqua.Text_IO
    Aquarius.Trees.Program_Tree
    Ada.Specification

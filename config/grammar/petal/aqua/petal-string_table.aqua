@@ -15,39 +15,39 @@ feature
       end
          
    Declare_Strings
-      local
-         Index : Integer
-         Key   : String
+--      local
+--         Index : Integer
+--         Key   : String       
       do
-         from
-            Index := 1
-         invariant
-            Index <= Next_Index
-         until
-            Index > Next_Index
-         loop
-            Key := "S" & Index.To_String
-            Set_Col (4)
-            Put (Key)
-            Set_Col (8)
-            Put (": aliased constant String :=")
-            New_Line
-            Set_Col (12)
-            Put (Table.Element (Key).To_String)
-            Put (";")
-            New_Line
-            Index := Index + 1
-         end
+--         from
+--            Index := 1
+--         invariant
+--            Index <= Next_Index
+--         until
+--            Index > Next_Index
+--         loop
+--            Key := "S" & Index.To_String
+--            Set_Col (4)
+--            Put (Key)
+--            Set_Col (8)
+--            Put (": aliased constant String :=")
+--            New_Line
+--            Set_Col (12)
+--            Put (Table.Element (Key).To_String)
+--            Put (";")
+--            New_Line
+--            Index := Index + 1
+--         end
       end
       
 feature {None}
 
-   New_Entry (Label : String; S : Petal.Value)
-      do
-         Table.Insert (Label, S)
-      end
-      
-   Table       : Aqua.Containers.List_Map [String, Petal.Value]
+   Table       : Aqua.Containers.Linked_List [Petal.Value]
    Next_Index  : Integer
    
+   New_Entry (Label : String; S : Petal.Value)
+      do
+         Table.Append (S)
+      end
+      
 end

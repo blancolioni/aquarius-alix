@@ -1,4 +1,7 @@
-class Ada.Checks.Defining_Program_Unit_Name inherit
+class
+   Ada.Checks.Defining_Program_Unit_Name 
+   
+inherit
    Aquarius.Trees.Program_Tree
 
 feature

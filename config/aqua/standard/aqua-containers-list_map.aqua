@@ -4,6 +4,7 @@ class
 inherit 
    Aqua.Containers.Linked_List [(Key_Type, Element_Type)]
    Aqua.Containers.Map [Key_Type, Element_Type]
+      redefine Contains_Key, Element, Insert, Delete, Replace end
               
 feature
 
