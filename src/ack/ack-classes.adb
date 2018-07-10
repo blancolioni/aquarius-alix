@@ -727,36 +727,32 @@ package body Ack.Classes is
       begin
          Unit.Segment (Tagatha.Executable);
          Unit.Begin_Code (Thunk_Name, False);
-         Unit.Directive (".expand call_thunk,"
-                         & Word_Offset'Image
-                           (Class.Ancestor_Table_Offset (To_Class)));
+         Unit.Pop_Operand
+           (Tagatha.Transfers.Shelf_Operand (Thunk_Name),
+            Tagatha.Default_Size);
+         Unit.Duplicate;
+         Unit.Dereference;
+         Unit.Dereference;
+         Unit.Swap;
+         Unit.Operate (Tagatha.Op_Sub);
+         Unit.Duplicate;
+         Unit.Dereference;
+         declare
+            Offset : constant Word_Offset :=
+                       Class.Ancestor_Table_Offset (To_Class);
+         begin
+            if Offset > 0 then
+               Push_Offset
+                 (Unit, Offset);
+               Unit.Operate (Tagatha.Op_Add);
+            end if;
+         end;
 
---           Unit.Pop_Operand
---             (Tagatha.Transfers.Shelf_Operand (Thunk_Name),
---              Tagatha.Default_Size);
---           Unit.Duplicate;
---           Unit.Dereference;
---           Unit.Dereference;
---           Unit.Swap;
---           Unit.Operate (Tagatha.Op_Sub);
---           Unit.Duplicate;
---           Unit.Dereference;
---           declare
---              Offset : constant Word_Offset :=
---                         Class.Ancestor_Table_Offset (To_Class);
---           begin
---              if Offset > 0 then
---                 Push_Offset
---                   (Unit, Offset);
---                 Unit.Operate (Tagatha.Op_Add);
---              end if;
---           end;
---
---           Unit.Dereference;
---           Unit.Operate (Tagatha.Op_Add);
---           Unit.Push_Operand
---             (Tagatha.Transfers.Shelf_Operand (Thunk_Name),
---              Tagatha.Default_Size);
+         Unit.Dereference;
+         Unit.Operate (Tagatha.Op_Add);
+         Unit.Push_Operand
+           (Tagatha.Transfers.Shelf_Operand (Thunk_Name),
+            Tagatha.Default_Size);
          Unit.Jump (Link_Name);
          Unit.End_Code;
          Unit.Segment (Tagatha.Read_Only);

@@ -235,7 +235,7 @@ package body Ack.Generate is
       end if;
 
       Unit.Write
-        (Target_Name    => "aqua32",
+        (Target_Name    => "pdp32",
          Directory_Path => Aquarius.Config_Paths.Config_File ("scratch"));
 
    end Generate_Class_Declaration;
