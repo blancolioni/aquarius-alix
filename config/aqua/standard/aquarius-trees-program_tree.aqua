@@ -1,3 +1,6 @@
+note
+   Routine_Update: Never
+   
 expanded class Aquarius.Trees.Program_Tree
       
 feature

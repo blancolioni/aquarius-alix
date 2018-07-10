@@ -83,6 +83,10 @@ package Ack.Classes is
      (Class : Class_Entity_Record)
       return Boolean;
 
+   function Update_Expanded_Value
+     (Class : Class_Entity_Record'Class)
+      return Boolean;
+
    function Frozen
      (Class : Class_Entity_Record'Class)
       return Boolean;
@@ -354,6 +358,7 @@ private
          Expanded                : Boolean := False;
          Frozen                  : Boolean := False;
          Bound                   : Boolean := False;
+         Routine_Update          : Boolean := True;
          Top_Node                : Node_Id;
          Behaviour               : Class_Behaviour := Normal;
          Conforming_Child_Action : Name_Id := No_Name;
@@ -477,6 +482,11 @@ private
      (Class : Class_Entity_Record)
       return Boolean
    is (Class.Expanded);
+
+   function Update_Expanded_Value
+     (Class : Class_Entity_Record'Class)
+      return Boolean
+   is (Class.Routine_Update);
 
    function Frozen
      (Class : Class_Entity_Record'Class)

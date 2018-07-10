@@ -83,8 +83,10 @@ package body Ack.Generate is
    is
       Unit : Tagatha.Units.Tagatha_Unit;
       Class : constant Ack.Classes.Class_Entity :=
-                 Ack.Classes.Get_Class_Entity (Node);
+                Ack.Classes.Get_Class_Entity (Node);
+
    begin
+
       Unit.Create_Unit
         (Class.Base_File_Name,
          Get_Program (Node).Source_File_Name);
@@ -418,7 +420,7 @@ package body Ack.Generate is
       Created_Entity.Pop_Entity
         (Created_Context, Creation_Type, Unit);
 
-      Created_Entity.Set_Attached;
+      --  Created_Entity.Set_Attached;
 
    exception
       when others =>
@@ -782,6 +784,20 @@ package body Ack.Generate is
             Context      => Get_Context (Element),
             Unit         => Unit);
 
+         if False and then E_Type /= null then
+            Ada.Text_IO.Put_Line
+              (Get_Program (Element).Show_Location
+               & ": push " & Entity.Qualified_Name & ": "
+               & E_Type.Qualified_Name
+               & (if E_Type.Expanded then " expanded" else "")
+               & (if Entity.Can_Update then " can-update" else "")
+               & (if Entity.Attached then " attached" else "")
+               & (if E_Type.Detachable then " detachable" else "")
+               & (if E_Type.Deferred then " deferred" else "")
+               & (if E_Type.Is_Generic_Formal_Type
+                 then " generic-formal" else ""));
+         end if;
+
          if E_Type /= null
            and then not E_Type.Expanded
            and then Entity.Can_Update
@@ -877,7 +893,10 @@ package body Ack.Generate is
                                   or else Constant_Feature_Entity (Last_Entity)
                                   .Is_Property);
       begin
-         if Expanded and then not Has_Result then
+         if Expanded
+           and then Current_Context.Update_Expanded_Value
+           and then not Has_Result
+         then
             Previous_Entity.Pop_Entity
               (Get_Context (Precursor).Class_Context, Current_Context, Unit);
          end if;

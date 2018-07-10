@@ -23,6 +23,7 @@ feature
       do
          Table_Name := Name
          Parent     := P
+         create Entry_List
          Put_Line ("New table: " & Name)
       end
       

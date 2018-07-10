@@ -4,8 +4,8 @@ inherit
    Aquarius.Trees.Program_Tree
    
 feature
-   Name : String
-   Constant : Boolean
+   Object_Name : String
+   Constant    : Boolean
    Type        : detachable Petal.Type
    Initialiser : detachable Petal.Checks.Expression
    
@@ -13,7 +13,7 @@ feature
 
    After_Identifier (Id : String) 
       do
-         Name := Id
+         Object_Name := Id
       end
       
    After_Constant (Unused : String)
