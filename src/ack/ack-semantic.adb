@@ -1748,7 +1748,7 @@ package body Ack.Semantic is
 
          begin
             if Kind (Item) = N_Identifier then
-               Add_Note_Text (To_String (Get_Name (Item)));
+               Add_Note_Text (To_Standard_String (Get_Name (Item)));
             elsif Kind (Item) = N_Constant then
                declare
                   Value : constant Node_Id := Field_2 (Item);
