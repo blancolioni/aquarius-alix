@@ -363,7 +363,6 @@ package body Ack.Semantic is
    is
       Notes_Node       : constant Node_Id := Notes (Node);
       Inheritance_Node : constant Node_Id := Inheritance (Node);
-      Creators_Node    : constant Node_Id := Class_Creators (Node);
       Features_Node    : constant Node_Id := Class_Features (Node);
       Class            : constant Ack.Classes.Class_Entity :=
                            Analyse_Class_Header (Node, Class_Header (Node));
@@ -403,40 +402,6 @@ package body Ack.Semantic is
 
       if Notes_Node in Real_Node_Id then
          Analyse_Notes (Class, Notes_Node);
-      end if;
-
-      if Creators_Node in Real_Node_Id then
-         declare
-            procedure Add_Creator_Clause
-              (Node : Node_Id);
-
-            ------------------------
-            -- Add_Creator_Clause --
-            ------------------------
-
-            procedure Add_Creator_Clause
-              (Node : Node_Id)
-            is
-               procedure Add_Creator_Name (Creator_Node : Node_Id);
-
-               ----------------------
-               -- Add_Creator_Name --
-               ----------------------
-
-               procedure Add_Creator_Name (Creator_Node : Node_Id) is
-               begin
-                  Class.Add_Creator
-                    (Get_Name (Creator_Node));
-               end Add_Creator_Name;
-
-            begin
-               Scan (Creator_List (Node), Add_Creator_Name'Access);
-            end Add_Creator_Clause;
-
-         begin
-            Scan (Creator_Clauses (Creators_Node),
-                  Add_Creator_Clause'Access);
-         end;
       end if;
 
       if Features_Node in Real_Node_Id then
@@ -550,7 +515,8 @@ package body Ack.Semantic is
       return Ack.Classes.Class_Entity
    is
       Formal_Generics_Node : constant Node_Id := Formal_Generics (Header);
-      Result : Ack.Classes.Class_Entity;
+      Creators_Node        : constant Node_Id := Class_Creators (Class);
+      Result               : Ack.Classes.Class_Entity;
    begin
       Analyse_Class_Name (null, Class_Name (Header),
                           Defining_Name => True);
@@ -570,6 +536,41 @@ package body Ack.Semantic is
       if Formal_Generics_Node /= No_Node then
          Analyse_Formal_Generics (Result, Formal_Generics_Node);
       end if;
+
+      if Creators_Node in Real_Node_Id then
+         declare
+            procedure Add_Creator_Clause
+              (Node : Node_Id);
+
+            ------------------------
+            -- Add_Creator_Clause --
+            ------------------------
+
+            procedure Add_Creator_Clause
+              (Node : Node_Id)
+            is
+               procedure Add_Creator_Name (Creator_Node : Node_Id);
+
+               ----------------------
+               -- Add_Creator_Name --
+               ----------------------
+
+               procedure Add_Creator_Name (Creator_Node : Node_Id) is
+               begin
+                  Result.Add_Creator
+                    (Get_Name (Creator_Node));
+               end Add_Creator_Name;
+
+            begin
+               Scan (Creator_List (Node), Add_Creator_Name'Access);
+            end Add_Creator_Clause;
+
+         begin
+            Scan (Creator_Clauses (Creators_Node),
+                  Add_Creator_Clause'Access);
+         end;
+      end if;
+
       return Result;
    end Analyse_Class_Header;
 
@@ -941,6 +942,10 @@ package body Ack.Semantic is
       end if;
 
       if Explicit_Call_Node not in Real_Node_Id then
+         Ack.Semantic.Work.Check_Work_Item
+           (Ack.Types.Type_Entity (Created_Type).Class,
+            No_Name, Ack.Semantic.Work.Class_Binding);
+
          if not Created_Type.Has_Default_Creation_Routine then
             Error (Creation, E_No_Default_Create_Routine);
          end if;
