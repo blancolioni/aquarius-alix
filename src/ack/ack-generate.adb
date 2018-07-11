@@ -415,7 +415,7 @@ package body Ack.Generate is
             Context      => Created_Context,
             Unit         => Unit);
 
-         Get_Entity (Explicit_Call_Node).Push_Entity
+         Creation_Routine.Push_Entity
            (Have_Current => True,
             Context      => Creation_Type.Class_Context,
             Unit         => Unit);
