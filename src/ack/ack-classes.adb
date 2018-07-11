@@ -202,6 +202,10 @@ package body Ack.Classes is
            (Top, No_Name, Ack.Semantic.Work.Class_Binding);
          if not Class.Inherited_List.Contains (Top) then
             Class.Inherited_List.Append (Top);
+            if Top.Expanded then
+               Error (Class.Declaration_Node, E_Inherited_Expanded_Class);
+            end if;
+
             for Inherited of Top.Inherited_Types loop
                Scan_Hierarchy (Inherited.Inherited_Type.Class);
             end loop;
