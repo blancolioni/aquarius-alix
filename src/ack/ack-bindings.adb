@@ -718,7 +718,7 @@ package body Ack.Bindings is
             Put_Line
               (File,
                "   " & Feature_Name
-               & " (Top, Parent, Child : Aquarius.Trees.Program_Tree)");
+               & " (Top, Parent, Child : Aquarius.Trees.Program_Tree_Driver)");
             Put_Line (File, "   local");
             Put_Converter ("Convert_P", Parent_Class_Name);
             if Has_Child and then not Child_String then
