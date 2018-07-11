@@ -345,14 +345,6 @@ package body Ack.Classes is
          Offset : Word_Offset;
          Value  : String);
 
-      package Generated_Feature_Maps is
-        new WL.String_Maps (Ack.Features.Constant_Feature_Entity,
-                            Ack.Features."=");
-      package Generated_Feature_Offsets is
-        new WL.String_Maps (Word_Offset);
-      Generated_Features : Generated_Feature_Maps.Map;
-      Generated_Offsets : Generated_Feature_Offsets.Map;
-
       function Table_Link_Name (Base : Constant_Class_Entity) return Name_Id
       is (Get_Name_Id
           (Class.Link_Name & "$" & Base.Link_Name & "$" & "vptr"));
@@ -486,40 +478,6 @@ package body Ack.Classes is
                                       (Get_Name_Id
                                          (Feature.Standard_Name));
                begin
-                  if Generated_Features.Contains
-                    (Class_Feature.Standard_Name)
-                  then
-                     Ada.Text_IO.Put_Line
-                       (Ada.Text_IO.Standard_Error,
-                        "in class " & Layout.Class.Qualified_Name
-                        & ": feature " & Class_Feature.Declared_Name
-                        & " defined more than once");
-                     Ada.Text_IO.Put_Line
-                       (Ada.Text_IO.Standard_Error,
-                        Get_Program
-                          (Generated_Features.Element
-                               (Class_Feature.Standard_Name)
-                           .Declaration_Node)
-                        .Show_Location & ": original declaration at offset"
-                        & Word_Offset'Image
-                          (Generated_Offsets.Element
-                               (Class_Feature.Standard_Name)));
-                     Ada.Text_IO.Put_Line
-                       (Ada.Text_IO.Standard_Error,
-                        Get_Program (Class_Feature.Declaration_Node)
-                        .Show_Location
-                        & ": current declaration at offset"
-                        & Word_Offset'Image (Offset));
-                     raise Program_Error with
-                       "this should have been detected earlier";
-                  end if;
-
-                  Generated_Features.Insert
-                    (Class_Feature.Standard_Name,
-                     Ack.Features.Constant_Feature_Entity (Feature));
-                  Generated_Offsets.Insert
-                    (Class_Feature.Standard_Name, Offset);
-
                   Class_Feature.Set_Virtual_Table_Offset (Offset - Start);
                   if Class_Feature.Deferred then
                      Put_Log
