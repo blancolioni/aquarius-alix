@@ -940,6 +940,12 @@ package body Ack.Semantic is
          Error (Creation, E_Create_Deferred_Class);
       end if;
 
+      if Explicit_Call_Node not in Real_Node_Id then
+         if not Created_Type.Has_Default_Creation_Routine then
+            Error (Creation, E_No_Default_Create_Routine);
+         end if;
+      end if;
+
       if Explicit_Call_Node in Real_Node_Id then
 
          Creator_Name := Get_Name (Explicit_Call_Node);

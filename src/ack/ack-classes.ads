@@ -83,6 +83,14 @@ package Ack.Classes is
      (Class : Class_Entity_Record)
       return Boolean;
 
+   overriding function Has_Default_Creation_Routine
+     (Class : Class_Entity_Record)
+      return Boolean;
+
+   overriding function Default_Creation_Routine
+     (Class : Class_Entity_Record)
+      return Entity_Type;
+
    function Update_Expanded_Value
      (Class : Class_Entity_Record'Class)
       return Boolean;
