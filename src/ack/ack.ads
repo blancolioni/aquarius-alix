@@ -128,6 +128,7 @@ package Ack is
       E_Id_List_With_No_Type,
       E_Id_List_With_Routine,
       E_Type_Error,
+      E_No_Default_Create_Routine,
       E_Insufficient_Arguments,
       E_Too_Many_Arguments,
       E_Does_Not_Accept_Arguments,
@@ -253,6 +254,17 @@ package Ack is
    function Declaration_Context
      (Entity : Root_Entity_Type)
       return Entity_Type;
+
+   function Has_Default_Creation_Routine
+     (Entity : Root_Entity_Type)
+      return Boolean
+   is (False);
+
+   function Default_Creation_Routine
+     (Entity : Root_Entity_Type)
+      return Entity_Type
+   is (null)
+     with Pre => Root_Entity_Type'Class (Entity).Has_Default_Creation_Routine;
 
    function Full_Name (Entity : Root_Entity_Type) return String
    is (Root_Entity_Type'Class (Entity).Qualified_Name);

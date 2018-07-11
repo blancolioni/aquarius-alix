@@ -48,6 +48,14 @@ package Ack.Types is
      (Typ : Type_Entity_Record)
       return Boolean;
 
+   overriding function Has_Default_Creation_Routine
+     (Typ : Type_Entity_Record)
+      return Boolean;
+
+   overriding function Default_Creation_Routine
+     (Typ : Type_Entity_Record)
+      return Entity_Type;
+
    type Type_Entity is access all Type_Entity_Record'Class;
    type Constant_Type_Entity is access constant Type_Entity_Record'Class;
 
@@ -220,6 +228,16 @@ private
      (Typ : Type_Entity_Record'Class)
       return access Ack.Classes.Class_Entity_Record'Class
    is (if Typ.Generic_Formal then null else Typ.Class);
+
+   overriding function Has_Default_Creation_Routine
+     (Typ : Type_Entity_Record)
+      return Boolean
+   is (Typ.Class.Has_Default_Creation_Routine);
+
+   overriding function Default_Creation_Routine
+     (Typ : Type_Entity_Record)
+      return Entity_Type
+   is (Typ.Class.Default_Creation_Routine);
 
    function Has_Type_Entity
      (Node : Node_Id)

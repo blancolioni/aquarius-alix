@@ -371,24 +371,29 @@ package body Ack.Generate is
                              Get_Context (Creation).Class_Context;
       Created_Entity     : constant Entity_Type :=
                              Get_Entity (Creation);
+      Creation_Routine   : Entity_Type;
+
    begin
 
       Unit.Call
         (Creation_Type.Link_Name & "$create", 0);
       Unit.Push_Return;
 
-      if Explicit_Call_Node in Real_Node_Id then
-
-         Created_Entity.Pop_Entity (Created_Context, Creation_Type, Unit);
-
+      if Explicit_Call_Node not in Real_Node_Id then
+         pragma Assert (Creation_Type.Has_Default_Creation_Routine);
+         Creation_Routine :=
+           Creation_Type.Default_Creation_Routine;
+      else
+         Creation_Routine :=
+           Get_Entity (Explicit_Call_Node);
          declare
-            Actual_List_Node : constant Node_Id :=
-                                 Actual_List (Explicit_Call_Node);
-            Actual_List      : constant List_Id :=
-                                 (if Actual_List_Node /= No_Node
-                                  then Node_Table.Element
-                                    (Actual_List_Node).List
-                                  else No_List);
+            Actual_List_Node  : constant Node_Id :=
+                                  Actual_List (Explicit_Call_Node);
+            Actual_List       : constant List_Id :=
+                                  (if Actual_List_Node /= No_Node
+                                   then Node_Table.Element
+                                     (Actual_List_Node).List
+                                   else No_List);
             Actuals_Node_List : constant List_Of_Nodes.List :=
                                   (if Actual_List = No_List
                                    then List_Of_Nodes.Empty_List
@@ -399,6 +404,11 @@ package body Ack.Generate is
                Generate_Expression (Unit, Context, Item);
             end loop;
          end;
+      end if;
+
+      if Creation_Routine /= null then
+
+         Created_Entity.Pop_Entity (Created_Context, Creation_Type, Unit);
 
          Created_Entity.Push_Entity
            (Have_Current => False,

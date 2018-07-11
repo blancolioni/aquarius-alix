@@ -623,6 +623,41 @@ package body Ack.Classes is
 
    end Create_Memory_Layout;
 
+   ------------------------------
+   -- Default_Creation_Routine --
+   ------------------------------
+
+   overriding function Default_Creation_Routine
+     (Class : Class_Entity_Record)
+      return Entity_Type
+   is
+   begin
+      if Class.Creators.Is_Empty then
+         return null;
+      else
+         declare
+            Found : Entity_Type;
+
+            procedure Check (Name : String);
+
+            -----------
+            -- Check --
+            -----------
+
+            procedure Check (Name : String) is
+            begin
+               if Class.Get (Name).Argument_Count = 0 then
+                  Found := Class.Get (Name);
+               end if;
+            end Check;
+
+         begin
+            Class.Creators.Iterate (Check'Access);
+            return Found;
+         end;
+      end if;
+   end Default_Creation_Routine;
+
    -------------
    -- Feature --
    -------------
@@ -1036,6 +1071,41 @@ package body Ack.Classes is
    begin
       return Class.Find_Aliased_Feature (Alias, Infix) /= null;
    end Has_Aliased_Feature;
+
+   ----------------------------------
+   -- Has_Default_Creation_Routine --
+   ----------------------------------
+
+   overriding function Has_Default_Creation_Routine
+     (Class : Class_Entity_Record)
+      return Boolean
+   is
+   begin
+      if Class.Creators.Is_Empty then
+         return True;
+      else
+         declare
+            Found : Boolean := False;
+
+            procedure Check (Name : String);
+
+            -----------
+            -- Check --
+            -----------
+
+            procedure Check (Name : String) is
+            begin
+               if Class.Get (Name).Argument_Count = 0 then
+                  Found := True;
+               end if;
+            end Check;
+
+         begin
+            Class.Creators.Iterate (Check'Access);
+            return Found;
+         end;
+      end if;
+   end Has_Default_Creation_Routine;
 
    -------------
    -- Inherit --
