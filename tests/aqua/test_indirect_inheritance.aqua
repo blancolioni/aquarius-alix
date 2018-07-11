@@ -3,8 +3,7 @@ class
    
 inherit
    Unit_Test
-      redefine Name, Execute end
-   Inheritance_2 redefine Value end
+   Inheritance_2
    
 feature
 

@@ -700,6 +700,31 @@ package body Ack.Features is
       end if;
    end Pop_Entity;
 
+   ------------------------
+   -- Properties_Summary --
+   ------------------------
+
+   function Properties_Summary
+     (Feature : Feature_Entity_Record'Class)
+      return String
+   is
+      use type Ack.Types.Constant_Type_Entity;
+      E_Type : constant Ack.Types.Constant_Type_Entity :=
+                 Ack.Types.Constant_Type_Entity
+                   (Feature.Get_Type);
+   begin
+      return Feature.Qualified_Name & ": "
+        & (if E_Type = null then "routine" else E_Type.Qualified_Name)
+        & (if E_Type /= null and then E_Type.Expanded
+           then " expanded" else "")
+        & (if Feature.Can_Update then " can-update" else "")
+        & (if E_Type /= null and then E_Type.Detachable
+           then " detachable" else "")
+        & (if Feature.Deferred then " deferred" else "")
+        & (if E_Type /= null and then E_Type.Is_Generic_Formal_Type
+           then " generic-formal" else "");
+   end Properties_Summary;
+
    -----------------
    -- Push_Entity --
    -----------------

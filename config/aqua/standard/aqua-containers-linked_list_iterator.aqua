@@ -3,9 +3,8 @@ class
    
 inherit
    Aqua.Containers.Forward_Iterator[G]
-      redefine Element, Next, At_Start, At_End, After end
    Aqua.Update_Iteration_Cursor [G]
-      redefine Insert, Delete, After, Next, Element end
+      redefine After, Next, Element end
       
    create
       Make

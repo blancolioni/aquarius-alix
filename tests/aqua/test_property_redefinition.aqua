@@ -2,9 +2,7 @@ class
    Test_Property_Redefinition
 
 inherit
-   Unit_Test
-      redefine Name, Execute end
-      
+   Unit_Test     
    Diamond_A 
       redefine a1 end
    

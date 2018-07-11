@@ -119,6 +119,7 @@ package Ack is
       E_Create_Deferred_Class,
       E_Inherited_Expanded_Class,
       E_Requires_Body,
+      E_Unnecessary_Redefine,
       E_Missing_Redefine,
       E_Missing_Redefinition,
       E_No_Component,
@@ -463,6 +464,10 @@ package Ack is
      (Node : Node_Id)
       return Constant_Entity_Type;
 
+   function Get_Error_Context
+     (Node : Node_Id)
+      return Constant_Entity_Type;
+
    procedure Scan_Errors
      (Top     : Node_Id;
       Process : not null access
@@ -470,9 +475,10 @@ package Ack is
                    Error : Error_Kind));
 
    procedure Error
-     (Node   : Node_Id;
-      Kind   : Error_Kind;
-      Entity : access constant Root_Entity_Type'Class := null)
+     (Node    : Node_Id;
+      Kind    : Error_Kind;
+      Entity  : access constant Root_Entity_Type'Class := null;
+      Context : access constant Root_Entity_Type'Class := null)
      with Pre => Kind /= E_Undeclared_Name or else Has_Name (Node);
 
    function Get_Program
@@ -775,6 +781,7 @@ private
          Dest_Type       : Constant_Entity_Type := null;
          Error           : Error_Kind := E_No_Error;
          Error_Entity    : Constant_Entity_Type := null;
+         Error_Context   : Constant_Entity_Type := null;
          Integer_Value   : Integer;
          Label           : Natural := 0;
       end record;
@@ -1087,6 +1094,11 @@ private
      (Node : Node_Id)
       return Constant_Entity_Type
    is (Node_Table.Element (Node).Error_Entity);
+
+   function Get_Error_Context
+     (Node : Node_Id)
+      return Constant_Entity_Type
+   is (Node_Table.Element (Node).Error_Context);
 
    function Require_Else (Node : Node_Id) return Boolean
    is (Node_Table.Element (Node).Inherited);

@@ -220,6 +220,55 @@ package body Ack.Classes is
          Scan_Hierarchy (Inherited.Inherited_Type.Class);
       end loop;
 
+      for Feature of Class.Class_Features loop
+         for Inherited of Class.Inherited_Types loop
+            declare
+               Ancestor : constant Class_Entity :=
+                            Class_Entity (Inherited.Inherited_Type.Class);
+            begin
+               if Ancestor.Defines_Feature (Feature.Entity_Name_Id) then
+                  declare
+                     Found : Boolean := False;
+                     A_Feature : constant Ack.Features.Feature_Entity :=
+                                   Ancestor.Feature
+                                     (Feature.Entity_Name_Id);
+                  begin
+                     for Redefine of Inherited.Redefined_Features loop
+                        if Redefine.Feature_Name = Feature.Entity_Name_Id then
+                           Found := True;
+                           if A_Feature.Deferred then
+                              Error (Redefine.Node,
+                                     E_Unnecessary_Redefine,
+                                     Feature);
+                           end if;
+                           exit;
+                        end if;
+                     end loop;
+
+                     if not Found
+                       and then not A_Feature.Deferred
+                     then
+                        Ada.Text_IO.Put_Line
+                          (Get_Program (Feature.Declaration_Node)
+                           .Show_Location
+                           & ": no redefine for "
+                           & A_Feature.Properties_Summary);
+
+                        Error (Feature.Declaration_Node,
+                               E_Missing_Redefine, Feature, Ancestor);
+                     end if;
+
+                     if not Found then
+                        Feature.Set_Redefined (Class, A_Feature);
+                     end if;
+
+                  end;
+               end if;
+            end;
+
+         end loop;
+      end loop;
+
       Class.Bound := True;
    end Bind;
 
@@ -616,6 +665,24 @@ package body Ack.Classes is
       end if;
    end Default_Creation_Routine;
 
+   ---------------------
+   -- Defines_Feature --
+   ---------------------
+
+   function Defines_Feature
+     (Class : not null access constant Class_Entity_Record'Class;
+      Name  : Name_Id)
+      return Boolean
+   is
+   begin
+      for Feature of Class.Class_Features loop
+         if Feature.Entity_Name_Id = Name then
+            return True;
+         end if;
+      end loop;
+      return False;
+   end Defines_Feature;
+
    -------------
    -- Feature --
    -------------
@@ -750,6 +817,7 @@ package body Ack.Classes is
    is
       Layout : Virtual_Table_Layout renames Class.Virtual_Table;
       Labels : WL.String_Sets.Set;
+      Thunks : WL.String_Sets.Set;
       Offset : Word_Offset := 0;
 
       procedure Create_Call_Thunk
@@ -769,6 +837,12 @@ package body Ack.Classes is
                         & "$" & Link_Name
                         & "$call_thunk";
       begin
+
+         if Thunks.Contains (Thunk_Name) then
+            return;
+         end if;
+
+         Thunks.Insert (Thunk_Name);
          Unit.Segment (Tagatha.Executable);
          Unit.Begin_Code (Thunk_Name, False);
          Unit.Pop_Operand
