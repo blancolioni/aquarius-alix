@@ -182,6 +182,11 @@ package Ack.Classes is
       Name  : Name_Id)
       return Boolean;
 
+   function Defines_Feature
+     (Class : not null access constant Class_Entity_Record'Class;
+      Name  : Name_Id)
+      return Boolean;
+
    function Feature
      (Class : not null access constant Class_Entity_Record'Class;
       Name  : Name_Id)

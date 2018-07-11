@@ -3,7 +3,6 @@ deferred class
 
 inherit
    Aqua.Iteration_Cursor [Element_Type]
-      redefine Element, Next, After end
    
 feature
 

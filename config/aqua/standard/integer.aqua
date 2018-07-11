@@ -2,16 +2,12 @@ expanded class
    Integer
    
 inherit  
-   Aqua.Algebra.Additive 
-      redefine Add, Subtract, Negate, Zero end
+   Aqua.Algebra.Additive redefine Subtract, Negate end 
    Aqua.Algebra.Multiplicative
-      redefine One, Multiply, Divide, Modulus end
    Aqua.Algebra.Eq
    Aqua.Integral 
-      redefine Make_With_Integer_Literal, Convert_From end
    Aqua.Comparable 
-      redefine GE, LE, GT, LT end
-   Aqua.Bounded redefine Minimum, Maximum end
+   Aqua.Bounded
    
 feature
    To_String : String

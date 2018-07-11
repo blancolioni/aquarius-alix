@@ -211,13 +211,15 @@ package body Ack is
    -----------
 
    procedure Error
-     (Node   : Node_Id;
-      Kind   : Error_Kind;
-      Entity : access constant Root_Entity_Type'Class := null)
+     (Node    : Node_Id;
+      Kind    : Error_Kind;
+      Entity  : access constant Root_Entity_Type'Class := null;
+      Context : access constant Root_Entity_Type'Class := null)
    is
    begin
       Node_Table (Node).Error := Kind;
       Node_Table (Node).Error_Entity := Constant_Entity_Type (Entity);
+      Node_Table (Node).Error_Context := Constant_Entity_Type (Context);
 --        Ada.Text_IO.Put_Line
 --          (Get_Program (Node).Show_Location
 --           & ": "
@@ -392,6 +394,7 @@ package body Ack is
                Node_Type       => null,
                Dest_Type       => null,
                Error_Entity    => null,
+               Error_Context   => null,
                Error           => E_No_Error,
                Label           => 0));
       end return;

@@ -238,7 +238,7 @@ package body Ack.Semantic is
                              (Actual_List_Node).List);
          begin
             if Entity.Argument_Count = 0 then
-               Error (Actual_List_Node, E_Does_Not_Accept_Arguments);
+               Error (Actual_List_Node, E_Does_Not_Accept_Arguments, Entity);
             elsif Actuals'Length > Entity.Argument_Count then
                Error (Actual_List_Node, E_Too_Many_Arguments);
             elsif Actuals'Length < Entity.Argument_Count then
@@ -1222,7 +1222,7 @@ package body Ack.Semantic is
                Entity.Set_Explicit_Value
                  (Constant_Value (Value_Node));
             elsif Deferred then
-               Entity.Set_Deferred;
+               null;  --  already analysed by feature header
             elsif Internal then
                Entity.Set_Routine (Effective_Node);
             elsif External then
@@ -1420,6 +1420,15 @@ package body Ack.Semantic is
    is
       pragma Unreferenced (Exports);
       Names        : constant List_Id := New_Feature_List (Feature);
+      Dec_Body        : constant Node_Id := Declaration_Body (Feature);
+      Value_Node      : constant Node_Id := Value (Dec_Body);
+      Routine_Feature : constant Boolean :=
+                          Value_Node /= No_Node
+                              and then Kind (Value_Node) = N_Routine;
+      Deferred        : constant Boolean :=
+                          Routine_Feature
+                              and then Node_Table.Element
+                                (Value_Node).Deferred;
    begin
       for Node of List_Table.Element (Names).List loop
          declare
@@ -1448,6 +1457,9 @@ package body Ack.Semantic is
             end if;
 
             Ack.Features.Set_Feature_Entity (Node, Entity);
+            if Deferred then
+               Entity.Set_Deferred;
+            end if;
             Class.Add_Feature (Entity);
          end;
       end loop;
@@ -2016,7 +2028,8 @@ package body Ack.Semantic is
                                    (Actual_List_Node).List);
                begin
                   if Entity.Argument_Count = 0 then
-                     Error (Actual_List_Node, E_Does_Not_Accept_Arguments);
+                     Error (Actual_List_Node, E_Does_Not_Accept_Arguments,
+                            Entity);
                   elsif Actuals'Length > Entity.Argument_Count then
                      Error (Actual_List_Node, E_Too_Many_Arguments);
                   elsif Actuals'Length < Entity.Argument_Count then

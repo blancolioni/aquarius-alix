@@ -59,10 +59,15 @@ package body Ack.Errors is
             return "cannot inherit expanded class";
          when E_Requires_Body =>
             return "routine feature requires a body";
-         when E_Missing_Redefine =>
+         when E_Unnecessary_Redefine =>
             return "deferred feature '"
               & Get_Error_Entity (Node).Declared_Name
-              & "' must appear in redefine clause";
+              & "' should not appear in redefine";
+         when E_Missing_Redefine =>
+            return "feature '"
+              & Get_Error_Entity (Node).Declared_Name
+              & "' must appear in redefine clause for class "
+              & Get_Error_Context (Node).Qualified_Name;
          when E_Missing_Redefinition =>
             return "missing declaration for redefined feature "
               & To_String (Get_Name (Node));
@@ -105,7 +110,11 @@ package body Ack.Errors is
          when E_Too_Many_Arguments =>
             return "too many arguments";
          when E_Does_Not_Accept_Arguments =>
-            return "entity does not accept arguments";
+            return Get_Error_Entity (Node).Declared_Name
+              & " declared at "
+              & Get_Program (Get_Error_Entity (Node).Declaration_Node)
+              .Show_Location
+              & " does not accept any arguments";
          when E_Requires_Value =>
             return "feature requires a body";
          when E_Requires_Definition =>
