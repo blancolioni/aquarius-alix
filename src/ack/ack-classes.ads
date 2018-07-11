@@ -143,6 +143,7 @@ package Ack.Classes is
       Feature_Name : Name_Id;
       Process      : not null access
         procedure (Ancestor_Class : Class_Entity;
+                   Redefinition_Node : Node_Id;
                    Ancestor_Feature : Name_Id));
 
    function Is_Descendent_Of

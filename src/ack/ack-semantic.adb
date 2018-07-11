@@ -1315,17 +1315,20 @@ package body Ack.Semantic is
       Type_Node    : constant Node_Id := Value_Type (Dec_Body);
 
       procedure Analyse_Ancestor_Feature
-        (Ancestor_Class   : Ack.Classes.Class_Entity;
-         Ancestor_Feature : Name_Id);
+        (Ancestor_Class    : Ack.Classes.Class_Entity;
+         Redefinition_Node : Node_Id;
+         Ancestor_Feature  : Name_Id);
 
       ------------------------------
       -- Analyse_Ancestor_Feature --
       ------------------------------
 
       procedure Analyse_Ancestor_Feature
-        (Ancestor_Class   : Ack.Classes.Class_Entity;
-         Ancestor_Feature : Name_Id)
+        (Ancestor_Class    : Ack.Classes.Class_Entity;
+         Redefinition_Node : Node_Id;
+         Ancestor_Feature  : Name_Id)
       is
+         pragma Unreferenced (Redefinition_Node);
       begin
          Ack.Semantic.Work.Check_Work_Item
            (Class        => Ancestor_Class,
@@ -1371,16 +1374,18 @@ package body Ack.Semantic is
 
          declare
             procedure Link_Redefinition
-              (Ancestor_Class   : Ack.Classes.Class_Entity;
-               Ancestor_Feature : Name_Id);
+              (Ancestor_Class    : Ack.Classes.Class_Entity;
+               Redefinition_Node : Node_Id;
+               Ancestor_Feature  : Name_Id);
 
             -----------------------
             -- Link_Redefinition --
             -----------------------
 
             procedure Link_Redefinition
-              (Ancestor_Class   : Ack.Classes.Class_Entity;
-               Ancestor_Feature : Name_Id)
+              (Ancestor_Class    : Ack.Classes.Class_Entity;
+               Redefinition_Node : Node_Id;
+               Ancestor_Feature  : Name_Id)
             is
                Feature : constant Ack.Features.Feature_Entity :=
                            Ack.Features.Get_Feature_Entity
@@ -1392,7 +1397,7 @@ package body Ack.Semantic is
                      Original_Feature =>
                        Ancestor_Class.Feature (Ancestor_Feature));
                else
-                  Error (Node, E_Not_Defined_In, Ancestor_Class);
+                  Error (Redefinition_Node, E_Not_Defined_In, Ancestor_Class);
                end if;
             end Link_Redefinition;
 

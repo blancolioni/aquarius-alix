@@ -1477,6 +1477,7 @@ package body Ack.Classes is
       Feature_Name : Name_Id;
       Process      : not null access
         procedure (Ancestor_Class : Class_Entity;
+                   Redefinition_Node : Node_Id;
                    Ancestor_Feature : Name_Id))
    is
    begin
@@ -1484,6 +1485,7 @@ package body Ack.Classes is
          for Redefined of Inherited.Redefined_Features loop
             if Redefined.Feature_Name = Feature_Name then
                Process (Inherited.Inherited_Type.Class,
+                        Redefined.Node,
                         Redefined.Feature_Name);
             end if;
          end loop;
