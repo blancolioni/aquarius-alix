@@ -6,7 +6,7 @@ feature
    Table_Name : String
    
    Entry_List : Aqua.Containers.Linked_List[Petal.Entry]
-   Parent : detachable Petal.Entry_Table
+   Parent     : detachable Petal.Entry_Table
    
    Set_Entry_List (List : Aqua.Containers.Linked_List[Petal.Entry])
       do
@@ -40,7 +40,9 @@ feature
       Lower_Name : String
    do
       Lower_Name := Name.To_Lower
+      Put_Line (Table_Name & ": looking for " & Lower_Name)
       across Entry_List as E loop
+         Put_Line ("checking " & E.Name)
          if E.Name = Lower_Name then
             Result := E
          end

@@ -1,4 +1,7 @@
-class Petal.Checks.Multiplying_Operator
+class 
+
+   Petal.Checks.Multiplying_Operator
+   
 inherit
    Aquarius.Trees.Program_Tree
    

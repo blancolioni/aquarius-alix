@@ -3,7 +3,7 @@ inherit
    Aqua.Text_IO
    
 create
-   Create_Constant_Entry, Create_Value_Entry, Create_Type_Entry, Create_Object_Entry
+   Create_Constant_Entry, Create_Value_Entry, Create_Type_Entry, Create_Object_Entry, Create_Entry
    
 feature
 

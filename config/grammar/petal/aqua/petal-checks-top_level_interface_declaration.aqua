@@ -11,9 +11,8 @@ feature
    After_Qualified_Identifier (Child : Petal.Checks.Qualified_Identifier)
       do
          Put_Line ("interface " & Child.Identifiers.Interpolate ("."))
-         create Entry
          create Interface
-         Entry.Create_Entry (Child.Identifiers.Last_Element, Void, Interface)
+         create Entry.Create_Entry (Child.Identifiers.Last_Element, Void, Interface)
       end
       
 end

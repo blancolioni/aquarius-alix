@@ -43,6 +43,7 @@ feature
                   else
                      Put_Line ("invalid prefix in selected component " & Id)
                   end
+                  Has_Error := True
                end
             else
                Put_Line ("invalid prefix in selected component " & Id)
