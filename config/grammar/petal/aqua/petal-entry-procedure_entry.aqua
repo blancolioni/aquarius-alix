@@ -1,9 +1,10 @@
 class Petal.Entry.Procedure_Entry
 inherit
-   Petal.Entry.Subprogram_Entry redefine Generate_Kernel_Type end
+   Petal.Entry.Subprogram_Entry
    Aqua.Text_IO
    
 feature
+
    Generate_Kernel_Type
    do
       Put_Line ("   --  kernel procedure type")

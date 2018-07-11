@@ -1,4 +1,7 @@
-class Petal.Checks.Boolean_Operator
+class 
+
+   Petal.Checks.Boolean_Operator
+   
 inherit
    Aquarius.Trees.Program_Tree
    

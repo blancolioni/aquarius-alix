@@ -1,7 +1,9 @@
-class Petal.Checks.Object_Reference
+class 
+   Petal.Checks.Object_Reference
+   
 inherit
-   Aquarius.Trees.Program_Tree
    Petal.Context
+   Aquarius.Trees.Program_Tree
    
 feature
 
