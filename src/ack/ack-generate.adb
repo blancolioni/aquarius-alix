@@ -379,6 +379,8 @@ package body Ack.Generate is
         (Creation_Type.Link_Name & "$create", 0);
       Unit.Push_Return;
 
+      Created_Entity.Pop_Entity (Created_Context, Creation_Type, Unit);
+
       if Explicit_Call_Node not in Real_Node_Id then
          pragma Assert (Creation_Type.Has_Default_Creation_Routine);
          Creation_Routine :=
@@ -386,6 +388,7 @@ package body Ack.Generate is
       else
          Creation_Routine :=
            Get_Entity (Explicit_Call_Node);
+
          declare
             Actual_List_Node  : constant Node_Id :=
                                   Actual_List (Explicit_Call_Node);
@@ -408,8 +411,6 @@ package body Ack.Generate is
 
       if Creation_Routine /= null then
 
-         Created_Entity.Pop_Entity (Created_Context, Creation_Type, Unit);
-
          Created_Entity.Push_Entity
            (Have_Current => False,
             Context      => Created_Context,
@@ -420,17 +421,7 @@ package body Ack.Generate is
             Context      => Creation_Type.Class_Context,
             Unit         => Unit);
 
-         Created_Entity.Push_Entity
-           (Have_Current => False,
-            Context      => Created_Context,
-            Unit         => Unit);
-
       end if;
-
-      Created_Entity.Pop_Entity
-        (Created_Context, Creation_Type, Unit);
-
-      --  Created_Entity.Set_Attached;
 
    exception
       when others =>
@@ -760,11 +751,6 @@ package body Ack.Generate is
                           From.Class.Ancestor_Table_Offset (To.Class);
             begin
                if Offset > 0 then
---                    Ada.Text_IO.Put_Line
---                      (Get_Program (Argument).Show_Location
---                       & ": converting from "
---                       & From.Class.Qualified_Name
---                       & " to " & To.Class.Qualified_Name);
                   Unit.Duplicate;
                   Unit.Dereference;
                   Push_Offset (Unit, Offset);
@@ -793,20 +779,6 @@ package body Ack.Generate is
            (Have_Current => Element /= First_Element,
             Context      => Get_Context (Element),
             Unit         => Unit);
-
-         if False and then E_Type /= null then
-            Ada.Text_IO.Put_Line
-              (Get_Program (Element).Show_Location
-               & ": push " & Entity.Qualified_Name & ": "
-               & E_Type.Qualified_Name
-               & (if E_Type.Expanded then " expanded" else "")
-               & (if Entity.Can_Update then " can-update" else "")
-               & (if Entity.Attached then " attached" else "")
-               & (if E_Type.Detachable then " detachable" else "")
-               & (if E_Type.Deferred then " deferred" else "")
-               & (if E_Type.Is_Generic_Formal_Type
-                 then " generic-formal" else ""));
-         end if;
 
          if E_Type /= null
            and then Entity.Standard_Name /= "void"
