@@ -127,6 +127,10 @@ package body Ack.Errors is
          when E_Not_An_Iterator =>
             return "type " & Get_Error_Entity (Node).Declared_Name
               & " is not traversable";
+         when E_Value_Might_Be_Void =>
+            return "value of attached entity "
+              & Get_Error_Entity (Node).Declared_Name
+              & " might void but there is no default create routine";
       end case;
    end Error_Message;
 
