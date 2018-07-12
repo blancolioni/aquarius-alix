@@ -2,12 +2,12 @@ expanded class
    Integer
    
 inherit  
-   Aqua.Algebra.Additive redefine Subtract, Negate end 
-   Aqua.Algebra.Multiplicative
-   Aqua.Algebra.Eq
-   Aqua.Integral 
-   Aqua.Comparable 
-   Aqua.Bounded
+   Aqua.Algebra.Additive redefine Subtract, Negate, Equal end 
+   Aqua.Algebra.Multiplicative redefine Equal end
+   Aqua.Algebra.Eq redefine Equal end
+   Aqua.Integral redefine Equal end
+   Aqua.Comparable redefine Equal end
+   Aqua.Bounded redefine Equal end
    
 feature
    To_String : String
