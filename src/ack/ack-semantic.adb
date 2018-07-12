@@ -1372,40 +1372,6 @@ package body Ack.Semantic is
             end if;
          end;
 
-         declare
-            procedure Link_Redefinition
-              (Ancestor_Class    : Ack.Classes.Class_Entity;
-               Redefinition_Node : Node_Id;
-               Ancestor_Feature  : Name_Id);
-
-            -----------------------
-            -- Link_Redefinition --
-            -----------------------
-
-            procedure Link_Redefinition
-              (Ancestor_Class    : Ack.Classes.Class_Entity;
-               Redefinition_Node : Node_Id;
-               Ancestor_Feature  : Name_Id)
-            is
-               Feature : constant Ack.Features.Feature_Entity :=
-                           Ack.Features.Get_Feature_Entity
-                             (Node);
-            begin
-               if Ancestor_Class.Has_Feature (Ancestor_Feature) then
-                  Feature.Set_Redefined
-                    (Class            => Class,
-                     Original_Feature =>
-                       Ancestor_Class.Feature (Ancestor_Feature));
-               else
-                  Error (Redefinition_Node, E_Not_Defined_In, Ancestor_Class);
-               end if;
-            end Link_Redefinition;
-
-         begin
-            Class.Scan_Redefinitions
-              (Get_Entity (Node).Entity_Name_Id,
-               Link_Redefinition'Access);
-         end;
       end loop;
    end Analyse_Feature_Header;
 
