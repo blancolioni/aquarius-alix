@@ -472,9 +472,17 @@ package Ack is
      (Top     : Node_Id;
       Process : not null access
         procedure (Node : Node_Id;
-                   Error : Error_Kind));
+                   Error : Error_Kind;
+                   Warning : Boolean));
 
    procedure Error
+     (Node    : Node_Id;
+      Kind    : Error_Kind;
+      Entity  : access constant Root_Entity_Type'Class := null;
+      Context : access constant Root_Entity_Type'Class := null)
+     with Pre => Kind /= E_Undeclared_Name or else Has_Name (Node);
+
+   procedure Warning
      (Node    : Node_Id;
       Kind    : Error_Kind;
       Entity  : access constant Root_Entity_Type'Class := null;
