@@ -1,6 +1,6 @@
 class Petal.Entry.Procedure_Entry
 inherit
-   Petal.Entry.Subprogram_Entry
+   Petal.Entry.Subprogram_Entry redefine Generate_Kernel_Type end 
    Aqua.Text_IO
    
 feature
