@@ -378,7 +378,7 @@ package body Ack is
                Expanded => Expanded, Frozen => Frozen,
                Defining => Defining, Single => False, Once => Once,
                Detachable      => Detachable, Inherited => Inherited,
-               Implicit_Entity => False,
+               Implicit_Entity => False, Attached => False,
                Field    =>
                  (1 => Field_1,
                   2 => Field_2,
@@ -395,6 +395,7 @@ package body Ack is
                Dest_Type       => null,
                Error_Entity    => null,
                Error_Context   => null,
+               Warning         => False,
                Error           => E_No_Error,
                Label           => 0));
       end return;
@@ -484,7 +485,8 @@ package body Ack is
      (Top     : Node_Id;
       Process : not null access
         procedure (Node : Node_Id;
-                   Error : Error_Kind))
+                   Error : Error_Kind;
+                   Warning : Boolean))
    is
       procedure Process_Node (Node : Node_Id);
 
@@ -495,7 +497,8 @@ package body Ack is
       procedure Process_Node (Node : Node_Id) is
       begin
          if Has_Error (Node) then
-            Process (Node, Get_Error (Node));
+            Process (Node, Get_Error (Node),
+                     Node_Table.Element (Node).Warning);
          end if;
       end Process_Node;
 
@@ -690,5 +693,22 @@ package body Ack is
          end loop;
       end return;
    end To_Array;
+
+   -------------
+   -- Warning --
+   -------------
+
+   procedure Warning
+     (Node    : Node_Id;
+      Kind    : Error_Kind;
+      Entity  : access constant Root_Entity_Type'Class := null;
+      Context : access constant Root_Entity_Type'Class := null)
+   is
+   begin
+      Node_Table (Node).Error := Kind;
+      Node_Table (Node).Error_Entity := Constant_Entity_Type (Entity);
+      Node_Table (Node).Error_Context := Constant_Entity_Type (Context);
+      Node_Table (Node).Warning := True;
+   end Warning;
 
 end Ack;

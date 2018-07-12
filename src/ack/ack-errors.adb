@@ -146,23 +146,28 @@ package body Ack.Errors is
    procedure Record_Errors (Node : Node_Id) is
 
       procedure Set_Error
-        (Node  : Ack.Node_Id;
-         Error : Ack.Error_Kind);
+        (Node    : Ack.Node_Id;
+         Error   : Ack.Error_Kind;
+         Warning : Boolean);
 
       ---------------
       -- Set_Error --
       ---------------
 
       procedure Set_Error
-        (Node  : Ack.Node_Id;
-         Error : Ack.Error_Kind)
+        (Node    : Ack.Node_Id;
+         Error   : Ack.Error_Kind;
+         Warning : Boolean)
       is
          Program : constant Aquarius.Programs.Program_Tree :=
                      Get_Program (Node);
-         Message : constant String := Error_Message (Node, Error);
+         Warning_Prefix : constant String :=
+                            (if Warning
+                             then "warning: " else "");
+         Message        : constant String := Error_Message (Node, Error);
       begin
-         Local_Has_Errors := True;
-         Aquarius.Errors.Error (Program, Message);
+         Local_Has_Errors := not Warning;
+         Aquarius.Errors.Error (Program, Warning_Prefix & Message);
       end Set_Error;
 
    begin
