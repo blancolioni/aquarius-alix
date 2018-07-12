@@ -216,25 +216,47 @@ package body Ack.Classes is
       if Trace_Classes then
          Ada.Text_IO.Put_Line ("binding: " & Class.Description);
       end if;
+
       for Inherited of Class.Inherited_Types loop
          Scan_Hierarchy (Inherited.Inherited_Type.Class);
       end loop;
 
       for Feature of Class.Class_Features loop
-         for Inherited of Class.Inherited_Types loop
-            declare
+
+         declare
+
+            Checked : WL.String_Sets.Set;
+
+            procedure Check_Redefinitions
+              (Inherited : Inherited_Type_Record);
+
+            -------------------------
+            -- Check_Redefinitions --
+            -------------------------
+
+            procedure Check_Redefinitions
+              (Inherited : Inherited_Type_Record)
+            is
                Ancestor : constant Class_Entity :=
                             Class_Entity (Inherited.Inherited_Type.Class);
             begin
-               if Ancestor.Defines_Feature (Feature.Entity_Name_Id) then
+               Checked.Insert (Ancestor.Qualified_Name);
+               if Ancestor.Has_Feature (Feature.Entity_Name_Id) then
                   declare
-                     Found : Boolean := False;
+                     Found     : Boolean := False;
                      A_Feature : constant Ack.Features.Feature_Entity :=
                                    Ancestor.Feature
                                      (Feature.Entity_Name_Id);
+                     A_Class   : constant Ack.Classes.Constant_Class_Entity :=
+                                   A_Feature.Definition_Class;
+                     pragma Unreferenced (A_Class);
                   begin
                      for Redefine of Inherited.Redefined_Features loop
                         if Redefine.Feature_Name = Feature.Entity_Name_Id then
+--                             Ada.Text_IO.Put_Line
+--                               (Feature.Qualified_Name
+--                                & " appears in redefine clause");
+                           Feature.Set_Redefined (Class, A_Feature);
                            Found := True;
                            if A_Feature.Deferred then
                               Error (Redefine.Node,
@@ -248,25 +270,35 @@ package body Ack.Classes is
                      if not Found
                        and then not A_Feature.Deferred
                      then
-                        Ada.Text_IO.Put_Line
-                          (Get_Program (Feature.Declaration_Node)
-                           .Show_Location
-                           & ": no redefine for "
-                           & A_Feature.Properties_Summary);
+--                          Ada.Text_IO.Put_Line
+--                            (Get_Program (Feature.Declaration_Node)
+--                             .Show_Location
+--                             & ": no redefine for "
+--                             & A_Feature.Properties_Summary);
 
                         Error (Feature.Declaration_Node,
                                E_Missing_Redefine, Feature, Ancestor);
                      end if;
 
                      if not Found then
+--                          Ada.Text_IO.Put_Line
+--                            (Feature.Qualified_Name
+--                             & " is effected from "
+--                             & A_Feature.Qualified_Name);
                         Feature.Set_Redefined (Class, A_Feature);
                      end if;
 
                   end;
                end if;
-            end;
+            end Check_Redefinitions;
 
-         end loop;
+         begin
+
+            for Inherited of Class.Inherited_Types loop
+               Check_Redefinitions (Inherited);
+            end loop;
+
+         end;
       end loop;
 
       Class.Bound := True;
