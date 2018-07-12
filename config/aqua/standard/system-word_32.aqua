@@ -6,10 +6,10 @@ expanded class
    System.Word_32
 
 inherit
-   Aqua.Algebra.Additive redefine Subtract end
-   Aqua.Algebra.Multiplicative
-   Aqua.Integral
-   Aqua.Comparable 
+   Aqua.Algebra.Additive redefine Subtract, Equal end
+   Aqua.Algebra.Multiplicative redefine Equal end
+   Aqua.Integral redefine Equal end
+   Aqua.Comparable redefine Equal end
       
 feature
 
