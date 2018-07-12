@@ -11,8 +11,7 @@ feature
    local
       Argument_Context : Petal.Entry_Table
    do
-      create Argument_Context
-      Argument_Context.Make ("formal-arguments", Context)
+      create Argument_Context.Make ("formal-arguments", Context)
       Context := Argument_Context
    end
      

@@ -2,6 +2,9 @@ class Petal.Entry_Table
 inherit
    Aqua.Text_IO
    
+create
+   Make
+   
 feature
    Table_Name : String
    
@@ -33,6 +36,7 @@ feature
    do
       Entry_List.Append (Entry)
       Entry.Set_Table (Current)
+      Put_line ("insert " & Entry.Name & " into " & Table_Name)
    end
       
    Find (Name : String) : detachable Petal.Entry
@@ -47,9 +51,11 @@ feature
             Result := E
          end
       end
+      Put_Line ("not found")
       if attached Result then
       else
          if attached Parent then 
+            Put_Line ("trying parent table")
             Result := Parent.Find (Name)
          end
       end
