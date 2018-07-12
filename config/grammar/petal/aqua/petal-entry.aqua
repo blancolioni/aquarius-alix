@@ -72,7 +72,7 @@ feature
       Has_Table := True
    ensure
       Table_Was_Set: Has_Table
-      Table_Was_Allocated: Table /= Void
+      Table_Has_Correct_Value: Table = To
    end
       
    Qualified_Name : String

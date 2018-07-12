@@ -15,6 +15,7 @@ feature
       do
          Put_Line ("procedure " & Child.Identifiers.Interpolate ("."))
          create Entry.Create_Entry (Child.Identifiers.Last_Element, Void, Void)
+         create Context.Make (Child.Identifiers.Interpolate ("-").To_Lower, Standard)
          Argument_Context := Context
          Declaration_Context := Context
       end
