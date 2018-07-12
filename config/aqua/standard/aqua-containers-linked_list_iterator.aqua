@@ -4,10 +4,9 @@ class
 inherit
    Aqua.Containers.Forward_Iterator[G]
    Aqua.Update_Iteration_Cursor [G]
-      redefine After, Next, Element end
       
-   create
-      Make
+create
+   Make
       
 feature{Aqua.Containers.Linked_List}
 
