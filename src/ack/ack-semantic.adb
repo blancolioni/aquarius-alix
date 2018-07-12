@@ -12,6 +12,7 @@ with Ack.Features;
 with Ack.Types;
 with Ack.Variables;
 
+with Ack.Attachment;
 with Ack.Semantic.Work;
 
 with Ack.Generate.Primitives;
@@ -136,86 +137,101 @@ package body Ack.Semantic is
      with Pre => Kind (Type_Node) = N_Tuple_Type;
 
    procedure Analyse_Assertion
-     (Class     : Ack.Classes.Class_Entity;
-      Container : not null access Root_Entity_Type'Class;
-      Assertion : Node_Id;
-      Process   : not null access
+     (Class      : Ack.Classes.Class_Entity;
+      Container  : not null access Root_Entity_Type'Class;
+      Attachment : in out Ack.Attachment.Attachment_Context'Class;
+      Assertion  : Node_Id;
+      Process    : not null access
         procedure (Tag : Name_Id;
                    Condition : Node_Id));
 
    procedure Analyse_Effective_Routine
-     (Class     : Ack.Classes.Class_Entity;
-      Container : not null access Root_Entity_Type'Class;
-      Routine   : Node_Id);
+     (Class      : Ack.Classes.Class_Entity;
+      Container  : not null access Root_Entity_Type'Class;
+      Attachment : in out Ack.Attachment.Attachment_Context'Class;
+      Routine    : Node_Id);
 
    procedure Analyse_Compound
-     (Class     : Ack.Classes.Class_Entity;
-      Container : not null access Root_Entity_Type'Class;
-      Compound  : Node_Id);
+     (Class      : Ack.Classes.Class_Entity;
+      Container  : not null access Root_Entity_Type'Class;
+      Attachment : in out Ack.Attachment.Attachment_Context'Class;
+      Compound   : Node_Id);
 
    procedure Analyse_Assignment
      (Class      : Ack.Classes.Class_Entity;
       Container  : not null access Root_Entity_Type'Class;
+      Attachment : in out Ack.Attachment.Attachment_Context'Class;
       Assignment : Node_Id);
 
    procedure Analyse_Conditional
      (Class       : Ack.Classes.Class_Entity;
       Container   : not null access Root_Entity_Type'Class;
+      Attachment  : in out Ack.Attachment.Attachment_Context'Class;
       Conditional : Node_Id);
 
    procedure Analyse_Creation
-     (Class     : Ack.Classes.Class_Entity;
-      Container : not null access Root_Entity_Type'Class;
-      Creation  : Node_Id);
+     (Class      : Ack.Classes.Class_Entity;
+      Container  : not null access Root_Entity_Type'Class;
+      Attachment : in out Ack.Attachment.Attachment_Context'Class;
+      Creation   : Node_Id);
 
    procedure Analyse_Loop
-     (Class     : Ack.Classes.Class_Entity;
-      Container : not null access Root_Entity_Type'Class;
-      Loop_Node : Node_Id);
+     (Class      : Ack.Classes.Class_Entity;
+      Container  : not null access Root_Entity_Type'Class;
+      Attachment : in out Ack.Attachment.Attachment_Context'Class;
+      Loop_Node  : Node_Id);
 
    procedure Analyse_Check
-     (Class     : Ack.Classes.Class_Entity;
-      Container : not null access Root_Entity_Type'Class;
-      Check     : Node_Id)
+     (Class      : Ack.Classes.Class_Entity;
+      Container  : not null access Root_Entity_Type'Class;
+      Attachment : in out Ack.Attachment.Attachment_Context'Class;
+      Check      : Node_Id)
    is null;
 
    procedure Analyse_Retry
      (Class      : Ack.Classes.Class_Entity;
       Container  : not null access Root_Entity_Type'Class;
+      Attachment : in out Ack.Attachment.Attachment_Context'Class;
       Retry      : Node_Id);
 
    procedure Analyse_Boolean_Expression
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
+      Attachment      : in out Ack.Attachment.Attachment_Context'Class;
       Expression      : Node_Id);
 
    procedure Analyse_Expression
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
+      Attachment      : in out Ack.Attachment.Attachment_Context'Class;
       Expression_Type : not null access Root_Entity_Type'Class;
       Expression      : Node_Id);
 
    procedure Analyse_Operator
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
+      Attachment      : in out Ack.Attachment.Attachment_Context'Class;
       Expression_Type : access Root_Entity_Type'Class;
       Operator_Node   : Node_Id);
 
    procedure Analyse_Precursor
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
+      Attachment      : in out Ack.Attachment.Attachment_Context'Class;
       Expression_Type : access Root_Entity_Type'Class;
       Precursor       : Node_Id);
 
    procedure Analyse_Tuple_Expression
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
+      Attachment      : in out Ack.Attachment.Attachment_Context'Class;
       Expression_Type : access Root_Entity_Type'Class;
       Expression      : Node_Id);
 
    procedure Analyse_Actual_Arguments
      (Class            : Ack.Classes.Class_Entity;
       Container        : not null access Root_Entity_Type'Class;
+      Attachment       : in out Ack.Attachment.Attachment_Context'Class;
       Entity           : Entity_Type;
       Actual_List_Node : Node_Id);
 
@@ -226,6 +242,7 @@ package body Ack.Semantic is
    procedure Analyse_Actual_Arguments
      (Class            : Ack.Classes.Class_Entity;
       Container        : not null access Root_Entity_Type'Class;
+      Attachment       : in out Ack.Attachment.Attachment_Context'Class;
       Entity           : Entity_Type;
       Actual_List_Node : Node_Id)
    is
@@ -248,6 +265,7 @@ package body Ack.Semantic is
                   Analyse_Expression
                     (Class           => Class,
                      Container       => Container,
+                     Attachment      => Attachment,
                      Expression_Type => Entity.Argument (I).Get_Type,
                      Expression      => Actuals (I));
                end loop;
@@ -278,10 +296,11 @@ package body Ack.Semantic is
    -----------------------
 
    procedure Analyse_Assertion
-     (Class     : Ack.Classes.Class_Entity;
-      Container : not null access Root_Entity_Type'Class;
-      Assertion : Node_Id;
-      Process   : not null access
+     (Class      : Ack.Classes.Class_Entity;
+      Container  : not null access Root_Entity_Type'Class;
+      Attachment : in out Ack.Attachment.Attachment_Context'Class;
+      Assertion  : Node_Id;
+      Process    : not null access
         procedure (Tag : Name_Id;
                    Condition : Node_Id))
    is
@@ -294,7 +313,8 @@ package body Ack.Semantic is
 
       procedure Analyse_Clause (Clause : Node_Id) is
       begin
-         Analyse_Boolean_Expression (Class, Container, Expression (Clause));
+         Analyse_Boolean_Expression
+           (Class, Container, Attachment, Expression (Clause));
          Process (Get_Name (Clause), Expression (Clause));
       end Analyse_Clause;
 
@@ -309,6 +329,7 @@ package body Ack.Semantic is
    procedure Analyse_Assignment
      (Class      : Ack.Classes.Class_Entity;
       Container  : not null access Root_Entity_Type'Class;
+      Attachment : in out Ack.Attachment.Attachment_Context'Class;
       Assignment : Node_Id)
    is
       Target : constant String :=
@@ -327,10 +348,12 @@ package body Ack.Semantic is
                   Category     => Ack.Semantic.Work.Feature_Header);
             end if;
 
-            Analyse_Expression (Class, Container, Entity.Get_Type,
+            Analyse_Expression (Class, Container, Attachment,
+                                Entity.Get_Type,
                                 Expression (Assignment));
             Set_Entity (Variable (Assignment), Entity);
             Set_Context (Variable (Assignment), Container);
+            Attachment.Transfer_Current_Context_Attachment (Entity);
          end;
       else
          Error (Variable (Assignment), E_Undeclared_Name);
@@ -345,11 +368,12 @@ package body Ack.Semantic is
    procedure Analyse_Boolean_Expression
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
+      Attachment      : in out Ack.Attachment.Attachment_Context'Class;
       Expression      : Node_Id)
    is
    begin
       Analyse_Expression
-        (Class, Container,
+        (Class, Container, Attachment,
          Get_Top_Level_Type ("boolean"),
          Expression);
    end Analyse_Boolean_Expression;
@@ -802,9 +826,10 @@ package body Ack.Semantic is
    ----------------------
 
    procedure Analyse_Compound
-     (Class     : Ack.Classes.Class_Entity;
-      Container : not null access Root_Entity_Type'Class;
-      Compound  : Node_Id)
+     (Class      : Ack.Classes.Class_Entity;
+      Container  : not null access Root_Entity_Type'Class;
+      Attachment : in out Ack.Attachment.Attachment_Context'Class;
+      Compound   : Node_Id)
    is
       List : constant List_Id := Instructions (Compound);
 
@@ -818,23 +843,24 @@ package body Ack.Semantic is
       begin
          case N_Instruction (Kind (Node)) is
             when N_Assignment =>
-               Analyse_Assignment (Class, Container, Node);
+               Analyse_Assignment (Class, Container, Attachment, Node);
             when N_Creation_Instruction =>
-               Analyse_Creation (Class, Container, Node);
+               Analyse_Creation (Class, Container, Attachment, Node);
             when N_Conditional =>
-               Analyse_Conditional (Class, Container, Node);
+               Analyse_Conditional (Class, Container, Attachment, Node);
             when N_Loop =>
-               Analyse_Loop (Class, Container, Node);
+               Analyse_Loop (Class, Container, Attachment, Node);
             when N_Precursor =>
                Analyse_Precursor
                  (Class           => Class,
                   Container       => Container,
+                  Attachment      => Attachment,
                   Expression_Type => null,
                   Precursor       => Node);
             when N_Check =>
-               Analyse_Check (Class, Container, Node);
+               Analyse_Check (Class, Container, Attachment, Node);
             when N_Retry =>
-               Analyse_Retry (Class, Container, Node);
+               Analyse_Retry (Class, Container, Attachment, Node);
          end case;
       end Analyse;
 
@@ -849,6 +875,7 @@ package body Ack.Semantic is
    procedure Analyse_Conditional
      (Class       : Ack.Classes.Class_Entity;
       Container   : not null access Root_Entity_Type'Class;
+      Attachment  : in out Ack.Attachment.Attachment_Context'Class;
       Conditional : Node_Id)
    is
       procedure Analyse_Element (Element : Node_Id);
@@ -863,13 +890,13 @@ package body Ack.Semantic is
       begin
          if Condition /= No_Node then
             Analyse_Boolean_Expression
-              (Class, Container,
+              (Class, Container, Attachment,
                Condition);
             if Implicit_Entity (Condition) then
                Container.Add_Implicit (Get_Entity (Condition));
             end if;
          end if;
-         Analyse_Compound (Class, Container, Compound);
+         Analyse_Compound (Class, Container, Attachment, Compound);
          if Condition /= No_Node and then Implicit_Entity (Condition) then
             Container.Remove_Implicit;
          end if;
@@ -885,9 +912,10 @@ package body Ack.Semantic is
    ----------------------
 
    procedure Analyse_Creation
-     (Class     : Ack.Classes.Class_Entity;
-      Container : not null access Root_Entity_Type'Class;
-      Creation  : Node_Id)
+     (Class      : Ack.Classes.Class_Entity;
+      Container  : not null access Root_Entity_Type'Class;
+      Attachment : in out Ack.Attachment.Attachment_Context'Class;
+      Creation   : Node_Id)
    is
       Explicit_Type_Node : constant Node_Id :=
                              Explicit_Creation_Type (Creation);
@@ -974,6 +1002,7 @@ package body Ack.Semantic is
                   Analyse_Actual_Arguments
                     (Class            => Class,
                      Container        => Container,
+                     Attachment       => Attachment,
                      Entity           => Creator,
                      Actual_List_Node => Actual_List (Explicit_Call_Node));
                end if;
@@ -984,6 +1013,8 @@ package body Ack.Semantic is
          end if;
       end if;
 
+      Attachment.Attach (Created_Entity);
+
    end Analyse_Creation;
 
    -------------------------------
@@ -991,14 +1022,16 @@ package body Ack.Semantic is
    -------------------------------
 
    procedure Analyse_Effective_Routine
-     (Class     : Ack.Classes.Class_Entity;
-      Container : not null access Root_Entity_Type'Class;
-      Routine   : Node_Id)
+     (Class      : Ack.Classes.Class_Entity;
+      Container  : not null access Root_Entity_Type'Class;
+      Attachment : in out Ack.Attachment.Attachment_Context'Class;
+      Routine    : Node_Id)
    is
    begin
       case N_Effective_Routine (Kind (Routine)) is
          when N_Internal =>
-            Analyse_Compound (Class, Container, Compound (Routine));
+            Analyse_Compound (Class, Container, Attachment,
+                              Compound (Routine));
          when N_External =>
             null;
       end case;
@@ -1071,6 +1104,7 @@ package body Ack.Semantic is
    procedure Analyse_Expression
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
+      Attachment      : in out Ack.Attachment.Attachment_Context'Class;
       Expression_Type : not null access Root_Entity_Type'Class;
       Expression      : Node_Id)
    is
@@ -1079,19 +1113,20 @@ package body Ack.Semantic is
       case N_Expression_Node (K) is
          when N_Operator =>
             Analyse_Operator
-              (Class, Container, Expression_Type, Expression);
+              (Class, Container, Attachment, Expression_Type, Expression);
          when N_Precursor =>
             Analyse_Precursor
-              (Class, Container, Expression_Type, Expression);
+              (Class, Container, Attachment, Expression_Type, Expression);
          when N_Old =>
-            Analyse_Expression (Class, Container, Expression_Type,
+            Analyse_Expression (Class, Container, Attachment,
+                                Expression_Type,
                                 Ack.Expression (Expression));
             Container.Save_Old_Value (Ack.Expression (Expression));
          when N_Tuple =>
             Analyse_Tuple_Expression
-              (Class, Container, Expression_Type, Expression);
+              (Class, Container, Attachment, Expression_Type, Expression);
          when N_Attachment_Test =>
-            Analyse_Expression (Class, Container,
+            Analyse_Expression (Class, Container, Attachment,
                                 Get_Top_Level_Type ("any"),
                                 Expression => Field_1 (Expression));
             if Get_Name (Expression) /= No_Name then
@@ -1104,6 +1139,7 @@ package body Ack.Semantic is
                                     Get_Type (Field_1 (Expression)));
                begin
                   Implicit.Set_Attached;
+                  Attachment.Attach (Implicit);
                   Set_Type (Expression,
                             Ack.Types.Get_Top_Level_Type ("boolean"));
                   Set_Entity (Expression, Implicit);
@@ -1193,6 +1229,9 @@ package body Ack.Semantic is
       External           : constant Boolean :=
                           Effective
                                  and then Kind (Effective_Node) = N_External;
+
+      Attachment         : Ack.Attachment.Attachment_Context;
+
    begin
 
       if not Property_Feature_Node (Feature)
@@ -1257,10 +1296,29 @@ package body Ack.Semantic is
                   end Add_Precondition;
 
                begin
-                  Analyse_Assertion (Class, Entity,
+                  Analyse_Assertion (Class, Entity, Attachment,
                                      Assertion (Precondition_Node),
                                      Add_Precondition'Access);
                end;
+            end if;
+
+            if Rescue_Node /= No_Node then
+               declare
+                  Rescue_Attachment : Ack.Attachment.Attachment_Context;
+               begin
+                  Analyse_Compound (Class, Entity, Rescue_Attachment,
+                                    Compound (Rescue_Node));
+                  Entity.Set_Rescue_Node (Rescue_Node);
+               end;
+            end if;
+
+            if Internal then
+               for I in 1 .. Entity.Argument_Count loop
+                  Attachment.Attach (Entity.Argument (I));
+               end loop;
+
+               Analyse_Effective_Routine
+                 (Class, Entity, Attachment, Effective_Node);
             end if;
 
             if Postcondition_Node /= No_Node then
@@ -1282,19 +1340,10 @@ package body Ack.Semantic is
                   end Add_Postcondition;
 
                begin
-                  Analyse_Assertion (Class, Entity,
+                  Analyse_Assertion (Class, Entity, Attachment,
                                      Assertion (Postcondition_Node),
                                      Add_Postcondition'Access);
                end;
-            end if;
-
-            if Rescue_Node /= No_Node then
-               Analyse_Compound (Class, Entity, Compound (Rescue_Node));
-               Entity.Set_Rescue_Node (Rescue_Node);
-            end if;
-
-            if Internal then
-               Analyse_Effective_Routine (Class, Entity, Effective_Node);
             end if;
 
          end;
@@ -1603,9 +1652,10 @@ package body Ack.Semantic is
    ------------------
 
    procedure Analyse_Loop
-     (Class     : Ack.Classes.Class_Entity;
-      Container : not null access Root_Entity_Type'Class;
-      Loop_Node : Node_Id)
+     (Class      : Ack.Classes.Class_Entity;
+      Container  : not null access Root_Entity_Type'Class;
+      Attachment : in out Ack.Attachment.Attachment_Context'Class;
+      Loop_Node  : Node_Id)
    is
       Iteration_Node      : constant Node_Id := Loop_Iteration (Loop_Node);
       Initialization_Node : constant Node_Id :=
@@ -1625,7 +1675,8 @@ package body Ack.Semantic is
          begin
 
             Analyse_Expression
-              (Class, Container, Expression_Type, Expression_Node);
+              (Class, Container, Attachment,
+               Expression_Type, Expression_Node);
 
             Iterable_Type :=
               Ack.Types.Type_Entity
@@ -1680,16 +1731,18 @@ package body Ack.Semantic is
       end if;
 
       if Initialization_Node /= No_Node then
-         Analyse_Compound (Class, Container, Compound (Initialization_Node));
+         Analyse_Compound (Class, Container, Attachment,
+                           Compound (Initialization_Node));
       end if;
 
       if Exit_Condition_Node /= No_Node then
          Analyse_Boolean_Expression
-           (Class, Container,
+           (Class, Container, Attachment,
             Expression (Exit_Condition_Node));
       end if;
 
-      Analyse_Compound (Class, Container, Compound (Loop_Body_Node));
+      Analyse_Compound (Class, Container, Attachment,
+                        Compound (Loop_Body_Node));
 
       if Iteration_Node /= No_Node then
          Container.Remove_Implicit;
@@ -1830,6 +1883,7 @@ package body Ack.Semantic is
    procedure Analyse_Operator
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
+      Attachment      : in out Ack.Attachment.Attachment_Context'Class;
       Expression_Type : access Root_Entity_Type'Class;
       Operator_Node   : Node_Id)
    is
@@ -1842,6 +1896,7 @@ package body Ack.Semantic is
       Analyse_Expression
         (Class           => Class,
          Container       => Container,
+         Attachment      => Attachment,
          Expression_Type => Get_Top_Level_Type ("any"),
          Expression      => Left);
       Left_Type := Ack.Types.Type_Entity (Get_Type (Left));
@@ -1896,7 +1951,7 @@ package body Ack.Semantic is
                                           Feature => Feature);
                   begin
                      Analyse_Expression
-                       (Class, Container, Expected_Type, Right);
+                       (Class, Container, Attachment, Expected_Type, Right);
                   end;
                end if;
             end if;
@@ -1928,6 +1983,7 @@ package body Ack.Semantic is
    procedure Analyse_Precursor
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
+      Attachment      : in out Ack.Attachment.Attachment_Context'Class;
       Expression_Type : access Root_Entity_Type'Class;
       Precursor       : Node_Id)
    is
@@ -1980,11 +2036,37 @@ package body Ack.Semantic is
          end;
 
          declare
+            use type Ack.Types.Constant_Type_Entity;
             Entity           : constant Entity_Type :=
                                  Local_Table.Get (Name);
+            E_Type           : constant Ack.Types.Constant_Type_Entity :=
+                                 Ack.Types.Constant_Type_Entity
+                                   (Entity.Get_Type);
             Actual_List_Node : constant Node_Id :=
                                  Actual_List (Precursor_Element);
          begin
+
+            Node_Table (Precursor_Element).Attached :=
+              Attachment.Is_Attached (Entity);
+
+            if Local_Warn_No_Default_Create
+              and then E_Type /= null
+              and then Entity.Standard_Name /= "void"
+              and then not E_Type.Expanded
+              and then Entity.Can_Update
+              and then not Entity.Attached
+              and then not E_Type.Detachable
+              and then not E_Type.Deferred
+              and then not E_Type.Is_Generic_Formal_Type
+            then
+               if not Attachment.Is_Attached (Entity) then
+                  if not E_Type.Has_Default_Creation_Routine then
+                     Warning (Precursor_Element,
+                              E_Value_Might_Be_Void,
+                              Entity);
+                  end if;
+               end if;
+            end if;
 
             if Actual_List_Node /= No_Node then
                declare
@@ -2002,16 +2084,25 @@ package body Ack.Semantic is
                      Error (Actual_List_Node, E_Insufficient_Arguments);
                   else
                      for I in Actuals'Range loop
+                        Attachment.Save_State;
                         Analyse_Expression
                           (Class           => Class,
                            Container       => Container,
+                           Attachment      => Attachment,
                            Expression_Type => Entity.Argument (I).Get_Type,
                            Expression      => Actuals (I));
                         Set_Destination_Type
                           (Actuals (I), Entity.Argument (I).Get_Type);
+                        Attachment.Restore_State;
                      end loop;
                   end if;
+
+                  Attachment.Detach_Current_Context;
+
                end;
+
+            else
+               Attachment.Set_Current_Context_Attachment (Entity);
             end if;
 
             Set_Entity (Precursor_Element, Entity);
@@ -2066,6 +2157,7 @@ package body Ack.Semantic is
    procedure Analyse_Retry
      (Class      : Ack.Classes.Class_Entity;
       Container  : not null access Root_Entity_Type'Class;
+      Attachment : in out Ack.Attachment.Attachment_Context'Class;
       Retry      : Node_Id)
    is
    begin
@@ -2079,6 +2171,7 @@ package body Ack.Semantic is
    procedure Analyse_Tuple_Expression
      (Class           : Ack.Classes.Class_Entity;
       Container       : not null access Root_Entity_Type'Class;
+      Attachment      : in out Ack.Attachment.Attachment_Context'Class;
       Expression_Type : access Root_Entity_Type'Class;
       Expression      : Node_Id)
    is
@@ -2126,7 +2219,7 @@ package body Ack.Semantic is
 
       for I in Expr_Nodes'Range loop
          Analyse_Expression
-           (Class, Container,
+           (Class, Container, Attachment,
             Expr_Type_Entity.Generic_Binding (I), Expr_Nodes (I));
          Actual_Types (I) :=
            Ack.Types.Type_Entity (Get_Type (Expr_Nodes (I)));
@@ -2142,6 +2235,8 @@ package body Ack.Semantic is
       if Type_Entity /= null then
          Set_Type (Expression, Type_Entity);
       end if;
+
+      Attachment.Attach_Current_Context;
 
    end Analyse_Tuple_Expression;
 

@@ -780,7 +780,8 @@ package body Ack.Generate is
             Context      => Get_Context (Element),
             Unit         => Unit);
 
-         if E_Type /= null
+         if not Node_Table.Element (Element).Attached
+           and then E_Type /= null
            and then Entity.Standard_Name /= "void"
            and then not E_Type.Expanded
            and then Entity.Can_Update
@@ -789,6 +790,15 @@ package body Ack.Generate is
            and then not E_Type.Deferred
            and then not E_Type.Is_Generic_Formal_Type
          then
+
+            if not E_Type.Has_Default_Creation_Routine then
+               Unit.Push_Text
+                 (Get_Program (Element).Show_Location
+                  & ": no default create routine for "
+                  & Entity.Qualified_Name);
+               Unit.Native_Operation ("trap 15", 0, 0, "");
+            end if;
+
             declare
                Label : constant Positive := Unit.Next_Label;
             begin

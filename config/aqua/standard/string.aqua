@@ -6,10 +6,16 @@ inherit
    
 create
     Create_With_Size, Create_From_String_Literal,
-    Create_With_Length, Create_From_String
+    Create_With_Length, Create_From_String,
+    Create_Empty_String
     
 feature
 
+   Create_Empty_String
+      do
+         Create_With_Length (0)
+      end
+      
    Create_With_Length (Initial_Length : Integer)
       local
          Size : System.Word_32
@@ -209,7 +215,7 @@ feature { None }
 
 feature { System.Drivers.Meta_Driver }
 
-   Block : System.Memory.Block_32
+   Block : detachable System.Memory.Block_32
    
 feature { None }
 

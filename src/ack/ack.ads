@@ -137,7 +137,8 @@ package Ack is
       E_Requires_Value,
       E_Requires_Definition,
       E_Illegal_Redefinition,
-      E_Not_An_Iterator
+      E_Not_An_Iterator,
+      E_Value_Might_Be_Void
      );
 
    type Assertion_Monitoring_Level is
@@ -780,6 +781,7 @@ private
          Detachable      : Boolean    := False;
          Inherited       : Boolean    := False;
          Implicit_Entity : Boolean    := False;
+         Attached        : Boolean    := False;
          Field           : Node_Field_Array := (others => No_Node);
          List            : List_Id    := No_List;
          Name            : Name_Id    := No_Name;
@@ -788,6 +790,7 @@ private
          Node_Type       : Entity_Type := null;
          Dest_Type       : Constant_Entity_Type := null;
          Error           : Error_Kind := E_No_Error;
+         Warning         : Boolean := False;
          Error_Entity    : Constant_Entity_Type := null;
          Error_Context   : Constant_Entity_Type := null;
          Integer_Value   : Integer;
@@ -1338,8 +1341,9 @@ private
    function Default_Monitoring_Level return Assertion_Monitoring_Level
    is (Local_Default_Monitoring_Level);
 
-   Local_Write_Tables   : Boolean := False;
-   Trace_Class_Analysis : Boolean := False;
-   Stack_Check_Enabled  : Boolean := False;
+   Local_Write_Tables           : Boolean := False;
+   Trace_Class_Analysis         : Boolean := False;
+   Stack_Check_Enabled          : Boolean := False;
+   Local_Warn_No_Default_Create : Boolean := False;
 
 end Ack;
