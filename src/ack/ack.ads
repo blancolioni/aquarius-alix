@@ -1219,7 +1219,7 @@ private
       return String
    is ("[e" & Integer'Image (-Entity.Sequence_Number) & "/node"
        & Integer'Image (-(Integer (Entity.Declaration_Node)))
-       & " " & Ada.Strings.Unbounded.To_String (Entity.Name)
+       & " " & Entity.Qualified_Name
        & "]");
 
    function Has_Context
