@@ -1,5 +1,7 @@
 with WL.String_Maps;
 
+with Ack.Semantic.Work;
+
 package body Ack.Types is
 
    package Class_Type_Maps is
@@ -252,6 +254,11 @@ package body Ack.Types is
             Type_Class : constant Ack.Classes.Constant_Class_Entity :=
                            Ack.Classes.Constant_Class_Entity (Typ.Class);
          begin
+
+            Ack.Semantic.Work.Check_Work_Item
+              (Typ.Class,
+               Feature.Entity_Name_Id,
+               Ack.Semantic.Work.Feature_Header);
 
             if not Feature.Deferred
               and then Feature.Effective_Class /= Type_Class
