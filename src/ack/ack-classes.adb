@@ -110,7 +110,6 @@ package body Ack.Classes is
       elsif Name = "conforming_child_node" then
          Class.Conforming_Child_Action := Get_Name_Id (Value);
       elsif Name = "routine_update" then
-         Ada.Text_IO.Put_Line ("Routine_Update: " & Value);
          if Value = "never" then
             Class.Routine_Update := False;
          end if;
