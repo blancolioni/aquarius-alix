@@ -93,6 +93,7 @@ procedure Aquarius.Driver is
 
    begin
       Clear_Cache_Files ("*.action");
+      Clear_Cache_Files ("*.aqua");
       Clear_Cache_Files ("*.m32");
       Clear_Cache_Files ("*.o32");
    end Clear_Cache;
