@@ -3,6 +3,8 @@ with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
+with Ada.Calendar.Formatting;
+
 with WL.String_Maps;
 
 with Ack.Bindings.Actions;
@@ -20,7 +22,7 @@ package body Ack.Bindings is
 
    Report_Calls          : constant Boolean := False;
 --     Report_Implicit_Calls : constant Boolean := False;
-   Report_Class_Load     : constant Boolean := False;
+   Report_Class_Load     : constant Boolean := True;
 
    package Link_Name_To_Class_Maps is
      new WL.String_Maps
@@ -443,9 +445,6 @@ package body Ack.Bindings is
                           then Source_Name (Match_Name'Length + 1
                             .. Source_Name'Last)
                           else "");
-         Modification_Time : constant Ada.Calendar.Time :=
-                               Ada.Directories.Modification_Time
-                                 (Source_Path);
       begin
          if Report_Class_Load then
             Ada.Text_IO.Put_Line ("loading: " & Source_Name);
@@ -458,15 +457,18 @@ package body Ack.Bindings is
             Ack.Bindings.Actions.Add_Tree (Binding_Table, Tree_Name);
          end if;
 
-         Ack.Compile.Compile_Class
-           (Source_Path, Image,
-            Add_Feature_Binding'Access);
-
          declare
             use type Ada.Calendar.Time;
+            Result : Ack.Compile.Compilation_Result;
          begin
-            if First_Class or else Modification_Time > Newest_Class_Time then
-               Newest_Class_Time := Modification_Time;
+            Ack.Compile.Compile_Class
+              (Source_Path, Image, Result,
+               Add_Feature_Binding'Access);
+
+            if First_Class
+              or else Result.Newest_Class_Source > Newest_Class_Time
+            then
+               Newest_Class_Time := Result.Newest_Class_Source;
                First_Class := False;
             end if;
          end;
@@ -487,8 +489,10 @@ package body Ack.Bindings is
                                (if not Binding.References.Is_Empty
                                 then Parent_Name & "_Aqua_Binding"
                                 else Parent_Name);
+         Object_Name       : constant String :=
+                     To_Source_File_Name (Parent_Class_Name) & ".o32";
       begin
-         Image.Load (To_Source_File_Name (Parent_Class_Name));
+         Image.Load (Object_Name);
       end Load_Object_File;
 
       -------------------------
@@ -508,7 +512,7 @@ package body Ack.Bindings is
                Ch := Ada.Characters.Handling.To_Lower (Ch);
             end if;
          end loop;
-         return Result & ".aqua";
+         return Result;
       end To_Source_File_Name;
 
       ------------------------------
@@ -644,7 +648,8 @@ package body Ack.Bindings is
                   Create (Parent_Class_File, Out_File,
                           Compose
                             (Containing_Directory (Binding_File_Path),
-                             To_Source_File_Name (Parent_Class_Name)));
+                             To_Source_File_Name (Parent_Class_Name)
+                             & ".aqua"));
                   Put_Line (Parent_Class_File,
                             "class " & Parent_Class_Name
                             & " inherit " & Parent_Name);
@@ -849,6 +854,18 @@ package body Ack.Bindings is
                             Aquarius.Paths.Scratch_File
                               (Base_Name (Binding_File_Path) & ".o32");
          begin
+
+            if Exists (Binding_File_Path) then
+               Ada.Text_IO.Put_Line
+                 ("most recent class modification: "
+                  & Ada.Calendar.Formatting.Image
+                    (Newest_Class_Time, True));
+               Ada.Text_IO.Put_Line
+                 ("binding file modification: "
+                  & Ada.Calendar.Formatting.Image
+                    (Modification_Time (Binding_File_Path), True));
+            end if;
+
             if First_Class
               or else not Exists (Object_Path)
               or else
@@ -857,25 +874,34 @@ package body Ack.Bindings is
                  < Newest_Class_Time)
             then
                Write_Aqua_Binding_Class;
-               Ack.Compile.Compile_Class
-                 (Binding_File_Path, Image, null);
+
+               declare
+                  Result : Ack.Compile.Compilation_Result;
+               begin
+                  Ack.Compile.Compile_Class
+                    (Binding_File_Path, Image, Result, null);
+               end;
+
             else
+
                for Index in 1 .. Binding_Vector.Last_Index loop
                   declare
-                     Rec           : constant Binding_Record :=
-                                       Binding_Vector.Element (Index);
+                     Rec  : constant Binding_Record :=
+                              Binding_Vector.Element (Index);
+                     Name : constant String := Binding_Name (Index);
                   begin
 
                      if (Rec.Has_Feature_Binding
                          or else not Rec.Implicit_Calls.Is_Empty)
                        and then not Rec.References.Is_Empty
                      then
-                        Load_Object_File (Binding_Name (Index), Rec);
+                        Load_Object_File (Name, Rec);
                      end if;
 
                   end;
                end loop;
                Image.Load (Base_Name (Binding_File_Path) & ".o32");
+               Image.Load ("system-address_to_object_conversions.o32");
             end if;
          end;
       end if;
