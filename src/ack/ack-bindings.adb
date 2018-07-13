@@ -6,6 +6,7 @@ with Ada.Text_IO;
 with Ada.Calendar.Formatting;
 
 with WL.String_Maps;
+with WL.String_Sets;
 
 with Ack.Bindings.Actions;
 with Ack.Classes;
@@ -22,7 +23,7 @@ package body Ack.Bindings is
 
    Report_Calls          : constant Boolean := False;
 --     Report_Implicit_Calls : constant Boolean := False;
-   Report_Class_Load     : constant Boolean := True;
+   Report_Class_Load     : constant Boolean := False;
 
    package Link_Name_To_Class_Maps is
      new WL.String_Maps
@@ -70,6 +71,8 @@ package body Ack.Bindings is
       Binding_Table  : Ack.Bindings.Actions.Ack_Binding_Table;
       Binding_Vector : Binding_Record_Vectors.Vector;
       Local_Classes  : Link_Name_To_Class_Maps.Map;
+      Aqua_Bound_Classes : WL.String_Sets.Set;
+
       Group_Name     : constant String :=
                          Aquarius.Actions.Action_Group_Name (Group);
 
@@ -486,7 +489,7 @@ package body Ack.Bindings is
          pragma Unreferenced (Feature_Name);
          Parent_Name       : constant String := -Binding.Parent_Full_Name;
          Parent_Class_Name : constant String :=
-                               (if not Binding.References.Is_Empty
+                               (if Aqua_Bound_Classes.Contains (Parent_Name)
                                 then Parent_Name & "_Aqua_Binding"
                                 else Parent_Name);
          Object_Name       : constant String :=
@@ -627,9 +630,14 @@ package body Ack.Bindings is
             Parent_Name       : constant String := -Binding.Parent_Full_Name;
             Child_Name        : constant String := -Binding.Child_Full_Name;
             Parent_Class_Name : constant String :=
-                                  (if not Binding.References.Is_Empty
+                                  (if Aqua_Bound_Classes.Contains (Parent_Name)
                                    then Parent_Name & "_Aqua_Binding"
                                    else Parent_Name);
+            Child_Class_Name  : constant String :=
+                                  (if Aqua_Bound_Classes.Contains (Child_Name)
+                                   then Child_Name & "_Aqua_Binding"
+                                   else Child_Name);
+
             Position          : constant String :=
                                   Position_Name (Binding.Position);
             Child_Tree        : constant String := -Binding.Child_Tree;
@@ -645,6 +653,7 @@ package body Ack.Bindings is
                   use Ada.Directories;
                   Parent_Class_File : File_Type;
                begin
+                  Aqua_Bound_Classes.Insert (Parent_Name);
                   Create (Parent_Class_File, Out_File,
                           Compose
                             (Containing_Directory (Binding_File_Path),
@@ -684,7 +693,7 @@ package body Ack.Bindings is
             Put_Line (File, "   local");
             Put_Converter ("Convert_P", Parent_Class_Name);
             if Has_Child and then not Child_String then
-               Put_Converter ("Convert_C", Child_Name);
+               Put_Converter ("Convert_C", Child_Class_Name);
             end if;
             for Ref of Binding.References loop
                Put_Converter ("Convert_Ref_" & Ref.Declared_Name,
@@ -698,7 +707,7 @@ package body Ack.Bindings is
             if Has_Child then
                Put_Line
                  (File,
-                  "      C : " & Child_Name);
+                  "      C : " & Child_Class_Name);
             end if;
 
             Put_Line
@@ -816,6 +825,23 @@ package body Ack.Bindings is
          if Report_Calls then
             Put_Line (File, "   IO : Aqua.Text_IO");
          end if;
+
+         for Index in 1 .. Binding_Vector.Last_Index loop
+            declare
+               Rec           : constant Binding_Record :=
+                                 Binding_Vector.Element (Index);
+               Parent_Name   : constant String :=
+                                 -Rec.Parent_Full_Name;
+            begin
+               if Rec.Has_Feature_Binding
+                 or else not Rec.Implicit_Calls.Is_Empty
+               then
+                  if not Rec.References.Is_Empty then
+                     Aqua_Bound_Classes.Insert (Parent_Name);
+                  end if;
+               end if;
+            end;
+         end loop;
 
          for Index in 1 .. Binding_Vector.Last_Index loop
             declare
