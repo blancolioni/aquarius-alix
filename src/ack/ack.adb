@@ -220,14 +220,6 @@ package body Ack is
       Node_Table (Node).Error := Kind;
       Node_Table (Node).Error_Entity := Constant_Entity_Type (Entity);
       Node_Table (Node).Error_Context := Constant_Entity_Type (Context);
---        Ada.Text_IO.Put_Line
---          (Get_Program (Node).Show_Location
---           & ": "
---           & "node" & Node'Img
---           & " "
---           & Kind'Img
---           & (if Entity = null then ""
---             else "(" & Entity.Qualified_Name & ")"));
    end Error;
 
    ------------------
