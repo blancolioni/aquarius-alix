@@ -1,6 +1,4 @@
 class Petal.Entry_Table
-inherit
-   Aqua.Text_IO
    
 create
    Make
@@ -27,7 +25,6 @@ feature
          Table_Name := Name
          Parent     := P
          create Entry_List
-         Put_Line ("New table: " & Name)
       end
       
 feature
@@ -36,7 +33,6 @@ feature
    do
       Entry_List.Append (Entry)
       Entry.Set_Table (Current)
-      Put_line ("insert " & Entry.Name & " into " & Table_Name)
    end
       
    Find (Name : String) : detachable Petal.Entry
@@ -44,9 +40,7 @@ feature
       Lower_Name : String
    do
       Lower_Name := Name.To_Lower
-      Put_Line (Table_Name & ": looking for " & Lower_Name)
       across Entry_List as E loop
-         Put_Line ("checking " & E.Name)
          if E.Name = Lower_Name then
             Result := E
          end
@@ -54,7 +48,6 @@ feature
       if attached Result then
       else
          if attached Parent then 
-            Put_Line ("trying parent table")
             Result := Parent.Find (Name)
          end
       end
