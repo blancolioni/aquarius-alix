@@ -1,8 +1,12 @@
 note
    Conforming_Child_Node: Copy_Context
    
-class Petal.Context
+class 
+
+   Petal.Context
+   
 feature
+
    Context         : Petal.Entry_Table
    String_Literals : Petal.String_Table
    

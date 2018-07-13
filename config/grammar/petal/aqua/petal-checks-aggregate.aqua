@@ -9,7 +9,6 @@ feature
    
    Before_Node
       do
-         create Agg_Value
          Value := Agg_Value
       end
       

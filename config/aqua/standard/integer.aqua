@@ -2,16 +2,12 @@ expanded class
    Integer
    
 inherit  
-   Aqua.Algebra.Additive 
-      redefine Add, Subtract, Negate, Zero end
-   Aqua.Algebra.Multiplicative
-      redefine One, Multiply, Divide, Modulus end
-   Aqua.Algebra.Eq
-   Aqua.Integral 
-      redefine Make_With_Integer_Literal, Convert_From end
-   Aqua.Comparable 
-      redefine GE, LE, GT, LT end
-   Aqua.Bounded redefine Minimum, Maximum end
+   Aqua.Algebra.Additive redefine Subtract, Negate, Equal end 
+   Aqua.Algebra.Multiplicative redefine Equal end
+   Aqua.Algebra.Eq redefine Equal end
+   Aqua.Integral redefine Equal end
+   Aqua.Comparable redefine Equal end
+   Aqua.Bounded redefine Equal end
    
 feature
    To_String : String
@@ -24,8 +20,7 @@ feature
          if Current = 0 then
             Result := "0"
          else
-            create Result
-            Result.Create_With_Length (20)
+            create Result.Create_With_Length (20)
             from
                It := Current
                Index := 20

@@ -83,6 +83,14 @@ package Ack.Classes is
      (Class : Class_Entity_Record)
       return Boolean;
 
+   overriding function Has_Default_Creation_Routine
+     (Class : Class_Entity_Record)
+      return Boolean;
+
+   overriding function Default_Creation_Routine
+     (Class : Class_Entity_Record)
+      return Entity_Type;
+
    function Update_Expanded_Value
      (Class : Class_Entity_Record'Class)
       return Boolean;
@@ -135,6 +143,7 @@ package Ack.Classes is
       Feature_Name : Name_Id;
       Process      : not null access
         procedure (Ancestor_Class : Class_Entity;
+                   Redefinition_Node : Node_Id;
                    Ancestor_Feature : Name_Id));
 
    function Is_Descendent_Of
@@ -169,6 +178,11 @@ package Ack.Classes is
       Unit  : in out Tagatha.Units.Tagatha_Unit);
 
    function Has_Feature
+     (Class : not null access constant Class_Entity_Record'Class;
+      Name  : Name_Id)
+      return Boolean;
+
+   function Defines_Feature
      (Class : not null access constant Class_Entity_Record'Class;
       Name  : Name_Id)
       return Boolean;

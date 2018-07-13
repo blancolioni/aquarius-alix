@@ -3,7 +3,6 @@ class
    
 inherit
    Unit_Test
-      redefine Name, Execute end
       
 feature
 

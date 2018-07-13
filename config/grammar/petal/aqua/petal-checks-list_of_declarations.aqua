@@ -9,8 +9,7 @@ feature
    local
       Local_Context : Petal.Entry_Table
    do
-      create Local_Context
-      Local_Context.Make ("list-of-declarations", Context)
+      create Local_Context.Make ("list-of-declarations", Context)
       Context := Local_Context
    end
    

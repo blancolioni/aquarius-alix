@@ -1,12 +1,13 @@
 class Petal.Entry_Table
-inherit
-   Aqua.Text_IO
+   
+create
+   Make
    
 feature
    Table_Name : String
    
    Entry_List : Aqua.Containers.Linked_List[Petal.Entry]
-   Parent : detachable Petal.Entry_Table
+   Parent     : detachable Petal.Entry_Table
    
    Set_Entry_List (List : Aqua.Containers.Linked_List[Petal.Entry])
       do
@@ -19,12 +20,11 @@ feature
    end
    
    Make (Name : String
-         P    : Entry_Table)
+         P    : detachable Entry_Table)
       do
          Table_Name := Name
          Parent     := P
          create Entry_List
-         Put_Line ("New table: " & Name)
       end
       
 feature

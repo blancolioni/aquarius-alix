@@ -88,6 +88,10 @@ package Ack.Features is
      (Feature     : in out Feature_Entity_Record'Class;
       Result_Type : not null access Ack.Types.Type_Entity_Record'Class);
 
+   function Properties_Summary
+     (Feature : Feature_Entity_Record'Class)
+      return String;
+
    procedure Set_Routine
      (Feature      : in out Feature_Entity_Record'Class;
       Routine_Node : Node_Id)

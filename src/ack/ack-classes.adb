@@ -110,7 +110,6 @@ package body Ack.Classes is
       elsif Name = "conforming_child_node" then
          Class.Conforming_Child_Action := Get_Name_Id (Value);
       elsif Name = "routine_update" then
-         Ada.Text_IO.Put_Line ("Routine_Update: " & Value);
          if Value = "never" then
             Class.Routine_Update := False;
          end if;
@@ -202,6 +201,10 @@ package body Ack.Classes is
            (Top, No_Name, Ack.Semantic.Work.Class_Binding);
          if not Class.Inherited_List.Contains (Top) then
             Class.Inherited_List.Append (Top);
+            if Top.Expanded then
+               Error (Class.Declaration_Node, E_Inherited_Expanded_Class);
+            end if;
+
             for Inherited of Top.Inherited_Types loop
                Scan_Hierarchy (Inherited.Inherited_Type.Class);
             end loop;
@@ -212,8 +215,89 @@ package body Ack.Classes is
       if Trace_Classes then
          Ada.Text_IO.Put_Line ("binding: " & Class.Description);
       end if;
+
       for Inherited of Class.Inherited_Types loop
          Scan_Hierarchy (Inherited.Inherited_Type.Class);
+      end loop;
+
+      for Feature of Class.Class_Features loop
+
+         declare
+
+            Checked : WL.String_Sets.Set;
+
+            procedure Check_Redefinitions
+              (Inherited : Inherited_Type_Record);
+
+            -------------------------
+            -- Check_Redefinitions --
+            -------------------------
+
+            procedure Check_Redefinitions
+              (Inherited : Inherited_Type_Record)
+            is
+               Ancestor : constant Class_Entity :=
+                            Class_Entity (Inherited.Inherited_Type.Class);
+            begin
+               Checked.Insert (Ancestor.Qualified_Name);
+               if Ancestor.Has_Feature (Feature.Entity_Name_Id) then
+                  declare
+                     Found     : Boolean := False;
+                     A_Feature : constant Ack.Features.Feature_Entity :=
+                                   Ancestor.Feature
+                                     (Feature.Entity_Name_Id);
+                     A_Class   : constant Ack.Classes.Constant_Class_Entity :=
+                                   A_Feature.Definition_Class;
+                     pragma Unreferenced (A_Class);
+                  begin
+                     for Redefine of Inherited.Redefined_Features loop
+                        if Redefine.Feature_Name = Feature.Entity_Name_Id then
+--                             Ada.Text_IO.Put_Line
+--                               (Feature.Qualified_Name
+--                                & " appears in redefine clause");
+                           Feature.Set_Redefined (Class, A_Feature);
+                           Found := True;
+                           if A_Feature.Deferred then
+                              Error (Redefine.Node,
+                                     E_Unnecessary_Redefine,
+                                     Feature);
+                           end if;
+                           exit;
+                        end if;
+                     end loop;
+
+                     if not Found
+                       and then not A_Feature.Deferred
+                     then
+--                          Ada.Text_IO.Put_Line
+--                            (Get_Program (Feature.Declaration_Node)
+--                             .Show_Location
+--                             & ": no redefine for "
+--                             & A_Feature.Properties_Summary);
+
+                        Error (Feature.Declaration_Node,
+                               E_Missing_Redefine, Feature, Ancestor);
+                     end if;
+
+                     if not Found then
+--                          Ada.Text_IO.Put_Line
+--                            (Feature.Qualified_Name
+--                             & " is effected from "
+--                             & A_Feature.Qualified_Name);
+                        Feature.Set_Redefined (Class, A_Feature);
+                     end if;
+
+                  end;
+               end if;
+            end Check_Redefinitions;
+
+         begin
+
+            for Inherited of Class.Inherited_Types loop
+               Check_Redefinitions (Inherited);
+            end loop;
+
+         end;
       end loop;
 
       Class.Bound := True;
@@ -340,14 +424,6 @@ package body Ack.Classes is
         (File   : Ada.Text_IO.File_Type;
          Offset : Word_Offset;
          Value  : String);
-
-      package Generated_Feature_Maps is
-        new WL.String_Maps (Ack.Features.Constant_Feature_Entity,
-                            Ack.Features."=");
-      package Generated_Feature_Offsets is
-        new WL.String_Maps (Word_Offset);
-      Generated_Features : Generated_Feature_Maps.Map;
-      Generated_Offsets : Generated_Feature_Offsets.Map;
 
       function Table_Link_Name (Base : Constant_Class_Entity) return Name_Id
       is (Get_Name_Id
@@ -482,40 +558,6 @@ package body Ack.Classes is
                                       (Get_Name_Id
                                          (Feature.Standard_Name));
                begin
-                  if Generated_Features.Contains
-                    (Class_Feature.Standard_Name)
-                  then
-                     Ada.Text_IO.Put_Line
-                       (Ada.Text_IO.Standard_Error,
-                        "in class " & Layout.Class.Qualified_Name
-                        & ": feature " & Class_Feature.Declared_Name
-                        & " defined more than once");
-                     Ada.Text_IO.Put_Line
-                       (Ada.Text_IO.Standard_Error,
-                        Get_Program
-                          (Generated_Features.Element
-                               (Class_Feature.Standard_Name)
-                           .Declaration_Node)
-                        .Show_Location & ": original declaration at offset"
-                        & Word_Offset'Image
-                          (Generated_Offsets.Element
-                               (Class_Feature.Standard_Name)));
-                     Ada.Text_IO.Put_Line
-                       (Ada.Text_IO.Standard_Error,
-                        Get_Program (Class_Feature.Declaration_Node)
-                        .Show_Location
-                        & ": current declaration at offset"
-                        & Word_Offset'Image (Offset));
-                     raise Program_Error with
-                       "this should have been detected earlier";
-                  end if;
-
-                  Generated_Features.Insert
-                    (Class_Feature.Standard_Name,
-                     Ack.Features.Constant_Feature_Entity (Feature));
-                  Generated_Offsets.Insert
-                    (Class_Feature.Standard_Name, Offset);
-
                   Class_Feature.Set_Virtual_Table_Offset (Offset - Start);
                   if Class_Feature.Deferred then
                      Put_Log
@@ -618,6 +660,59 @@ package body Ack.Classes is
       end if;
 
    end Create_Memory_Layout;
+
+   ------------------------------
+   -- Default_Creation_Routine --
+   ------------------------------
+
+   overriding function Default_Creation_Routine
+     (Class : Class_Entity_Record)
+      return Entity_Type
+   is
+   begin
+      if Class.Creators.Is_Empty then
+         return null;
+      else
+         declare
+            Found : Entity_Type;
+
+            procedure Check (Name : String);
+
+            -----------
+            -- Check --
+            -----------
+
+            procedure Check (Name : String) is
+            begin
+               if Class.Get (Name).Argument_Count = 0 then
+                  Found := Class.Get (Name);
+               end if;
+            end Check;
+
+         begin
+            Class.Creators.Iterate (Check'Access);
+            return Found;
+         end;
+      end if;
+   end Default_Creation_Routine;
+
+   ---------------------
+   -- Defines_Feature --
+   ---------------------
+
+   function Defines_Feature
+     (Class : not null access constant Class_Entity_Record'Class;
+      Name  : Name_Id)
+      return Boolean
+   is
+   begin
+      for Feature of Class.Class_Features loop
+         if Feature.Entity_Name_Id = Name then
+            return True;
+         end if;
+      end loop;
+      return False;
+   end Defines_Feature;
 
    -------------
    -- Feature --
@@ -753,6 +848,7 @@ package body Ack.Classes is
    is
       Layout : Virtual_Table_Layout renames Class.Virtual_Table;
       Labels : WL.String_Sets.Set;
+      Thunks : WL.String_Sets.Set;
       Offset : Word_Offset := 0;
 
       procedure Create_Call_Thunk
@@ -772,6 +868,12 @@ package body Ack.Classes is
                         & "$" & Link_Name
                         & "$call_thunk";
       begin
+
+         if Thunks.Contains (Thunk_Name) then
+            return;
+         end if;
+
+         Thunks.Insert (Thunk_Name);
          Unit.Segment (Tagatha.Executable);
          Unit.Begin_Code (Thunk_Name, False);
          Unit.Pop_Operand
@@ -1032,6 +1134,41 @@ package body Ack.Classes is
    begin
       return Class.Find_Aliased_Feature (Alias, Infix) /= null;
    end Has_Aliased_Feature;
+
+   ----------------------------------
+   -- Has_Default_Creation_Routine --
+   ----------------------------------
+
+   overriding function Has_Default_Creation_Routine
+     (Class : Class_Entity_Record)
+      return Boolean
+   is
+   begin
+      if Class.Creators.Is_Empty then
+         return True;
+      else
+         declare
+            Found : Boolean := False;
+
+            procedure Check (Name : String);
+
+            -----------
+            -- Check --
+            -----------
+
+            procedure Check (Name : String) is
+            begin
+               if Class.Get (Name).Argument_Count = 0 then
+                  Found := True;
+               end if;
+            end Check;
+
+         begin
+            Class.Creators.Iterate (Check'Access);
+            return Found;
+         end;
+      end if;
+   end Has_Default_Creation_Routine;
 
    -------------
    -- Inherit --
@@ -1403,6 +1540,7 @@ package body Ack.Classes is
       Feature_Name : Name_Id;
       Process      : not null access
         procedure (Ancestor_Class : Class_Entity;
+                   Redefinition_Node : Node_Id;
                    Ancestor_Feature : Name_Id))
    is
    begin
@@ -1410,6 +1548,7 @@ package body Ack.Classes is
          for Redefined of Inherited.Redefined_Features loop
             if Redefined.Feature_Name = Feature_Name then
                Process (Inherited.Inherited_Type.Class,
+                        Redefined.Node,
                         Redefined.Feature_Name);
             end if;
          end loop;
