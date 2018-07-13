@@ -3,7 +3,6 @@ class
    
 inherit
    Unit_Test
-      redefine Name, Execute end
    Weaker_Precondition_1 redefine Value end
    
 feature

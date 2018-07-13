@@ -1,4 +1,3 @@
-with Ada.Calendar;
 with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
@@ -26,6 +25,7 @@ package body Ack.Compile is
 
    procedure Load_Class
      (Source_Path : String;
+      Result      : in out Compilation_Result'Class;
       To_Image    : Aqua.Images.Image_Type;
       Root        : Boolean := False);
 
@@ -39,6 +39,7 @@ package body Ack.Compile is
    procedure Compile_Class
      (Source_Path      : String;
       To_Image         : Aqua.Images.Image_Type;
+      Result           : in out Compilation_Result'Class;
       Root_Class       : Boolean;
       Feature_Callback : access
         procedure (Class        : not null access constant
@@ -53,6 +54,7 @@ package body Ack.Compile is
    procedure Compile_Class
      (Source_Path : String;
       To_Image    : Aqua.Images.Image_Type;
+      Result      : in out Compilation_Result'Class;
       Root_Class  : Boolean;
       Feature_Callback : access
         procedure (Class        : not null access constant
@@ -64,7 +66,7 @@ package body Ack.Compile is
                     Ada.Directories.Base_Name (Source_Path);
    begin
       if not Class_Object_Paths.Contains (Base_Name) then
-         Load_Class (Source_Path, To_Image, Root_Class);
+         Load_Class (Source_Path, Result, To_Image, Root_Class);
 
          if not Ack.Errors.Has_Errors then
 
@@ -83,7 +85,7 @@ package body Ack.Compile is
                                         Program.Source_Directory
                                         & "/" & Program.Source_File_Name;
                      begin
-                        Load_Class (Source_Path, To_Image);
+                        Load_Class (Source_Path, Result, To_Image);
                      end;
                   end if;
                end;
@@ -126,8 +128,9 @@ package body Ack.Compile is
    -------------------
 
    procedure Compile_Class
-     (Source_Path      : String;
-      To_Image         : Aqua.Images.Image_Type;
+     (Source_Path : String;
+      To_Image    : Aqua.Images.Image_Type;
+      Result      : in out Compilation_Result'Class;
       Feature_Callback : access
         procedure (Class        : not null access constant
                      Ack.Classes.Class_Entity_Record'Class;
@@ -135,7 +138,7 @@ package body Ack.Compile is
                      Root_Entity_Type'Class))
    is
    begin
-      Compile_Class (Source_Path, To_Image, False, Feature_Callback);
+      Compile_Class (Source_Path, To_Image, Result, False, Feature_Callback);
    end Compile_Class;
 
    --------------------------
@@ -165,12 +168,25 @@ package body Ack.Compile is
 
    procedure Load_Class
      (Source_Path : String;
+      Result      : in out Compilation_Result'Class;
       To_Image    : Aqua.Images.Image_Type;
       Root        : Boolean := False)
    is
-      Base_Name : constant String :=
-                    Ada.Directories.Base_Name (Source_Path);
+      use type Ada.Calendar.Time;
+      Base_Name                : constant String :=
+                                   Ada.Directories.Base_Name (Source_Path);
+      Source_Modification_Time : constant Ada.Calendar.Time :=
+                                   Ada.Directories.Modification_Time
+                                     (Source_Path);
    begin
+      if Result.Compilation_Count = 0
+        or else Source_Modification_Time > Result.Newest_Class_Source
+      then
+         Result.Newest_Class_Source := Source_Modification_Time;
+      end if;
+
+      Result.Compilation_Count := Result.Compilation_Count + 1;
+
       if not Class_Object_Paths.Contains (Base_Name) then
          if not Loaded_Classes.Contains (Base_Name) then
             declare
@@ -200,7 +216,7 @@ package body Ack.Compile is
             begin
                if not Exists (Object_Path)
                  or else Modification_Time (Object_Path)
-                 < Modification_Time (Source_Path)
+                 < Source_Modification_Time
                then
                   Ada.Text_IO.Put_Line
                     ("generating " & Base_Name);
@@ -302,11 +318,16 @@ package body Ack.Compile is
      (Source_Path : String;
       To_Image    : Aqua.Images.Image_Type)
    is
+      Result : Ack.Compile.Compilation_Result;
    begin
-      Compile_Class (Source_Path, To_Image,
+      Compile_Class (Source_Path, To_Image, Result,
                      Root_Class => True,
                      Feature_Callback => null);
 
+      Ada.Text_IO.Put_Line
+        ("loaded"
+         & Natural'Image (Result.Compiled_Classes_Count)
+         & " classes");
       Load_Link_Config (To_Image);
       To_Image.Link;
    end Load_Root_Class;

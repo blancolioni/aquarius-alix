@@ -55,12 +55,19 @@ package body Ack.Errors is
               & Get_Error_Entity (Node).Description;
          when E_Create_Deferred_Class =>
             return "cannot create instance of deferred class";
+         when E_Inherited_Expanded_Class =>
+            return "cannot inherit expanded class";
          when E_Requires_Body =>
             return "routine feature requires a body";
-         when E_Missing_Redefine =>
+         when E_Unnecessary_Redefine =>
             return "deferred feature '"
               & Get_Error_Entity (Node).Declared_Name
-              & "' must appear in redefine clause";
+              & "' should not appear in redefine";
+         when E_Missing_Redefine =>
+            return "feature '"
+              & Get_Error_Entity (Node).Declared_Name
+              & "' must appear in redefine clause for class "
+              & Get_Error_Context (Node).Qualified_Name;
          when E_Missing_Redefinition =>
             return "missing declaration for redefined feature "
               & To_String (Get_Name (Node));
@@ -94,6 +101,8 @@ package body Ack.Errors is
                  & (if Value_Type = null then " with no type"
                     else " of type " & Value_Type.Description);
             end;
+         when E_No_Default_Create_Routine =>
+            return "explict create call required";
          when E_Insufficient_Arguments =>
             return "not enough arguments";
          when E_Ignored_Return_Value =>
@@ -101,7 +110,11 @@ package body Ack.Errors is
          when E_Too_Many_Arguments =>
             return "too many arguments";
          when E_Does_Not_Accept_Arguments =>
-            return "entity does not accept arguments";
+            return Get_Error_Entity (Node).Declared_Name
+              & " declared at "
+              & Get_Program (Get_Error_Entity (Node).Declaration_Node)
+              .Show_Location
+              & " does not accept any arguments";
          when E_Requires_Value =>
             return "feature requires a body";
          when E_Requires_Definition =>
@@ -114,6 +127,10 @@ package body Ack.Errors is
          when E_Not_An_Iterator =>
             return "type " & Get_Error_Entity (Node).Declared_Name
               & " is not traversable";
+         when E_Value_Might_Be_Void =>
+            return "value of attached entity "
+              & Get_Error_Entity (Node).Declared_Name
+              & " might void but there is no default create routine";
       end case;
    end Error_Message;
 
@@ -133,23 +150,28 @@ package body Ack.Errors is
    procedure Record_Errors (Node : Node_Id) is
 
       procedure Set_Error
-        (Node  : Ack.Node_Id;
-         Error : Ack.Error_Kind);
+        (Node    : Ack.Node_Id;
+         Error   : Ack.Error_Kind;
+         Warning : Boolean);
 
       ---------------
       -- Set_Error --
       ---------------
 
       procedure Set_Error
-        (Node  : Ack.Node_Id;
-         Error : Ack.Error_Kind)
+        (Node    : Ack.Node_Id;
+         Error   : Ack.Error_Kind;
+         Warning : Boolean)
       is
          Program : constant Aquarius.Programs.Program_Tree :=
                      Get_Program (Node);
-         Message : constant String := Error_Message (Node, Error);
+         Warning_Prefix : constant String :=
+                            (if Warning
+                             then "warning: " else "");
+         Message        : constant String := Error_Message (Node, Error);
       begin
-         Local_Has_Errors := True;
-         Aquarius.Errors.Error (Program, Message);
+         Local_Has_Errors := not Warning;
+         Aquarius.Errors.Error (Program, Warning_Prefix & Message);
       end Set_Error;
 
    begin

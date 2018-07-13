@@ -1,4 +1,7 @@
-class Petal.Checks.Binary_Adding_Operator
+class 
+
+   Petal.Checks.Binary_Adding_Operator
+   
 inherit
    Aquarius.Trees.Program_Tree
    

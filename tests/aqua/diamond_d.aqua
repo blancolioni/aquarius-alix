@@ -2,8 +2,8 @@ class
    Diamond_D
    
 inherit
-   Diamond_B redefine a1, b1 end
-   Diamond_C redefine a3, c1 end
+   Diamond_B redefine a1, a3, b1 end
+   Diamond_C redefine a1, a3, c1 end
    
 feature
 

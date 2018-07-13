@@ -2,7 +2,6 @@ expanded class
    System.Address
 inherit
    Aqua.Integral 
-      redefine Make_With_Integer_Literal, Convert_From end
    
 feature
 

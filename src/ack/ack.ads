@@ -117,7 +117,9 @@ package Ack is
       E_Not_Defined_In,
       E_Not_A_Create_Feature,
       E_Create_Deferred_Class,
+      E_Inherited_Expanded_Class,
       E_Requires_Body,
+      E_Unnecessary_Redefine,
       E_Missing_Redefine,
       E_Missing_Redefinition,
       E_No_Component,
@@ -127,6 +129,7 @@ package Ack is
       E_Id_List_With_No_Type,
       E_Id_List_With_Routine,
       E_Type_Error,
+      E_No_Default_Create_Routine,
       E_Insufficient_Arguments,
       E_Too_Many_Arguments,
       E_Does_Not_Accept_Arguments,
@@ -134,7 +137,8 @@ package Ack is
       E_Requires_Value,
       E_Requires_Definition,
       E_Illegal_Redefinition,
-      E_Not_An_Iterator
+      E_Not_An_Iterator,
+      E_Value_Might_Be_Void
      );
 
    type Assertion_Monitoring_Level is
@@ -252,6 +256,17 @@ package Ack is
    function Declaration_Context
      (Entity : Root_Entity_Type)
       return Entity_Type;
+
+   function Has_Default_Creation_Routine
+     (Entity : Root_Entity_Type)
+      return Boolean
+   is (False);
+
+   function Default_Creation_Routine
+     (Entity : Root_Entity_Type)
+      return Entity_Type
+   is (null)
+     with Pre => Root_Entity_Type'Class (Entity).Has_Default_Creation_Routine;
 
    function Full_Name (Entity : Root_Entity_Type) return String
    is (Root_Entity_Type'Class (Entity).Qualified_Name);
@@ -450,16 +465,29 @@ package Ack is
      (Node : Node_Id)
       return Constant_Entity_Type;
 
+   function Get_Error_Context
+     (Node : Node_Id)
+      return Constant_Entity_Type;
+
    procedure Scan_Errors
      (Top     : Node_Id;
       Process : not null access
         procedure (Node : Node_Id;
-                   Error : Error_Kind));
+                   Error : Error_Kind;
+                   Warning : Boolean));
 
    procedure Error
-     (Node   : Node_Id;
-      Kind   : Error_Kind;
-      Entity : access constant Root_Entity_Type'Class := null)
+     (Node    : Node_Id;
+      Kind    : Error_Kind;
+      Entity  : access constant Root_Entity_Type'Class := null;
+      Context : access constant Root_Entity_Type'Class := null)
+     with Pre => Kind /= E_Undeclared_Name or else Has_Name (Node);
+
+   procedure Warning
+     (Node    : Node_Id;
+      Kind    : Error_Kind;
+      Entity  : access constant Root_Entity_Type'Class := null;
+      Context : access constant Root_Entity_Type'Class := null)
      with Pre => Kind /= E_Undeclared_Name or else Has_Name (Node);
 
    function Get_Program
@@ -753,6 +781,7 @@ private
          Detachable      : Boolean    := False;
          Inherited       : Boolean    := False;
          Implicit_Entity : Boolean    := False;
+         Attached        : Boolean    := False;
          Field           : Node_Field_Array := (others => No_Node);
          List            : List_Id    := No_List;
          Name            : Name_Id    := No_Name;
@@ -761,7 +790,9 @@ private
          Node_Type       : Entity_Type := null;
          Dest_Type       : Constant_Entity_Type := null;
          Error           : Error_Kind := E_No_Error;
+         Warning         : Boolean := False;
          Error_Entity    : Constant_Entity_Type := null;
+         Error_Context   : Constant_Entity_Type := null;
          Integer_Value   : Integer;
          Label           : Natural := 0;
       end record;
@@ -1075,6 +1106,11 @@ private
       return Constant_Entity_Type
    is (Node_Table.Element (Node).Error_Entity);
 
+   function Get_Error_Context
+     (Node : Node_Id)
+      return Constant_Entity_Type
+   is (Node_Table.Element (Node).Error_Context);
+
    function Require_Else (Node : Node_Id) return Boolean
    is (Node_Table.Element (Node).Inherited);
 
@@ -1194,7 +1230,7 @@ private
       return String
    is ("[e" & Integer'Image (-Entity.Sequence_Number) & "/node"
        & Integer'Image (-(Integer (Entity.Declaration_Node)))
-       & " " & Ada.Strings.Unbounded.To_String (Entity.Name)
+       & " " & Entity.Qualified_Name
        & "]");
 
    function Has_Context
@@ -1305,8 +1341,9 @@ private
    function Default_Monitoring_Level return Assertion_Monitoring_Level
    is (Local_Default_Monitoring_Level);
 
-   Local_Write_Tables   : Boolean := False;
-   Trace_Class_Analysis : Boolean := False;
-   Stack_Check_Enabled  : Boolean := False;
+   Local_Write_Tables           : Boolean := False;
+   Trace_Class_Analysis         : Boolean := False;
+   Stack_Check_Enabled          : Boolean := False;
+   Local_Warn_No_Default_Create : Boolean := False;
 
 end Ack;

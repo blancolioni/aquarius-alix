@@ -2,7 +2,7 @@ class
    Petal.Value_Processor.Extract_String_Arguments
    
 inherit
-   Petal.Value_Processor redefine Process end
+   Petal.Value_Processor
    
 feature
 
