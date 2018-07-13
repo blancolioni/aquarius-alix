@@ -830,23 +830,6 @@ package body Ack.Bindings is
             declare
                Rec           : constant Binding_Record :=
                                  Binding_Vector.Element (Index);
-               Parent_Name   : constant String :=
-                                 -Rec.Parent_Full_Name;
-            begin
-               if Rec.Has_Feature_Binding
-                 or else not Rec.Implicit_Calls.Is_Empty
-               then
-                  if not Rec.References.Is_Empty then
-                     Aqua_Bound_Classes.Insert (Parent_Name);
-                  end if;
-               end if;
-            end;
-         end loop;
-
-         for Index in 1 .. Binding_Vector.Last_Index loop
-            declare
-               Rec           : constant Binding_Record :=
-                                 Binding_Vector.Element (Index);
             begin
 
                if Rec.Has_Feature_Binding
@@ -874,6 +857,24 @@ package body Ack.Bindings is
         (Binding_Table, Check_Bindings'Access);
 
       if not Ack.Errors.Has_Errors then
+
+         for Index in 1 .. Binding_Vector.Last_Index loop
+            declare
+               Rec           : constant Binding_Record :=
+                                 Binding_Vector.Element (Index);
+               Parent_Name   : constant String :=
+                                 -Rec.Parent_Full_Name;
+            begin
+               if Rec.Has_Feature_Binding
+                 or else not Rec.Implicit_Calls.Is_Empty
+               then
+                  if not Rec.References.Is_Empty then
+                     Aqua_Bound_Classes.Insert (Parent_Name);
+                  end if;
+               end if;
+            end;
+         end loop;
+
          declare
             use Ada.Calendar, Ada.Directories;
             Object_Path : constant String :=
