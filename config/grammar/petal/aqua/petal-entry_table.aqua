@@ -22,7 +22,7 @@ feature
    end
    
    Make (Name : String
-         P    : Entry_Table)
+         P    : detachable Entry_Table)
       do
          Table_Name := Name
          Parent     := P
@@ -51,7 +51,6 @@ feature
             Result := E
          end
       end
-      Put_Line ("not found")
       if attached Result then
       else
          if attached Parent then 

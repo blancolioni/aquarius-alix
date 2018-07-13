@@ -791,14 +791,6 @@ package body Ack.Generate is
            and then not E_Type.Is_Generic_Formal_Type
          then
 
-            if not E_Type.Has_Default_Creation_Routine then
-               Unit.Push_Text
-                 (Get_Program (Element).Show_Location
-                  & ": no default create routine for "
-                  & Entity.Qualified_Name);
-               Unit.Native_Operation ("trap 15", 0, 0, "");
-            end if;
-
             declare
                Label : constant Positive := Unit.Next_Label;
             begin
@@ -806,14 +798,22 @@ package body Ack.Generate is
                Unit.Operate (Tagatha.Op_Test);
                Unit.Jump (Label, Tagatha.C_Not_Equal);
                Unit.Drop;
-               Unit.Call
-                 (E_Type.Link_Name & "$create", 0);
-               Unit.Push_Return;
-               Unit.Duplicate;
-               Entity.Pop_Entity
-                 (Context    => Get_Context (Element),
-                  Value_Type => E_Type,
-                  Unit       => Unit);
+               if not E_Type.Has_Default_Creation_Routine then
+                  Unit.Push_Text
+                    (Get_Program (Element).Show_Location
+                     & ": no default create routine for "
+                     & Entity.Qualified_Name);
+                  Unit.Native_Operation ("trap 15", 0, 0, "");
+               else
+                  Unit.Call
+                    (E_Type.Link_Name & "$create", 0);
+                  Unit.Push_Return;
+                  Unit.Duplicate;
+                  Entity.Pop_Entity
+                    (Context    => Get_Context (Element),
+                     Value_Type => E_Type,
+                     Unit       => Unit);
+               end if;
                Unit.Label (Label);
             end;
          end if;

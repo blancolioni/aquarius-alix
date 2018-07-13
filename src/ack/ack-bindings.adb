@@ -770,8 +770,8 @@ package body Ack.Bindings is
                for Call of Binding.Implicit_Calls loop
                   Put_Line
                     (File,
-                     "      C." & (-Call.Feature_Name)
-                         & " (P)");
+                     "      P." & (-Call.Feature_Name)
+                         & " (C)");
                end loop;
 
                if Report_Calls then
