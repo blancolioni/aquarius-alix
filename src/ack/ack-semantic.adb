@@ -233,7 +233,8 @@ package body Ack.Semantic is
       Container        : not null access Root_Entity_Type'Class;
       Attachment       : in out Ack.Attachment.Attachment_Context'Class;
       Entity           : Entity_Type;
-      Actual_List_Node : Node_Id);
+      Actual_List_Node : Node_Id)
+     with Unreferenced;
 
    ------------------------------
    -- Analyse_Actual_Arguments --
@@ -922,6 +923,9 @@ package body Ack.Semantic is
       Call_Node          : constant Node_Id := Creation_Call (Creation);
       Explicit_Call_Node : constant Node_Id :=
                              Explicit_Creation_Call (Call_Node);
+      Actual_List_Node   : constant Node_Id :=
+                             (if Explicit_Call_Node = No_Node then No_Node
+                              else Actual_List (Explicit_Call_Node));
       Variable_Node      : constant Node_Id := Variable (Call_Node);
       Name               : constant Name_Id := Get_Name (Variable_Node);
       Created_Entity     : constant Entity_Type :=
@@ -999,12 +1003,41 @@ package body Ack.Semantic is
                   Error (Explicit_Call_Node, E_Not_A_Create_Feature,
                          Created_Type);
                else
-                  Analyse_Actual_Arguments
-                    (Class            => Class,
-                     Container        => Container,
-                     Attachment       => Attachment,
-                     Entity           => Creator,
-                     Actual_List_Node => Actual_List (Explicit_Call_Node));
+                  if Actual_List_Node /= No_Node then
+                     declare
+                        Actuals : constant Array_Of_Nodes :=
+                                    To_Array
+                                      (Node_Table.Element
+                                         (Actual_List_Node).List);
+                     begin
+                        if Creator.Argument_Count = 0 then
+                           Error (Actual_List_Node,
+                                  E_Does_Not_Accept_Arguments,
+                                  Creator);
+                        elsif Actuals'Length > Creator.Argument_Count then
+                           Error (Actual_List_Node, E_Too_Many_Arguments);
+                        elsif Actuals'Length < Creator.Argument_Count then
+                           Error (Actual_List_Node, E_Insufficient_Arguments);
+                        else
+                           for I in Actuals'Range loop
+                              Attachment.Save_State;
+                              Analyse_Expression
+                                (Class           => Class,
+                                 Container       => Container,
+                                 Attachment      => Attachment,
+                                 Expression_Type =>
+                                   Creator.Argument (I).Get_Type,
+                                 Expression      => Actuals (I));
+                              Set_Destination_Type
+                                (Actuals (I), Creator.Argument (I).Get_Type);
+                              Attachment.Restore_State;
+                           end loop;
+                        end if;
+
+                        Attachment.Detach_Current_Context;
+
+                     end;
+                  end if;
                end if;
             end;
          else
