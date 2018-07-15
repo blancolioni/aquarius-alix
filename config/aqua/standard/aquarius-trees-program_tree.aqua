@@ -6,46 +6,49 @@ feature { None }
 
    Tree : Aquarius.Trees.Program_Tree_Driver
 
+   Have_Tree : Boolean
+   
 feature
 
    Set_Tree (Driver : Aquarius.Trees.Program_Tree_Driver)
       do
          Tree := Driver
+         Have_Tree := True
       end
       
 feature
 
    Node_Name : String
       require
-         Tree_Set : attached Tree
+         Tree_Set : Have_Tree
       do
          Result := Tree.Name
       end
       
    Node_Text : String
       require
-         Tree_Set : attached Tree
+         Tree_Set : Have_Tree
       do
          Result := Tree.Text
       end
       
    Standard_Text : String
       require
-         Tree_Set : attached Tree
+         Tree_Set : Have_Tree
       do
          Result := Tree.Standard_Text
       end
       
    Concatenated_Image : String
       require
-         Tree_Set : attached Tree
+         Tree_Set : Have_Tree
       do
          Result := Tree.Concatenated_Image
       end
 
    Error (Message : String)
       require
-         Tree_Set : attached Tree
+         Tree_Set : Have_Tree
       do
          Tree.Error (Message)
       end
@@ -55,7 +58,7 @@ feature
                   Class_Name           : String
                   Top_Level            : Boolean) : Komnenos.Entity
       require
-         Tree_Set : attached Tree
+         Tree_Set : Have_Tree
       do
          Result := Tree.Create_Entity (Defining_Name_Tree, Name, Qualified_Name, Class_Name, Top_Level)
       end
@@ -63,7 +66,7 @@ feature
    Find_Entity (Entity_Name    : String
                 Class_Name     : String) : Komnenos.Entity
       require
-         Tree_Set : attached Tree
+         Tree_Set : Have_Tree
       do
          Result := tree.Find_Entity (Entity_Name, Class_Name)
       end
@@ -73,7 +76,7 @@ feature
                     Referenced_Entity : Komnenos.Entity
                     Reference_Type    : String)
       require
-         Tree_Set : attached Tree
+         Tree_Set : Have_Tree
       do
          Tree.Cross_Reference (Referrer_Entity, Referenced_Entity, Reference_Type)
       end
