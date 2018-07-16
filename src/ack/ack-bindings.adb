@@ -13,6 +13,7 @@ with Ack.Classes;
 with Ack.Compile;
 with Ack.Errors;
 with Ack.Features;
+with Ack.Semantic;
 with Ack.Types;
 
 with Aquarius.Paths;
@@ -37,6 +38,11 @@ package body Ack.Bindings is
    package Implicit_Call_Lists is
       new Ada.Containers.Doubly_Linked_Lists (Implicit_Call_Record);
 
+   Local_Program_Tree_Class : Ack.Classes.Constant_Class_Entity;
+
+   function Aquarius_Trees_Program_Tree
+     return Ack.Classes.Constant_Class_Entity;
+
    type Binding_Record is
       record
          Parent_Tree          : Ada.Strings.Unbounded.Unbounded_String;
@@ -54,6 +60,22 @@ package body Ack.Bindings is
 
    package Binding_Record_Vectors is
      new Ada.Containers.Vectors (Positive, Binding_Record);
+
+   ---------------------------------
+   -- Aquarius_Trees_Program_Tree --
+   ---------------------------------
+
+   function Aquarius_Trees_Program_Tree
+     return Ack.Classes.Constant_Class_Entity
+   is
+      use type Ack.Classes.Constant_Class_Entity;
+   begin
+      if Local_Program_Tree_Class = null then
+         Local_Program_Tree_Class :=
+           Ack.Semantic.Get_Class ("Aquarius.Trees.Program_Tree");
+      end if;
+      return Local_Program_Tree_Class;
+   end Aquarius_Trees_Program_Tree;
 
    ----------------------
    -- Load_Ack_Binding --
@@ -531,7 +553,8 @@ package body Ack.Bindings is
            (Local_Name, Class_Name : String);
 
          procedure Check_Property
-           (Tree_Name, Local_Name, Converter_Name, Class_Name : String);
+           (Tree_Name, Local_Name, Converter_Name, Class_Name : String;
+            Inherits_Program_Tree                             : Boolean);
 
          procedure Check_Class_Binding
            (Bound_Class_Feature : Entity_Type);
@@ -572,7 +595,8 @@ package body Ack.Bindings is
          --------------------
 
          procedure Check_Property
-           (Tree_Name, Local_Name, Converter_Name, Class_Name : String)
+           (Tree_Name, Local_Name, Converter_Name, Class_Name : String;
+            Inherits_Program_Tree                             : Boolean)
          is
          begin
             Put_Line
@@ -593,6 +617,15 @@ package body Ack.Bindings is
               (File,
                "         "
                & "create " & Local_Name);
+
+            if Inherits_Program_Tree then
+               Put_Line
+                 (File,
+                  "         "
+                  & Local_Name & ".Set_Tree ("
+                  & Tree_Name & ")");
+            end if;
+
             Put_Line
               (File,
                "         "
@@ -637,7 +670,14 @@ package body Ack.Bindings is
                                   (if Aqua_Bound_Classes.Contains (Child_Name)
                                    then Child_Name & "_Aqua_Binding"
                                    else Child_Name);
-
+            Parent_Is_Tree    : constant Boolean :=
+                                  Binding.Parent_Class.Conforms_To
+                                    (Aquarius_Trees_Program_Tree);
+            Child_Is_Tree     : constant Boolean :=
+                                  (if Child_Name = ""
+                                   then False
+                                   else Binding.Child_Class.Conforms_To
+                                     (Aquarius_Trees_Program_Tree));
             Position          : constant String :=
                                   Position_Name (Binding.Position);
             Child_Tree        : constant String := -Binding.Child_Tree;
@@ -720,7 +760,8 @@ package body Ack.Bindings is
                   "      if attached IO then else create IO end");
             end if;
 
-            Check_Property ("Parent", "P", "Convert_P", Parent_Name);
+            Check_Property ("Parent", "P", "Convert_P", Parent_Name,
+                            Parent_Is_Tree);
 
             if Has_Child then
                if Child_String then
@@ -728,7 +769,8 @@ package body Ack.Bindings is
                     (File,
                      "      C := Child.Text");
                else
-                  Check_Property ("Child", "C", "Convert_C", Child_Name);
+                  Check_Property ("Child", "C", "Convert_C", Child_Name,
+                                  Child_Is_Tree);
                end if;
             end if;
 
