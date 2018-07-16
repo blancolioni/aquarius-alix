@@ -2368,6 +2368,38 @@ package body Ack.Semantic is
       return Local_Iterable_Class;
    end Class_Iterable;
 
+   function Get_Class
+     (Qualified_Name : String)
+      return Ack.Classes.Constant_Class_Entity
+   is
+      Q_Name : constant String := Qualified_Name & ".";
+      Start  : Positive := Q_Name'First;
+      Class  : Ack.Classes.Class_Entity;
+   begin
+      for I in Q_Name'Range loop
+         if Q_Name (I) = '.' then
+            declare
+               Name : constant String :=
+                        Qualified_Name (Start .. I - 1);
+            begin
+               if Start = Q_Name'First then
+                  Class :=
+                    Ack.Classes.Get_Top_Level_Class (Name);
+               elsif Class.Contains (Name) then
+                  Class :=
+                    Ack.Classes.Class_Entity
+                      (Class.Get (Name));
+               else
+                  Class :=
+                    Load_Class (null, Class, Get_Name_Id (Name));
+               end if;
+               Start := I + 1;
+            end;
+         end if;
+      end loop;
+      return Ack.Classes.Constant_Class_Entity (Class);
+   end Get_Class;
+
    ------------------------
    -- Get_Top_Level_Type --
    ------------------------
