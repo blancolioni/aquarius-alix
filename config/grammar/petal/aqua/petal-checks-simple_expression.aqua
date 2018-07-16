@@ -19,9 +19,7 @@ feature
       
    After_Binary_Adding_Operator (Child : Petal.Checks.Binary_Adding_Operator)
       do
-         if Child.Have_Tree then
-            Operator_Name := Child.Concatenated_Image
-         end
+         Operator_Name := Child.Concatenated_Image
       end
       
 feature
