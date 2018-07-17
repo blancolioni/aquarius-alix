@@ -8,6 +8,8 @@ with Ack.Classes;
 with Ack.Features;
 with Ack.Types;
 
+with Ack.Generate.Intrinsics;
+
 with Ada.Text_IO;
 with Ack.IO;
 
@@ -740,7 +742,8 @@ package body Ack.Generate is
       Previous_Context : Ack.Classes.Constant_Class_Entity := null;
 
       procedure Apply_Arguments
-        (Actuals_List   : List_Id);
+        (Actuals_List : List_Id;
+         Reversed     : Boolean := True);
 
       procedure Convert
         (Argument                         : Node_Id;
@@ -756,18 +759,36 @@ package body Ack.Generate is
       ---------------------
 
       procedure Apply_Arguments
-        (Actuals_List   : List_Id)
+        (Actuals_List : List_Id;
+         Reversed     : Boolean := True)
       is
          Actuals_Node_List : constant List_Of_Nodes.List :=
                                List_Table.Element
                                  (Actuals_List).List;
-      begin
-         for Item of reverse Actuals_Node_List loop
+
+         procedure Apply (Item : Node_Id);
+
+         -----------
+         -- Apply --
+         -----------
+
+         procedure Apply (Item : Node_Id) is
+         begin
             Generate_Expression (Unit, Context, Item);
             if Has_Destination_Type (Item) then
                Convert (Item, Get_Type (Item), Get_Destination_Type (Item));
             end if;
-         end loop;
+         end Apply;
+      begin
+         if Reversed then
+            for Item of reverse Actuals_Node_List loop
+               Apply (Item);
+            end loop;
+         else
+            for Item of Actuals_Node_List loop
+               Apply (Item);
+            end loop;
+         end if;
       end Apply_Arguments;
 
       -------------
@@ -890,18 +911,44 @@ package body Ack.Generate is
                                   then Node_Table.Element
                                     (Actual_List_Node).List
                                   else No_List);
+            Entity           : constant Entity_Type := Get_Entity (Element);
          begin
             if Element = Last_Element
               or else Actual_List /= No_List
+              or else Entity.Intrinsic
             then
 
-               if Actual_List /= No_List then
-                  Apply_Arguments (Actual_List);
-               end if;
+               if Entity.Intrinsic then
+                  declare
+                     Arg_Count : constant Natural :=
+                                   Natural
+                                     (List_Table.Element (Actual_List)
+                                      .List.Length);
+                     Args      : Array_Of_Nodes (1 .. Arg_Count);
+                     Index     : Natural := 0;
+                  begin
+                     for Arg of List_Table.Element (Actual_List).List loop
+                        Index := Index + 1;
+                        Args (Index) := Arg;
+                     end loop;
+                     pragma Assert (Index = Arg_Count);
 
-               for Item of Pending loop
-                  Process (Item, Item = Last_Element);
-               end loop;
+                     Ack.Generate.Intrinsics.Generate_Intrinsic
+                       (Name      =>
+                          Ack.Features.Feature_Entity (Entity).Alias,
+                        Precursor => Pending,
+                        Arguments => Args);
+                  end;
+               else
+
+                  if Actual_List /= No_List then
+                     Apply_Arguments (Actual_List);
+                  end if;
+
+                  for Item of Pending loop
+                     Process (Item, Item = Last_Element);
+                  end loop;
+               end if;
 
                Pending.Clear;
             end if;
