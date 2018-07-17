@@ -317,6 +317,11 @@ private
      (Feature : in out Feature_Entity_Record;
       Name    : String);
 
+   overriding function Intrinsic
+     (Feature : Feature_Entity_Record)
+      return Boolean
+   is (Feature.Intrinsic);
+
    procedure Check_Precondition
      (Feature       : not null access constant Feature_Entity_Record'Class;
       Unit          : in out Tagatha.Units.Tagatha_Unit;

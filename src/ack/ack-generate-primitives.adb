@@ -462,7 +462,8 @@ package body Ack.Generate.Primitives is
    procedure Generate_Offset_Words
      (Unit : in out Tagatha.Units.Tagatha_Unit)
    is
-   begin      Unit.Swap;
+   begin
+      Unit.Swap;
       Unit.Push (4);
       Unit.Operate (Tagatha.Op_Mul);
       Unit.Operate (Tagatha.Op_Add);
