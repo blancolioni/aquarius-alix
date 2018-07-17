@@ -50,6 +50,8 @@ package body Ack.Generate.Primitives is
    procedure Generate_Mod (Unit : in out Tagatha.Units.Tagatha_Unit);
    procedure Generate_Join (Unit : in out Tagatha.Units.Tagatha_Unit);
 
+   procedure Generate_Offset_Words (Unit : in out Tagatha.Units.Tagatha_Unit);
+
    procedure Generate_Exit (Unit : in out Tagatha.Units.Tagatha_Unit);
 
    procedure Generate_Intrinsic_Nop
@@ -212,6 +214,7 @@ package body Ack.Generate.Primitives is
       Add ("gt", Generate_GT'Access);
       Add ("get_word_32", Generate_Intrinsic_Mem_Get_Word_32'Access);
       Add ("put_word_32", Generate_Intrinsic_Mem_Put_Word_32'Access);
+      Add ("offset_words", Generate_Offset_Words'Access);
 
       Add ("exit", Generate_Exit'Access);
 
@@ -451,6 +454,19 @@ package body Ack.Generate.Primitives is
    begin
       Unit.Operate (Tagatha.Op_Not_Equal);
    end Generate_Not_Equal;
+
+   ---------------------------
+   -- Generate_Offset_Words --
+   ---------------------------
+
+   procedure Generate_Offset_Words
+     (Unit : in out Tagatha.Units.Tagatha_Unit)
+   is
+   begin      Unit.Swap;
+      Unit.Push (4);
+      Unit.Operate (Tagatha.Op_Mul);
+      Unit.Operate (Tagatha.Op_Add);
+   end Generate_Offset_Words;
 
    -----------------------
    -- Generate_Operator --
