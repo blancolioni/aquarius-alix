@@ -221,7 +221,8 @@ begin
    if Aquarius.Command_Line.Ack_Execute_Root /= "" then
       declare
          Image : constant Aqua.Images.Image_Type := Aqua.Images.New_Image;
-         CPU   : Aqua.CPU.Aqua_CPU_Type (Image);
+         CPU   : constant Aqua.CPU.Aqua_CPU :=
+                   Aqua.CPU.Create_CPU (Image);
       begin
          Ack.Compile.Load_Root_Class
            (Source_Path => Aquarius.Command_Line.Ack_Execute_Root,

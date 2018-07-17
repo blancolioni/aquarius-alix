@@ -69,8 +69,7 @@ package body Aquarius.Plugins.Dynamic is
       Result.Name    := Ada.Strings.Unbounded.To_Unbounded_String (Name);
       Result.Version := Ada.Strings.Unbounded.To_Unbounded_String (Version);
       Result.Image   := Aqua.Images.New_Image;
-      Result.Executor :=
-        new Aqua.CPU.Aqua_CPU_Type (Result.Image);
+      Result.Executor := Aqua.CPU.Create_CPU (Result.Image);
       Aquarius_Plugin_Type'Class (Result.all).Load (Grammar);
       return Aquarius_Plugin (Result);
    end New_Dynamic_Plugin;
