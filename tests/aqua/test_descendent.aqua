@@ -1,0 +1,17 @@
+class
+   Test_Descendent
+   
+create
+   Make
+   
+feature
+
+   Make (Msg : String)
+      do
+         Message := Msg
+      end
+   
+   Buffer  : String
+   Message : String
+   
+end 
