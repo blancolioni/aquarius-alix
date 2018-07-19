@@ -460,7 +460,13 @@ package body Ack.Features is
          end if;
 
          for I in 1 .. Feature.Local_Count loop
-            Unit.Push (0);
+            declare
+               Local : constant Tagatha.Local_Offset :=
+                         Unit.Allocate_Local;
+               pragma Unreferenced (Local);
+            begin
+               Unit.Push (0);
+            end;
          end loop;
 
          if Feature.Monitor_Postconditions then
