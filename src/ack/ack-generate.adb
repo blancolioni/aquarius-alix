@@ -414,13 +414,13 @@ package body Ack.Generate is
                              Get_Entity (Creation);
       Creation_Routine   : Entity_Type;
 
+      Created_Offset : constant Tagatha.Local_Offset :=
+                         Unit.Allocate_Local;
    begin
 
       Unit.Call
         (Creation_Type.Link_Name & "$create", 0);
       Unit.Push_Return;
-
-      Created_Entity.Pop_Entity (Created_Context, Creation_Type, Unit);
 
       if Explicit_Call_Node not in Real_Node_Id then
          pragma Assert (Creation_Type.Has_Default_Creation_Routine);
@@ -452,10 +452,7 @@ package body Ack.Generate is
 
       if Creation_Routine /= null then
 
-         Created_Entity.Push_Entity
-           (Have_Current => False,
-            Context      => Created_Context,
-            Unit         => Unit);
+         Unit.Push_Local (Created_Offset);
 
          Creation_Routine.Push_Entity
            (Have_Current => True,
@@ -463,6 +460,8 @@ package body Ack.Generate is
             Unit         => Unit);
 
       end if;
+
+      Created_Entity.Pop_Entity (Created_Context, Creation_Type, Unit);
 
    exception
       when others =>
