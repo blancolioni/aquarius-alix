@@ -75,6 +75,45 @@ package body Ack.Generate is
       Value_Type : not null access constant Root_Entity_Type'Class;
       Node       : Node_Id);
 
+   procedure Generate_Assignment_Conversion
+     (Unit               : in out Tagatha.Units.Tagatha_Unit;
+      From_Type, To_Type : not null access constant
+        Root_Entity_Type'Class);
+
+   ------------------------------------
+   -- Generate_Assignment_Conversion --
+   ------------------------------------
+
+   procedure Generate_Assignment_Conversion
+     (Unit               : in out Tagatha.Units.Tagatha_Unit;
+      From_Type, To_Type : not null access constant
+        Root_Entity_Type'Class)
+   is
+      From : constant Ack.Types.Constant_Type_Entity :=
+               Ack.Types.Constant_Type_Entity (From_Type);
+      To   : constant Ack.Types.Constant_Type_Entity :=
+               Ack.Types.Constant_Type_Entity (To_Type);
+   begin
+      if From.Class /= To.Class
+        and then not From.Class.Expanded
+        and then From.Class.Qualified_Name /= "None"
+      then
+         declare
+            Offset : constant Word_Offset :=
+                       From.Class.Ancestor_Table_Offset (To.Class);
+         begin
+            if Offset > 0 then
+               Unit.Duplicate;
+               Unit.Dereference;
+               Push_Offset (Unit, Offset);
+               Unit.Operate (Tagatha.Op_Add);
+               Unit.Dereference;
+               Unit.Operate (Tagatha.Op_Add);
+            end if;
+         end;
+      end if;
+   end Generate_Assignment_Conversion;
+
    --------------------------------
    -- Generate_Class_Declaration --
    --------------------------------
@@ -375,46 +414,6 @@ package body Ack.Generate is
                              Get_Entity (Creation);
       Creation_Routine   : Entity_Type;
 
-      procedure Convert
-        (Argument                         : Node_Id;
-         From_Type_Entity, To_Type_Entity : not null access constant
-           Root_Entity_Type'Class);
-
-      -------------
-      -- Convert --
-      -------------
-
-      procedure Convert
-        (Argument                         : Node_Id;
-         From_Type_Entity, To_Type_Entity : not null access constant
-           Root_Entity_Type'Class)
-      is
-         pragma Unreferenced (Argument);
-         From : constant Ack.Types.Constant_Type_Entity :=
-                  Ack.Types.Constant_Type_Entity (From_Type_Entity);
-         To   : constant Ack.Types.Constant_Type_Entity :=
-                  Ack.Types.Constant_Type_Entity (To_Type_Entity);
-      begin
-         if From.Class /= To.Class
-           and then not From.Class.Expanded
-           and then From.Class.Qualified_Name /= "None"
-         then
-            declare
-               Offset : constant Word_Offset :=
-                          From.Class.Ancestor_Table_Offset (To.Class);
-            begin
-               if Offset > 0 then
-                  Unit.Duplicate;
-                  Unit.Dereference;
-                  Push_Offset (Unit, Offset);
-                  Unit.Operate (Tagatha.Op_Add);
-                  Unit.Dereference;
-                  Unit.Operate (Tagatha.Op_Add);
-               end if;
-            end;
-         end if;
-      end Convert;
-
    begin
 
       Unit.Call
@@ -447,9 +446,6 @@ package body Ack.Generate is
          begin
             for Item of reverse Actuals_Node_List loop
                Generate_Expression (Unit, Context, Item);
-               if Has_Destination_Type (Item) then
-                  Convert (Item, Get_Type (Item), Get_Destination_Type (Item));
-               end if;
             end loop;
          end;
       end if;
@@ -548,6 +544,12 @@ package body Ack.Generate is
             end;
       end case;
 
+      if Has_Destination_Type (Expression) then
+         Generate_Assignment_Conversion
+           (Unit      => Unit,
+            From_Type => Get_Type (Expression),
+            To_Type   => Get_Destination_Type (Expression));
+      end if;
    end Generate_Expression;
 
    ----------------------
@@ -706,16 +708,49 @@ package body Ack.Generate is
          Generate_Expression (Unit, Context, Right);
          Unit.Operate (Tagatha.Op_Or);
       else
-         if Right /= No_Node then
-            Generate_Expression (Unit, Context, Right);
-         end if;
-         Generate_Expression (Unit, Context, Left);
+         declare
+            Entity : constant Entity_Type := Get_Entity (Operator_Node);
 
-         Get_Entity (Operator_Node).Push_Entity
-           (Have_Current => True,
-            Context      => Get_Type (Left).Class_Context,
-            Unit         => Unit);
+            procedure Push (Argument_Index : Positive);
 
+            ----------
+            -- Push --
+            ----------
+
+            procedure Push (Argument_Index : Positive) is
+               Arg : constant Node_Id :=
+                       (if Argument_Index = 1
+                        then Left else Right);
+            begin
+               Generate_Expression (Unit, Context, Arg);
+            end Push;
+
+         begin
+            if Entity.Intrinsic then
+               Entity.Push_Entity
+                 (Have_Current => True,
+                  Context      => Get_Type (Left).Class_Context,
+                  Unit         => Unit);
+               Ack.Generate.Intrinsics.Generate_Intrinsic
+                 (Unit      => Unit,
+                  Name      =>
+                    To_Standard_String
+                      (Ack.Features.Feature_Entity
+                           (Entity).External_Label),
+                  Arg_Count => (if Right = No_Node then 1 else 2),
+                  Push      => Push'Access);
+            else
+               if Right /= No_Node then
+                  Generate_Expression (Unit, Context, Right);
+               end if;
+               Generate_Expression (Unit, Context, Left);
+
+               Entity.Push_Entity
+                 (Have_Current => True,
+                  Context      => Get_Type (Left).Class_Context,
+                  Unit         => Unit);
+            end if;
+         end;
       end if;
    end Generate_Operator_Expression;
 
@@ -742,13 +777,7 @@ package body Ack.Generate is
       Previous_Context : Ack.Classes.Constant_Class_Entity := null;
 
       procedure Apply_Arguments
-        (Actuals_List : List_Id;
-         Reversed     : Boolean := True);
-
-      procedure Convert
-        (Argument                         : Node_Id;
-         From_Type_Entity, To_Type_Entity : not null access constant
-           Root_Entity_Type'Class);
+        (Actuals_List : List_Id);
 
       procedure Process
         (Element : Node_Id;
@@ -759,8 +788,7 @@ package body Ack.Generate is
       ---------------------
 
       procedure Apply_Arguments
-        (Actuals_List : List_Id;
-         Reversed     : Boolean := True)
+        (Actuals_List : List_Id)
       is
          Actuals_Node_List : constant List_Of_Nodes.List :=
                                List_Table.Element
@@ -775,56 +803,13 @@ package body Ack.Generate is
          procedure Apply (Item : Node_Id) is
          begin
             Generate_Expression (Unit, Context, Item);
-            if Has_Destination_Type (Item) then
-               Convert (Item, Get_Type (Item), Get_Destination_Type (Item));
-            end if;
          end Apply;
+
       begin
-         if Reversed then
-            for Item of reverse Actuals_Node_List loop
-               Apply (Item);
-            end loop;
-         else
-            for Item of Actuals_Node_List loop
-               Apply (Item);
-            end loop;
-         end if;
+         for Item of reverse Actuals_Node_List loop
+            Apply (Item);
+         end loop;
       end Apply_Arguments;
-
-      -------------
-      -- Convert --
-      -------------
-
-      procedure Convert
-        (Argument                         : Node_Id;
-         From_Type_Entity, To_Type_Entity : not null access constant
-           Root_Entity_Type'Class)
-      is
-         pragma Unreferenced (Argument);
-         From : constant Ack.Types.Constant_Type_Entity :=
-                  Ack.Types.Constant_Type_Entity (From_Type_Entity);
-         To   : constant Ack.Types.Constant_Type_Entity :=
-                  Ack.Types.Constant_Type_Entity (To_Type_Entity);
-      begin
-         if From.Class /= To.Class
-           and then not From.Class.Expanded
-           and then From.Class.Qualified_Name /= "None"
-         then
-            declare
-               Offset : constant Word_Offset :=
-                          From.Class.Ancestor_Table_Offset (To.Class);
-            begin
-               if Offset > 0 then
-                  Unit.Duplicate;
-                  Unit.Dereference;
-                  Push_Offset (Unit, Offset);
-                  Unit.Operate (Tagatha.Op_Add);
-                  Unit.Dereference;
-                  Unit.Operate (Tagatha.Op_Add);
-               end if;
-            end;
-         end if;
-      end Convert;
 
       -------------
       -- Process --
@@ -926,6 +911,18 @@ package body Ack.Generate is
                                       .List.Length);
                      Args      : Array_Of_Nodes (1 .. Arg_Count);
                      Index     : Natural := 0;
+
+                     procedure Push (Arg : Positive);
+
+                     ----------
+                     -- Push --
+                     ----------
+
+                     procedure Push (Arg : Positive) is
+                     begin
+                        Generate_Expression (Unit, Context, Args (Arg));
+                     end Push;
+
                   begin
                      for Arg of List_Table.Element (Actual_List).List loop
                         Index := Index + 1;
@@ -933,11 +930,18 @@ package body Ack.Generate is
                      end loop;
                      pragma Assert (Index = Arg_Count);
 
+                     for Item of Pending loop
+                        Process (Item, Item = Last_Element);
+                     end loop;
+
                      Ack.Generate.Intrinsics.Generate_Intrinsic
-                       (Name      =>
-                          Ack.Features.Feature_Entity (Entity).Alias,
-                        Precursor => Pending,
-                        Arguments => Args);
+                       (Unit      => Unit,
+                        Arg_Count => Args'Length,
+                        Name      =>
+                          To_Standard_String
+                            (Ack.Features.Feature_Entity
+                                 (Entity).External_Label),
+                        Push      => Push'Access);
                   end;
                else
 

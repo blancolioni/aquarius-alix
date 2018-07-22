@@ -57,7 +57,7 @@ feature
    
 feature  --  get/put
 
-   Put (Offset : System.Word_32; Value : System.Word_32) external "intrinsic" alias "put_relative_word_32"
+   Put (Offset : System.Word_32; Value : System.Word_32) external "intrinsic" alias "system-memory-block_32-put"
 
    Get (Offset : System.Word_32) : System.Word_32
       local

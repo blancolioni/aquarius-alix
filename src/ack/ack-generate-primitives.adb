@@ -1,4 +1,3 @@
-with Ada.Text_IO;
 package body Ack.Generate.Primitives is
 
    type Primitive_Operator_Generator is access
@@ -246,6 +245,7 @@ package body Ack.Generate.Primitives is
 
    procedure Generate_Divide (Unit : in out Tagatha.Units.Tagatha_Unit) is
    begin
+      Unit.Swap;
       Unit.Operate (Tagatha.Op_Div);
    end Generate_Divide;
 
@@ -273,7 +273,7 @@ package body Ack.Generate.Primitives is
 
    procedure Generate_GE (Unit : in out Tagatha.Units.Tagatha_Unit) is
    begin
-      Unit.Operate (Tagatha.Op_Less_Equal);
+      Unit.Operate (Tagatha.Op_Greater_Equal);
    end Generate_GE;
 
    -----------------
@@ -282,7 +282,7 @@ package body Ack.Generate.Primitives is
 
    procedure Generate_GT (Unit : in out Tagatha.Units.Tagatha_Unit) is
    begin
-      Unit.Operate (Tagatha.Op_Less);
+      Unit.Operate (Tagatha.Op_Greater);
    end Generate_GT;
 
    ----------------------
@@ -293,6 +293,7 @@ package body Ack.Generate.Primitives is
       False_Label : constant Positive := Unit.Next_Label;
       Out_Label : constant Positive := Unit.Next_Label;
    begin
+      Unit.Swap;
       Unit.Operate (Tagatha.Op_Test);
       Unit.Jump (False_Label, Tagatha.C_Equal);
       Unit.Drop;
@@ -319,8 +320,8 @@ package body Ack.Generate.Primitives is
       if Intrinsic_Features.Contains (To_Standard_String (Name)) then
          Intrinsic_Features.Element (To_Standard_String (Name)) (Unit);
       else
-         Ada.Text_IO.Put_Line
-           ("no such intrinsic: " & To_Standard_String (Name));
+         raise Constraint_Error with
+           "no such intrinsic: " & To_Standard_String (Name);
       end if;
    end Generate_Intrinsic;
 
@@ -332,8 +333,9 @@ package body Ack.Generate.Primitives is
      (Unit : in out Tagatha.Units.Tagatha_Unit)
    is
    begin
-      Unit.Drop;
       Unit.Dereference;
+      Unit.Swap;
+      Unit.Drop;
    end Generate_Intrinsic_Mem_Get_Word_32;
 
    ----------------------------------------
@@ -344,8 +346,9 @@ package body Ack.Generate.Primitives is
      (Unit : in out Tagatha.Units.Tagatha_Unit)
    is
    begin
-      Unit.Drop;
+      Unit.Swap;
       Unit.Store;
+      Unit.Drop;
    end Generate_Intrinsic_Mem_Put_Word_32;
 
    ----------------------------
@@ -368,6 +371,7 @@ package body Ack.Generate.Primitives is
      (Unit : in out Tagatha.Units.Tagatha_Unit)
    is
    begin
+      Unit.Swap;
       Unit.Drop;
    end Generate_Intrinsic_Replace_Current;
 
@@ -379,8 +383,9 @@ package body Ack.Generate.Primitives is
      (Unit : in out Tagatha.Units.Tagatha_Unit)
    is
    begin
-      Unit.Drop;
       Unit.Push (0);
+      Unit.Swap;
+      Unit.Drop;
    end Generate_Intrinsic_Zero;
 
    -------------------
@@ -398,7 +403,7 @@ package body Ack.Generate.Primitives is
 
    procedure Generate_LE (Unit : in out Tagatha.Units.Tagatha_Unit) is
    begin
-      Unit.Operate (Tagatha.Op_Greater_Equal);
+      Unit.Operate (Tagatha.Op_Less_Equal);
    end Generate_LE;
 
    -----------------
@@ -407,7 +412,7 @@ package body Ack.Generate.Primitives is
 
    procedure Generate_LT (Unit : in out Tagatha.Units.Tagatha_Unit) is
    begin
-      Unit.Operate (Tagatha.Op_Greater);
+      Unit.Operate (Tagatha.Op_Less);
    end Generate_LT;
 
    ------------------
@@ -416,6 +421,7 @@ package body Ack.Generate.Primitives is
 
    procedure Generate_Mod (Unit : in out Tagatha.Units.Tagatha_Unit) is
    begin
+      Unit.Swap;
       Unit.Operate (Tagatha.Op_Mod);
    end Generate_Mod;
 
@@ -463,7 +469,6 @@ package body Ack.Generate.Primitives is
      (Unit : in out Tagatha.Units.Tagatha_Unit)
    is
    begin
-      Unit.Swap;
       Unit.Push (4);
       Unit.Operate (Tagatha.Op_Mul);
       Unit.Operate (Tagatha.Op_Add);
@@ -516,6 +521,7 @@ package body Ack.Generate.Primitives is
 
    procedure Generate_Subtract (Unit : in out Tagatha.Units.Tagatha_Unit) is
    begin
+      Unit.Swap;
       Unit.Operate (Tagatha.Op_Sub);
    end Generate_Subtract;
 

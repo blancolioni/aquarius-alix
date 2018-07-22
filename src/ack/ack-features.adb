@@ -7,7 +7,7 @@ with Ack.Classes;
 with Ack.Generate;
 with Ack.Types;
 
-with Ack.Generate.Primitives;
+with Ack.Generate.Intrinsics;
 
 with Ack.Semantic.Work;
 
@@ -371,11 +371,24 @@ package body Ack.Features is
                Result_Words   => Result_Count,
                Global         => True);
 
-            for I in reverse 1 .. Arg_Count loop
-               Unit.Push_Argument (Tagatha.Argument_Offset (I));
-            end loop;
+            declare
+               procedure Push (Index : Positive);
 
-            Feature.Push_Entity (True, Feature.Active_Class, Unit);
+               ----------
+               -- Push --
+               ----------
+
+               procedure Push (Index : Positive) is
+               begin
+                  Unit.Push_Argument (Tagatha.Argument_Offset (Index + 1));
+               end Push;
+
+            begin
+               Unit.Push_Argument (1);
+               Ack.Generate.Intrinsics.Generate_Intrinsic
+                 (Unit, To_Standard_String (Feature.External_Label),
+                  Arg_Count, Push'Access);
+            end;
 
             if Result_Count > 0 then
                Unit.Pop_Result;
@@ -800,8 +813,7 @@ package body Ack.Features is
 --        end if;
 
       if Feature.Intrinsic then
-         Ack.Generate.Primitives.Generate_Intrinsic
-           (Unit, Feature.External_Label);
+         null;
       elsif Feature.Is_Property then
          if not Feature.Active_Class.Expanded then
             if Feature.Definition_Class /= Current

@@ -35,6 +35,10 @@ package Ack.Features is
      (Feature : Feature_Entity_Record'Class)
       return Name_Id;
 
+   function External_Label
+     (Feature : Feature_Entity_Record'Class)
+      return Name_Id;
+
    function Is_Creator
      (Feature : Feature_Entity_Record'Class)
       return Boolean;
@@ -332,6 +336,11 @@ private
      (Feature : Feature_Entity_Record'Class)
       return Name_Id
    is (Feature.Alias);
+
+   function External_Label
+     (Feature : Feature_Entity_Record'Class)
+      return Name_Id
+   is (Feature.External_Label);
 
    function Is_Property
      (Feature : Feature_Entity_Record'Class)
