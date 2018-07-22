@@ -1000,11 +1000,18 @@ package body Ack.Parser is
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
    is
-      Node : constant Node_Id :=
-               Import_Entity_Declaration_List
-                 (From.Program_Child ("entity_declaration_list"));
+      use Aquarius.Programs;
+      Child : constant Program_Tree :=
+                From.Program_Child ("entity_declaration_list");
+      Node  : constant Node_Id :=
+                (if Child = null then No_Node
+                 else Import_Entity_Declaration_List (Child));
    begin
-      return New_Node (N_Formal_Arguments, From, Field_1 => Node);
+      if Node = No_Node then
+         return Node;
+      else
+         return New_Node (N_Formal_Arguments, From, Field_1 => Node);
+      end if;
    end Import_Formal_Arguments;
 
    ----------------------------
@@ -1168,11 +1175,18 @@ package body Ack.Parser is
      (From : Aquarius.Programs.Program_Tree)
       return Node_Id
    is
-      Node : constant Node_Id :=
-               Import_Entity_Declaration_List
-                 (From.Program_Child ("entity_declaration_list"));
+      use Aquarius.Programs;
+      Child : constant Program_Tree :=
+                From.Program_Child ("entity_declaration_list");
+      Node  : constant Node_Id :=
+                (if Child = null then No_Node
+                 else Import_Entity_Declaration_List (Child));
    begin
-      return New_Node (N_Local_Declarations, From, Field_1 => Node);
+      if Node = No_Node then
+         return Node;
+      else
+         return New_Node (N_Local_Declarations, From, Field_1 => Node);
+      end if;
    end Import_Local_Declarations;
 
    -----------------
