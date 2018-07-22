@@ -1,0 +1,8 @@
+class
+   Test_Descendent_Ancestor
+   
+feature
+
+   Message : String
+   
+end 
