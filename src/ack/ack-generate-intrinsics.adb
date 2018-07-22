@@ -11,6 +11,12 @@ package body Ack.Generate.Intrinsics is
 
    procedure Create_Builtin_Generators;
 
+   function System_Memory_Block_32_Get
+     (Unit       : in out Tagatha.Units.Tagatha_Unit;
+      Push       : not null access
+        procedure (Argument_Index : Positive))
+      return Boolean;
+
    function System_Memory_Block_32_Put
      (Unit       : in out Tagatha.Units.Tagatha_Unit;
       Push       : not null access
@@ -59,6 +65,8 @@ package body Ack.Generate.Intrinsics is
         ("return-argument", Return_Argument'Access);
       Add_Intrinsic
         ("put_relative_word_32", Put_Relative_Word_32'Access);
+      Add_Intrinsic
+        ("system-memory-block_32-get", System_Memory_Block_32_Get'Access);
       Add_Intrinsic
         ("system-memory-block_32-put", System_Memory_Block_32_Put'Access);
    end Create_Builtin_Generators;
@@ -153,6 +161,28 @@ package body Ack.Generate.Intrinsics is
       Push (1);
       return True;
    end Return_Argument;
+
+   --------------------------------
+   -- System_Memory_Block_32_Get --
+   --------------------------------
+
+   function System_Memory_Block_32_Get
+     (Unit       : in out Tagatha.Units.Tagatha_Unit;
+      Push       : not null access
+        procedure (Argument_Index : Positive))
+      return Boolean
+   is
+   begin
+      Unit.Push (4);
+      Unit.Operate (Tagatha.Op_Add);
+      Unit.Dereference;
+      Push (1);
+      Unit.Push (4);
+      Unit.Operate (Tagatha.Op_Mul, Tagatha.Default_Size);
+      Unit.Operate (Tagatha.Op_Add, Tagatha.Default_Size);
+      Unit.Dereference;
+      return True;
+   end System_Memory_Block_32_Get;
 
    --------------------------------
    -- System_Memory_Block_32_Put --
