@@ -29,6 +29,12 @@ package body Ack.Generate.Intrinsics is
         procedure (Argument_Index : Positive))
       return Boolean;
 
+   function Return_Argument
+     (Unit       : in out Tagatha.Units.Tagatha_Unit;
+      Push       : not null access
+        procedure (Argument_Index : Positive))
+      return Boolean;
+
    -------------------
    -- Add_Intrinsic --
    -------------------
@@ -49,6 +55,8 @@ package body Ack.Generate.Intrinsics is
    begin
       Add_Intrinsic
         ("offset_words", Offset_Words'Access);
+      Add_Intrinsic
+        ("return-argument", Return_Argument'Access);
       Add_Intrinsic
         ("put_relative_word_32", Put_Relative_Word_32'Access);
       Add_Intrinsic
@@ -129,6 +137,22 @@ package body Ack.Generate.Intrinsics is
       Unit.Store;
       return True;
    end Put_Relative_Word_32;
+
+   ---------------------
+   -- Return_Argument --
+   ---------------------
+
+   function Return_Argument
+     (Unit       : in out Tagatha.Units.Tagatha_Unit;
+      Push       : not null access
+        procedure (Argument_Index : Positive))
+      return Boolean
+   is
+      pragma Unreferenced (Unit);
+   begin
+      Push (1);
+      return True;
+   end Return_Argument;
 
    --------------------------------
    -- System_Memory_Block_32_Put --
