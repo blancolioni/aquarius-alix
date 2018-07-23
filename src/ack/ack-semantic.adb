@@ -973,6 +973,10 @@ package body Ack.Semantic is
          Error (Creation, E_Create_Deferred_Class);
       end if;
 
+      if not Created_Type.Conforms_To (Created_Entity.Get_Type) then
+         Error (Creation, E_Creation_Type_Error, Created_Type);
+      end if;
+
       if Explicit_Call_Node not in Real_Node_Id then
          Ack.Semantic.Work.Check_Work_Item
            (Ack.Types.Type_Entity (Created_Type).Class,

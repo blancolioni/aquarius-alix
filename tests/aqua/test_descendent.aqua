@@ -1,5 +1,8 @@
 class
    Test_Descendent
+
+inherit
+   Test_Descendent_Ancestor
    
 create
    Make
@@ -10,8 +13,5 @@ feature
       do
          Message := Msg
       end
-   
-   Buffer  : String
-   Message : String
    
 end 
