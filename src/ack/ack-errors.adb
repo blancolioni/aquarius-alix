@@ -101,6 +101,9 @@ package body Ack.Errors is
                  & (if Value_Type = null then " with no type"
                     else " of type " & Value_Type.Description);
             end;
+         when E_Creation_Type_Error =>
+            return "non-conforming creation type "
+              & Get_Error_Entity (Node).Description;
          when E_No_Default_Create_Routine =>
             return "explict create call required";
          when E_Insufficient_Arguments =>
