@@ -463,6 +463,8 @@ package body Ack.Generate is
 
       Created_Entity.Pop_Entity (Created_Context, Creation_Type, Unit);
 
+      Unit.Deallocate_Local;
+
    exception
       when others =>
          Ada.Text_IO.Put_Line ("no entity in this tree:");
