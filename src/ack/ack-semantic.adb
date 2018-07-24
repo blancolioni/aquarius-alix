@@ -1839,7 +1839,7 @@ package body Ack.Semantic is
                begin
                   case N_Constant_Value (Kind (Value)) is
                      when N_String_Constant =>
-                        Add_Note_Text (To_String (Get_Name (Value)));
+                        Add_Note_Text (To_String (Get_Text (Value)));
                      when N_Character_Constant =>
                         Add_Note_Text (To_String (Get_Name (Value)));
                      when N_Integer_Constant =>

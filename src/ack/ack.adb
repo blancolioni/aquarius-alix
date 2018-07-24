@@ -326,6 +326,19 @@ package body Ack is
       Entity.Sequence_Number := Next_Sequence_Number;
    end Instantiated;
 
+   ------------------
+   -- Make_Text_Id --
+   ------------------
+
+   function Make_Text_Id
+     (Text : String)
+      return Text_Id
+   is
+   begin
+      Text_Table.Append (Text);
+      return Text_Table.Last_Index;
+   end Make_Text_Id;
+
    --------------
    -- New_List --
    --------------
@@ -359,6 +372,7 @@ package body Ack is
       Field_6    : Node_Id     := No_Node;
       List       : List_Id     := No_List;
       Name       : Name_Id     := No_Name;
+      Text       : Text_Id := No_Text;
       Entity     : Entity_Type := null)
       return Node_Id
    is
@@ -380,6 +394,7 @@ package body Ack is
                   6 => Field_6),
                List            => List,
                Name            => Name,
+               Text            => Text,
                Integer_Value   => 0,
                Entity          => Entity,
                Context         => null,

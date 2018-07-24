@@ -199,24 +199,25 @@ package body Ack.Parser.Expressions is
       Value : constant Program_Tree := From.Program_Child ("manifest_value");
       Choice : constant Program_Tree := Value.Chosen_Tree;
       Kind   : Node_Kind;
-      Text   : Name_Id;
+      Text   : Text_Id := No_Text;
+      Name   : Name_Id := No_Name;
    begin
       if Choice.Name = "string_constant" then
          Kind := N_String_Constant;
          Text :=
-           Get_Name_Id
+           Make_Text_Id
              (Import_String_Constant (Choice.Concatenate_Children));
       elsif Choice.Name = "character_constant" then
          Kind := N_Character_Constant;
-         Text :=
+         Name :=
            Get_Name_Id
              (Import_Character_Constant (Choice.Concatenate_Children));
       elsif Choice.Name = "integer_constant" then
          Kind := N_Integer_Constant;
-         Text := Get_Name_Id (Choice.Concatenate_Children);
+         Name := Get_Name_Id (Choice.Concatenate_Children);
       elsif Choice.Name = "boolean_constant" then
          Kind := N_Boolean_Constant;
-         Text := Get_Name_Id (Choice.Concatenate_Children);
+         Name := Get_Name_Id (Choice.Concatenate_Children);
       else
          raise Constraint_Error with
            "unhandled constant type: " & Choice.Name;
@@ -227,7 +228,8 @@ package body Ack.Parser.Expressions is
          Field_2 =>
            New_Node
              (Kind, Choice,
-              Name => Text));
+              Name => Name,
+              Text => Text));
    end Import_Manifest_Constant;
 
    ----------------------
