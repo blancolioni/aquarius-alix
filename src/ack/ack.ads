@@ -215,6 +215,16 @@ package Ack is
      (Name : Name_Id)
       return String;
 
+   type Text_Id is private;
+
+   No_Text : constant Text_Id;
+
+   function Make_Text_Id
+     (Text : String)
+      return Text_Id;
+
+   function To_String (Id : Text_Id) return String;
+
    type Byte_Offset is new Natural;
 
    type Word_Offset is new Natural;
@@ -551,7 +561,7 @@ package Ack is
 
    function Has_Name (N : Node_Id) return Boolean
    is (Kind (N) in N_Identifier | N_Feature_Name | N_Feature_Alias
-         | N_Variable | N_Integer_Constant | N_String_Constant
+         | N_Variable | N_Integer_Constant
          | N_Boolean_Constant | N_Character_Constant
          | N_Effective_Routine | N_Precursor_Element
          | N_Explicit_Creation_Call
@@ -562,6 +572,12 @@ package Ack is
 
    function Get_Name (N : Node_Id) return Name_Id
      with Pre => Has_Name (N);
+
+   function Has_Text (N : Node_Id) return Boolean
+   is (Kind (N) = N_String_Constant);
+
+   function Get_Text (N : Node_Id) return Text_Id
+     with Pre => Has_Text (N);
 
    function Get_Entity (N : Node_Id) return Entity_Type;
    function Has_Entity (N : Node_Id) return Boolean;
@@ -763,6 +779,12 @@ private
 
    subtype Real_Name_Id is Name_Id range 2 .. Name_Id'Last;
 
+   type Text_Id is range 0 .. 99_999_999;
+
+   No_Text : constant Text_Id := 0;
+
+   subtype Real_Text_Id is Text_Id range 1 .. Text_Id'Last;
+
    type Program_Id is range 0 .. 99_999_999;
 
    No_Program : constant Program_Id := 0;
@@ -791,6 +813,7 @@ private
          Field           : Node_Field_Array := (others => No_Node);
          List            : List_Id    := No_List;
          Name            : Name_Id    := No_Name;
+         Text            : Text_Id := No_Text;
          Entity          : Entity_Type := null;
          Context         : Constant_Entity_Type := null;
          Node_Type       : Entity_Type := null;
@@ -819,6 +842,9 @@ private
    package List_Vectors is
      new Ada.Containers.Vectors (Real_List_Id, List_Record);
 
+   package Text_Vectors is
+     new Ada.Containers.Indefinite_Vectors (Real_Text_Id, String);
+
    package Name_Vectors is
      new Ada.Containers.Indefinite_Vectors (Real_Name_Id, String);
 
@@ -827,6 +853,7 @@ private
 
    Node_Table   : Node_Vectors.Vector;
    List_Table   : List_Vectors.Vector;
+   Text_Table   : Text_Vectors.Vector;
    Name_Table   : Name_Vectors.Vector;
    Name_Map     : Name_Maps.Map;
 
@@ -839,6 +866,9 @@ private
      (Name : Name_Id)
       return String
    is (Ada.Characters.Handling.To_Lower (To_String (Name)));
+
+   function To_String (Id : Text_Id) return String
+   is (if Id = No_Text then "" else Text_Table (Id));
 
    function Length
      (List : List_Id)
@@ -993,6 +1023,9 @@ private
    function Get_Name (N : Node_Id) return Name_Id
    is (Node_Table.Element (N).Name);
 
+   function Get_Text (N : Node_Id) return Text_Id
+   is (Node_Table.Element (N).Text);
+
    function Has_Entity (N : Node_Id) return Boolean
    is (Node_Table.Element (N).Entity /= null);
 
@@ -1141,6 +1174,7 @@ private
       Field_6    : Node_Id     := No_Node;
       List       : List_Id     := No_List;
       Name       : Name_Id     := No_Name;
+      Text       : Text_Id     := No_Text;
       Entity     : Entity_Type := null)
     return Node_Id;
 

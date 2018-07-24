@@ -506,7 +506,7 @@ package body Ack.Generate is
                         Label : constant String :=
                                   Next_String_Label (Unit.Unit_Name);
                         Text  : constant String :=
-                                  To_String (Get_Name (Value));
+                                  To_String (Get_Text (Value));
                      begin
                         Unit.Segment (Tagatha.Read_Only);
                         Unit.Label (Label);
