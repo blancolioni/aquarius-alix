@@ -364,6 +364,7 @@ package body Ack.Generate is
             Generate_Expression (Unit, Context, Condition);
             if Implicit_Entity (Condition) then
                Unit.Duplicate;
+               Unit.Allocate_Local;
             end if;
 
             Else_Label := Unit.Next_Label;
@@ -375,6 +376,7 @@ package body Ack.Generate is
            and then Implicit_Entity (Condition)
          then
             Unit.Drop;
+            Unit.Deallocate_Local;
          end if;
 
          Unit.Jump (Out_Label);
