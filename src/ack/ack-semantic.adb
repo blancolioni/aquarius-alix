@@ -1166,7 +1166,9 @@ package body Ack.Semantic is
             Analyse_Expression (Class, Container, Attachment,
                                 Get_Top_Level_Type ("any"),
                                 Expression => Field_1 (Expression));
-            if Get_Name (Expression) /= No_Name then
+            if Get_Name (Expression) /= No_Name
+              and then Get_Type (Field_1 (Expression)) /= null
+            then
                declare
                   Implicit : constant Ack.Variables.Variable_Entity :=
                                Ack.Variables.New_Local_Entity
