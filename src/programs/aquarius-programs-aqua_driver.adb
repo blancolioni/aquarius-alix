@@ -16,7 +16,15 @@ package body Aquarius.Programs.Aqua_Driver is
       Error,
       Get_Property,
       Has_Property,
-      Set_Property);
+      Set_Property,
+      Full_File_Name,
+      File_Name,
+      Start_Line,
+      End_Line,
+      Start_Column,
+      End_Column,
+      Start_Position,
+      End_Position);
 
    function Is_Command (Value : Natural) return Boolean
    is (Value <= Driver_Command'Pos (Driver_Command'Last));
@@ -92,6 +100,24 @@ package body Aquarius.Programs.Aqua_Driver is
             Driver.Write_String (Driver.Current.Standard_Text);
          when Concatenated_Image =>
             Driver.Write_String (Driver.Current.Concatenate_Children);
+         when File_Name =>
+            Driver.Write_String
+              (Aquarius.Names.To_String (Driver.Current.Source_File_Name));
+         when Full_File_Name =>
+            Driver.Write_String
+              (Aquarius.Names.To_String (Driver.Current.Source_File_Name));
+         when Start_Line =>
+            Driver.Set_Word (8, Aqua.Word (Driver.Current.Source_Line));
+         when End_Line =>
+            Driver.Set_Word (8, Aqua.Word (Driver.Current.End_Line));
+         when Start_Column =>
+            Driver.Set_Word (8, Aqua.Word (Driver.Current.Source_Column));
+         when End_Column =>
+            Driver.Set_Word (8, Aqua.Word (Driver.Current.End_Column));
+         when Start_Position =>
+            Driver.Set_Word (8, Aqua.Word (Driver.Current.Start_Position));
+         when End_Position =>
+            Driver.Set_Word (8, Aqua.Word (Driver.Current.End_Position));
          when Error =>
             Driver.Current.Attach_Message
               (Aquarius.Messages.New_Message
