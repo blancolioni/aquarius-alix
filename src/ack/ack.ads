@@ -130,6 +130,7 @@ package Ack is
       E_Id_List_With_Routine,
       E_Type_Error,
       E_Creation_Type_Error,
+      E_Iterator_Type_Error,
       E_No_Default_Create_Routine,
       E_Insufficient_Arguments,
       E_Too_Many_Arguments,

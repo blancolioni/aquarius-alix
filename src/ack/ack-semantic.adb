@@ -1725,6 +1725,20 @@ package body Ack.Semantic is
                return;
             end if;
 
+            declare
+               use Ack.Types;
+               Inherited_Type           : constant access constant
+                 Type_Entity_Record'Class :=
+                   Iterable_Type.Get_Ancestor_Type
+                     (Class_Iterable);
+            begin
+               if Inherited_Type = null then
+                  Error (Iteration_Node, E_Iterator_Type_Error,
+                         Class_Iterable);
+                  return;
+               end if;
+            end;
+
             Ack.Semantic.Work.Check_Work_Item
               (Class        => Iterable_Type.Class,
                Feature_Name => Get_Name_Id ("new_cursor"),
@@ -1732,10 +1746,11 @@ package body Ack.Semantic is
 
             declare
                use Ack.Types;
-               Inherited_Type     : constant access constant
-                 Type_Entity_Record'Class
-                   := Iterable_Type.Get_Ancestor_Type (Class_Iterable);
 
+               Inherited_Type           : constant access constant
+                 Type_Entity_Record'Class :=
+                                      Iterable_Type.Get_Ancestor_Type
+                                        (Class_Iterable);
                New_Cursor_Feature : constant Ack.Features.Feature_Entity :=
                                       Iterable_Type.Feature
                                         (Get_Name_Id ("new_cursor"));

@@ -104,6 +104,9 @@ package body Ack.Errors is
          when E_Creation_Type_Error =>
             return "non-conforming creation type "
               & Get_Error_Entity (Node).Description;
+         when E_Iterator_Type_Error =>
+            return "cannot iterate over type "
+              & Get_Error_Entity (Node).Description;
          when E_No_Default_Create_Routine =>
             return "explict create call required";
          when E_Insufficient_Arguments =>
