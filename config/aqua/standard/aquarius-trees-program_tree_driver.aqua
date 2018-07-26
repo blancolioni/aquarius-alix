@@ -31,6 +31,54 @@ feature
          Result := Get_String
       end
 
+   Full_File_Name : String
+      do
+         Set_Tree_Driver (9)
+         Result := Get_String
+      end
+      
+   File_Name : String
+      do
+         Set_Tree_Driver (10)
+         Result := Get_String
+      end
+      
+   Start_Line : Integer
+      do
+         Set_Tree_Driver (11)
+         Result := Get_Integer
+      end
+      
+   End_Line : Integer
+      do
+         Set_Tree_Driver (12)
+         Result := Get_Integer
+      end
+      
+   Start_Column : Integer
+      do
+         Set_Tree_Driver (13)
+         Result := Get_Integer
+      end
+      
+   End_Column : Integer
+      do
+         Set_Tree_Driver (14)
+         Result := Get_Integer
+      end
+      
+   Start_Position : Integer
+      do
+         Set_Tree_Driver (15)
+         Result := Get_Integer
+      end
+      
+   End_Position : Integer
+      do
+         Set_Tree_Driver (16)
+         Result := Get_Integer
+      end
+      
    Error (Message : String)
       do
          Send_String (5, Message)
@@ -90,6 +138,15 @@ feature
       do
          Text.Write_To_Memory (Text_Address)
          Set_Tree_Driver (Command)
+      end
+      
+   Get_Integer : Integer
+      local
+         Mem : System.Memory.Mem
+         W : System.Word_32
+      do
+         W := Mem.Get_Word_32 (Argument_Address)
+         Result.Convert_From (W)
       end
       
    Get_String : String
