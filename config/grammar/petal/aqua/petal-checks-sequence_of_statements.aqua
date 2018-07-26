@@ -1,5 +1,27 @@
-class Petal.Checks.Sequence_Of_Statements
+class
+   Petal.Checks.Sequence_Of_Statements
+   
 inherit 
    Petal.Context
+   Aqua.Text_IO
+   Aquarius.Trees.Program_Tree
+   
+feature
 
+   Statements : Petal.Statements
+   
+   Set_Statements (Sts : Petal.Statements)
+      do
+         Put_Line ("set statement")
+         Statements := Sts
+      end
+      
+   After_Statement (St : Petal.Checks.Statement)
+      do
+         if attached St.Statement as Stat then
+            Put_Line ("adding statement: " & Stat.Init_Script_Line)
+            Statements.Statements.Append (Stat)
+         end
+      end
+      
 end

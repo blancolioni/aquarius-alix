@@ -1,0 +1,9 @@
+deferred class 
+   Petal.Statement
+
+feature
+
+   Init_Script_Line : detachable String deferred end
+   
+end
+  

@@ -1,1 +1,8 @@
-class Petal.Statements end
+class 
+   Petal.Statements 
+
+feature
+
+   Statements : Aqua.Containers.Linked_List [Petal.Statement]
+   
+end
