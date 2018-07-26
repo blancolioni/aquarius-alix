@@ -1,0 +1,12 @@
+class 
+   Petal.Init.Sequence_Of_Statements
+
+feature
+
+   Have_First : Boolean
+   
+   Before_Statement (Statement : Petal.Init.Statement)
+      do
+      end
+
+end

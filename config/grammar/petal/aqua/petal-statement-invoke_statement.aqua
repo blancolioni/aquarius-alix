@@ -1,4 +1,9 @@
-class Petal.Statements.Invoke
+class 
+   Petal.Statement.Invoke_Statement
+   
+inherit
+   Petal.Statement
+   
 create
    Make
    
@@ -17,6 +22,13 @@ feature --  arguments to invocation
    Recv        : Aqua.Containers.Linked_List[Petal.Value]
    Send_String : Aqua.Containers.Linked_List[Petal.Value]
    
+feature --  init script
+
+   Init_Script_Line : detachable String
+      do
+         Result := "invoke"
+      end 
+      
 feature {None}
 
    Cap_Entry : Petal.Entry

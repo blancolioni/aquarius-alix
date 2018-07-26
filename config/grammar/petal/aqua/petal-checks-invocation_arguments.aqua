@@ -4,9 +4,9 @@ inherit
 
 feature
 
-   Invoke : Petal.Statements.Invoke
+   Invoke : Petal.Statement.Invoke_Statement
    
-   Set_Invoke_Statement (S : Petal.Statements.Invoke)
+   Set_Invoke_Statement (S : Petal.Statement.Invoke_Statement)
       do
          Invoke := S
       end
