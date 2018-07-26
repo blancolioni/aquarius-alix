@@ -46,6 +46,13 @@ feature
          Result := Tree.Concatenated_Image
       end
 
+   Start_Location_Image : String
+      require
+         Tree_Set : Have_Tree
+      do
+         Result := Tree.File_Name & ":" & Tree.Start_Line.To_String & ":" & Tree.Start_Column.To_String
+      end
+      
    Error (Message : String)
       require
          Tree_Set : Have_Tree
