@@ -624,6 +624,7 @@ package body Ack.Generate is
            (Have_Current => True,
             Context      => Iterable_Type.Class_Context,
             Unit         => Unit);
+         Unit.Allocate_Local;
       end if;
 
       Unit.Label (Top_Label);
@@ -659,6 +660,7 @@ package body Ack.Generate is
 
       if Iteration_Node /= No_Node then
          Unit.Drop;
+         Unit.Deallocate_Local;
       end if;
 
    end Generate_Loop;
