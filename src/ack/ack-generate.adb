@@ -862,6 +862,20 @@ package body Ack.Generate is
                   Unit.Call
                     (E_Type.Link_Name & "$create", 0);
                   Unit.Push_Return;
+
+                  declare
+                     Create_Routine : constant Entity_Type :=
+                                        E_Type.Default_Creation_Routine;
+                  begin
+                     if Create_Routine /= null then
+                        Unit.Duplicate;
+                        Create_Routine.Push_Entity
+                          (Have_Current => True,
+                           Context      => E_Type.Class_Context,
+                           Unit         => Unit);
+                     end if;
+                  end;
+
                   Unit.Duplicate;
                   Entity.Pop_Entity
                     (Context    => Get_Context (Element),
