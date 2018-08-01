@@ -24,6 +24,11 @@ feature
          Value.Convert_From (Other)
       end
       
+   To_String : String
+      do
+         Result := Value.To_String
+      end 
+      
 feature { None }
 
    Value : Word_32
