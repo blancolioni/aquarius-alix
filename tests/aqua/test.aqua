@@ -35,6 +35,8 @@ feature
 --         Test_List.Append (T)
 --         create { Test_Explicit_Interval } T
 --         Test_List.Append (T)
+         create { Test_Inner_Implicit_Create } T
+         Test_List.Append (T)
          create { Test_String_List } T
          Test_List.Append (T)
          create { Test_Indirect_Inheritance } T
