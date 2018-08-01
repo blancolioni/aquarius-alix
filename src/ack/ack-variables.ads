@@ -80,6 +80,13 @@ private
       Unit          : in out Tagatha.Units.Tagatha_Unit)
      with Pre => not Have_Current;
 
+   overriding procedure Push_Entity_Address
+     (Variable      : Variable_Entity_Record;
+      Have_Current  : Boolean;
+      Context       : not null access constant Root_Entity_Type'Class;
+      Unit          : in out Tagatha.Units.Tagatha_Unit)
+     with Pre => not Have_Current;
+
    overriding procedure Pop_Entity
      (Variable   : Variable_Entity_Record;
       Context    : not null access constant Root_Entity_Type'Class;

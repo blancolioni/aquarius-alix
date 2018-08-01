@@ -311,6 +311,12 @@ private
       Context       : not null access constant Root_Entity_Type'Class;
       Unit          : in out Tagatha.Units.Tagatha_Unit);
 
+   overriding procedure Push_Entity_Address
+     (Feature       : Feature_Entity_Record;
+      Have_Current  : Boolean;
+      Context       : not null access constant Root_Entity_Type'Class;
+      Unit          : in out Tagatha.Units.Tagatha_Unit);
+
    overriding procedure Pop_Entity
      (Feature    : Feature_Entity_Record;
       Context    : not null access constant Root_Entity_Type'Class;

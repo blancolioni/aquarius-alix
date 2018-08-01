@@ -421,6 +421,13 @@ package Ack is
       Unit          : in out Tagatha.Units.Tagatha_Unit)
    is null;
 
+   procedure Push_Entity_Address
+     (Entity        : Root_Entity_Type;
+      Have_Current  : Boolean;
+      Context       : not null access constant Root_Entity_Type'Class;
+      Unit          : in out Tagatha.Units.Tagatha_Unit)
+   is null;
+
    procedure Pop_Entity
      (Entity     : Root_Entity_Type;
       Context    : not null access constant Root_Entity_Type'Class;

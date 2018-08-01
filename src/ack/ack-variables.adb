@@ -177,6 +177,35 @@ package body Ack.Variables is
       end case;
    end Push_Entity;
 
+   -------------------------
+   -- Push_Entity_Address --
+   -------------------------
+
+   overriding procedure Push_Entity_Address
+     (Variable      : Variable_Entity_Record;
+      Have_Current  : Boolean;
+      Context       : not null access constant Root_Entity_Type'Class;
+      Unit          : in out Tagatha.Units.Tagatha_Unit)
+   is
+      pragma Unreferenced (Have_Current);
+      pragma Unreferenced (Context);
+   begin
+      case Variable.Kind is
+         when Local =>
+            Unit.Push_Local_Address
+              (Tagatha.Local_Offset (Variable.Offset));
+
+            if Variable.Iterator then
+               raise Constraint_Error with
+                 "attempted to push the address of an iterator";
+            end if;
+
+         when Argument =>
+            Unit.Push_Argument_Address
+              (Tagatha.Argument_Offset (Variable.Offset));
+      end case;
+   end Push_Entity_Address;
+
    ----------------
    -- Set_Offset --
    ----------------
