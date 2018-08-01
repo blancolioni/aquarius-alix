@@ -829,11 +829,6 @@ package body Ack.Generate is
          E_Type : constant Ack.Types.Constant_Type_Entity :=
                     Ack.Types.Constant_Type_Entity (Entity.Get_Type);
       begin
-         Entity.Push_Entity
-           (Have_Current => Element /= First_Element,
-            Context      => Get_Context (Element),
-            Unit         => Unit);
-
          if not Node_Table.Element (Element).Attached
            and then E_Type /= null
            and then Entity.Standard_Name /= "void"
@@ -845,13 +840,26 @@ package body Ack.Generate is
            and then not E_Type.Is_Generic_Formal_Type
          then
 
+--              Ada.Text_IO.Put_Line
+--                (Get_Program (Element).Show_Location
+--                 & ": implicit create test: entity = "
+--                 & Entity.Description
+--                 & "; context = "
+--                 & E_Type.Class_Context.Description);
+
+            Entity.Push_Entity_Address
+              (Have_Current => Element /= First_Element,
+               Context      => Get_Context (Element),
+               Unit         => Unit);
+
             declare
                Label : constant Positive := Unit.Next_Label;
             begin
                Unit.Duplicate;
+               Unit.Dereference;
                Unit.Operate (Tagatha.Op_Test);
                Unit.Jump (Label, Tagatha.C_Not_Equal);
-               Unit.Drop;
+
                if not E_Type.Has_Default_Creation_Routine then
                   Unit.Push_Text
                     (Get_Program (Element).Show_Location
@@ -859,6 +867,7 @@ package body Ack.Generate is
                      & Entity.Qualified_Name);
                   Unit.Native_Operation ("trap 15", 0, 0, "");
                else
+                  Unit.Duplicate;
                   Unit.Call
                     (E_Type.Link_Name & "$create", 0);
                   Unit.Push_Return;
@@ -876,14 +885,21 @@ package body Ack.Generate is
                      end if;
                   end;
 
-                  Unit.Duplicate;
-                  Entity.Pop_Entity
-                    (Context    => Get_Context (Element),
-                     Value_Type => E_Type,
-                     Unit       => Unit);
+                  Unit.Swap;
+                  Unit.Store;
                end if;
                Unit.Label (Label);
             end;
+
+            Unit.Dereference;
+
+         else
+
+            Entity.Push_Entity
+              (Have_Current => Element /= First_Element,
+               Context      => Get_Context (Element),
+               Unit         => Unit);
+
          end if;
 
          if not Last then
