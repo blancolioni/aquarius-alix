@@ -901,6 +901,53 @@ package body Ack.Features is
 
    end Push_Entity;
 
+   overriding procedure Push_Entity_Address
+     (Feature       : Feature_Entity_Record;
+      Have_Current  : Boolean;
+      Context       : not null access constant Root_Entity_Type'Class;
+      Unit          : in out Tagatha.Units.Tagatha_Unit)
+   is
+      Current        : constant Ack.Classes.Constant_Class_Entity :=
+                         Ack.Classes.Constant_Class_Entity (Context);
+   begin
+      if Feature.Standard_Name = "void" then
+         raise Constraint_Error with "attempted to push address of void";
+      elsif Feature.Explicit_Value then
+         raise Constraint_Error with
+           "attempted to push address of explicit value";
+      end if;
+
+      if not Have_Current then
+         Unit.Push_Argument (1);
+      end if;
+
+      if Feature.Intrinsic then
+         raise Constraint_Error with "attempt to push address of intrinsic";
+      elsif not Feature.Is_Property then
+         raise Constraint_Error with "attempt to push address of routine";
+      elsif Feature.Is_Property then
+         if Feature.Definition_Class /= Current
+           and then not Feature.Intrinsic
+         then
+            Unit.Duplicate;
+            Unit.Dereference;
+            Unit.Dereference;
+            Unit.Swap;
+            Unit.Operate (Tagatha.Op_Sub);
+            Unit.Duplicate;
+            Unit.Dereference;
+            Push_Offset
+              (Unit,
+               Current.Ancestor_Table_Offset (Feature.Definition_Class));
+            Unit.Operate (Tagatha.Op_Add);
+            Unit.Dereference;
+            Unit.Operate (Tagatha.Op_Add);
+         end if;
+         Push_Offset (Unit, Feature.Property_Offset);
+         Unit.Operate (Tagatha.Op_Add);
+      end if;
+   end Push_Entity_Address;
+
    --------------------
    -- Push_Old_Value --
    --------------------
