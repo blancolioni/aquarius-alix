@@ -2,7 +2,7 @@ class
    Petal.Statement.Invoke_Statement
    
 inherit
-   Petal.Statement
+   Petal.Statement redefine Init_Script_Lines end
    
 create
    Make
@@ -24,9 +24,11 @@ feature --  arguments to invocation
    
 feature --  init script
 
-   Init_Script_Line : detachable String
+   Init_Script_Lines : Aqua.Containers.Linked_List [String]
       do
-         Result := "invoke"
+         Result.Append ("(Invoke, " & Cap_Entry.Declared_Name 
+                        & ", " & Endpoint.To_String & ", True"
+                        & ")")
       end 
       
 feature {None}

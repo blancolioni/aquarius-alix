@@ -1,8 +1,8 @@
-class Petal.Checks.Formal_Arguments
+class 
+   Petal.Checks.Formal_Arguments
 inherit 
    Petal.Context
    Petal.Entry_Table
-   Aqua.Text_IO
    
 feature
 

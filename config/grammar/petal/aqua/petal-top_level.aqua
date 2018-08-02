@@ -1,13 +1,11 @@
 class Petal.Top_Level
 inherit
    Petal.Entry_Table
-   Aqua.Text_IO
    
 feature
    
    Standard : Petal.Entry_Table
    once
-      Put_Line ("creating standard table")
       create Result.Make ("standard", Void)
       Create_Standard_Table (Result)
    end
@@ -35,7 +33,6 @@ feature
    
       create NL_Value.Make (10)
       create NL_Entry.Create_Value_Entry ("nl", NL_Value, String_Type)
-      Put_Line ("adding NL entry")
       Table.Entry_List.Append (NL_Entry)
       
    end

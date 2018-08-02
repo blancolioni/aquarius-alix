@@ -1,7 +1,6 @@
 class Petal.Checks.List_Of_Declarations
 inherit 
    Petal.Context
-   Aqua.Text_IO
 
 feature
 

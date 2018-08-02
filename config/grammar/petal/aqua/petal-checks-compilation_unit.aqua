@@ -1,7 +1,6 @@
 class Petal.Checks.Compilation_Unit
 inherit
    Petal.Top_Level
-   Aqua.Text_IO
    
 feature
 
@@ -12,7 +11,6 @@ feature
          create String_Lits
          Child.Set_String_Table (String_Lits)
          Child.Set_Context (Standard)
-         Put_Line ("context: " & Child.Context.Table_Name)
       end
    
 end

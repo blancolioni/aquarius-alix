@@ -3,7 +3,9 @@ deferred class
 
 feature
 
-   Init_Script_Line : detachable String deferred end
+   Init_Script_Lines : Aqua.Containers.Linked_List [String]
+     do
+     end
    
 end
   
