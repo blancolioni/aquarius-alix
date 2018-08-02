@@ -81,8 +81,22 @@ feature
       end
    
    To_Integer : Integer
+      local
+         Index : Integer
+         Code  : System.Word_32
+         Item  : Integer
       do
-         Result := Current.Length
+         from
+            Result := 0
+            Index  := 1
+         until
+            Index > Length
+         loop
+            Code := Current.Element (Index).UTF_32_Code - 48
+            Item.Convert_From (Code)
+            Result := Result * 10 + Item
+            Index := Index + 1
+         end         
       end
 
    Index_Of (Ch : Character; Start_Index : Integer) : Integer
