@@ -1,7 +1,6 @@
 class Petal.Checks.Invoke_Statement
 inherit 
    Petal.Context
-   Aqua.Text_IO
 
 feature
 

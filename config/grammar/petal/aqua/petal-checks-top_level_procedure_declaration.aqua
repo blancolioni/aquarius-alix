@@ -1,7 +1,6 @@
 class Petal.Checks.Top_Level_Procedure_Declaration
 inherit
    Aquarius.Trees.Program_Tree
-   Aqua.Text_IO
    Petal.Declaration
    Petal.Top_Level
    
@@ -17,7 +16,6 @@ feature
       local
          Procedure_Context : Petal.Entry_Table
       do
-         Put_Line ("procedure " & Child.Identifiers.Interpolate ("."))
          create Entry.Create_Entry (Child.Identifiers.Last_Element, Void, Void)
          create Procedure_Context.Make (Child.Identifiers.Interpolate ("-"), Context)
          Set_Context (Procedure_Context)
@@ -43,17 +41,8 @@ feature
    
    Before_Sequence_Of_Statements (Child : Petal.Checks.Sequence_Of_Statements)
    do
-      Put_Line (Child.Start_Location_Image & ": setting child context and statements")
       Child.Set_Context (Declaration_Context)
       Child.Set_Statements (Statements)
-      Put_Line ("done")
-   end
-   
-   After_Sequence_Of_Statements (Child : Petal.Checks.Sequence_Of_Statements)
-   do
-      across Statements.Statements as St loop
-         Put_Line (St.Init_Script_Line)
-      end
    end
    
 end

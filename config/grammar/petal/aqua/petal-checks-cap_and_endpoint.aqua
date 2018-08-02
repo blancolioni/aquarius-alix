@@ -1,7 +1,6 @@
 class Petal.Checks.Cap_And_Endpoint
 inherit 
    Petal.Context
-   Aqua.Text_IO
    Aquarius.Trees.Program_Tree
    
 feature

@@ -1,4 +1,6 @@
-class Petal.String_Table
+class 
+   Petal.String_Table
+   
 inherit
    Aqua.Text_IO
    

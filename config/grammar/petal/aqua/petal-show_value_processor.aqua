@@ -3,7 +3,6 @@ class
    
 inherit
    Petal.Value_Processor redefine Process end
-   Aqua.Text_IO
    
 feature
 
