@@ -1,8 +1,14 @@
-class Petal.Value.Entry_Value
-inherit Petal.Value
-create Make
+class 
+   Petal.Value.Entry_Value
+   
+inherit 
+   Petal.Value redefine Requires_Initialization, Initialization_Lines end
+   
+create 
+   Make
 
 feature
+
    Make (Value : Petal.Entry)
      do
         E_Value := Value
@@ -13,6 +19,20 @@ feature
          Result := E_Value.Name
       end
 
+   Requires_Initialization : Boolean
+      do
+         if attached E_Value.Type then
+            Result := E_Value.Type.Name = "page"
+         end
+      end
+      
+   Initialization_Lines : Aqua.Containers.Linked_List [String]
+      do
+         if E_Value.Type.Name = "page" then
+            Result.Append ("(Move, " & E_Value.Declared_Name & "_Addr, 0, (Address_Value, " & E_Value.Declared_Name & "'Address))")
+         end
+      end
+      
 feature
 
    E_Value : Petal.Entry

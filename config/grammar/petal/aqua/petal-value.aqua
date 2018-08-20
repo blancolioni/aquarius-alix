@@ -16,6 +16,22 @@ feature
    Scan_Value (Processor : Petal.Value_Processor)
       do 
          Processor.Process (Current)
-end
+      end
+      
+   Requires_Initialization : Boolean
+      do
+         Result := False
+      end
+      
+   Initialized : Boolean
+   
+   Set_Initialized
+      do
+         Initialized := True
+      end
+      
+   Initialization_Lines : Aqua.Containers.Linked_List [String]
+      do
+      end
       
 end

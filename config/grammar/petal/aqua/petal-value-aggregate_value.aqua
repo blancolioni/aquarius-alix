@@ -1,6 +1,9 @@
-class Petal.Value.Aggregate_Value
+class 
+   Petal.Value.Aggregate_Value
+   
 inherit 
-   Petal.Value redefine Scan_Value end
+   Petal.Value 
+      redefine Scan_Value, Requires_Initialization, Initialization_Lines end
    
 create
    Make
@@ -30,6 +33,26 @@ feature
          end
       end
 
+   Requires_Initialization : Boolean
+      do
+         across Values as V loop
+            if V.Requires_Initialization then
+               Result := True
+            end
+         end
+      end
+      
+   Initialization_Lines : Aqua.Containers.Linked_List [String]
+      do
+         across Values as V loop        
+            if V.Requires_Initialization then
+               across V.Initialization_Lines as Line loop
+                  Result.Append (Line)
+               end
+            end
+         end
+      end
+      
 feature
 
    Append (V : Petal.Value)

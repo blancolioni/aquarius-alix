@@ -1,6 +1,12 @@
-class Petal.Value.Integer_Value
-inherit Petal.Value
-create Make
+class 
+   Petal.Value.Integer_Value
+   
+inherit 
+   Petal.Value
+      redefine Requires_Initialization, Initialization_Lines end
+   
+create 
+   Make
    
 feature
    Make (Value : Integer)
@@ -17,6 +23,19 @@ feature
          Result = I_Value.To_String
       end
 
+   Requires_Initialization : Boolean
+      do
+         Result := True
+      end
+      
+   Initialization_Lines : Aqua.Containers.Linked_List [String]
+      local
+         R : Integer
+      do
+         R := I_Value + 100
+         Result.Append ("(Move, " & R.To_String & ", 0, (Word_Value, " & I_Value.To_String & "))")
+      end
+      
 feature
 
    I_Value : Integer
