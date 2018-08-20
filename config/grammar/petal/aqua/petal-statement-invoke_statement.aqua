@@ -26,6 +26,16 @@ feature --  init script
 
    Init_Script_Lines : Aqua.Containers.Linked_List [String]
       do
+         across Send as V loop
+            Result.Append ("--  checking " & V.To_String)
+            if V.Requires_Initialization then
+               across V.Initialization_Lines as Init loop
+                  Result.Append (Init)
+               end
+               V.Set_Initialized
+            end
+         end
+         
          Result.Append ("(Invoke, " & Cap_Entry.Declared_Name 
                         & ", " & Endpoint.To_String & ", True"
                         & ")")
