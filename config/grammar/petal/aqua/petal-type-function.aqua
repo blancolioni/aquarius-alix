@@ -1,4 +1,0 @@
-class Petal.Type.Function
-   inherit Petal.Type.Subprogram
-   
-end

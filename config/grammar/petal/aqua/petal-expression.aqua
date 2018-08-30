@@ -1,7 +1,0 @@
-class Petal.Expression
-
-feature
-
-   Value : Petal.Value
-   
-end
