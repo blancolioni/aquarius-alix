@@ -1,5 +1,0 @@
-deferred class Petal.Entry.Subprogram_Entry
-inherit
-   Petal.Entry
-   
-end
