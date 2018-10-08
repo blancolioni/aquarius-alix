@@ -2389,6 +2389,10 @@ package body Ack.Semantic is
       return Local_Iterable_Class;
    end Class_Iterable;
 
+   ---------------
+   -- Get_Class --
+   ---------------
+
    function Get_Class
      (Qualified_Name : String)
       return Ack.Classes.Constant_Class_Entity
@@ -2400,12 +2404,21 @@ package body Ack.Semantic is
       for I in Q_Name'Range loop
          if Q_Name (I) = '.' then
             declare
+               use type Ack.Classes.Class_Entity;
                Name : constant String :=
                         Qualified_Name (Start .. I - 1);
             begin
                if Start = Q_Name'First then
                   Class :=
-                    Ack.Classes.Get_Top_Level_Class (Name);
+                    Load_Class (null, Ack.Environment.Top_Level,
+                                Get_Name_Id (Name));
+                  if Class = null then
+                     Ada.Text_IO.Put_Line
+                       (Ada.Text_IO.Standard_Error,
+                        "failed to load top level class '"
+                        & Name & "'");
+                     return null;
+                  end if;
                elsif Class.Contains (Name) then
                   Class :=
                     Ack.Classes.Class_Entity
@@ -2413,8 +2426,21 @@ package body Ack.Semantic is
                else
                   Class :=
                     Load_Class (null, Class, Get_Name_Id (Name));
+                  if Class = null then
+                     Ada.Text_IO.Put_Line
+                       (Ada.Text_IO.Standard_Error,
+                        "failed to load child class '"
+                        & Name & "' in " & Qualified_Name);
+                     return null;
+                  end if;
+
                end if;
                Start := I + 1;
+            exception
+               when others =>
+                  Ada.Text_IO.Put_Line
+                    ("failed to get classes for '" & Qualified_Name & "'");
+                  raise;
             end;
          end if;
       end loop;
