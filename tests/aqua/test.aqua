@@ -29,6 +29,8 @@ feature
          Test_List.Append (T)
          create { Test_Based_Integers } T
          Test_List.Append (T)
+         create { Test_Based_Integer_Strings } T
+         Test_List.Append (T)
          create { Test_Integer_Enum } T
          Test_List.Append (T)
 --         create { Test_Explicit_Integer_Interval } T

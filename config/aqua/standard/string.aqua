@@ -83,18 +83,41 @@ feature
    To_Integer : Integer
       local
          Index : Integer
-         Code  : System.Word_32
+         Code  : Integer
          Item  : Integer
+         Base  : Integer
+         Ch    : Character
       do
+         Base := 10
+         
          from
             Result := 0
             Index  := 1
          until
             Index > Length
          loop
-            Code := Current.Element (Index).UTF_32_Code - 48
-            Item.Convert_From (Code)
-            Result := Result * 10 + Item
+            Ch := Current.Element (Index)
+            if Ch = '#' then
+               if Index < Length then
+                  Base := Result
+                  Result := 0
+               end
+            elsif Ch = '_' then
+               --  ignore
+            else               
+               Code.Convert_From (Ch.UTF_32_Code)
+               if Code >= 48 and then Code < 58 and then Code < Base + 48 then
+                  Item := Code - 48
+               elsif Code > 64 and then Code <= Base + 54 then
+                  Item := Code - 55
+               elsif Code > 96 and then Code <= Base + 86 then
+                  Item := Code - 87
+               else
+                  --  Put_Line ("bad base " & Base.To_String & " character: '" & Current.Slice (Index, Index) & "' " & Code.To_String)
+                  Item := 99999999  --  oh dear
+               end
+               Result := Result * Base + Item
+            end
             Index := Index + 1
          end         
       end
