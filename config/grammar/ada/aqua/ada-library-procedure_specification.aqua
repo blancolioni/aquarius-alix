@@ -12,7 +12,6 @@ feature
          if Part_Of_Body then
             
          else
-            Put_Line ("Ada.Library: new procedure spec: " & Full_Name)
             Entity := Create_Entity (Child, Local_Name, Full_Name, "procedure-spec", Top_Level)
          end
       end

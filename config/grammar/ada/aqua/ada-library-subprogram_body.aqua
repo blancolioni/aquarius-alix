@@ -16,7 +16,6 @@ feature
          Local_Name := Child.Local_Name
          Full_Name := Child.Full_Name
          Entity := Create_Entity (Current, Local_Name, Full_Name, "procedure-body", Top_Level)
-         Put_Line ("Ada.Library: new subprogram body: " & Full_Name)
       end
 
 end
