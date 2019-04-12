@@ -16,7 +16,7 @@ feature
          Id  : String
       do
          Context := New_Context
-         Id := Child.Text
+         Id := Child.Standard_Text
          
          if attached Context then
             New_Context := Find_Entity (Id, "")
