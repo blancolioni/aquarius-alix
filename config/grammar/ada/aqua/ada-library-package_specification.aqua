@@ -9,7 +9,7 @@ feature
       do
          Set_Name (Child.Identifiers)
          Entity := Create_Entity (Child, Local_Name, Full_Name, "package", Top_Level)
-         Put_Line ("Ada.Library: new package: " & Entity.Name)
+         Put_Line ("Ada.Library: new package: " & Full_Name)
       end
       
 end
