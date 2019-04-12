@@ -953,6 +953,13 @@ package body Ack.Bindings is
 
             else
 
+               declare
+                  Result : Ack.Compile.Compilation_Result;
+               begin
+                  Ack.Compile.Compile_Class
+                    (Binding_File_Path, Image, Result, null);
+               end;
+
                for Index in 1 .. Binding_Vector.Last_Index loop
                   declare
                      Rec  : constant Binding_Record :=
