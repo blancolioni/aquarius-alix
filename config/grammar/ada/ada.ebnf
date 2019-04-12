@@ -108,7 +108,9 @@ abstract_subprogram_declaration ::= [ overriding_indicator ] subprogram_specific
 
 null_procedure_declaration ::= [ overriding_indicator ] procedure_specification 'is' 'null' [ aspect_specification ] ';'
 
-expression_function_declaration ::= [ overriding_indicator ] function_specification 'is' parenthesised_expression [ aspect_specification ] ';'
+expression_function_declaration ::= [ overriding_indicator ] function_specification 'is' expression_function_value [ aspect_specification ] ';'
+
+expression_function_value ::= parenthesised_expression | aggregate
 
 subprogram_specification ::= procedure_specification | function_specification
 
@@ -614,9 +616,9 @@ return_statement ::= simple_return | extended_return
 
 simple_return ::= 'return' [expression] ';'
 
-extended_return ::= 'return' identifier ':' [ 'constant' ] type_indication [ ':=' expression ] 'do'
+extended_return ::= 'return' identifier ':' [ 'constant' ] type_indication [ ':=' expression ] [ 'do'
                         sequence_of_statements
-                    'end' 'return' ';'
+                    'end' 'return' ] ';'
 
 exit_statement ::= 'exit' [ identifier ] [ 'when' expression ] ';'
 
@@ -771,6 +773,7 @@ atomic_expression ::= object_reference | numeric_literal | string_literal |
 parenthesised_expression ::= '(' expression ')'
                            | '(' conditional_expression ')'
                            | '(' case_expression ')'
+                           | '(' loop_expression ')'
 
 conditional_expression ::= 'if' condition 'then' expression { 'elsif' condition 'then' expression } 'else' expression
 
@@ -780,10 +783,14 @@ case_expression ::= 'case' expression 'is' < case_expression_alternative / ',' >
 
 case_expression_alternative ::= 'when' case_option '=>' expression
 
+loop_expression ::= 'for' 'some' identifier 'of' primary '=>' expression
+                  | 'for' 'all' identifier 'of' primary '=>' expression
+                  
 aggregate ::=
     '(' object_reference 'with' 'null' 'record' ')'
   | '(' object_reference 'with' < selector_expression / ',' > ')'
   | '(' selector '=>' expression ')'
+  | '(' selector '=>' '<>' ')'
   | '(' selector_expression ',' < selector_expression / ',' > ')'
 
 selector_expression ::= selector '=>' expression
