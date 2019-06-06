@@ -75,7 +75,7 @@ feature
       require
          Tree_Set : Have_Tree
       do
-         Result := tree.Find_Entity (Entity_Name, Class_Name)
+         Result := Tree.Find_Entity (Entity_Name, Class_Name)
       end
    
    
