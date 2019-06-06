@@ -1,0 +1,12 @@
+class Kit.Checks.Qualified_Identifier
+   
+feature
+
+   Identifiers : String_List
+   
+   After_Identifier (Id : String)
+      do
+         Identifiers.Append (Id)
+      end
+   
+end

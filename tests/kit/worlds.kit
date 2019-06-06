@@ -1,0 +1,90 @@
+with Chemicals;
+with Commodities;
+with Generated;
+with Names;
+with Knowledge;
+with Orders;
+with Owners;
+with Surfaces;
+with Systems;
+
+package Worlds is
+
+   type World_Category is (Asteroid, Dwarf, Terrestrial, Super_Terrestrial, 
+                           Sub_Jovian, Jovian, Super_Jovian);
+
+   record Terrain : Localised, Has_Color is
+      Hazard   : Long_Float;
+      Is_Water : Boolean;   
+   end Terrain;
+
+   record Climate : Localised is
+      Habitability    : Long_Float;
+      Default_Terrain : Terrain;
+   end Climate;
+
+   record Climate_Terrain is
+      key Climate;
+      Terrain;
+      Chance : Long_Float;
+      key Climate_Terrain with Climate, Terrain;
+   end Climate_Terrain;
+   
+   record World : Star_System_Object, Has_Name, Is_Generated, Knowable, Order_Target, Surface, Has_Owner is
+      Category                 : World_Category;
+      Climate;
+      Greenhouse_Effect        : Boolean;
+      Gas_Giant                : Boolean;
+      key Habitability         : Long_Float;
+      Solid_Mass               : Long_Float;
+      Gas_Mass                 : Long_Float;
+      Exospheric_Temp          : Long_Float;
+      Surface_Pressure         : Long_Float;
+      Water_Coverage           : Long_Float;
+      Cloud_Coverage           : Long_Float;
+      Ice_Coverage             : Long_Float;
+      Water_Boiling_Point      : Long_Float;
+      Volatile_Gas_Inventory   : Long_Float;
+      Greenhouse_Rise          : Long_Float;
+      Minimum_Temperature      : Long_Float;
+      Maximum_Temperature      : Long_Float;
+      Night_Temperature_Low    : Long_Float;
+      Daytime_Temperature_High : Long_Float;
+      Albedo                   : Long_Float;
+   end World; 
+
+   record Atmosphere_Component : Chemical;
+   
+   record Atmosphere is
+      key World;
+      Component : Atmosphere_Component;
+      Percentage : Long_Float;
+      key World_Atm_Comp with World, Percentage;
+      key World_Atmosphere with World, Component;
+   end Atmosphere;
+
+record Terrain_Resource is
+   key Terrain;
+   Resource;
+   Chance    : Long_Float;
+end Terrain_Resource;
+
+record Feature : Has_Name, Has_Color is
+   Habitability : Long_Float;
+end Feature;
+   
+record World_Sector : Sector, Has_Owner is
+   key World;
+   Terrain;
+   Feature;
+   key World_Sector_Owner with World, Owner;
+end World_Sector;
+   
+record Deposit is
+   key World_Sector;
+   Resource;
+   Accessibility : Long_Float;
+   Abundance     : Long_Float;
+end Deposit;
+
+end Worlds;

@@ -1,0 +1,16 @@
+with Commodities;
+
+package Construction is
+
+record Constructed is
+   Build_Cost : Natural;
+end Constructed;
+
+record Construction_Input is
+   key Constructed;
+   key Commodity;
+   Quantity : Float;
+   unique key Construction_Input with Constructed, Commodity;
+end Construction_Input;
+
+end Construction;

@@ -16,12 +16,16 @@ format '(' space_before no_space_after
 format ')' no_space_before space_after
 
 database_declaration ::=
-    { context_clause }
-    'package' name 'is'
+    { context_clause } package_declaration
+    
+package_declaration ::=
+    'package' qualified_identifier 'is'
         list_of_declarations
-    'end' [ 'database' ] name ';'
+    'end' matching_qualified_identifier ';'
 
-context_clause ::= 'with' identifier ';'
+matching_qualified_identifier ::= qualified_identifier
+
+context_clause ::= 'with' qualified_identifier ';'
 
 list_of_declarations ::= { declaration }
 
@@ -57,8 +61,12 @@ constraint ::= '(' integer ')'
 
 enumeration_type ::= '(' < identifier / ',' > ')'
 
-type_declaration ::= 'type' identifier 'is' type_spec ';'
+type_declaration ::= 'type' qualified_identifier 'is' type_spec ';'
 
-type_spec ::= named_type | enumeration_type
+type_spec ::= named_type | enumeration_type | imported_type
 
-name ::= < identifier / '.' >
+imported_type ::= 'new' identifier 'with' < imported_type_aspect / ',' >
+
+imported_type_aspect ::= identifier '=>' identifier
+
+qualified_identifier ::= < identifier / '.' >

@@ -1,0 +1,23 @@
+class Kit.Checks.Package_Declaration
+
+inherit
+   Aquarius.Trees.Program_Tree
+   Aqua.Text_IO
+
+feature
+
+   Package_Name : String
+   
+   After_Qualified_Identifier (Child : Kit.Checks.Qualified_Identifier)
+      do
+         Package_Name := Child.Identifiers.Interpolate (".")
+      end
+   
+   After_Matching_Qualified_Identifier (Child : Kit.Checks.Matching_Qualified_Identifier)
+      do
+         if Child.Identifiers.Interpolate (".") /= Package_Name then
+            Error ("package names do not match")
+         end
+      end
+   
+end

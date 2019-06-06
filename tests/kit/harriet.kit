@@ -1,0 +1,26 @@
+with Calendar;
+with Events;
+with Factions;
+with Installations;
+with Markets;
+with Pops;
+with Ships;
+with Stars;
+with Surfaces;
+with Users;
+with Worlds;
+
+package Harriet.Db is
+
+--  bug in kit requires at least one fixed string field in the database
+record Unused is
+   Tag : Fixed_String (3);
+end Unused;
+
+record Scenario is
+   unique key Id     : String (32);
+   unique key Active : Boolean;
+   Central_System    : Star_System;
+end Scenario;
+
+end Harriet.Db;

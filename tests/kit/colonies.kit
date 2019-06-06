@@ -1,0 +1,32 @@
+with Agents;
+with Commodities;
+with Houses;
+with Money;
+with Pop_Groups;
+with Production;
+with Worlds;
+
+package Colonies is
+
+record Colony : Agent, Has_Stock is
+   unique key World;
+   key House;
+   Capital        : Boolean;
+   Plurality      : Float;
+end Colony;
+
+record Colony_Region is
+   key Colony;
+   key World_Region;
+   unique key Colony_Region with Colony, World_Region;
+   Infrastructure : Float;
+end Colony_Region;
+
+record Colony_Price is
+   key Colony;
+   key Commodity;
+   Price : Price_Type;
+   unique key Commodity_Price with Colony, Commodity;
+end Colony_Price;
+
+end Colonies;
