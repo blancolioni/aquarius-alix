@@ -1,0 +1,12 @@
+class Kit.Checks.Matching_Qualified_Identifier
+   
+feature
+
+   Identifiers : String_List
+   
+   After_Qualified_Identifier (Child : Kit.Checks.Qualified_Identifier)
+      do
+         Identifiers := Child.Identifiers
+      end
+   
+end
