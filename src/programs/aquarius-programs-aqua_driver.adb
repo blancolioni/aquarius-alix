@@ -231,10 +231,10 @@ package body Aquarius.Programs.Aqua_Driver is
                      Qualified_Name   => Qualified_Name,
                      Class_Name       => Class_Name,
                      Top_Level        => Top_Level,
-                     Compilation_Unit => Driver.Current,
+                     Compilation_Unit => Driver.Current.Program_Root,
                      Defining_Name    => Driver.Current,
                      Entity_Spec      => Driver.Current,
-                     Entity_Body      => null);
+                     Entity_Body      => Driver.Current);
                end;
 
             end;
