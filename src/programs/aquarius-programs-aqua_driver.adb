@@ -1,11 +1,13 @@
 with Ada.Text_IO;
 with Aqua.IO;
+with Aquarius.Programs.Komnenos_Entities;
+with Komnenos.UI;
 
 package body Aquarius.Programs.Aqua_Driver is
 
    Trace_Properties : constant Boolean := False;
 
-   Local_Tree_Driver : aliased Aquarius_Tree_Driver_Record (255);
+   Local_Tree_Driver : aliased Aquarius_Tree_Driver_Record (1023);
 
    type Driver_Command is
      (No_Command,
@@ -24,7 +26,10 @@ package body Aquarius.Programs.Aqua_Driver is
       Start_Column,
       End_Column,
       Start_Position,
-      End_Position);
+      End_Position,
+      Create_Entity,
+      Find_Entity,
+      Cross_Reference);
 
    function Is_Command (Value : Natural) return Boolean
    is (Value <= Driver_Command'Pos (Driver_Command'Last));
@@ -52,10 +57,12 @@ package body Aquarius.Programs.Aqua_Driver is
       A : Driver_Register_Range := 12;
       L : constant Natural := Natural (Driver.Get_Word (A));
       S : String (1 .. L);
+      V : Aqua.Word;
    begin
       for Ch of S loop
          A := A + 4;
-         Ch := Character'Val (Driver.Get_Word (A));
+         V := Driver.Get_Word (A);
+         Ch := Character'Val (V);
       end loop;
       return S;
    end Read_String;
@@ -182,6 +189,62 @@ package body Aquarius.Programs.Aqua_Driver is
                   Props.Insert (Name, Value);
                end if;
             end;
+
+         when Create_Entity =>
+
+            declare
+               use type Aqua.Word;
+
+               Specification : constant String :=
+                                 Driver.Read_String;
+               Name_Left     : constant Natural :=
+                                 Specification'First - 1;
+               Q_Name_Left   : constant Natural :=
+                                 Ada.Strings.Fixed.Index
+                                   (Specification, "/", Name_Left + 1);
+               Class_Name_Left : constant Natural :=
+                                   Ada.Strings.Fixed.Index
+                                     (Specification, "/", Q_Name_Left + 1);
+               Location_Left   : constant Natural :=
+                                   Ada.Strings.Fixed.Index
+                                     (Specification, "/", Class_Name_Left + 1);
+               Name            : constant String :=
+                                   Specification
+                                     (Name_Left + 1 .. Q_Name_Left - 1);
+               Qualified_Name  : constant String :=
+                                   Specification
+                                     (Q_Name_Left + 1 .. Class_Name_Left - 1);
+               Class_Name      : constant String :=
+                                   Specification
+                                     (Class_Name_Left + 1
+                                      .. Location_Left - 1);
+               Top_Level       : constant Boolean :=
+                                   Driver.Get_Word (8) /= 0;
+            begin
+
+               declare
+                  use Aquarius.Programs.Komnenos_Entities;
+               begin
+                  Create_Aquarius_Source_Entity
+                    (Table            => Komnenos.UI.Current_UI.Main_Table,
+                     Name             => Name,
+                     Qualified_Name   => Qualified_Name,
+                     Class_Name       => Class_Name,
+                     Top_Level        => Top_Level,
+                     Compilation_Unit => Driver.Current,
+                     Defining_Name    => Driver.Current,
+                     Entity_Spec      => Driver.Current,
+                     Entity_Body      => null);
+               end;
+
+            end;
+
+         when Find_Entity =>
+            null;
+
+         when Cross_Reference =>
+            null;
+
       end case;
    end Update;
 
