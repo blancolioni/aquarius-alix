@@ -233,7 +233,7 @@ package body Aquarius.Lexers is
                  Text   : in     String)
                 return Natural
    is
-      function Scan (Current : not null access Lexer_node;
+      function Scan (Current : not null access Lexer_Node;
                      Index   : Positive)
                     return Natural;
 

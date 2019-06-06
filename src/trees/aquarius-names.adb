@@ -120,8 +120,9 @@ package body Aquarius.Names is
    -- Name_Value --
    ----------------
 
-   function Name_Value (Name : String)
-                       return access Aquarius_Name_Value'Class
+   function Name_Value
+     (Name : String)
+      return Aquarius_Name_Value_Access
    is
    begin
       return new Aquarius_Name_Value'(Value => To_Aquarius_Name (Name));

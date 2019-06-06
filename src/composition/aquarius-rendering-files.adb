@@ -3,11 +3,13 @@ with Ada.Text_IO;
 
 package body Aquarius.Rendering.Files is
 
+   type File_Access is access Ada.Text_IO.File_Type;
+
    type Root_File_Renderer is
      new Root_Aquarius_Renderer with
       record
          Path : Ada.Strings.Unbounded.Unbounded_String;
-         File : access Ada.Text_IO.File_Type;
+         File : File_Access;
       end record;
 
    overriding procedure Set_Text

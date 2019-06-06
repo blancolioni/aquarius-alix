@@ -216,12 +216,15 @@ private
          Groups : Action_Group_Lists.List;
       end record;
 
+   type Action_Source_Access is access all Action_Source'Class;
+   type Action_Execution_Access is access all Action_Execution_Interface'Class;
+
    type Action_Instance is
       record
          Group    : Action_Group;
          Position : Rule_Position;
-         Parent   : access Action_Source'Class;
-         Action   : access Action_Execution_Interface'Class;
+         Parent   : Action_Source_Access;
+         Action   : Action_Execution_Access;
       end record;
 
    package Action_Instance_Lists is
@@ -231,8 +234,6 @@ private
       record
          List : Action_Instance_Lists.List;
       end record;
-
-   type Action_Source_Access is access all Action_Source'Class;
 
    type Action_Context is array (Positive range <>) of Action_Source_Access;
 

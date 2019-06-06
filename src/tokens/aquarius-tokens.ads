@@ -207,13 +207,15 @@ private
 
    Max_Short_Length : constant := 16;
 
+   type Long_Token_Text is access constant String;
+
    type Token_Text (Length_Class : Token_Text_Length_Class := Short) is
       record
          case Length_Class is
             when Short =>
                Text      : String (1 .. Max_Short_Length) := (others => ' ');
             when Long =>
-               Long_Text : access String;
+               Long_Text : Long_Token_Text;
          end case;
       end record;
 
