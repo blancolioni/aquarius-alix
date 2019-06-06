@@ -1,0 +1,16 @@
+with Commodities;
+
+package Pop_Groups is
+
+record Pop_Group : Commodity is
+   Consumer_Quality : Positive;
+   Service_Quality  : Positive;
+   Salary           : Price_Type;
+end Pop_Group;
+
+record Pop_Group_Needs is
+   key Pop_Group;
+   Commodity;
+end Pop_Group_Needs;
+
+end Pop_Groups;

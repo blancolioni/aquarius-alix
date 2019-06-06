@@ -1,0 +1,26 @@
+with Commodities;
+with Employers;
+with Managed;
+with Pop_Groups;
+with Ships;
+with Transport;
+with Worlds;
+
+package Pops is
+
+record Pop : Transportable, Managed, Agent is
+   key Faction;
+   key World;
+   key World_Sector;
+   key Employer;
+   key Ship;
+   key Pop_Group;
+   Size      : Quantity_Type;
+   Salary    : Price_Type;
+   Happiness : Long_Float;
+   key Faction_World with Faction, World;
+   unique key Pop_Group_Sector with Pop_Group, World_Sector;
+   unique key Pop_Group_Employer with Pop_Group, Employer;
+end Pop;
+
+end Pops;

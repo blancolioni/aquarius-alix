@@ -1,0 +1,17 @@
+with Colonies;
+with Commodities;
+with Employers;
+with Money;
+with Owners;
+with Pops;
+
+package Buildings is
+
+record Building : Employer, Has_Stock, Owned is
+   key Colony;
+   key Colony_Region;
+   key Production;
+   Size      : Positive;
+end Building;
+
+end Buildings;

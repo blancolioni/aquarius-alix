@@ -1,0 +1,102 @@
+with Localisation;
+with Calendar;
+with Colors;
+with Money;
+with Quantities;
+
+package Commodities is
+
+   record Commodity : Localised with Vector, Map is
+      key Available : Boolean;
+      Initial_Price : Price_Type;
+      Mass          : Long_Float;
+      Density       : Long_Float;
+   end Commodity;
+
+   record Recipe is
+      key Commodity;
+   end Recipe;
+   
+   record Recipe_Input is
+      key Recipe;
+      key Commodity;
+      Quantity : Quantity_Type;
+      unique key Recipe_Input with Recipe, Commodity;
+   end Recipe_Input;
+
+   record Consumer_Good : Commodity is
+      key Quality : Natural;
+   end Consumer_Good;
+
+   record Industrial_Good : Commodity;
+   
+   record Alloy : Industrial_Good;
+   
+   record Ceramic : Industrial_Good;
+   
+   record Cryogenic : Industrial_Good;
+   
+   record Electronics : Industrial_Good;
+   
+   record Explosives : Industrial_Good;
+   
+   record Plastics : Industrial_Good;
+   
+   record Clothing_Commodity : Consumer_Good;
+         
+   record Drink_Commodity : Consumer_Good;
+   
+   record Food_Commodity : Consumer_Good;
+   
+   record Intoxicant : Consumer_Good;
+         
+   record Resource : Commodity;
+   
+   record Fissile : Resource;
+   
+   record Fuel : Resource;
+   
+   record Gas : Resource;
+   
+   record Liquid : Resource;
+   
+   record Mineral : Resource;
+
+   record Metal : Resource;
+   
+   record Organic : Resource;
+   
+   record Building_Module : Commodity;
+
+   record Commercial_Module : Building_Module;
+
+   record Habitation_Module : Building_Module;
+   
+   record Industrial_Module : Building_Module;
+   
+   record Military_Module : Building_Module;
+   
+   record Structural : Building_Module;
+   
+   record Has_Stock is
+      Capacity : Quantity_Type;
+   end Has_Stock;
+   
+   record Stock_Item is
+      key Has_Stock;
+      Commodity;
+      Quantity : Quantity_Type;
+      Value    : Money_Type;
+      unique key Stock_Item with Has_Stock, Commodity;
+   end Stock_Item;
+   
+   record Historical_Stock is
+      Time_Stamp : Time;
+      Has_Stock;
+      Commodity;
+      Quantity : Quantity_Type;
+      Value    : Money_Type;
+      unique key Historical_Stock with Has_Stock, Commodity, Time_Stamp;
+   end Historical_Stock;
+   
+end Commodities;

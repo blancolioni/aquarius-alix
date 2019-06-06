@@ -1,0 +1,23 @@
+with Commodities;
+with Money;
+
+package Agents is
+
+   record Account is
+      Guarantor  : Account;
+      Start_Cash : Money_Type;
+      Cash       : Money_Type;
+   end Account;
+   
+   record Agent : Has_Stock is
+      unique key Account;
+   end Agent;
+   
+   record Stock_Price is
+      key Agent;
+      Commodity;
+      Price : Price_Type;
+      unique key Stock_Price with Agent, Commodity;
+   end Stock_Price;
+   
+end Agents;

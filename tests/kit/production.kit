@@ -1,0 +1,45 @@
+with Localisation;
+
+with Commodities;
+with Money;
+with Pop_Groups;
+
+package Production is
+
+type Production_Class is (RGO, Artisan, Factory);
+
+type Production_Effect is (Input, Throughput, Output);
+
+record Production : Localised is
+   key Class        : Production_Class;
+   key Owner        : Pop_Group;
+   Owner_Effect     : Production_Effect;
+   Owner_Multiplier : Float;
+   key Output       : Commodity;
+   Output_Value     : Float;
+   Workforce        : Positive;
+   Is_Coastal       : Boolean;
+   key Class_Output with Class, Output;
+end Production;
+
+record Efficiency_Input is
+   key Production;
+   key Commodity;
+   Efficiency : Float;
+end Efficiency_Input;
+
+record Worker_Input is
+   key Production;
+   key Pop_Group;
+   Fraction   : Float;
+   Effect     : Production_Effect;
+   Multiplier : Float;
+end Worker_Input;
+
+record Commodity_Input is
+   key Production;
+   key Commodity;
+   Quantity : Float;
+end Commodity_Input;
+
+end Production;

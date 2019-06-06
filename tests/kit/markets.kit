@@ -1,0 +1,78 @@
+with Agents;
+with Calendar;
+with Money;
+with Quantities;
+with Worlds;
+
+package Markets is
+
+record Market with Map is
+   unique key World;
+end Market;
+   
+record Market_State is
+   key Time_Stamp : Time;
+   Market;
+   Commodity;
+   Price  : Price_Type;
+   Demand : Quantity_Type;
+   Supply : Quantity_Type;
+   key Market_State with Market, Commodity, Time_Stamp;
+end Market_State;
+
+record Market_Price is
+   key Market;
+   key Commodity;
+   Price : Price_Type;
+   unique key Market_Price with Market, Commodity;
+end Market_Price;
+
+type Offer_Type is (Ask, Bid);
+
+record Market_Offer is
+   key Market;
+   key Commodity;
+   key Agent;
+   Offer : Offer_Type;
+   Has_Stock;
+   Account;
+   Price           : Price_Type;
+   key Priority    : Long_Float;
+   Quantity        : Quantity_Type;
+   key Market_Priority with Market, Commodity, Priority;
+   key Agent_Offer with Market, Agent;
+   unique key Market_Offer with Market, Agent, Commodity, Offer;
+end Market_Offer;
+
+record Ask_Offer : Market_Offer;
+
+record Bid_Offer : Market_Offer;
+
+record Historical_Offer is
+   Time_Stamp : Time;
+   Market;
+   Commodity;
+   Agent;
+   Offer : Offer_Type;
+   Quantity   : Quantity_Type;
+   Price      : Price_Type;
+   key Historical_Offer with Market, Commodity, Time_Stamp;
+   key Historical_Agent_Offer with Market, Agent, Commodity, Time_Stamp;
+end Historical_Offer;
+
+record Historical_Ask : Historical_Offer;
+
+record Historical_Bid : Historical_Offer;
+
+record Transaction is
+   key Time_Stamp : Time;
+   key Market;
+   key Commodity;
+   key Buyer : Agent;
+   key Seller : Agent;
+   Price : Price_Type;
+   Quantity : Quantity_Type;
+   key Transaction with Market, Commodity, Time_Stamp;
+end Transaction;
+   
+end Markets;

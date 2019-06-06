@@ -1,0 +1,17 @@
+with Agents;
+with Commodities;
+with Employers;
+with Facilities;
+with Managed;
+with Worlds;
+
+package Installations is
+
+   record Installation : Has_Owner, Managed, Agent, Employer is
+      key World;
+      key World_Sector;
+      Facility;
+      Production : Commodity;
+   end Installation;
+   
+end Installations;

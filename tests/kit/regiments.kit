@@ -1,0 +1,20 @@
+with Colonies;
+with Houses;
+with Markets;
+with Pops;
+with Units;
+
+package Regiments is
+
+record Regiment : Has_Name, Has_Stock is
+   key Pop;
+   key Leader : Individual;
+   key Colony_Region;
+   key House;
+   key Market;
+   Unit;
+   Size         : Natural;
+   Organisation : Natural;
+end Regiment;
+
+end Regiments;

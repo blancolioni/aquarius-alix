@@ -1,0 +1,17 @@
+class Kit.Checks.Record_Declaration
+
+inherit
+   Aquarius.Trees.Program_Tree
+   
+feature
+
+   Record_Name : String
+   Record_Entity : Komnenos.Entity
+   
+   After_Identifier (Text : String)
+      do
+         Record_Name := Text
+         Record_Entity := Create_Entity (Current, Text, Text, "record", True)
+      end
+   
+end
