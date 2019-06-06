@@ -86,6 +86,9 @@ private
 
    type Lexer_State is (End_Of_Line, End_Of_File);
 
+   type Lexer_Rule;
+   type Lexer_Rule_Access is access Lexer_Rule;
+
    type Lexer_Rule (Rule_Type : Lexer_Rule_Type) is
       record
          Negate : Boolean;
@@ -100,27 +103,28 @@ private
             when Character_Range =>
                Lo, Hi : Character;
             when Or_Rule =>
-               Left, Right : access Lexer_Rule;
+               Left, Right : Lexer_Rule_Access;
          end case;
       end record;
+
+   type Lexer_Node;
+   type Lexer is access Lexer_Node;
 
    type Lexer_Node (Node_Type : Lexer_Type) is
       record
          case Node_Type is
             when Terminal =>
-               Rule   : access Lexer_Rule;
+               Rule        : Lexer_Rule_Access;
             when Sequence =>
-               First       : access Lexer_Node;
-               Rest        : access Lexer_Node;
+               First       : Lexer;
+               Rest        : Lexer;
             when Repeat | Optional =>
-               Child       : access Lexer_Node;
+               Child       : Lexer;
             when Choice =>
-               Left, Right : access Lexer_Node;
+               Left, Right : Lexer;
             when Negate =>
-               Negated     : access Lexer_Node;
+               Negated     : Lexer;
          end case;
       end record;
-
-   type Lexer is access Lexer_Node;
 
 end Aquarius.Lexers;

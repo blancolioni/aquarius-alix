@@ -29,18 +29,10 @@ package body Aquarius.Messages is
                             Reference  : access Message_Location'Class;
                             Message    : in     String)
    is
-      Ref : constant Message_Reference := (Reference, new String'(Message));
+      Ref : constant Message_Reference :=
+              (Reference, Ada.Strings.Unbounded.To_Unbounded_String (Message));
    begin
-      if To.Reference_Count = 0 then
-         To.Reference_Count := 1;
-         To.Reference := Ref;
-      else
-         To.Reference_Count := To.Reference_Count + 1;
-         if To.References = null then
-            To.References := new Array_Of_References (2 .. 4);
-         end if;
-         To.References (To.Reference_Count) := Ref;
-      end if;
+      To.References.Append (Ref);
    end Add_Reference;
 
    ------------
@@ -130,7 +122,7 @@ package body Aquarius.Messages is
       return String
    is
    begin
-      return Item.Text.all;
+      return Ada.Strings.Unbounded.To_String (Item.Text);
    end Get_Message_Text;
 
    -------------------
@@ -215,12 +207,12 @@ package body Aquarius.Messages is
                          Text     : in     String)
                         return Message
    is
-      Result : constant Message := new Message_Record;
+      Result : constant Message := new Message_Record'
+        (Level      => Level,
+         Location   => Location,
+         Text       => Ada.Strings.Unbounded.To_Unbounded_String (Text),
+         References => Message_Reference_Vectors.Empty_Vector);
    begin
-      Result.Level           := Level;
-      Result.Location        := Location;
-      Result.Text            := new String'(Text);
-      Result.Reference_Count := 0;
       return Result;
    end New_Message;
 
@@ -249,7 +241,7 @@ package body Aquarius.Messages is
 
    function Reference_Count (Item : in Message) return Natural is
    begin
-      return Item.Reference_Count;
+      return Item.References.Last_Index;
    end Reference_Count;
 
    ----------
@@ -257,13 +249,13 @@ package body Aquarius.Messages is
    ----------
 
    function Show (Item : in Message) return String is
+      Text : constant String :=
+               Ada.Strings.Unbounded.To_String (Item.Text);
    begin
       if Item.Location /= null then
-         return Item.Location.Show_Location & ": " &
-           Level_Prefix (Item.Level) &
-           Item.Text.all;
+         return Item.Location.Show_Location & ": " & Text;
       else
-         return Level_Prefix (Item.Level) & Item.Text.all;
+         return Level_Prefix (Item.Level) & Text;
       end if;
    end Show;
 
@@ -288,29 +280,22 @@ package body Aquarius.Messages is
    -- Show_Reference --
    --------------------
 
-   function Show_Reference (Item      : in Message;
-                            Ref_Index : in Positive)
-                           return String
+   function Show_Reference
+     (Item      : in Message;
+      Ref_Index : in Positive)
+      return String
    is
-      Ref : Message_Reference := Item.Reference;
+      Ref : constant Message_Reference := Item.References.Element (Ref_Index);
+      Text : constant String :=
+               Ada.Strings.Unbounded.To_String (Ref.Text);
+      Loc  : constant String :=
+               (if Ref.Reference = null
+                then "(built-in)"
+                else Ref.Reference.Show_Location);
    begin
-      if Ref_Index > Item.Reference_Count then
-         raise Constraint_Error with
-           "Message has no such reference" & Ref_Index'Img &
-           " (" & Show (Item) & ")";
-      end if;
-      if Ref_Index > 1 then
-         Ref := Item.References (Ref_Index);
-      end if;
-      if Ref.Reference = null then
-         return "(built-in)" &
-           ": " & Level_Prefix (Item.Level) &
-           Ref.Text.all;
-      else
-         return Ref.Reference.Show_Location &
-           ": " & Level_Prefix (Item.Level) &
-           Ref.Text.all;
-      end if;
+      return Loc
+        & ": " & Level_Prefix (Item.Level)
+        & Text;
    end Show_Reference;
 
 end Aquarius.Messages;

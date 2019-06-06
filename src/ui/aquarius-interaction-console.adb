@@ -3,6 +3,8 @@ package body Aquarius.Interaction.Console is
    type Console_Interactor_Type is
      new Interactor with null record;
 
+   type Console_Interactor_Access is access all Console_Interactor_Type'Class;
+
    overriding
    function Name
      (Item  : Console_Interactor_Type)
@@ -14,7 +16,7 @@ package body Aquarius.Interaction.Console is
       Start : not null access Aquarius.Trees.Root_Tree_Type'Class)
       is null;
 
-   Local_Console_Interactor : access Console_Interactor_Type := null;
+   Local_Console_Interactor : Console_Interactor_Access := null;
 
    function Console_Interactor
      return access Interactor'Class

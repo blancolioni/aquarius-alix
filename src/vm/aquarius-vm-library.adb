@@ -379,7 +379,7 @@ package body Aquarius.VM.Library is
    is
       pragma Unreferenced (Env);
       pragma Unreferenced (Arguments);
-      New_Map : constant access Root_Aquarius_Object'Class :=
+      New_Map : constant Maps.Map_Property_Access :=
                   new Maps.Map_Property_Type;
    begin
       return VM.To_Value (New_Map);

@@ -6,6 +6,7 @@ package Aquarius.VM.Maps is
 
    type Map_Property_Type is
      new Object_Interface with private;
+   type Map_Property_Access is access all Map_Property_Type'Class;
 
    overriding function Name
      (Item : Map_Property_Type)

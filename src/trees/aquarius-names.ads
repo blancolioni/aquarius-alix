@@ -21,12 +21,14 @@ package Aquarius.Names is
 
    type Aquarius_Name_Value is new Root_Aquarius_Object with private;
 
+   type Aquarius_Name_Value_Access is access all Aquarius_Name_Value'Class;
+
    overriding
    function Name (Item : Aquarius_Name_Value)
                  return String;
 
    function Name_Value (Name : String)
-                       return access Aquarius_Name_Value'Class;
+                       return Aquarius_Name_Value_Access;
 
    function Allocated_Name_Count
      return Natural;

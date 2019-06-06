@@ -162,7 +162,7 @@ package Ack.Features is
    function Property_Offset
      (Feature : Feature_Entity_Record'Class)
       return Word_Offset
-     with Pre => Feature.Is_Property;
+     with Pre => Is_Property (Feature);
 
    procedure Set_Property_Offset
      (Feature : in out Feature_Entity_Record'Class;

@@ -1,3 +1,4 @@
+private with Ada.Strings.Unbounded;
 private with Ada.Containers.Vectors;
 
 package Aquarius.Messages is
@@ -57,7 +58,8 @@ package Aquarius.Messages is
    function Reference_Count (Item : in Message) return Natural;
    function Show_Reference (Item      : in Message;
                             Ref_Index : in Positive)
-                           return String;
+                            return String
+     with Pre => Ref_Index <= Reference_Count (Item);
 
    --  Getting information about a message
    function Get_Location (Item : Message)
@@ -133,22 +135,23 @@ private
    type Message_Record;
    type Message is access Message_Record;
 
+   type Location_Access is access Message_Location'Class;
+
    type Message_Reference is
       record
          Reference : access Message_Location'Class;
-         Text      : access String;
+         Text      : Ada.Strings.Unbounded.Unbounded_String;
       end record;
 
-   type Array_Of_References is array (Positive range <>) of Message_Reference;
+   package Message_Reference_Vectors is
+     new Ada.Containers.Vectors (Positive, Message_Reference);
 
    type Message_Record is
       record
          Level           : Message_Level;
          Location        : access Message_Location'Class;
-         Text            : access String;
-         Reference_Count : Natural;
-         Reference       : Message_Reference;
-         References      : access Array_Of_References;
+         Text            : Ada.Strings.Unbounded.Unbounded_String;
+         References      : Message_Reference_Vectors.Vector;
       end record;
 
    package Message_Vector is new Ada.Containers.Vectors (Positive, Message);
