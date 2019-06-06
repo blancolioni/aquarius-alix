@@ -1,0 +1,10 @@
+program_stores = { file_system_store = { name = "unnamed session"
+                                         base_path = "./tests/kit"
+                                         extensions = kit
+                                       }
+                 }
+ui = { view_left = 0
+       view_top = 0
+       view_width = 400
+       view_height = 400
+     }
