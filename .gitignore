@@ -1,0 +1,8 @@
+build/*
+aquarius.gpr
+src/environment/aquarius-config_paths.ads
+aqua-core.txt
+arrangement.log
+*.o32
+*.m32
+config/scratch/*.aqua
