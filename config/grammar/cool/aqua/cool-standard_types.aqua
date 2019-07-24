@@ -1,0 +1,16 @@
+class
+   Cool.Standard_Types
+   
+feature
+
+   Standard_Boolean : Cool.Object_Type
+      do
+	     create {Cool.Object_Type.Primitive_Boolean}.Make_Boolean (Result)
+	  end
+	
+   Standard_Object : Cool.Object_Type
+      do
+         create {Cool.Object_Type.Primitive_Object}.Make_Object (Result)
+      end
+	  
+end

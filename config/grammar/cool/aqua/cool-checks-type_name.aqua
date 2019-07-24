@@ -1,0 +1,11 @@
+class Cool.Checks.Type_Name
+feature
+
+   Name : String
+
+   After_Identifier (Text : String)
+      do
+		 Name := Text
+      end
+
+end

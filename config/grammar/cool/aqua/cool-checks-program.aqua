@@ -1,0 +1,29 @@
+class 
+   Cool.Checks.Program
+   
+inherit
+   Cool.With_Table
+   
+feature
+   
+   Before_Node
+      local
+	     Prim_Object  : Cool.Object_Type
+		 Object_Entry : Cool.Table_Entry
+		 Prim_IO      : Cool.Object_Type
+		 IO_Entry     : Cool.Table_Entry
+      do
+         create Table.Make_Root ("standard")
+	     create {Cool.Object_Type.Primitive_Object} Prim_Object.Make_Object
+		 create Object_Entry.Make_Entry ("Object", Prim_Object)
+		 Table.Insert (Object_Entry)
+		 create Prim_IO.Make_Class ("IO", Prim_Object)
+		 create IO_Entry.Make_Entry ("IO", Prim_IO)
+		 Table.Insert (IO_Entry)
+      end
+
+   Before_Class_Declaration (Child : Cool.Checks.Class_Declaration)
+      do
+	  end
+	  
+end

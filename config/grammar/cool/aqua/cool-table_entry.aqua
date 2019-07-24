@@ -1,0 +1,22 @@
+class
+   Cool.Table_Entry
+   
+create
+   Make_Entry
+   
+feature
+
+   Is_Class_Entry  : Boolean
+   Is_Method_Entry : Boolean
+   
+   Name       : String
+   Entry_Type : Cool.Object_Type
+   
+   Make_Entry (Entry_Name : String
+               With_Type  : Cool.Object_Type)
+      do
+	     Name := Entry_Name
+		 Entry_Type := With_Type
+      end
+	  
+end

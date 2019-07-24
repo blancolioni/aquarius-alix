@@ -1,0 +1,2 @@
+class Cool
+end

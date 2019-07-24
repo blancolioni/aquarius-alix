@@ -1,0 +1,21 @@
+class
+   Cool.Object_Type.Primitive_Object
+   
+inherit
+   Cool.Object_Type
+   
+create
+   Make_Object
+   
+feature
+
+   Make_Object
+      do
+	     Name          := "Object"
+		 Standard_Name := "object"
+		 Primitive     := False
+      end
+	  
+end
+
+

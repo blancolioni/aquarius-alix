@@ -1,0 +1,27 @@
+class Cool.Checks.Class_Declaration
+inherit
+   Aqua.Text_IO
+   Cool.With_Table
+   
+feature
+
+   Class_Type   : Cool.Object_Type
+   Class_Entry  : Cool.Table_Entry
+   
+   After_Class_Header (Child : Class_Header)
+      local
+	     Parent_Class : Object_Type
+		 E_Object     : Table_Entry
+      do
+	     if attached Child.Parent_Class as Parent then
+		    Parent_Class := Parent
+	     else
+		    E_Object := Table.Get ("Object")
+     		Parent_Class := E_Object.Entry_Type
+	     end
+		 create Class_Type.Make_Class (Child.Class_Name, Parent_Class)
+		 create Class_Entry.Make_Entry (Child.Class_Name, Class_Type)
+		 Table.Insert (Class_Entry)
+      end
+	  
+end

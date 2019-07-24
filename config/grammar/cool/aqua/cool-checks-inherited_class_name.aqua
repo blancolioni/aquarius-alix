@@ -1,0 +1,12 @@
+class Cool.Checks.Inherited_Class_Name
+   
+feature
+
+   Name : String
+   
+   After_Type_Name (Child : Type_Name)
+      do
+	     Name := Child.Name
+      end
+
+end

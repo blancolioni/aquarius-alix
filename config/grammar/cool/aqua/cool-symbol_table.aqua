@@ -1,0 +1,56 @@
+class
+   Cool.Symbol_Table
+
+inherit
+   Aqua.Text_IO
+   
+create
+   Make, Make_Root
+   
+feature
+
+   Name   : String
+   Parent : detachable Symbol_Table
+
+   Make (With_Name : String; With_Parent : Symbol_Table)
+      do
+	     Name   := With_Name
+	     Parent := With_Parent
+      end
+	  
+   Make_Root (With_Name : String)
+      do
+	     Name := With_Name
+      end
+	  
+   Contains (Name : String) : Boolean
+      do
+	     Put_Line ("contains: " & Current.Name & ", " & Name)
+	     across Table as Item loop
+		    if Item.Name = Name then
+			   Result := True
+			end
+         end
+	  end
+	  
+   Get (Name : String) : Table_Entry
+      do
+	     across Table as Item loop
+		    if Item.Name = Name then
+			   Result := Item
+			end
+         end
+	  end
+	     
+   Insert (Item : Table_Entry)
+      do
+	     Table.Append (Item)
+	  end
+	  
+feature
+   
+   Table : Aqua.Containers.Linked_List [Table_Entry]
+   
+end
+
+   

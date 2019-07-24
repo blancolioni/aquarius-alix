@@ -1,0 +1,73 @@
+top_level ::= program
+case_sensitive = false
+
+identifier         ::= standard ada_identifier
+numeric_literal    ::= standard ada_numeric_literal
+character_literal  ::= standard ada_character_literal
+string_literal     ::= standard ada_string_literal
+delimiter          ::= delimiters "&()+,;|@{}"
+symbol             ::= standard ada_symbol
+
+line_comment       = "--"
+
+format ';' no_space_before new_line_after
+format '{' space_before new_line_after indent_after
+format '}' outdent_before soft_new_line_after
+format '(' space_before no_space_after
+format ')' no_space_before space_after
+format feature_declaration indented_child
+format let_binding indented_child
+
+program ::= < class_declaration ';' >
+
+class_declaration ::= 'class' class_header '{' { feature_declaration ';' } '}' 
+
+class_header ::= type_name  [ inherited_class_name ]
+
+inherited_class_name ::= [ 'inherits' type_name ]
+
+feature_declaration ::= identifier '(' { formal / ',' } ')' ':' type_name '{' expr '}'
+                      | identifier ':' type_name [ '<-' expr ]
+		  
+formal ::= identifier ':' type_name
+
+expr::=  identifier '<-' expr
+	   | 'if' expr 'then' expr 'else' expr 'fi'
+	   | 'while' expr 'loop' expr 'pool'
+	   | '{' < expr ';' > '}'
+	   | 'let' < let_binding  / ',' > 'in' expr
+	   | 'case' expr 'of' < identifier ':' type_name '=>' expr ';' > 'esac'
+	   | 'isvoid' expr
+	   | boolean_expr
+
+let_binding ::= identifier ':'  type_name  [ '<-' expr ]
+
+boolean_expr ::= [ 'not' ] relation_expr
+
+relation_expr ::= term { relation_op term }
+
+term ::= factor { addition_op factor }
+
+factor ::= void_check { multiplication_op void_check }
+
+void_check ::= [ 'isvoid' ] logical_expr
+
+logical_expr ::= [ '~' ] method_selector
+
+method_selector ::= primary [ [ '@' type_name ] '.' identifier '(' { expr / ',' } ')' ]
+
+relation_op ::= '<=' | '<' | '='
+
+addition_op ::= '+' | '-'
+
+multiplication_op ::= '*' | '/'
+
+primary ::= identifier [ '(' { expr / ',' } ')' ]
+     	  | 'new' type_name
+    	  | '(' expr ')'
+	      | numeric_literal
+	      | string_literal
+	      | 'true'
+	      | 'false'
+
+type_name ::= identifier

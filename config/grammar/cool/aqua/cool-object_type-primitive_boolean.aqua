@@ -1,0 +1,20 @@
+class
+   Cool.Object_Type.Primitive_Boolean
+   
+inherit
+   Cool.Object_Type
+   
+create
+   Make_Boolean
+   
+feature
+
+   Make_Boolean
+      local
+	     Std : Cool.Standard_types
+      do
+	     Make_Class ("Boolean", Std.Standard_Object)
+		 Primitive := True
+	  end
+	  
+end

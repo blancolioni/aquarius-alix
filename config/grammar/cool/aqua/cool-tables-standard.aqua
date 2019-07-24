@@ -1,0 +1,16 @@
+class Klein.Table.Standard
+   inherit Symbol_Table
+   
+Standard_Integer : Type_Entry (
+   Standard_Name => "integer",
+   Declared_Name => "Integer",
+   Entry_Type    => Integral_Type'(
+     Low  => -134217728,
+     High => 134217727
+     )
+   )
+   
+Initialize do
+   Insert (Standard_Integer)
+end Initialize
+   
