@@ -2,11 +2,13 @@ class Cool.Checks.Class_Declaration
 inherit
    Aqua.Text_IO
    Cool.With_Table
+   Aquarius.Trees.Program_Tree
    
 feature
 
    Class_Type   : Cool.Object_Type
    Class_Entry  : Cool.Table_Entry
+   Entity       : Komnenos.Entity
    
    After_Class_Header (Child : Class_Header)
       local
@@ -19,9 +21,12 @@ feature
 		    E_Object := Table.Get ("Object")
      		Parent_Class := E_Object.Entry_Type
 	     end
+		 
 		 create Class_Type.Make_Class (Child.Class_Name, Parent_Class)
 		 create Class_Entry.Make_Entry (Child.Class_Name, Class_Type)
 		 Table.Insert (Class_Entry)
+		 Entity := Create_Entity (Current, Child.Class_Name, Child.Class_Name, "class", True)
+		 
       end
 	  
 end
