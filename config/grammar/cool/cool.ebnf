@@ -6,9 +6,10 @@ numeric_literal    ::= standard ada_numeric_literal
 character_literal  ::= standard ada_character_literal
 string_literal     ::= standard ada_string_literal
 delimiter          ::= delimiters "&()+,;|@{}"
-symbol             ::= standard ada_symbol
 
-line_comment       = "--"
+line_comment        = "--"
+block_comment_start = "(*"
+block_comment_end   = "*)"
 
 format ';' no_space_before new_line_after
 format '{' space_before new_line_after indent_after
