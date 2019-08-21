@@ -1,7 +1,9 @@
-class Cool.Checks.Class_Header
+class 
+   Cool.Checks.Class_Header
+   
 inherit
-   Aqua.Text_IO
    Cool.With_Table
+   Aquarius.Trees.Program_Tree
    
 feature
 
@@ -10,17 +12,15 @@ feature
    
    After_Type_Name (Child : Type_Name)
       do
-	     Put_Line ("class " & Child.Name)
 		 Class_Name := Child.Name
       end
 
    After_Inherited_Class_Name (Child : Inherited_Class_Name)
       do
-	     Put_Line ("   inherit " & Child.Name)
 		 if Table.Contains (Child.Name) then 
 		    Parent_Class := Table.Get (Child.Name).Entry_Type
 	     else
-		    Put_Line ("error: " & Child.Name & ": undefined")
+		    Error (Child.Name & ": undefined")
 		 end
       end
 	  

@@ -1,6 +1,7 @@
-class Cool.Checks.Class_Declaration
+class 
+   Cool.Checks.Class_Declaration
+   
 inherit
-   Aqua.Text_IO
    Cool.With_Table
    Aquarius.Trees.Program_Tree
    
