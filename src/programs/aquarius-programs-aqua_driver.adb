@@ -1,7 +1,7 @@
 with Ada.Text_IO;
 with Aqua.IO;
 with Aquarius.Programs.Komnenos_Entities;
-with Komnenos.UI;
+with Komnenos.Entities.Tables;
 
 package body Aquarius.Programs.Aqua_Driver is
 
@@ -226,7 +226,7 @@ package body Aquarius.Programs.Aqua_Driver is
                   use Aquarius.Programs.Komnenos_Entities;
                begin
                   Create_Aquarius_Source_Entity
-                    (Table            => Komnenos.UI.Current_UI.Main_Table,
+                    (Table            => Komnenos.Entities.Tables.Active_Table,
                      Name             => Name,
                      Qualified_Name   => Qualified_Name,
                      Class_Name       => Class_Name,
