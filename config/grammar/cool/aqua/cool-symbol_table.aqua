@@ -1,9 +1,6 @@
 class
    Cool.Symbol_Table
 
-inherit
-   Aqua.Text_IO
-   
 create
    Make, Make_Root
    
@@ -25,8 +22,6 @@ feature
 	  
    Contains (Name : String) : Boolean
       do
-	     Put_Line ("contains: " & Current.Name & ", " & Name)
-		 Put_Line ("  table length: " & Table.Length.To_String)
 	     across Table as Item loop
 		    if Item.Name = Name then
 			   Result := True
