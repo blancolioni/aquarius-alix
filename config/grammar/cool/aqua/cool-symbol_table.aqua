@@ -13,11 +13,13 @@ feature
       do
 	     Name   := With_Name
 	     Parent := With_Parent
+		 create Table
       end
 	  
    Make_Root (With_Name : String)
       do
 	     Name := With_Name
+		 create Table
       end
 	  
    Contains (Name : String) : Boolean
