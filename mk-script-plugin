@@ -1,3 +1,0 @@
-#!/bin/sh
-(cd config/grammar/script ; aquarius -f -i script.plugin -o /dev/null)
-mv config/grammar/script/aquarius-plugins-script_plugin-generated* src/plugins/generated
