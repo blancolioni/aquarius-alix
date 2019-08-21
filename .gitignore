@@ -6,3 +6,4 @@ arrangement.log
 *.o32
 *.m32
 config/scratch/*.aqua
+.aquarius-session
