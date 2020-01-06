@@ -7,3 +7,5 @@ arrangement.log
 *.m32
 config/scratch/*.aqua
 .aquarius-session
+tests/cool/theory.stanford.edu/*
+tests/cool/index.html
