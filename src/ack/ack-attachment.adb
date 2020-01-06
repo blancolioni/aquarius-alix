@@ -22,7 +22,7 @@ package body Ack.Attachment is
            ("attaching: " & Entity.Qualified_Name);
       end if;
 
-      Context.Attached.Insert (Entity.Qualified_Name);
+      Context.Attached.Include (Entity.Qualified_Name);
    end Attach;
 
    ----------------------------
@@ -187,7 +187,7 @@ package body Ack.Attachment is
             & To.Qualified_Name & " from context from " & From.Qualified_Name);
       end if;
       if Context.Is_Attached (From) then
-         Context.Attached.Insert (To.Qualified_Name);
+         Context.Attached.Include (To.Qualified_Name);
       else
          Context.Attached.Delete (To.Qualified_Name);
       end if;
@@ -209,7 +209,7 @@ package body Ack.Attachment is
             & To.Qualified_Name & " from current context");
       end if;
       if Context.Current then
-         Context.Attached.Insert (To.Qualified_Name);
+         Context.Attached.Include (To.Qualified_Name);
       else
          Context.Attached.Delete (To.Qualified_Name);
       end if;

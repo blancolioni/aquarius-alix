@@ -27,7 +27,7 @@ package body Ack.Classes is
       Name  : Name_Id)
    is
    begin
-      Class.Creators.Insert
+      Class.Creators.Include
         (To_Standard_String (Name));
    end Add_Creator;
 
@@ -239,7 +239,7 @@ package body Ack.Classes is
                Ancestor : constant Class_Entity :=
                             Class_Entity (Inherited.Inherited_Type.Class);
             begin
-               Checked.Insert (Ancestor.Qualified_Name);
+               Checked.Include (Ancestor.Qualified_Name);
                if Ancestor.Has_Feature (Feature.Entity_Name_Id) then
                   declare
                      Found     : Boolean := False;
@@ -873,7 +873,7 @@ package body Ack.Classes is
             return;
          end if;
 
-         Thunks.Insert (Thunk_Name);
+         Thunks.Include (Thunk_Name);
          Unit.Segment (Tagatha.Executable);
          Unit.Begin_Code (Thunk_Name, False);
          Unit.Pop_Operand
@@ -916,7 +916,7 @@ package body Ack.Classes is
            and then not Labels.Contains (To_Standard_String (Item.Name))
          then
             Unit.Label (To_Standard_String (Item.Name));
-            Labels.Insert (To_Standard_String (Item.Name));
+            Labels.Include (To_Standard_String (Item.Name));
          end if;
 
          if Item.Reference /= No_Name then

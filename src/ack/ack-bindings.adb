@@ -693,7 +693,7 @@ package body Ack.Bindings is
                   use Ada.Directories;
                   Parent_Class_File : File_Type;
                begin
-                  Aqua_Bound_Classes.Insert (Parent_Name);
+                  Aqua_Bound_Classes.Include (Parent_Name);
                   Create (Parent_Class_File, Out_File,
                           Compose
                             (Containing_Directory (Binding_File_Path),
@@ -911,7 +911,7 @@ package body Ack.Bindings is
                  or else not Rec.Implicit_Calls.Is_Empty
                then
                   if not Rec.References.Is_Empty then
-                     Aqua_Bound_Classes.Insert (Parent_Name);
+                     Aqua_Bound_Classes.Include (Parent_Name);
                   end if;
                end if;
             end;
