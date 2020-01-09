@@ -1,0 +1,13 @@
+class
+   Cool.Checks.Defining_Class_Name
+   
+feature
+
+   Name  : String
+   
+   After_Identifier (Text : String)
+      do
+		 Name := Text
+      end
+
+end

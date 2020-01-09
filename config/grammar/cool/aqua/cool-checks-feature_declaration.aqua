@@ -1,0 +1,16 @@
+class
+   Cool.Checks.Feature_Declaration
+
+inherit
+   Cool.With_Table
+   Aquarius.Trees.Program_Tree
+   
+feature
+
+   After_Property_Feature (Child : Property_Feature) do end
+   
+   After_Method_Feature (Child : Method_Feature) do end
+
+end
+
+   

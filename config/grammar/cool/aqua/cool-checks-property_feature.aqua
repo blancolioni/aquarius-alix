@@ -1,0 +1,17 @@
+class
+   Cool.Checks.Property_Feature
+
+inherit
+   Cool.With_Table
+   Aqua.Text_IO
+   
+feature
+
+   After_Identifier (Id : String)
+      do
+	     Put_Line ("new property: " & Id)
+      end
+
+end
+
+   

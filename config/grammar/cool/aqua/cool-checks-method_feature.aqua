@@ -1,0 +1,29 @@
+class
+   Cool.Checks.Method_Feature
+
+inherit
+   Cool.With_Table
+   Aqua.Text_IO
+   Aquarius.Trees.Program_Tree
+   
+feature
+
+   Method_Name  : String
+   Method_Entry : Table_Entry
+   Method_Type  : Object_Type
+   
+   After_Identifier (Id : String)
+      do
+	     Method_Name := Id
+      end
+
+   After_Type_Name (Child : Cool.Checks.Type_Name)
+      do
+	     Method_Type := Child.Type
+		 create Method_Entry.Make_Method_Entry (Method_Name, Method_Type)
+		 Table.Insert (Method_Entry)
+	  end
+	  
+end
+
+   

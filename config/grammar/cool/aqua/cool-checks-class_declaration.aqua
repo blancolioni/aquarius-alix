@@ -7,9 +7,10 @@ inherit
    
 feature
 
-   Class_Type   : Cool.Object_Type
-   Class_Entry  : Cool.Table_Entry
-   Entity       : Komnenos.Entity
+   Class_Type    : Cool.Object_Type
+   Class_Entry   : Cool.Table_Entry
+   Entity        : Komnenos.Entity
+   Feature_Table : Cool.Symbol_Table
    
    After_Class_Header (Child : Class_Header)
       local
@@ -24,10 +25,16 @@ feature
 	     end
 		 
 		 create Class_Type.Make_Class (Child.Class_Name, Parent_Class)
-		 create Class_Entry.Make_Entry (Child.Class_Name, Class_Type)
+		 create Class_Entry.Make_Class_Entry (Child.Class_Name, Class_Type)
 		 Table.Insert (Class_Entry)
 		 Entity := Create_Entity (Current, Child.Class_Name, Child.Class_Name, "class", True)
+		 create Feature_Table.Make (Child.Class_Name, Table, Class_Entry)
 		 
+      end
+	  
+   Before_Feature_Declaration (Child : Feature_Declaration)
+      do
+	     Child.Set_Table (Feature_Table)
       end
 	  
 end

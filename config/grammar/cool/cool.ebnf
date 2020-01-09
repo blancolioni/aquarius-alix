@@ -23,12 +23,17 @@ program ::= < class_declaration ';' >
 
 class_declaration ::= 'class' class_header '{' { feature_declaration ';' } '}' 
 
-class_header ::= type_name  [ inherited_class_name ]
+class_header ::= defining_class_name  [ inherited_class_name ]
+
+defining_class_name ::= identifier
 
 inherited_class_name ::= [ 'inherits' type_name ]
 
-feature_declaration ::= identifier '(' { formal / ',' } ')' ':' type_name '{' expr '}'
-                      | identifier ':' type_name [ '<-' expr ]
+feature_declaration ::= method_feature | property_feature
+
+method_feature ::= identifier '(' { formal / ',' } ')' ':' type_name '{' expr '}'
+
+property_feature ::= identifier ':' type_name [ '<-' expr ]
 		  
 formal ::= identifier ':' type_name
 

@@ -4,24 +4,21 @@ class
 inherit
    Cool.With_Table
    Aquarius.Trees.Program_Tree
+   Aqua.Text_IO
    
 feature
 
    Class_Name   : String
    Parent_Class : detachable Cool.Object_Type
    
-   After_Type_Name (Child : Type_Name)
+   After_Defining_Class_Name (Child : Defining_Class_Name)
       do
 		 Class_Name := Child.Name
       end
 
    After_Inherited_Class_Name (Child : Inherited_Class_Name)
       do
-		 if Table.Contains (Child.Name) then 
-		    Parent_Class := Table.Get (Child.Name).Entry_Type
-	     else
-		    Error (Child.Name & ": undefined")
-		 end
+	     Parent_Class := Child.Type
       end
 	  
 end

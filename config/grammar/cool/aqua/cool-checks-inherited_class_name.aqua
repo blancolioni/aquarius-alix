@@ -1,12 +1,20 @@
-class Cool.Checks.Inherited_Class_Name
+class
+   Cool.Checks.Inherited_Class_Name
+   
+inherit
+   Cool.With_Table
    
 feature
 
-   Name : String
+   Name  : String
+   Entry : Table_Entry
+   Type  : Object_Type
    
-   After_Type_Name (Child : Type_Name)
+   After_Type_Name (Child : Cool.Checks.Type_Name)
       do
-	     Name := Child.Name
+		 Name  := Child.Name
+		 Entry := Child.Entry
+		 Type  := Child.Type
       end
 
 end
