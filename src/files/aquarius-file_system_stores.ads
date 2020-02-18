@@ -61,6 +61,7 @@ package Aquarius.File_System_Stores is
 
    procedure Create
      (Item      : in out Root_File_System_Store'Class;
+      Name      : String;
       Base_Path : String);
 
    procedure Add_Extension

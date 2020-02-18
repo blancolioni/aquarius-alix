@@ -23,6 +23,8 @@ package body Aquarius.Grammars.Builtin is
 
    Hash_Line_Comment      : Lexer;
 
+   Backslash_Escaped_String : Lexer;
+
    ----------------------------
    -- Create_Standard_Lexers --
    ----------------------------
@@ -46,6 +48,8 @@ package body Aquarius.Grammars.Builtin is
         Literal ('#') & Optional (Exponent);
       String_Element : constant Lexer :=
         (Literal ('"') & Literal ('"')) or (not Literal ('"'));
+      Backslash_Escaped_String_Element : constant Lexer :=
+        (Literal ('\') & Any) or (not (Literal ('\') or Literal ('"')));
       Haskell_Symbol : constant Lexer :=
         One_Of ("!#$%&*+./<=>?@^|-~\");
 
@@ -79,6 +83,11 @@ package body Aquarius.Grammars.Builtin is
       Haskell_Consym := Literal (':') & Repeat (Haskell_Symbol or
                                                   Literal (':'));
 
+      Backslash_Escaped_String :=
+        Literal ('"')
+        & Optional (Repeat (Backslash_Escaped_String_Element))
+        & Literal ('"');
+
       Hash_Line_Comment :=
         Literal ('#') & Repeat (Any);
       Have_Lexers := True;
@@ -110,6 +119,8 @@ package body Aquarius.Grammars.Builtin is
          return Ada_Apostrophe;
       elsif Name = "ada_comment" then
          return Ada_Comments;
+      elsif Name = "backslash_escaped_string" then
+         return Backslash_Escaped_String;
       elsif Name = "symbol_sequence" then
          return Symbol_Sequence;
       elsif Name = "haskell_varid" then

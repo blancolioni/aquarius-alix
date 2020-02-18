@@ -52,9 +52,12 @@ package body Aquarius.File_System_Stores is
 
    procedure Create
      (Item      : in out Root_File_System_Store'Class;
+      Name      : String;
       Base_Path : String)
    is
    begin
+      Item.Store_Name :=
+        Aquarius.Names.To_Aquarius_Name (Name);
       Item.Base_Path :=
         Aquarius.Names.To_Aquarius_Name (Base_Path);
    end Create;

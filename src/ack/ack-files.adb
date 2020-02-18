@@ -35,7 +35,7 @@ package body Ack.Files is
          Class_Store :=
            new Aquarius.File_System_Stores.Root_File_System_Store;
          Class_Store.Create
-           (Aquarius.Config_Paths.Config_File ("aqua"));
+           ("aqua", Aquarius.Config_Paths.Config_File ("aqua"));
          Class_Store.Add_Folder (".");
          Class_Store.Add_Folder ("standard");
          Class_Store.Add_Folder ("generated");
