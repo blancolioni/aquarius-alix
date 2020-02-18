@@ -1,0 +1,7 @@
+class
+   Cool.Checks.Term
+   
+inherit
+   Cool.With_Table
+   
+end

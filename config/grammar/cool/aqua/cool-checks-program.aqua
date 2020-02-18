@@ -10,6 +10,8 @@ feature
       local
 	     Prim_Object  : Cool.Object_Type
 		 Object_Entry : Cool.Table_Entry
+	     Prim_Int     : Cool.Object_Type
+		 Int_Entry    : Cool.Table_Entry
 		 Prim_IO      : Cool.Object_Type
 		 IO_Entry     : Cool.Table_Entry
       do
@@ -17,6 +19,9 @@ feature
 	     create {Cool.Object_Type.Primitive_Object} Prim_Object.Make_Object
 		 create Object_Entry.Make_Class_Entry ("Object", Prim_Object)
 		 Table.Insert (Object_Entry)
+	     create {Cool.Object_Type.Primitive_Int} Prim_Int.Make_Object
+		 create Int_Entry.Make_Class_Entry ("Int", Prim_Int)
+		 Table.Insert (Int_Entry)
 		 create Prim_IO.Make_Class ("IO", Prim_Object)
 		 create IO_Entry.Make_Class_Entry ("IO", Prim_IO)
 		 Table.Insert (IO_Entry)

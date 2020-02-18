@@ -1,5 +1,5 @@
 class
-   Cool.Object_Type.Primitive_Object
+   Cool.Object_Type.Primitive_Int
    
 inherit
    Cool.Object_Type
@@ -11,9 +11,9 @@ feature
 
    Make_Object
       do
-	     Name          := "Object"
-		 Standard_Name := "object"
-		 Primitive     := False
+	     Name          := "Int"
+		 Standard_Name := "int"
+		 Primitive     := True
       end
 	  
 end

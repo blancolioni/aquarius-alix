@@ -1,0 +1,7 @@
+class
+   Cool.Checks.Void_Check
+   
+inherit
+   Cool.With_Table
+   
+end

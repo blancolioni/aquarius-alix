@@ -1,0 +1,7 @@
+class
+   Cool.Checks.Primary
+   
+inherit
+   Cool.With_Table
+   
+end
