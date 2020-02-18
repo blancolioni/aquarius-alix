@@ -17,7 +17,7 @@ package Aquarius.Command_Line is
    function Input_File   return String;
    function Output_File  return String;
    function Enable_Debug return String;
-   function Project_Name return String;
+   function GPR_Project_Name return String;
    function Plugin_Name  return String;
    function Plugin_Path  return String;
    function Session_File return String;
@@ -38,6 +38,12 @@ package Aquarius.Command_Line is
 
    function Aqua_Trace_Code return Boolean;
    function Aqua_Trace_Link return Boolean;
+
+   function Initialize_Project return Boolean;
+   function Project_Root return String;
+   function Project_Name return String;
+   function Project_Source_Directories return String;
+   function Project_Source_Extensions return String;
 
    function Extra_Arguments return String;
 

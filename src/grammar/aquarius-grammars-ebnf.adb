@@ -52,7 +52,7 @@ package body Aquarius.Grammars.EBNF is
       Class_Store : Aquarius.File_System_Stores.Root_File_System_Store;
    begin
       Class_Store.Create
-        (Aquarius.Config_Paths.Config_File ("grammar"));
+        ("grammar", Aquarius.Config_Paths.Config_File ("grammar"));
       Class_Store.Add_Folder (".");
       Class_Store.Add_Extension ("ebnf");
 

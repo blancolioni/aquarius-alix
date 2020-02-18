@@ -236,6 +236,15 @@ package body Aquarius.Command_Line is
       return False;
    end Get_Flag;
 
+   ----------------------
+   -- GPR_Project_Name --
+   ----------------------
+
+   function GPR_Project_Name  return String is
+   begin
+      return Get_Argument ("P", "gpr-project-name");
+   end GPR_Project_Name;
+
    -------------
    -- Grammar --
    -------------
@@ -253,6 +262,11 @@ package body Aquarius.Command_Line is
    begin
       return Get_Flag ("?", "help");
    end Help;
+
+   function Initialize_Project return Boolean is
+   begin
+      return Get_Flag ("", "initialize-project");
+   end Initialize_Project;
 
    ----------------
    -- Input_File --
@@ -319,8 +333,35 @@ package body Aquarius.Command_Line is
 
    function Project_Name  return String is
    begin
-      return Get_Argument ("P", "project");
+      return Get_Argument ("", "project-name");
    end Project_Name;
+
+   ------------------
+   -- Project_Root --
+   ------------------
+
+   function Project_Root return String is
+   begin
+      return Get_Argument ("", "project-root");
+   end Project_Root;
+
+   --------------------------------
+   -- Project_Source_Directories --
+   --------------------------------
+
+   function Project_Source_Directories return String is
+   begin
+      return Get_Argument ("", "source-directories");
+   end Project_Source_Directories;
+
+   -------------------------------
+   -- Project_Source_Extensions --
+   -------------------------------
+
+   function Project_Source_Extensions return String is
+   begin
+      return Get_Argument ("", "source-extensions");
+   end Project_Source_Extensions;
 
    --------------
    -- Renderer --

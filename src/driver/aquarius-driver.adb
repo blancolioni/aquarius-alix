@@ -8,6 +8,7 @@ with Aquarius.Actions;
 with Aquarius.Command_Line;
 with Aquarius.Config_Paths;
 with Aquarius.Configuration;
+with Aquarius.File_System_Stores;
 with Aquarius.Grammars.Aqua_Gen;
 with Aquarius.Grammars.Manager;
 with Aquarius.Library;
@@ -456,11 +457,11 @@ begin
 --              Komnenos.Entities.Aqua_Entities.Create_Aqua_Object (UI);
 --           end if;
 
-         if Command_Line.Project_Name /= "" then
+         if Command_Line.GPR_Project_Name /= "" then
             declare
                Project : constant Aquarius.Projects.Aquarius_Project :=
                            Aquarius.Projects.Files.Load_Project_From_File
-                             (Command_Line.Project_Name);
+                             (Command_Line.GPR_Project_Name);
             begin
                Project.Write_Session_File
                  (".aquarius-session");
@@ -478,7 +479,91 @@ begin
             end;
          end if;
 
-         if Command_Line.Session_File /= "" then
+         if Command_Line.Initialize_Project then
+            declare
+               Store : constant File_System_Stores.File_System_Store :=
+                 new Aquarius.File_System_Stores.Root_File_System_Store;
+
+               Root  : constant String :=
+                 (if Command_Line.Project_Root /= ""
+                  then Command_Line.Project_Root
+                  else Ada.Directories.Current_Directory);
+
+               procedure Scan_Comma_Separated_String
+                 (S : String;
+                  Process : not null access
+                    procedure (Field : String));
+
+               procedure Add_Directory
+                 (Path : String);
+
+               procedure Add_Extension
+                 (Extension : String);
+
+               -------------------
+               -- Add_Directory --
+               -------------------
+
+               procedure Add_Directory
+                 (Path : String)
+               is
+               begin
+                  Store.Add_Folder (Path);
+               end Add_Directory;
+
+               -------------------
+               -- Add_Extension --
+               -------------------
+
+               procedure Add_Extension
+                 (Extension : String)
+               is
+               begin
+                  Store.Add_Extension (Extension);
+               end Add_Extension;
+
+               ---------------------------------
+               -- Scan_Comma_Separated_String --
+               ---------------------------------
+
+               procedure Scan_Comma_Separated_String
+                 (S       : String;
+                  Process : not null access
+                    procedure (Field : String))
+               is
+                  SS : constant String := S & ',';
+                  Start : Positive := SS'First;
+               begin
+                  for I in SS'Range loop
+                     if SS (I) = ',' then
+                        declare
+                           Item : constant String :=
+                             SS (Start .. I - 1);
+                        begin
+                           if Item'Length > 0 then
+                              Process (Item);
+                           end if;
+                           Start := I + 1;
+                        end;
+                     end if;
+                  end loop;
+               end Scan_Comma_Separated_String;
+
+            begin
+               Store.Create (Command_Line.Project_Name, Root);
+
+               Scan_Comma_Separated_String
+                 (Command_Line.Project_Source_Directories,
+                  Add_Directory'Access);
+               Scan_Comma_Separated_String
+                 (Command_Line.Project_Source_Extensions,
+                  Add_Extension'Access);
+
+               Komnenos.UI.Sessions.Create_Session
+                 (UI => UI,
+                  Store => Store);
+            end;
+         elsif Command_Line.Session_File /= "" then
             Komnenos.UI.Sessions.Load_Session
               (UI, Command_Line.Session_File);
          elsif Load_Session
