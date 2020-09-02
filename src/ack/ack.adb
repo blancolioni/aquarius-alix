@@ -11,7 +11,8 @@ package body Ack is
       Implicit_Entity : not null access Root_Entity_Type'Class)
    is
    begin
-      Table_Entity.Children.Implicits.Append (Implicit_Entity);
+      Table_Entity.Children.Implicits.Append
+        (Entity_Type (Implicit_Entity));
    end Add_Implicit;
 
    ------------
@@ -46,7 +47,7 @@ package body Ack is
       return Boolean
    is
    begin
-      return Root_Entity_Type'Class (Class.all)'Access = Other;
+      return Constant_Entity_Type (Class) = Constant_Entity_Type (Other);
    end Conforms_To;
 
    --------------

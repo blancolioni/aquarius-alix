@@ -1154,6 +1154,10 @@ package body Aquarius.Programs is
       return Item.Start_Position;
    end Layout_Start_Position;
 
+   -----------------------
+   -- Local_Environment --
+   -----------------------
+
    function Local_Environment
      (Item : in out Program_Tree_Type'Class)
       return access Local_Environment_Interface'Class
@@ -1163,7 +1167,7 @@ package body Aquarius.Programs is
          return Item.Local_Env;
       elsif Item.Program_Parent /= null then
          declare
-            Result : constant access Local_Environment_Interface'Class :=
+            Result : constant Local_Environment_Access :=
                        Item.Program_Parent.Local_Environment;
          begin
             Item.Local_Env := Result;

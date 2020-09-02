@@ -57,6 +57,8 @@ feature
          Test_List.Append (T)
          create { Test_Descendent_Create } T
          Test_List.Append (T)
+         create { Test_Inherited_Attached } T
+         Test_List.Append (T)
       end
 
    Make
