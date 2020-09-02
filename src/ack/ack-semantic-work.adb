@@ -4,6 +4,8 @@ with Ada.Containers.Doubly_Linked_Lists;
 
 with Ack.Errors;
 
+with Ack.Semantic.Analysis.Features;
+
 package body Ack.Semantic.Work is
 
    Trace_Work : constant Boolean := False;
@@ -163,10 +165,10 @@ package body Ack.Semantic.Work is
 
       case Item.Category is
          when Feature_Header =>
-            Analyse_Feature_Header
+            Ack.Semantic.Analysis.Features.Analyse_Feature_Header
               (Item.Class, Item.Feature);
          when Feature_Body =>
-            Analyse_Feature_Body
+            Ack.Semantic.Analysis.Features.Analyse_Feature_Body
               (Item.Class, Item.Feature);
          when Class_Binding =>
             Item.Class.Bind;

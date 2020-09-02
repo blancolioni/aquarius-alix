@@ -1243,6 +1243,9 @@ private
    package List_Of_Entities is
      new Ada.Containers.Doubly_Linked_Lists (Entity_Type);
 
+   package List_Of_Constant_Entities is
+     new Ada.Containers.Doubly_Linked_Lists (Constant_Entity_Type);
+
    type Entity_Table_Record is
       record
          Map       : Entity_Maps.Map;

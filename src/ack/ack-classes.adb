@@ -40,7 +40,7 @@ package body Ack.Classes is
       Feature : not null access Ack.Features.Feature_Entity_Record'Class)
    is
    begin
-      Class.Class_Features.Append (Feature);
+      Class.Class_Features.Append (Ack.Features.Feature_Entity (Feature));
       Root_Entity_Type (Class).Insert (Feature);
       if Class.Expanded
         and then Feature.Is_Property
@@ -68,7 +68,7 @@ package body Ack.Classes is
       Formal : not null access Ack.Types.Type_Entity_Record'Class)
    is
    begin
-      Class.Formal_Arguments.Append (Formal);
+      Class.Formal_Arguments.Append (Entity_Type (Formal));
       Class.Insert (Formal);
       Class.Generic_Class := True;
    end Add_Generic_Formal;

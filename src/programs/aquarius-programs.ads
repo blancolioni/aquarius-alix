@@ -485,6 +485,9 @@ private
 
    Name_Property         : constant String := "name";
 
+   type Local_Environment_Access is
+     access all Local_Environment_Interface'Class;
+
    type Program_Tree_Type is
      new Aquarius.Trees.Root_Tree_Type
      and Aquarius.Actions.Actionable
@@ -528,7 +531,7 @@ private
          Offset_Rule       : Aquarius.Source.Source_Position;
          Render_Class      : Aquarius.Syntax.Syntax_Tree;
          Fragment          : Tagatha.Fragments.Tagatha_Fragment;
-         Local_Env         : access Local_Environment_Interface'Class;
+         Local_Env         : Local_Environment_Access;
          String_Props      : String_Property_Maps.Map;
          Aqua_Props        : Aqua_Address_Maps.Map;
       end record;
