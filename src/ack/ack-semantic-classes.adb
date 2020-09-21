@@ -1,3 +1,5 @@
+with Ada.Directories;
+
 with Aquarius.Loader;
 with Aquarius.Programs.Komnenos_Entities;
 
@@ -23,48 +25,65 @@ package body Ack.Semantic.Classes is
                   then Parent.Get (Name)
                   else null);
    begin
+
+      --  Ada.Text_IO.Put_Line
+      --    ("load-class: " & To_String (Name));
+
       if Entity = null then
          declare
             Path : constant String :=
-                     Ack.Files.Find_Class_File
-                       (Referrer, Parent, Name);
+              Ack.Files.Find_Class_File
+                (Referrer, Parent, Name);
          begin
             if Path /= "" then
                declare
-                  Program : constant Aquarius.Programs.Program_Tree :=
-                              Aquarius.Loader.Load_From_File
-                                (Path);
-                  Node    : constant Node_Id :=
-                              Ack.Parser.Import (Program);
+                  Base_Name : constant String :=
+                    Ada.Directories.Base_Name (Path);
+                  Node : Node_Id;
                begin
-                  Ack.Semantic.Analyse_Class_Declaration (Node);
-                  Entity := Get_Entity (Node);
-                  Parent.Insert (Entity);
+                  if Loaded_Classes.Contains (Base_Name) then
+                     Node := Loaded_Classes.Element (Base_Name);
+                     Entity := Get_Entity (Node);
+                  else
+                     declare
+                        Program : constant Aquarius.Programs.Program_Tree :=
+                          Aquarius.Loader.Load_From_File
+                            (Path);
+                     begin
+                        Node := Ack.Parser.Import (Program);
+                        Ack.Semantic.Analyse_Class_Declaration (Node);
+                        Entity := Get_Entity (Node);
+                        Parent.Insert (Entity);
 
-                  declare
-                     Base_Name : constant String := Entity.Base_File_Name;
-                  begin
-                     Loaded_Classes.Insert
-                       (Base_Name, Node);
-                  end;
+                        declare
+                           Base_Name : constant String :=
+                             Entity.Base_File_Name;
+                        begin
+                           Loaded_Classes.Insert
+                             (Base_Name, Node);
+                        end;
 
-                  declare
-                     use Aquarius.Programs.Komnenos_Entities;
-                  begin
-                     Create_Aquarius_Source_Entity
-                       (Table            =>
-                          Komnenos.Entities.Tables.Table ("aqua"),
-                        Name             => Entity.Qualified_Name,
-                        Qualified_Name   => Entity.Qualified_Name,
-                        Class_Name       => "class",
-                        Top_Level        => True,
-                        Compilation_Unit => Program,
-                        Defining_Name    => Program,
-                        Entity_Spec      => Program,
-                        Entity_Body      => Program);
-                  end;
+                        declare
+                           use Aquarius.Programs.Komnenos_Entities;
+                        begin
+                           Create_Aquarius_Source_Entity
+                             (Table            =>
+                                Komnenos.Entities.Tables.Table ("aqua"),
+                              Name             => Entity.Qualified_Name,
+                              Qualified_Name   => Entity.Qualified_Name,
+                              Class_Name       => "class",
+                              Top_Level        => True,
+                              Compilation_Unit => Program,
+                              Defining_Name    => Program,
+                              Entity_Spec      => Program,
+                              Entity_Body      => Program);
+                        end;
 
-                  Partial_Class_List.Append (Node);
+                        Partial_Class_List.Append (Node);
+
+                     end;
+                  end if;
+
                end;
             end if;
          end;
