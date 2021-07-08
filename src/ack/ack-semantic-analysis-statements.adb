@@ -8,6 +8,8 @@ with Ack.Semantic.Work;
 with Ack.Semantic.Analysis.Expressions;
 with Ack.Semantic.Analysis.Types;
 
+with Ack.Types;
+
 package body Ack.Semantic.Analysis.Statements is
 
    Local_Iterable_Type         : Ack.Types.Type_Entity := null;

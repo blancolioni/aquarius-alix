@@ -1,5 +1,7 @@
 with Ada.Text_IO;
 
+with Ack.Types;
+
 with Ack.Semantic.Analysis.Classes;
 with Ack.Semantic.Analysis.Expressions;
 with Ack.Semantic.Analysis.Statements;

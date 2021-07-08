@@ -8,7 +8,7 @@ package Aquarius.Loader is
    function Load_From_File
      (Grammar    : in     Aquarius.Grammars.Aquarius_Grammar;
       Store      : not null access Programs.Root_Program_Tree_Store'Class;
-      Interactor : not null access Interaction.Interactor'Class;
+      Interactor : Aquarius.Interaction.Interactor_Access;
       UI         : Aquarius.UI.Aquarius_UI;
       Path       : in     String)
       return Aquarius.Programs.Program_Tree;

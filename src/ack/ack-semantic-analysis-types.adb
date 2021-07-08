@@ -2,6 +2,8 @@ with Ack.Semantic.Analysis.Class_Names;
 with Ack.Semantic.Tuples;
 with Ack.Semantic.Types;
 
+with Ack.Types;
+
 package body Ack.Semantic.Analysis.Types is
 
    ---------------------------

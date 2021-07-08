@@ -3,7 +3,6 @@ with Aqua.Drivers;
 with Aquarius.Command_Line;
 with Aquarius.Configuration;
 with Aquarius.File_System_Stores;
-with Aquarius.Grammars;
 with Aquarius.Paths;
 with Aquarius.Programs;
 with Aquarius.Programs.Aqua_Driver;

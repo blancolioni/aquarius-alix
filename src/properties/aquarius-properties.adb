@@ -1,5 +1,8 @@
 package body Aquarius.Properties is
 
+   type Aquarius_Object_Access is
+     access all Root_Aquarius_Object'Class;
+
    package Property_Type_Vector is
       new Ada.Containers.Vectors (Positive, Property_Type);
 
@@ -299,6 +302,8 @@ package body Aquarius.Properties is
                   Prop  : in              Property_Type;
                   Value : not null access Root_Aquarius_Object'Class)
    is
+      Prop_Value : constant Aquarius_Object_Access :=
+                     Aquarius_Object_Access (Value);
    begin
       if not Prop.Has_Value then
          raise Constraint_Error with
@@ -315,7 +320,7 @@ package body Aquarius.Properties is
            "expected to find a property called " & Get_Name (Prop);
       else
          Item.Present (Prop.Index) := True;
-         Item.Properties.Append ((Prop.Index, Value));
+         Item.Properties.Append (Property_Value'(Prop.Index, Prop_Value));
       end if;
    end Set;
 

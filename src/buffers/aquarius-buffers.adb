@@ -123,7 +123,7 @@ package body Aquarius.Buffers is
    ----------
 
    procedure Load
-     (Buffer      : in out Aquarius_Buffer_Record'Class;
+     (Buffer      : Aquarius_Buffer;
       Synchronous : Boolean)
    is
       use Ada.Strings.Unbounded;
@@ -131,7 +131,8 @@ package body Aquarius.Buffers is
       Buffer.Contents :=
         Aquarius.Loader.Load_From_File (Buffer.Grammar,
                                         Buffer.Program_Store,
-                                        Buffer'Access,
+                                        Aquarius.Interaction.Interactor_Access
+                                          (Buffer),
                                         Buffer.Buffer_UI,
                                         To_String (Buffer.Full_Path));
 
@@ -165,7 +166,7 @@ package body Aquarius.Buffers is
       Result : constant Aquarius_Buffer :=
         New_Buffer_From_File (UI, Path);
    begin
-      Result.Load (True);
+      Load (Result, True);
       return Result;
    end Load_Buffer_From_File;
 

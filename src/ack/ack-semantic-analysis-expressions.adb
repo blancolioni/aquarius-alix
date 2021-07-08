@@ -2,6 +2,7 @@ with Ack.Semantic.Tuples;
 with Ack.Semantic.Types;
 with Ack.Semantic.Work;
 
+with Ack.Types;
 with Ack.Variables;
 
 package body Ack.Semantic.Analysis.Expressions is
@@ -432,6 +433,7 @@ package body Ack.Semantic.Analysis.Expressions is
       Expression_Type : access Root_Entity_Type'Class;
       Expression      : Node_Id)
    is
+      use type Ack.Classes.Class_Entity;
       use type Ack.Types.Type_Entity;
       Expr_Nodes : constant Array_Of_Nodes :=
                      To_Array

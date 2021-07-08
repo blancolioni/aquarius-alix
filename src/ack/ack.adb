@@ -244,7 +244,7 @@ package body Ack is
    ---------
 
    function Get
-     (Table_Entity : not null access Root_Entity_Type;
+     (Table_Entity : not null access constant Root_Entity_Type;
       Name         : String)
       return Entity_Type
    is
@@ -347,7 +347,7 @@ package body Ack is
    function New_List return List_Id is
    begin
       return List : constant List_Id := List_Table.Last_Index + 1 do
-         List_Table.Append ((others => <>));
+         List_Table.Append (List_Record'(others => <>));
       end return;
    end New_List;
 

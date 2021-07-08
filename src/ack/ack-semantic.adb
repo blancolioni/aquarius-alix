@@ -1,8 +1,5 @@
 with Ada.Text_IO;
 
-with Ack.Features;
-with Ack.Types;
-
 with Ack.Semantic.Analysis;
 with Ack.Semantic.Classes;
 

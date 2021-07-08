@@ -10,6 +10,8 @@ with Ack.Semantic.Work;
 with Ack.Semantic.Analysis.Class_Names;
 with Ack.Semantic.Analysis.Types;
 
+with Ack.Types;
+
 package body Ack.Semantic.Analysis.Classes is
 
    -------------------------------

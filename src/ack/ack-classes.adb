@@ -237,7 +237,7 @@ package body Ack.Classes is
               (Inherited : Inherited_Type_Record)
             is
                Ancestor : constant Class_Entity :=
-                            Class_Entity (Inherited.Inherited_Type.Class);
+                            Inherited.Inherited_Type.Class;
             begin
                Checked.Include (Ancestor.Qualified_Name);
                if Ancestor.Has_Feature (Feature.Entity_Name_Id) then
@@ -333,7 +333,8 @@ package body Ack.Classes is
                     then Constant_Class_Entity (Other)
                     elsif Other.all in
                       Ack.Types.Type_Entity_Record'Class
-                    then Ack.Types.Type_Entity_Record'Class (Other.all).Class
+                    then Constant_Class_Entity
+                      (Ack.Types.Type_Entity_Record'Class (Other.all).Class)
                     else null);
 
       function Try
@@ -466,7 +467,9 @@ package body Ack.Classes is
         (Base : not null access constant Class_Entity_Record'Class)
       is
       begin
-         Class_Vector.Append ((Constant_Class_Entity (Base), others => <>));
+         Class_Vector.Append
+           (Class_Layout_Record'
+              (Constant_Class_Entity (Base), others => <>));
       end Add_Base_Class;
 
       --------------------------------
@@ -484,8 +487,9 @@ package body Ack.Classes is
 
          if not Layout.Class.Expanded then
             Object_Layout.Append
-              ((No_Name, Table_Link_Name (Layout.Class), 0,
-               null, null));
+              (Layout_Entry'
+                 (No_Name, Table_Link_Name (Layout.Class), 0,
+                  null, null));
 
             Put_Log
               (Object_Log, Offset, "vptr " & Layout.Class.Qualified_Name);
@@ -496,7 +500,8 @@ package body Ack.Classes is
             if Feature.Is_Property_Of_Class (Layout.Class) then
                Feature.Set_Property_Offset (Offset - Start);
                Object_Layout.Append
-                 ((No_Name, No_Name, 0, null, null));
+                 (Layout_Entry'
+                    (No_Name, No_Name, 0, null, null));
                Put_Log
                  (Object_Log, Offset,
                   "prop " & Feature.Declared_Name);
@@ -519,7 +524,8 @@ package body Ack.Classes is
                         Table_Link_Name (Layout.Class);
       begin
          Table_Layout.Append
-           ((Entry_Name, No_Name, Layout.Object_Start, null, null));
+           (Layout_Entry'
+              (Entry_Name, No_Name, Layout.Object_Start, null, null));
          Entry_Name := No_Name;
          Put_Log
            (Table_Log, Offset,
@@ -533,7 +539,8 @@ package body Ack.Classes is
                         Class_Vector.Element (Base_Index);
             begin
                Table_Layout.Append
-                 ((Entry_Name, No_Name, Base.Object_Start, null, null));
+                 (Layout_Entry'
+                    (Entry_Name, No_Name, Base.Object_Start, null, null));
                Put_Log
                  (Table_Log, Offset,
                   Image  (Base.Object_Start)
@@ -565,14 +572,15 @@ package body Ack.Classes is
                         "deferred "
                         & Class_Feature.Declared_Name);
                      Table_Layout.Append
-                       ((Entry_Name, No_Name, 0, null, null));
+                       (Layout_Entry'(Entry_Name, No_Name, 0, null, null));
                   else
                      Put_Log
                        (Table_Log, Offset,
                         Class_Feature.Link_Name);
                      Table_Layout.Append
-                       ((Entry_Name, Class_Feature.Link_Name_Id, 0,
-                        Class_Feature.Active_Class, Feature));
+                       (Layout_Entry'
+                          (Entry_Name, Class_Feature.Link_Name_Id, 0,
+                           Class_Feature.Active_Class, Feature));
                   end if;
                end;
                Entry_Name := No_Name;

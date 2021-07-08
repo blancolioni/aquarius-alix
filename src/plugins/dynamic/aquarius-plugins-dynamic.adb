@@ -1,7 +1,6 @@
 with Aquarius.Grammars.Manager;
 
 with Aqua.CPU;
-with Aqua.Drivers;
 
 package body Aquarius.Plugins.Dynamic is
 

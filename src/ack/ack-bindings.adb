@@ -14,7 +14,6 @@ with Ack.Compile;
 with Ack.Errors;
 with Ack.Features;
 with Ack.Semantic;
-with Ack.Types;
 
 with Aquarius.Paths;
 with Aquarius.Syntax;

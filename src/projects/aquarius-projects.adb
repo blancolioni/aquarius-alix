@@ -194,7 +194,7 @@ package body Aquarius.Projects is
                    (UI, Path, P);
             end;
             Project.Buffers.Append (Buffer);
-            Buffer.Load (Synchronous);
+            Aquarius.Buffers.Load (Buffer, Synchronous);
             Project.Load_References (Buffer.Program);
 
             --  Aquarius.Tasks.Set_Changed ("GUI");
@@ -386,7 +386,7 @@ package body Aquarius.Projects is
            Aquarius.Buffers.New_Buffer_From_File (Project.Project_UI,
                                                   Path, Project'Access);
          Project.Buffers.Append (Buffer);
-         Buffer.Load (True);
+         Aquarius.Buffers.Load (Buffer, True);
          Project.Load_References (Buffer.Program);
          declare
             Messages : Aquarius.Messages.Message_List;

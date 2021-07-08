@@ -449,8 +449,8 @@ package Ack is
    function Get
      (Table_Entity : not null access constant Root_Entity_Type;
       Name         : String)
-      return Entity_Type
-   with Pre'Class => Table_Entity.Contains (Name);
+      return Entity_Type;
+   --  with Pre'Class => Table_Entity.Contains (Name);
 
    function Contains
      (Table_Entity : Root_Entity_Type'Class;
