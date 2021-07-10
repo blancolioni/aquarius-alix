@@ -69,6 +69,7 @@ feature
          Pass_Ratio      : Integer
          Test_Value      : Unit_Test
          Test_Name       : String
+         A : Ackermann
       do
          Put_Line ("Initialising ...")
          Create_Test_List
@@ -99,6 +100,15 @@ feature
          Put (Passed_Tests.To_String)
          Put (" (" & Pass_Ratio.To_String & "%)")
          New_Line
+         
+         create A
+         Put_Line ("A(2, 1) = " & A.fn (2, 1).To_String);
+         Put_Line ("A(2, 2) = " & A.fn (2, 2).To_String);
+         Put_Line ("A(2, 3) = " & A.fn (2, 3).To_String);
+         Put_Line ("A(3, 1) = " & A.fn (3, 1).To_String);
+         Put_Line ("A(3, 2) = " & A.fn (3, 2).To_String);
+         Put_Line ("A(3, 3) = " & A.fn (3, 3).To_String);
+         Put_Line ("A(3, 4) = " & A.fn (3, 4).To_String);
       end
 
 feature {None}
