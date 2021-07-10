@@ -1,2 +1,0 @@
-class Klein.Types.Integral_Type
-   inherit Klein.Types.Discrete_Type

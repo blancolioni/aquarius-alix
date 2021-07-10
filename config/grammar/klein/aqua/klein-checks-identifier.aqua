@@ -1,0 +1,17 @@
+class Klein.Checks.Identifier
+inherit
+   Aqua.Text_IO
+   
+feature
+
+   Standard_Text : String
+   Raw_Text      : String
+   
+   After_Identifier (Text : String)
+      do
+	     Standard_Text := Text.To_Lower
+		 Raw_Text      := Text
+		 Put_Line ("id=" & Raw_Text)
+      end
+
+end

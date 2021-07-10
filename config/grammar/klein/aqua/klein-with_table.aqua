@@ -1,0 +1,23 @@
+note
+   Conforming_Child_Node: Copy_Table
+   
+class 
+   Klein.With_Table
+
+feature
+
+   Table : Klein.Symbol_Table
+   
+feature {None}
+
+   Copy_Table (To : With_Table)
+      do
+         To.Set_Table (Table)
+      end
+
+   Set_Table (To : Klein.Symbol_Table)	  
+      do
+	     Table := To
+      end
+	  
+end

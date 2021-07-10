@@ -1,0 +1,7 @@
+class
+   Klein.Checks.List_Of_Declarations
+   
+inherit
+   Klein.With_Table
+   
+end

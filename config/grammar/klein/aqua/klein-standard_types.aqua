@@ -1,0 +1,16 @@
+class
+   Klein.Standard_Types
+   
+feature
+
+   Standard_Boolean : Klein.Object_Type
+      do
+	     create {Klein.Object_Type.Primitive_Boolean}.Make_Boolean (Result)
+	  end
+	
+   Standard_Object : Klein.Object_Type
+      do
+         create {Klein.Object_Type.Primitive_Object}.Make_Object (Result)
+      end
+	  
+end

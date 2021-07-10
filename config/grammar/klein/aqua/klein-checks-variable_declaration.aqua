@@ -1,0 +1,19 @@
+class
+   Klein.Checks.Variable_Declaration
+   
+inherit
+   Klein.With_Table
+   
+feature
+
+   After_Defining_Identifier_List (Child : Defining_Identifier_List)
+      local
+         New_Entry : Klein.Table_Entry.Object
+      do
+         across Child.Ids as Id loop
+            create New_Entry.Make (Id)
+            Table.Insert (New_Entry)
+         end
+      end
+
+end

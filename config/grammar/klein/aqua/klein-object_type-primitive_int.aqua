@@ -1,0 +1,21 @@
+class
+   Klein.Object_Type.Primitive_Integer
+   
+inherit
+   Klein.Object_Type
+   
+create
+   Make_Object
+   
+feature
+
+   Make_Object
+      do
+	     Name          := "Integer"
+		  Standard_Name := "integer"
+		  Primitive     := True
+      end
+	  
+end
+
+

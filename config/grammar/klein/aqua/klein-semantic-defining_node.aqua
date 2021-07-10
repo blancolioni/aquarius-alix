@@ -1,5 +1,0 @@
-abstract class Klein.Semantic.Defining_Node
-
-Entry : Klein.Table.Entry
-
-end Klein.Semantic.Defining_Node

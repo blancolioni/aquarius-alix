@@ -1,0 +1,7 @@
+class
+   Klein.Checks.Method_Selector
+   
+inherit
+   Klein.With_Table
+   
+end

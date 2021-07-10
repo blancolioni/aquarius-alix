@@ -1,0 +1,15 @@
+class
+   Klein.Checks.Subprogram
+   
+inherit
+   Klein.With_Table
+   Aqua.Text_IO
+
+feature
+   Before_Node
+      do
+         Put_Line ("creating standard table")
+         create Table.Make_Root ("standard")
+      end
+
+end

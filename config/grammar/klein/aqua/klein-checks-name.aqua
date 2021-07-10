@@ -1,0 +1,17 @@
+class
+   Klein.Checks.Name
+   
+inherit
+   Klein.With_Table
+   Aquarius.Trees.Program_Tree
+
+feature
+
+   After_Direct_Name (Child : Direct_Name)
+      do
+         if Table.Contains (Child.Name) then
+         else
+            Error (Child.Name & ": undefined")
+         end
+      end
+end

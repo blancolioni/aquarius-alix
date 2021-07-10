@@ -1,7 +1,0 @@
-class Klein.Entries.Label_Entry
-   inherit Klein.Entries.Entry
-   
-feature
-   Statement : Klein.Syntax.Statement_Node
-   
-end Klein.Entries.Label_Entry

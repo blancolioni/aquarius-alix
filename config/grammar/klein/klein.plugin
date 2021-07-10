@@ -1,11 +1,3 @@
 plugin Klein version 0.1 is
 
-   group run_check : semantic is
-      check;
-   end run_check;
-
-   group generate : code is
-      klein_code;
-   end generate;
-   
-end Klein;
+  group checks : semantic;

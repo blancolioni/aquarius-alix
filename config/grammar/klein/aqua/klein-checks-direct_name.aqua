@@ -1,0 +1,15 @@
+class
+   Klein.Checks.Direct_Name
+   
+inherit
+   Klein.With_Table
+   
+feature
+
+   Name : String
+
+   After_Identifier (Id : String)
+      do
+         Name := Id
+      end
+end

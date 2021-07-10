@@ -1,9 +1,0 @@
-class Klein.Annotate.Labeled_Statement
-
-Label_Text : String
-
-before Label do
-begin
-   Label_Text := Child.Identifier.Text
-end Label
-

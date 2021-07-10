@@ -1,0 +1,10 @@
+class Klein.Table_Entry
+
+feature
+   Declared_Name : String
+   Standard_Name : String
+
+   Is_Type_Entry : Boolean
+   Entry_Type    : Klein.Object_Type
+
+end

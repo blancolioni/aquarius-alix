@@ -1,0 +1,7 @@
+class
+   Klein.Checks.Formal
+   
+inherit
+   Klein.With_Table
+   
+end

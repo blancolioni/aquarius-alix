@@ -1,0 +1,16 @@
+class
+   Klein.Checks.Defining_Identifier_List
+   
+inherit
+   Klein.With_Table
+   
+feature
+
+   Ids : Aqua.Containers.Linked_List[String]
+
+   After_Identifier (Id : String)
+      do
+         Ids.Append (Id)
+      end
+
+end

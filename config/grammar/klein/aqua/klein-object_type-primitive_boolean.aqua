@@ -1,0 +1,20 @@
+class
+   Klein.Object_Type.Primitive_Boolean
+   
+inherit
+   Klein.Object_Type
+   
+create
+   Make_Boolean
+   
+feature
+
+   Make_Boolean
+      local
+	     Std : Klein.Standard_types
+      do
+	     Make_Class ("Boolean", Std.Standard_Object)
+		 Primitive := True
+	  end
+	  
+end

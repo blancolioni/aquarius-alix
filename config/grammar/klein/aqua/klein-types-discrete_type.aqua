@@ -1,7 +1,0 @@
-class Klein.Types.Discrete_Type
-   inherit Type
-   
-Low   : Integer
-High  : Integer
-
-end Klein.Types.Discrete_Type

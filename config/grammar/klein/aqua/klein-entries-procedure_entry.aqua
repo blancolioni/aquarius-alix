@@ -1,6 +1,0 @@
-class Klein.Table.Procedure_Entry
-   inherit Klein.Table.Entry
-   
-feature
-   
-end Klein.Table.Procedure_Entry

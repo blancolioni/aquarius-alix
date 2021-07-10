@@ -1,0 +1,25 @@
+class 
+   Klein.Object_Type
+
+create
+   Make_Class
+   
+feature
+
+   Name          : String
+   Standard_Name : String
+   Inherit_From  : Object_Type
+   Primitive     : Boolean
+
+feature
+
+   Make_Class (Class_Name      : String
+               Inherited_Class : Object_Type)
+      do
+	     Name          := Class_Name
+		 Standard_Name := Class_Name.To_Lower
+		 Inherit_From  := Inherited_Class
+		 Primitive     := False
+	  end
+	  
+end

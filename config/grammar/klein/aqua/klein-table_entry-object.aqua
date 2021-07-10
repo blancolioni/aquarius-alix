@@ -1,0 +1,18 @@
+class
+   Klein.Table_Entry.Object
+
+inherit
+   Klein.Table_Entry
+
+create
+   Make
+
+feature
+
+   Make (Name : String)
+   do
+      Declared_Name := Name;
+      Standard_Name := Name.To_Lower;
+   end
+   
+end
