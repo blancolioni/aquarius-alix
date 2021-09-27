@@ -50,7 +50,7 @@ post_install = "aquarius --clear-cache --ack-execute-root=tests/aqua/test.aqua"
 config_dir = config
 path_unit = { unit = Aquarius.Config_Paths
               path = src/environment/aquarius-config_paths.ads }
-when[target=posix] = {
+when(target=posix) = {
     linker_option = "-lpixman-1"
     linker_option = "-lgtk-3"
     linker_option = "-lgdk-3"
