@@ -19,6 +19,7 @@ source_dir = src/messages
 source_dir = src/plugins
 source_dir = src/plugins/dynamic
 source_dir = src/plugins/ebnf
+source_dir = src/plugins/macro11
 source_dir = src/plugins/macro32
 source_dir = src/plugins/projects
 source_dir = src/programs
@@ -49,5 +50,18 @@ post_install = "aquarius --clear-cache --ack-execute-root=tests/aqua/test.aqua"
 config_dir = config
 path_unit = { unit = Aquarius.Config_Paths
               path = src/environment/aquarius-config_paths.ads }
-# uncomment following line when building on Linux
-# linker_option = "-lpixman-1"
+when[target=posix] = {
+    linker_option = "-lpixman-1"
+    linker_option = "-lgtk-3"
+    linker_option = "-lgdk-3"
+    linker_option = "-lpangocairo-1.0"
+    linker_option = "-lpango-1.0"
+    linker_option = "-lharfbuzz"
+    linker_option = "-latk-1.0"
+    linker_option = "-lcairo-gobject"
+    linker_option = "-lcairo"
+    linker_option = "-lgdk_pixbuf-2.0"
+    linker_option = "-lgio-2.0"
+    linker_option = "-lgobject-2.0"
+    linker_option = "-lglib-2.0"
+}
