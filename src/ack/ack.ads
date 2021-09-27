@@ -449,8 +449,8 @@ package Ack is
    function Get
      (Table_Entity : not null access constant Root_Entity_Type;
       Name         : String)
-      return Entity_Type
-   with Pre'Class => Table_Entity.Contains (Name);
+      return Entity_Type;
+   --  with Pre'Class => Table_Entity.Contains (Name);
 
    function Contains
      (Table_Entity : Root_Entity_Type'Class;
@@ -1242,6 +1242,9 @@ private
 
    package List_Of_Entities is
      new Ada.Containers.Doubly_Linked_Lists (Entity_Type);
+
+   package List_Of_Constant_Entities is
+     new Ada.Containers.Doubly_Linked_Lists (Constant_Entity_Type);
 
    type Entity_Table_Record is
       record

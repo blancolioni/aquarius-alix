@@ -43,7 +43,7 @@ package Aquarius.Buffers is
    --  The file is not loaded.
 
    procedure Load
-     (Buffer      : in out Aquarius_Buffer_Record'Class;
+     (Buffer      : Aquarius_Buffer;
       Synchronous : Boolean);
 
    function Load_Buffer_From_File

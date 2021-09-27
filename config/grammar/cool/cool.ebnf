@@ -4,7 +4,7 @@ case_sensitive = false
 identifier         ::= standard ada_identifier
 numeric_literal    ::= standard ada_numeric_literal
 character_literal  ::= standard ada_character_literal
-string_literal     ::= standard ada_string_literal
+string_literal     ::= standard backslash_escaped_string
 delimiter          ::= delimiters "&()+,;|@{}"
 
 line_comment        = "--"
@@ -37,14 +37,21 @@ property_feature ::= identifier ':' type_name [ '<-' expr ]
 		  
 formal ::= identifier ':' type_name
 
-expr::=  identifier '<-' expr
-	   | 'if' expr 'then' expr 'else' expr 'fi'
-	   | 'while' expr 'loop' expr 'pool'
-	   | '{' < expr ';' > '}'
-	   | 'let' < let_binding  / ',' > 'in' expr
-	   | 'case' expr 'of' < identifier ':' type_name '=>' expr ';' > 'esac'
-	   | 'isvoid' expr
+expr ::= assignment_expr 
+	   | while_expr
+	   | compound_expr
+	   | let_expr
+	   | case_expr
+	   | isvoid_expr
 	   | boolean_expr
+	   
+assignment_expr ::= identifier '<-' expr
+if_expr ::= 'if' expr 'then' expr 'else' expr 'fi'
+while_expr ::= 'while' expr 'loop' expr 'pool'
+compound_expr ::= '{' < expr ';' > '}'
+let_expr ::= 'let' < let_binding  / ',' > 'in' expr
+case_expr ::= 'case' expr 'of' < identifier ':' type_name '=>' expr ';' > 'esac'
+isvoid_expr ::= 'isvoid' expr
 
 let_binding ::= identifier ':'  type_name  [ '<-' expr ]
 
@@ -60,7 +67,7 @@ void_check ::= [ 'isvoid' ] logical_expr
 
 logical_expr ::= [ '~' ] method_selector
 
-method_selector ::= primary [ [ '@' type_name ] '.' identifier '(' { expr / ',' } ')' ]
+method_selector ::= primary { [ '@' type_name ] '.' primary }
 
 relation_op ::= '<=' | '<' | '='
 
@@ -71,6 +78,7 @@ multiplication_op ::= '*' | '/'
 primary ::= identifier [ '(' { expr / ',' } ')' ]
      	  | 'new' type_name
     	  | '(' expr ')'
+          | if_expr
 	      | numeric_literal
 	      | string_literal
 	      | 'true'

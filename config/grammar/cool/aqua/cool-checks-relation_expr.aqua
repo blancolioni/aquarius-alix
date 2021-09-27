@@ -1,0 +1,7 @@
+class
+   Cool.Checks.Relation_Expr
+   
+inherit
+   Cool.With_Table
+   
+end

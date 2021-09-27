@@ -89,6 +89,7 @@ package body Ack.Generate is
       From_Type, To_Type : not null access constant
         Root_Entity_Type'Class)
    is
+      use type Ack.Classes.Class_Entity;
       From : constant Ack.Types.Constant_Type_Entity :=
                Ack.Types.Constant_Type_Entity (From_Type);
       To   : constant Ack.Types.Constant_Type_Entity :=

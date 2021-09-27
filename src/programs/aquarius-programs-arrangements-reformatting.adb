@@ -101,7 +101,8 @@ package body Aquarius.Programs.Arrangements.Reformatting is
                             Separators.Find ((Syntax, Depth));
             begin
                if not Has_Element (Position) then
-                  Separators.Append ((Syntax, Depth));
+                  Separators.Append
+                    (Separator_Info'(Syntax, Depth));
                end if;
             end;
          end if;

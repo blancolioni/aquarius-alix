@@ -993,7 +993,8 @@ package body Aquarius.Syntax is
    is
    begin
       Item.Node.Formats.Append
-        ((Aquarius.Names.To_Aquarius_Name (Name), To));
+        (Named_Format'
+           (Aquarius.Names.To_Aquarius_Name (Name), To));
       Item.Pristine := False;
    end Set_Format;
 

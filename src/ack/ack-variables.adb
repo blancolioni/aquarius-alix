@@ -156,9 +156,8 @@ package body Ack.Variables is
             if Variable.Iterator then
                declare
                   Class : constant Ack.Classes.Class_Entity :=
-                            Ack.Classes.Class_Entity
-                              (Ack.Types.Type_Entity
-                                 (Variable.Iteration).Class);
+                            Ack.Types.Type_Entity
+                              (Variable.Iteration).Class;
                   Feature : constant Ack.Features.Feature_Entity :=
                               Class.Feature
                                 (Get_Name_Id ("element"));

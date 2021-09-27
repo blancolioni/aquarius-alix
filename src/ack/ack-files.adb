@@ -69,6 +69,18 @@ package body Ack.Files is
          end;
       end if;
 
+      if Parent.Declaration_Node /= No_Node then
+         declare
+            Parent_Path : constant String :=
+              Get_Program (Parent.Declaration_Node).Source_Directory;
+            Path : constant String := Parent_Path & "/" & File_Name;
+         begin
+            if Ada.Directories.Exists (Path) then
+               return Path;
+            end if;
+         end;
+      end if;
+
       for Path of Class_Path loop
          if Ada.Directories.Exists (Path & "/" & File_Name) then
             return Path & "/" & File_Name;

@@ -21,7 +21,9 @@ package body Aquarius.UI.Console is
 
    function Console_UI return Aquarius_UI is
    begin
-      return new Console_UI_Type;
+      return Result : constant Aquarius_UI := new Console_UI_Type do
+         null;
+      end return;
    end Console_UI;
 
    ----------

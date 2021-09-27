@@ -14,7 +14,6 @@ with Ack.Compile;
 with Ack.Errors;
 with Ack.Features;
 with Ack.Semantic;
-with Ack.Types;
 
 with Aquarius.Paths;
 with Aquarius.Syntax;
@@ -53,7 +52,7 @@ package body Ack.Bindings is
          Parent_Class         : Ack.Classes.Constant_Class_Entity;
          Child_Class          : Ack.Classes.Constant_Class_Entity;
          Position             : Binding_Position;
-         References           : List_Of_Entities.List;
+         References           : List_Of_Constant_Entities.List;
          Implicit_Calls       : Implicit_Call_Lists.List;
          Has_Feature_Binding  : Boolean;
       end record;
@@ -89,7 +88,7 @@ package body Ack.Bindings is
       Group             : Aquarius.Actions.Action_Group)
       return Boolean
    is
-      References     : List_Of_Entities.List;
+      References     : List_Of_Constant_Entities.List;
       Binding_Table  : Ack.Bindings.Actions.Ack_Binding_Table;
       Binding_Vector : Binding_Record_Vectors.Vector;
       Local_Classes  : Link_Name_To_Class_Maps.Map;
@@ -184,7 +183,7 @@ package body Ack.Bindings is
              (Class,
               Ack.Features.Feature_Entity_Record'Class (Feature.all)'Access)
          then
-            References.Append (Feature);
+            References.Append (Constant_Entity_Type (Feature));
             return;
          end if;
 
@@ -557,7 +556,7 @@ package body Ack.Bindings is
             Inherits_Program_Tree                             : Boolean);
 
          procedure Check_Class_Binding
-           (Bound_Class_Feature : Entity_Type);
+           (Bound_Class_Feature : Constant_Entity_Type);
 
          procedure Write_Binding
            (Feature_Name : String;
@@ -568,7 +567,7 @@ package body Ack.Bindings is
          -------------------------
 
          procedure Check_Class_Binding
-           (Bound_Class_Feature : Entity_Type)
+           (Bound_Class_Feature : Constant_Entity_Type)
          is
             Bound_Class_Name : constant String :=
                                  Bound_Class_Feature.Get_Type

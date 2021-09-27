@@ -38,7 +38,7 @@ package Ack.Types is
 
    function Class
      (Typ : Type_Entity_Record'Class)
-      return access Ack.Classes.Class_Entity_Record'Class;
+      return Ack.Classes.Class_Entity;
 
    overriding function Expanded
      (Typ : Type_Entity_Record)
@@ -226,7 +226,7 @@ private
 
    function Class
      (Typ : Type_Entity_Record'Class)
-      return access Ack.Classes.Class_Entity_Record'Class
+      return Ack.Classes.Class_Entity
    is (if Typ.Generic_Formal then null else Typ.Class);
 
    overriding function Has_Default_Creation_Routine

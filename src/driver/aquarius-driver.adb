@@ -35,7 +35,6 @@ with Ack.Semantic;
 with Ack.Generate;
 
 with Aqua.CPU;
-with Aqua.Drivers;
 with Aqua.Images;
 with Aqua.Options;
 

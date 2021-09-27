@@ -9,4 +9,6 @@ package Aquarius.Interaction is
       Start : not null access Aquarius.Trees.Root_Tree_Type'Class)
       is abstract;
 
+   type Interactor_Access is access all Interactor'Class;
+
 end Aquarius.Interaction;

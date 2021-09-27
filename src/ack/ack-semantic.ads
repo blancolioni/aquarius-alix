@@ -11,14 +11,11 @@ package Ack.Semantic is
 
 private
 
-   procedure Analyse_Feature_Header
-     (Class   : Ack.Classes.Class_Entity;
-      Feature : Node_Id)
-     with Pre => Kind (Feature) = N_Feature_Declaration;
+   type Tuple_Arity_Range is range 2 .. 20;
 
-   procedure Analyse_Feature_Body
-     (Class   : Ack.Classes.Class_Entity;
-      Feature : Node_Id)
-     with Pre => Kind (Feature) = N_Feature_Declaration;
+   function Property_Feature_Node
+     (Node : Node_Id)
+     return Boolean
+     with Pre => Kind (Node) = N_Feature_Declaration;
 
 end Ack.Semantic;
