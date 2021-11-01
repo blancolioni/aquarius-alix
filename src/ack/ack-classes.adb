@@ -812,7 +812,6 @@ package body Ack.Classes is
       Unit.Begin_Routine
         (Name           => Class.Link_Name & "$create",
          Argument_Words => 0,
-         Frame_Words    => 0,
          Result_Words   => 0,
          Global         => True);
       Unit.Push (Tagatha.Tagatha_Integer (Layout.Length) * 4);

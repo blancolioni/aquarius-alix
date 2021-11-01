@@ -345,7 +345,6 @@ package body Ack.Features is
          Unit.Begin_Routine
            (Name           => Feature.Link_Name,
             Argument_Words => 1,
-            Frame_Words    => 0,
             Result_Words   => 1,
             Global         => True);
 
@@ -367,7 +366,6 @@ package body Ack.Features is
             Unit.Begin_Routine
               (Name           => Feature.Link_Name,
                Argument_Words => Arg_Count,
-               Frame_Words    => 0,
                Result_Words   => Result_Count,
                Global         => True);
 
@@ -407,7 +405,6 @@ package body Ack.Features is
          Unit.Begin_Routine
            (Name           => Feature.Link_Name,
             Argument_Words => Arg_Count,
-            Frame_Words    => 0,
             Result_Words   => Result_Count,
             Global         => True);
 

@@ -142,7 +142,6 @@ package body Ack.Generate is
          Unit.Begin_Routine
            (Name           => Class.Link_Name & "$main",
             Argument_Words => 0,
-            Frame_Words    => 0,
             Result_Words   => 0,
             Global         => True);
          Unit.Call (Class.Link_Name & "$create", 0);
@@ -225,7 +224,6 @@ package body Ack.Generate is
       Unit.Begin_Routine
         (Class.Link_Name & "$init",
          Argument_Words => 0,
-         Frame_Words    => 0,
          Result_Words   => 1,
          Global         => True);
 
