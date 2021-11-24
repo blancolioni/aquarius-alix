@@ -367,7 +367,7 @@ package body Ack.Generate is
             end if;
 
             Else_Label := Unit.Next_Label;
-            Unit.Operate (Tagatha.Op_Test, Tagatha.Default_Size);
+            Unit.Operate (Tagatha.Op_Test);
             Unit.Jump (Else_Label, Tagatha.C_Equal);
          end if;
          Generate_Compound (Unit, Context, Compound);

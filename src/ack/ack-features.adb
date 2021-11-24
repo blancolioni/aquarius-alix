@@ -452,16 +452,15 @@ package body Ack.Features is
                Unit.Push_Operand
                  (Tagatha.Transfers.External_Operand
                     (Once_Flag_Label,
-                     Immediate => False),
-                  Size => Tagatha.Default_Size);
-               Unit.Operate (Tagatha.Op_Test, Tagatha.Default_Size);
+                     Immediate => False));
+               Unit.Operate (Tagatha.Op_Test);
                Unit.Jump (Continue_Once, Tagatha.C_Equal);
                if Feature.Has_Result then
                   Unit.Push_Operand
                     (Tagatha.Transfers.External_Operand
                        (Once_Value_Label,
-                        Immediate => False),
-                     Size => Tagatha.Default_Size);
+                        Immediate => False,
+                        Size      => Tagatha.Default_Size));
                   Unit.Pop_Result;
                end if;
                Unit.Jump (Exit_Label);
@@ -521,14 +520,12 @@ package body Ack.Features is
                Unit.Pop_Operand
                  (Tagatha.Transfers.External_Operand
                     (Once_Flag_Label,
-                     Immediate => False),
-                  Size => Tagatha.Default_Size);
+                     Immediate => False));
                Unit.Push_Local (1);
                Unit.Pop_Operand
                  (Tagatha.Transfers.External_Operand
                     (Once_Value_Label,
-                     Immediate => False),
-                  Size => Tagatha.Default_Size);
+                     Immediate => False));
             end if;
 
             Unit.Push_Local (1);

@@ -120,8 +120,8 @@ package body Ack.Generate.Intrinsics is
    begin
       Push (1);
       Unit.Push (4);
-      Unit.Operate (Tagatha.Op_Mul, Tagatha.Default_Size);
-      Unit.Operate (Tagatha.Op_Add, Tagatha.Default_Size);
+      Unit.Operate (Tagatha.Op_Mul);
+      Unit.Operate (Tagatha.Op_Add);
       return True;
    end Offset_Words;
 
@@ -138,8 +138,8 @@ package body Ack.Generate.Intrinsics is
    begin
       Push (1);
       Unit.Push (4);
-      Unit.Operate (Tagatha.Op_Mul, Tagatha.Default_Size);
-      Unit.Operate (Tagatha.Op_Add, Tagatha.Default_Size);
+      Unit.Operate (Tagatha.Op_Mul);
+      Unit.Operate (Tagatha.Op_Add);
       Push (2);
       Unit.Swap;
       Unit.Store;
@@ -178,8 +178,8 @@ package body Ack.Generate.Intrinsics is
       Unit.Dereference;
       Push (1);
       Unit.Push (4);
-      Unit.Operate (Tagatha.Op_Mul, Tagatha.Default_Size);
-      Unit.Operate (Tagatha.Op_Add, Tagatha.Default_Size);
+      Unit.Operate (Tagatha.Op_Mul);
+      Unit.Operate (Tagatha.Op_Add);
       Unit.Dereference;
       return True;
    end System_Memory_Block_32_Get;
@@ -200,8 +200,8 @@ package body Ack.Generate.Intrinsics is
       Unit.Dereference;
       Push (1);
       Unit.Push (4);
-      Unit.Operate (Tagatha.Op_Mul, Tagatha.Default_Size);
-      Unit.Operate (Tagatha.Op_Add, Tagatha.Default_Size);
+      Unit.Operate (Tagatha.Op_Mul);
+      Unit.Operate (Tagatha.Op_Add);
       Push (2);
       Unit.Swap;
       Unit.Store;

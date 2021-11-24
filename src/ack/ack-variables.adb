@@ -124,13 +124,11 @@ package body Ack.Variables is
       case Variable.Kind is
          when Local =>
             Unit.Pop_Local
-              (Tagatha.Local_Offset (Variable.Offset),
-               Tagatha.Default_Size);
+              (Tagatha.Local_Offset (Variable.Offset));
 
          when Argument =>
             Unit.Pop_Argument
-              (Tagatha.Argument_Offset (Variable.Offset),
-               Tagatha.Default_Size);
+              (Tagatha.Argument_Offset (Variable.Offset));
       end case;
    end Pop_Entity;
 
@@ -150,8 +148,7 @@ package body Ack.Variables is
       case Variable.Kind is
          when Local =>
             Unit.Push_Local
-              (Tagatha.Local_Offset (Variable.Offset),
-               Tagatha.Default_Size);
+              (Tagatha.Local_Offset (Variable.Offset));
 
             if Variable.Iterator then
                declare
@@ -171,8 +168,7 @@ package body Ack.Variables is
 
          when Argument =>
             Unit.Push_Argument
-              (Tagatha.Argument_Offset (Variable.Offset),
-               Tagatha.Default_Size);
+              (Tagatha.Argument_Offset (Variable.Offset));
       end case;
    end Push_Entity;
 

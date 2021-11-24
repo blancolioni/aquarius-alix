@@ -824,8 +824,8 @@ package body Ack.Classes is
             Unit.Push_Operand
               (Tagatha.Transfers.External_Operand
                  (To_Standard_String (Item.Reference),
-                  Immediate => True),
-               Size => Tagatha.Default_Size);
+                  Immediate => True,
+                  Size      => Tagatha.Default_Size));
             if Item.Offset /= 0 then
                Push_Offset (Unit, Item.Offset);
                Unit.Operate (Tagatha.Op_Add);
@@ -834,7 +834,7 @@ package body Ack.Classes is
             Push_Offset (Unit, Item.Offset);
          end if;
 
-         Unit.Copy_To (Tagatha.Default_Size);
+         Unit.Copy_To;
 
       end loop;
 
@@ -884,8 +884,7 @@ package body Ack.Classes is
          Unit.Segment (Tagatha.Executable);
          Unit.Begin_Code (Thunk_Name, False);
          Unit.Pop_Operand
-           (Tagatha.Transfers.Shelf_Operand (Thunk_Name),
-            Tagatha.Default_Size);
+           (Tagatha.Transfers.Shelf_Operand (Thunk_Name));
          Unit.Duplicate;
          Unit.Dereference;
          Unit.Dereference;
@@ -907,8 +906,7 @@ package body Ack.Classes is
          Unit.Dereference;
          Unit.Operate (Tagatha.Op_Add);
          Unit.Push_Operand
-           (Tagatha.Transfers.Shelf_Operand (Thunk_Name),
-            Tagatha.Default_Size);
+           (Tagatha.Transfers.Shelf_Operand (Thunk_Name));
          Unit.Jump (Link_Name);
          Unit.End_Code;
          Unit.Segment (Tagatha.Read_Only);
