@@ -164,9 +164,9 @@ simple_expression ::= [ sign ] < term / adding_operator >
 
 term ::= < factor / multiplying_operator >
 
-factor ::= variable_access | unsigned_constant | function_designator | set_constructor | '(' expression ')' | 'not' factor
+factor ::= variable_access | unsigned_constant  | set_constructor | '(' expression ')' | 'not' factor
 
-unsigned_constant ::= numeric_literal | string_literal | constant_identifier | 'nil'
+unsigned_constant ::= numeric_literal | string_literal | 'nil'
 
 set_constructor ::= '[' < member_designator / ',' > ']'
 
