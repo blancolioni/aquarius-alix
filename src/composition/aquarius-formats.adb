@@ -437,7 +437,7 @@ package body Aquarius.Formats is
          declare
             Rules : constant Array_Of_Rules :=
               (New_Line (Aquarius.Before),
-               New_Line (Aquarius.After),
+               --  New_Line (Aquarius.After),
                Indent (Aquarius.Before, 3),
                Indent (Aquarius.After, -3));
          begin
