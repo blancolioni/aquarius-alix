@@ -76,7 +76,7 @@ single_operand_instruction ::=
 
 double_operand_instruction ::=
      'mov' | 'cmp' | 'add' | 'sub' | 'mul' | 'div' | 'mod' | 'and' | 'or' | 'xor'
-   | 'seq' | 'sne' | 'sgt' | 'slt' | 'sge' | 'sle'
+   | 'seq' | 'sne' | 'sgt' | 'slt' | 'sge' | 'sle' | 'ash' | 'lsh'
   
 branch_instruction ::= 
           'br' | 'bne' | 'beq' | 'bge' | 'blt' | 'bgt' | 'ble'

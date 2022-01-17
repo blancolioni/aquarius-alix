@@ -33,6 +33,8 @@ feature
          Test_List.Append (T)
          create { Test_Integer_Enum } T
          Test_List.Append (T)
+		 create { Test_To_String } T
+		 Test_List.Append (T)
 --         create { Test_Explicit_Integer_Interval } T
 --         Test_List.Append (T)
 --         create { Test_Explicit_Interval } T

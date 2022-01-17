@@ -1,0 +1,27 @@
+class
+   Test_To_String
+   
+inherit
+   Unit_Test
+      
+feature
+
+   Name : String
+      do
+         Result := "test-to_string"
+      end
+      
+   Execute
+      local
+         X : System.Word_32
+		 Y : String
+      do
+         X := 1453
+         Y := X.To_String
+         Success := Y = "000005AD"
+         if not Success then
+            Fail_Message := "To_String: expected 000005AD, but got " & Y
+         end
+      end
+       
+end 
