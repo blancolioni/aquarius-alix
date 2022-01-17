@@ -1,0 +1,16 @@
+class
+   Pascal.Standard_Types
+   
+feature
+
+   Standard_Boolean : Pascal.Object_Type
+      do
+	     create {Pascal.Object_Type.Primitive_Boolean}.Make_Boolean (Result)
+	  end
+	
+   Standard_Object : Pascal.Object_Type
+      do
+         create {Pascal.Object_Type.Primitive_Object}.Make_Object (Result)
+      end
+	  
+end

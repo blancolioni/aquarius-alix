@@ -1,0 +1,14 @@
+class 
+   Pascal.Checks.Program_Heading
+
+inherit
+   Aqua.Text_IO
+
+feature
+
+   After_Identifier (Id : String) 
+      do
+         Put_Line ("checking program: " & Id)
+      end
+
+end

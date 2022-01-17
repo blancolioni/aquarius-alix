@@ -1,0 +1,75 @@
+class
+   Pascal.Symbol_Table
+
+inherit
+   Aqua.Text_IO
+   
+create
+   Make, Make_Root
+   
+feature
+
+   Name   : String
+   Parent : detachable Symbol_Table
+   Owner  : detachable Pascal.Table_Entry
+   
+   Make (With_Name   : String
+         With_Parent : Symbol_Table
+		 With_Owner  : Pascal.Table_Entry)
+      do
+	     Name   := With_Name
+	     Parent := With_Parent
+		 Owner  := With_Owner
+		 create Table
+		 Put_Line ("new table " & With_Name & " owned by " & With_Owner.Name);
+      end
+	  
+   Make_Root (With_Name : String)
+      do
+	     Name := With_Name
+		 create Table
+      end
+	  
+   Contains (Name : String) : Boolean
+      do
+	     across Table as Item loop
+		    if Item.Name = Name then
+			   Result := True
+			end
+         end
+		 if Result then
+		 elsif attached Parent then
+		    Result := Parent.Contains (Name)
+		 end
+	  end
+	  
+   Get (Name : String) : Table_Entry
+      require
+	     Contains (Name)
+	  local
+	     Found : Boolean
+      do
+	     across Table as Item loop
+		    if Item.Name = Name then
+			   Result := Item
+			   Found  := True
+			end
+         end
+		 if Found then
+		 else
+		    Result := Parent.Get (Name)
+		 end
+	  end
+	     
+   Insert (Item : Table_Entry)
+      do
+	     Table.Append (Item)
+	  end
+	  
+feature
+   
+   Table : Aqua.Containers.Linked_List [Table_Entry]
+   
+end
+
+   

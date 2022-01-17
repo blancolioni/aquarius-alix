@@ -1,0 +1,20 @@
+class
+   Pascal.Object_Type.Primitive_Boolean
+   
+inherit
+   Pascal.Object_Type
+   
+create
+   Make_Boolean
+   
+feature
+
+   Make_Boolean
+      local
+	     Std : Pascal.Standard_types
+      do
+	     Make_Class ("Boolean", Std.Standard_Object)
+		 Primitive := True
+	  end
+	  
+end

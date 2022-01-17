@@ -1,0 +1,8 @@
+class 
+   Pascal.Checks.Program
+
+feature
+
+   After_Node do end
+
+end

@@ -1,0 +1,32 @@
+class
+   Pascal.Table_Entry
+   
+create
+   Make_Class_Entry,
+   Make_Method_Entry
+   
+feature
+
+   Is_Class_Entry  : Boolean
+   Is_Method_Entry : Boolean
+   
+   Name       : String
+   Entry_Type : Pascal.Object_Type
+   
+   Make_Class_Entry (Class_Name : String
+                     Class_Type : Pascal.Object_Type)
+     do
+	    Name := Class_Name
+		Entry_Type := Class_Type
+		Is_Class_Entry := True
+	 end
+	
+   Make_Method_Entry (Method_Name : String
+                      Method_Type : Object_Type)
+      do
+	     Name := Method_Name
+		 Entry_Type := Method_Type
+		 Is_Method_Entry := True
+      end
+	  
+end
