@@ -329,6 +329,21 @@ package body Aquarius.Actions is
       end loop;
    end Iterate;
 
+   -------------
+   -- Iterate --
+   -------------
+
+   procedure Iterate
+     (List    : Action_Instance_List;
+      Process : not null access
+        procedure (Item : Action_Instance))
+   is
+   begin
+      for Item of List.List loop
+         Process (Item);
+      end loop;
+   end Iterate;
+
    -----------------------
    -- New_Instance_List --
    -----------------------

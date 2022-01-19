@@ -129,6 +129,13 @@ package Aquarius.Programs is
                              Skip_Separators : Boolean := True)
                             return Array_Of_Program_Trees;
 
+   procedure Iterate_Named_Children
+     (Item            : Program_Tree_Type;
+      Skip_Separators : Boolean;
+      Process         : not null access
+        procedure (Child : Program_Tree;
+                   Stop  : out Boolean));
+
    function Concatenate_Children (Item : Program_Tree_Type) return String;
    --  Finds all named children of Item and concatenates their text
    --  representations

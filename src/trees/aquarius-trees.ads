@@ -255,6 +255,12 @@ package Aquarius.Trees is
      (Top   : Root_Tree_Type)
      return Array_Of_Trees;
 
+   procedure Iterate_Named_Children
+     (Top : Root_Tree_Type;
+      Process : not null access
+        procedure (Child : Tree;
+                   Stop : out Boolean));
+
    function Children
      (Top  : not null access Root_Tree_Type'Class;
       Path : String)

@@ -113,10 +113,18 @@ package Aquarius.Actions is
 
    type Action_Instance is private;
 
+   function Get_Group (Item : Action_Instance) return Action_Group;
+   function Get_Position (Item : Action_Instance) return Rule_Position;
+
    type Action_Instance_List is private;
 
    procedure Append (List   : in out Action_Instance_List;
                      Action : Action_Instance);
+
+   procedure Iterate
+     (List : Action_Instance_List;
+      Process : not null access
+        procedure (Item : Action_Instance));
 
    function Get_Action_List (Source : not null access Action_Source)
                             return Action_Instance_List
@@ -226,6 +234,12 @@ private
          Parent   : Action_Source_Access;
          Action   : Action_Execution_Access;
       end record;
+
+   function Get_Group (Item : Action_Instance) return Action_Group
+   is (Item.Group);
+
+   function Get_Position (Item : Action_Instance) return Rule_Position
+   is (Item.Position);
 
    package Action_Instance_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Action_Instance);

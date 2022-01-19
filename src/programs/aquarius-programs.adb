@@ -1077,6 +1077,42 @@ package body Aquarius.Programs is
       return Item.Syntax.Syntax_Class = Terminal;
    end Is_Terminal;
 
+   ----------------------------
+   -- Iterate_Named_Children --
+   ----------------------------
+
+   procedure Iterate_Named_Children
+     (Item            : Program_Tree_Type;
+      Skip_Separators : Boolean;
+      Process         : not null access
+        procedure (Child : Program_Tree;
+                   Stop  : out Boolean))
+   is
+      procedure P (T : Aquarius.Trees.Tree;
+                   Stop : out Boolean);
+
+      -------
+      -- P --
+      -------
+
+      procedure P (T    : Aquarius.Trees.Tree;
+                   Stop : out Boolean)
+      is
+         Item : constant Program_Tree := Program_Tree (T);
+      begin
+         if not Skip_Separators or else
+           not Item.Is_Separator
+         then
+            Process (Item, Stop);
+         else
+            Stop := False;
+         end if;
+      end P;
+
+   begin
+      Item.Iterate_Named_Children (P'Access);
+   end Iterate_Named_Children;
+
    -----------------------
    -- Layout_End_Column --
    -----------------------
@@ -1513,17 +1549,27 @@ package body Aquarius.Programs is
 
       procedure RA (T       : in out Program_Tree_Type'Class) is
 
-         Children : constant Array_Of_Program_Trees :=
-           T.Direct_Children (Skip_Separators => False);
+         procedure Process_Tree
+           (Tree      : Program_Tree;
+            Send_Stop : out Boolean);
+
+         procedure Process_Tree
+           (Tree      : Program_Tree;
+            Send_Stop : out Boolean)
+         is
+         begin
+            RA (Tree.all);
+            Send_Stop := Stop;
+         end Process_Tree;
+
       begin
 
          Aquarius.Actions.Execute (T.Syntax.all, T,
                                    Action_Group, Before);
 
-         for I in Children'Range loop
-            RA (Children (I).all);
-            exit when Stop;
-         end loop;
+         T.Iterate_Named_Children
+           (Skip_Separators => False,
+            Process         => Process_Tree'Access);
 
          if Stop then
             return;

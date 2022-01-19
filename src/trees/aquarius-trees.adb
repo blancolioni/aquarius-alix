@@ -922,6 +922,42 @@ package body Aquarius.Trees is
       return T = null;
    end Is_Null;
 
+   ----------------------------
+   -- Iterate_Named_Children --
+   ----------------------------
+
+   procedure Iterate_Named_Children
+     (Top     : Root_Tree_Type;
+      Process : not null access
+        procedure (Child : Tree;
+                   Stop : out Boolean))
+   is
+      Stop : Boolean := False;
+
+      procedure GNC (Current : Tree);
+
+      ---------
+      -- GNC --
+      ---------
+
+      procedure GNC (Current : Tree) is
+      begin
+         if Current.Name /= "" then
+            Process (Current, Stop);
+         else
+            for I in 1 .. Current.Child_Count loop
+               GNC (Current.Child (I));
+            end loop;
+         end if;
+      end GNC;
+
+   begin
+      for I in 1 .. Top.Child_Count loop
+         GNC (Top.Child (I));
+         exit when Stop;
+      end loop;
+   end Iterate_Named_Children;
+
    ----------------
    -- Last_Child --
    ----------------
