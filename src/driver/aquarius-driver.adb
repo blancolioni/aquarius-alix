@@ -434,6 +434,31 @@ begin
             raise;
       end;
 
+   elsif Command_Line.Action = "grammar-gen" then
+      if Command_Line.Grammar = "" then
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "grammar-gen action requires --grammar");
+         return;
+      end if;
+
+      declare
+         Grammar : constant Aquarius.Grammars.Aquarius_Grammar :=
+                     Aquarius.Grammars.Manager.Get_Grammar
+                       (Command_Line.Grammar);
+         Gen     : Aquarius.Grammars.Aqua_Gen.Aqua_Generator_Type;
+      begin
+         Gen.Create
+           (Grammar => Grammar,
+            Path    =>
+              Aquarius.Config_Paths.Config_File
+                ("aqua/generated/" & Grammar.Name));
+         Gen.Add_Ancestor_Class
+           (Root  => Grammar.Get_Top_Level_Syntax,
+            Group => Grammar.Group ("checks"),
+            Name  => "Pascal.With_Table");
+         Gen.Execute;
+      end;
    else
 
       Komnenos.Logging.Start_Logging;
