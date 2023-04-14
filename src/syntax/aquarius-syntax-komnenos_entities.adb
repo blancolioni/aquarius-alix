@@ -244,6 +244,8 @@ package body Aquarius.Syntax.Komnenos_Entities is
                  (Group : Aquarius.Actions.Action_Group)
                is
                   use type Komnenos.Entities.Entity_Reference;
+                  List : constant Aquarius.Actions.Action_Instance_List :=
+                           Entity.Syntax.Get_Action_List;
                   Before : constant Komnenos.Entities.Entity_Reference :=
                              Entity.Grammar.Action_Entity
                                (Group       => Group,
@@ -256,7 +258,48 @@ package body Aquarius.Syntax.Komnenos_Entities is
                                Position    => Aquarius.Actions.After_Node,
                                Parent_Name => Entity.Syntax.Name,
                                Child_Name  => Label_Text);
+
+                  procedure Put_Action
+                    (Action : Aquarius.Actions.Action_Instance);
+
+                  ----------------
+                  -- Put_Action --
+                  ----------------
+
+                  procedure Put_Action
+                    (Action : Aquarius.Actions.Action_Instance)
+                  is
+                     Anchor : constant Node_Edge :=
+                                (case Aquarius.Actions.Get_Position (Action) is
+                                    when Aquarius.Before => Left,
+                                    when Aquarius.After  => Right);
+                     Node   : constant Node_Reference :=
+                                Visual.Put_Sub_Node
+                                  (Parent      => Reference,
+                                   Anchor      => Anchor,
+                                   Interior    => False,
+                                   Visibility  => Show_On_Parent_Selected,
+                                   Style       => Box,
+                                   Label_Text  =>
+                                     Aquarius.Actions.Action_Group_Name
+                                       (Group),
+                                   Label_Style => Action_Group_Style,
+                                   Tool_Tip    => "",
+                                   Link        => null);
+                  begin
+                     case Aquarius.Actions.Get_Position (Action) is
+                        when Aquarius.Before =>
+                           Context.Before_Node := Node;
+                        when Aquarius.After  =>
+                           Context.After_Node := Node;
+                     end case;
+                  end Put_Action;
+
                begin
+
+                  Ada.Text_IO.Put_Line ("node: " & Label_Text);
+                  Aquarius.Actions.Iterate (List, Put_Action'Access);
+
                   if Before /= null then
                      Ada.Text_IO.Put_Line
                        ("render: "
