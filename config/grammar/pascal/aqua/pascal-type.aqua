@@ -1,0 +1,14 @@
+class 
+   Pascal.Type
+
+feature
+
+   Name          : String
+   Primitive     : Boolean
+
+   Compatible (Other : Pascal.Type) : Boolean
+      do
+         Result := Other = Current
+      end
+
+end

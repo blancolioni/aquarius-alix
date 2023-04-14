@@ -1,0 +1,56 @@
+class Pascal.Checks.Block
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Label_Declaration_Part (Child : Pascal.Checks.Label_Declaration_Part)
+      do
+      end
+
+   After_Label_Declaration_Part (Child : Pascal.Checks.Label_Declaration_Part)
+      do
+      end
+
+   Before_Constant_Definition_Part (Child : Pascal.Checks.Constant_Definition_Part)
+      do
+      end
+
+   After_Constant_Definition_Part (Child : Pascal.Checks.Constant_Definition_Part)
+      do
+      end
+
+   Before_Type_Definition_Part (Child : Pascal.Checks.Type_Definition_Part)
+      do
+      end
+
+   After_Type_Definition_Part (Child : Pascal.Checks.Type_Definition_Part)
+      do
+      end
+
+   Before_Variable_Declaration_Part (Child : Pascal.Checks.Variable_Declaration_Part)
+      do
+      end
+
+   After_Variable_Declaration_Part (Child : Pascal.Checks.Variable_Declaration_Part)
+      do
+      end
+
+   Before_Procedure_And_Function_Declaration_Part (Child : Pascal.Checks.Procedure_And_Function_Declaration_Part)
+      do
+      end
+
+   After_Procedure_And_Function_Declaration_Part (Child : Pascal.Checks.Procedure_And_Function_Declaration_Part)
+      do
+      end
+
+   Before_Statement_Part (Child : Pascal.Checks.Statement_Part)
+      do
+      end
+
+   After_Statement_Part (Child : Pascal.Checks.Statement_Part)
+      do
+      end
+
+end

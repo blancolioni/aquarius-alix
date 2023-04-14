@@ -1,0 +1,14 @@
+class Pascal.Checks.Multiplying_Operator
+
+inherit
+   Pascal.With_Table
+   Pascal.Expression_Node
+
+feature
+
+   To_String : String
+      do
+         Result := "*"
+      end
+
+end

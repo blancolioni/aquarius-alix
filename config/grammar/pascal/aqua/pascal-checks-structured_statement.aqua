@@ -1,0 +1,40 @@
+class Pascal.Checks.Structured_Statement
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Compound_Statement (Child : Pascal.Checks.Compound_Statement)
+      do
+      end
+
+   After_Compound_Statement (Child : Pascal.Checks.Compound_Statement)
+      do
+      end
+
+   Before_Conditional_Statement (Child : Pascal.Checks.Conditional_Statement)
+      do
+      end
+
+   After_Conditional_Statement (Child : Pascal.Checks.Conditional_Statement)
+      do
+      end
+
+   Before_Repetitive_Statement (Child : Pascal.Checks.Repetitive_Statement)
+      do
+      end
+
+   After_Repetitive_Statement (Child : Pascal.Checks.Repetitive_Statement)
+      do
+      end
+
+   Before_With_Statement (Child : Pascal.Checks.With_Statement)
+      do
+      end
+
+   After_With_Statement (Child : Pascal.Checks.With_Statement)
+      do
+      end
+
+end

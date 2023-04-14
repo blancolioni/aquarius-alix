@@ -1,0 +1,16 @@
+class Pascal.Checks.Functional_Parameter_Specification
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Function_Heading (Child : Pascal.Checks.Function_Heading)
+      do
+      end
+
+   After_Function_Heading (Child : Pascal.Checks.Function_Heading)
+      do
+      end
+
+end

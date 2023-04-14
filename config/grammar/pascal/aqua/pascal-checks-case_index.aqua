@@ -1,0 +1,16 @@
+class Pascal.Checks.Case_Index
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Expression (Child : Pascal.Checks.Expression)
+      do
+      end
+
+   After_Expression (Child : Pascal.Checks.Expression)
+      do
+      end
+
+end

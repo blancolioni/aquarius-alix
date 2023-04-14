@@ -1,0 +1,40 @@
+class Pascal.Checks.Unpacked_Structured_Type
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Array_Type (Child : Pascal.Checks.Array_Type)
+      do
+      end
+
+   After_Array_Type (Child : Pascal.Checks.Array_Type)
+      do
+      end
+
+   Before_Record_Type (Child : Pascal.Checks.Record_Type)
+      do
+      end
+
+   After_Record_Type (Child : Pascal.Checks.Record_Type)
+      do
+      end
+
+   Before_Set_Type (Child : Pascal.Checks.Set_Type)
+      do
+      end
+
+   After_Set_Type (Child : Pascal.Checks.Set_Type)
+      do
+      end
+
+   Before_File_Type (Child : Pascal.Checks.File_Type)
+      do
+      end
+
+   After_File_Type (Child : Pascal.Checks.File_Type)
+      do
+      end
+
+end

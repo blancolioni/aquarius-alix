@@ -1,0 +1,32 @@
+class Pascal.Checks.Simple_Statement
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Assignment_Statement (Child : Pascal.Checks.Assignment_Statement)
+      do
+      end
+
+   After_Assignment_Statement (Child : Pascal.Checks.Assignment_Statement)
+      do
+      end
+
+   Before_Procedure_Statement (Child : Pascal.Checks.Procedure_Statement)
+      do
+      end
+
+   After_Procedure_Statement (Child : Pascal.Checks.Procedure_Statement)
+      do
+      end
+
+   Before_Goto_Statement (Child : Pascal.Checks.Goto_Statement)
+      do
+      end
+
+   After_Goto_Statement (Child : Pascal.Checks.Goto_Statement)
+      do
+      end
+
+end

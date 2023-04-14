@@ -2,31 +2,57 @@ class
    Pascal.Table_Entry
    
 create
-   Make_Class_Entry,
-   Make_Method_Entry
+   Make_Type_Entry,
+   Make_Var_Entry,
+   Make_Function_Entry
    
 feature
 
-   Is_Class_Entry  : Boolean
-   Is_Method_Entry : Boolean
-   
    Name       : String
-   Entry_Type : Pascal.Object_Type
+   Entry_Type : Pascal.Type
    
-   Make_Class_Entry (Class_Name : String
-                     Class_Type : Pascal.Object_Type)
+   Is_Const     : Boolean
+   Is_Type      : Boolean
+   Is_Var       : Boolean
+   Is_Procedure : Boolean
+   Is_Function  : Boolean
+   
+   Make_Type_Entry (Type_Name : String
+                    Type_Def  : Pascal.Type)
      do
-	    Name := Class_Name
-		Entry_Type := Class_Type
-		Is_Class_Entry := True
+	    Name := Type_Name.To_Lower
+		 Entry_Type := Type_Def
+		 Is_Type := True
 	 end
 	
-   Make_Method_Entry (Method_Name : String
-                      Method_Type : Object_Type)
-      do
-	     Name := Method_Name
-		 Entry_Type := Method_Type
-		 Is_Method_Entry := True
-      end
-	  
+   Make_Var_Entry (Var_Name : String
+                   Var_Type : Pascal.Type)
+     do
+	    Name := Var_Name.To_Lower
+		 Entry_Type := Var_Type
+		 Is_Var := True
+	 end
+
+   Make_Function_Entry (Fn_Name : String
+                        Return_Type : Pascal.Type
+                        Arguments   : Aqua.Containers.Linked_List[Pascal.Table_Entry])
+     local
+        Fn_Type : Pascal.Type.Function
+     do
+        Name := Fn_Name.To_Lower
+        create Fn_Type.Make_Function (To_Argument_Types (Arguments), Return_Type)
+        Entry_Type := Fn_Type
+        Is_Function := True
+     end
+	
+feature {None}
+
+   To_Argument_Types (Args : Aqua.Containers.Linked_List[Pascal.Table_Entry]) : Aqua.Containers.Linked_List[Pascal.Type]
+     do
+        create Result
+        across Args as E loop
+           Result.Append (E.Entry_Type)
+        end
+     end
+
 end

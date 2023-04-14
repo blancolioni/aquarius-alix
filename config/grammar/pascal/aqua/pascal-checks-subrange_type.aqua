@@ -1,0 +1,16 @@
+class Pascal.Checks.Subrange_Type
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Constant (Child : Pascal.Checks.Constant)
+      do
+      end
+
+   After_Constant (Child : Pascal.Checks.Constant)
+      do
+      end
+
+end

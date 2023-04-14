@@ -1,0 +1,46 @@
+class Pascal.Checks.Variable_Access
+
+inherit
+   Pascal.Expression_Node
+   Pascal.Has_Type
+   Pascal.With_Table
+   Aquarius.Trees.Program_Tree
+
+feature
+
+   To_String : String
+
+   Before_Variable_Identifier (Child : Pascal.Checks.Variable_Identifier)
+      do
+      end
+
+   After_Variable_Identifier (Child : Pascal.Checks.Variable_Identifier)
+      do
+         To_String := Child.Id
+         if attached Child.Variable then
+            Current_Type := Child.Variable.Entry_Type
+         end 
+      end
+
+   Before_Variable_Suffix (Child : Pascal.Checks.Variable_Suffix)
+      do
+      end
+
+   After_Variable_Suffix (Child : Pascal.Checks.Variable_Suffix)
+      do
+      end
+
+   After_Node
+      do
+         if attached Current_Type then
+            Set_Type (Current_Type)
+         else
+            Error ("unable to determine type")
+         end 
+      end
+
+feature {None}
+
+   Current_Type : detachable Pascal.Type
+
+end

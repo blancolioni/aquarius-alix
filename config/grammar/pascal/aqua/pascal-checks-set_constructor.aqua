@@ -1,0 +1,16 @@
+class Pascal.Checks.Set_Constructor
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Member_Designator (Child : Pascal.Checks.Member_Designator)
+      do
+      end
+
+   After_Member_Designator (Child : Pascal.Checks.Member_Designator)
+      do
+      end
+
+end

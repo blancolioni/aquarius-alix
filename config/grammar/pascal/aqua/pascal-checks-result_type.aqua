@@ -1,0 +1,16 @@
+class Pascal.Checks.Result_Type
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Type_Identifier (Child : Pascal.Checks.Type_Identifier)
+      do
+      end
+
+   After_Type_Identifier (Child : Pascal.Checks.Type_Identifier)
+      do
+      end
+
+end

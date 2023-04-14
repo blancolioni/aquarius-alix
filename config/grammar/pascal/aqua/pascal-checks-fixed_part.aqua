@@ -1,0 +1,16 @@
+class Pascal.Checks.Fixed_Part
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Record_Section (Child : Pascal.Checks.Record_Section)
+      do
+      end
+
+   After_Record_Section (Child : Pascal.Checks.Record_Section)
+      do
+      end
+
+end

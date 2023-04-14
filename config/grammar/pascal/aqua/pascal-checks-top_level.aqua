@@ -1,0 +1,35 @@
+class Pascal.Checks.Top_Level
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Program (Child : Pascal.Checks.Program)
+      do
+      end
+
+   After_Program (Child : Pascal.Checks.Program)
+      do
+      end
+
+   Before_Node 
+      local
+         I, R  : Pascal.Type
+         E, A  : Pascal.Table_Entry
+         Args  : Aqua.Containers.Linked_List[Pascal.Table_Entry]
+      do
+         create Table.Make_Root ("standard")
+         create {Pascal.Type.Primitive_Integer} I.Make_Integer
+         create E.Make_Type_Entry ("integer", I)
+         Table.Insert (E)
+         create {Pascal.Type.Primitive_Real} R.Make_Real
+         create E.Make_Type_Entry ("real", R)
+         Table.Insert (E)
+         create A.Make_Var_Entry("x", R)
+         Args.Append (A)
+         create E.Make_Function_Entry ("sqrt", R, Args)
+         Table.Insert (E)
+      end
+
+end

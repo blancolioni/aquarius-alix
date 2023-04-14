@@ -1,0 +1,32 @@
+class Pascal.Checks.Variable_Identifier
+
+inherit
+   Pascal.With_Table
+   Aquarius.Trees.Program_Tree
+
+feature
+
+   Id : String
+   Variable : detachable Pascal.Table_Entry
+
+   Before_Identifier (Text : String)
+      do
+      end
+
+   After_Identifier (Text : String)
+      do
+         Id := Text
+         if Table.Contains (Text) then
+            Variable := Table.Get (Text)
+            if Variable.Is_Var then
+            elsif Variable.Is_Function then
+            elsif Variable.Is_Const then
+            else
+               Error ("expected a variable, function, or constant, but found " & Text)
+            end 
+         else
+            Error ("undefined: " & Text)
+         end
+      end
+
+end

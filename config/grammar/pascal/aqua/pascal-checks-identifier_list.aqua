@@ -1,0 +1,19 @@
+class Pascal.Checks.Identifier_List
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Ids : Aqua.Containers.Linked_List[String]
+
+   Before_Identifier (Text : String)
+      do
+      end
+
+   After_Identifier (Text : String)
+      do
+         Ids.Append (Text)
+      end
+
+end

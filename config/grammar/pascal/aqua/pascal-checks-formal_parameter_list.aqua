@@ -1,0 +1,16 @@
+class Pascal.Checks.Formal_Parameter_List
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Formal_Parameter_Section (Child : Pascal.Checks.Formal_Parameter_Section)
+      do
+      end
+
+   After_Formal_Parameter_Section (Child : Pascal.Checks.Formal_Parameter_Section)
+      do
+      end
+
+end

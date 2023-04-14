@@ -1,0 +1,10 @@
+class 
+   Pascal.Term.Real
+
+inherit
+   Pascal.Term
+
+feature
+   Value : Real
+   
+end

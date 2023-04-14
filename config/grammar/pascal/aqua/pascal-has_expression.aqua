@@ -1,0 +1,23 @@
+note
+   Conforming_Child_Node: Copy_Expression
+   
+class 
+   Pascal.Has_Expression
+
+feature
+
+   Expression : Pascal.Expression
+   
+feature {None}
+
+   Copy_Expression (To : Has_Expression)
+      do
+         To.Set_Expression (Expression)
+      end
+
+   Set_Expression (To : Pascal.Expression)	  
+      do
+	      Expression := To
+      end
+	  
+end

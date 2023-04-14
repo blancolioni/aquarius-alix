@@ -1,0 +1,20 @@
+class
+   Pascal.Type.Primitive_Real
+   
+inherit
+   Pascal.Type
+   
+create
+   Make_Real
+   
+feature
+
+   Make_Real
+      do
+	     Name          := "real"
+		  Primitive     := True
+      end
+	  
+end
+
+

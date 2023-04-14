@@ -1,0 +1,16 @@
+class Pascal.Checks.Statement_Sequence
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Statement (Child : Pascal.Checks.Statement)
+      do
+      end
+
+   After_Statement (Child : Pascal.Checks.Statement)
+      do
+      end
+
+end

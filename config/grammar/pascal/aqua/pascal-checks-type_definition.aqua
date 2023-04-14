@@ -1,0 +1,25 @@
+class Pascal.Checks.Type_Definition
+
+inherit
+   Pascal.With_Table
+
+feature
+
+
+   Before_Identifier (Text : String)
+      do
+      end
+
+   After_Identifier (Text : String)
+      do
+      end
+
+   Before_Type_Denoter (Child : Pascal.Checks.Type_Denoter)
+      do
+      end
+
+   After_Type_Denoter (Child : Pascal.Checks.Type_Denoter)
+      do
+      end
+
+end

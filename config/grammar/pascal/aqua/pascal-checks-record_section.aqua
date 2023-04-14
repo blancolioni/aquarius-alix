@@ -1,0 +1,24 @@
+class Pascal.Checks.Record_Section
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Identifier_List (Child : Pascal.Checks.Identifier_List)
+      do
+      end
+
+   After_Identifier_List (Child : Pascal.Checks.Identifier_List)
+      do
+      end
+
+   Before_Type_Denoter (Child : Pascal.Checks.Type_Denoter)
+      do
+      end
+
+   After_Type_Denoter (Child : Pascal.Checks.Type_Denoter)
+      do
+      end
+
+end

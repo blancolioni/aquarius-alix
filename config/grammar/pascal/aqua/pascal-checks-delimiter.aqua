@@ -1,0 +1,6 @@
+class Pascal.Checks.Delimiter
+
+inherit
+   Pascal.With_Table
+
+end

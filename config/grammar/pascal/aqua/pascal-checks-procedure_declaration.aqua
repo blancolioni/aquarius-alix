@@ -1,0 +1,32 @@
+class Pascal.Checks.Procedure_Declaration
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Procedure_Heading (Child : Pascal.Checks.Procedure_Heading)
+      do
+      end
+
+   After_Procedure_Heading (Child : Pascal.Checks.Procedure_Heading)
+      do
+      end
+
+   Before_Directive (Child : Pascal.Checks.Directive)
+      do
+      end
+
+   After_Directive (Child : Pascal.Checks.Directive)
+      do
+      end
+
+   Before_Procedure_Block (Child : Pascal.Checks.Procedure_Block)
+      do
+      end
+
+   After_Procedure_Block (Child : Pascal.Checks.Procedure_Block)
+      do
+      end
+
+end

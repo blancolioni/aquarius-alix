@@ -1,0 +1,17 @@
+class Pascal.Checks.Label
+
+inherit
+   Pascal.With_Table
+
+feature
+
+
+   Before_Numeric_Literal (Text : String)
+      do
+      end
+
+   After_Numeric_Literal (Text : String)
+      do
+      end
+
+end

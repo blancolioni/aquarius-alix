@@ -1,0 +1,16 @@
+class Pascal.Checks.Record_Type
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Field_List (Child : Pascal.Checks.Field_List)
+      do
+      end
+
+   After_Field_List (Child : Pascal.Checks.Field_List)
+      do
+      end
+
+end

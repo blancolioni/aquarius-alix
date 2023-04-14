@@ -1,0 +1,25 @@
+class
+   Pascal.Type.Function
+   
+inherit
+   Pascal.Type
+   
+create
+   Make_Function
+   
+feature
+
+   Make_Function(Arguments : Aqua.Containers.Linked_List[Pascal.Type]
+                 Returns   : Pascal.Type)
+      do
+	     Name           := "function"
+        Argument_Types := Arguments
+        Return_Type    := Returns
+      end
+
+   Argument_Types : Aqua.Containers.Linked_List[Pascal.Type]
+   Return_Type    : Pascal.Type
+
+end
+
+

@@ -1,0 +1,18 @@
+class
+   Pascal.Type.Primitive_Boolean
+   
+inherit
+   Pascal.Type
+   
+create
+   Make_Boolean
+   
+feature
+
+   Make_Boolean
+     do
+         Name := "boolean"
+         Primitive := True
+	  end
+	  
+end

@@ -1,0 +1,24 @@
+class Pascal.Checks.Function_Heading
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Formal_Parameter_List (Child : Pascal.Checks.Formal_Parameter_List)
+      do
+      end
+
+   After_Formal_Parameter_List (Child : Pascal.Checks.Formal_Parameter_List)
+      do
+      end
+
+   Before_Result_Type (Child : Pascal.Checks.Result_Type)
+      do
+      end
+
+   After_Result_Type (Child : Pascal.Checks.Result_Type)
+      do
+      end
+
+end

@@ -1,0 +1,9 @@
+deferred class 
+   Pascal.Expression_Node
+
+feature
+   To_String : String
+      deferred
+      end
+      
+end

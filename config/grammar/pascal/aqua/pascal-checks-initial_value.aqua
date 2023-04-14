@@ -1,0 +1,16 @@
+class Pascal.Checks.Initial_Value
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Expression (Child : Pascal.Checks.Expression)
+      do
+      end
+
+   After_Expression (Child : Pascal.Checks.Expression)
+      do
+      end
+
+end

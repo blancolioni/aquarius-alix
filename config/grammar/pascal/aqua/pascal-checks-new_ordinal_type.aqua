@@ -1,0 +1,24 @@
+class Pascal.Checks.New_Ordinal_Type
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Enumerated_Type (Child : Pascal.Checks.Enumerated_Type)
+      do
+      end
+
+   After_Enumerated_Type (Child : Pascal.Checks.Enumerated_Type)
+      do
+      end
+
+   Before_Subrange_Type (Child : Pascal.Checks.Subrange_Type)
+      do
+      end
+
+   After_Subrange_Type (Child : Pascal.Checks.Subrange_Type)
+      do
+      end
+
+end

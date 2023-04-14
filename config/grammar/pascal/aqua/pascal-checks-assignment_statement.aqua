@@ -1,0 +1,30 @@
+class Pascal.Checks.Assignment_Statement
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Destination_Type : detachable Pascal.Type
+
+   Before_Variable_Access (Child : Pascal.Checks.Variable_Access)
+      do
+      end
+
+   After_Variable_Access (Child : Pascal.Checks.Variable_Access)
+      do
+         Destination_Type := Child.Type
+      end
+
+   Before_Expression (Child : Pascal.Checks.Expression)
+      do
+         if attached Destination_Type then
+            Child.Expect_Type (Destination_Type)
+         end
+      end
+
+   After_Expression (Child : Pascal.Checks.Expression)
+      do
+      end
+
+end

@@ -1,0 +1,24 @@
+class Pascal.Checks.Value_Parameter_Specification
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Identifier_List (Child : Pascal.Checks.Identifier_List)
+      do
+      end
+
+   After_Identifier_List (Child : Pascal.Checks.Identifier_List)
+      do
+      end
+
+   Before_Type_Identifier (Child : Pascal.Checks.Type_Identifier)
+      do
+      end
+
+   After_Type_Identifier (Child : Pascal.Checks.Type_Identifier)
+      do
+      end
+
+end

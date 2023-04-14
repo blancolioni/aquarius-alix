@@ -1,0 +1,6 @@
+class Pascal.Checks.String_Literal
+
+inherit
+   Pascal.With_Table
+
+end

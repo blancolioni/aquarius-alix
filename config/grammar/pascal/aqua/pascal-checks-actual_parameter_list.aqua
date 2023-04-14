@@ -1,0 +1,16 @@
+class Pascal.Checks.Actual_Parameter_List
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Actual_Parameter (Child : Pascal.Checks.Actual_Parameter)
+      do
+      end
+
+   After_Actual_Parameter (Child : Pascal.Checks.Actual_Parameter)
+      do
+      end
+
+end

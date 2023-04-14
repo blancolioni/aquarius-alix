@@ -1,0 +1,16 @@
+class Pascal.Checks.Set_Type
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Base_Type (Child : Pascal.Checks.Base_Type)
+      do
+      end
+
+   After_Base_Type (Child : Pascal.Checks.Base_Type)
+      do
+      end
+
+end

@@ -1,0 +1,7 @@
+class 
+   Pascal.Expression
+   
+inherit
+   Aqua.Containers.Linked_List[Pascal.Expression_Node]
+   
+end

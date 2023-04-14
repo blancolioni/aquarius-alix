@@ -1,0 +1,17 @@
+class Pascal.Checks.Field_Designator
+
+inherit
+   Pascal.With_Table
+
+feature
+
+
+   Before_Identifier (Text : String)
+      do
+      end
+
+   After_Identifier (Text : String)
+      do
+      end
+
+end

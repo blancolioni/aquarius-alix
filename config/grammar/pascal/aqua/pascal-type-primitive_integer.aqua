@@ -1,0 +1,20 @@
+class
+   Pascal.Type.Primitive_Integer
+   
+inherit
+   Pascal.Type
+   
+create
+   Make_Integer
+   
+feature
+
+   Make_Integer
+      do
+	     Name          := "integer"
+		  Primitive     := True
+      end
+	  
+end
+
+

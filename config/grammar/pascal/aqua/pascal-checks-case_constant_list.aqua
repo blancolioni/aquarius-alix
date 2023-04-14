@@ -1,0 +1,16 @@
+class Pascal.Checks.Case_Constant_List
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Case_Constant (Child : Pascal.Checks.Case_Constant)
+      do
+      end
+
+   After_Case_Constant (Child : Pascal.Checks.Case_Constant)
+      do
+      end
+
+end

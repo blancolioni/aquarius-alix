@@ -1,0 +1,16 @@
+class Pascal.Checks.Procedural_Parameter_Specification
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Procedure_Heading (Child : Pascal.Checks.Procedure_Heading)
+      do
+      end
+
+   After_Procedure_Heading (Child : Pascal.Checks.Procedure_Heading)
+      do
+      end
+
+end

@@ -1,0 +1,16 @@
+class Pascal.Checks.Function_Designator
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Actual_Parameter (Child : Pascal.Checks.Actual_Parameter)
+      do
+      end
+
+   After_Actual_Parameter (Child : Pascal.Checks.Actual_Parameter)
+      do
+      end
+
+end

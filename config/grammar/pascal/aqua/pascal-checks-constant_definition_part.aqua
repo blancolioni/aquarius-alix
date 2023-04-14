@@ -1,0 +1,16 @@
+class Pascal.Checks.Constant_Definition_Part
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Constant_Definition (Child : Pascal.Checks.Constant_Definition)
+      do
+      end
+
+   After_Constant_Definition (Child : Pascal.Checks.Constant_Definition)
+      do
+      end
+
+end

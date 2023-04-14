@@ -1,0 +1,16 @@
+class Pascal.Checks.Field_List
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Fixed_Part (Child : Pascal.Checks.Fixed_Part)
+      do
+      end
+
+   After_Fixed_Part (Child : Pascal.Checks.Fixed_Part)
+      do
+      end
+
+end

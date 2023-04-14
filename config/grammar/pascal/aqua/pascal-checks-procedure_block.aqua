@@ -1,0 +1,16 @@
+class Pascal.Checks.Procedure_Block
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Block (Child : Pascal.Checks.Block)
+      do
+      end
+
+   After_Block (Child : Pascal.Checks.Block)
+      do
+      end
+
+end

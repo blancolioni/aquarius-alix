@@ -1,0 +1,24 @@
+class Pascal.Checks.Conditional_Statement
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_If_Statement (Child : Pascal.Checks.If_Statement)
+      do
+      end
+
+   After_If_Statement (Child : Pascal.Checks.If_Statement)
+      do
+      end
+
+   Before_Case_Statement (Child : Pascal.Checks.Case_Statement)
+      do
+      end
+
+   After_Case_Statement (Child : Pascal.Checks.Case_Statement)
+      do
+      end
+
+end

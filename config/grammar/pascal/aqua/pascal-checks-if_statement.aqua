@@ -1,0 +1,24 @@
+class Pascal.Checks.If_Statement
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Expression (Child : Pascal.Checks.Expression)
+      do
+      end
+
+   After_Expression (Child : Pascal.Checks.Expression)
+      do
+      end
+
+   Before_Statement (Child : Pascal.Checks.Statement)
+      do
+      end
+
+   After_Statement (Child : Pascal.Checks.Statement)
+      do
+      end
+
+end

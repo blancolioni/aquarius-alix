@@ -8,9 +8,14 @@ feature
 	     create {Pascal.Object_Type.Primitive_Boolean}.Make_Boolean (Result)
 	  end
 	
-   Standard_Object : Pascal.Object_Type
+   Standard_Integer : Pascal.Object_Type
       do
-         create {Pascal.Object_Type.Primitive_Object}.Make_Object (Result)
+         create {Pascal.Object_Type.Primitive_Integer}.Make_Object (Result)
+      end
+	  
+   Standard_Real : Pascal.Object_Type
+      do
+         create {Pascal.Object_Type.Primitive_Real}.Make_Object (Result)
       end
 	  
 end

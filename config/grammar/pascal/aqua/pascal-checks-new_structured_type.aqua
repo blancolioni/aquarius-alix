@@ -1,0 +1,16 @@
+class Pascal.Checks.New_Structured_Type
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Unpacked_Structured_Type (Child : Pascal.Checks.Unpacked_Structured_Type)
+      do
+      end
+
+   After_Unpacked_Structured_Type (Child : Pascal.Checks.Unpacked_Structured_Type)
+      do
+      end
+
+end

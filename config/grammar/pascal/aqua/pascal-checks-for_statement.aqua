@@ -1,0 +1,40 @@
+class Pascal.Checks.For_Statement
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Control_Variable (Child : Pascal.Checks.Control_Variable)
+      do
+      end
+
+   After_Control_Variable (Child : Pascal.Checks.Control_Variable)
+      do
+      end
+
+   Before_Initial_Value (Child : Pascal.Checks.Initial_Value)
+      do
+      end
+
+   After_Initial_Value (Child : Pascal.Checks.Initial_Value)
+      do
+      end
+
+   Before_Final_Value (Child : Pascal.Checks.Final_Value)
+      do
+      end
+
+   After_Final_Value (Child : Pascal.Checks.Final_Value)
+      do
+      end
+
+   Before_Statement (Child : Pascal.Checks.Statement)
+      do
+      end
+
+   After_Statement (Child : Pascal.Checks.Statement)
+      do
+      end
+
+end

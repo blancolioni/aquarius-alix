@@ -1,0 +1,16 @@
+class Pascal.Checks.New_Pointer_Type
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Domain_Type (Child : Pascal.Checks.Domain_Type)
+      do
+      end
+
+   After_Domain_Type (Child : Pascal.Checks.Domain_Type)
+      do
+      end
+
+end

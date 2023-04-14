@@ -1,0 +1,27 @@
+class Pascal.Checks.Type_Denoter
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Denoted_Type : Pascal.Type
+
+   Before_Type_Identifier (Child : Pascal.Checks.Type_Identifier)
+      do
+      end
+
+   After_Type_Identifier (Child : Pascal.Checks.Type_Identifier)
+      do
+         Denoted_Type := Child.Type
+      end
+
+   Before_New_Type (Child : Pascal.Checks.New_Type)
+      do
+      end
+
+   After_New_Type (Child : Pascal.Checks.New_Type)
+      do
+      end
+
+end

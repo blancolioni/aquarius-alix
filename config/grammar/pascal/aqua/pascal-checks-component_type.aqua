@@ -1,0 +1,16 @@
+class Pascal.Checks.Component_Type
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Type_Denoter (Child : Pascal.Checks.Type_Denoter)
+      do
+      end
+
+   After_Type_Denoter (Child : Pascal.Checks.Type_Denoter)
+      do
+      end
+
+end

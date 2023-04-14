@@ -1,0 +1,40 @@
+class Pascal.Checks.Formal_Parameter_Section
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Value_Parameter_Specification (Child : Pascal.Checks.Value_Parameter_Specification)
+      do
+      end
+
+   After_Value_Parameter_Specification (Child : Pascal.Checks.Value_Parameter_Specification)
+      do
+      end
+
+   Before_Variable_Parameter_Specification (Child : Pascal.Checks.Variable_Parameter_Specification)
+      do
+      end
+
+   After_Variable_Parameter_Specification (Child : Pascal.Checks.Variable_Parameter_Specification)
+      do
+      end
+
+   Before_Procedural_Parameter_Specification (Child : Pascal.Checks.Procedural_Parameter_Specification)
+      do
+      end
+
+   After_Procedural_Parameter_Specification (Child : Pascal.Checks.Procedural_Parameter_Specification)
+      do
+      end
+
+   Before_Functional_Parameter_Specification (Child : Pascal.Checks.Functional_Parameter_Specification)
+      do
+      end
+
+   After_Functional_Parameter_Specification (Child : Pascal.Checks.Functional_Parameter_Specification)
+      do
+      end
+
+end

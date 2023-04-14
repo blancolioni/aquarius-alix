@@ -1,0 +1,42 @@
+class Pascal.Checks.Constant
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Sign (Child : Pascal.Checks.Sign)
+      do
+      end
+
+   After_Sign (Child : Pascal.Checks.Sign)
+      do
+      end
+
+
+   Before_Numeric_Literal (Text : String)
+      do
+      end
+
+   After_Numeric_Literal (Text : String)
+      do
+      end
+
+   Before_Constant_Identifier (Child : Pascal.Checks.Constant_Identifier)
+      do
+      end
+
+   After_Constant_Identifier (Child : Pascal.Checks.Constant_Identifier)
+      do
+      end
+
+
+   Before_String_Literal (Text : String)
+      do
+      end
+
+   After_String_Literal (Text : String)
+      do
+      end
+
+end

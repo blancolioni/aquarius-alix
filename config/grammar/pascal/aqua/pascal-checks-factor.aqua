@@ -1,0 +1,52 @@
+class Pascal.Checks.Factor
+
+inherit
+   Pascal.With_Table
+   Pascal.Has_Type
+   Pascal.Has_Expression
+
+feature
+
+   Before_Variable_Access (Child : Pascal.Checks.Variable_Access)
+      do
+      end
+
+   After_Variable_Access (Child : Pascal.Checks.Variable_Access)
+      do
+         Expression.Append (Child)
+      end
+
+   Before_Unsigned_Constant (Child : Pascal.Checks.Unsigned_Constant)
+      do
+      end
+
+   After_Unsigned_Constant (Child : Pascal.Checks.Unsigned_Constant)
+      do
+         Expression.Append (Child)
+      end
+
+   Before_Set_Constructor (Child : Pascal.Checks.Set_Constructor)
+      do
+      end
+
+   After_Set_Constructor (Child : Pascal.Checks.Set_Constructor)
+      do
+      end
+
+   Before_Expression (Child : Pascal.Checks.Expression)
+      do
+      end
+
+   After_Expression (Child : Pascal.Checks.Expression)
+      do
+      end
+
+   Before_Factor (Child : Pascal.Checks.Factor)
+      do
+      end
+
+   After_Factor (Child : Pascal.Checks.Factor)
+      do
+      end
+
+end

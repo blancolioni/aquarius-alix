@@ -5,7 +5,7 @@ identifier         ::= standard ada_identifier
 numeric_literal    ::= standard ada_numeric_literal
 character_literal  ::= standard ada_character_literal
 string_literal     ::= standard backslash_escaped_string
-delimiter          ::= delimiters "(),;[]^"
+delimiter          ::= delimiters "(),;[]^."
 
 block_comment_start = "(*"
 block_comment_end   = "*)"

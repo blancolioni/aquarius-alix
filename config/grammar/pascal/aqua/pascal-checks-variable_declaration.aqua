@@ -1,0 +1,36 @@
+class Pascal.Checks.Variable_Declaration
+
+inherit
+   Pascal.With_Table
+   Aqua.Text_IO
+
+feature
+
+   Ids : Aqua.Containers.Linked_List[String]
+
+   Before_Identifier_List (Child : Pascal.Checks.Identifier_List)
+      do
+      end
+
+   After_Identifier_List (Child : Pascal.Checks.Identifier_List)
+      do
+         Ids := Child.Ids
+      end
+
+   Before_Type_Denoter (Child : Pascal.Checks.Type_Denoter)
+      do
+      end
+
+   After_Type_Denoter (Child : Pascal.Checks.Type_Denoter)
+      local
+         Var_Type  : Pascal.Type
+         Var_Entry : Pascal.Table_Entry
+      do
+         Var_Type := Table.Get ("integer").Entry_Type
+         across Ids as Id loop
+            create Var_Entry.Make_Var_Entry (Id, Var_Type)
+            Table.Insert (Var_Entry)
+         end
+      end
+
+end

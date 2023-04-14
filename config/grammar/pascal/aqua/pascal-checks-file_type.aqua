@@ -1,0 +1,16 @@
+class Pascal.Checks.File_Type
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Component_Type (Child : Pascal.Checks.Component_Type)
+      do
+      end
+
+   After_Component_Type (Child : Pascal.Checks.Component_Type)
+      do
+      end
+
+end

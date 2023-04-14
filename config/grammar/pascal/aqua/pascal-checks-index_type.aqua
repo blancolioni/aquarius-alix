@@ -1,0 +1,16 @@
+class Pascal.Checks.Index_Type
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Ordinal_Type (Child : Pascal.Checks.Ordinal_Type)
+      do
+      end
+
+   After_Ordinal_Type (Child : Pascal.Checks.Ordinal_Type)
+      do
+      end
+
+end

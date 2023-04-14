@@ -1,0 +1,29 @@
+class 
+   Pascal.Has_Type
+
+feature
+
+   Expected_Type : detachable Pascal.Type
+   Type  : detachable Pascal.Type
+
+   Expect_Type (Expected : Pascal.Type)
+      do
+         Expected_Type := Expected
+      end
+
+   Compatible_Type (T : Pascal.Type) : Boolean
+      do
+         if attached Expected_Type then
+            Result := T.Compatible (Expected_Type)
+         else
+            Result := True
+         end
+      end
+
+   Set_Type (To : Pascal.Type)
+      require
+         Compatible_Type (To)
+      do
+         Type := To
+      end   
+end

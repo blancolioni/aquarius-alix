@@ -1,0 +1,40 @@
+class Pascal.Checks.Variable_Suffix
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Indexed_Variable (Child : Pascal.Checks.Indexed_Variable)
+      do
+      end
+
+   After_Indexed_Variable (Child : Pascal.Checks.Indexed_Variable)
+      do
+      end
+
+   Before_Field_Designator (Child : Pascal.Checks.Field_Designator)
+      do
+      end
+
+   After_Field_Designator (Child : Pascal.Checks.Field_Designator)
+      do
+      end
+
+   Before_Identified_Variable (Child : Pascal.Checks.Identified_Variable)
+      do
+      end
+
+   After_Identified_Variable (Child : Pascal.Checks.Identified_Variable)
+      do
+      end
+
+   Before_Function_Designator (Child : Pascal.Checks.Function_Designator)
+      do
+      end
+
+   After_Function_Designator (Child : Pascal.Checks.Function_Designator)
+      do
+      end
+
+end

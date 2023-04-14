@@ -1,0 +1,30 @@
+class Pascal.Checks.Term
+
+inherit
+   Pascal.With_Table
+   Pascal.Has_Type
+   Pascal.Has_Expression
+
+feature
+
+   Before_Factor (Child : Pascal.Checks.Factor)
+      do
+      end
+
+   After_Factor (Child : Pascal.Checks.Factor)
+      do
+         if attached Operator then
+            Expression.Append (Operator)
+         end
+      end
+
+   After_Multiplying_Operator (Child : Pascal.Checks.Multiplying_Operator)
+      do
+         Operator := Child
+      end
+
+feature { None }
+
+   Operator : detachable Pascal.Checks.Multiplying_Operator
+
+end

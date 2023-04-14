@@ -1,0 +1,16 @@
+class Pascal.Checks.Label_Declaration_Part
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Label (Child : Pascal.Checks.Label)
+      do
+      end
+
+   After_Label (Child : Pascal.Checks.Label)
+      do
+      end
+
+end

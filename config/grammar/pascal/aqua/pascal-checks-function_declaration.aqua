@@ -1,0 +1,32 @@
+class Pascal.Checks.Function_Declaration
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Function_Heading (Child : Pascal.Checks.Function_Heading)
+      do
+      end
+
+   After_Function_Heading (Child : Pascal.Checks.Function_Heading)
+      do
+      end
+
+   Before_Directive (Child : Pascal.Checks.Directive)
+      do
+      end
+
+   After_Directive (Child : Pascal.Checks.Directive)
+      do
+      end
+
+   Before_Function_Block (Child : Pascal.Checks.Function_Block)
+      do
+      end
+
+   After_Function_Block (Child : Pascal.Checks.Function_Block)
+      do
+      end
+
+end

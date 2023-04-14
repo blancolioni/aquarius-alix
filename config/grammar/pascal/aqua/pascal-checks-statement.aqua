@@ -1,0 +1,32 @@
+class Pascal.Checks.Statement
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Label (Child : Pascal.Checks.Label)
+      do
+      end
+
+   After_Label (Child : Pascal.Checks.Label)
+      do
+      end
+
+   Before_Simple_Statement (Child : Pascal.Checks.Simple_Statement)
+      do
+      end
+
+   After_Simple_Statement (Child : Pascal.Checks.Simple_Statement)
+      do
+      end
+
+   Before_Structured_Statement (Child : Pascal.Checks.Structured_Statement)
+      do
+      end
+
+   After_Structured_Statement (Child : Pascal.Checks.Structured_Statement)
+      do
+      end
+
+end

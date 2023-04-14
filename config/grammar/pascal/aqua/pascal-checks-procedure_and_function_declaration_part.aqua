@@ -1,0 +1,24 @@
+class Pascal.Checks.Procedure_And_Function_Declaration_Part
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Procedure_Declaration (Child : Pascal.Checks.Procedure_Declaration)
+      do
+      end
+
+   After_Procedure_Declaration (Child : Pascal.Checks.Procedure_Declaration)
+      do
+      end
+
+   Before_Function_Declaration (Child : Pascal.Checks.Function_Declaration)
+      do
+      end
+
+   After_Function_Declaration (Child : Pascal.Checks.Function_Declaration)
+      do
+      end
+
+end

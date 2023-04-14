@@ -31,9 +31,12 @@ feature
       end
 	  
    Contains (Name : String) : Boolean
+      local
+	     Lower : String
       do
+	     Lower := Name.To_Lower
 	     across Table as Item loop
-		    if Item.Name = Name then
+		    if Item.Name = Lower then
 			   Result := True
 			end
          end
@@ -48,9 +51,11 @@ feature
 	     Contains (Name)
 	  local
 	     Found : Boolean
+		 Lower : String
       do
+	     Lower := Name.To_Lower
 	     across Table as Item loop
-		    if Item.Name = Name then
+		    if Item.Name = Lower then
 			   Result := Item
 			   Found  := True
 			end

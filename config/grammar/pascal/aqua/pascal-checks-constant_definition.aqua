@@ -1,0 +1,25 @@
+class Pascal.Checks.Constant_Definition
+
+inherit
+   Pascal.With_Table
+
+feature
+
+
+   Before_Identifier (Text : String)
+      do
+      end
+
+   After_Identifier (Text : String)
+      do
+      end
+
+   Before_Constant (Child : Pascal.Checks.Constant)
+      do
+      end
+
+   After_Constant (Child : Pascal.Checks.Constant)
+      do
+      end
+
+end

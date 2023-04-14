@@ -1,0 +1,31 @@
+class Pascal.Checks.Unsigned_Constant
+
+inherit
+   Pascal.With_Table
+   Pascal.Expression_Node
+   Aqua.Text_IO
+
+feature
+
+   To_String : String
+
+   Before_Numeric_Literal (Text : String)
+      do
+      end
+
+   After_Numeric_Literal (Text : String)
+      do
+         Put_Line ("setting To_String to " & Text)
+         To_String := Text
+      end
+
+   Before_String_Literal (Text : String)
+      do
+      end
+
+   After_String_Literal (Text : String)
+      do
+         To_String := Text
+      end
+
+end

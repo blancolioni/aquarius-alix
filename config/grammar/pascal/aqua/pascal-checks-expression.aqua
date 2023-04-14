@@ -1,0 +1,35 @@
+class Pascal.Checks.Expression
+
+inherit
+   Aqua.Text_IO
+   Aquarius.Trees.Program_Tree
+   Pascal.With_Table
+   Pascal.Has_Type
+   Pascal.Has_Expression
+
+feature
+
+   Operator : detachable Pascal.Checks.Relational_Operator
+
+   Before_Simple_Expression (Child : Pascal.Checks.Simple_Expression)
+      do
+      end
+
+   After_Relational_Operator (Child : Pascal.Checks.Relational_Operator)
+      do
+         Operator := Child
+      end
+
+   After_Simple_Expression (Child : Pascal.Checks.Simple_Expression)
+      do
+         if attached Operator then
+            Expression.Append (Operator)
+         end
+--           Put_Line (Concatenated_Image)
+--           across Expression as Expr loop
+--              Put (" item")
+--           end
+--           New_Line
+      end
+
+end

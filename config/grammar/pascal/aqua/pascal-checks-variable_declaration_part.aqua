@@ -1,0 +1,16 @@
+class Pascal.Checks.Variable_Declaration_Part
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Variable_Declaration (Child : Pascal.Checks.Variable_Declaration)
+      do
+      end
+
+   After_Variable_Declaration (Child : Pascal.Checks.Variable_Declaration)
+      do
+      end
+
+end

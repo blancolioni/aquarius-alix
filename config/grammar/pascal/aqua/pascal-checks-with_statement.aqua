@@ -1,0 +1,24 @@
+class Pascal.Checks.With_Statement
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Record_Variable_List (Child : Pascal.Checks.Record_Variable_List)
+      do
+      end
+
+   After_Record_Variable_List (Child : Pascal.Checks.Record_Variable_List)
+      do
+      end
+
+   Before_Statement (Child : Pascal.Checks.Statement)
+      do
+      end
+
+   After_Statement (Child : Pascal.Checks.Statement)
+      do
+      end
+
+end

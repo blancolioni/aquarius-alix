@@ -1,14 +1,30 @@
-class 
-   Pascal.Checks.Program_Heading
+class Pascal.Checks.Program_Heading
 
 inherit
+   Pascal.With_Table
    Aqua.Text_IO
-
+   Aquarius.Trees.Program_Tree
+   
 feature
 
-   After_Identifier (Id : String) 
+   Name : String
+
+   Before_Identifier (Text : String)
       do
-         Put_Line ("checking program: " & Id)
+      end
+
+   After_Identifier (Text : String)
+      do
+         Put_Line ("checking program: " & Text)
+         Name := Text
+      end
+
+   Before_Program_Parameter_List (Child : Pascal.Checks.Program_Parameter_List)
+      do
+      end
+
+   After_Program_Parameter_List (Child : Pascal.Checks.Program_Parameter_List)
+      do
       end
 
 end

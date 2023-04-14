@@ -1,8 +1,28 @@
-class 
-   Pascal.Checks.Program
+class Pascal.Checks.Program
+
+inherit
+   Pascal.With_Table
+   Aquarius.Trees.Program_Tree
 
 feature
 
-   After_Node do end
+   Entity : Komnenos.Entity
+
+   Before_Program_Heading (Child : Pascal.Checks.Program_Heading)
+      do
+      end
+
+   After_Program_Heading (Child : Pascal.Checks.Program_Heading)
+      do
+         Entity := Create_Entity (Child, Child.Name, Child.Name, "program", True)
+      end
+
+   Before_Program_Block (Child : Pascal.Checks.Program_Block)
+      do
+      end
+
+   After_Program_Block (Child : Pascal.Checks.Program_Block)
+      do
+      end
 
 end

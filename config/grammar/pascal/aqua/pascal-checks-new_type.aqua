@@ -1,0 +1,32 @@
+class Pascal.Checks.New_Type
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_New_Ordinal_Type (Child : Pascal.Checks.New_Ordinal_Type)
+      do
+      end
+
+   After_New_Ordinal_Type (Child : Pascal.Checks.New_Ordinal_Type)
+      do
+      end
+
+   Before_New_Structured_Type (Child : Pascal.Checks.New_Structured_Type)
+      do
+      end
+
+   After_New_Structured_Type (Child : Pascal.Checks.New_Structured_Type)
+      do
+      end
+
+   Before_New_Pointer_Type (Child : Pascal.Checks.New_Pointer_Type)
+      do
+      end
+
+   After_New_Pointer_Type (Child : Pascal.Checks.New_Pointer_Type)
+      do
+      end
+
+end

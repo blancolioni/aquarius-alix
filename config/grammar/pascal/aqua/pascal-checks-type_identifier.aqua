@@ -1,0 +1,31 @@
+class Pascal.Checks.Type_Identifier
+
+inherit
+   Pascal.With_Table
+   Aquarius.Trees.Program_Tree
+
+feature
+
+   Type : Pascal.Type
+
+   Before_Identifier (Text : String)
+      do
+      end
+
+   After_Identifier (Text : String)
+      local
+         Type_Entry : Pascal.Table_Entry
+      do
+         if Table.Contains (Text) then
+            Type_Entry := Table.Get (Text)
+            if Type_Entry.Is_Type then
+               Type := Type_Entry.Entry_Type
+            else
+               Error ("expected a type name")
+            end
+         else
+            Error ("undefined: " & Text)
+         end
+      end
+
+end

@@ -1,0 +1,15 @@
+class Pascal.Checks.Relational_Operator
+
+inherit
+   Pascal.With_Table
+   Pascal.Expression_Node
+   Aquarius.Trees.Program_Tree
+
+feature
+
+   To_String : String
+      do
+         Result := "relop" --  Node_Name & ": " & Node_Text
+      end
+
+end

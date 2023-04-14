@@ -1,0 +1,16 @@
+class Pascal.Checks.Type_Definition_Part
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Type_Definition (Child : Pascal.Checks.Type_Definition)
+      do
+      end
+
+   After_Type_Definition (Child : Pascal.Checks.Type_Definition)
+      do
+      end
+
+end

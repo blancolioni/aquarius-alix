@@ -1,0 +1,24 @@
+class Pascal.Checks.Simple_Type
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_New_Ordinal_Type (Child : Pascal.Checks.New_Ordinal_Type)
+      do
+      end
+
+   After_New_Ordinal_Type (Child : Pascal.Checks.New_Ordinal_Type)
+      do
+      end
+
+   Before_Type_Identifier (Child : Pascal.Checks.Type_Identifier)
+      do
+      end
+
+   After_Type_Identifier (Child : Pascal.Checks.Type_Identifier)
+      do
+      end
+
+end

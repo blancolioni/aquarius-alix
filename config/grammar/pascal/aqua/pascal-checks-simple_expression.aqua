@@ -1,0 +1,34 @@
+class Pascal.Checks.Simple_Expression
+
+inherit
+   Pascal.With_Table
+   Pascal.Has_Type
+   Pascal.Has_Expression
+
+feature
+
+   Sign : detachable Pascal.Checks.Sign
+   Operator : detachable Pascal.Checks.Adding_Operator
+
+   After_Sign (Child : Pascal.Checks.Sign)
+      do
+         Sign := Child
+      end
+
+   After_Adding_Operator (Child : Adding_Operator)
+      do
+         Operator := Child
+      end
+
+   Before_Term (Child : Pascal.Checks.Term)
+      do
+      end
+
+   After_Term (Child : Pascal.Checks.Term)
+      do
+         if attached Operator then
+            Expression.Append (Operator)
+         end
+      end
+
+end

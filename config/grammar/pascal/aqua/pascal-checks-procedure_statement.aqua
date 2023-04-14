@@ -1,0 +1,24 @@
+class Pascal.Checks.Procedure_Statement
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Procedure_Identifier (Child : Pascal.Checks.Procedure_Identifier)
+      do
+      end
+
+   After_Procedure_Identifier (Child : Pascal.Checks.Procedure_Identifier)
+      do
+      end
+
+   Before_Actual_Parameter_List (Child : Pascal.Checks.Actual_Parameter_List)
+      do
+      end
+
+   After_Actual_Parameter_List (Child : Pascal.Checks.Actual_Parameter_List)
+      do
+      end
+
+end

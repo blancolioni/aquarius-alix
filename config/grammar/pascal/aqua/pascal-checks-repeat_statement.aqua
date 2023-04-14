@@ -1,0 +1,24 @@
+class Pascal.Checks.Repeat_Statement
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Statement_Sequence (Child : Pascal.Checks.Statement_Sequence)
+      do
+      end
+
+   After_Statement_Sequence (Child : Pascal.Checks.Statement_Sequence)
+      do
+      end
+
+   Before_Expression (Child : Pascal.Checks.Expression)
+      do
+      end
+
+   After_Expression (Child : Pascal.Checks.Expression)
+      do
+      end
+
+end

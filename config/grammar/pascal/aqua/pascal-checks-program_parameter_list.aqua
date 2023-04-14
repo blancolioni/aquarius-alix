@@ -1,0 +1,16 @@
+class Pascal.Checks.Program_Parameter_List
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Identifier_List (Child : Pascal.Checks.Identifier_List)
+      do
+      end
+
+   After_Identifier_List (Child : Pascal.Checks.Identifier_List)
+      do
+      end
+
+end

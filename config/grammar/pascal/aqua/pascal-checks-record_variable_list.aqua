@@ -1,0 +1,16 @@
+class Pascal.Checks.Record_Variable_List
+
+inherit
+   Pascal.With_Table
+
+feature
+
+   Before_Variable_Identifier (Child : Pascal.Checks.Variable_Identifier)
+      do
+      end
+
+   After_Variable_Identifier (Child : Pascal.Checks.Variable_Identifier)
+      do
+      end
+
+end

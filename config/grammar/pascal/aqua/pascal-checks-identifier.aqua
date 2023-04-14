@@ -1,0 +1,6 @@
+class Pascal.Checks.Identifier
+
+inherit
+   Pascal.With_Table
+
+end
