@@ -2,6 +2,8 @@ with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
+with Komnenos.Entities.Tables;
+
 with Ack.Parser;
 with Ack.Semantic;
 with Ack.Generate;
@@ -16,6 +18,7 @@ with Aquarius.Loader;
 with Aquarius.Actions;
 with Aquarius.Grammars;
 with Aquarius.Grammars.Manager;
+with Aquarius.Programs.Komnenos_Entities;
 
 with Ack.Semantic.Work;
 
@@ -199,6 +202,29 @@ package body Ack.Compile is
             begin
                Ack.Semantic.Analyse_Class_Declaration (Node);
                Loaded_Classes.Insert (Base_Name, Node);
+
+               declare
+                  use Aquarius.Programs.Komnenos_Entities;
+                  Entity : constant Entity_Type := Get_Entity (Node);
+               begin
+                  Entity.Parent_Environment.Insert (Entity);
+                  Create_Aquarius_Source_Entity
+                    (Table            =>
+                       Komnenos.Entities.Tables.Table ("aqua"),
+                     Name             => Entity.Qualified_Name,
+                     Qualified_Name   => Entity.Qualified_Name,
+                     Class_Name       => "class",
+                     Top_Level        => True,
+                     Compilation_Unit => Source_Program,
+                     Defining_Name    => Source_Program,
+                     Entity_Spec      => Source_Program,
+                     Entity_Body      => Source_Program);
+
+                  --  Ada.Text_IO.Put_Line
+                  --    ("compiled: "
+                  --     & Entity.Full_Name);
+               end;
+
             end;
 
          end if;

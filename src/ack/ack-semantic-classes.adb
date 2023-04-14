@@ -1,4 +1,5 @@
 with Ada.Directories;
+--  with Ada.Text_IO;
 
 with Aquarius.Loader;
 with Aquarius.Programs.Komnenos_Entities;
@@ -25,9 +26,6 @@ package body Ack.Semantic.Classes is
                   then Parent.Get (Name)
                   else null);
    begin
-
-      --  Ada.Text_IO.Put_Line
-      --    ("load-class: " & To_String (Name));
 
       if Entity = null then
          declare
@@ -80,6 +78,10 @@ package body Ack.Semantic.Classes is
                         end;
 
                         Partial_Class_List.Append (Node);
+
+                        --  Ada.Text_IO.Put_Line
+                        --    ("loaded: "
+                        --     & Entity.Full_Name);
 
                      end;
                   end if;

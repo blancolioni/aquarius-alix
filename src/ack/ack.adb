@@ -260,8 +260,11 @@ package body Ack is
         and then Table_Entity.Children.Map.Contains (Name)
       then
          return Table_Entity.Children.Map.Element (Name);
-      else
+      elsif Table_Entity.Parent_Environment /= null then
          return Table_Entity.Parent_Environment.Get (Name);
+      else
+         raise Constraint_Error with
+         Name & ": not found";
       end if;
    end Get;
 
