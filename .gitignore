@@ -9,3 +9,6 @@ config/scratch/*.aqua
 .aquarius-session
 tests/cool/theory.stanford.edu/*
 tests/cool/index.html
+tools/aqua/as/build/*
+*.aqo
+*.lst

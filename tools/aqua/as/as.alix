@@ -1,0 +1,9 @@
+project_name = as
+source_dir = src
+main_unit = as-driver
+exec_name = as
+config_dir = config
+depend = { project = wlib version = any }
+depend = { project = aqua version = any }
+path_unit = { unit = As.Paths
+              path = src/as-paths.ads }
