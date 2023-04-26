@@ -1,12 +1,8 @@
-with Ada.Calendar;
-with Ada.Sequential_IO;
+with WL.Files.ELF;
+
+with As.Environment;
 
 package body As.Objects is
-
-   L_Header   : constant := 1;
-   L_Footer   : constant := 2;
-   L_Quote    : constant := 3;
-   L_Location : constant := 4;
 
    function Get_Context
      (This : Instance'Class;
@@ -14,28 +10,42 @@ package body As.Objects is
       return Context_Record
      with Pre => This.Has_Context (From);
 
+   -----------
+   -- Align --
+   -----------
+
+   overriding procedure Align
+     (This      : in out Instance;
+      Alignment : Word_32)
+   is
+   begin
+      while Word_32 (This.Segment_List (This.Active).Data.Length)
+      mod Alignment
+        /= 0
+      loop
+         This.Append (Word_8'(0));
+      end loop;
+   end Align;
+
    ------------
    -- Append --
    ------------
 
    procedure Append (This : in out Instance'Class; Value : Word_8) is
+      Seg : Segment_Record renames This.Segment_List (This.Active);
    begin
-      if not This.Raw and then Value = Loader_Value
-        and then This.Data.Last_Index mod 4 = 0
-      then
-         This.Data.Append (Loader_Value);
-         This.Data.Append (L_Quote);
-         This.Data.Append (0);
-         This.Data.Append (1);
-      end if;
+      Seg.Data.Append (Value);
+      Seg.Loc := Seg.Loc + 1;
 
-      This.Data.Append (Value);
+      This.Set_Location (Seg.Loc);
 
-      if not This.Raw then
-         This.Loc := This.Loc + 1;
-         if Context_Lists.Has_Element (This.Current) then
-            This.Contexts (This.Current).Last := This.Data.Last_Index;
-         end if;
+      if Context_Lists.Has_Element (This.Current) then
+         declare
+            Context : Context_Record renames This.Contexts (This.Current);
+         begin
+            Context.Segment := Seg.Segment;
+            Context.Last := Seg.Data.Last_Index;
+         end;
       end if;
 
    end Append;
@@ -64,20 +74,14 @@ package body As.Objects is
    -- Create --
    ------------
 
-   function Create return Reference is
-      use Ada.Calendar;
-      Now : constant Time := Clock;
-      Y : constant Year_Number := Year (Now);
+   function Create
+     (Env : not null access constant As.Environment.Instance'Class)
+      return Reference
+   is
    begin
       return This : constant Reference := new Instance do
-         This.Loader (L_Header, 1, 2);
-         This.Raw := True;
-         This.Append (Word_8 (Y / 256 mod 256));
-         This.Append (Word_8 (Y mod 256));
-         This.Append (Word_8 (Month (Now)));
-         This.Append (Word_8 (Day (Now)));
-         This.Append (Word_32 (Seconds (Now)));
-         This.Raw := False;
+         This.Env := Environment_Reference (Env);
+         This.Initialize (Env);
       end return;
    end Create;
 
@@ -125,62 +129,50 @@ package body As.Objects is
       Context : As.Files.File_Context)
       return Context_Data
    is
-      Rec : constant Context_Record := This.Get_Context (Context);
-      First : constant Positive := Rec.First;
-      Last  : constant Natural := Rec.Last;
+      Rec     : constant Context_Record := This.Get_Context (Context);
+      First   : constant Positive := Rec.First;
+      Last    : constant Natural := Rec.Last;
+      Segment : constant As.Segments.Reference := Rec.Segment;
+      Seg_Pos : Segment_Lists.Cursor renames This.Segment_Map (Segment.Name);
+      Seg     : Segment_Record renames This.Segment_List (Seg_Pos);
    begin
       return Data : Context_Data (1 .. Last - First + 1) do
          for I in First .. Last loop
-            Data (I - First + 1) := This.Data (I);
+            Data (I - First + 1) := Seg.Data (I);
          end loop;
       end return;
    end Get_Data;
 
-   ------------------
-   -- Global_Value --
-   ------------------
+   ----------------
+   -- Initialize --
+   ----------------
 
-   procedure Global_Value
-     (This  : in out Instance'Class;
-      Value : Word_32)
+   overriding procedure Initialize
+     (This : in out Instance;
+      From : not null access constant As.Segments.Segment_State'Class)
    is
+
+      procedure Add_Segment (Segment : As.Segments.Reference);
+
+      -----------------
+      -- Add_Segment --
+      -----------------
+
+      procedure Add_Segment (Segment : As.Segments.Reference) is
+         Name : constant String := Segment.Name;
+         Rec : constant Segment_Record := Segment_Record'
+           (Segment => Segment,
+            Start   => 0, Size => 0, Loc => 0, Data => <>);
+      begin
+         This.Segment_List.Append (Rec);
+         This.Segment_Map.Insert (Name, This.Segment_List.Last);
+      end Add_Segment;
+
    begin
-      This.Raw := True;
-      This.Append (Value);
-      This.Raw := False;
-   end Global_Value;
-
-   -------------
-   -- Globals --
-   -------------
-
-   procedure Globals
-     (This : in out Instance'Class;
-      Last : Register_Index)
-   is
-   begin
-      This.Loader (L_Footer, 0, Word_8 (Last));
-   end Globals;
-
-   ------------
-   -- Loader --
-   ------------
-
-   procedure Loader
-     (This    : in out Instance'Class;
-      X, Y, Z : Word_8)
-   is
-   begin
-      while This.Data.Last_Index mod 4 /= 0 loop
-         This.Append (Word_8'(0));
-      end loop;
-      This.Raw := True;
-      This.Append (Loader_Value);
-      This.Append (X);
-      This.Append (Y);
-      This.Append (Z);
-      This.Raw := False;
-   end Loader;
+      As.Segments.Segment_State (This).Initialize (From);
+      From.Iterate_Segments (Add_Segment'Access);
+      This.Active := This.Segment_List.First;
+   end Initialize;
 
    -----------------
    -- Set_Context --
@@ -190,45 +182,141 @@ package body As.Objects is
      (This    : in out Instance'Class;
       Context : As.Files.File_Context)
    is
+      Active : Segment_Record renames This.Segment_List (This.Active);
    begin
       This.Contexts.Append
         (Context_Record'
            (Context => Context,
-            Address => This.Location,
-            First   => This.Data.Last_Index + 1,
-            Last    => This.Data.Last_Index));
+            Address => Active.Loc,
+            Segment => Active.Segment,
+            First   => Active.Data.Last_Index + 1,
+            Last    => Active.Data.Last_Index));
       This.Current := This.Contexts.Last;
    end Set_Context;
 
-   ------------------
-   -- Set_Location --
-   ------------------
+   -----------------
+   -- Set_Current --
+   -----------------
 
-   procedure Set_Location
-     (This  : in out Instance'Class;
-      Value : Word_32)
+   overriding procedure Set_Current
+     (This         : in out Instance;
+      Segment_Name : String)
    is
    begin
-      This.Loader (L_Location, 0, 0);
-      This.Raw := True;
-      This.Append (Value);
-      This.Raw := False;
-      This.Loc := Value;
-   end Set_Location;
+      Parent (This).Set_Current (Segment_Name);
+      This.Active := This.Segment_Map (Segment_Name);
+   end Set_Current;
 
    -----------
    -- Write --
    -----------
 
    procedure Write (This : in out Instance'Class; Path : String) is
-      package Word_8_IO is new Ada.Sequential_IO (Word_8);
-      use Word_8_IO;
+      use WL.Files.ELF;
       File : File_Type;
+
+      procedure Add_Global_Symbol
+        (Name     : String;
+         Segment  : As.Segments.Reference;
+         Defined  : Boolean;
+         Exported : Boolean;
+         Value    : Word_32);
+
+      procedure Add_Local_Symbol
+        (Name     : String;
+         Segment  : As.Segments.Reference;
+         Defined  : Boolean;
+         Exported : Boolean;
+         Value    : Word_32);
+
+      -----------------------
+      -- Add_Global_Symbol --
+      -----------------------
+
+      procedure Add_Global_Symbol
+        (Name     : String;
+         Segment  : As.Segments.Reference;
+         Defined  : Boolean;
+         Exported : Boolean;
+         Value    : Word_32)
+      is
+         pragma Unreferenced (Defined);
+      begin
+         if Exported then
+            WL.Files.ELF.New_Symbol
+              (File         => File,
+               Name         => Name,
+               Value        => Address_32 (Value),
+               Size         => 4,
+               Binding      => Global,
+               Typ          => Func,
+               Visibility   => Default,
+               Section_Name => Segment.Name);
+         end if;
+      end Add_Global_Symbol;
+
+      ----------------------
+      -- Add_Local_Symbol --
+      ----------------------
+
+      procedure Add_Local_Symbol
+        (Name     : String;
+         Segment  : As.Segments.Reference;
+         Defined  : Boolean;
+         Exported : Boolean;
+         Value    : Word_32)
+      is
+         pragma Unreferenced (Defined);
+      begin
+         if not Exported then
+            WL.Files.ELF.New_Symbol
+              (File         => File,
+               Name         => Name,
+               Value        => Address_32 (Value),
+               Size         => 4,
+               Binding      => Local,
+               Typ          => Func,
+               Visibility   => Default,
+               Section_Name => Segment.Name);
+         end if;
+      end Add_Local_Symbol;
+
    begin
       Create (File, Out_File, Path);
-      for W of This.Data loop
-         Write (File, W);
+
+      --  for Segment of This.Segment_List loop
+      --     for Symbol of Segment.Symbols loop
+      --        New_Symbol
+      --          (File         => File,
+      --           Name         => As.Names."-" (Symbol.Name),
+      --           Value        => Address_32 (Symbol.Value),
+      --           Size         => 4,
+      --           Binding      => (if Symbol.Exported then Global else Local),
+      --           Typ          => No_Type,
+      --      Visibility   => (if Symbol.Exported then Default else Internal),
+      --           Section_Name => Segment.Segment.Name);
+      --     end loop;
+      --  end loop;
+
+      for Segment of This.Segment_List loop
+         New_Section_Header
+           (File        => File,
+            Name        => Segment.Segment.Name,
+            Header_Type =>
+              (if Segment.Segment.Initialize
+               then WL.Files.ELF.Progbits
+               else WL.Files.ELF.Nobits),
+            Write       => Segment.Segment.Write,
+            Execinstr   => Segment.Segment.Execute,
+            Alloc       => Segment.Segment.Allocate);
+         for W of Segment.Data loop
+            Put (File, Octet (W));
+         end loop;
       end loop;
+
+      This.Env.Iterate (Add_Local_Symbol'Access);
+      This.Env.Iterate (Add_Global_Symbol'Access);
+
       Close (File);
    end Write;
 

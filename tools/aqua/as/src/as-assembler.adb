@@ -6,6 +6,7 @@ with As.Images;
 with As.Instructions;
 with As.Parser;
 with As.Paths;
+with As.Segments;
 
 package body As.Assembler is
 
@@ -19,8 +20,6 @@ package body As.Assembler is
    --------------
 
    procedure Assemble (This : in out Instance'Class) is
-
-      PC  : Word_32 := 0;
 
       procedure Pass_One (Line : As.Source.Source_Line);
       procedure Pass_Two (Line : As.Source.Source_Line);
@@ -58,8 +57,6 @@ package body As.Assembler is
          use As.Source;
       begin
 
-         This.Env.Set_Location (PC);
-
          if Has_Command (Line)
            and then Get_Command (Line) = "equ"
          then
@@ -71,7 +68,7 @@ package body As.Assembler is
                   Loc : constant Word_32 :=
                           Get_Argument (Line, 1).Get_Word_Value (This.Env);
                begin
-                  PC := Loc;
+                  This.Env.Set_Location (Loc);
                end;
             else
                This.Env.Insert (Get_Label (Line), Get_Argument (Line, 1));
@@ -99,10 +96,10 @@ package body As.Assembler is
                            This.Error (Context (Line),
                                        "redefined label: " & Label);
                         else
-                           This.Env.Update (Label, PC);
+                           This.Env.Update (Label, This.Env.Location);
                         end if;
                      else
-                        This.Env.Insert (Label, PC);
+                        This.Env.Insert_Current (Label);
                      end if;
                   end if;
                end if;
@@ -125,12 +122,9 @@ package body As.Assembler is
                            declare
                               Instr : constant As.Instructions.Reference :=
                                         Value.Get_Instruction_Value (This.Env);
-                              Align : constant Word_32 := Instr.Alignment;
                            begin
-                              if PC mod Align /= 0 then
-                                 PC := PC + Align - PC mod Align;
-                              end if;
-                              Instr.Skip (PC, This.Env, Arguments (Line));
+                              This.Env.Align (Instr.Alignment);
+                              Instr.Skip (This.Env, Arguments (Line));
                            end;
                         else
                            This.Error (Context (Line),
@@ -168,6 +162,7 @@ package body As.Assembler is
            and then Get_Command (Line) /= "equ"
            and then Get_Command (Line) /= "global"
          then
+
             declare
                Command : constant String := Get_Command (Line);
                Value   : constant As.Expressions.Reference :=
@@ -179,11 +174,8 @@ package body As.Assembler is
                   declare
                      Instr : constant As.Instructions.Reference :=
                                Value.Get_Instruction_Value (This.Env);
-                     Align : constant Word_32 := Instr.Alignment;
                   begin
-                     while This.Obj.Location mod Align /= 0 loop
-                        This.Obj.Append (Word_8'(0));
-                     end loop;
+                     This.Obj.Align (Instr.Alignment);
                      Value.Get_Instruction_Value (This.Env)
                        .Assemble (This.Env, Args, This.Obj);
                   exception
@@ -205,18 +197,13 @@ package body As.Assembler is
          Source.Iterate (Pass_One'Access);
       end loop;
 
-      This.Obj := As.Objects.Create;
-      PC := 0;
+      This.Obj := As.Objects.Create (This.Env);
+      This.Obj.Set_Current (As.Segments.Code_Segment.Name);
 
       for Source of This.Sources loop
          Source.Iterate (Pass_Two'Access);
       end loop;
 
-      This.Obj.Globals (This.Env.Last_Global);
-      for G in This.Env.Last_Global .. 254 loop
-         This.Obj.Global_Value (This.Env.Get_Global (G));
-      end loop;
-      This.Obj.Global_Value (4096);
    end Assemble;
 
    -----------

@@ -1,4 +1,5 @@
 with As.Environment;
+with As.Segments;
 
 package body As.Expressions is
 
@@ -104,7 +105,7 @@ package body As.Expressions is
       case This.Class is
          when Word_Node =>
             if This.Current_Loc then
-               return Env.Get_Location;
+               return As.Segments.Location (Env.Location);
             else
                return This.Word_Value;
             end if;

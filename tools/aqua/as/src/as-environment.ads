@@ -4,21 +4,16 @@ private with WL.String_Maps;
 
 with As.Expressions;
 with As.Files;
+with As.Segments;
 
 private package As.Environment is
 
-   type Instance is tagged private;
+   subtype Parent is As.Segments.Segment_State;
+
+   type Instance is new Parent with private;
    type Reference is access all Instance'Class;
 
    function Create return Reference;
-
-   procedure Set_Location
-     (This : in out Instance'Class;
-      Loc  : Word_32);
-
-   function Get_Location
-     (This : Instance'Class)
-      return Word_32;
 
    function Contains
      (This : Instance'Class;
@@ -36,6 +31,12 @@ private package As.Environment is
       Name : String)
       return As.Expressions.Reference
      with Pre => This.Contains (Name) and then This.Has_Value (Name);
+
+   function Is_Exported
+     (This : Instance'Class;
+      Name : String)
+      return Boolean
+     with Pre => This.Contains (Name);
 
    procedure Insert
      (This  : in out Instance'Class;
@@ -59,6 +60,12 @@ private package As.Environment is
       Name  : String)
      with Pre => not This.Contains (Name),
      Post => This.Contains (Name) and then not This.Has_Value (Name);
+
+   procedure Insert_Current
+     (This  : in out Instance'Class;
+      Name  : String)
+     with Pre => not This.Contains (Name),
+     Post => This.Contains (Name) and then This.Has_Value (Name);
 
    procedure Insert_Local_Label
      (This  : in out Instance'Class;
@@ -98,6 +105,10 @@ private package As.Environment is
       G       : out Register_Index;
       W       : out Word_32);
 
+   procedure Export
+     (This : in out Instance'Class;
+      Name : String);
+
    procedure Update
      (This  : in out Instance'Class;
       Name  : String;
@@ -109,7 +120,7 @@ private package As.Environment is
    procedure Update
      (This  : in out Instance'Class;
       Name  : String;
-      Value : Word_32)
+      Value : As.Segments.Segment_Location)
      with Pre => This.Contains (Name) and then not This.Has_Value (Name);
 
    procedure Iterate
@@ -117,12 +128,24 @@ private package As.Environment is
       Process : not null access
         procedure (Name : String));
 
+   procedure Iterate
+     (This    : not null access constant Instance'Class;
+      Process : not null access
+        procedure (Name : String;
+                   Segment : As.Segments.Reference;
+                   Defined : Boolean;
+                   Exported : Boolean;
+                   Value : Word_32));
+
 private
 
    type Entry_Record is
       record
-         Defined : Boolean := False;
-         Value   : As.Expressions.Reference;
+         Defined  : Boolean := False;
+         Exported : Boolean := False;
+         Const    : Boolean := False;
+         Segment  : As.Segments.Reference;
+         Value    : As.Expressions.Reference;
       end record;
 
    package Entry_Maps is
@@ -146,10 +169,9 @@ private
      new Ada.Containers.Vectors (Positive, Local_Label_Sets.Set,
                                  Local_Label_Sets."=");
 
-   type Instance is tagged
+   type Instance is new Parent with
       record
-         Loc         : Word_32 := 0;
-         Map         : Entry_Maps.Map;
+         Entry_Map   : Entry_Maps.Map;
          Last_Global : Register_Index := 255;
          Globals     : Global_Array;
          Locals      : Local_Label_Vectors.Vector;
@@ -159,24 +181,19 @@ private
      (This : Instance'Class;
       Name : String)
       return Boolean
-   is (This.Map.Contains (Name));
+   is (This.Entry_Map.Contains (Name));
 
    function Has_Value
      (This : Instance'Class;
       Name : String)
       return Boolean
-   is (This.Map (Name).Defined);
+   is (This.Entry_Map (Name).Defined);
 
    function Get_Value
      (This : Instance'Class;
       Name : String)
       return As.Expressions.Reference
-   is (This.Map (Name).Value);
-
-   function Get_Location
-     (This : Instance'Class)
-      return Word_32
-   is (This.Loc);
+   is (This.Entry_Map (Name).Value);
 
    function Last_Global
      (This : Instance'Class)

@@ -1,3 +1,5 @@
+private with As.Names;
+
 limited with As.Environment;
 limited with As.Expressions;
 
@@ -29,6 +31,8 @@ private package As.Instructions is
    function I_Branch (Base_Op : Word_8) return Reference;
 
    function Data (Element_Size : Positive) return Reference;
+   function Segment (Name : String) return Reference;
+   function Export return Reference;
 
    type Expression_Reference is access constant As.Expressions.Instance'Class;
 
@@ -37,8 +41,7 @@ private package As.Instructions is
 
    procedure Skip
      (This      : Instance'Class;
-      PC        : in out Word_32;
-      Env       : not null access constant As.Environment.Instance'Class;
+      Env       : not null access As.Environment.Instance'Class;
       Arguments : Instruction_Arguments);
 
    procedure Assemble
@@ -51,11 +54,14 @@ private
 
    type Special_Instruction is (Get, Put, Resume, Set);
 
+   type Directive_Instruction is (Set_Segment, Export_Symbol);
+
    type Instance is tagged
       record
          Base_Op       : Word_8  := 0;
          Is_Data       : Boolean := False;
          Is_Special    : Boolean := False;
+         Is_Directive  : Boolean := False;
          Z_Imm_Option  : Boolean := False;
          Y_Immediate   : Boolean := False;
          YZ_Immediate  : Boolean := False;
@@ -64,7 +70,9 @@ private
          Has_Rel_Addr  : Boolean := False;
          Is_Pop        : Boolean := False;
          Data_Size     : Positive := 4;
+         Segment_Name  : As.Names.Symbol_Name;
          Special       : Special_Instruction := Get;
+         Directive     : Directive_Instruction := Set_Segment;
       end record;
 
    function Alignment (This : Instance'Class) return Word_32
@@ -88,6 +96,17 @@ private
    function Data (Element_Size : Positive) return Reference
    is (new Instance'(Is_Data => True, Data_Size => Element_Size,
                      others  => <>));
+
+   function Segment (Name : String) return Reference
+   is (new Instance'(Is_Directive => True,
+                     Directive    => Set_Segment,
+                     Segment_Name => As.Names."+" (Name),
+                     others       => <>));
+
+   function Export return Reference
+   is (new Instance'(Is_Directive => True,
+                     Directive    => Export_Symbol,
+                     others       => <>));
 
    Local_Jmp  : aliased constant Instance :=
                   (16#F0#, Has_Rel_Addr => True, others => <>);

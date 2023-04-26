@@ -18,10 +18,12 @@ package body As.Environment is
       if Index <= This.Locals.Last_Index then
          declare
             Set : Local_Label_Sets.Set renames This.Locals (Index);
+            Loc : constant Word_32 :=
+                    This.Location (As.Segments.Code_Segment);
             Position : constant Local_Label_Sets.Cursor :=
                          (if Forward
-                          then Set.Ceiling (This.Loc + 4)
-                          else Set.Floor (This.Loc));
+                          then Set.Ceiling (Loc + 4)
+                          else Set.Floor (Loc));
          begin
             return Local_Label_Sets.Has_Element (Position);
          end;
@@ -175,10 +177,42 @@ package body As.Environment is
       Instr ("byte", As.Instructions.Data (1));
       Instr ("word", As.Instructions.Data (4));
 
+      Instr ("code", As.Instructions.Segment (".code"));
+      Instr ("data", As.Instructions.Segment (".data"));
+      Instr ("text", As.Instructions.Segment (".text"));
+
+      Instr ("export", As.Instructions.Export);
+
       Env.Insert ("@", As.Expressions.Current_Location);
+
+      Env.Add_Segment (As.Segments.Code_Segment);
+      Env.Add_Segment (As.Segments.Text_Segment);
+      Env.Add_Segment (As.Segments.Data_Segment);
+      Env.Add_Segment (As.Segments.Heap_Segment);
+      Env.Add_Segment (As.Segments.Info_Segment);
+
+      Env.Set_Current (".code");
 
       return Env;
    end Create;
+
+   ------------
+   -- Export --
+   ------------
+
+   procedure Export
+     (This : in out Instance'Class;
+      Name : String)
+   is
+   begin
+      if This.Entry_Map.Contains (Name) then
+         This.Entry_Map (Name).Exported := True;
+      else
+         This.Entry_Map.Insert
+           (Name, Entry_Record'(False, True, False,
+            This.Current_Segment, null));
+      end if;
+   end Export;
 
    ----------------------
    -- Find_Local_Label --
@@ -192,10 +226,12 @@ package body As.Environment is
    is
       pragma Assert (Index <= This.Locals.Last_Index);
       Set      : Local_Label_Sets.Set renames This.Locals (Index);
+      Loc      : constant Word_32 :=
+                   This.Location (As.Segments.Code_Segment);
       Position : constant Local_Label_Sets.Cursor :=
                    (if Forward
-                    then Set.Ceiling (This.Loc + 4)
-                    else Set.Floor (This.Loc));
+                    then Set.Ceiling (Loc + 4)
+                    else Set.Floor (Loc));
       pragma Assert (Local_Label_Sets.Has_Element (Position));
    begin
       return Local_Label_Sets.Element (Position);
@@ -236,8 +272,9 @@ package body As.Environment is
       Value : As.Expressions.Reference)
    is
    begin
-      This.Map.Insert
-        (Name, Entry_Record'(True, Value));
+      This.Entry_Map.Insert
+        (Name, Entry_Record'(True, False, True,
+         This.Current_Segment, Value));
    end Insert;
 
    ------------
@@ -262,9 +299,27 @@ package body As.Environment is
       Name : String)
    is
    begin
-      This.Map.Insert
-        (Name, Entry_Record'(False, null));
+      This.Entry_Map.Insert
+        (Name, Entry_Record'(False, False, False,
+         This.Current_Segment, null));
    end Insert;
+
+   --------------------
+   -- Insert_Current --
+   --------------------
+
+   procedure Insert_Current
+     (This : in out Instance'Class;
+      Name : String)
+   is
+   begin
+      This.Entry_Map.Insert
+        (Name,
+         Entry_Record'(True, False, False,
+           This.Current_Segment,
+           As.Expressions.Word_Value
+             (This.Location (This.Current_Segment))));
+   end Insert_Current;
 
    -------------------
    -- Insert_Global --
@@ -298,8 +353,22 @@ package body As.Environment is
          This.Locals.Append (Local_Label_Sets.Empty);
       end loop;
 
-      This.Locals (Index).Insert (This.Loc);
+      This.Locals (Index).Insert (This.Location (As.Segments.Code_Segment));
    end Insert_Local_Label;
+
+   -----------------
+   -- Is_Exported --
+   -----------------
+
+   function Is_Exported
+     (This : Instance'Class;
+      Name : String)
+      return Boolean
+   is
+   begin
+      return This.Entry_Map.Contains (Name)
+        and then This.Entry_Map (Name).Exported;
+   end Is_Exported;
 
    -------------
    -- Iterate --
@@ -315,7 +384,7 @@ package body As.Environment is
       Names : Name_Lists.List;
       package Name_Sorting is new Name_Lists.Generic_Sorting ("<");
    begin
-      for Position in This.Map.Iterate loop
+      for Position in This.Entry_Map.Iterate loop
          Names.Append (Entry_Maps.Key (Position));
       end loop;
       Name_Sorting.Sort (Names);
@@ -324,17 +393,43 @@ package body As.Environment is
       end loop;
    end Iterate;
 
-   ------------------
-   -- Set_Location --
-   ------------------
+   -------------
+   -- Iterate --
+   -------------
 
-   procedure Set_Location
-     (This : in out Instance'Class;
-      Loc  : Word_32)
+   procedure Iterate
+     (This    : not null access constant Instance'Class;
+      Process : not null access
+        procedure (Name : String;
+                   Segment : As.Segments.Reference;
+                   Defined : Boolean;
+                   Exported : Boolean;
+                   Value : Word_32))
    is
    begin
-      This.Loc := Loc;
-   end Set_Location;
+      for Position in This.Entry_Map.Iterate loop
+         declare
+            use type As.Segments.Reference;
+            use type As.Expressions.Reference;
+            Rec : Entry_Record renames This.Entry_Map (Position);
+            Value : constant Word_32 :=
+                      (if Rec.Value = null
+                       or else not Rec.Value.Has_Word_Value (This)
+                       then 0
+                       else Rec.Value.Get_Word_Value (This));
+         begin
+            if not Rec.Const
+              and then Rec.Segment /= null
+            then
+               Process (Name => Entry_Maps.Key (Position),
+                        Segment => Rec.Segment,
+                        Defined => Rec.Defined,
+                        Exported => Rec.Exported,
+                        Value    => Value);
+            end if;
+         end;
+      end loop;
+   end Iterate;
 
    ------------
    -- Update --
@@ -345,8 +440,10 @@ package body As.Environment is
       Name  : String;
       Value : As.Expressions.Reference)
    is
+      Rec : Entry_Record renames This.Entry_Map (Name);
    begin
-      This.Map (Name) := Entry_Record'(True, Value);
+      Rec.Defined := True;
+      Rec.Value := Value;
    end Update;
 
    ------------
@@ -354,12 +451,15 @@ package body As.Environment is
    ------------
 
    procedure Update
-     (This : in out Instance'Class;
+     (This  : in out Instance'Class;
       Name  : String;
-      Value : Word_32)
+      Value : As.Segments.Segment_Location)
    is
+      Rec : Entry_Record renames This.Entry_Map (Name);
    begin
-      This.Update (Name, Expressions.Word_Value (Value));
+      Rec.Defined := True;
+      Rec.Value := Expressions.Word_Value (As.Segments.Location (Value));
+      Rec.Segment := As.Segments.Segment (Value);
    end Update;
 
 end As.Environment;

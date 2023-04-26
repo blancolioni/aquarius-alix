@@ -1,6 +1,7 @@
 with As.Environment;
 with As.Expressions;
 with As.Images;
+with As.Segments;
 
 package body As.Instructions is
 
@@ -53,9 +54,17 @@ package body As.Instructions is
                end loop;
             end;
          end loop;
+      elsif This.Is_Directive then
+         case This.Directive is
+            when Export_Symbol =>
+               null;
+            when Set_Segment =>
+               Target.Set_Current (As.Names."-" (This.Segment_Name));
+         end case;
       elsif This.Is_Branch then
          declare
-            PC : constant Word_32 := Target.Location;
+            PC : constant Word_32 :=
+                   As.Segments.Location (Target.Location);
             Address : constant Word_32 := Op2.Get_Word_Value (Env);
             Offset  : constant Word_32 :=
                         (if Address >= PC
@@ -119,7 +128,8 @@ package body As.Instructions is
          end;
       elsif This.Has_Rel_Addr then
          declare
-            PC      : constant Word_32 := Target.Location;
+            PC      : constant Word_32 :=
+                        As.Segments.Location (Target.Location);
             Address : constant Word_32 := Op1.Get_Word_Value (Env);
             Offset  : constant Word_32 :=
                         (if Address >= PC
@@ -221,17 +231,25 @@ package body As.Instructions is
 
    procedure Skip
      (This      : Instance'Class;
-      PC        : in out Word_32;
-      Env       : not null access constant As.Environment.Instance'Class;
+      Env       : not null access As.Environment.Instance'Class;
       Arguments : Instruction_Arguments)
    is
-      pragma Unreferenced (Env);
    begin
       if This.Is_Data then
-         PC := PC
-           + Word_32 (This.Data_Size) * Word_32 (Arguments'Length);
+         Env.Set_Location (As.Segments.Location (Env.Location)
+                           + Word_32 (This.Data_Size)
+                           * Word_32 (Arguments'Length));
+      elsif This.Is_Directive then
+         case This.Directive is
+            when Export_Symbol =>
+               for Arg of Arguments loop
+                  Env.Export (Arg.To_String);
+               end loop;
+            when Set_Segment =>
+               Env.Set_Current (As.Names."-" (This.Segment_Name));
+         end case;
       else
-         PC := PC + 4;
+         Env.Set_Location (As.Segments.Location (Env.Location) + 4);
       end if;
    end Skip;
 
