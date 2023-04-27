@@ -229,6 +229,12 @@ package body As.Objects is
          Exported : Boolean;
          Value    : Word_32);
 
+      procedure Add_Symbol_Reference
+        (Name    : String;
+         Segment : As.Segments.Reference;
+         Offset  : Word_32;
+         Context : Mention_Context);
+
       -----------------------
       -- Add_Global_Symbol --
       -----------------------
@@ -281,22 +287,24 @@ package body As.Objects is
          end if;
       end Add_Local_Symbol;
 
+      --------------------------
+      -- Add_Symbol_Reference --
+      --------------------------
+
+      procedure Add_Symbol_Reference
+        (Name    : String;
+         Segment : As.Segments.Reference;
+         Offset  : Word_32;
+         Context : Mention_Context)
+      is
+      begin
+         WL.Files.ELF.Add_Symbol_Reference
+           (File, Name, Segment.Name, Address_32 (Offset),
+           Mention_Context'Pos (Context));
+      end Add_Symbol_Reference;
+
    begin
       Create (File, Out_File, Path);
-
-      --  for Segment of This.Segment_List loop
-      --     for Symbol of Segment.Symbols loop
-      --        New_Symbol
-      --          (File         => File,
-      --           Name         => As.Names."-" (Symbol.Name),
-      --           Value        => Address_32 (Symbol.Value),
-      --           Size         => 4,
-      --           Binding      => (if Symbol.Exported then Global else Local),
-      --           Typ          => No_Type,
-      --      Visibility   => (if Symbol.Exported then Default else Internal),
-      --           Section_Name => Segment.Segment.Name);
-      --     end loop;
-      --  end loop;
 
       for Segment of This.Segment_List loop
          New_Section_Header
@@ -316,6 +324,8 @@ package body As.Objects is
 
       This.Env.Iterate (Add_Local_Symbol'Access);
       This.Env.Iterate (Add_Global_Symbol'Access);
+
+      This.Env.Iterate_Mentions (Add_Symbol_Reference'Access);
 
       Close (File);
    end Write;

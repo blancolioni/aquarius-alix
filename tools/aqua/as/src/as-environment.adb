@@ -209,8 +209,7 @@ package body As.Environment is
          This.Entry_Map (Name).Exported := True;
       else
          This.Entry_Map.Insert
-           (Name, Entry_Record'(False, True, False,
-            This.Current_Segment, null));
+           (Name, This.Export_Entry);
       end if;
    end Export;
 
@@ -273,8 +272,7 @@ package body As.Environment is
    is
    begin
       This.Entry_Map.Insert
-        (Name, Entry_Record'(True, False, True,
-         This.Current_Segment, Value));
+        (Name, This.Value_Entry (Value));
    end Insert;
 
    ------------
@@ -294,15 +292,15 @@ package body As.Environment is
    -- Insert --
    ------------
 
-   procedure Insert
-     (This : in out Instance'Class;
-      Name : String)
-   is
-   begin
-      This.Entry_Map.Insert
-        (Name, Entry_Record'(False, False, False,
-         This.Current_Segment, null));
-   end Insert;
+   --  procedure Insert
+   --    (This : in out Instance'Class;
+   --     Name : String)
+   --  is
+   --  begin
+   --     This.Entry_Map.Insert
+   --       (Name, Entry_Record'(False, False, False,
+   --        This.Current_Segment, null));
+   --  end Insert;
 
    --------------------
    -- Insert_Current --
@@ -314,11 +312,7 @@ package body As.Environment is
    is
    begin
       This.Entry_Map.Insert
-        (Name,
-         Entry_Record'(True, False, False,
-           This.Current_Segment,
-           As.Expressions.Word_Value
-             (This.Location (This.Current_Segment))));
+        (Name, This.Current_Entry);
    end Insert_Current;
 
    -------------------
@@ -430,6 +424,79 @@ package body As.Environment is
          end;
       end loop;
    end Iterate;
+
+   ----------------------
+   -- Iterate_Mentions --
+   ----------------------
+
+   procedure Iterate_Mentions
+     (This    : not null access constant Instance'Class;
+      Process : not null access
+        procedure (Name : String;
+                   Segment : As.Segments.Reference;
+                   Offset  : Word_32;
+                   Context : Mention_Context))
+   is
+   begin
+      for Position in This.Entry_Map.Iterate loop
+         declare
+            Name : constant String := Entry_Maps.Key (Position);
+            Rec : Entry_Record renames This.Entry_Map (Position);
+         begin
+            for Mention of Rec.Mentions loop
+               Process (Name, Mention.Segment,
+                        Mention.Offset, Mention.Context);
+            end loop;
+         end;
+      end loop;
+   end Iterate_Mentions;
+
+   -------------
+   -- Mention --
+   -------------
+
+   procedure Mention
+     (This    : in out Instance'Class;
+      Name    : String;
+      Context : Mention_Context;
+      Offset  : Word_32 := 0)
+   is
+   begin
+      if not This.Entry_Map.Contains (Name) then
+         This.Entry_Map.Insert (Name, This.Undefined_Entry);
+      end if;
+
+      declare
+         Rec : Entry_Record renames This.Entry_Map (Name);
+      begin
+         Rec.Mentions.Append
+           (Mention_Record'
+              (Segment => This.Current_Segment,
+               Offset  => As.Segments.Location (This.Location) + Offset,
+               Context => Context));
+      end;
+   end Mention;
+
+   -------------------
+   -- Needs_Mention --
+   -------------------
+
+   function Needs_Mention
+     (This   : not null access constant Instance'Class;
+      Name   : String)
+      return Boolean
+   is
+   begin
+      if not This.Entry_Map.Contains (Name) then
+         return True;
+      end if;
+
+      declare
+         Rec : Entry_Record renames This.Entry_Map (Name);
+      begin
+         return not Rec.Const;
+      end;
+   end Needs_Mention;
 
    ------------
    -- Update --

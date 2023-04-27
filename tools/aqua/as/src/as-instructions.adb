@@ -236,6 +236,15 @@ package body As.Instructions is
    is
    begin
       if This.Is_Data then
+         declare
+            Offset : Word_32 := As.Segments.Location (Env.Location);
+         begin
+            for Arg of Arguments loop
+               Arg.Mention (Env, No_Context, Offset);
+               Offset := Offset + Word_32 (This.Data_Size);
+            end loop;
+         end;
+
          Env.Set_Location (As.Segments.Location (Env.Location)
                            + Word_32 (This.Data_Size)
                            * Word_32 (Arguments'Length));
@@ -249,6 +258,9 @@ package body As.Instructions is
                Env.Set_Current (As.Names."-" (This.Segment_Name));
          end case;
       else
+         for Arg of Arguments loop
+            Arg.Mention (Env, This.Mention);
+         end loop;
          Env.Set_Location (As.Segments.Location (Env.Location) + 4);
       end if;
    end Skip;

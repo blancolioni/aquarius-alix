@@ -337,6 +337,93 @@ package body As.Expressions is
         (Class => Local_Node, Label_Index => Index, Forward => Forward);
    end Local;
 
+   procedure Mention
+     (This    : Instance;
+      Env     : not null access As.Environment.Instance'Class;
+      Context : Mention_Context;
+      Offset  : Word_32 := 0)
+   is
+   begin
+      case This.Class is
+         when Word_Node =>
+            null;
+         when Local_Node =>
+            null;
+         when Identifier_Node =>
+            if Env.Needs_Mention (As.Names."-" (This.Id_Value)) then
+               Env.Mention (As.Names."-" (This.Id_Value), Context, Offset);
+            end if;
+         when Operator_Node =>
+            case This.Op is
+               when Op_Plus =>
+                  if This.Left = null then
+                     This.Right.Mention (Env, Context, Offset);
+                  elsif This.Left.Has_Static_Value then
+                     This.Right.Mention
+                       (Env, Context, Offset + This.Left.Get_Static_Value);
+                  elsif This.Right.Has_Static_Value then
+                     This.Left.Mention
+                       (Env, Context, Offset + This.Right.Get_Static_Value);
+                  elsif This.Left.Needs_Mention (Env)
+                    or else This.Right.Needs_Mention (Env)
+                  then
+                     raise Constraint_Error with
+                       "invalid non-static reference";
+                  end if;
+               when Op_Minus =>
+                  if This.Left /= null
+                    and then This.Right.Has_Static_Value
+                  then
+                     This.Left.Mention
+                       (Env, Context, Offset - This.Right.Get_Static_Value);
+                  elsif This.Right.Needs_Mention (Env)
+                    or else (This.Left /= null
+                             and then This.Left.Needs_Mention (Env))
+                  then
+                     raise Constraint_Error with
+                       "invalid non-static reference";
+                  end if;
+               when others =>
+                  if This.Right.Needs_Mention (Env)
+                    or else (This.Left /= null
+                             and then This.Left.Needs_Mention (Env))
+                  then
+                     raise Constraint_Error with
+                       "invalid reference expression";
+                  end if;
+            end case;
+         when Register_Node =>
+            null;
+
+         when Instruction_Node =>
+            null;
+
+      end case;
+   end Mention;
+
+   -------------------
+   -- Needs_Mention --
+   -------------------
+
+   function Needs_Mention
+     (This   : Instance;
+      Env    : not null access As.Environment.Instance'Class)
+      return Boolean
+   is
+   begin
+      return (case This.Class is
+                 when Word_Node        => False,
+                 when Register_Node    => False,
+                 when Instruction_Node => False,
+                 when Local_Node       => False,
+                 when Identifier_Node  =>
+                   Env.Needs_Mention (As.Names."-" (This.Id_Value)),
+                 when Operator_Node    =>
+                   This.Right.Needs_Mention (Env)
+              or else (This.Left /= null
+                and then This.Left.Needs_Mention (Env)));
+   end Needs_Mention;
+
    -------------
    -- Operate --
    -------------

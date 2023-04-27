@@ -1,3 +1,4 @@
+private with Ada.Containers.Doubly_Linked_Lists;
 private with Ada.Containers.Ordered_Sets;
 private with Ada.Containers.Vectors;
 private with WL.String_Maps;
@@ -55,11 +56,11 @@ private package As.Environment is
      and then This.Get_Value (Name).Has_Static_Value
      and then This.Get_Value (Name).Get_Static_Value = Value;
 
-   procedure Insert
-     (This  : in out Instance'Class;
-      Name  : String)
-     with Pre => not This.Contains (Name),
-     Post => This.Contains (Name) and then not This.Has_Value (Name);
+   --  procedure Insert
+   --    (This  : in out Instance'Class;
+   --     Name  : String)
+   --    with Pre => not This.Contains (Name),
+   --    Post => This.Contains (Name) and then not This.Has_Value (Name);
 
    procedure Insert_Current
      (This  : in out Instance'Class;
@@ -109,6 +110,17 @@ private package As.Environment is
      (This : in out Instance'Class;
       Name : String);
 
+   function Needs_Mention
+     (This   : not null access constant Instance'Class;
+      Name   : String)
+      return Boolean;
+
+   procedure Mention
+     (This    : in out Instance'Class;
+      Name    : String;
+      Context : Mention_Context;
+      Offset  : Word_32 := 0);
+
    procedure Update
      (This  : in out Instance'Class;
       Name  : String;
@@ -137,7 +149,25 @@ private package As.Environment is
                    Exported : Boolean;
                    Value : Word_32));
 
+   procedure Iterate_Mentions
+     (This    : not null access constant Instance'Class;
+      Process : not null access
+        procedure (Name : String;
+                   Segment : As.Segments.Reference;
+                   Offset  : Word_32;
+                   Context : Mention_Context));
+
 private
+
+   type Mention_Record is
+      record
+         Segment : As.Segments.Reference;
+         Context : Mention_Context;
+         Offset  : Word_32;
+      end record;
+
+   package Mention_Lists is
+     new Ada.Containers.Doubly_Linked_Lists (Mention_Record);
 
    type Entry_Record is
       record
@@ -146,6 +176,7 @@ private
          Const    : Boolean := False;
          Segment  : As.Segments.Reference;
          Value    : As.Expressions.Reference;
+         Mentions : Mention_Lists.List;
       end record;
 
    package Entry_Maps is
@@ -205,5 +236,43 @@ private
       G    : Register_Index)
       return Word_32
    is (This.Globals (G).Value);
+
+   function Current_Entry
+     (This  : Instance'Class)
+      return Entry_Record
+   is (Entry_Record'
+         (Defined => True, Exported => False, Const => False,
+          Segment => This.Current_Segment,
+          Value   => As.Expressions.Word_Value
+            (This.Location (This.Current_Segment)),
+          Mentions => <>));
+
+   function Undefined_Entry
+     (This  : Instance'Class)
+      return Entry_Record
+   is (Entry_Record'
+         (Defined  => False, Exported => False, Const => False,
+          Segment  => This.Current_Segment,
+          Value    => null,
+          Mentions => <>));
+
+   function Export_Entry
+     (This : Instance'Class)
+      return Entry_Record
+   is (Entry_Record'
+         (Defined  => False, Exported => True, Const => False,
+          Segment  => This.Current_Segment,
+          Value    => null,
+          Mentions => <>));
+
+   function Value_Entry
+     (This  : Instance'Class;
+      Value : As.Expressions.Reference)
+      return Entry_Record
+   is (Entry_Record'
+         (Defined  => True, Exported => False, Const => True,
+          Segment  => This.Current_Segment,
+          Value    => Value,
+          Mentions => <>));
 
 end As.Environment;

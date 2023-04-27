@@ -70,6 +70,7 @@ private
          Has_Rel_Addr  : Boolean := False;
          Is_Pop        : Boolean := False;
          Data_Size     : Positive := 4;
+         Mention       : Mention_Context := No_Context;
          Segment_Name  : As.Names.Symbol_Name;
          Special       : Special_Instruction := Get;
          Directive     : Directive_Instruction := Set_Segment;
@@ -91,7 +92,8 @@ private
    is (new Instance'(Base_Op, YZ_Immediate => True, others => <>));
 
    function I_Branch (Base_Op : Word_8) return Reference
-   is (new Instance'(Base_Op, Is_Branch => True, others => <>));
+   is (new Instance'(Base_Op, Is_Branch => True,
+                     Mention => Relative_XY, others => <>));
 
    function Data (Element_Size : Positive) return Reference
    is (new Instance'(Is_Data => True, Data_Size => Element_Size,
@@ -109,7 +111,8 @@ private
                      others       => <>));
 
    Local_Jmp  : aliased constant Instance :=
-                  (16#F0#, Has_Rel_Addr => True, others => <>);
+                  (16#F0#, Has_Rel_Addr => True,
+                   Mention => Relative_XYZ, others => <>);
 
    Local_Pop : aliased constant Instance :=
                  (16#F8#, Is_Pop => True, others => <>);

@@ -61,6 +61,17 @@ private package As.Expressions is
       return Word_32
      with Pre => Instance'Class (This).Has_Word_Value (Env);
 
+   function Needs_Mention
+     (This   : Instance;
+      Env    : not null access As.Environment.Instance'Class)
+      return Boolean;
+
+   procedure Mention
+     (This    : Instance;
+      Env     : not null access As.Environment.Instance'Class;
+      Context : Mention_Context;
+      Offset  : Word_32 := 0);
+
    function Word_Value
      (Value : Word_32)
       return Reference;
@@ -79,6 +90,10 @@ private package As.Expressions is
    function Identifier
      (Name : String)
       return Reference;
+
+   function Is_Identifier
+     (This : Instance'Class)
+      return Boolean;
 
    function Local
      (Index   : Positive;
@@ -122,5 +137,10 @@ private
                Left, Right  : Reference;
          end case;
       end record;
+
+   function Is_Identifier
+     (This : Instance'Class)
+      return Boolean
+   is (This.Class = Identifier_Node);
 
 end As.Expressions;

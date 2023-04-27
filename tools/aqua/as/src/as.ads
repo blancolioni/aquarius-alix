@@ -6,4 +6,6 @@ package As is
 
    type Register_Index is new Word_8;
 
+   type Mention_Context is (No_Context, Relative_XY, Relative_XYZ);
+
 end As;
