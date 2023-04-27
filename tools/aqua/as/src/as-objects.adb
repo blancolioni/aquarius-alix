@@ -246,9 +246,8 @@ package body As.Objects is
          Exported : Boolean;
          Value    : Word_32)
       is
-         pragma Unreferenced (Defined);
       begin
-         if Exported then
+         if Exported or else not Defined then
             WL.Files.ELF.New_Symbol
               (File         => File,
                Name         => Name,
@@ -257,7 +256,8 @@ package body As.Objects is
                Binding      => Global,
                Typ          => Func,
                Visibility   => Default,
-               Section_Name => Segment.Name);
+               Section_Name =>
+                 (if Defined then Segment.Name else ""));
          end if;
       end Add_Global_Symbol;
 
@@ -272,9 +272,10 @@ package body As.Objects is
          Exported : Boolean;
          Value    : Word_32)
       is
-         pragma Unreferenced (Defined);
       begin
-         if not Exported then
+         if not Exported
+           and then Defined
+         then
             WL.Files.ELF.New_Symbol
               (File         => File,
                Name         => Name,

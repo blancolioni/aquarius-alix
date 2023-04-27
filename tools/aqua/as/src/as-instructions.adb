@@ -65,7 +65,10 @@ package body As.Instructions is
          declare
             PC : constant Word_32 :=
                    As.Segments.Location (Target.Location);
-            Address : constant Word_32 := Op2.Get_Word_Value (Env);
+            Address : constant Word_32 :=
+                        (if Op2.Has_Value (Env)
+                         then Op2.Get_Word_Value (Env)
+                         else 0);
             Offset  : constant Word_32 :=
                         (if Address >= PC
                          then Address - PC
@@ -130,7 +133,10 @@ package body As.Instructions is
          declare
             PC      : constant Word_32 :=
                         As.Segments.Location (Target.Location);
-            Address : constant Word_32 := Op1.Get_Word_Value (Env);
+            Address : constant Word_32 :=
+                        (if Op1.Has_Value (Env)
+                         then Op1.Get_Word_Value (Env)
+                         else 0);
             Offset  : constant Word_32 :=
                         (if Address >= PC
                          then Address - PC
